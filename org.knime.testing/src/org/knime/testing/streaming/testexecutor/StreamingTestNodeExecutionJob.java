@@ -72,6 +72,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.exec.SandboxedNodeCreator;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
@@ -165,6 +166,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
             return NodeContainerExecutionStatus.FAILURE;
         }
 
+        //TODO should actually not be used for execution itself, but is currently!
         NativeNodeContainer localNodeContainer = (NativeNodeContainer)nodeContainer;
 
         if (localNodeContainer.getNodeModel() instanceof LoopStartNode
@@ -175,15 +177,11 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
             return NodeContainerExecutionStatus.FAILURE;
         }
 
-        ExecutionContext localExec = localNodeContainer.createExecutionContext();
-
         localNodeContainer.getNodeModel().addWarningListener(w -> {
             if (w != null) {
                 m_warningMessages.add(w);
             }
         });
-
-        /* --- configure nodes --- */
 
         // get the input object specs
         PortObject[] inPortObjects = getPortObjects(); // includes the flow
@@ -215,23 +213,6 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         // }
         // }
 
-        // configure the original node (i.e. the master)
-        boolean isConfigureOK;
-        try (WorkflowLock lock = localNodeContainer.getParent().lock()) {
-            // wfm.createAndSetFlowObjectStackFor(localNodeContainer,
-            // flowObjectStacks.toArray(new
-            // FlowObjectStack[flowObjectStacks.size()]));
-            LOGGER.info("call local: NodeModel#configure");
-            isConfigureOK = localNodeContainer.callNodeConfigure(inPortObjectSpecs, true);
-        }
-
-        if (!isConfigureOK) {
-            String message = "Configuration failed";
-            nodeContainer.setNodeMessage(new NodeMessage(Type.ERROR, message));
-            LOGGER.error(message);
-            return NodeContainerExecutionStatus.FAILURE;
-        }
-
         // check for distributable ports
         boolean isDistributable = false;
         for (int i = 0; i < inputPortRoles.length; i++) {
@@ -239,46 +220,47 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 isDistributable = true;
             }
         }
-        int numChunks;
-        NativeNodeContainer[] remoteNodeContainers;
-        if (isDistributable && m_numChunks > 1) {
-            // if there is a distributable port, copy nodes and configure the
-            // copies
-            numChunks = m_numChunks;
 
-            //adjust the number of chunks if one of the distributable input table contains less rows than chunks
-            for (int i = 1; i < inPortObjects.length; i++) { //without the flow variable port
-                if (inputPortRoles[i - 1].isDistributable()) {
-                    int rowCount = (int)((BufferedDataTable)inPortObjects[i]).size();
-                    if (rowCount < numChunks) {
-                        numChunks = Math.max(1, rowCount);
-                    }
+        /* ---- create node copies and configure ----*/
+
+        //adjust the number of chunks if one of the distributable input table contains less rows than chunks
+        int numChunks = isDistributable ? m_numChunks : 1;
+        for (int i = 1; i < inPortObjects.length; i++) { //without the flow variable port
+            if (inputPortRoles[i - 1].isDistributable()) {
+                int rowCount = (int)((BufferedDataTable)inPortObjects[i]).size();
+                if (rowCount < numChunks) {
+                    numChunks = Math.max(1, rowCount);
                 }
             }
+        }
 
-            if (numChunks > 1) {
-                remoteNodeContainers = createNodeCopies(localNodeContainer, numChunks);
-                // configure the node copies
-                for (int i = 0; i < remoteNodeContainers.length; i++) {
-                    try (WorkflowLock lock = localNodeContainer.getParent().lock()) {
-                        // wfm.createAndSetFlowObjectStackFor(localNodeContainer,
-                        // flowObjectStacks.toArray(new
-                        // FlowObjectStack[flowObjectStacks.size()]));
-                        LOGGER.info("call remote: NodeModel#configure");
-                        isConfigureOK = remoteNodeContainers[i].callNodeConfigure(inPortObjectSpecs, true);
-                        assert isConfigureOK; // should be ok every time since the configure call above on the original node didn't give any errors
-                    }
+        //create the 'remote' node containers used for the execution itself
+        NativeNodeContainer[] remoteNodeContainers = createNodeCopies(localNodeContainer, numChunks);
+
+        //exactly one execution context per 'remote' node
+        ExecutionContext[] remoteExec = createExecutionContexts(remoteNodeContainers);
+
+        //execution context for the original node
+        //- mainly for the creation of the input and output tables (to be fed into the 'remote' node copies)
+        //- created tables are tracked in m_tableChunksToBeDisposed to be disposed at the end
+        //- should actually not be used for the actual execution but is currently! (TODO)
+        ExecutionContext localExec = remoteExec[0];
+
+        // configure the node copies
+        for (int i = 0; i < remoteNodeContainers.length; i++) {
+            try (WorkflowLock lock = localNodeContainer.getParent().lock()) {
+                // wfm.createAndSetFlowObjectStackFor(localNodeContainer,
+                // flowObjectStacks.toArray(new
+                // FlowObjectStack[flowObjectStacks.size()]));
+                LOGGER.info("call remote: NodeModel#configure");
+                boolean isConfigureOK = remoteNodeContainers[i].callNodeConfigure(inPortObjectSpecs, true);
+                if (!isConfigureOK) {
+                    String message = "Configuration failed";
+                    nodeContainer.setNodeMessage(new NodeMessage(Type.ERROR, message));
+                    LOGGER.error(message);
+                    return NodeContainerExecutionStatus.FAILURE;
                 }
-            } else {
-                remoteNodeContainers = new NativeNodeContainer[]{localNodeContainer};
-                // node doesn't need to be configured again, was already done above
             }
-
-        } else {
-            // no chunks, just one node for execution
-            numChunks = 1;
-            remoteNodeContainers = new NativeNodeContainer[]{localNodeContainer};
-            // node doesn't need to be configured again, was already done above
         }
 
         /* ---- take care about the input ---- */
@@ -311,8 +293,8 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         try {
             while (localNodeContainer.getNodeModel().iterate(operatorInternals)) {
 
-                newInternals = performIntermediateIteration(remoteNodeContainers, operatorInternals, inSpecsNoFlowPort,
-                    portInputs, numChunks, localMergeOperator != null);
+                newInternals = performIntermediateIteration(remoteNodeContainers, remoteExec, operatorInternals,
+                    inSpecsNoFlowPort, portInputs, numChunks, localMergeOperator != null);
 
                 if (localMergeOperator != null) {
                     LOGGER.info("call local: MergeOperator#mergeIntermediate");
@@ -357,11 +339,9 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                     streamableOperator.loadInternals(operatorInternals);
                 }
                 LOGGER.info("call: StreamableOperator#runFinal");
-                ExecutionContext exec = remoteNodeContainers[i].createExecutionContext();
-                remoteNodeContainers[i].getNode().openFileStoreHandler(exec);
                 try {
                     PortOutput[] tmpPortOutputs = portOutputs.clone();
-                    streamableOperator.runFinal(portInputs[i], portOutputs, exec);
+                    streamableOperator.runFinal(portInputs[i], portOutputs, remoteExec[i]);
                     //make sure that the portOutputs-object hasn't been manipulated directly (only it's containing objects)
                     if(IntStream.range(0, portOutputs.length).anyMatch(j -> {
                         return tmpPortOutputs[j] != portOutputs[j];
@@ -492,14 +472,42 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
             localNodeContainer.getNode().createErrorMessageAndNotify("Execute failed: " + e.getMessage(), e);
             return NodeContainerExecutionStatus.FAILURE;
         } finally {
-            /* --- remove virtual nodes from workflow --- */
-            if (numChunks > 1) {
-                removeNodeCopies(remoteNodeContainers);
-            }
+            //remove virtual nodes from workflow
+            removeNodeCopies(remoteNodeContainers);
 
-            /* --- clear/dispose all newly created table chunks if there are any (created via creatTableChunks) --- */
+            //other things to be done in post execution
+            postExecution(remoteExec, remoteNodeContainers);
+
+            // clear/dispose all newly created table chunks if there are any (created via creatTableChunks)
             m_tableChunksToBeDisposed.forEach(c -> c.dispose());
             m_tableChunksToBeDisposed.clear();
+        }
+    }
+
+    /**
+     * Does all the necessary things in order to create the execution context for a single node instance. Call
+     * {@link #postExecution(NativeNodeContainer)} to finish-up the node's execution with the created execution context.
+     */
+    private ExecutionContext[] createExecutionContexts(final NativeNodeContainer... nc) {
+        ExecutionContext[] exec = new ExecutionContext[nc.length];
+        for (int i = 0; i < nc.length; i++) {
+            exec[i] = nc[i].createExecutionContext();
+            Node node = nc[0].getNode();
+            node.openFileStoreHandler(exec[i]);
+        }
+        return exec;
+    }
+
+    /**
+     * Performs necessary actions after the node's execution is finished.
+     * The entries of the passed arrays will also be set to <code>null</code> in order to make sure that they aren't be
+     * used anymore afterwards.
+     */
+    private void postExecution(final ExecutionContext[] exec, final NativeNodeContainer[] nc) {
+        for (int i = 0; i < nc.length; i++) {
+            nc[i].putOutputTablesIntoGlobalRepository(exec[i]);
+            nc[i] = null;
+            exec[i] = null;
         }
     }
 
@@ -513,12 +521,12 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
      * @throws Exception
      *
      */
-    private StreamableOperatorInternals[] performIntermediateIteration(final NativeNodeContainer[] remoteNodeContainers, final StreamableOperatorInternals internals,
+    private StreamableOperatorInternals[] performIntermediateIteration(final NativeNodeContainer[] remoteNodeContainers,
+        final ExecutionContext[] exec, final StreamableOperatorInternals internals,
         final PortObjectSpec[] inSpecsNoFlowPort, final PortInput[][] portInputs, final int numChunks,
         final boolean mergeOpAvailable) throws Exception {
         StreamableOperatorInternals[] newInternals = new StreamableOperatorInternals[numChunks];
         for (int i = 0; i < numChunks; i++) {
-            ExecutionContext exec = remoteNodeContainers[i].createExecutionContext();
             //            LOGGER.info("call remote: NodeModel#createInitialStreamableOperatorInternals");
             //            StreamableOperatorInternals internals =
             //                remoteNodeContainers[i].getNodeModel().createInitialStreamableOperatorInternals();
@@ -530,15 +538,11 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 streamableOperator.loadInternals(saveAndLoadInternals(internals));
             }
             LOGGER.info("call: StreamableOperator#runIntermediate");
-            Node node = remoteNodeContainers[i].getNode();
-            node.openFileStoreHandler(exec);
-            //use remote execution context
-            streamableOperator.runIntermediate(portInputs[i], exec);
+            streamableOperator.runIntermediate(portInputs[i], exec[i]);
             if (mergeOpAvailable) {
                 LOGGER.info("call: StreamableOperator#saveInternals");
                 newInternals[i] = saveAndLoadInternals(streamableOperator.saveInternals());
             }
-            remoteNodeContainers[i].putOutputTablesIntoGlobalRepository(exec);
         }
         return newInternals;
     }
@@ -555,40 +559,26 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 continue;
             }
             // if distributed: create chunks of the input table(s)
-            if (numChunks > 1) {
-                if (inputPortRoles[i].isDistributable()) {
-                    // create a own DataTableRowInput for each chunk, but only
-                    // if input is distributable
-                    BufferedDataTable[] tables =
-                        createTableChunks((BufferedDataTable)inPortObjects[i + 1], numChunks, exec);
-                    for (int j = 0; j < tables.length; j++) {
-                        if (inputPortRoles[i].isStreamable()) {
-                            portInputs[j][i] = new DataTableRowInput(tables[j]);
-                        } else {
-                            portInputs[j][i] = new PortObjectInput(tables[j]);
-                        }
-                    }
-                } else {
-                    // TODO: copy port object for each chunk to be executed
-                    for (int j = 0; j < numChunks; j++) {
-                        if (inputPortRoles[i].isStreamable()) {
-                            BufferedDataTable table = (BufferedDataTable)inPortObjects[i + 1];
-                            try {
-                                portInputs[j][i] = new DataTableRowInput(exec.createBufferedDataTable(table, exec));
-                            } catch (CanceledExecutionException e) {
-                                throw new RuntimeException(e);
-                            }
-                        } else {
-                            portInputs[j][i] = new PortObjectInput(inPortObjects[i + 1]);
-                        }
+            if (inputPortRoles[i].isDistributable() && numChunks > 1) {
+                // create a own DataTableRowInput for each chunk, but only
+                // if input is distributable
+                BufferedDataTable[] tables =
+                    createTableChunks((BufferedDataTable)inPortObjects[i + 1], numChunks, exec);
+                for (int j = 0; j < tables.length; j++) {
+                    if (inputPortRoles[i].isStreamable()) {
+                        portInputs[j][i] = new DataTableRowInput(tables[j]);
+                    } else {
+                        portInputs[j][i] = new PortObjectInput(tables[j]);
                     }
                 }
             } else {
                 // no distributed execution
-                if (inputPortRoles[i].isStreamable()) {
-                    portInputs[0][i] = new DataTableRowInput((BufferedDataTable)inPortObjects[i + 1]);
-                } else {
-                    portInputs[0][i] = new PortObjectInput(inPortObjects[i + 1]);
+                for (int j = 0; j < numChunks; j++) {
+                    if (inputPortRoles[i].isStreamable()) {
+                        portInputs[j][i] = new DataTableRowInput((BufferedDataTable)inPortObjects[i + 1]);
+                    } else {
+                        portInputs[j][i] = new PortObjectInput(inPortObjects[i + 1]);
+                    }
                 }
             }
         }
@@ -634,6 +624,8 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                         //use row output the only is allowed to be filled by 'setFully'
                         rowOutput = new BufferedDataContainerRowOutput();
                     } else {
+                        //don't dispose (i.e. add it to m_tableChunksToBeDisposed) the output data containers
+                        //since they are needed by successors and are persisted
                         rowOutput = new BufferedDataContainerRowOutput(
                             exec.createDataContainer((DataTableSpec)outSpecsNoFlowPort[i], true));
                     }
@@ -666,18 +658,22 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         }
     }
 
-    /** Creates the given number of copies of the given node */
-    private NativeNodeContainer[] createNodeCopies(final NodeContainer nodeContainer, final int numCopies) {
+    /** Creates the given number of copies of the given node
+     *  TODO: use {@link SandboxedNodeCreator}!! */
+    private NativeNodeContainer[] createNodeCopies(final NativeNodeContainer nodeContainer, final int numCopies) {
         WorkflowManager workflowManager = nodeContainer.getParent();
         WorkflowCopyContent.Builder sourceContent = WorkflowCopyContent.builder();
         sourceContent.setNodeIDs(nodeContainer.getID());
         sourceContent.setIncludeInOutConnections(false);
         WorkflowPersistor workflowPersistor = workflowManager.copy(sourceContent.build());
         NativeNodeContainer[] nodeContainers = new NativeNodeContainer[numCopies];
+        //TODO: actually DON'T use the local node container for execution
+        //however, currently the way the nodes are copied doesn't work with flow variables in some circumstance
+        nodeContainers[0] = nodeContainer;
         NodeID[] nodeIDs = new NodeID[numCopies];
         NodeUIInformation uiInf = nodeContainer.getUIInformation();
         Set<ConnectionContainer> connections = workflowManager.getIncomingConnectionsFor(nodeContainer.getID());
-        for (int i = 0; i < numCopies; i++) {
+        for (int i = 1; i < numCopies; i++) {
             WorkflowCopyContent sinkContent = workflowManager.paste(workflowPersistor);
             nodeContainers[i] = (NativeNodeContainer)workflowManager.getNodeContainer(sinkContent.getNodeIDs()[0]);
             nodeContainers[i]
@@ -689,17 +685,19 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 workflowManager.addConnection(c.getSource(), c.getSourcePort(), nodeContainers[i].getID(),
                     c.getDestPort());
             }
-            nodeContainers[i].getNode().setFileStoreHandler(((NativeNodeContainer) nodeContainer).getNode().getFileStoreHandler());
+            nodeContainers[i].getNode().setFileStoreHandler(nodeContainer.getNode().getFileStoreHandler());
         }
 
         //TODO: collapse the node copies into a meta node, unfortunately doesn't work -> flow variables are somehow not propagated
         //workflowManager.collapseIntoMetaNode(nodeIDs, new WorkflowAnnotation[0], "Distributed Execution");
-
         return nodeContainers;
     }
 
     private void removeNodeCopies(final NativeNodeContainer[] nodeContainers) {
-        for (int i = 0; i < nodeContainers.length; i++) {
+        //NOTE: the for loop starts with _1_ since the original node is at position 0 that must not be deleted
+        //TODO this should actually NOT be necessary since all nodes used for execution should be copies
+        //(or better sandboxed)
+        for (int i = 1; i < nodeContainers.length; i++) {
             nodeContainers[i].getNode().setFileStoreHandler(null);
             NodeID id = nodeContainers[i].getID();
             WorkflowManager workflowManager = nodeContainers[i].getParent();
