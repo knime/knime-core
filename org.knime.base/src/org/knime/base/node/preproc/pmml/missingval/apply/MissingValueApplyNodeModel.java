@@ -52,7 +52,7 @@ public class MissingValueApplyNodeModel extends NodeModel {
         DataTableSpec inSpec = inTable.getDataTableSpec();
 
         PMMLPortObject pmmlIn = (PMMLPortObject)inData[PMML_PORT_IDX];
-        MissingCellReplacingDataTable mvTable = null;
+        MissingCellReplacingDataTable mvTable;
 
         try (AutocloseableSupplier<Document> supplier = pmmlIn.getPMMLValue().getDocumentSupplier()) {
             mvTable = new MissingCellReplacingDataTable(inSpec, PMMLDocument.Factory.parse(supplier.get()));

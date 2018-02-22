@@ -254,8 +254,7 @@ public class XML2PMMLNodeModel extends NodeModel {
                         String failure = null;
                         XmlObject xmlDoc;
 
-                        try (@SuppressWarnings("unchecked")
-                        AutocloseableSupplier<Document> supplier = ((XMLValue<Document>)cell).getDocumentSupplier()){
+                        try (AutocloseableSupplier<Document> supplier = ((XMLValue<Document>)cell).getDocumentSupplier()) {
                             xmlDoc = XmlObject.Factory.parse(supplier.get().cloneNode(true));
                             if (xmlDoc instanceof PMMLDocument) {
                                 pmmlDoc = (PMMLDocument)xmlDoc;

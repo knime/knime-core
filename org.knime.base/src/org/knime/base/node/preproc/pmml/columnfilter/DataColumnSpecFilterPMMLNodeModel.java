@@ -200,7 +200,7 @@ public class DataColumnSpecFilterPMMLNodeModel extends DataColumnSpecFilterNodeM
         if (pmmlIn == null) {
             return new PMMLPortObject(createPMMLSpec(null, outSpec, res));
         } else {
-            PMMLDocument pmmldoc = null;
+            PMMLDocument pmmldoc;
 
             try (AutocloseableSupplier<Document> supplier = pmmlIn.getPMMLValue().getDocumentSupplier()) {
                 pmmldoc = PMMLDocument.Factory.parse(supplier.get());

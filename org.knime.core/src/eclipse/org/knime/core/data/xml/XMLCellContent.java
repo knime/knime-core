@@ -81,7 +81,7 @@ public class XMLCellContent implements XMLValue<Document> {
 
     private SoftReference<Document> m_content;
 
-    private final ReentrantLock m_lock;
+    private final ReentrantLock m_lock = new ReentrantLock();
 
     /**
      * Creates a {@link Document} by parsing the passed string. It must contain
@@ -119,8 +119,6 @@ public class XMLCellContent implements XMLValue<Document> {
             m_xmlString = xmlString;
             m_content = new SoftReference<Document>(null);
         }
-
-        m_lock = new ReentrantLock();
     }
 
     /**
@@ -135,7 +133,6 @@ public class XMLCellContent implements XMLValue<Document> {
      */
     XMLCellContent(final InputStream is) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
-        m_lock = new ReentrantLock();
         try {
             Document doc = parse(is);
             m_content = new SoftReference<Document>(doc);
@@ -159,7 +156,6 @@ public class XMLCellContent implements XMLValue<Document> {
      * @param doc an XML document
      */
     XMLCellContent(final Document doc) {
-        m_lock = new ReentrantLock();
         m_content = new SoftReference<Document>(doc);
         // Transform CDATA to text
         DOMConfiguration domConfig = doc.getDomConfig();
@@ -184,7 +180,6 @@ public class XMLCellContent implements XMLValue<Document> {
      * @since 3.6
      */
     public XMLCellContent(final AutocloseableSupplier<Document> documentSupplier) {
-        m_lock = new ReentrantLock();
         String s = null;
         try {
             /* Serialize the xml string as in the other constructor.
@@ -242,10 +237,11 @@ public class XMLCellContent implements XMLValue<Document> {
 
     private static String serialize(final Document doc) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        ReentrantLock lock = new ReentrantLock();
 
         try (XMLCellWriter writer = XMLCellWriterFactory.createXMLCellWriter(os)) {
             writer.write(new XMLValue<Document>() {
+                private final ReentrantLock m_lock = new ReentrantLock();
+
                 @Deprecated
                 @Override
                 public Document getDocument() {
@@ -254,7 +250,7 @@ public class XMLCellContent implements XMLValue<Document> {
 
                 @Override
                 public AutocloseableSupplier<Document> getDocumentSupplier() {
-                    return new AutocloseableSupplier<Document>(doc, lock);
+                    return new AutocloseableSupplier<Document>(doc, m_lock);
                 }
             });
         }
@@ -307,16 +303,6 @@ public class XMLCellContent implements XMLValue<Document> {
      */
     @Override
     public AutocloseableSupplier<Document> getDocumentSupplier() {
-        Document doc = m_content.get();
-        if (doc == null) {
-            try {
-                doc = parse(m_xmlString);
-                m_content = new SoftReference<Document>(doc);
-            } catch (Exception ex) {
-                LOGGER.error("Error while parsing XML in XML Cell", ex);
-            }
-        }
-
-        return new AutocloseableSupplier<Document>(doc, m_lock);
+        return new AutocloseableSupplier<Document>(getDocument(), m_lock);
     }
 }
