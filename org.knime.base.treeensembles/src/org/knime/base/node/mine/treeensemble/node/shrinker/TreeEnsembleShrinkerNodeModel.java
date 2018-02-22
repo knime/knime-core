@@ -59,7 +59,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.util.AutocloseableSupplier;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -151,7 +151,7 @@ class TreeEnsembleShrinkerNodeModel extends NodeModel {
         // This code is based on org.knime.ensembles.pmml.combine.PMMLEnsembleNodeModel.execute()
         List<PMMLDocument> documents = new ArrayList<PMMLDocument>();
         for (int i = 0; i < treeEnsemble.getEnsembleModel().getNrModels(); i++) {
-            try (AutocloseableSupplier<Document> supplier =
+            try (LockedSupplier<Document> supplier =
                 treeEnsemble.createDecisionTreePMMLPortObject(i).getPMMLValue().getDocumentSupplier()) {
                 documents.add(PMMLDocument.Factory.parse(supplier.get()));
             }
