@@ -499,6 +499,23 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
     }
 
     /**
+     * Get ClassLoader to access the additional bundles at runtime.
+     *
+     * @return ClassLoader with access to all the jars of the additional bundles.
+     */
+    public List<ClassLoader> getAdditionalBundlesClassLoaders() {
+        final ArrayList<ClassLoader> loaders = new ArrayList<>();
+        if (m_settings != null) {
+            // Resolve bundle names to bundles
+            Stream.of(m_settings.getBundles()).map(bname -> Platform.getBundle(bname.split(" ")[0]))
+                .filter(o -> o != null).map(b -> b.adapt(BundleWiring.class).getClassLoader())
+                .collect(Collectors.toCollection(() -> loaders));
+        }
+
+        return loaders;
+    }
+
+    /**
      * Give jar file with all *.class files returned by getManipulators(ALL_CATEGORY).
      *
      * @return file object of a jar file with all compiled manipulators
@@ -935,11 +952,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
      * @throws InvalidSettingsException when settings are inconsistent with the table or the flow variables at the input
      * @throws CanceledExecutionException when execution is canceled by the user
      */
-    public BufferedDataTable execute(
-            final BufferedDataTable table,
-            final FlowVariableRepository flowVariableRepository,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            InvalidSettingsException  {
+    public BufferedDataTable execute(final BufferedDataTable table, final FlowVariableRepository flowVariableRepository,
+        final ExecutionContext exec) throws CanceledExecutionException, InvalidSettingsException {
         final OutColList outFields = m_fields.getOutColFields();
         if (outFields.size() > 0) {
             final ColumnRearranger rearranger =
@@ -1115,13 +1129,16 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
                 customTypeClassLoaders.addAll(getClassLoadersFor(col.getConverterFactoryId()));
             }
 
+            /* Add class loaders of additional bundles */
+            customTypeClassLoaders.addAll(getAdditionalBundlesClassLoaders());
+
             // remove core class loader:
             //   (a) it's referenced via JavaSnippet.class classloader and
             //   (b) it would collect buddies when used directly (see support ticket #1943)
             customTypeClassLoaders.remove(DataCellToJavaConverterRegistry.class.getClassLoader());
 
-            final MultiParentClassLoader customTypeLoader =
-                new MultiParentClassLoader(customTypeClassLoaders.stream().toArray(ClassLoader[]::new));
+            final MultiParentClassLoader customTypeLoader = new MultiParentClassLoader(
+                customTypeClassLoaders.stream().toArray(ClassLoader[]::new));
 
             // TODO (Next version bump) change return value of createClassLoader instead of cast
             m_classLoader = (URLClassLoader)compiler.createClassLoader(customTypeLoader);

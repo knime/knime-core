@@ -197,6 +197,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         addTab("Additional Libraries", createAdditionalLibsPanel());
 
         m_bundleListPanel = new BundleListPanel();
+        m_bundleListPanel.getListModel().addListDataListener(forceReparseListener);
         addTab("Additional Bundles", m_bundleListPanel);
 
         if (!isPreview) {
@@ -322,34 +323,36 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         return loc;
     }
 
+    final ListDataListener forceReparseListener = new ListDataListener() {
+        private void updateSnippet() {
+            m_snippet.setJarFiles(m_jarPanel.getJarFiles());
+            // force reparsing of the snippet
+            for (int i = 0; i < m_snippetTextArea.getParserCount(); i++) {
+                m_snippetTextArea.forceReparsing(i);
+            }
+            // update autocompletion
+            updateAutocompletion();
+        }
+
+        @Override
+        public void intervalRemoved(final ListDataEvent e) {
+            updateSnippet();
+        }
+
+        @Override
+        public void intervalAdded(final ListDataEvent e) {
+            updateSnippet();
+        }
+
+        @Override
+        public void contentsChanged(final ListDataEvent e) {
+            updateSnippet();
+        }
+    };
+
     private JPanel createAdditionalLibsPanel() {
         m_jarPanel = new JarListPanel();
-        m_jarPanel.addListDataListener(new ListDataListener() {
-            private void updateSnippet() {
-                m_snippet.setJarFiles(m_jarPanel.getJarFiles());
-                // force reparsing of the snippet
-                for (int i = 0; i < m_snippetTextArea.getParserCount(); i++) {
-                    m_snippetTextArea.forceReparsing(i);
-                }
-                // update autocompletion
-                updateAutocompletion();
-            }
-
-            @Override
-            public void intervalRemoved(final ListDataEvent e) {
-                updateSnippet();
-            }
-
-            @Override
-            public void intervalAdded(final ListDataEvent e) {
-                updateSnippet();
-            }
-
-            @Override
-            public void contentsChanged(final ListDataEvent e) {
-                updateSnippet();
-            }
-        });
+        m_jarPanel.addListDataListener(forceReparseListener);
         return m_jarPanel;
     }
 
@@ -468,7 +471,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
             if (m_autoCompletionJars == null || !Arrays.stream(m_autoCompletionJars).allMatch(file -> file.exists())
                 || !Arrays.equals(m_autoCompletionJars, m_snippet.getCompiletimeClassPath())) {
 
-                m_autoCompletionJars = m_snippet.getClassPath();
+                m_autoCompletionJars = m_snippet.getCompiletimeClassPath();
                 jarManager.clearClassFileSources();
                 jarManager.addCurrentJreClassFileSource();
                 for (final File jarFile : m_autoCompletionJars) {
@@ -669,11 +672,10 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         if (!outFieldsModel.validateValues()) {
             throw new IllegalArgumentException("The output fields table has errors.");
         }
-        // give subclasses the chance to modify settings
-        preSaveSettings(s);
-
         s.setBundles(m_bundleListPanel.getBundles());
 
+        // give subclasses the chance to modify settings
+        preSaveSettings(s);
         s.saveSettings(settings);
     }
 

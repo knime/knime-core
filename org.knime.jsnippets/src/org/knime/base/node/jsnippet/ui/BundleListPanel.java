@@ -69,6 +69,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ListModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -349,5 +350,12 @@ public class BundleListPanel extends JPanel {
         //}
 
         return true;
+    }
+
+    /**
+     * @return Model of main List
+     */
+    public ListModel<String> getListModel() {
+        return m_listModel;
     }
 }
