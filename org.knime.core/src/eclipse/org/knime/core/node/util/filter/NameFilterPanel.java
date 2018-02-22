@@ -1089,6 +1089,98 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
+     * Setter for the original "Remove All" button.
+     *
+     * @param text the new button title
+     * @deprecated Icons are used instead of button text,
+     * see {@link NameFilterPanel#setRemoveAllButtonIcon(URL)}.
+     * Calling this method will have no effect.
+     */
+    @Deprecated
+    public void setRemoveAllButtonText(final String text) {
+      //no-op, we use icons instead
+    }
+
+    /**
+     * Setter for the original "Add All" button.
+     *
+     * @param text the new button title
+     * @deprecated Icons are used instead of button text,
+     * see {@link NameFilterPanel#setAddAllButtonIcon(URL)}
+     * Calling this method will have no effect.
+     */
+    @Deprecated
+    public void setAddAllButtonText(final String text) {
+      //no-op, we use icons instead
+    }
+
+    /**
+     * Setter for the original "Remove" button.
+     *
+     * @param text the new button title
+     * @deprecated Icons are used instead of button text,
+     * see {@link NameFilterPanel#setRemoveButtonIcon(URL)}
+     * Calling this method will have no effect.
+     */
+    @Deprecated
+    public void setRemoveButtonText(final String text) {
+        //no-op, we use icons instead
+    }
+
+    /**
+     * Setter for the original "Add" button.
+     *
+     * @param text the new button title
+     * @deprecated Icons are used instead of button text,
+     * see {@link NameFilterPanel#setAddButtonIcon(URL)}
+     * Calling this method will have no effect.
+     */
+    @Deprecated
+    public void setAddButtonText(final String text) {
+      //no-op, we use icons instead
+    }
+
+    /**
+     * Setter for the original "Remove All" button icon.
+     *
+     * @param iconURL the URL to the new button icon
+     * @since 3.6
+     */
+    public void setRemoveAllButtonIcon(final URL iconURL) {
+        m_remAllButton.setIcon(new ImageIcon(iconURL));
+    }
+
+    /**
+     * Setter for the original "Add All" button icon.
+     *
+     * @param iconURL the URL to the new button icon
+     * @since 3.6
+     */
+    public void setAddAllButtonIcon(final URL iconURL) {
+        m_addAllButton.setIcon(new ImageIcon(iconURL));
+    }
+
+    /**
+     * Setter for the original "Remove" button icon.
+     *
+     * @param iconURL the URL to the new button icon
+     * @since 3.6
+     */
+    public void setRemoveButtonIcon(final URL iconURL) {
+        m_remButton.setIcon(new ImageIcon(iconURL));
+    }
+
+    /**
+     * Setter for the original "Add" button icon.
+     *
+     * @param iconURL the URL to the new button icon
+     * @since 3.6
+     */
+    public void setAddButtonIcon(final URL iconURL) {
+        m_addButton.setIcon(new ImageIcon(iconURL));
+    }
+
+    /**
      * Sets the internal used {@link InputFilter} and calls the {@link #update(List, List, String[])} method to update
      * the panel.
      *
