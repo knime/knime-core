@@ -108,8 +108,8 @@ import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 
 /**
  * NodeExecutionJob that tests all streaming and distributed execution related functionsRoles()}<br>
- * TODO: use of the {@link MergeOperator#isHierarchical()}-method<br> *
- * TODO: little TODO's in the code
+ * TODO: use of the {@link MergeOperator#isHierarchical()}-method<br>
+ * * TODO: little TODO's in the code
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -188,7 +188,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                                                        // variable port object!
         PortObjectSpec[] inPortObjectSpecs = new PortObjectSpec[inPortObjects.length];
         for (int i = 1; i < inPortObjectSpecs.length; i++) { // without flow
-                                                             // variable port
+                                                                 // variable port
                                                              //check if it's not an optional in-port
             if (inPortObjects[i] != null) {
                 inPortObjectSpecs[i] = inPortObjects[i].getSpec();
@@ -343,7 +343,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                     PortOutput[] tmpPortOutputs = portOutputs.clone();
                     streamableOperator.runFinal(portInputs[i], portOutputs, remoteExec[i]);
                     //make sure that the portOutputs-object hasn't been manipulated directly (only it's containing objects)
-                    if(IntStream.range(0, portOutputs.length).anyMatch(j -> {
+                    if (IntStream.range(0, portOutputs.length).anyMatch(j -> {
                         return tmpPortOutputs[j] != portOutputs[j];
                     })) {
                         throw new IllegalStateException("Output array must not be manipulated.");
@@ -372,9 +372,9 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 LOGGER.info("call local: NodeModel#finishStreamableExecution");
                 //create the port outputs for the NodeModel#finishStreamableExecution-method -> only non-distributed ports have to be provided here
                 PortOutput[] nonDistrPortOutputs;
-                if(isDistributable) {
-                    nonDistrPortOutputs= createPortOutputs(localNodeContainer.getNode(), outputPortRoles,
-                    outSpecsNoFlowPort, isDistributable, false, localExec);
+                if (isDistributable) {
+                    nonDistrPortOutputs = createPortOutputs(localNodeContainer.getNode(), outputPortRoles,
+                        outSpecsNoFlowPort, isDistributable, false, localExec);
                 } else {
                     //if the node is not distributable we assume that all port-outputs have already been set in the runFinal-Method
                     //and don't pass any port outputs here -> the finishStreamableExecution method is than only be used
@@ -393,7 +393,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 }
                 //merge the portOutputs and the nonDistrPortOutputs
                 for (int i = 0; i < nonDistrPortOutputs.length; i++) {
-                    if(nonDistrPortOutputs[i]!=null) {
+                    if (nonDistrPortOutputs[i] != null) {
                         portOutputs[i] = nonDistrPortOutputs[i];
                     }
                 }
@@ -426,7 +426,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 }
 
                 //retrieve the out port object specs
-                if (outSpecsNoFlowPort!=null && outSpecsNoFlowPort[i-1] != null) {
+                if (outSpecsNoFlowPort != null && outSpecsNoFlowPort[i - 1] != null) {
                     //get out port specs as return by the configure-method (happen to be null in some cases, i.e. the Transpose-node)
                     outPortObjectSpecs[i] = outSpecsNoFlowPort[i - 1];
                 } else if (outPortObjects[i] != null) { //port objects can be null (mainly in loop iterations)
@@ -499,9 +499,8 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
     }
 
     /**
-     * Performs necessary actions after the node's execution is finished.
-     * The entries of the passed arrays will also be set to <code>null</code> in order to make sure that they aren't be
-     * used anymore afterwards.
+     * Performs necessary actions after the node's execution is finished. The entries of the passed arrays will also be
+     * set to <code>null</code> in order to make sure that they aren't be used anymore afterwards.
      */
     private void postExecution(final ExecutionContext[] exec, final NativeNodeContainer[] nc) {
         for (int i = 0; i < nc.length; i++) {
@@ -586,30 +585,32 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
     }
 
     /**
-     * Creates the port output array depending on the given parameters.
-     * If the node is distributable (i.e. there is at least one input port that is distributable)
-     * AND the outputs are to be created for the StreamableOperator#runFinal-method,
-     * only the 'slots' that are distributed (according to the output role) are set, the others are <code>null</code>.
-     * If the node is distributable AND the outputs are to be created for the NodeModel#finishStreamableExecution-method,
-     * only the non-distributed ports are set.
+     * Creates the port output array depending on the given parameters. If the node is distributable (i.e. there is at
+     * least one input port that is distributable) AND the outputs are to be created for the
+     * StreamableOperator#runFinal-method, only the 'slots' that are distributed (according to the output role) are set,
+     * the others are <code>null</code>. If the node is distributable AND the outputs are to be created for the
+     * NodeModel#finishStreamableExecution-method, only the non-distributed ports are set.
      *
-     * If the node is NOT distributable, all 'slots' of the port output-array are filled (either with RowOutputs, if its a data table or PortObjectOutputs otherwise),
-     * not matter distributed or not (in this case the 'createForRunFinalMethod' has no effect)
+     * If the node is NOT distributable, all 'slots' of the port output-array are filled (either with RowOutputs, if its
+     * a data table or PortObjectOutputs otherwise), not matter distributed or not (in this case the
+     * 'createForRunFinalMethod' has no effect)
      *
      *
      * @param node needed to determine the out port type
      * @param outRoles the output-roles - distributed or not
-     * @param outSpecsNoFlowPort the out specs needed to create the RowOutput's,
-     *        if null (i.e. if the NodeModel#configure-method returns null, e.g. Transpose-node), a PortObjectOutput is created instead
-     * @param isDistributable if the whole node can be run in distributed manner (i.e. there is at least one distributed in port)
-     * @param createForRunFinalMethod if the port outputs are to be created to be used as parameters in the StreamableOperator#runFinal method (only distributed outputs are set)
-     *                                or not (only non-distributed outputs are set, since assumed to be used in the NodeModel#finishStreamableExecution-method)
+     * @param outSpecsNoFlowPort the out specs needed to create the RowOutput's, if null (i.e. if the
+     *            NodeModel#configure-method returns null, e.g. Transpose-node), a PortObjectOutput is created instead
+     * @param isDistributable if the whole node can be run in distributed manner (i.e. there is at least one distributed
+     *            in port)
+     * @param createForRunFinalMethod if the port outputs are to be created to be used as parameters in the
+     *            StreamableOperator#runFinal method (only distributed outputs are set) or not (only non-distributed
+     *            outputs are set, since assumed to be used in the NodeModel#finishStreamableExecution-method)
      * @param exec the execution context to create the buffered data container
      * @return the port outputs with some 'slots' possibly set to null
      */
     private PortOutput[] createPortOutputs(final Node node, final OutputPortRole[] outRoles,
-        final PortObjectSpec[] outSpecsNoFlowPort, final boolean isDistributable,
-        final boolean createForRunFinalMethod, final ExecutionContext exec) {
+        final PortObjectSpec[] outSpecsNoFlowPort, final boolean isDistributable, final boolean createForRunFinalMethod,
+        final ExecutionContext exec) {
         PortOutput[] portOutputs = new PortOutput[node.getNrOutPorts() - 1]; // without flow variables port
         for (int i = 0; i < portOutputs.length; i++) {
             //fill all port outputs if NOT distributed OR fill either the distributed outports or non-distributed outports ONLY (depending on the createForRunFinal-flag)
@@ -619,7 +620,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                     || node.getOutputType(i + 1).equals(BufferedDataTable.TYPE_OPTIONAL))) {
                     // output is a BufferedDataTable -> create a row output that wraps a BufferedDataTable
                     BufferedDataContainerRowOutput rowOutput;
-                    if(outSpecsNoFlowPort==null || outSpecsNoFlowPort[i] == null) {
+                    if (outSpecsNoFlowPort == null || outSpecsNoFlowPort[i] == null) {
                         //outSpecsNoFlowPort might be null if the node models' configure-method return null (e.g. Transpose-node)
                         //use row output the only is allowed to be filled by 'setFully'
                         rowOutput = new BufferedDataContainerRowOutput();
@@ -644,22 +645,22 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         return portOutputs;
     }
 
-
     /**
      * Checks whether all row outputs have been closed.
      */
     private void checkClosedPortOutputs(final PortOutput[] portOutputs) {
-        for(PortOutput portOutput : portOutputs) {
-            if(portOutput instanceof BufferedDataContainerRowOutput) {
-                if(!((BufferedDataContainerRowOutput) portOutput).closeCalled()) {
+        for (PortOutput portOutput : portOutputs) {
+            if (portOutput instanceof BufferedDataContainerRowOutput) {
+                if (!((BufferedDataContainerRowOutput)portOutput).closeCalled()) {
                     throw new IllegalStateException("close() has NOT been called on at least one RowOutput.");
                 }
             }
         }
     }
 
-    /** Creates the given number of copies of the given node
-     *  TODO: use {@link SandboxedNodeCreator}!! */
+    /**
+     * Creates the given number of copies of the given node TODO: use {@link SandboxedNodeCreator}!!
+     */
     private NativeNodeContainer[] createNodeCopies(final NativeNodeContainer nodeContainer, final int numCopies) {
         WorkflowManager workflowManager = nodeContainer.getParent();
         WorkflowCopyContent.Builder sourceContent = WorkflowCopyContent.builder();
@@ -676,8 +677,8 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         for (int i = 1; i < numCopies; i++) {
             WorkflowCopyContent sinkContent = workflowManager.paste(workflowPersistor);
             nodeContainers[i] = (NativeNodeContainer)workflowManager.getNodeContainer(sinkContent.getNodeIDs()[0]);
-            nodeContainers[i]
-                .setUIInformation(NodeUIInformation.builder(uiInf).translate(new int[]{0, (i + 1) * uiInf.getBounds()[3]}).build());
+            nodeContainers[i].setUIInformation(
+                NodeUIInformation.builder(uiInf).translate(new int[]{0, (i + 1) * uiInf.getBounds()[3]}).build());
             nodeIDs[i] = nodeContainers[i].getID();
 
             //set all incoming connections
@@ -740,7 +741,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
      */
     private StreamableOperatorInternals saveAndLoadInternals(final StreamableOperatorInternals internals)
         throws IOException, InstantiationException, IllegalAccessException {
-        if(internals == null) {
+        if (internals == null) {
             return null;
         }
         ByteArrayOutputStream byteArrayOutput = new ByteArrayOutputStream();
