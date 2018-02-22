@@ -52,7 +52,7 @@ import javax.swing.Icon;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.data.convert.DataValueAccessMethod;
-import org.knime.core.data.util.AutocloseableSupplier;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.xml.util.XmlDomComparer;
 import org.w3c.dom.Document;
 
@@ -86,7 +86,7 @@ public interface XMLValue<T extends Document> extends DataValue {
      *
      * @since 3.6
      */
-    AutocloseableSupplier<T> getDocumentSupplier();
+    LockedSupplier<T> getDocumentSupplier();
 
     /**
      * Meta information to this value type.
@@ -104,8 +104,8 @@ public interface XMLValue<T extends Document> extends DataValue {
      * @since 3.0
      */
     static boolean equalContent(final XMLValue<Document> v1, final XMLValue<Document> v2) {
-        try (AutocloseableSupplier<Document> s1 = v1.getDocumentSupplier();
-                AutocloseableSupplier<Document> s2 = v2.getDocumentSupplier()) {
+        try (LockedSupplier<Document> s1 = v1.getDocumentSupplier();
+                LockedSupplier<Document> s2 = v2.getDocumentSupplier()) {
             return XmlDomComparer.equals(s1.get(), s2.get());
         }
     }
@@ -118,7 +118,7 @@ public interface XMLValue<T extends Document> extends DataValue {
      * @since 3.0
      */
     static int hashCode(final XMLValue<Document> v) {
-        try (AutocloseableSupplier<Document> supplier = v.getDocumentSupplier()) {
+        try (LockedSupplier<Document> supplier = v.getDocumentSupplier()) {
             return XmlDomComparer.hashCode(supplier.get());
         }
     }

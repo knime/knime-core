@@ -62,7 +62,7 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.util.AutocloseableSupplier;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.xml.PMMLCell;
 import org.knime.core.data.xml.PMMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
@@ -254,7 +254,7 @@ public class XML2PMMLNodeModel extends NodeModel {
                         String failure = null;
                         XmlObject xmlDoc;
 
-                        try (AutocloseableSupplier<Document> supplier = ((XMLValue<Document>)cell).getDocumentSupplier()) {
+                        try (LockedSupplier<Document> supplier = ((XMLValue<Document>)cell).getDocumentSupplier()) {
                             xmlDoc = XmlObject.Factory.parse(supplier.get().cloneNode(true));
                             if (xmlDoc instanceof PMMLDocument) {
                                 pmmlDoc = (PMMLDocument)xmlDoc;

@@ -59,7 +59,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-import org.knime.core.data.util.AutocloseableSupplier;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.xml.XMLValue;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -200,7 +200,7 @@ class XMLMultiCellWriter implements XMLCellWriter {
 	@Override
 	public void write(final XMLValue<Document> cell)
 	throws IOException {
-        try (AutocloseableSupplier<Document> supplier = cell.getDocumentSupplier()) {
+        try (LockedSupplier<Document> supplier = cell.getDocumentSupplier()) {
             Document doc = supplier.get();
             Node child = doc.getFirstChild();
             Node pre = null;

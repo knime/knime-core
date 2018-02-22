@@ -68,7 +68,7 @@ import org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.util.AutocloseableSupplier;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
@@ -202,7 +202,7 @@ public class DataColumnSpecFilterPMMLNodeModel extends DataColumnSpecFilterNodeM
         } else {
             PMMLDocument pmmldoc;
 
-            try (AutocloseableSupplier<Document> supplier = pmmlIn.getPMMLValue().getDocumentSupplier()) {
+            try (LockedSupplier<Document> supplier = pmmlIn.getPMMLValue().getDocumentSupplier()) {
                 pmmldoc = PMMLDocument.Factory.parse(supplier.get());
             }
 

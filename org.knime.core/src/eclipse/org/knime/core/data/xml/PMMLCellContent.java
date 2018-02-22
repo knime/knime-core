@@ -56,7 +56,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 
-import org.knime.core.data.util.AutocloseableSupplier;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Document;
@@ -112,7 +112,7 @@ public class PMMLCellContent extends XMLCellContent implements PMMLValue {
      */
     @Override
     public String getPMMLVersion() {
-        try (AutocloseableSupplier<Document> supplier = getDocumentSupplier()) {
+        try (LockedSupplier<Document> supplier = getDocumentSupplier()) {
             Node pmml = supplier.get().getElementsByTagName(PMMLPortObject.PMML_ELEMENT).item(0);
             return pmml.getAttributes().getNamedItem("version").getNodeValue();
         }
@@ -137,7 +137,7 @@ public class PMMLCellContent extends XMLCellContent implements PMMLValue {
     public List<Node> getModels(final PMMLModelType type) {
         List<Node> nodes = new LinkedList<Node>();
 
-        try (AutocloseableSupplier<Document> supplier = getDocumentSupplier()) {
+        try (LockedSupplier<Document> supplier = getDocumentSupplier()) {
             Node pmml = supplier.get().getElementsByTagName("PMML").item(0);
             NodeList children = pmml.getChildNodes();
             for (int i = 0; i < children.getLength(); i++) {

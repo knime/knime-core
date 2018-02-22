@@ -53,7 +53,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Autocloseable supplier of an object that is thread-safe to use.
+ * Supplier of an object that uses a lock to protect concurrent access to the object.
  *
  * This class uses a {@link ReentrantLock} for managing thread-safe access of the stored object.<br/>
  * It is <b>important</b> to unlock the object as soon as it isn't used anymore to provide high a throughput and avoid
@@ -66,7 +66,7 @@ import java.util.function.Supplier;
  * Examples 1 (recommended):
  *
  * <pre>
- * try (T object = autocloseableSupplier.get()) {
+ * try (T object = lockedSupplier.get()) {
  *     doStuff();
  *     // usage of the object is thread-safe within this block.
  * }
@@ -77,13 +77,13 @@ import java.util.function.Supplier;
  *
  * <pre>
  * try {
- *     T object = autocloseableSupplier.get();
+ *     T object = lockedSupplier.get();
  *     // usage of object is thread-safe
  *     doStuff();
  * } catch (Exception e) {
  *     exceptionHandling();
  * } finally {
- *     autocloseableSupplier.close();
+ *     lockedSupplier.close();
  *     // No further usage of object after this the previous line!
  * }
  * // usage of the object is not thread-safe anymore!
@@ -94,7 +94,7 @@ import java.util.function.Supplier;
  * Example 3 (possible but highly discouraged!):
  *
  * <pre>
- * T object = autocloseableSupplier.getObject();
+ * T object = lockedSupplier.getObject();
  * // possible code in between is discouraged as an (un-)checked Exception
  * // may yield that the object will never be released.
  * try {
@@ -103,7 +103,7 @@ import java.util.function.Supplier;
  *     exceptionHandling();
  * } finally {
  *     // No further usage of object after the following line!
- *     autocloseableSupplier.close();
+ *     lockedSupplier.close();
  * }
  * // usage of the object is not thread-safe anymore!
  * </pre>
@@ -112,7 +112,7 @@ import java.util.function.Supplier;
  * @param <T> The type that shall be stored.
  * @since 3.6
  */
-public final class AutocloseableSupplier<T> implements AutoCloseable, Supplier<T> {
+public final class LockedSupplier<T> implements AutoCloseable, Supplier<T> {
     private final T m_object;
 
     private final ReentrantLock m_lock;
@@ -123,7 +123,7 @@ public final class AutocloseableSupplier<T> implements AutoCloseable, Supplier<T
      * @param object object to be wrapped.
      * @param lock {@link ReentrantLock} that is used to protect the passed object
      */
-    public AutocloseableSupplier(final T object, final ReentrantLock lock) {
+    public LockedSupplier(final T object, final ReentrantLock lock) {
         m_object = object;
         m_lock = lock;
         m_lock.lock();

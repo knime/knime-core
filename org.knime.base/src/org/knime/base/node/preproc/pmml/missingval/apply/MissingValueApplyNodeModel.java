@@ -8,7 +8,7 @@ import org.knime.base.node.preproc.pmml.missingval.MissingCellReplacingDataTable
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.util.AutocloseableSupplier;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -54,7 +54,7 @@ public class MissingValueApplyNodeModel extends NodeModel {
         PMMLPortObject pmmlIn = (PMMLPortObject)inData[PMML_PORT_IDX];
         MissingCellReplacingDataTable mvTable;
 
-        try (AutocloseableSupplier<Document> supplier = pmmlIn.getPMMLValue().getDocumentSupplier()) {
+        try (LockedSupplier<Document> supplier = pmmlIn.getPMMLValue().getDocumentSupplier()) {
             mvTable = new MissingCellReplacingDataTable(inSpec, PMMLDocument.Factory.parse(supplier.get()));
         }
 

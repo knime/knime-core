@@ -58,7 +58,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 
-import org.knime.core.data.util.AutocloseableSupplier;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.xml.io.XMLCellReaderFactory;
 import org.knime.core.data.xml.io.XMLCellWriter;
 import org.knime.core.data.xml.io.XMLCellWriterFactory;
@@ -174,12 +174,12 @@ public class XMLCellContent implements XMLValue<Document> {
     }
 
     /**
-     * Creates a new instance which encapsulates the document held by the passed {@link AutocloseableSupplier}.
+     * Creates a new instance which encapsulates the document held by the passed {@link LockedSupplier}.
      *
-     * @param documentSupplier {@link AutocloseableSupplier} holding the document.
+     * @param documentSupplier {@link LockedSupplier} holding the document.
      * @since 3.6
      */
-    public XMLCellContent(final AutocloseableSupplier<Document> documentSupplier) {
+    public XMLCellContent(final LockedSupplier<Document> documentSupplier) {
         String s = null;
         try {
             /* Serialize the xml string as in the other constructor.
@@ -249,8 +249,8 @@ public class XMLCellContent implements XMLValue<Document> {
                 }
 
                 @Override
-                public AutocloseableSupplier<Document> getDocumentSupplier() {
-                    return new AutocloseableSupplier<Document>(doc, m_lock);
+                public LockedSupplier<Document> getDocumentSupplier() {
+                    return new LockedSupplier<Document>(doc, m_lock);
                 }
             });
         }
@@ -302,7 +302,7 @@ public class XMLCellContent implements XMLValue<Document> {
      * @since 3.6
      */
     @Override
-    public AutocloseableSupplier<Document> getDocumentSupplier() {
-        return new AutocloseableSupplier<Document>(getDocument(), m_lock);
+    public LockedSupplier<Document> getDocumentSupplier() {
+        return new LockedSupplier<Document>(getDocument(), m_lock);
     }
 }
