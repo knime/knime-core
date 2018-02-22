@@ -49,7 +49,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.dmg.pmml.PMMLDocument;
-import org.knime.core.data.util.AutocloseableSupplier;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.xml.util.XmlDomComparer.Diff;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -178,8 +178,8 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inPorts, final ExecutionContext exec) throws Exception {
-        try (AutocloseableSupplier<Document> sup1 = ((PMMLPortObject)inPorts[0]).getPMMLValue().getDocumentSupplier();
-             AutocloseableSupplier<Document> sup2 = ((PMMLPortObject)inPorts[1]).getPMMLValue().getDocumentSupplier()) {
+        try (LockedSupplier<Document> sup1 = ((PMMLPortObject)inPorts[0]).getPMMLValue().getDocumentSupplier();
+             LockedSupplier<Document> sup2 = ((PMMLPortObject)inPorts[1]).getPMMLValue().getDocumentSupplier()) {
             PMMLDocument doc1 = PMMLDocument.Factory.parse(sup1.get());
             PMMLDocument doc2 = PMMLDocument.Factory.parse(sup2.get());
 

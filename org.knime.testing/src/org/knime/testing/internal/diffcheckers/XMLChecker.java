@@ -48,7 +48,7 @@
  */
 package org.knime.testing.internal.diffcheckers;
 
-import org.knime.core.data.util.AutocloseableSupplier;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.xml.XMLValue;
 import org.knime.core.data.xml.util.XmlDomComparer;
 import org.knime.core.data.xml.util.XmlDomComparer.Diff;
@@ -99,8 +99,8 @@ public class XMLChecker extends AbstractDifferenceChecker<XMLValue> {
      */
     @Override
     public Result check(final XMLValue expected, final XMLValue got) {
-        try (AutocloseableSupplier<Document> expSupplier = expected.getDocumentSupplier();
-                AutocloseableSupplier<Document> gotSupplier = got.getDocumentSupplier()) {
+        try (LockedSupplier<Document> expSupplier = expected.getDocumentSupplier();
+                LockedSupplier<Document> gotSupplier = got.getDocumentSupplier()) {
             Diff result = XmlDomComparer.compareNodes(expSupplier.get(), gotSupplier.get());
 
             if (result != null) {
