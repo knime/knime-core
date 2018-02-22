@@ -54,6 +54,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
+import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -210,5 +211,22 @@ public class FileUtilTest {
 
         path = Paths.get("\\local\\path");
         assertThat("Non-UNC path '" + path + "' not recognized", FileUtil.looksLikeUNC(path), is(false));
+    }
+
+    /**
+     * Test that assures that both the protocol \\ and HOSTNAME of a UNC path is included in the absolute path
+     * of a file after calling {@link FileUtil#getFileFromURL(URL)}.
+     *
+     * UNC paths have the syntax \\<computer name>\<shared directory>\ and are used to access folders
+     * and files on a windows network of computers.
+     *
+     * Fixes AP-8896 "Zip File node shows success after failing to write to remote location".
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testFileResolvedFromUncUrlContainsTheProtocolHostAndPathInItsAbsolutePath() throws Exception {
+        File resolvedFile = FileUtil.getFileFromURL(new URL("file://HOST/path"));
+        assertThat("Resolved file does not have a correct UNC path", resolvedFile.getAbsolutePath(), is("\\\\HOST\\path"));
     }
 }
