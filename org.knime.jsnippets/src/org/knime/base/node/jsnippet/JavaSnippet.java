@@ -78,9 +78,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -93,6 +95,8 @@ import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.internal.compiler.tool.EclipseFileObject;
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
 import org.eclipse.osgi.storage.bundlefile.BundleFile;
@@ -150,11 +154,14 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.namespace.BundleNamespace;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 
 /**
- * The java snippet which can be controlled by changing the settings, fields
- * and jar-files to be included or by changing the contents of the snippets
- * document. The document is a java class which is compiled for execution.
+ * The java snippet which can be controlled by changing the settings, fields and jar-files to be included or by changing
+ * the contents of the snippets document. The document is a java class which is compiled for execution.
  *
  * @author Heiko Hofer
  */
@@ -162,7 +169,9 @@ import org.knime.core.util.FileUtil;
 public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeable {
     private static class SnippetCache {
         private String m_snippetCode;
+
         private Class<? extends AbstractJSnippet> m_snippetClass;
+
         private boolean m_hasCustomFields;
 
         void invalidate() {
@@ -224,8 +233,10 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
     /** Identifier for row index (starting with 0). */
     public static final String ROWINDEX = "ROWINDEX";
+
     /** Identifier for row ID. */
     public static final String ROWID = "ROWID";
+
     /** Identifier for row count. */
     public static final String ROWCOUNT = "ROWCOUNT";
 
@@ -233,18 +244,22 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
     public static final String VERSION_1_X = "version 1.x";
 
     private static File jSnippetJar;
+
     private String[] m_jarFiles = new String[0];
 
     private JavaFileObject m_snippet;
+
     private File m_snippetFile;
 
     private GuardedDocument m_document;
+
     // true when the document has changed and the m_snippet is not up to date.
     private boolean m_dirty;
 
     private JSnippetParser m_parser;
 
     private JavaSnippetSettings m_settings;
+
     private JavaSnippetFields m_fields;
 
     private final File m_tempClassPathDir;
@@ -265,8 +280,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         try {
             tempDir = FileUtil.createTempDir("knime_javasnippet");
         } catch (IOException ex) {
-            NodeLogger.getLogger(getClass()).error(
-                "Could not create temporary directory for Java Snippet: " + ex.getMessage(), ex);
+            NodeLogger.getLogger(getClass())
+                .error("Could not create temporary directory for Java Snippet: " + ex.getMessage(), ex);
             // use the standard temp directory instead
             tempDir = new File(KNIMEConstants.getKNIMETempDir());
         }
@@ -294,6 +309,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
     /**
      * Create a new snippet with the given settings.
+     *
      * @param settings the settings
      */
     public void setSettings(final JavaSnippetSettings settings) {
@@ -309,9 +325,9 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         }
     }
 
-
     /**
      * Get the updated settings java snippet.
+     *
      * @return the settings
      */
     public JavaSnippetSettings getSettings() {
@@ -321,13 +337,10 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
     private void updateSettings() {
         try {
-            GuardedDocument doc = getDocument();
-            m_settings.setScriptImports(doc.getTextBetween(GUARDED_IMPORTS,
-                    GUARDED_FIELDS));
-            m_settings.setScriptFields(doc.getTextBetween(GUARDED_FIELDS,
-                    GUARDED_BODY_START));
-            m_settings.setScriptBody(doc.getTextBetween(GUARDED_BODY_START,
-                    GUARDED_BODY_END));
+            final GuardedDocument doc = getDocument();
+            m_settings.setScriptImports(doc.getTextBetween(GUARDED_IMPORTS, GUARDED_FIELDS));
+            m_settings.setScriptFields(doc.getTextBetween(GUARDED_FIELDS, GUARDED_BODY_START));
+            m_settings.setScriptBody(doc.getTextBetween(GUARDED_BODY_START, GUARDED_BODY_END));
         } catch (BadLocationException e) {
             // this should never happen
             throw new IllegalStateException(e);
@@ -338,7 +351,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         m_settings.setJarFiles(m_jarFiles);
     }
 
-
     @Override
     public File[] getClassPath() throws IOException {
         final List<File> additionalBuildPath = Arrays.asList(getAdditionalBuildPaths());
@@ -346,6 +358,19 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
         jarFiles.addAll(Arrays.asList(getRuntimeClassPath()));
         jarFiles.addAll(additionalBuildPath);
+
+        return jarFiles.toArray(new File[jarFiles.size()]);
+    }
+
+    @Override
+    public File[] getCompiletimeClassPath() throws IOException {
+        final List<File> additionalBuildPath = Arrays.asList(getAdditionalBuildPaths());
+        final List<File> additionalBundlesPath = Arrays.asList(getAdditionalBundlesPaths(false));
+        final ArrayList<File> jarFiles = new ArrayList<>();
+
+        jarFiles.addAll(Arrays.asList(getRuntimeClassPath()));
+        jarFiles.addAll(additionalBuildPath);
+        jarFiles.addAll(additionalBundlesPath);
 
         return jarFiles.toArray(new File[jarFiles.size()]);
     }
@@ -373,9 +398,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return jarFiles.toArray(new File[jarFiles.size()]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Iterable<? extends JavaFileObject> getCompilationUnits() throws IOException {
         if (m_snippet == null || m_snippetFile == null || !m_snippetFile.exists()) {
@@ -410,7 +432,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
     @Override
     public File[] getAdditionalBuildPaths() {
-        Set<File> result = new LinkedHashSet<>();
+        final Set<File> result = new LinkedHashSet<>();
 
         for (InCol colField : m_fields.getInColFields()) {
             final String factoryId = colField.getConverterFactoryId();
@@ -428,11 +450,44 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             }
         }
 
-        for (final String b : m_settings.getBundles()) {
-            final Bundle bundle = Platform.getBundle(b.split(" ")[0]);
+        return result.toArray(new File[result.size()]);
+    }
 
+    /**
+     * Get jar files required for compiling with the additional bundles.
+     *
+     * @param withDeps Whether to also resolve the dependencies of the bundles.
+     * @return Array of .jar files.
+     */
+    public File[] getAdditionalBundlesPaths(final boolean withDeps) {
+        final Set<Bundle> bundles = new LinkedHashSet<>();
+
+        final LinkedBlockingQueue<Bundle> pending = new LinkedBlockingQueue<Bundle>();
+
+        // Resolve bundle names to bundles
+        Stream.of(m_settings.getBundles()).map(bname -> Platform.getBundle(bname.split(" ")[0]))
+            .map(b -> pending.add(b));
+
+        Bundle bundle = null;
+        while ((bundle = pending.poll()) != null) {
+            if (!bundles.add(bundle)) {
+                continue;
+            }
+
+            if (withDeps) {
+                // resolve dependencies
+                final BundleWiring wiring = bundle.adapt(BundleWiring.class);
+                final List<BundleWire> requiredWires = wiring.getRequiredWires(BundleNamespace.BUNDLE_NAMESPACE);
+                for (final BundleWire w : requiredWires) {
+                    pending.add(w.getProviderWiring().getBundle());
+                }
+            }
+        }
+
+        final ArrayList<File> result = new ArrayList<>();
+        for (final Bundle b : bundles) {
             try {
-                result.add(FileLocator.getBundleFile(bundle));
+                result.add(FileLocator.getBundleFile(b));
             } catch (IOException e) {
                 LOGGER.warn("Failed to get bundle file of \"" + b + "\"");
             }
@@ -441,10 +496,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return result.toArray(new File[result.size()]);
     }
 
-
     /**
-     * Give jar file with all *.class files returned by
-     * getManipulators(ALL_CATEGORY).
+     * Give jar file with all *.class files returned by getManipulators(ALL_CATEGORY).
      *
      * @return file object of a jar file with all compiled manipulators
      * @throws IOException if jar file cannot be created
@@ -471,8 +524,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return jarFile;
     }
 
-    private static DefaultMutableTreeNode createTree(
-            final Collection<? extends Object> classes) {
+    private static DefaultMutableTreeNode createTree(final Collection<? extends Object> classes) {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("build");
         for (Object o : classes) {
             Class<?> cl = o instanceof Class ? (Class<?>)o : o.getClass();
@@ -494,11 +546,9 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return root;
     }
 
-    private static DefaultMutableTreeNode getChild(final DefaultMutableTreeNode curr,
-            final String p) {
+    private static DefaultMutableTreeNode getChild(final DefaultMutableTreeNode curr, final String p) {
         for (int i = 0; i < curr.getChildCount(); i++) {
-            DefaultMutableTreeNode child =
-                (DefaultMutableTreeNode)curr.getChildAt(i);
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode)curr.getChildAt(i);
             if (child.getUserObject().toString().equals(p)) {
                 return child;
             }
@@ -506,10 +556,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return null;
     }
 
-
-    private static void createJar(final DefaultMutableTreeNode node,
-            final JarOutputStream jar,
-            final String path) throws IOException {
+    private static void createJar(final DefaultMutableTreeNode node, final JarOutputStream jar, final String path)
+        throws IOException {
         Object o = node.getUserObject();
         if (o instanceof String) {
             // folders must end with a "/"
@@ -521,8 +569,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
                 jar.closeEntry();
             }
             for (int i = 0; i < node.getChildCount(); i++) {
-                DefaultMutableTreeNode child =
-                    (DefaultMutableTreeNode) node.getChildAt(i);
+                DefaultMutableTreeNode child = (DefaultMutableTreeNode)node.getChildAt(i);
                 createJar(child, jar, subPath);
             }
         } else {
@@ -533,8 +580,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             jar.putNextEntry(entry);
 
             ClassLoader loader = cl.getClassLoader();
-            InputStream inStream = loader.getResourceAsStream(
-                    cl.getName().replace('.', '/') + ".class");
+            InputStream inStream = loader.getResourceAsStream(cl.getName().replace('.', '/') + ".class");
 
             FileUtil.copy(inStream, jar);
             inStream.close();
@@ -571,7 +617,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return m_document;
     }
 
-
     /** Create the document with the default skeleton. */
     private GuardedDocument createDocument() {
         return new JavaSnippetDocument("public void snippet() throws TypeException, ColumnException, Abort");
@@ -582,20 +627,17 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         try {
             initGuardedSections(doc);
             if (null != m_settings) {
-                doc.replaceBetween(GUARDED_IMPORTS, GUARDED_FIELDS,
-                        m_settings.getScriptImports());
-                doc.replaceBetween(GUARDED_FIELDS, GUARDED_BODY_START,
-                        m_settings.getScriptFields());
-                doc.replaceBetween(GUARDED_BODY_START, GUARDED_BODY_END,
-                        m_settings.getScriptBody());
+                doc.replaceBetween(GUARDED_IMPORTS, GUARDED_FIELDS, m_settings.getScriptImports());
+                doc.replaceBetween(GUARDED_FIELDS, GUARDED_BODY_START, m_settings.getScriptFields());
+                doc.replaceBetween(GUARDED_BODY_START, GUARDED_BODY_END, m_settings.getScriptBody());
             }
         } catch (BadLocationException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }
     }
 
-    /** Initialize GUARDED_IMPORTS and GUARDED_FIELDS with information from
-     * the settings.
+    /**
+     * Initialize GUARDED_IMPORTS and GUARDED_FIELDS with information from the settings.
      */
     private void initGuardedSections(final GuardedDocument doc) {
         try {
@@ -607,7 +649,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             throw new IllegalStateException(e.getMessage(), e);
         }
     }
-
 
     /**
      * Create the system variable (input and output) section of the snippet.
@@ -659,8 +700,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
     }
 
     /** Append field declaration to the string builder. */
-    private void appendFields(final StringBuilder out,
-            final JavaField f) {
+    private void appendFields(final StringBuilder out, final JavaField f) {
         out.append("  public ");
         if (null != f.getJavaType()) {
             out.append(f.getJavaType().getSimpleName());
@@ -725,8 +765,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return imports.toString();
     }
 
-
-
     /**
      * {@inheritDoc}
      */
@@ -740,34 +778,26 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
     }
 
     /**
-     * Get the list of default imports. Override this method to append or
-     * modify this list.
+     * Get the list of default imports. Override this method to append or modify this list.
+     *
      * @return the list of default imports
      */
     protected String[] getSystemImports() {
         String pkg = "org.knime.base.node.jsnippet.expression";
-        return new String[] {AbstractJSnippet.class.getName()
-                , Abort.class.getName()
-                , Cell.class.getName()
-                , ColumnException.class.getName()
-                , TypeException.class.getName()
-                , "static " + pkg + ".Type.*"
-                /* these need to be listed, even if unused, for backwards-compatibility */
-                , "java.util.Date"
-                , "java.util.Calendar"
-                , "org.w3c.dom.Document"};
+        return new String[]{AbstractJSnippet.class.getName(), Abort.class.getName(), Cell.class.getName(),
+            ColumnException.class.getName(), TypeException.class.getName(), "static " + pkg + ".Type.*"
+            /* these need to be listed, even if unused, for backwards-compatibility */
+            , "java.util.Date", "java.util.Calendar", "org.w3c.dom.Document"};
     }
 
-
     /**
-     * Validate settings which is typically called in the configure method
-     * of a node.
+     * Validate settings which is typically called in the configure method of a node.
      *
      * What is checked:
      * <ul>
-     *  <li>Whether converter factories matching the ids from the settings exist</li>
-     *  <li>Whether the code compiles</li>
-     *  <li>Whether columns required by input mappings still exist.</li>
+     * <li>Whether converter factories matching the ids from the settings exist</li>
+     * <li>Whether the code compiles</li>
+     * <li>Whether columns required by input mappings still exist.</li>
      * </ul>
      *
      * @param spec the spec of the data table at the inport
@@ -790,8 +820,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
                 if (!type.equals(field.getDataType())) {
                     // Input column type changed, try to find new converter
-                    final Optional<?> factory =
-                        ConverterUtil.getConverterFactory(type, field.getJavaType());
+                    final Optional<?> factory = ConverterUtil.getConverterFactory(type, field.getJavaType());
 
                     if (factory.isPresent()) {
                         warnings.add(
@@ -804,25 +833,20 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             }
 
             if (!field.getConverterFactory().isPresent()) {
-                errors.add(
-                    String.format("Missing converter for column '%s' to java field '%s' (converter id: '%s')",
-                        field.getKnimeName(), field.getJavaName(), field.getConverterFactoryId()));
+                errors.add(String.format("Missing converter for column '%s' to java field '%s' (converter id: '%s')",
+                    field.getKnimeName(), field.getJavaName(), field.getConverterFactoryId()));
             }
         }
 
         // check input variables
         for (InVar field : m_fields.getInVarFields()) {
-            FlowVariable var = flowVariableRepository.getFlowVariable(
-                    field.getKnimeName());
+            FlowVariable var = flowVariableRepository.getFlowVariable(field.getKnimeName());
             if (var != null) {
                 if (!var.getType().equals(field.getFlowVarType())) {
-                    errors.add("The type of the flow variable \""
-                                + field.getKnimeName()
-                                + "\" has changed.");
+                    errors.add("The type of the flow variable \"" + field.getKnimeName() + "\" has changed.");
                 }
             } else {
-                errors.add("The flow variable \"" + field.getKnimeName()
-                        + "\" is not found in the input.");
+                errors.add("The flow variable \"" + field.getKnimeName() + "\" is not found in the input.");
             }
         }
 
@@ -834,37 +858,29 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
             int index = spec.findColumnIndex(field.getKnimeName());
             if (field.getReplaceExisting() && index < 0) {
-                errors.add("The output column \""
-                        + field.getKnimeName()
-                        + "\" is marked to be a replacement, "
-                        + "but an input with this name does not exist.");
+                errors.add("The output column \"" + field.getKnimeName() + "\" is marked to be a replacement, "
+                    + "but an input with this name does not exist.");
             }
             if (!field.getReplaceExisting() && index > 0) {
-                errors.add("The output column \""
-                        + field.getKnimeName()
-                        + "\" is marked to be new, "
-                        + "but an input with this name does exist.");
+                errors.add("The output column \"" + field.getKnimeName() + "\" is marked to be new, "
+                    + "but an input with this name does exist.");
             }
             if (!field.getConverterFactory().isPresent()) {
-                errors.add(String.format("Missing converter for java field '%s' to column '%s' (converter id: '%s')", field.getJavaName(), field.getKnimeName(), field.getConverterFactoryId()));
+                errors.add(String.format("Missing converter for java field '%s' to column '%s' (converter id: '%s')",
+                    field.getJavaName(), field.getKnimeName(), field.getConverterFactoryId()));
             }
         }
 
         // check output variables
         for (OutVar field : m_fields.getOutVarFields()) {
-            FlowVariable var = flowVariableRepository.getFlowVariable(
-                    field.getKnimeName());
+            FlowVariable var = flowVariableRepository.getFlowVariable(field.getKnimeName());
             if (field.getReplaceExisting() && var == null) {
-                errors.add("The output flow variable \""
-                        + field.getKnimeName()
-                        + "\" is marked to be a replacement, "
-                        + "but an input with this name does not exist.");
+                errors.add("The output flow variable \"" + field.getKnimeName() + "\" is marked to be a replacement, "
+                    + "but an input with this name does not exist.");
             }
             if (!field.getReplaceExisting() && var != null) {
-                errors.add("The output flow variable \""
-                        + field.getKnimeName()
-                        + "\" is marked to be new, "
-                        + "but an input with this name does exist.");
+                errors.add("The output flow variable \"" + field.getKnimeName() + "\" is marked to be new, "
+                    + "but an input with this name does exist.");
             }
         }
 
@@ -877,32 +893,27 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             close();
         }
         return new ValidationReport(errors.toArray(new String[errors.size()]),
-                warnings.toArray(new String[warnings.size()]));
+            warnings.toArray(new String[warnings.size()]));
     }
 
     /**
-     * Create the outspec of the java snippet node. This method is typically
-     * used in the configure of a node.
+     * Create the outspec of the java snippet node. This method is typically used in the configure of a node.
+     *
      * @param spec the spec of the data table at the inport
      * @param flowVariableRepository the flow variables at the inport
      * @return the spec at the output
-     * @throws InvalidSettingsException when settings are inconsistent with
-     *  the spec or the flow variables at the inport
+     * @throws InvalidSettingsException when settings are inconsistent with the spec or the flow variables at the inport
      */
-    public DataTableSpec configure(final DataTableSpec spec,
-            final FlowVariableRepository flowVariableRepository)
-            throws InvalidSettingsException {
-        DataTableSpec outSpec =
-            createRearranger(spec, flowVariableRepository, -1, null).createSpec();
+    public DataTableSpec configure(final DataTableSpec spec, final FlowVariableRepository flowVariableRepository)
+        throws InvalidSettingsException {
+        DataTableSpec outSpec = createRearranger(spec, flowVariableRepository, -1, null).createSpec();
         // populate flowVariableRepository with new flow variables having
         // default values
         for (OutVar outVar : m_fields.getOutVarFields()) {
             FlowVariable flowVar = null;
-            if (outVar.getFlowVarType().equals(
-                    org.knime.core.node.workflow.FlowVariable.Type.INTEGER)) {
+            if (outVar.getFlowVarType().equals(org.knime.core.node.workflow.FlowVariable.Type.INTEGER)) {
                 flowVar = new FlowVariable(outVar.getKnimeName(), -1);
-            } else if (outVar.getFlowVarType().equals(
-                    org.knime.core.node.workflow.FlowVariable.Type.DOUBLE)) {
+            } else if (outVar.getFlowVarType().equals(org.knime.core.node.workflow.FlowVariable.Type.DOUBLE)) {
                 flowVar = new FlowVariable(outVar.getKnimeName(), -1.0);
             } else {
                 flowVar = new FlowVariable(outVar.getKnimeName(), "");
@@ -912,15 +923,14 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return outSpec;
     }
 
-
     /**
      * Execute the snippet.
+     *
      * @param table the data table at the inport
      * @param flowVariableRepository the flow variables at the inport
      * @param exec the execution context to report progress
      * @return the table for the output
-     * @throws InvalidSettingsException when settings are inconsistent with
-     * the table or the flow variables at the input
+     * @throws InvalidSettingsException when settings are inconsistent with the table or the flow variables at the input
      * @throws CanceledExecutionException when execution is canceled by the user
      */
     public BufferedDataTable execute(
@@ -950,29 +960,22 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
     }
 
     /**
-     * The execution method when no input table is present. I.e. used by
-     * the java edit variable node.
+     * The execution method when no input table is present. I.e. used by the java edit variable node.
+     *
      * @param flowVariableRepository flow variables at the input
-     * @param exec the execution context to report progress, may be null when
-     * this method is called from configure
+     * @param exec the execution context to report progress, may be null when this method is called from configure
      */
-    public void execute(final FlowVariableRepository flowVariableRepository,
-            final ExecutionContext exec) {
+    public void execute(final FlowVariableRepository flowVariableRepository, final ExecutionContext exec) {
         DataTableSpec spec = new DataTableSpec();
-        CellFactory factory = new JavaSnippetCellFactory(this, spec,
-                flowVariableRepository, 1, exec);
-        factory.getCells(new DefaultRow(RowKey.createRowKey(0L),
-                new DataCell[0]));
+        CellFactory factory = new JavaSnippetCellFactory(this, spec, flowVariableRepository, 1, exec);
+        factory.getCells(new DefaultRow(RowKey.createRowKey(0L), new DataCell[0]));
     }
 
     /** The rearranger is the working horse for creating the output table. */
-    ColumnRearranger createRearranger(final DataTableSpec spec,
-            final FlowVariableRepository flowVariableRepository,
-            final int rowCount, final ExecutionContext context)
-        throws InvalidSettingsException {
+    ColumnRearranger createRearranger(final DataTableSpec spec, final FlowVariableRepository flowVariableRepository,
+        final int rowCount, final ExecutionContext context) throws InvalidSettingsException {
         int offset = spec.getNumColumns();
-        CellFactory factory = new JavaSnippetCellFactory(this, spec,
-                flowVariableRepository, rowCount, context);
+        CellFactory factory = new JavaSnippetCellFactory(this, spec, flowVariableRepository, rowCount, context);
         ColumnRearranger c = new ColumnRearranger(spec);
         // add factory to the column rearranger
         c.append(factory);
@@ -987,9 +990,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
                     c.remove(index);
                     c.move(offset + i - 1, index);
                 } else {
-                    throw new InvalidSettingsException("Field \""
-                            + field.getJavaName() + "\" is configured to "
-                            + "replace no existing columns.");
+                    throw new InvalidSettingsException(
+                        "Field \"" + field.getJavaName() + "\" is configured to " + "replace no existing columns.");
                 }
             }
         }
@@ -1003,11 +1005,9 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
     @Override
     @SuppressWarnings("rawtypes")
     public JavaSnippetTemplate createTemplate(final Class metaCategory) {
-        JavaSnippetTemplate template = new JavaSnippetTemplate(metaCategory,
-                getSettings());
+        JavaSnippetTemplate template = new JavaSnippetTemplate(metaCategory, getSettings());
         return template;
     }
-
 
     /**
      * {@inheritDoc}
@@ -1019,6 +1019,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
     /**
      * Get the system fields of the snippet.
+     *
      * @return the fields
      */
     public JavaSnippetFields getSystemFields() {
@@ -1037,8 +1038,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
     }
 
     /**
-     * Set the list of additional jar files to be added to the class path
-     * of the snippet.
+     * Set the list of additional jar files to be added to the class path of the snippet.
+     *
      * @param jarFiles the jar files
      */
     public void setJarFiles(final String[] jarFiles) {
@@ -1070,8 +1071,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             // recompile
             m_snippetCache.invalidate();
             StringWriter log = new StringWriter();
-            DiagnosticCollector<JavaFileObject> digsCollector =
-                    new DiagnosticCollector<>();
+            DiagnosticCollector<JavaFileObject> digsCollector = new DiagnosticCollector<>();
             CompilationTask compileTask = null;
             try {
                 compileTask = compiler.getTask(log, digsCollector);
@@ -1082,8 +1082,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             if (!success) {
                 StringBuilder msg = new StringBuilder();
                 msg.append("Compile with errors:\n");
-                for (Diagnostic<? extends JavaFileObject> d
-                        : digsCollector.getDiagnostics()) {
+                for (Diagnostic<? extends JavaFileObject> d : digsCollector.getDiagnostics()) {
                     boolean isSnippet = this.isSnippetSource(d.getSource());
                     if (isSnippet && d.getKind().equals(javax.tools.Diagnostic.Kind.ERROR)) {
                         long line = d.getLineNumber();
@@ -1119,8 +1118,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             //   (b) it would collect buddies when used directly (see support ticket #1943)
             customTypeClassLoaders.remove(DataCellToJavaConverterRegistry.class.getClassLoader());
 
-            final MultiParentClassLoader customTypeLoader = new MultiParentClassLoader(
-                customTypeClassLoaders.stream().toArray(ClassLoader[]::new));
+            final MultiParentClassLoader customTypeLoader =
+                new MultiParentClassLoader(customTypeClassLoaders.stream().toArray(ClassLoader[]::new));
 
             // TODO (Next version bump) change return value of createClassLoader instead of cast
             m_classLoader = (URLClassLoader)compiler.createClassLoader(customTypeLoader);
@@ -1137,6 +1136,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
     /**
      * Create an instance of the snippet.
+     *
      * @return a snippet instance
      */
     public AbstractJSnippet createSnippetInstance() {
@@ -1159,9 +1159,9 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return instance;
     }
 
-
     /**
      * Attach logger to be used by this java snippet instance.
+     *
      * @param logger the node logger
      */
     public void attachLogger(final NodeLogger logger) {
@@ -1182,14 +1182,15 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
     // --- Classpath caching related methods and fields --- //
     private static final Map<String, Set<File>> CLASSPATH_CACHE = new LinkedHashMap<>();
+
     private static final Map<Class<?>, Set<File>> CLASSPATH_FOR_CLASS_CACHE = new LinkedHashMap<>();
 
     static final NodeLogger LOGGER = NodeLogger.getLogger(JavaSnippet.class);
 
     /**
      * Create the classpath for every java type of every converter factory registered in
-     * {@link DataCellToJavaConverterRegistry} and {@link JavaToDataCellConverterRegistry}.
-     * Called during bundle activation.
+     * {@link DataCellToJavaConverterRegistry} and {@link JavaToDataCellConverterRegistry}. Called during bundle
+     * activation.
      */
     synchronized static void cacheCustomTypeClasspaths() {
         if (!CLASSPATH_CACHE.isEmpty()) {
@@ -1206,7 +1207,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             CLASSPATH_CACHE.put(factory.getIdentifier(),
                 resolveBuildPathForJavaType((javaType.isArray()) ? javaType.getComponentType() : javaType));
         }
-
 
         Set<JavaToDataCellConverterFactory<?>> javaToDCFactories = new LinkedHashSet<>();
         javaToDCFactories.addAll(JavaToDataCellConverterRegistry.getInstance().getAllConverterFactories());
@@ -1288,8 +1288,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         final Set<File> result = new LinkedHashSet<>();
         final Set<URL> urls = new LinkedHashSet<>();
 
-        ClassUtil.streamForClassHierarchy(javaType)
-            .filter(c -> c.getClassLoader() instanceof ModuleClassLoader)
+        ClassUtil.streamForClassHierarchy(javaType).filter(c -> c.getClassLoader() instanceof ModuleClassLoader)
             .flatMap(c -> {
                 final ModuleClassLoader moduleClassLoader = (ModuleClassLoader)c.getClassLoader();
                 return Arrays.stream(moduleClassLoader.getClasspathManager().getHostClasspathEntries());
@@ -1317,12 +1316,11 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
         if (result.contains(null)) {
             throw new IllegalStateException("Couldn't assemble classpath for custom type \"" + javaType
-                + "\", illegal <null> value in list:\n  " + result.stream().map(f -> f == null ? "<NULL>"
-                    : f.getAbsolutePath()).collect(Collectors.joining("\n  ")));
+                + "\", illegal <null> value in list:\n  " + result.stream()
+                    .map(f -> f == null ? "<NULL>" : f.getAbsolutePath()).collect(Collectors.joining("\n  ")));
         }
 
         CLASSPATH_FOR_CLASS_CACHE.put(javaType, result);
         return result;
     }
 }
-

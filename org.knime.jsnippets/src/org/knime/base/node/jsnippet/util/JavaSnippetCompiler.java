@@ -109,7 +109,7 @@ public class JavaSnippetCompiler {
             throws IOException {
         if (m_compiler == null) {
             m_compileArgs = new ArrayList<>();
-            final File[] classpaths = m_snippet.getClassPath();
+            final File[] classpaths = m_snippet.getCompiletimeClassPath();
 
             m_compileArgs.add("-classpath");
             m_compileArgs.add(Arrays.stream(classpaths)

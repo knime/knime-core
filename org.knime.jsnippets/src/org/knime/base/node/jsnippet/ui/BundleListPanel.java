@@ -61,7 +61,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import javax.swing.AbstractListModel;
@@ -82,10 +81,6 @@ import org.eclipse.core.runtime.IBundleGroup;
 import org.eclipse.core.runtime.IBundleGroupProvider;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.namespace.BundleNamespace;
-import org.osgi.framework.wiring.BundleRequirement;
-import org.osgi.framework.wiring.BundleWire;
-import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * Panel for adding Bundles to the Java Snippet node for compilation.
@@ -225,29 +220,6 @@ public class BundleListPanel extends JPanel {
 
                     final Set<String> bundleNameSet = new HashSet<String>();
 
-                    final LinkedBlockingQueue<Bundle> pending = new LinkedBlockingQueue<Bundle>();
-                    pending.add(firstBundle);
-
-                    Bundle bundle = null;
-                    while ((bundle = pending.poll()) != null) {
-                        if (!bundleNameSet.add(bundle.getSymbolicName() + " " + bundle.getVersion())) {
-                            continue;
-                        }
-
-                        final BundleWiring wiring = bundle.adapt(BundleWiring.class);
-                        final List<BundleWire> requiredWires =
-                            wiring.getRequiredWires(BundleNamespace.BUNDLE_NAMESPACE);
-
-                        System.out.println("-----------------------");
-                        for (final BundleWire w : requiredWires) {
-                            for(final BundleRequirement o : w.getProviderWiring().getRequirements(BundleNamespace.BUNDLE_NAMESPACE)) {
-                                System.out.println(o);
-                            }
-                            pending.add(w.getProviderWiring().getBundle());
-
-                            w.getRequirerWiring().getRequirements(BundleNamespace.BUNDLE_NAMESPACE);
-                        }
-                    }
 
                     for (final String bn : bundleNameSet) {
                         listToAddTo.addElement(bn);

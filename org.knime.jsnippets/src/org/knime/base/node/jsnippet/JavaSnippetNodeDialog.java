@@ -466,7 +466,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
 
         try {
             if (m_autoCompletionJars == null || !Arrays.stream(m_autoCompletionJars).allMatch(file -> file.exists())
-                || !Arrays.equals(m_autoCompletionJars, m_snippet.getClassPath())) {
+                || !Arrays.equals(m_autoCompletionJars, m_snippet.getCompiletimeClassPath())) {
 
                 m_autoCompletionJars = m_snippet.getClassPath();
                 jarManager.clearClassFileSources();

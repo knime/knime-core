@@ -114,6 +114,17 @@ public interface JSnippet<T extends JSnippetTemplate> {
     }
 
     /**
+     * Get the jar files required at compiletime for this snippet.
+     *
+     * This is usually a subset of @ref {@link #getClassPath()}.
+     * @return the jar files for the class path, never <code>null</code>
+     * @throws IOException when a file could not be loaded
+     */
+    default public File[] getCompiletimeClassPath() throws IOException {
+        return getClassPath();
+    }
+
+    /**
      * Get compilation units used by the JavaSnippetCompiler.
      * @return the files to compile
      * @throws IOException When files cannot be created.
