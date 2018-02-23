@@ -509,7 +509,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             // Resolve bundle names to bundles
             Stream.of(m_settings.getBundles()).map(bname -> Platform.getBundle(bname.split(" ")[0]))
                 .filter(o -> o != null).map(b -> b.adapt(BundleWiring.class).getClassLoader())
-                .collect(Collectors.toCollection(() -> loaders));
+                .filter(o -> o != null).collect(Collectors.toCollection(() -> loaders));
         }
 
         return loaders;

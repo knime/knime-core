@@ -49,11 +49,15 @@
 package org.knime.base.node.jsnippet.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Window;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,6 +65,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.AbstractListModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -80,6 +85,7 @@ import org.eclipse.core.runtime.IBundleGroup;
 import org.eclipse.core.runtime.IBundleGroupProvider;
 import org.eclipse.core.runtime.Platform;
 import org.knime.base.node.jsnippet.ui.util.MouseClickListener;
+import org.knime.core.node.KNIMEConstants;
 import org.osgi.framework.Bundle;
 
 /**
@@ -95,11 +101,68 @@ public class BundleListPanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
+    /** Entry in the Bundle List */
+    class BundleListEntry {
+        /** Name of the bundle */
+        final String name;
+
+        /** Whether the bundle is found in the currently running system */
+        final boolean exists;
+
+        /**
+         * Constructor
+         *
+         * @param name
+         * @param exists
+         */
+        public BundleListEntry(final String name, final boolean exists) {
+            this.name = name;
+            this.exists = exists;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj instanceof String) {
+                return this.name.equals(obj);
+            } else if (obj instanceof BundleListEntry) {
+                return this.name.equals(((BundleListEntry)obj).name);
+            }
+            return super.equals(obj);
+        }
+
+        @Override
+        public int hashCode() {
+            return this.name.hashCode();
+        }
+    }
+
+    class BundleListEntryRenderer extends DefaultListCellRenderer {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index,
+            final boolean isSelected, final boolean cellHasFocus) {
+            final BundleListEntry e = ((BundleListEntry)value);
+            final Component c = super.getListCellRendererComponent(list, e.name, index, isSelected, cellHasFocus);
+            if (!e.exists) {
+                c.setForeground(Color.RED);
+            }
+
+            return c;
+        }
+    }
+
     /* Filterable list model containing all available bundles */
-    final DefaultListModel<String> m_listModel = new DefaultListModel<>();
+    final DefaultListModel<BundleListEntry> m_listModel = new DefaultListModel<>();
 
     /* List displaying all available bundles */
-    final JList<String> m_list = new JList<>(m_listModel);
+    final JList<BundleListEntry> m_list = new JList<>(m_listModel);
 
     /* Field for filtering the bundle list */
     final JTextField m_filterField = new JTextField();
@@ -184,6 +247,7 @@ public class BundleListPanel extends JPanel {
 
         initBundleNames();
 
+        m_list.setCellRenderer(new BundleListEntryRenderer());
         add(new JScrollPane(m_list), BorderLayout.CENTER);
 
         final JPanel northPane = new JPanel(new FlowLayout());
@@ -222,6 +286,10 @@ public class BundleListPanel extends JPanel {
             final Dimension d = getSize();
             setLocation(p.x + (d.width - width) / 2, p.y + (d.height - height) / 2);
 
+            if (KNIMEConstants.KNIME16X16 != null) {
+                setIconImage(KNIMEConstants.KNIME16X16.getImage());
+            }
+
             final JPanel pane = new JPanel(new BorderLayout());
 
             final JPanel northPane = new JPanel(new GridLayout(2, 1));
@@ -244,6 +312,27 @@ public class BundleListPanel extends JPanel {
                         final String bundleName = m_bundleList.getSelectedValue();
                         addBundle(bundleName);
 
+                        setVisible(false);
+                        dispose();
+                    }
+                }
+            });
+            m_bundleList.addKeyListener(new KeyListener() {
+
+                @Override
+                public void keyTyped(final KeyEvent e) {
+                }
+
+                @Override
+                public void keyReleased(final KeyEvent e) {
+                }
+
+                @Override
+                public void keyPressed(final KeyEvent e) {
+                    if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        for (final String bundleName : m_bundleList.getSelectedValuesList()) {
+                            addBundle(bundleName);
+                        }
                         setVisible(false);
                         dispose();
                     }
@@ -294,7 +383,7 @@ public class BundleListPanel extends JPanel {
     void removeSelectedBundles() {
         final int[] selections = m_list.getSelectedIndices();
 
-        for (int i = selections.length-1; i >= 0; --i) {
+        for (int i = selections.length - 1; i >= 0; --i) {
             m_listModel.remove(selections[i]);
         }
     }
@@ -306,7 +395,7 @@ public class BundleListPanel extends JPanel {
         final String[] bundles = new String[m_listModel.getSize()];
 
         for (int i = 0; i < m_listModel.getSize(); ++i) {
-            bundles[i] = m_listModel.get(i);
+            bundles[i] = m_listModel.get(i).name;
         }
 
         return bundles;
@@ -341,9 +430,13 @@ public class BundleListPanel extends JPanel {
             return false;
         }
 
+        if (m_listModel.contains(firstBundle)) {
+            return false;
+        }
+
         //final Set<String> bundleNameSet = new HashSet<String>();
         final String symbolicName = firstBundle.getSymbolicName();
-        m_listModel.addElement(symbolicName);
+        m_listModel.addElement(new BundleListEntry(symbolicName, true));
 
         //for (final String bn : bundleNameSet) {
         //    listToAddTo.addElement(bn);
@@ -355,7 +448,7 @@ public class BundleListPanel extends JPanel {
     /**
      * @return Model of main List
      */
-    public ListModel<String> getListModel() {
+    public ListModel<BundleListEntry> getListModel() {
         return m_listModel;
     }
 }

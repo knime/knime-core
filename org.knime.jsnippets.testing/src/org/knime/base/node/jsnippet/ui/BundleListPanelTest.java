@@ -1,8 +1,5 @@
 package org.knime.base.node.jsnippet.ui;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -89,7 +86,7 @@ public class BundleListPanelTest extends UiTest {
     @Test
     public void testAddBundle() {
         /* Test initialization */
-        assertThat(BundleListPanel.bundleNames, not(empty()));
+        assertFalse(BundleListPanel.bundleNames.isEmpty());
 
         final String firstBundle = BundleListPanel.bundleNames.get(0);
 
@@ -99,8 +96,11 @@ public class BundleListPanelTest extends UiTest {
 
         assertTrue(panel.addBundle(firstBundle));
         assertEquals(1, panel.m_listModel.size());
-        final Bundle bundle = Platform.getBundle(panel.m_listModel.getElementAt(0));
+        final Bundle bundle = Platform.getBundle(panel.m_listModel.getElementAt(0).name);
         assertNotNull("Expected symbolic name of an existing bundle to have been added", bundle);
+
+        assertFalse("Adding a already added bundle should not be permitted", panel.addBundle(firstBundle));
+        assertEquals("Adding a bundle a second time should not increase size of list", 1, panel.m_listModel.size());
 
         assertFalse(panel.addBundle("i.dont.exist"));
 
@@ -112,7 +112,7 @@ public class BundleListPanelTest extends UiTest {
         panel.setBundles(new String[]{firstBundle});
         assertEquals(1, panel.m_listModel.size());
         assertNotNull("Expected symbolic name of an existing bundle in the list",
-            Platform.getBundle(panel.m_listModel.getElementAt(0)));
+            Platform.getBundle(panel.m_listModel.getElementAt(0).name));
 
         /* Test that opening the dialog does not throw any exceptions */
         final AddBundleDialog dialog = panel.openAddBundleDialog();
@@ -128,7 +128,7 @@ public class BundleListPanelTest extends UiTest {
 
         /* Test getBundles() */
         assertArrayEquals("getBundles should return array of bundles in list model",
-            new String[]{panel.m_listModel.getElementAt(0), panel.m_listModel.getElementAt(1)}, panel.getBundles());
+            new String[]{panel.m_listModel.getElementAt(0).name, panel.m_listModel.getElementAt(1).name}, panel.getBundles());
 
         /* Select multiple and remove */
         panel.m_list.setSelectedIndices(new int[]{0, 1});

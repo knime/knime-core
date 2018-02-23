@@ -90,6 +90,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.util.DataTypeListCellRenderer;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
@@ -143,6 +144,10 @@ public final class AddOutFieldDialog extends JDialog {
     private AddOutFieldDialog(final Frame parent, final OutFieldsTableModel model, final DataTableSpec spec,
         final Map<String, FlowVariable> flowVars, final boolean flowVarsOnly) {
         super(parent, true);
+
+        if (KNIMEConstants.KNIME16X16 != null) {
+            setIconImage(KNIMEConstants.KNIME16X16.getImage());
+        }
 
         m_model = model;
         m_spec = spec;

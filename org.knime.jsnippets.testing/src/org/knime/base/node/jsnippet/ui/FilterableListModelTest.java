@@ -1,7 +1,5 @@
 package org.knime.base.node.jsnippet.ui;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -69,15 +67,15 @@ public class FilterableListModelTest {
     @Test
     public void testAddBundle() {
         /* Test filtering in BundleListModel */
-        final BundleListPanel.FilterableListModel model = new BundleListPanel.FilterableListModel(Arrays.asList("a", "ab", "b", "abc", "c"));
-        assertThat(model.getSize(), is(5));
+        final BundleListPanel.FilterableListModel model =
+            new BundleListPanel.FilterableListModel(Arrays.asList("a", "ab", "b", "abc", "c"));
+        assertEquals(5, model.getSize());
 
         /* Test filtering by "c" yields two results */
         model.setFilter("c");
         assertEquals(model.getSize(), 2);
         assertEquals(model.getElementAt(0), "abc");
         assertEquals(model.getElementAt(1), "c");
-
 
         /* Test incremental filtering */
         model.setFilter("a");
