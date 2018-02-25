@@ -475,7 +475,7 @@
             commandId="knime.commands.updateMetaNodeLink"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="CTRL+ALT+U"/>
+            sequence="M1+ALT+U"/>
       <key
             commandId="knime.commands.setNameAndDescription"
             contextId="org.eclipse.ui.contexts.window"
@@ -490,12 +490,12 @@
             commandId="knime.commands.editor.gridSettings"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="CTRL+SHIFT+ALT+X"/>
+            sequence="M1+SHIFT+ALT+X"/>
       <key
             commandId="knime.commands.editor.toggleGrid"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="CTRL+SHIFT+X"/>            
+            sequence="M1+SHIFT+X"/>            
       <key
             commandId="knime.commands.openView"
             contextId="org.eclipse.ui.contexts.window"
@@ -515,12 +515,12 @@
             commandId="knime.commands.hideNodeNames"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="CTRL+ALT+Q"/>    
+            sequence="M1+ALT+Q"/>    
       <key
             commandId="knime.commands.appendNodeIds"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="CTRL+ALT+W"/>    
+            sequence="M1+ALT+W"/>    
       <key
             commandId="knime.commands.execute"
             contextId="org.eclipse.ui.contexts.window"
@@ -550,52 +550,52 @@
             commandId="knime.commands.steploop"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="ALT+CTRL+F6"/>
+            sequence="M1+ALT+F6"/>
       <key
             commandId="knime.commands.pauseexecution"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="ALT+CTRL+F7"/>
+            sequence="M1+ALT+F7"/>
       <key
             commandId="knime.commands.resumeloop"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="ALT+CTRL+F8"/>  
+            sequence="M1+ALT+F8"/>  
       <key
             commandId="knime.action.selectLoop"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="ALT+CTRL+F10"/>            
+            sequence="M1+ALT+F10"/>            
       <key
             commandId="knime.commands.editor.moveNodesUp"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="SHIFT+CTRL+ARROW_UP"/> 
+            sequence="M1+SHIFT+ARROW_UP"/> 
       <key
             commandId="knime.commands.editor.moveNodesDown"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="SHIFT+CTRL+ARROW_DOWN"/>  
+            sequence="M1+SHIFT+ARROW_DOWN"/>  
       <key
             commandId="knime.commands.editor.moveNodesLeft"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="SHIFT+CTRL+ARROW_LEFT"/> 
+            sequence="M1+SHIFT+ARROW_LEFT"/> 
       <key
             commandId="knime.commands.editor.moveNodesRight"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="SHIFT+CTRL+ARROW_RIGHT"/> 
+            sequence="M1+SHIFT+ARROW_RIGHT"/> 
       <key
             commandId="knime.commands.editor.bringToFront"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="SHIFT+CTRL+PAGE_UP"/> 
+            sequence="M1+SHIFT+PAGE_UP"/> 
       <key
             commandId="knime.commands.editor.sendToBack"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="SHIFT+CTRL+PAGE_DOWN"/> 
+            sequence="M1+SHIFT+PAGE_DOWN"/> 
             
    </extension>
     <extension

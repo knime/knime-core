@@ -73,6 +73,8 @@ import javax.swing.table.AbstractTableModel;
  * of type string.
  *
  * @author Heiko Hofer
+ *
+ * TODO this is similar to the same-name class in knime-json's org.knime.json.util package; consider consolidating.
  */
 @SuppressWarnings("serial")
 public class KeyValuePanel extends ConfigTablePanel {
@@ -88,15 +90,14 @@ public class KeyValuePanel extends ConfigTablePanel {
         table.getColumnModel().getColumn(1).setPreferredWidth(200);
         m_model = (KeyValueTableModel)getModel();
 
+        int menuAcceleratorKeyModifier = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
-        KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V,
-                KeyEvent.CTRL_MASK);
+        KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V, menuAcceleratorKeyModifier);
         table.getInputMap().put(ctrlV, "TablePaste");
         table.getActionMap().put("TablePaste",
                 new PasteAction(this));
 
-        KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_V,
-                KeyEvent.CTRL_MASK);
+        KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_V, menuAcceleratorKeyModifier);
         table.getInputMap().put(ctrlC, "TableCopy");
         table.getActionMap().put("TableCopy",
                 new CopyAction(this));

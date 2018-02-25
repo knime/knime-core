@@ -191,7 +191,7 @@ public class WrappedNodeDialog extends Dialog {
         Menu menu = new Menu(newShell, SWT.DROP_DOWN);
         MenuItem rootItem = new MenuItem(menuBar, SWT.CASCADE);
         rootItem.setText("File");
-        rootItem.setAccelerator(SWT.CTRL | 'F');
+        rootItem.setAccelerator(SWT.MOD1 | 'F');
         rootItem.setMenu(menu);
 
         final FileDialog openDialog = new FileDialog(newShell, SWT.OPEN);
@@ -199,7 +199,7 @@ public class WrappedNodeDialog extends Dialog {
 
         MenuItem itemLoad = new MenuItem(menu, SWT.PUSH);
         itemLoad.setText("Load Settings");
-        itemLoad.setAccelerator(SWT.CTRL | 'L');
+        itemLoad.setAccelerator(SWT.MOD1 | 'L');
         itemLoad.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
@@ -221,7 +221,7 @@ public class WrappedNodeDialog extends Dialog {
         });
         MenuItem itemSave = new MenuItem(menu, SWT.PUSH);
         itemSave.setText("Save Settings");
-        itemSave.setAccelerator(SWT.CTRL | 'S');
+        itemSave.setAccelerator(SWT.MOD1 | 'S');
         itemSave.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
@@ -330,7 +330,7 @@ public class WrappedNodeDialog extends Dialog {
             /** {@inheritDoc} */
             @Override
             public void keyReleased(final KeyEvent ke) {
-                if (ke.keyCode == SWT.CTRL) {
+                if (ke.keyCode == SWT.MOD1) {
                     btnOK.setText("OK");
                 }
             }
@@ -344,14 +344,14 @@ public class WrappedNodeDialog extends Dialog {
                 }
                 // this locks the WFM so avoid calling it each time.
                 Predicate<NodeContainer> canExecutePredicate = n -> n.getParent().canExecuteNode(n.getID());
-                if (ke.keyCode == SWT.CTRL && canExecutePredicate.test(m_nodeContainer)) {
-                    // change OK button label, when CTRL is pressed
+                if (ke.keyCode == SWT.MOD1 && canExecutePredicate.test(m_nodeContainer)) {
+                    // change OK button label, when CTRL/COMMAND is pressed
                     btnOK.setText("OK - Execute");
                 }
-                if ((ke.keyCode == SWT.CR) && ((ke.stateMask & SWT.CTRL) != 0)) {
+                if ((ke.keyCode == SWT.CR) && ((ke.stateMask & SWT.MOD1) != 0)) {
                     // Bug 3942: transfer focus to OK button to have all component to auto-commit their changes
                     btnOK.forceFocus();
-                    // force OK - Execute when CTRL and ENTER is pressed
+                    // force OK - Execute when CTRL/COMMAND and ENTER is pressed
                     // open first out-port view if SHIFT is pressed
                     ke.doit = doApply();
                     if (ke.doit) {
@@ -375,10 +375,10 @@ public class WrappedNodeDialog extends Dialog {
         btnOK.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent se) {
-                if ((se.stateMask & SWT.SHIFT) != 0 && (se.stateMask & SWT.CTRL) != 0) {
+                if ((se.stateMask & SWT.SHIFT) != 0 && (se.stateMask & SWT.MOD1) != 0) {
                     // OK plus execute and open first out-port view
                     doOK(se, true, true);
-                } else if ((se.stateMask & SWT.CTRL) != 0) {
+                } else if ((se.stateMask & SWT.MOD1) != 0) {
                     // OK plus execute only
                     doOK(se, true, false);
                 } else {

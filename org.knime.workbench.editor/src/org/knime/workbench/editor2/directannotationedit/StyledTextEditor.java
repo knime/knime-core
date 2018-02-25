@@ -223,7 +223,7 @@ public class StyledTextEditor extends CellEditor {
         m_styledText.addVerifyKeyListener(new VerifyKeyListener() {
             @Override
             public void verifyKey(final VerifyEvent event) {
-                if (event.character == SWT.CR && (event.stateMask & SWT.CTRL) != 0) {
+                if (event.character == SWT.CR && (event.stateMask & SWT.MOD1) != 0) {
                     event.doit = false;
                 }
             }
@@ -533,8 +533,8 @@ public class StyledTextEditor extends CellEditor {
     protected void keyReleaseOccured(final KeyEvent keyEvent) {
         if (keyEvent.character == SWT.CR) { // Return key
             // don't let super close the editor on CR
-            if ((keyEvent.stateMask & SWT.CTRL) != 0) {
-                // closing the editor with Ctrl-CR.
+            if ((keyEvent.stateMask & SWT.MOD1) != 0) {
+                // closing the editor with Ctrl/Command-CR.
                 keyEvent.doit = false;
                 fireApplyEditorValue();
                 deactivate();

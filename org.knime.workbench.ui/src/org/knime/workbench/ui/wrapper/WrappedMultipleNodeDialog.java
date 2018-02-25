@@ -184,7 +184,7 @@ public class WrappedMultipleNodeDialog extends Dialog {
             /** {@inheritDoc} */
             @Override
             public void keyReleased(final KeyEvent ke) {
-                if (ke.keyCode == SWT.CTRL) {
+                if (ke.keyCode == SWT.MOD1) {
                     btnOK.setText("OK");
                 }
             }
@@ -196,8 +196,9 @@ public class WrappedMultipleNodeDialog extends Dialog {
                     // close dialog on ESC
                     doCancel();
                 }
-                if ((ke.keyCode == SWT.CR) && ((ke.stateMask == SWT.CTRL) || (ke.stateMask == SWT.SHIFT + SWT.CTRL))) {
-                    // force OK - Execute when CTRL and ENTER is pressed
+                // TODO this does not mimic the same behavior as found in WrappedNodeDialog to change the OK button text
+                if ((ke.keyCode == SWT.CR) && ((ke.stateMask == SWT.MOD1) || (ke.stateMask == SWT.SHIFT + SWT.MOD1))) {
+                    // force OK - Execute when CTRL/Command and ENTER is pressed
                     // open first out-port view if SHIFT is pressed
                     doOK(ke);
                 }

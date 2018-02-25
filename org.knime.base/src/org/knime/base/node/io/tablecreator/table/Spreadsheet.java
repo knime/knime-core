@@ -51,9 +51,9 @@ import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -152,26 +152,24 @@ public class Spreadsheet extends JComponent {
 
         m_table.getEditorTextField().addKeyListener(inputLineContr);
 
-        KeyStroke ctrlX = KeyStroke.getKeyStroke(KeyEvent.VK_X,
-                InputEvent.CTRL_MASK);
+        int menuAcceleratorKeyModifier = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+
+        KeyStroke ctrlX = KeyStroke.getKeyStroke(KeyEvent.VK_X, menuAcceleratorKeyModifier);
         m_table.getInputMap().put(ctrlX, "SpreadsheetCut");
         m_table.getActionMap().put("SpreadsheetCut",
                 new CutAction(m_table));
 
-        KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_C,
-                InputEvent.CTRL_MASK);
+        KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_C, menuAcceleratorKeyModifier);
         m_table.getInputMap().put(ctrlC, "SpreadsheetCopy");
         m_table.getActionMap().put("SpreadsheetCopy",
                 new CopyAction(m_table));
 
-        KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V,
-                InputEvent.CTRL_MASK);
+        KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V, menuAcceleratorKeyModifier);
         m_table.getInputMap().put(ctrlV, "SpreadsheetPaste");
         m_table.getActionMap().put("SpreadsheetPaste",
                 new PasteAction(m_table));
 
-        KeyStroke ctrlA = KeyStroke.getKeyStroke(KeyEvent.VK_A,
-                InputEvent.CTRL_MASK);
+        KeyStroke ctrlA = KeyStroke.getKeyStroke(KeyEvent.VK_A, menuAcceleratorKeyModifier);
         m_table.getInputMap().put(ctrlA, "SpreadsheetSelectAll");
         m_table.getActionMap().put("SpreadsheetSelectAll",
                 new SelectAllAction(m_table));
