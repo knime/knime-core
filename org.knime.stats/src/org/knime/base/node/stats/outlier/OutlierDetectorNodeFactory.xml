@@ -13,8 +13,7 @@
 			<p>
 				Detects and treats the outliers for each of the selected columns
 				individually by means of
-				<a href="https://en.wikipedia.org/wiki/Outlier#Tukey's_fences">interquartile range (IQR)</a>
-				.
+				<a href="https://en.wikipedia.org/wiki/Outlier#Tukey's_fences">interquartile range (IQR)</a>.
 			</p>
 			<p>
 				To detect the outliers for a given column, the first and
@@ -44,53 +43,11 @@
 		</intro>
 		<tab name="Outlier Selection (Outlier Settings)">
 			<option name="Outlier selection">
-				Allows to select the columns for which outliers have to be
+				Allows the selection of columns for which outliers have to be
 				detected
-				and treated. If "Compute outlier statistics on groups" is selected,
-				the outliers for each of the columns are computed
-				solely with respect
+				and treated. If "Compute outlier statistics on groups" (see tab "Group Settings") is selected,
+				the outliers for each of the columns are computed solely with respect
 				to the different groups.
-				<br />
-				<br />
-				<b>Options:</b>
-				<ul>
-					<li>
-						<b>Include:</b>
-						This list contains the column names for which the outliers have to
-						be detected and treated.
-					</li>
-					<li>
-						<b>Enforce Inclusion:</b>
-						Select this option to enforce the current inclusion list to stay
-						the same even if the input table specification changes. New
-						columns will automatically be added to the exclusion list.
-					</li>
-					<li>
-						<b>Select:</b>
-						Use these buttons to move columns between the Include and Exclude
-						list.
-					</li>
-					<li>
-						<b>Search:</b>
-						Use one of these fields to search either within the Include or
-						Exclude list for certain column names or name substrings. Repeated
-						clicking of the search button marks the next column that matches
-						the search text. The check box 'Mark all search hits' causes all
-						matching columns to be selected making them movable between the
-						two lists.
-					</li>
-					<li>
-						<b>Exclude:</b>
-						This list contains the column names of the input table that are
-						left out of the calculation.
-					</li>
-					<li>
-						<b>Enforce Exclusion:</b>
-						Select this option to enforce the current exclusion list to stay
-						the same even if the input table specification changes. New
-						columns will automatically be added to the inclusion list.
-					</li>
-				</ul>
 			</option>
 
 		</tab>
@@ -172,68 +129,22 @@
 		</tab>
 		
 		<tab name="Group Selection (Group Settings)">
-			<option name="Group selection">
-				Allows to select columns to identify groups. A group comprises all
-				rows of the input exhibiting the same values in every single column.
+			<option name="Compute outlier statistics on groups">
+				If enabled, allows the selection of columns to identify groups. A group comprises all
+				rows of the input exhibiting the same values in every single column (similar to the GroupBy node).
 				The outliers will finally be computed with respect to each of the
 				individual groups.
-				<br/>
-				<br/>
-				Note that if "Compute outlier statistics on groups" is not selected
-				these settings will be ignored.
-
-				<br/>
-				<br/>
-				<b>Options:</b>
-				<ul>
-					<li>
-						<b>Compute outlier statistics on groups</b>
-						Allows to specify groups. If the outliers should not be computed
-						on groups the included groups are being ignored.
-					</li>
-					<li>
-						<b>Include:</b>
-						This list contains the column names for which the groups shall be
-						formed.
-					</li>
-					<li>
-						<b>Enforce Inclusion:</b>
-						Select this option to enforce the current inclusion list to stay
-						the same even if the input table specification changes. New
-						columns will automatically be added to the exclusion list.
-					</li>
-					<li>
-						<b>Select:</b>
-						Use these buttons to move columns between the Include and Exclude
-						list.
-					</li>
-					<li>
-						<b>Search:</b>
-						Use one of these fields to search either within the Include or
-						Exclude list for certain column names or name substrings. Repeated
-						clicking of the search button marks the next column that matches
-						the search text. The check box 'Mark all search hits' causes all
-						matching columns to be selected making them movable between the
-						two lists.
-					</li>
-					<li>
-						<b>Exclude:</b>
-						This list contains the column names of the input table that are
-						left out of the calculation.
-					</li>
-					<li>
-						<b>Enforce Exclusion:</b>
-						Select this option to enforce the current exclusion list to stay
-						the same even if the input table specification changes. New
-						columns will automatically be added to the inclusion list.
-					</li>
-				</ul>
+			</option>
+			<option name="Column Filter">
+			     Move the columns defining the groups into the Include list. The group definition will take priority,
+			     i.e. if a column is selected for both group definition and outlier handling, 
+			     it will be used to define groups (no outlier handling done for that column). 
 			</option>
 
 		</tab>
 	</fullDescription>
 	<ports>
-		<inPort index="0" name="Numeric input data">Numeric input data to evaluate</inPort>
+		<inPort index="0" name="Input data">Numeric input data to evaluate + optional group information</inPort>
 		<outPort index="0" name="Outlier table">Data table where outliers are either
 			replaced or rows containing outliers were removed
 		</outPort>

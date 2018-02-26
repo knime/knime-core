@@ -49,11 +49,11 @@
 package org.knime.base.algorithms.outlier.listeners;
 
 /**
- * Class encoding a warning.
+ * Class encoding a warning for outlier treatment node(s).
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class Warning {
+public final class Warning {
 
     /** The warning mesage */
     private final String m_msg;

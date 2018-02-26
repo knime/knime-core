@@ -70,12 +70,12 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-class OutlierDomainsUpdater {
+final class OutlierDomainsUpdater {
 
     /** Map containing the min and max values for the column domains to update. */
     private final Map<String, double[]> m_domainsMap;
 
-    public OutlierDomainsUpdater() {
+    OutlierDomainsUpdater() {
         m_domainsMap = new HashMap<String, double[]>();
     }
 
@@ -86,7 +86,7 @@ class OutlierDomainsUpdater {
      * @param data the data table whose domains have to be reseted
      * @return the data table after reseting the domains
      */
-    public BufferedDataTable updateDomain(final ExecutionContext exec, final BufferedDataTable data) {
+    BufferedDataTable updateDomain(final ExecutionContext exec, final BufferedDataTable data) {
         DataTableSpec spec = data.getSpec();
         final DataColumnSpec[] domainSpecs = new DataColumnSpec[spec.getNumColumns()];
         for (int i = 0; i < spec.getNumColumns(); i++) {

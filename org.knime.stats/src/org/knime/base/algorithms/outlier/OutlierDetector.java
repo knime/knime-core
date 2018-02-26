@@ -63,7 +63,7 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class OutlierDetector {
+public final class OutlierDetector {
 
     /** The intervals calculator. */
     private final OutlierIntervalsCalculator m_calculator;

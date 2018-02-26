@@ -83,7 +83,7 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class OutlierIntervalsCalculator {
+public final class OutlierIntervalsCalculator {
 
     /** The column name policy used by the {@link GroupByTable} */
     private static final ColumnNamePolicy COLUMN_NAME_POLICY = ColumnNamePolicy.AGGREGATION_METHOD_COLUMN_NAME;
@@ -264,7 +264,9 @@ public class OutlierIntervalsCalculator {
         // start the computation of the first and third quartile (and some additional stuff)
         exec.setMessage(STATISTICS_MSG);
         try {
-            t = getGroupByTable(in, exec.createSubExecutionContext(quartilesProgress));
+            ExecutionContext quartilesCalcExec = exec.createSubExecutionContext(quartilesProgress);
+            t = getGroupByTable(in, quartilesCalcExec);
+            quartilesCalcExec.setProgress(1.0);
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(MEMORY_EXCEPTION, e);
         }

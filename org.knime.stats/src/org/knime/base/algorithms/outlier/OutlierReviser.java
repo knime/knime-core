@@ -87,7 +87,7 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class OutlierReviser {
+public final class OutlierReviser {
 
     /** Suffix of the outlier replacement count column. */
     private static final String REPLACEMENT_COUNT_SUFFIX = " (outlier count)";

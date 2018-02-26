@@ -86,14 +86,14 @@ public abstract class StoreResizableDoubleArrayOperator extends AggregationOpera
             return true;
         }
         // ensure that the array size never exceeds the maximum number of unique values
-        if (m_cells.getInternalValues().length < getMaxUniqueValues()
-            && m_cells.getInternalValues().length * m_cells.getExpansionFactor() > getMaxUniqueValues()) {
-            m_cells.setExpansionFactor((1f * getMaxUniqueValues()) / m_cells.getInternalValues().length);
+        final int length = m_cells.getInternalValues().length;
+        if (length < getMaxUniqueValues() && length * m_cells.getExpansionFactor() > getMaxUniqueValues()) {
+            m_cells.setExpansionFactor((1f * getMaxUniqueValues()) / length);
         }
         try {
             m_cells.addElement(((DoubleValue)cell).getDoubleValue());
         } catch (final OutOfMemoryError e) {
-            setSkipMessage("Groups requires too much storage");
+            setSkipMessage("Group requires too much storage");
             return true;
         }
         return false;
