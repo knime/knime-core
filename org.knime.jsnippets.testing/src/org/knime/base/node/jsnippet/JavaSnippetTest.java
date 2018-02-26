@@ -100,7 +100,7 @@ public class JavaSnippetTest {
 
         try {
             s.snippet();
-            fail("Excpected exception to be thrown by snippet");
+            fail("Expected exception to be thrown by snippet");
         } catch (Abort e) {
             if(!e.getMessage().equals("success")) {
                 throw e;

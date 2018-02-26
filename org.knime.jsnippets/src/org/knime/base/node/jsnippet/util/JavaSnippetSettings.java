@@ -298,7 +298,7 @@ public class JavaSnippetSettings {
         settings.addString(TEMPLATE_UUID, m_templateUUID);
         settings.addBoolean(RUN_ON_EXECUTE, m_runOnExecute);
 
-        // added in 3.5
+        // added in 3.6
         settings.addStringArray(BUNDLES, m_bundles);
     }
 
@@ -323,7 +323,7 @@ public class JavaSnippetSettings {
         // added in 2.8 (only java edit variable) -- 2.7 scripts were always run on execute()
         m_runOnExecute = settings.getBoolean(RUN_ON_EXECUTE, true);
 
-        // added in 3.5
+        // added in 3.6
         m_bundles = settings.getStringArray(BUNDLES, new String[0]);
     }
 
@@ -358,7 +358,7 @@ public class JavaSnippetSettings {
         // added in 2.8 (only java edit variable)
         m_runOnExecute = settings.getBoolean(RUN_ON_EXECUTE, false);
 
-        // added in 3.5
+        // added in 3.6
         m_bundles = settings.getStringArray(BUNDLES, new String[0]);
     }
 }
