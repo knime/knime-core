@@ -152,6 +152,9 @@ public class BundleListPanel extends JPanel {
             final Component c = super.getListCellRendererComponent(list, e.name, index, isSelected, cellHasFocus);
             if (!e.exists) {
                 c.setForeground(Color.RED);
+                if (c instanceof JLabel) {
+                    ((JLabel)c).setToolTipText("Bundle is not installed.");
+                }
             }
 
             return c;
@@ -425,18 +428,15 @@ public class BundleListPanel extends JPanel {
         final String nameWithoutVersion = bundleName.split(" ")[0];
         final Bundle firstBundle = Platform.getBundle(nameWithoutVersion);
 
-        if (firstBundle == null) {
-            /* Bundle not found */
-            return false;
-        }
+        final boolean bundleFound = (firstBundle != null);
+        final String symbolicName = (bundleFound) ? firstBundle.getSymbolicName() : nameWithoutVersion;
 
         if (m_listModel.contains(firstBundle)) {
             return false;
         }
 
         //final Set<String> bundleNameSet = new HashSet<String>();
-        final String symbolicName = firstBundle.getSymbolicName();
-        m_listModel.addElement(new BundleListEntry(symbolicName, true));
+        m_listModel.addElement(new BundleListEntry(symbolicName, bundleFound));
 
         //for (final String bn : bundleNameSet) {
         //    listToAddTo.addElement(bn);

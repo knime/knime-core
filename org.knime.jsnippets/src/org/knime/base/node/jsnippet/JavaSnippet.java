@@ -467,7 +467,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         if (m_settings != null) {
             // Resolve bundle names to bundles
             Stream.of(m_settings.getBundles()).map(bname -> Platform.getBundle(bname.split(" ")[0]))
-                .collect(Collectors.toCollection(() -> pending));
+                .filter(b -> b != null).collect(Collectors.toCollection(() -> pending));
         }
 
         Bundle bundle = null;
@@ -900,6 +900,16 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             if (!field.getReplaceExisting() && var != null) {
                 errors.add("The output flow variable \"" + field.getKnimeName() + "\" is marked to be new, "
                     + "but an input with this name does exist.");
+            }
+        }
+
+        // Check additional bundles
+        for (final String bundleName : m_settings.getBundles()) {
+            final Bundle bundle = Platform.getBundle(bundleName);
+            if (bundle == null) {
+                errors.add("Bundle \"" + bundleName + "\" required by this snippet was not found.");
+            } else {
+                // TODO Version warning?
             }
         }
 
