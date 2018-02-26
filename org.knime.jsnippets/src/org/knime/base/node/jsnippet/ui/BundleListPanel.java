@@ -62,6 +62,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -444,7 +445,7 @@ public class BundleListPanel extends JPanel {
      * @param list The bundle names to add
      */
     public void addBundles(final List<String> list) {
-        final ArrayList<BundleListEntry> entries = new ArrayList<>(list.size());
+        final LinkedHashSet<BundleListEntry> entries = new LinkedHashSet<>(list.size());
         for (final String b : list) {
             if (b == null) {
                 continue;

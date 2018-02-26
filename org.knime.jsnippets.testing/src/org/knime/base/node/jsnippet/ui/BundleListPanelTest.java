@@ -103,7 +103,7 @@ public class BundleListPanelTest extends UiTest {
         assertFalse("Adding an already added bundle should not be permitted", panel.addBundle(bundle.getSymbolicName()));
         assertEquals("Adding a bundle a second time should not increase size of list", 1, panel.m_listModel.size());
 
-        assertFalse(panel.addBundle("i.dont.exist"));
+        assertTrue("Adding non-existent bundles should be allowed.", panel.addBundle("i.dont.exist"));
 
         /* Test clearing */
         panel.setBundles(new String[]{});
@@ -119,10 +119,10 @@ public class BundleListPanelTest extends UiTest {
         final AddBundleDialog dialog = panel.openAddBundleDialog();
 
         /* Select first value */
-        dialog.m_bundleList.setSelectedIndex(0);
+        dialog.m_bundleList.setSelectedIndex(1);
         /* Simulate a double-click to close and add */
         dialog.m_bundleList
-            .dispatchEvent(new MouseEvent(dialog, MouseEvent.MOUSE_CLICKED, 1, MouseEvent.BUTTON1, 4, 4, 2, false));
+            .dispatchEvent(new MouseEvent(dialog, MouseEvent.MOUSE_CLICKED, 1, MouseEvent.BUTTON1, 0, 0, 2, false));
 
         assertFalse("Double-Click should close AddBundleDialog", dialog.isVisible());
         assertEquals("Double-Click should add a bundle", 2, panel.m_listModel.size());
@@ -136,6 +136,7 @@ public class BundleListPanelTest extends UiTest {
         panel.addBundles(Arrays.asList(bundleNames[0], bundleNames[1], bundleNames[1]));
         assertArrayEquals("getBundles should return array of bundles in list model",
             new String[]{panel.m_listModel.getElementAt(0).name, panel.m_listModel.getElementAt(1).name}, bundleNames);
+        assertEquals("Duplicates should be skipped while adding bundles.", 2, panel.m_listModel.size());
 
         /* Select multiple and remove */
         panel.m_list.setSelectedIndices(new int[]{0, 1});
