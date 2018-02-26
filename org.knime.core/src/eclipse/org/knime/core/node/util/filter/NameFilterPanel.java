@@ -101,12 +101,15 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import javax.swing.table.TableStringConverter;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.DataColumnSpecTableCellRenderer;
+import org.knime.core.node.util.FlowVariableListCellRenderer.FlowVariableCell;
 import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
 
 /**
@@ -243,65 +246,33 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private String[] m_availableNames = new String[0];
 
     /**
-     * Creates a panel allowing the user to select elements.
-     */
-    protected NameFilterPanel() {
-        this(false, null);
-    }
-
-    /**
-     * Creates a new filter panel with three component which are the include list, button panel to shift elements
-     * between the two lists, and the exclude list. The include list then will contain all values to filter.
-     *
-     * @param showSelectionListsOnly if set, the component shows only the basic include/exclude selection panel - no
-     *            additional search boxes, force-include-options, etc.
-     */
-    protected NameFilterPanel(final boolean showSelectionListsOnly) {
-        this(showSelectionListsOnly, null);
-    }
-
-    /**
-     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
-     * between the two lists, and the exclude list. The include list then will contain all values to filter.
-     * Additionally a {@link InputFilter} can be specified, based on which the shown items are shown or not. The filter
-     * can be <code>null
-     * </code>, in which case it is simply not used at all.
-     *
-     * @param showSelectionListsOnly if set, the component shows only the basic include/exclude selection panel - no
-     *            additional search boxes, force-include-options, etc.
-     * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
-     *            exclude) and which are not shown.
-     */
-    protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter) {
-        this(showSelectionListsOnly, filter, null);
-    }
-
-    /**
      * Placeholder being displayed instead of table when search matches no items.
      *
      * @author Johannes Schweig
      */
     private class TablePlaceholder extends JLabel{
+        final String m_entryString;
 
-        TablePlaceholder(){
+        TablePlaceholder(final String entryString){
             setHorizontalAlignment(SwingConstants.CENTER);
             setVerticalAlignment(SwingConstants.TOP);
             setFont(getFont().deriveFont(Font.ITALIC));
             setForeground(Color.GRAY);
+            m_entryString = entryString;
         }
 
         /**
-         * Updates the label's text if there are no columns to be displayed.
+         * Updates the label's text if there are no entries to be displayed.
          *
          */
         private void updateTextEmpty(){
-            setText("No columns in this list");
+            setText("No " + m_entryString + " in this list");
         }
 
         /**
-         * Updates the label's text if no matching columns are found.
+         * Updates the label's text if no matching entries are found.
          * @param searchString term that was searched for
-         * @param total total number of columns in the table
+         * @param total total number of entries in the table
          */
         private void updateTextNothingFound(final String searchString, final int total){
             // empty list/table
@@ -311,7 +282,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
             if (str.length() > max){
                 str = str.substring(0, max) + "...";
             }
-            setText("<html>No columns found matching<br>\""+str+"\" (total: " + total + ")</html>");
+            setText("<html>No " + m_entryString + " found matching<br>\""+str+"\" (total: " + total + ")</html>");
         }
 
     }
@@ -362,7 +333,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
          */
         @Override
         public void keyTyped(final KeyEvent e) {
-            // find first column starting with typed character
+            // find first entry starting with typed character
             String key = String.valueOf(e.getKeyChar());
             int index = -1;
             for (int i = 0; i < m_table.getRowCount(); i++) {
@@ -372,7 +343,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
                     break;
                 }
             }
-            // if a column is found, select it and scroll the view
+            // if a entry is found, select it and scroll the view
             if (index != -1) {
                 m_table.setRowSelectionInterval(index, index);
                 m_table.scrollRectToVisible(new Rectangle(m_table.getCellRect(index, 0, true)));
@@ -491,7 +462,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * ActionListener that triggers the moving of columns on button press.
+     * ActionListener that triggers the moving of entries on button press.
      *
      * @author Johannes Schweig
      */
@@ -531,8 +502,27 @@ public abstract class NameFilterPanel<T> extends JPanel {
         }
     }
 
+
     /**
-     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
+     * Creates a panel allowing the user to select elements.
+     */
+    protected NameFilterPanel() {
+        this(false, null);
+    }
+
+    /**
+     * Creates a new filter panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
+     *
+     * @param showSelectionListsOnly if set, the component shows only the basic include/exclude selection panel - no
+     *            additional search boxes, force-include-options, etc.
+     */
+    protected NameFilterPanel(final boolean showSelectionListsOnly) {
+        this(showSelectionListsOnly, null);
+    }
+
+    /**
+     * Creates a new filter panel with three component which are the include list, button panel to shift elements
      * between the two lists, and the exclude list. The include list then will contain all values to filter.
      * Additionally a {@link InputFilter} can be specified, based on which the shown items are shown or not. The filter
      * can be <code>null</code>, in which case it is simply not used at all.
@@ -541,12 +531,48 @@ public abstract class NameFilterPanel<T> extends JPanel {
      *            additional search boxes, force-include-options, etc.
      * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
      *            exclude) and which are not shown.
+     * @deprecated Icons are used instead of searchLabel,
+     * the searchLabel parameter will be ignored.
      * @param searchLabel text to show next to the search fields
      * @since 3.4
      */
-    @SuppressWarnings({"rawtypes"})
+    @Deprecated
     protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter,
         final String searchLabel) {
+        this(showSelectionListsOnly, filter);
+    }
+
+    /**
+     * Creates a new filter panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
+     * Additionally a {@link InputFilter} can be specified, based on which the shown items are shown or not. The filter
+     * can be <code>null
+     * </code>, in which case it is simply not used at all.
+     *
+     * @param showSelectionListsOnly if set, the component shows only the basic include/exclude selection panel - no
+     *            additional search boxes, force-include-options, etc.
+     * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
+     *            exclude) and which are not shown.
+     */
+    protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter) {
+        this(showSelectionListsOnly, "columns", filter);
+    }
+    /**
+     * Creates a new filter panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
+     * Additionally a {@link InputFilter} can be specified, based on which the shown items are shown or not. The filter
+     * can be <code>null
+     * </code>, in which case it is simply not used at all.
+     *
+     * @param showSelectionListsOnly if set, the component shows only the basic include/exclude selection panel - no
+     *            additional search boxes, force-include-options, etc.
+     * @param entryString description of the entries in the panel (columns, values, variables)
+     * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
+     *            exclude) and which are not shown.
+     * @since 3.6
+     */
+    protected NameFilterPanel(final boolean showSelectionListsOnly, final String entryString, final InputFilter<T> filter) {
+
         super(new GridLayout(1, 1));
         m_filter = filter;
         m_patternPanel = getPatternFilterPanel(filter);
@@ -569,7 +595,25 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_inclTable = new JTable(m_inclMdl);
         m_exclMdl = new NameFilterTableModel();
         m_exclTable = new JTable(m_exclMdl);
+        // TableStringConverter
+        TableStringConverter tableStringConverter = new TableStringConverter() {
 
+            @Override
+            public String toString(final TableModel model, final int row, final int column) {
+                @SuppressWarnings("unchecked")
+                T t = (T)model.getValueAt(row, column);
+                String str;
+                // check if instance of DataColumnSpec (format: "column (String)") or FlowVariableCell
+                if (t instanceof DataColumnSpec) {
+                    str = ((DataColumnSpec) t).getName();
+                } else if (t instanceof FlowVariableCell) {
+                    str = ((FlowVariableCell) t).getName();
+                } else {
+                    str = t.toString();
+                }
+                return str;
+            }
+        };
         // include list
         m_inclTable.setShowGrid(false);
         m_inclTable.setFillsViewportHeight(true);
@@ -578,6 +622,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_inclTable.addMouseListener(new DoubleClickMouseAdapter(m_inclTable));
         m_inclTable.addKeyListener(new TableKeyAdapter(m_inclTable));
         m_inclSorter = new TableRowSorter<NameFilterTableModel>(m_inclMdl);
+        m_inclSorter.setStringConverter(tableStringConverter);
         m_inclTable.setRowSorter(m_inclSorter);
         m_inclTable.addFocusListener(new TableFocusAdapter(m_exclTable));
         final JScrollPane jspIncl = new JScrollPane(m_inclTable);
@@ -585,7 +630,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         // setup cardlayout for display of placeholder on search returning no results
         m_inclCards = new JPanel(new CardLayout());
         m_inclCards.setBorder(new EmptyBorder(0, 8, 0, 8));
-        m_inclTablePlaceholder = new TablePlaceholder();
+        m_inclTablePlaceholder = new TablePlaceholder(entryString);
         m_inclCards.add(jspIncl, ID_CARDLAYOUT_LIST);
         m_inclCards.add(m_inclTablePlaceholder, ID_CARDLAYOUT_PLACEHOLDER);
 
@@ -614,9 +659,10 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_exclTable.addMouseListener(new DoubleClickMouseAdapter(m_exclTable));
         m_exclTable.addKeyListener(new TableKeyAdapter(m_exclTable));
         // set renderer for items in the in- and exclude list
-        m_inclTable.setDefaultRenderer(Object.class, new DataColumnSpecTableCellRenderer());
-        m_exclTable.setDefaultRenderer(Object.class, new DataColumnSpecTableCellRenderer());
+        m_inclTable.setDefaultRenderer(Object.class, getTableCellRenderer());
+        m_exclTable.setDefaultRenderer(Object.class, getTableCellRenderer());
         m_exclSorter = new TableRowSorter<NameFilterTableModel>(m_exclMdl);
+        m_exclSorter.setStringConverter(tableStringConverter);
         m_exclTable.setRowSorter(m_exclSorter);
         m_exclTable.addFocusListener(new TableFocusAdapter(m_inclTable));
         final JScrollPane jspExcl = new JScrollPane(m_exclTable);
@@ -624,7 +670,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         // setup cardlayout for display of placeholder on search returning no results
         m_exclCards = new JPanel(new CardLayout());
         m_exclCards.setBorder(new EmptyBorder(0, 8, 0, 8));
-        m_exclTablePlaceholder = new TablePlaceholder();
+        m_exclTablePlaceholder = new TablePlaceholder(entryString);
         m_exclCards.add(jspExcl, ID_CARDLAYOUT_LIST);
         m_exclCards.add(m_exclTablePlaceholder, ID_CARDLAYOUT_PLACEHOLDER);
 
@@ -655,38 +701,38 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_enforceExclusion.addActionListener(e -> cleanInvalidValues());
         if (!showSelectionListsOnly) {
             final ButtonGroup forceGroup = new ButtonGroup();
-            m_enforceInclusion.setToolTipText("Force the set of included names to stay the same.");
+            m_enforceInclusion.setToolTipText("Force the set of included " + entryString + " to stay the same.");
             forceGroup.add(m_enforceInclusion);
             includePanel.add(m_enforceInclusion, BorderLayout.SOUTH);
-            m_enforceExclusion.setToolTipText("Force the set of excluded names to stay the same.");
+            m_enforceExclusion.setToolTipText("Force the set of excluded " + entryString + " to stay the same.");
             forceGroup.add(m_enforceExclusion);
             m_enforceExclusion.doClick();
             excludePanel.add(m_enforceExclusion, BorderLayout.SOUTH);
         }
         m_addButton = new JButton(new ImageIcon(getResourceUrl("add.png")));
         m_addButton.setMaximumSize(new Dimension(125, 25));
-        m_addButton.setToolTipText("Move the selected entries from the left to the right list.");
+        m_addButton.setToolTipText("Move the selected " + entryString +" from the left to the right list.");
         buttonPan.add(m_addButton);
         m_addButton.addActionListener(e -> onAddIt(m_exclTable.getSelectedRows()));
         buttonPan.add(Box.createVerticalStrut(25));
 
         m_addAllButton = new JButton(new ImageIcon(getResourceUrl("add_all.png")));
         m_addAllButton.setMaximumSize(new Dimension(125, 25));
-        m_addAllButton.setToolTipText("Moves all visible entries from the left to the right list.");
+        m_addAllButton.setToolTipText("Moves all visible " + entryString + " from the left to the right list.");
         buttonPan.add(m_addAllButton);
         m_addAllButton.addActionListener(new MoveAllActionListener(m_exclTable));
         buttonPan.add(Box.createVerticalStrut(25));
 
         m_remButton = new JButton(new ImageIcon(getResourceUrl("rem.png")));
         m_remButton.setMaximumSize(new Dimension(125, 25));
-        m_remButton.setToolTipText("Move the selected entries from the right to the left list.");
+        m_remButton.setToolTipText("Move the selected " + entryString + " from the right to the left list.");
         buttonPan.add(m_remButton);
         m_remButton.addActionListener(e -> onRemIt(m_inclTable.getSelectedRows()));
         buttonPan.add(Box.createVerticalStrut(25));
 
         m_remAllButton = new JButton(new ImageIcon(getResourceUrl("rem_all.png")));
         m_remAllButton.setMaximumSize(new Dimension(125, 25));
-        m_remAllButton.setToolTipText("Moves all visible entries from the right to the left list.");
+        m_remAllButton.setToolTipText("Moves all visible " + entryString + " from the right to the left list.");
         buttonPan.add(m_remAllButton);
         m_remAllButton.addActionListener(new MoveAllActionListener(m_inclTable));
         m_additionalCheckbox = createAdditionalButton();
@@ -736,9 +782,18 @@ public abstract class NameFilterPanel<T> extends JPanel {
         return Optional.ofNullable(m_additionalCheckbox);
     }
 
-    /** @return a list cell renderer from items to be rendered in the filer */
+    /** @return a list cell renderer from items to be rendered in the filer
+     *  @deprecated JLists were replaced by JTables. Use getTableCellRenderer instead.
+     * */
+    @Deprecated
     @SuppressWarnings("rawtypes")
     protected abstract ListCellRenderer getListCellRenderer();
+
+    /**
+     * @return a table cell renderer from items to be renderer in the filer
+     * @since 3.6
+     */
+    protected abstract TableCellRenderer getTableCellRenderer();
 
     /**
      * Get the a T for the given name.
@@ -772,6 +827,16 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_addButton.setEnabled(enabled);
         m_enforceInclusion.setEnabled(enabled);
         m_enforceExclusion.setEnabled(enabled);
+        // change font color of jtable to gray when disabled
+        if (enabled) {
+            m_inclTable.setForeground(Color.BLACK);
+            m_exclTable.setForeground(Color.BLACK);
+        } else {
+            m_inclTable.clearSelection();
+            m_exclTable.clearSelection();
+            m_inclTable.setForeground(Color.GRAY);
+            m_exclTable.setForeground(Color.GRAY);
+        }
         if (m_additionalCheckbox != null) {
             m_additionalCheckbox.setEnabled(enabled);
         }
@@ -783,7 +848,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Adds a listener which gets informed whenever the column filtering changes.
+     * Adds a listener which gets informed whenever the entry filtering changes.
      *
      * @param listener the listener
      */
@@ -795,7 +860,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Removes the given listener from this filter column panel.
+     * Removes the given listener from this filter panel.
      *
      * @param listener the listener.
      */
@@ -806,7 +871,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Removes all column filter change listener.
+     * Removes all filter change listener.
      */
     public void removeAllColumnFilterChangeListener() {
         if (m_listeners != null) {
@@ -816,7 +881,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /**
      * Updates this filter panel by removing all current selections from the include and exclude list. The include list
-     * will contains all column names from the spec afterwards.
+     * contains all entry names from the spec afterwards.
      *
      * @param config to be loaded from
      * @param names array of names to be included or excluded (preserve order)
@@ -1029,7 +1094,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Removes the given columns form either include or exclude list and notifies all listeners. Does not throw an
+     * Removes the given entries from either include or exclude list and notifies all listeners. Does not throw an
      * exception if the argument contains <code>null</code> elements or is not contained in any of the lists.
      *
      * @param names a list of names to hide from the filter
@@ -1547,7 +1612,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         JPanel panel = new JPanel();
         panel.setBorder(new EmptyBorder(4, 4, 4, 4));
         panel.setLayout(new GridBagLayout());
-        // Setup the mode panel, containing the options by column name and by column type
+        // Setup the mode panel, containing the options by entry name and by type
         m_typeGroup = new ButtonGroup();
         m_typePanel = new JPanel();
         m_typePanel.setLayout(new BoxLayout(m_typePanel, BoxLayout.X_AXIS));
@@ -1661,7 +1726,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     private void updateFilterView(final JTable table, final JPanel cardsPanel, final TablePlaceholder tablePlaceholder, final String searchQuery){
         CardLayout cl = (CardLayout) cardsPanel.getLayout();
-        // if there are no columns in the list
+        // if there are no entries in the list
         if (table.getModel().getRowCount() == 0) {
             tablePlaceholder.updateTextEmpty();
             cl.show(cardsPanel, ID_CARDLAYOUT_PLACEHOLDER);
@@ -1688,8 +1753,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
             try {
                 // by default perform case insensitive search
                 // escape all regex characters [\^$.|?*+()
-                // DataColumnSpec format "foo (knime type)" -> filter should only search for name
-                rf = RowFilter.regexFilter("(?i)" + Pattern.quote(searchQuery) + ".*\\(.*\\)");
+                rf = RowFilter.regexFilter("(?i)" + Pattern.quote(searchQuery));
             } catch (java.util.regex.PatternSyntaxException p) {
                 return;
             }

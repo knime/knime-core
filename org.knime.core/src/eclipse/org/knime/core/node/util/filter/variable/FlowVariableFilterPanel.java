@@ -50,9 +50,11 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.swing.ListCellRenderer;
+import javax.swing.table.TableCellRenderer;
 
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.util.FlowVariableListCellRenderer.FlowVariableCell;
+import org.knime.core.node.util.FlowVariableTableCellRenderer;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterPanel;
 import org.knime.core.node.workflow.FlowVariable;
@@ -72,7 +74,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      * Create a new panel to filter {@link FlowVariable}s.
      */
     public FlowVariableFilterPanel() {
-        super();
+        super(false, "variables", null);
     }
 
     /**
@@ -82,7 +84,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      *            force-include-option, etc.
      */
     public FlowVariableFilterPanel(final boolean showSelectionListsOnly) {
-        super(showSelectionListsOnly);
+        super(showSelectionListsOnly, "variables", null);
     }
 
     /**
@@ -92,7 +94,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      * @param types The FlowVariable.Type of the flow variables to show.
      */
     public FlowVariableFilterPanel(final FlowVariable.Type... types) {
-        super(false, new FlowVariableTypeFilter(types));
+        super(false, "variables", new FlowVariableTypeFilter(types));
     }
 
     /**
@@ -104,7 +106,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      * @param types The FlowVariable.Type of the flow variables to show.
      */
     public FlowVariableFilterPanel(final boolean showSelectionListsOnly, final FlowVariable.Type... types) {
-        super(showSelectionListsOnly, new FlowVariableTypeFilter(types));
+        super(showSelectionListsOnly, "variables", new FlowVariableTypeFilter(types));
     }
 
     /**
@@ -116,7 +118,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      * @param filter The filter specifying which variables are shown and which not.
      */
     public FlowVariableFilterPanel(final boolean showSelectionListsOnly, final InputFilter<FlowVariableCell> filter) {
-        super(showSelectionListsOnly, filter);
+        super(showSelectionListsOnly, "variables", filter);
     }
 
     /**
@@ -126,12 +128,14 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      * @param filter The filter specifying which variables are shown and which not.
      */
     public FlowVariableFilterPanel(final InputFilter<FlowVariableCell> filter) {
-        super(false, filter);
+        super(false, "variables", filter);
     }
 
     /**
      * {@inheritDoc}
+     * @deprecated see {@link NameFilterPanel#getListCellRenderer()}
      */
+    @Deprecated
     @SuppressWarnings("rawtypes")
     @Override
     protected ListCellRenderer getListCellRenderer() {
@@ -178,6 +182,14 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
     @Override
     protected boolean supportsInvalidValues() {
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected TableCellRenderer getTableCellRenderer() {
+        return new FlowVariableTableCellRenderer();
     }
 
 }

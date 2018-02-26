@@ -55,6 +55,8 @@ import java.util.Set;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JCheckBox;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.NominalValue;
@@ -88,7 +90,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
      * @param showSelectionListsOnly {@code true} hides the <i>Enforce in-/exclusion</i> buttons
      */
     public NominalValueFilterPanel(final boolean showSelectionListsOnly) {
-        super(showSelectionListsOnly, null, "Value(s)");
+        super(showSelectionListsOnly, "values", null);
     }
 
     @Override
@@ -100,7 +102,9 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
 
     /**
      * {@inheritDoc}
+     * @deprecated see {@link NameFilterPanel#getListCellRenderer()}
      */
+    @Deprecated
     @Override
     protected DefaultListCellRenderer getListCellRenderer() {
         return new DefaultListCellRenderer();
@@ -173,6 +177,14 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
     @Override
     protected NominalValuePatternFilterPanel getPatternFilterPanel(final InputFilter<NominalValue> filter) {
         return new NominalValuePatternFilterPanel(this, filter);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected TableCellRenderer getTableCellRenderer() {
+        return new DefaultTableCellRenderer();
     }
 
 }

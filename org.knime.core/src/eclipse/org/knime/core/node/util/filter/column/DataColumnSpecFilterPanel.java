@@ -51,12 +51,14 @@ import javax.swing.JRadioButton;
 import javax.swing.ListCellRenderer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.table.TableCellRenderer;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.node.util.DataColumnSpecTableCellRenderer;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 import org.knime.core.node.util.filter.NameFilterPanel;
@@ -232,7 +234,10 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
         m_typePanel.setEnabled(enabled);
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @deprecated see {@link NameFilterPanel#getListCellRenderer()}
+     */
+    @Deprecated
     @SuppressWarnings("rawtypes")
     @Override
     protected ListCellRenderer getListCellRenderer() {
@@ -311,6 +316,14 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
             }
             m_typeFilterEnabled = enabled;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected TableCellRenderer getTableCellRenderer() {
+        return new DataColumnSpecTableCellRenderer();
     }
 
 }

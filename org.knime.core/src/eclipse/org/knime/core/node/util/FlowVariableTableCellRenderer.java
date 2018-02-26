@@ -41,25 +41,28 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 26, 2008 (wiswedel): created
  */
 package org.knime.core.node.util;
 
+import java.awt.Color;
 import java.awt.Component;
 
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.knime.core.data.DataValue;
+import org.knime.core.node.util.FlowVariableListCellRenderer.FlowVariableCell;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * Table cell renderer for elements of type {@link FlowVariable}. It will show
  * the name of the variable along with an icon representing the type.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class FlowVariableTableCellRenderer extends DefaultTableCellRenderer {
@@ -72,8 +75,29 @@ public class FlowVariableTableCellRenderer extends DefaultTableCellRenderer {
         Component c =
                 super.getTableCellRendererComponent(table, value, isSelected,
                         hasFocus, row, column);
+        FlowVariable flowVariable = null;
         if (value instanceof FlowVariable) {
-            FlowVariable v = (FlowVariable)value;
+            flowVariable = (FlowVariable) value;
+        } else if (value instanceof FlowVariableCell) {
+            // Added for bug 4601 to display missing flow variables
+            FlowVariableCell flowVariableCell = (FlowVariableCell)value;
+            if (flowVariableCell.isValid()) {
+                // Display as normal flow variable
+                flowVariable = flowVariableCell.getFlowVariable();
+            } else {
+                // Display missing variable by known name and with missing icon and red border
+                setText(flowVariableCell.getName());
+                setIcon(FlowVariableListCellRenderer.FLOW_VAR_INVALID_ICON);
+                setToolTipText(null);
+                setBorder(BorderFactory.createLineBorder(Color.red));
+            }
+        } else {
+            // Value is neither flow variable nor flow variable cell, do nothing
+            setToolTipText(null);
+        }
+        // If flow variable was found either directly as value or inside flow variable cell
+        if (flowVariable != null) {
+            FlowVariable v = flowVariable;
             Icon icon;
             setText(v.getName());
             String curValue;
@@ -105,11 +129,7 @@ public class FlowVariableTableCellRenderer extends DefaultTableCellRenderer {
             b.append(curValue);
             b.append(")");
             setToolTipText(b.toString());
-        } else {
-            setIcon(null);
-            setToolTipText(null);
         }
         return c;
     }
-
 }

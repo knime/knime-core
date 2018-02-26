@@ -45,8 +45,10 @@
 package org.knime.core.node.util.filter;
 
 import javax.swing.ListCellRenderer;
+import javax.swing.table.TableCellRenderer;
 
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.node.util.DataColumnSpecTableCellRenderer;
 
 /**
  * A panel to filter {@link String}s.
@@ -73,7 +75,10 @@ public class StringFilterPanel extends NameFilterPanel<String> {
         super(showSelectionListsOnly);
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @deprecated see {@link NameFilterPanel#getListCellRenderer()}
+     * */
+    @Deprecated
     @Override
     protected ListCellRenderer getListCellRenderer() {
         return new DataColumnSpecListCellRenderer();
@@ -100,6 +105,14 @@ public class StringFilterPanel extends NameFilterPanel<String> {
     public void loadConfiguration(final NameFilterConfiguration config,
             final String[] names) {
         super.loadConfiguration(config, names);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected TableCellRenderer getTableCellRenderer() {
+        return new DataColumnSpecTableCellRenderer();
     }
 
 }
