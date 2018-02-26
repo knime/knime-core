@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 
 import org.eclipse.core.runtime.Platform;
 import org.junit.Before;
@@ -84,7 +85,7 @@ public class BundleListPanelTest extends UiTest {
      * Test adding a bundle to the panel (manually and via dialog and simulated click).
      */
     @Test
-    public void testAddBundle() {
+    public void testBundleListPanel() {
         /* Test initialization */
         assertFalse(BundleListPanel.bundleNames.isEmpty());
 
@@ -99,7 +100,7 @@ public class BundleListPanelTest extends UiTest {
         final Bundle bundle = Platform.getBundle(panel.m_listModel.getElementAt(0).name);
         assertNotNull("Expected symbolic name of an existing bundle to have been added", bundle);
 
-        assertFalse("Adding a already added bundle should not be permitted", panel.addBundle(firstBundle));
+        assertFalse("Adding an already added bundle should not be permitted", panel.addBundle(bundle.getSymbolicName()));
         assertEquals("Adding a bundle a second time should not increase size of list", 1, panel.m_listModel.size());
 
         assertFalse(panel.addBundle("i.dont.exist"));
@@ -127,8 +128,14 @@ public class BundleListPanelTest extends UiTest {
         assertEquals("Double-Click should add a bundle", 2, panel.m_listModel.size());
 
         /* Test getBundles() */
+        final String[] bundleNames = panel.getBundles();
         assertArrayEquals("getBundles should return array of bundles in list model",
-            new String[]{panel.m_listModel.getElementAt(0).name, panel.m_listModel.getElementAt(1).name}, panel.getBundles());
+            new String[]{panel.m_listModel.getElementAt(0).name, panel.m_listModel.getElementAt(1).name}, bundleNames);
+
+        panel.setBundles(new String[]{});
+        panel.addBundles(Arrays.asList(bundleNames[0], bundleNames[1], bundleNames[1]));
+        assertArrayEquals("getBundles should return array of bundles in list model",
+            new String[]{panel.m_listModel.getElementAt(0).name, panel.m_listModel.getElementAt(1).name}, bundleNames);
 
         /* Select multiple and remove */
         panel.m_list.setSelectedIndices(new int[]{0, 1});

@@ -60,13 +60,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.AbstractListModel;
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -86,6 +86,7 @@ import org.eclipse.core.runtime.IBundleGroupProvider;
 import org.eclipse.core.runtime.Platform;
 import org.knime.base.node.jsnippet.ui.util.MouseClickListener;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.util.filter.ArrayListModel;
 import org.osgi.framework.Bundle;
 
 /**
@@ -102,7 +103,7 @@ public class BundleListPanel extends JPanel {
     private static final long serialVersionUID = 1L;
 
     /** Entry in the Bundle List */
-    class BundleListEntry {
+    static class BundleListEntry {
         /** Name of the bundle */
         final String name;
 
@@ -162,7 +163,7 @@ public class BundleListPanel extends JPanel {
     }
 
     /* Filterable list model containing all available bundles */
-    final DefaultListModel<BundleListEntry> m_listModel = new DefaultListModel<>();
+    final ArrayListModel<BundleListEntry> m_listModel = new ArrayListModel<>();
 
     /* List displaying all available bundles */
     final JList<BundleListEntry> m_list = new JList<>(m_listModel);
@@ -332,10 +333,8 @@ public class BundleListPanel extends JPanel {
 
                 @Override
                 public void keyPressed(final KeyEvent e) {
-                    if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        for (final String bundleName : m_bundleList.getSelectedValuesList()) {
-                            addBundle(bundleName);
-                        }
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        addBundles(m_bundleList.getSelectedValuesList());
                         setVisible(false);
                         dispose();
                     }
@@ -410,9 +409,7 @@ public class BundleListPanel extends JPanel {
     public void setBundles(final String[] bundles) {
         m_listModel.clear();
 
-        for (final String b : bundles) {
-            addBundle(b);
-        }
+        addBundles(Arrays.asList(bundles));
     }
 
     /**
@@ -422,8 +419,52 @@ public class BundleListPanel extends JPanel {
      * @return true if adding was successful, false if bundle with given name was not found.
      */
     public boolean addBundle(final String bundleName) {
-        if (bundleName == null) {
+        final BundleListEntry e = makeBundleListEntry(bundleName);
+        if (e == null) {
             return false;
+        }
+
+        if (m_listModel.contains(e)) {
+            return false;
+        }
+
+        //final Set<String> bundleNameSet = new HashSet<String>();
+        m_listModel.add(e);
+
+        //for (final String bn : bundleNameSet) {
+        //    listToAddTo.addElement(bn);
+        //}
+
+        return true;
+    }
+
+    /**
+     * Add given bundle names to list. Duplicates and null names are skipped.
+     *
+     * @param list The bundle names to add
+     */
+    public void addBundles(final List<String> list) {
+        final ArrayList<BundleListEntry> entries = new ArrayList<>(list.size());
+        for (final String b : list) {
+            if (b == null) {
+                continue;
+            }
+
+            final BundleListEntry e = makeBundleListEntry(b);
+            if (m_listModel.contains(e.name)) {
+                continue;
+            }
+
+            entries.add(e);
+        }
+
+        m_listModel.addAll(entries);
+    }
+
+    /* Create a BundleListEntry from bundleName */
+    private static BundleListEntry makeBundleListEntry(final String bundleName) {
+        if (bundleName == null) {
+            return null;
         }
         final String nameWithoutVersion = bundleName.split(" ")[0];
         final Bundle firstBundle = Platform.getBundle(nameWithoutVersion);
@@ -431,19 +472,7 @@ public class BundleListPanel extends JPanel {
         final boolean bundleFound = (firstBundle != null);
         final String symbolicName = (bundleFound) ? firstBundle.getSymbolicName() : nameWithoutVersion;
 
-        final BundleListEntry e = new BundleListEntry(symbolicName, bundleFound);
-        if (m_listModel.contains(e)) {
-            return false;
-        }
-
-        //final Set<String> bundleNameSet = new HashSet<String>();
-        m_listModel.addElement(e);
-
-        //for (final String bn : bundleNameSet) {
-        //    listToAddTo.addElement(bn);
-        //}
-
-        return true;
+        return new BundleListEntry(symbolicName, bundleFound);
     }
 
     /**
