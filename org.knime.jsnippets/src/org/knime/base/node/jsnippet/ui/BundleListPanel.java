@@ -384,11 +384,7 @@ public class BundleListPanel extends JPanel {
 
     /* Remove all bundles currently selected in list */
     void removeSelectedBundles() {
-        final int[] selections = m_list.getSelectedIndices();
-
-        for (int i = selections.length - 1; i >= 0; --i) {
-            m_listModel.remove(selections[i]);
-        }
+        m_listModel.removeAll(m_list.getSelectedValuesList());
     }
 
     /**
