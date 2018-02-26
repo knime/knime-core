@@ -431,12 +431,13 @@ public class BundleListPanel extends JPanel {
         final boolean bundleFound = (firstBundle != null);
         final String symbolicName = (bundleFound) ? firstBundle.getSymbolicName() : nameWithoutVersion;
 
-        if (m_listModel.contains(firstBundle)) {
+        final BundleListEntry e = new BundleListEntry(symbolicName, bundleFound);
+        if (m_listModel.contains(e)) {
             return false;
         }
 
         //final Set<String> bundleNameSet = new HashSet<String>();
-        m_listModel.addElement(new BundleListEntry(symbolicName, bundleFound));
+        m_listModel.addElement(e);
 
         //for (final String bn : bundleNameSet) {
         //    listToAddTo.addElement(bn);
