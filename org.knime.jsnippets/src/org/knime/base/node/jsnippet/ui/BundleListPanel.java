@@ -82,13 +82,13 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-import org.eclipse.core.runtime.IBundleGroup;
-import org.eclipse.core.runtime.IBundleGroupProvider;
 import org.eclipse.core.runtime.Platform;
 import org.knime.base.node.jsnippet.ui.util.MouseClickListener;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.util.filter.ArrayListModel;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * Panel for adding Bundles to the Java Snippet node for compilation.
@@ -181,12 +181,9 @@ public class BundleListPanel extends JPanel {
             return;
         }
 
-        for (final IBundleGroupProvider provider : Platform.getBundleGroupProviders()) {
-            for (final IBundleGroup feature : provider.getBundleGroups()) {
-                for (final Bundle bundle : feature.getBundles()) {
-                    bundleNames.add(bundle.getSymbolicName() + " " + bundle.getVersion().toString());
-                }
-            }
+        final BundleContext ctx =  FrameworkUtil.getBundle(BundleListPanel.class).getBundleContext();
+        for (final Bundle bundle : ctx.getBundles()) {
+            bundleNames.add(bundle.getSymbolicName() + " " + bundle.getVersion().toString());
         }
 
         Collections.sort(bundleNames);
