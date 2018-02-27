@@ -492,7 +492,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         ExecutionContext[] exec = new ExecutionContext[nc.length];
         for (int i = 0; i < nc.length; i++) {
             exec[i] = nc[i].createExecutionContext();
-            Node node = nc[0].getNode();
+            Node node = nc[i].getNode();
             node.openFileStoreHandler(exec[i]);
         }
         return exec;
