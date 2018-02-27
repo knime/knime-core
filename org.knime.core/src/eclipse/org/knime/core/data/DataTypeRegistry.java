@@ -50,6 +50,7 @@ package org.knime.core.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -167,8 +168,8 @@ public final class DataTypeRegistry {
     }
 
     /**
-     * Returns a collection with all known data types (that registered at the extension point
-     * <tt>org.knime.core.DataType</tt>.
+     * Returns a collection with all known data types (that are registered at the extension point
+     * <tt>org.knime.core.DataType</tt>).
      *
      * @return a (possibly empty) collection with data types
      */
@@ -193,7 +194,7 @@ public final class DataTypeRegistry {
             }
         }
 
-        m_allDataTypes = types;
+        m_allDataTypes = Collections.unmodifiableCollection(types);
         return types;
     }
 
