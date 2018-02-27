@@ -203,7 +203,17 @@ public class ProfileManager {
             }
         }
 
-        Path pluginCustFile = PathUtils.createTempFile("pluginCustomization", ".ini");
+        Path pluginCustFile = getStateLocation().resolve("combined-preferences.epf");
+        if (Files.exists(pluginCustFile) && !Files.isWritable(pluginCustFile)) {
+            Path tempCustFile = PathUtils.createTempFile("combined-preferences", ".epf");
+            Path nonWorkingFile = pluginCustFile;
+            pluginCustFile = tempCustFile;
+
+            m_collectedLogs.add(() -> NodeLogger.getLogger(ProfileManager.class)
+                .warn("Could not write combined preferences file '" + nonWorkingFile + "', will use temporary file '"
+                    + tempCustFile + "' instead."));
+        }
+
         // It's important here to write to a stream and not a reader because when reading the file back in
         // org.eclipse.core.internal.preferences.DefaultPreferences.loadProperties(String) also reads from a stream
         // and therefore assumes it's ISO-8859-1 encoded (with replacement for UTF characters).
@@ -259,10 +269,13 @@ public class ProfileManager {
                 .collect(Collectors.toList());
     }
 
+    private Path getStateLocation() {
+        Bundle myself = FrameworkUtil.getBundle(getClass());
+        return Platform.getStateLocation(myself).toFile().toPath();
+    }
 
     private Path downloadProfiles(final URI profileLocation) {
-        Bundle myself = FrameworkUtil.getBundle(getClass());
-        Path stateDir = Platform.getStateLocation(myself).toFile().toPath();
+        Path stateDir = getStateLocation();
         Path profileDir = stateDir.resolve("profiles");
 
         try {
