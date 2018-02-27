@@ -113,9 +113,9 @@ public class KNIMEApplication implements IApplication {
                 return EXIT_OK;
             }
 
-            ProfileManager.getInstance().applyProfiles();
-
             ViewUtils.setLookAndFeel();
+
+            ProfileManager.getInstance().applyProfiles();
 
             // initialize KNIMEConstants as early as possible in order to avoid deadlocks during startup
             KNIMEConstants.BUILD.toString();
