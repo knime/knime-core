@@ -69,6 +69,7 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.BatchExecutor;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
@@ -116,11 +117,14 @@ public class TestflowRunnerApplication implements IApplication {
     @Override
     public Object start(final IApplicationContext context) throws Exception {
         final long globalStartTime = System.currentTimeMillis();
-        ProfileManager.getInstance().applyProfiles();
 
         // we need a display, initialized as early as possible, otherwise closing JFrames may result
         // in X errors (BadWindow) under Linux
         PlatformUI.createDisplay();
+
+        ViewUtils.setLookAndFeel();
+
+        ProfileManager.getInstance().applyProfiles();
 
         // make sure the logfile doesn't get split.
         System.setProperty(KNIMEConstants.PROPERTY_MAX_LOGFILESIZE, "-1");
