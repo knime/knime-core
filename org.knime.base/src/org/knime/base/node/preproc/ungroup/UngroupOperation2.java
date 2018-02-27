@@ -70,6 +70,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
@@ -81,87 +82,70 @@ import org.knime.core.node.streamable.RowOutput;
 
 /**
  * This class performs the ungroup operation.
- * @author Tim-Oliver Buchholz, KNIME AG, Zurich, Switzerland
- * @since 2.12
- * @deprecated use {@link UngroupOperation2} instead
+ *
+ * @author Oliver Buchholz, KNIME AG, Zurich, Switzerland
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @since 3.6
  */
-@Deprecated
-public class UngroupOperation {
+public class UngroupOperation2 {
 
-    private boolean m_enableHilite = false;
+    private final boolean m_skipMissingValues;
 
-    private boolean m_skipMissingValues = false;
+    private final boolean m_removeCollectionCol;
 
-    private boolean m_removeCollectionCol = true;
+    private final boolean m_enableHilite;
 
-    /**
-     * The hilite handler instance.
-     */
-    private HiLiteTranslator m_trans = null;
-
-    private BufferedDataTable m_table = null;
-
-    private int[] m_colIndices;
-
-    private DataTableSpec m_newSpec;
+    private final int[] m_colIndices;
 
     /**
+     * Creates a new ungroup operation.
+     *
      * @param enableHilite hilite enable
      * @param skipMissingValues skip missing values
      * @param removeCollectionCol remove collection columns
+     * @param colIndices the column indices to ungroup - if <code>null</code> or the length is 0 nothing will be
+     *            ungrouped
+     * @throws InvalidSettingsException
      */
-    public UngroupOperation(final boolean enableHilite, final boolean skipMissingValues,
-        final boolean removeCollectionCol) {
+    public UngroupOperation2(final boolean enableHilite, final boolean skipMissingValues,
+        final boolean removeCollectionCol, final int[] colIndices) throws InvalidSettingsException {
+        m_colIndices = colIndices;
         m_enableHilite = enableHilite;
-
         m_skipMissingValues = skipMissingValues;
-
         m_removeCollectionCol = removeCollectionCol;
     }
 
     /**
-     * Only needs to be set if {@link #compute(ExecutionContext)} is called subsequently.
+     * Performs the ungroup operation on the given data table.
      *
-     * @param table to perform the ungroup
-     */
-    public void setTable(final BufferedDataTable table) {
-        m_table = table;
-    }
-
-    /**
-     *
-     * @param indices of the collection columns
-     */
-    public void setColIndices(final int[] indices) {
-        m_colIndices = indices;
-    }
-
-    /**
-     * Only needs to be set if {@link #compute(ExecutionContext)} is called subsequently.
-     *
-     * @param newSpec the new spec created with
-     *            {@link UngroupOperation#createTableSpec(DataTableSpec, boolean, String...)}
-     */
-    public void setNewSpec(final DataTableSpec newSpec) {
-        m_newSpec = newSpec;
-    }
-
-    /**
      * @param exec the execution context
+     * @param table table to perform the ungroup operation on
+     * @param trans the hilite translater, will be modified directly. Must be non-null if hiliting is enabled, can be
+     *            <code>null</code> otherwise
      * @return the table with the ungrouped collections
-     * @throws Exception the thrown exception
+     * @throws CanceledExecutionException if the execution has been canceled
+     * @throws InterruptedException if the execution has been interrupted
+     * @throws InvalidSettingsException thrown if the table doesn't contain a collection column at one of the column
+     *             indices to be ungrouped
+     * @throws IllegalArgumentException if hiliting is enabled and no hilite translater is given
      */
-    public BufferedDataTable compute(final ExecutionContext exec) throws Exception {
-        final BufferedDataContainer dc = exec.createDataContainer(m_newSpec);
-        if (m_table.size() == 0) {
+    public BufferedDataTable compute(final ExecutionContext exec, final BufferedDataTable table,
+        final HiLiteTranslator trans)
+        throws CanceledExecutionException, InterruptedException, InvalidSettingsException {
+        final BufferedDataContainer dc =
+            exec.createDataContainer(createTableSpec(table.getDataTableSpec(), m_removeCollectionCol, m_colIndices));
+        if (table.size() == 0) {
             dc.close();
             return dc.getTable();
         }
-        DataTableRowInput in = new DataTableRowInput(m_table);
+        DataTableRowInput in = new DataTableRowInput(table);
         BufferedDataTableRowOutput out = new BufferedDataTableRowOutput(dc);
-        compute(in, out, exec, m_table.size());
-        in.close();
-        out.close();
+        try {
+            compute(in, out, exec, table.size(), trans);
+        } finally {
+            in.close();
+            out.close();
+        }
         return out.getDataTable();
     }
 
@@ -172,10 +156,17 @@ public class UngroupOperation {
      * @param out the row input, will NOT be closed when finished
      * @param exec the execution context to check cancellation and (optional) progress logging
      * @param rowCount row count to track the progress or <code>-1</code> without progress tracking
-     * @throws Exception the thrown exception
-     * @since 3.2
+     * @param trans the hilite translater, will be modified directly. Must be non-null if hiliting is enabled, can be
+     *            <code>null</code> otherwise
+     * @throws CanceledExecutionException if the execution has been canceled
+     * @throws InterruptedException if the execution has been interrupted
+     * @throws IllegalArgumentException if hiliting is enabled and no hilite translater is given
      */
-    public void compute(final RowInput in, final RowOutput out, final ExecutionContext exec, final long rowCount) throws Exception {
+    public void compute(final RowInput in, final RowOutput out, final ExecutionContext exec, final long rowCount,
+        final HiLiteTranslator trans) throws CanceledExecutionException, InterruptedException {
+        if (m_enableHilite && trans == null) {
+            throw new IllegalArgumentException("HiLiteTranslator must not be null when hiliting is enabled!");
+        }
         final Map<RowKey, Set<RowKey>> hiliteMapping = new HashMap<RowKey, Set<RowKey>>();
         @SuppressWarnings("unchecked")
         Iterator<DataCell>[] iterators = new Iterator[m_colIndices.length];
@@ -187,8 +178,7 @@ public class UngroupOperation {
             rowCounter++;
             exec.checkCanceled();
             if (rowCount > 0) {
-                exec.setProgress(rowCounter / (double)rowCount,
-                    "Processing row " + rowCounter + " of " + rowCount);
+                exec.setProgress(rowCounter / (double)rowCount, "Processing row " + rowCounter + " of " + rowCount);
             }
             boolean allMissing = true;
             for (int i = 0, length = m_colIndices.length; i < length; i++) {
@@ -271,7 +261,7 @@ public class UngroupOperation {
             }
         }
         if (m_enableHilite) {
-            m_trans.setMapper(new DefaultHiLiteMapper(hiliteMapping));
+            trans.setMapper(new DefaultHiLiteMapper(hiliteMapping));
         }
     }
 
@@ -305,28 +295,29 @@ public class UngroupOperation {
     }
 
     /**
+     * Creates the data table spec the ungroup operation would result in if applied on the given input table spec (i.e.
+     * {@link #compute(ExecutionContext, BufferedDataTable, HiLiteTranslator)} returns a table of the same table spec).
+     *
      * @param spec original spec
      * @param removeCollectionCol <code>true</code> if the collection column should be removed
-     * @param colNames the collection column names
+     * @param colIndices the indices of the collection columns
      * @return the new spec
-     * @throws InvalidSettingsException if an exception occurs
+     * @throws InvalidSettingsException if an exception occurs, e.g. if the column at the a given index is not a
+     *             collection column
      */
     public static DataTableSpec createTableSpec(final DataTableSpec spec, final boolean removeCollectionCol,
-        final String... colNames) throws InvalidSettingsException {
-        if (colNames == null || colNames.length <= 0) {
+        final int[] colIndices) throws InvalidSettingsException {
+        if (colIndices == null || colIndices.length <= 0) {
             //the user has not selected any column
             return spec;
         }
         final Collection<DataColumnSpec> specs = new LinkedList<DataColumnSpec>();
-        final Map<String, DataType> collectionColsMap = new LinkedHashMap<String, DataType>(colNames.length);
-        for (final String colName : colNames) {
-            final int index = spec.findColumnIndex(colName);
-            if (index < 0) {
-                throw new InvalidSettingsException("Invalid column name '" + colName + "'");
-            }
-            final DataColumnSpec colSpec = spec.getColumnSpec(index);
+        final Map<String, DataType> collectionColsMap = new LinkedHashMap<String, DataType>(colIndices.length);
+        for (final Integer colIndex : colIndices) {
+            final DataColumnSpec colSpec = spec.getColumnSpec(colIndex);
             final DataType type = colSpec.getType();
             final DataType basicType = type.getCollectionElementType();
+            final String colName = spec.getColumnSpec(colIndex).getName();
             if (basicType == null) {
                 throw new InvalidSettingsException("Column '" + colName + "' is not of collection type");
             }
@@ -364,19 +355,5 @@ public class UngroupOperation {
         //        }
         final DataTableSpec resultSpec = new DataTableSpec(specs.toArray(new DataColumnSpec[0]));
         return resultSpec;
-    }
-
-    /**
-     * @return the hilite translator
-     */
-    public HiLiteTranslator getTrans() {
-        return m_trans;
-    }
-
-    /**
-     * @param trans the hilite translator to set
-     */
-    public void setTrans(final HiLiteTranslator trans) {
-        m_trans = trans;
     }
 }
