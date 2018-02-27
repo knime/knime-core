@@ -222,10 +222,11 @@ public class FileUtilTest {
      *
      * Fixes AP-8896 "Zip File node shows success after failing to write to remote location".
      *
-     * @throws Exception
+     * @throws Exception if an error occurs
      */
     @Test
     public void testFileResolvedFromUncUrlContainsTheProtocolHostAndPathInItsAbsolutePath() throws Exception {
+        assumeThat(Platform.getOS(), is(Platform.OS_WIN32)); // UNC paths only work under Windows
         File resolvedFile = FileUtil.getFileFromURL(new URL("file://HOST/path"));
         assertThat("Resolved file does not have a correct UNC path", resolvedFile.getAbsolutePath(), is("\\\\HOST\\path"));
     }
