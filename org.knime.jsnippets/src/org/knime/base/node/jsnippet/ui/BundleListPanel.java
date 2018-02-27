@@ -59,6 +59,7 @@ import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -83,7 +84,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 import org.eclipse.core.runtime.Platform;
-import org.knime.base.node.jsnippet.ui.util.MouseClickListener;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.util.filter.ArrayListModel;
 import org.osgi.framework.Bundle;
@@ -181,7 +181,7 @@ public class BundleListPanel extends JPanel {
             return;
         }
 
-        final BundleContext ctx =  FrameworkUtil.getBundle(BundleListPanel.class).getBundleContext();
+        final BundleContext ctx = FrameworkUtil.getBundle(BundleListPanel.class).getBundleContext();
         for (final Bundle bundle : ctx.getBundles()) {
             bundleNames.add(bundle.getSymbolicName() + " " + bundle.getVersion().toString());
         }
@@ -306,7 +306,24 @@ public class BundleListPanel extends JPanel {
             scrollPane.setPreferredSize(new Dimension(width, height));
             pane.add(scrollPane, BorderLayout.CENTER);
 
-            m_bundleList.addMouseListener(new MouseClickListener() {
+            m_bundleList.addMouseListener(new MouseListener() {
+
+                @Override
+                public void mouseReleased(final MouseEvent e) {
+                }
+
+                @Override
+                public void mousePressed(final MouseEvent e) {
+                }
+
+                @Override
+                public void mouseExited(final MouseEvent e) {
+                }
+
+                @Override
+                public void mouseEntered(final MouseEvent e) {
+                }
+
                 @Override
                 public void mouseClicked(final MouseEvent e) {
                     if (e.getClickCount() == 2) {
