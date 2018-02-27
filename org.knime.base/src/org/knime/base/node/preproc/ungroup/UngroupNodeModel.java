@@ -69,9 +69,18 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /**
@@ -150,7 +159,8 @@ public class UngroupNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         final DataTableSpec spec = inSpecs[0];
-        final DataTableSpec resultSpec = compatibleCreateResultSpec(spec);
+        final DataTableSpec resultSpec = UngroupOperation2.createTableSpec(inSpecs[0],
+            m_removeCollectionCol.getBooleanValue(), getSelectedColIdxs(spec, getColumnNames(spec)));
         return new DataTableSpec[]{resultSpec};
     }
 
@@ -161,34 +171,73 @@ public class UngroupNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
         throws Exception {
 
-        UngroupOperation ugO =
-            new UngroupOperation(m_enableHilite.getBooleanValue(), m_skipMissingVal.getBooleanValue(),
-                m_removeCollectionCol.getBooleanValue());
-
         if (inData == null || inData.length != 1) {
             throw new InvalidSettingsException("Invalid input data");
         }
         final BufferedDataTable table = inData[0];
-        ugO.setTable(table);
-        int[] colIdxs = compatibleGetSelectedColIds(table);
-        if (colIdxs == null || colIdxs.length <= 0) {
-            setWarningMessage("No ungroup column selected. Node returns input table.");
-            return inData;
-        }
-        ugO.setColIndices(colIdxs);
+        final DataTableSpec spec = table.getDataTableSpec();
 
-        final DataTableSpec newSpec = compatibleCreateResultSpec(table.getDataTableSpec());
-        ugO.setNewSpec(newSpec);
+        UngroupOperation2 ugO =
+            createUngroupOperation(table.getDataTableSpec(), getSelectedColIdxs(spec, getColumnNames(spec)));
 
-        ugO.setTrans(m_trans);
-
-        BufferedDataTable[] result = new BufferedDataTable[]{ugO.compute(exec)};
-
-        m_trans = ugO.getTrans();
-
+        BufferedDataTable[] result =
+            new BufferedDataTable[]{ugO.compute(exec, table, m_trans)};
         return result;
     }
 
+    private UngroupOperation2 createUngroupOperation(final DataTableSpec spec, final int[] colIndices)
+        throws InvalidSettingsException {
+        return new UngroupOperation2(m_enableHilite.getBooleanValue(), m_skipMissingVal.getBooleanValue(),
+            m_removeCollectionCol.getBooleanValue(), colIndices);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        DataTableSpec spec = (DataTableSpec) inSpecs[0];
+        int[] idxs = getSelectedColIdxs(spec, getColumnNames(spec));
+        UngroupOperation2 ugO = createUngroupOperation(spec, idxs);
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                RowInput input = (RowInput)inputs[0];
+                RowOutput output = (RowOutput)outputs[0];
+                ugO.compute(input, output, exec, -1, m_trans);
+                input.close();
+                output.close();
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+    }
+
+    /**
+     * Get the column indices for column names.
+     *
+     * @param spec
+     * @param colNames column names to get the indices for
+     * @return the indices or null, if no ungroup column has been selected
+     * @throws InvalidSettingsException if selected column cannot be found in the table
+     */
     private int[] getSelectedColIdxs(final DataTableSpec spec, final String... colNames)
         throws InvalidSettingsException {
         final int[] idxs = new int[colNames.length];
@@ -198,6 +247,9 @@ public class UngroupNodeModel extends NodeModel {
             if (idxs[i] < 0) {
                 throw new InvalidSettingsException("Column with name " + name + " not found in input table");
             }
+        }
+        if (idxs.length <= 0) {
+            setWarningMessage("No ungroup column selected. Node returns input table.");
         }
         return idxs;
     }
@@ -316,41 +368,13 @@ public class UngroupNodeModel extends NodeModel {
         }
     }
 
-    /**
-     * @param table
-     * @return
-     * @throws InvalidSettingsException
-     */
-    private int[] compatibleGetSelectedColIds(final BufferedDataTable table) throws InvalidSettingsException {
-        final DataTableSpec spec = table.getDataTableSpec();
-        final String[] columnNames;
+    private String[] getColumnNames(final DataTableSpec spec) {
         if (m_columnName.getStringValue() == null) {
             //the column filter has been introduced in KNIME 2.8
             final FilterResult filterResult = m_collCols.applyTo(spec);
-            columnNames = filterResult.getIncludes();
+            return filterResult.getIncludes();
         } else {
-            columnNames = new String[]{m_columnName.getStringValue()};
+            return new String[]{m_columnName.getStringValue()};
         }
-        return getSelectedColIdxs(spec, columnNames);
-    }
-
-    /**
-     * @param spec
-     * @return
-     * @throws InvalidSettingsException
-     */
-    private DataTableSpec compatibleCreateResultSpec(final DataTableSpec spec) throws InvalidSettingsException {
-        final DataTableSpec resultSpec;
-        if (m_columnName.getStringValue() == null) {
-            //the column filter has been introduced in KNIME 2.8
-            final FilterResult filterResult = m_collCols.applyTo(spec);
-            String[] colNames = filterResult.getIncludes();
-            resultSpec = UngroupOperation.createTableSpec(spec, m_removeCollectionCol.getBooleanValue(), colNames);
-        } else {
-            resultSpec =
-                UngroupOperation.createTableSpec(spec, m_removeCollectionCol.getBooleanValue(),
-                    m_columnName.getStringValue());
-        }
-        return resultSpec;
     }
 }
