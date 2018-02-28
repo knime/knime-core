@@ -467,11 +467,6 @@
    </extension>
    <extension point="org.eclipse.ui.bindings">
       <key
-            commandId="knime.commands.addMetaNode"
-            contextId="org.eclipse.ui.contexts.window"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="SHIFT+F12"/>
-      <key
             commandId="knime.commands.updateMetaNodeLink"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
@@ -515,12 +510,12 @@
             commandId="knime.commands.hideNodeNames"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+ALT+Q"/>    
+            sequence="CTRL+ALT+Q"/>    
       <key
             commandId="knime.commands.appendNodeIds"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+ALT+W"/>    
+            sequence="CTRL+ALT+W"/>    
       <key
             commandId="knime.commands.execute"
             contextId="org.eclipse.ui.contexts.window"

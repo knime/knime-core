@@ -48,6 +48,8 @@
 package org.knime.workbench.ui.wrapper;
 
 import java.awt.Dimension;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -58,7 +60,6 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -79,7 +80,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.InvalidSettingsException;
@@ -103,14 +103,12 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  *
  * @author Thomas Gabriel, University of Konstanz, Germany
  */
-public class WrappedNodeDialog extends Dialog {
+public class WrappedNodeDialog extends AbstractWrappedDialog {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WrappedNodeDialog.class);
+
     private final NodeContainer m_nodeContainer;
 
-    private Panel2CompositeWrapper m_wrapper;
-
     private final NodeDialogPane m_dialogPane;
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(WrappedNodeDialog.class);
 
     /**
      * Creates the (application modal) dialog for a given node.
@@ -120,16 +118,15 @@ public class WrappedNodeDialog extends Dialog {
      * WrappedNodeDialog#getInitialSize())
      *
      * @param parentShell The parent shell
-     * @param nodeContainer The node.
+     * @param nodeContainer The node
      * @throws NotConfigurableException if the dialog cannot be opened because
      *             of real invalid settings or if any pre-conditions are not
      *             fulfilled, e.g. no predecessor node, no nominal column in
      *             input table, etc.
      */
-    public WrappedNodeDialog(final Shell parentShell,
-            final NodeContainer nodeContainer) throws NotConfigurableException {
+    public WrappedNodeDialog(final Shell parentShell, final NodeContainer nodeContainer) throws NotConfigurableException {
         super(parentShell);
-        this.setShellStyle(SWT.PRIMARY_MODAL | SWT.SHELL_TRIM);
+
         m_nodeContainer = nodeContainer;
         m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
     }
@@ -184,8 +181,6 @@ public class WrappedNodeDialog extends Dialog {
     @Override
     protected void configureShell(final Shell newShell) {
         super.configureShell(newShell);
-        Image img = ImageRepository.getIconImage(SharedImages.KNIME);
-        newShell.setImage(img);
         Menu menuBar = new Menu(newShell, SWT.BAR);
         newShell.setMenuBar(menuBar);
         Menu menu = new Menu(newShell, SWT.DROP_DOWN);
@@ -298,6 +293,8 @@ public class WrappedNodeDialog extends Dialog {
         // Absolute upper left point for the dialog
         Point newLocation = new Point(middle.x - (size.x / 2) + knimeWindowBounds.x, middle.y - (size.y / 2) + knimeWindowBounds.y);
         getShell().setBounds(newLocation.x, newLocation.y, size.x, size.y);
+
+        this.finishDialogCreation();
     }
 
     /**
@@ -321,12 +318,11 @@ public class WrappedNodeDialog extends Dialog {
         Image img = ImageRepository.getIconImage(SharedImages.Help);
         btnHelp.setImage(img);
 
-
         boolean writeProtected = m_dialogPane.isWriteProtected();
         btnOK.setEnabled(!writeProtected);
         btnApply.setEnabled(!writeProtected);
 
-        final KeyListener keyListener = new KeyListener() {
+        this.swtKeyListener = new KeyListener() {
             /** {@inheritDoc} */
             @Override
             public void keyReleased(final KeyEvent ke) {
@@ -364,11 +360,67 @@ public class WrappedNodeDialog extends Dialog {
                 }
             }
         };
+        this.awtKeyListener = new KeyAdapter() {
+            @Override
+            public void keyReleased(final java.awt.event.KeyEvent ke) {
+                int menuAccelerator = (Platform.OS_MACOSX.equals(Platform.getOS())) ? java.awt.event.KeyEvent.VK_META
+                                                                                    : java.awt.event.KeyEvent.VK_CONTROL;
 
-        btnOK.addKeyListener(keyListener);
-        btnApply.addKeyListener(keyListener);
-        btnCancel.addKeyListener(keyListener);
-        m_wrapper.addKeyListener(keyListener);
+                if (ke.getKeyCode() == menuAccelerator) {
+                    getShell().getDisplay().asyncExec(() -> {
+                        btnOK.setText("OK");
+                    });
+                }
+            }
+
+            @Override
+            public void keyPressed(final java.awt.event.KeyEvent ke) {
+                if ((ke.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) && m_dialogPane.closeOnESC()) {
+                    // close dialog on ESC
+                    getShell().getDisplay().asyncExec(() -> {
+                        doCancel();
+                    });
+                }
+
+                // this locks the WFM so avoid calling it each time.
+                final Predicate<NodeContainer> canExecutePredicate = n -> n.getParent().canExecuteNode(n.getID());
+                int menuAccelerator = (Platform.OS_MACOSX.equals(Platform.getOS())) ? java.awt.event.KeyEvent.VK_META
+                                                                                    : java.awt.event.KeyEvent.VK_CONTROL;
+                if ((ke.getKeyCode() == menuAccelerator) && canExecutePredicate.test(m_nodeContainer)) {
+                    // change OK button label, when CTRL/COMMAND is pressed
+                    getShell().getDisplay().asyncExec(() -> {
+                        btnOK.setText("OK - Execute");
+                    });
+                }
+                int modifierKey = (Platform.OS_MACOSX.equals(Platform.getOS())) ? InputEvent.META_DOWN_MASK
+                                                                                : InputEvent.CTRL_DOWN_MASK;
+                if ((ke.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER)
+                                    && ((ke.getModifiersEx() & modifierKey) != 0)) {
+                    getShell().getDisplay().asyncExec(() -> {
+                        // Bug 3942: transfer focus to OK button to have all component to auto-commit their changes
+                        btnOK.forceFocus();
+
+                        // force OK - Execute when CTRL/COMMAND and ENTER is pressed
+                        // open first out-port view if SHIFT is pressed
+                        if (doApply()) {
+                            runOK(canExecutePredicate.test(m_nodeContainer),
+                                  ((ke.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK) != 0));
+                        }
+                        else {
+                            // reset ok button state/label
+                            btnOK.setText("OK");
+                        }
+                    });
+                }
+            }
+        };
+
+        if (!Platform.OS_MACOSX.equals(Platform.getOS())) {
+            btnOK.addKeyListener(this.swtKeyListener);
+            btnApply.addKeyListener(this.swtKeyListener);
+            btnCancel.addKeyListener(this.swtKeyListener);
+            m_wrapper.addKeyListener(this.swtKeyListener);
+        }
 
         // Register listeners that notify the content object, which
         // in turn notify the dialog about the particular event.
@@ -417,7 +469,6 @@ public class WrappedNodeDialog extends Dialog {
                 doOpenNodeDescription();
             }
         });
-
     }
 
     private void doOpenNodeDescription() {
@@ -562,30 +613,6 @@ public class WrappedNodeDialog extends Dialog {
     }
 
     /**
-     * Shows the latest error message of the dialog in a MessageBox.
-     *
-     * @param message The error string.
-     */
-    private void showErrorMessage(final String message) {
-        MessageBox box = new MessageBox(getShell(), SWT.ICON_ERROR);
-        box.setText("Error");
-        box.setMessage(message != null ? message : "(no message)");
-        box.open();
-    }
-
-    /**
-     * Shows the latest error message of the dialog in a MessageBox.
-     *
-     * @param message The error string.
-     */
-    private void showWarningMessage(final String message) {
-        MessageBox box = new MessageBox(getShell(), SWT.ICON_WARNING);
-        box.setText("Warning");
-        box.setMessage(message != null ? message : "(no message)");
-        box.open();
-    }
-
-    /**
      * Show confirm dialog before applying settings.
      *
      * @return <code>true</code> if the settings should be applied
@@ -622,20 +649,6 @@ public class WrappedNodeDialog extends Dialog {
         return true;
     }
 
-    /**
-     * Show an information dialog that the settings were not changed and
-     * therefore the settings are not reset (node stays executed).
-     */
-    protected void informNothingChanged() {
-        MessageBox mb =
-                new MessageBox(Display.getDefault().getActiveShell(),
-                        SWT.ICON_INFORMATION | SWT.OK);
-        mb.setText("Settings were not changed.");
-        mb.setMessage("The settings were not changed. "
-                + "The node will not be reset.");
-        mb.open();
-    }
-
     // these are extra height and width value since the parent dialog
     // does not return the right sizes for the underlying dialog pane
     private static final int EXTRA_WIDTH;
@@ -655,6 +668,9 @@ public class WrappedNodeDialog extends Dialog {
      * This calculates the initial size of the dialog. As the wrapped AWT-Panel
      * ("NodeDialogPane") sometimes just won't return any useful preferred sizes
      * this is kinda tricky workaround :-(
+     *
+     * TODO: It seems like either this one is more correct, or the one in WrappedMultipleNodeDialog is more correct, and
+     *  whichever one it is should get their implementation moved up into AbstractWrappedDialog.
      *
      * {@inheritDoc}
      */

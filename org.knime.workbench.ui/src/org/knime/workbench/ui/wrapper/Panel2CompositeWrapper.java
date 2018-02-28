@@ -55,6 +55,7 @@ import java.awt.event.FocusListener;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -75,6 +76,12 @@ import org.knime.core.node.util.ViewUtils;
 public class Panel2CompositeWrapper extends Composite {
 
     /**
+     * We track the root frame we create so that it can be handed off, on Mac platforms, to our
+     *  key-tracking-instrumenter.
+     */
+    protected Frame rootFrame;
+
+    /**
      * Creates a new wrapper.
      *
      * @param parent The parent composite
@@ -93,7 +100,7 @@ public class Panel2CompositeWrapper extends Composite {
         setLayout(gridLayout);
         setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        final Frame awtFrame = SWT_AWT.new_Frame(this);
+        this.rootFrame = SWT_AWT.new_Frame(this);
         // The lightweight Swing panel must be wrapped into a heavyweight AWT container-panel
         // otherwise the cursor changes when moving over a Swing component won't work correctly.
         // bug 6516
@@ -102,11 +109,13 @@ public class Panel2CompositeWrapper extends Composite {
         heavyweightPanel.setBackground(null);
         // use heavyweight panel as root
         heavyweightPanel.add(panel);
-        awtFrame.add(heavyweightPanel);
+        this.rootFrame.add(heavyweightPanel);
 
 
         // on some Linux systems tabs are not properly passed to AWT without the next line
-        awtFrame.setFocusTraversalKeysEnabled(false);
+        if (Platform.OS_LINUX.equals(Platform.getOS())) {
+            this.rootFrame.setFocusTraversalKeysEnabled(false);
+        }
 
         // the size of the composite is 0x0 at this point. The above SWT_AWT.newFrame() determines the client
         // size BEFORE this constructor completes (via ViewUtils#invokeAndWaitInEDT - see below);
@@ -156,7 +165,7 @@ public class Panel2CompositeWrapper extends Composite {
                                         public void run() {
                                             // Set sizes on AWT frame and dialog panel if different from
                                             // wrapper component
-                                            awtFrame.setSize(wrapperSize.x, wrapperSize.y);
+                                            Panel2CompositeWrapper.this.rootFrame.setSize(wrapperSize.x, wrapperSize.y);
                                             heavyweightPanel.setSize(wrapperSize.x, wrapperSize.y);
                                             panel.setSize(wrapperSize.x, wrapperSize.y);
                                         }
@@ -180,4 +189,9 @@ public class Panel2CompositeWrapper extends Composite {
             }
         });
     }
+
+    Frame getRootFrame () {
+        return this.rootFrame;
+    }
+
 }

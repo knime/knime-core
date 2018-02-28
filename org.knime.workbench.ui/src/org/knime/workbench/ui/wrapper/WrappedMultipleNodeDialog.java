@@ -47,7 +47,10 @@
  */
 package org.knime.workbench.ui.wrapper;
 
-import org.eclipse.jface.dialogs.Dialog;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
+
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
@@ -55,59 +58,54 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Wraps the settings that can be applied to multiple nodes.
  *
  * @author Peter Ohl, KNIME.com AG, Switzerland
  */
-public class WrappedMultipleNodeDialog extends Dialog {
+public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WrappedMultipleNodeDialog.class);
 
     private final WorkflowManager m_parentMgr;
 
     private final NodeID[] m_nodes;
 
-    private Panel2CompositeWrapper m_wrapper;
-
     private final NodeContainerSettings m_initValue;
 
     private final NodeExecutorJobManagerDialogTab m_dialogPane;
 
     /**
-     * Creates the (application modal) dialog for a given node.
+     * Creates the (application modal) dialog for a set of nodes.
      *
      * We'll set SHELL_TRIM - style to keep this dialog resizable. This is needed because of the odd "preferredSize"
-     * behavior (@see WrappedNodeDialog#getInitialSize())
+     *  behavior (@see WrappedNodeDialog#getInitialSize()) (this comment is not necessarily applicable to this class;
+     *  it appears to be the result of a copy and paste from WrappedNodeDialog)
      *
      * @param parentShell The parent shell
-     * @param nodeContainer The node.
-     * @throws NotConfigurableException if the dialog cannot be opened because of real invalid settings or if any
-     *             pre-conditions are not fulfilled, e.g. no predecessor node, no nominal column in input table, etc.
+     * @param parentMgr The workflow manager containing the cited nodes
+     * @param splitType A SplitType which i suppose is the lowest common denominator across all nodes.
+     * @param nodes 1-N nodes whose dialogs are being wrapped.
      */
     public WrappedMultipleNodeDialog(final Shell parentShell, final WorkflowManager parentMgr,
                                      final SplitType splitType, final NodeID... nodes) {
         super(parentShell);
-        this.setShellStyle(SWT.PRIMARY_MODAL | SWT.SHELL_TRIM);
+
         m_parentMgr = parentMgr;
         m_nodes = nodes;
         m_initValue = m_parentMgr.getCommonSettings(nodes);
@@ -122,18 +120,6 @@ public class WrappedMultipleNodeDialog extends Dialog {
         // dialog window x'ed out
         doCancel();
         super.handleShellCloseEvent();
-    }
-
-    /**
-     * Configure shell, create top level menu.
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    protected void configureShell(final Shell newShell) {
-        super.configureShell(newShell);
-        Image img = KNIMEUIPlugin.getDefault().getImageRegistry().get("knime");
-        newShell.setImage(img);
     }
 
     /**
@@ -160,12 +146,16 @@ public class WrappedMultipleNodeDialog extends Dialog {
     /**
      * Linux (GTK) hack: must explicitly invoke <code>getInitialSize()</code>.
      *
+     * TODO it seems like WrappedNodeDialog is probably doing the better thing here - we should probably just move
+     *  that implementation into AbstractWrappedDialog and get rid of this implementation.
+     *
      * @see org.eclipse.jface.window.Window#create()
      */
     @Override
     public void create() {
         super.create();
         getShell().setSize(getInitialSize());
+        this.finishDialogCreation();
     }
 
     /**
@@ -180,10 +170,11 @@ public class WrappedMultipleNodeDialog extends Dialog {
 
         ((GridLayout)parent.getLayout()).numColumns++;
 
-        final KeyListener keyListener = new KeyListener() {
+        this.swtKeyListener = new KeyListener() {
             /** {@inheritDoc} */
             @Override
             public void keyReleased(final KeyEvent ke) {
+                // TODO there's no point to this presently since we don't ever change the text
                 if (ke.keyCode == SWT.MOD1) {
                     btnOK.setText("OK");
                 }
@@ -205,9 +196,49 @@ public class WrappedMultipleNodeDialog extends Dialog {
             }
         };
 
-        btnOK.addKeyListener(keyListener);
-        btnCancel.addKeyListener(keyListener);
-        m_wrapper.addKeyListener(keyListener);
+        this.awtKeyListener = new KeyAdapter() {
+            @Override
+            public void keyReleased(final java.awt.event.KeyEvent ke) {
+                // TODO there's no point to this presently since we don't ever change the text
+                int menuAccelerator = (Platform.OS_MACOSX.equals(Platform.getOS())) ? java.awt.event.KeyEvent.VK_META
+                                                                                    : java.awt.event.KeyEvent.VK_CONTROL;
+
+                if (ke.getKeyCode() == menuAccelerator) {
+                    getShell().getDisplay().asyncExec(() -> {
+                        btnOK.setText("OK");
+                    });
+                }
+            }
+
+            @Override
+            public void keyPressed(final java.awt.event.KeyEvent ke) {
+                if (ke.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) {
+                    // close dialog on ESC
+                    getShell().getDisplay().asyncExec(() -> {
+                        doCancel();
+                    });
+                }
+
+                // TODO this does not mimic the same behavior as found in WrappedNodeDialog to change the OK button text
+                int modifierKey = (Platform.OS_MACOSX.equals(Platform.getOS())) ? InputEvent.META_DOWN_MASK
+                                                                                : InputEvent.CTRL_DOWN_MASK;
+                if ((ke.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER)
+                                    && ((ke.getModifiersEx() & modifierKey) != 0)) {
+                    getShell().getDisplay().asyncExec(() -> {
+                        // force OK - Execute when CTRL/Command and ENTER is pressed
+                        if (doApply()) {
+                            runOK();
+                        }
+                    });
+                }
+            }
+        };
+
+        if (!Platform.OS_MACOSX.equals(Platform.getOS())) {
+            btnOK.addKeyListener(this.swtKeyListener);
+            btnCancel.addKeyListener(this.swtKeyListener);
+            m_wrapper.addKeyListener(this.swtKeyListener);
+        }
 
         // Register listeners that notify the content object, which
         // in turn notify the dialog about the particular event.
@@ -224,7 +255,6 @@ public class WrappedMultipleNodeDialog extends Dialog {
                 doCancel();
             }
         });
-
     }
 
     private void doCancel() {
@@ -278,41 +308,6 @@ public class WrappedMultipleNodeDialog extends Dialog {
         return false;
     }
 
-    /**
-     * Shows the latest error message of the dialog in a MessageBox.
-     *
-     * @param message The error string.
-     */
-    private void showErrorMessage(final String message) {
-        MessageBox box = new MessageBox(getShell(), SWT.ICON_ERROR);
-        box.setText("Error");
-        box.setMessage(message != null ? message : "(no message)");
-        box.open();
-    }
-
-    /**
-     * Shows the latest error message of the dialog in a MessageBox.
-     *
-     * @param message The error string.
-     */
-    private void showWarningMessage(final String message) {
-        MessageBox box = new MessageBox(getShell(), SWT.ICON_WARNING);
-        box.setText("Warning");
-        box.setMessage(message != null ? message : "(no message)");
-        box.open();
-    }
-
-    /**
-     * Show an information dialog that the settings were not changed and therefore the settings are not reset (node
-     * stays executed).
-     */
-    private void informNothingChanged() {
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
-        mb.setText("Settings were not changed.");
-        mb.setMessage("The settings were not changed. " + "The node will not be reset.");
-        mb.open();
-    }
-
     // these are extra height and width value since the parent dialog
     // does not return the right sizes for the underlying dialog pane
     private static final int EXTRA_WIDTH = 25;
@@ -322,6 +317,9 @@ public class WrappedMultipleNodeDialog extends Dialog {
     /**
      * This calculates the initial size of the dialog. As the wrapped AWT-Panel ("NodeDialogPane") sometimes just won't
      * return any useful preferred sizes this is kinda tricky workaround :-(
+     *
+     * TODO: It seems like either this one is more correct, or the one in WrappedNodeDialog is more correct, and
+     *  whichever one it is should get their implementation moved up into AbstractWrappedDialog.
      *
      * {@inheritDoc}
      */
