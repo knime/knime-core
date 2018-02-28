@@ -326,4 +326,12 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
         return new DataColumnSpecTableCellRenderer();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getEntryDescription() {
+        return "columns";
+    }
+
 }

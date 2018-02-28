@@ -90,7 +90,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
      * @param showSelectionListsOnly {@code true} hides the <i>Enforce in-/exclusion</i> buttons
      */
     public NominalValueFilterPanel(final boolean showSelectionListsOnly) {
-        super(showSelectionListsOnly, "values", null);
+        super(showSelectionListsOnly, null);
     }
 
     @Override
@@ -185,6 +185,14 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
     @Override
     protected TableCellRenderer getTableCellRenderer() {
         return new DefaultTableCellRenderer();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getEntryDescription() {
+        return "values";
     }
 
 }

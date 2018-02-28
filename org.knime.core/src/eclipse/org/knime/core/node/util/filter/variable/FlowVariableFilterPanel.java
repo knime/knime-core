@@ -74,7 +74,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      * Create a new panel to filter {@link FlowVariable}s.
      */
     public FlowVariableFilterPanel() {
-        super(false, "variables", null);
+        super(false, null);
     }
 
     /**
@@ -84,7 +84,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      *            force-include-option, etc.
      */
     public FlowVariableFilterPanel(final boolean showSelectionListsOnly) {
-        super(showSelectionListsOnly, "variables", null);
+        super(showSelectionListsOnly, null);
     }
 
     /**
@@ -94,7 +94,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      * @param types The FlowVariable.Type of the flow variables to show.
      */
     public FlowVariableFilterPanel(final FlowVariable.Type... types) {
-        super(false, "variables", new FlowVariableTypeFilter(types));
+        super(false, new FlowVariableTypeFilter(types));
     }
 
     /**
@@ -106,7 +106,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      * @param types The FlowVariable.Type of the flow variables to show.
      */
     public FlowVariableFilterPanel(final boolean showSelectionListsOnly, final FlowVariable.Type... types) {
-        super(showSelectionListsOnly, "variables", new FlowVariableTypeFilter(types));
+        super(showSelectionListsOnly, new FlowVariableTypeFilter(types));
     }
 
     /**
@@ -118,7 +118,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      * @param filter The filter specifying which variables are shown and which not.
      */
     public FlowVariableFilterPanel(final boolean showSelectionListsOnly, final InputFilter<FlowVariableCell> filter) {
-        super(showSelectionListsOnly, "variables", filter);
+        super(showSelectionListsOnly, filter);
     }
 
     /**
@@ -128,7 +128,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
      * @param filter The filter specifying which variables are shown and which not.
      */
     public FlowVariableFilterPanel(final InputFilter<FlowVariableCell> filter) {
-        super(false, "variables", filter);
+        super(false, filter);
     }
 
     /**
@@ -190,6 +190,14 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
     @Override
     protected TableCellRenderer getTableCellRenderer() {
         return new FlowVariableTableCellRenderer();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getEntryDescription() {
+        return "variables";
     }
 
 }
