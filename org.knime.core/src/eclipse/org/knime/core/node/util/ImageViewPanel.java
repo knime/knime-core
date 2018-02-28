@@ -84,7 +84,9 @@ public class ImageViewPanel extends JPanel implements Scrollable {
     }
 
     /** Panel displaying given image and scaling {@link ScaleType#ShrinkAsNeeded}.
-     * @param image The image (may be null). */
+     * @param image The image (may be null).
+     * @since 3.6
+     */
     public ImageViewPanel(final Image image) {
         m_image = image;
         m_scaleType = ScaleType.ShrinkAsNeeded;
@@ -92,6 +94,7 @@ public class ImageViewPanel extends JPanel implements Scrollable {
 
     /** Set image to draw (or null) and repaint.
      * @param image The image
+     * @since 3.6
      */
     public void setImage(final Image image) {
         m_image = image;
