@@ -1212,7 +1212,7 @@ public class TableView extends JScrollPane {
         if (m_findAction == null) {
             String name = "Find...";
             KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_F,
-                                                      Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
             TableAction action = new TableAction(stroke, name) {
                 @Override
                 public void actionPerformed(final ActionEvent e) {
@@ -1324,7 +1324,7 @@ public class TableView extends JScrollPane {
         if (m_gotoRowAction == null) {
             String name = "Go to Row...";
             KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_L,
-                                                      Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
             TableAction action = new TableAction(stroke, name) {
                 @Override
                 public void actionPerformed(final ActionEvent e) {

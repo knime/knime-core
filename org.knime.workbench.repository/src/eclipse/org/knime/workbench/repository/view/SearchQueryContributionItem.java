@@ -51,12 +51,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.ControlContribution;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
@@ -64,6 +67,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
@@ -81,6 +85,19 @@ import org.knime.workbench.repository.model.NodeTemplate;
  * @author Martin Horn, University of Konstanz
  */
 class SearchQueryContributionItem extends ControlContribution implements KeyListener {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(SearchQueryContributionItem.class);
+
+    private static final int KEY_UP = 16777217;
+
+    private static final int KEY_DOWN = 16777218;
+
+    /**
+     * Delay for a triggered (by a key event) tree viewer update process before the actually update is performed.
+     * This avoids unnecessary updates while typing the search query.
+     */
+    private static final long DELAY = 200;
+
+
     private final TreeViewer m_viewer;
 
     private TextualViewFilter m_filter;
@@ -90,10 +107,6 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
     private Runnable m_callback = null;
 
     private final boolean m_liveUpdate;
-
-    private static final int KEY_UP = 16777217;
-
-    private static final int KEY_DOWN = 16777218;
 
     //stores the tree items currently shown in the viewer
     // -> doesn't need to be determined again if the query string didn't change
@@ -117,12 +130,6 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
     private char m_lastKey;
 
     /**
-     * Delay for a triggered (by a key event) tree viewer update process before the actually update is performed.
-     * This avoids unnecessary updates while typing the search query.
-     */
-    private static final long DELAY = 200;
-
-    /**
      * Creates the contribution item.
      *
      * @param viewer The viewer that will be updated when the search query string has been changed. Furthermore, the
@@ -144,8 +151,34 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
     @Override
     protected Control createControl(final Composite parent) {
         m_text = new Text(parent, SWT.SINGLE | SWT.BORDER | SWT.BORDER_SOLID);
+
         m_text.addKeyListener(this);
+
+        if (Platform.OS_MACOSX.equals(Platform.getOS())) {
+            m_text.addFocusListener(new FocusAdapter () {
+                @Override
+                public void focusGained(final FocusEvent fe) {
+                    try {
+                        PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+                                                                            .showView(DefaultRepositoryView.ID);
+
+                        // You would think that this would be ripe for an infinite loop, but luckily SWT is doing the
+                        //      correct thing and not notifying focusGained for an already focused item (and similarly
+                        //      the workbench is not re-focusing and already focus'd view, which temporarily robs
+                        //      the SWT focus of its subcomponent...)
+                        Display.getDefault().asyncExec(() -> {
+                            m_text.setFocus();
+                        });
+                    }
+                    catch (PartInitException e) {
+                        LOGGER.warn("Exception encountered attempting to give focus to node repository view.", e);
+                    }
+                }
+            });
+        }
+
         m_text.setToolTipText("Filter contents");
+
         return m_text;
     }
 
@@ -200,11 +233,8 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
             //enter was pressed, insert the selected node, if there is one selected
             //and select the whole search string (such that the user can just further type text in
             createNode(((IStructuredSelection)m_viewer.getSelection()).getFirstElement());
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    m_text.setFocus();
-                }
+            Display.getDefault().asyncExec(() -> {
+                m_text.setFocus();
             });
             m_text.selectAll();
         } else if(e.character == SWT.ESC) {
