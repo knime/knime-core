@@ -48,10 +48,14 @@
  */
 package org.knime.base.algorithms.outlier;
 
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
+import org.knime.base.algorithms.outlier.listeners.Warning;
+import org.knime.base.algorithms.outlier.listeners.WarningListener;
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
@@ -63,10 +67,10 @@ import org.knime.base.data.aggregation.numerical.QuantileOperator;
 import org.knime.base.node.preproc.groupby.BigGroupByTable;
 import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
 import org.knime.base.node.preproc.groupby.GroupByTable;
+import org.knime.base.node.preproc.groupby.GroupKey;
 import org.knime.base.node.preproc.groupby.MemoryGroupByTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -83,10 +87,13 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public final class OutlierIntervalsCalculator {
+final class OutlierIntervalsCalculator {
 
     /** The column name policy used by the {@link GroupByTable} */
     private static final ColumnNamePolicy COLUMN_NAME_POLICY = ColumnNamePolicy.AGGREGATION_METHOD_COLUMN_NAME;
+
+    /** The default groups name. */
+    private static final String DEFAULT_GROUPS_NAME = "none";
 
     /** Interval calculation routine message. */
     private static final String INTERVAL_MSG = "Calculating intervals";
@@ -108,36 +115,39 @@ public final class OutlierIntervalsCalculator {
     private final String[] m_outlierColNames;
 
     /** The group column names. */
-    private final List<String> m_groupColNames;
+    private final String[] m_groupColNames;
 
     /** The estimation type. */
     private final EstimationType m_estimationType;
 
-    /** The interquartile range scalar. */
-    private final double m_iqrScalar;
+    /** The interquartile range multiplier. */
+    private final double m_iqrMultiplier;
 
     /** Tells whether the computation is done in or out of memory. */
     private final boolean m_inMemory;
+
+    /** List of listeners receiving warning messages. */
+    private final List<WarningListener> m_listeners;
 
     /**
      * Builder of the IntervalsCalculator.
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
-    public static class Builder {
+    static final class Builder {
 
         // Required parameters
         /** The outlier column names. */
         private final String[] m_outlierColNames;
 
         /** The group column names. */
-        private List<String> m_groupColNames = Collections.emptyList();
+        private String[] m_groupColNames = new String[]{};
 
         /** The estimation type. */
         private EstimationType m_estimationType = EstimationType.R_4;
 
-        /** The interquartile range scalar. */
-        private double m_iqrScalar = 1.5d;
+        /** The interquartile range multiplier. */
+        private double m_iqrMultiplier = 1.5d;
 
         /** Tells whether the computation is done in or out of memory. */
         private boolean m_inMemory = false;
@@ -147,7 +157,7 @@ public final class OutlierIntervalsCalculator {
          *
          * @param outlierColNames the outlier column names to be used
          */
-        public Builder(final String[] outlierColNames) {
+        Builder(final String[] outlierColNames) {
             m_outlierColNames = outlierColNames;
         }
 
@@ -158,7 +168,7 @@ public final class OutlierIntervalsCalculator {
          * @param estimationType the estimation type to be used
          * @return the builder itself
          */
-        public Builder setEstimationType(final EstimationType estimationType) {
+        Builder setEstimationType(final EstimationType estimationType) {
             m_estimationType = estimationType;
             return this;
         }
@@ -169,7 +179,7 @@ public final class OutlierIntervalsCalculator {
          * @param groupColNames the group column names
          * @return the builder itself
          */
-        public Builder setGroupColumnNames(final List<String> groupColNames) {
+        Builder setGroupColumnNames(final String[] groupColNames) {
             m_groupColNames = groupColNames;
             return this;
         }
@@ -181,19 +191,19 @@ public final class OutlierIntervalsCalculator {
          * @param inMemory the in memory calculation flag
          * @return the builder itself
          */
-        public Builder calcInMemory(final boolean inMemory) {
+        Builder calcInMemory(final boolean inMemory) {
             m_inMemory = inMemory;
             return this;
         }
 
         /**
-         * Sets the interquartile range scalar.
+         * Sets the interquartile range multiplier.
          *
-         * @param iqrScalar the interquartile scalar
+         * @param iqrMultiplier the interquartile multiplier
          * @return the builder itself
          */
-        public Builder setIQRScalar(final double iqrScalar) {
-            m_iqrScalar = iqrScalar;
+        Builder setIQRMultiplier(final double iqrMultiplier) {
+            m_iqrMultiplier = iqrMultiplier;
             return this;
         }
 
@@ -202,7 +212,7 @@ public final class OutlierIntervalsCalculator {
          *
          * @return the outlier detector using the settings provided by the builder
          */
-        public OutlierIntervalsCalculator build() {
+        OutlierIntervalsCalculator build() {
             return new OutlierIntervalsCalculator(this);
         }
     }
@@ -216,9 +226,38 @@ public final class OutlierIntervalsCalculator {
         m_outlierColNames = b.m_outlierColNames;
         m_groupColNames = b.m_groupColNames;
         m_estimationType = b.m_estimationType;
-        m_iqrScalar = b.m_iqrScalar;
+        m_iqrMultiplier = b.m_iqrMultiplier;
         m_inMemory = b.m_inMemory;
+        m_listeners = new LinkedList<>();
+    }
 
+    /**
+     * Adds the given listener.
+     *
+     * @param listener the listener to add
+     */
+    void addListener(final WarningListener listener) {
+        if (!m_listeners.contains(listener)) {
+            m_listeners.add(listener);
+        }
+    }
+
+    /**
+     * Returns the outlier column names.
+     *
+     * @return the outlier column names
+     */
+    String[] getOutlierColumnNames() {
+        return m_outlierColNames;
+    }
+
+    /**
+     * Returns the group column names.
+     *
+     * @return the group column names
+     */
+    String[] getGroupColumnNames() {
+        return m_groupColNames;
     }
 
     /**
@@ -226,7 +265,7 @@ public final class OutlierIntervalsCalculator {
      *
      * @return the memory policy
      */
-    public boolean inMemory() {
+    boolean inMemory() {
         return m_inMemory;
     }
 
@@ -236,9 +275,9 @@ public final class OutlierIntervalsCalculator {
      * @param inSpec the spec of the input data table
      * @return the spec of the table storing the permitted intervals
      */
-    public DataTableSpec getIntervalsTableSpec(final DataTableSpec inSpec) {
-        return renameColumns(GroupByTable.createGroupByTableSpec(inSpec, m_groupColNames,
-            getAggretators(inSpec, GlobalSettings.DEFAULT), COLUMN_NAME_POLICY));
+    DataTableSpec getIntervalsTableSpec(final DataTableSpec inSpec) {
+        return GroupByTable.createGroupByTableSpec(inSpec, Arrays.stream(m_groupColNames).collect(Collectors.toList()),
+            getAggretators(inSpec, GlobalSettings.DEFAULT), COLUMN_NAME_POLICY);
     }
 
     /**
@@ -247,10 +286,9 @@ public final class OutlierIntervalsCalculator {
      * @param in the data table for which the outliers have to be detected
      * @param exec the execution context
      * @return returns the mapping between groups and the permitted intervals for each outlier column
-     * @throws Exception if the execution failed, due to internal reasons or cancelation from the outside.
+     * @throws Exception if the execution failed, due to internal reasons or cancelation from the outside
      */
-    public BufferedDataTable calculateIntervals(final BufferedDataTable in, final ExecutionContext exec)
-        throws Exception {
+    OutlierModel calculateIntervals(final BufferedDataTable in, final ExecutionContext exec) throws Exception {
 
         // calculate the first and third quartile of each outlier column wr.t. the groups this method might cause an
         // out of memory exception while cloning the aggregators. However, this is very unlikely
@@ -285,61 +323,84 @@ public final class OutlierIntervalsCalculator {
         // calculate the intervals for each column w.r.t. to the groups
         BufferedDataTable intervalsTable = calcIntervals(intervalExec, t.getBufferedTable());
 
-        // rename the columns
-        intervalsTable = exec.createSpecReplacerTable(intervalsTable, renameColumns(intervalsTable.getDataTableSpec()));
+        // create the model and return it
+        final OutlierModel model = createModel(intervalExec, intervalsTable);
 
         // update the progress and return the permitted intervals
         exec.setProgress(1);
-        return intervalsTable;
+
+        // return the model
+        return model;
     }
 
     /**
-     * Renames the columns.
+     * Creates the outlier model storing all information provided by the intervals table
      *
-     * @param inSpec the table spec
-     * @return the renamed columns table spec
+     * @param exec the execution context
+     * @param intervalsTable the table storing the permitted intervals for each group and outlier column
+     * @return the outlier model
+     * @throws CanceledExecutionException if the user has canceled the execution
      */
-    private DataTableSpec renameColumns(final DataTableSpec inSpec) {
-        DataColumnSpec[] cols = new DataColumnSpec[inSpec.getNumColumns()];
+    private OutlierModel createModel(final ExecutionContext exec, final BufferedDataTable intervalsTable)
+        throws CanceledExecutionException {
+        // initialize the outlier model
+        final OutlierModel model = new OutlierModel(m_groupColNames, m_outlierColNames, intervalsTable.getSpec());
 
-        final int outlierOffset = m_groupColNames.size();
-        final int noOutliers = m_outlierColNames.length;
+        // get the table spec
+        final DataTableSpec intervalsSpec = intervalsTable.getDataTableSpec();
 
-        for (int i = 0; i < outlierOffset; i++) {
-            cols[i] = inSpec.getColumnSpec(i);
+        // store counters to update the progress
+        final long rowCount = intervalsTable.size();
+        long rowCounter = 1;
+
+        // first position where outlier columns can be found in the intervals table
+        final int outlierOffset = m_groupColNames.length;
+
+        for (final DataRow r : intervalsTable) {
+            exec.checkCanceled();
+            final long rowCounterLong = rowCounter++; // 'final' due to access in lambda expression
+            exec.setProgress(rowCounterLong / (double)rowCount,
+                () -> "Storing interval for row " + rowCounterLong + " of " + rowCount);
+
+            // calculate the groups key
+            final GroupKey key = model.getKey(r, intervalsSpec);
+
+            for (int i = 0; i < m_outlierColNames.length; i++) {
+                final double[] interval;
+                // the GroupByTable might return MissingValues, but only if
+                // the entire group consists of Missing Values
+                final int index = i * 2 + outlierOffset;
+                final DataCell fQuart = r.getCell(index);
+                final DataCell tQuart = r.getCell(index + 1);
+                if (!fQuart.isMissing() && !tQuart.isMissing()) {
+                    interval =
+                        new double[]{((DoubleValue)fQuart).getDoubleValue(), ((DoubleValue)tQuart).getDoubleValue()};
+                } else {
+                    interval = null;
+                    String groupNames = Arrays.stream(key.getGroupVals()).map(groupCell -> groupCell.toString())
+                        .collect(Collectors.joining(", "));
+                    if (groupNames.isEmpty()) {
+                        groupNames = DEFAULT_GROUPS_NAME;
+                    }
+                    warnListeners(
+                        "Group <" + groupNames + "> contains only missing values in column " + m_outlierColNames[i]);
+                }
+                // setting null here is no problem since during the update we will only access the interval
+                // if the cell is not missing. However, this implies that the interval is not null
+                model.addEntry(key, m_outlierColNames[i], interval);
+            }
         }
 
-        // rename the columns
-        for (int i = 0; i < noOutliers; i++) {
-            int index = i * 2 + outlierOffset;
-            cols[index] = createColumnSpec(inSpec.getColumnSpec(index), m_outlierColNames[i] + " (lower bound)");
-            ++index;
-            cols[index] = createColumnSpec(inSpec.getColumnSpec(index), m_outlierColNames[i] + " (upper bound)");
-
-        }
-        // renamed spec
-        return new DataTableSpec(inSpec.getName(), cols);
+        // return the model
+        return model;
     }
 
     /**
-     * Creates a data column spec with the given name.
-     *
-     * @param inSpec the input spec
-     * @param name the new name of that column
-     * @return the column spec with the new name
-     */
-    private DataColumnSpec createColumnSpec(final DataColumnSpec inSpec, final String name) {
-        final DataColumnSpecCreator specCreator = new DataColumnSpecCreator(inSpec);
-        specCreator.setName(name);
-        return specCreator.createSpec();
-    }
-
-    /**
-     * Constructs the {@link GroupByTable} in accordance with the given settings.
+     * Constructs the group by table in accordance with the given settings.
      *
      * @param in the input data table
      * @param exec the execution context
-     * @return the {@link GroupByTable} w.r.t. the selected settings
+     * @return the group by table w.r.t. the selected settings
      * @throws CanceledExecutionException if the user has canceled the execution
      */
     private GroupByTable getGroupByTable(final BufferedDataTable in, final ExecutionContext exec)
@@ -354,9 +415,11 @@ public final class OutlierIntervalsCalculator {
         // init and return the GroupByTable obeying the chosen memory settings
         final GroupByTable t;
         if (m_inMemory) {
-            t = new MemoryGroupByTable(exec, in, m_groupColNames, agg, gSettings, false, COLUMN_NAME_POLICY, false);
+            t = new MemoryGroupByTable(exec, in, Arrays.stream(m_groupColNames).collect(Collectors.toList()), agg,
+                gSettings, false, COLUMN_NAME_POLICY, false);
         } else {
-            t = new BigGroupByTable(exec, in, m_groupColNames, agg, gSettings, false, COLUMN_NAME_POLICY, false);
+            t = new BigGroupByTable(exec, in, Arrays.stream(m_groupColNames).collect(Collectors.toList()), agg,
+                gSettings, false, COLUMN_NAME_POLICY, false);
         }
         return t;
     }
@@ -374,7 +437,7 @@ public final class OutlierIntervalsCalculator {
             .setMaxUniqueValues(KnowsRowCountTable.checkRowCount(in.size())) //
             .setAggregationContext(AggregationContext.COLUMN_AGGREGATION) //
             .setDataTableSpec(in.getDataTableSpec()) //
-            .setGroupColNames(m_groupColNames) //
+            .setGroupColNames(Arrays.stream(m_groupColNames).collect(Collectors.toList())) //
             .setValueDelimiter(GlobalSettings.STANDARD_DELIMITER) //
             .build();
     }
@@ -436,7 +499,7 @@ public final class OutlierIntervalsCalculator {
         final DataCell[] intervals = new DataCell[2 * m_outlierColNames.length];
 
         // first position where outlier columns can be found
-        final int outlierOffset = m_groupColNames.size();
+        final int outlierOffset = m_groupColNames.length;
 
         final int[] colsToRepInd = new int[intervals.length];
         final DataColumnSpec[] colsToRepSpecs = new DataColumnSpec[intervals.length];
@@ -466,7 +529,7 @@ public final class OutlierIntervalsCalculator {
                         final double tQ = ((DoubleValue)tQuart).getDoubleValue();
 
                         // calculate the scaled IQR
-                        final double iqr = m_iqrScalar * (tQ - fQ);
+                        final double iqr = m_iqrMultiplier * (tQ - fQ);
 
                         // store the permitted interval boundaries
                         final double lowerBound = fQ - iqr;
@@ -489,6 +552,17 @@ public final class OutlierIntervalsCalculator {
 
         // return the table storing the permitted intervals with updated domains
         return domainsUpdater.updateDomain(exec, exec.createColumnRearrangeTable(quartiles, colRearranger, exec));
+    }
+
+    /**
+     * Informs the listeners that a problem occured.
+     *
+     * @param msg the warning message
+     */
+    private void warnListeners(final String msg) {
+        final Warning warning = new Warning(msg);
+        // warn all listeners
+        m_listeners.forEach(l -> l.warning(warning));
     }
 
 }

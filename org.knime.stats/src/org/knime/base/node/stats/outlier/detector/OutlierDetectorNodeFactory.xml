@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <knimeNode xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10"
-	type="Manipulator" icon="outlier.png">
+	type="Manipulator" icon="../outlier.png">
 	<name>Outlier Detector</name>
 	<shortDescription>
 		Detects and handles outliers for all numerical
@@ -11,7 +11,7 @@
 	<fullDescription>
 		<intro>
 			<p>
-				Detects and treats the outliers for each of the selected columns
+				This node detects and treats the outliers for each of the selected columns
 				individually by means of
 				<a href="https://en.wikipedia.org/wiki/Outlier#Tukey's_fences">interquartile range (IQR)</a>.
 			</p>
@@ -53,7 +53,7 @@
 		</tab>
 		
 		<tab name="General settings (Outlier Settings)">
-			<option name="IQR scalar">
+			<option name="IQR multiplier (k)">
 				Allows to scale the interquartile range (IQR).
 				The default is k = 1.5.
 			</option>
@@ -148,8 +148,11 @@
 		<outPort index="0" name="Outlier table">Data table where outliers are either
 			replaced or rows containing outliers were removed
 		</outPort>
-		<outPort index="1" name="Interval bounds">Data table holding the lower and upper
-			bound for each group of the outliers
+		<outPort index="1" name="Summary">Data table holding the number of members, outliers, and
+			the lower and upper	bound for each outlier group
+		</outPort>
+		<outPort index="2" name="Model">Model holding the permitted interval bounds for each
+			outlier group and outlier treatment specifications
 		</outPort>
 	</ports>
 

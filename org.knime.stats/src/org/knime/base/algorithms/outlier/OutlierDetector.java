@@ -48,7 +48,10 @@
  */
 package org.knime.base.algorithms.outlier;
 
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
@@ -71,6 +74,9 @@ public final class OutlierDetector {
     /** The outlier reviser. */
     private final OutlierReviser m_reviser;
 
+    /** The port object. */
+    private OutlierPortObject m_outlierPort;
+
     /**
      * Builder of the OutlierDetector.
      *
@@ -78,18 +84,24 @@ public final class OutlierDetector {
      */
     public static class Builder {
 
+        /** The builder of the outlier intervals calculator. */
         private final OutlierIntervalsCalculator.Builder m_intervalsBuilder;
 
+        /** The builder of the outlier reviser calculator. */
         private final OutlierReviser.Builder m_reviserBuilder;
 
+        /** The list managing the warning listeners. */
+        private final List<WarningListener> m_listener;
+
         /**
-         * Sets the outlier column names.
+         * Constructor initializting all builders and setting the outlier column names.
          *
          * @param outlierColNames the outlier column names to be used
          */
         public Builder(final String[] outlierColNames) {
             m_intervalsBuilder = new OutlierIntervalsCalculator.Builder(outlierColNames);
-            m_reviserBuilder = new OutlierReviser.Builder(outlierColNames);
+            m_reviserBuilder = new OutlierReviser.Builder();
+            m_listener = new LinkedList<WarningListener>();
         }
 
         /**
@@ -132,9 +144,8 @@ public final class OutlierDetector {
          * @param groupColNames the group column names
          * @return the builder itself
          */
-        public Builder setGroupColumnNames(final List<String> groupColNames) {
+        public Builder setGroupColumnNames(final String[] groupColNames) {
             m_intervalsBuilder.setGroupColumnNames(groupColNames);
-            m_reviserBuilder.setGroupColumnNames(groupColNames);
             return this;
         }
 
@@ -151,13 +162,13 @@ public final class OutlierDetector {
         }
 
         /**
-         * Sets the interquartile range scalar.
+         * Sets the interquartile range multiplier.
          *
-         * @param iqrScalar the interquartile scalar
+         * @param iqrMultiplier the interquartile multiplier
          * @return the builder itself
          */
-        public Builder setIQRScalar(final double iqrScalar) {
-            m_intervalsBuilder.setIQRScalar(iqrScalar);
+        public Builder setIQRMultiplier(final double iqrMultiplier) {
+            m_intervalsBuilder.setIQRMultiplier(iqrMultiplier);
             return this;
         }
 
@@ -168,7 +179,7 @@ public final class OutlierDetector {
          * @return the builder itself
          */
         public Builder addWarningListener(final WarningListener listener) {
-            m_reviserBuilder.addListener(listener);
+            m_listener.add(listener);
             return this;
         }
 
@@ -202,6 +213,8 @@ public final class OutlierDetector {
     private OutlierDetector(final Builder b) {
         m_calculator = b.m_intervalsBuilder.build();
         m_reviser = b.m_reviserBuilder.build();
+        b.m_listener.forEach(l -> m_reviser.addListener(l));
+        b.m_listener.forEach(l -> m_calculator.addListener(l));
     }
 
     /**
@@ -224,22 +237,45 @@ public final class OutlierDetector {
     }
 
     /**
-     * Returns the data table storing the allowed intervals and member counts.
+     * Returns the data table storing the permitted intervals and additional information about member counts.
      *
-     * @return the data table storing the allowed intervals and member counts
+     * @return the data table storing the summary
      */
     public BufferedDataTable getSummaryTable() {
         return m_reviser.getSummaryTable();
     }
 
     /**
-     * Returns the spec of the table storing the overview, i.e., permitted intervals, member counts.
+     * Returns the spec of the table storing the permitted intervals and additional information about member counts.
      *
      * @param inSpec the spec of the input data table
-     * @return the spec of the table storing the allowed intervals
+     * @return the spec of the data table storing the summary
      */
     public DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec) {
-        return m_reviser.getSummaryTableSpec(m_calculator.getIntervalsTableSpec(inSpec));
+        return OutlierReviser.getSummaryTableSpec(
+            OutlierModel.getModelSpec(m_calculator.getIntervalsTableSpec(inSpec), m_calculator.getGroupColumnNames(),
+                m_calculator.getOutlierColumnNames()),
+            m_calculator.getGroupColumnNames().length, m_calculator.getOutlierColumnNames());
+    }
+
+    /**
+     * Returns the outlier port object.
+     *
+     * @return the outlier port object
+     */
+    public OutlierPortObject getOutlierPort() {
+        return m_outlierPort;
+    }
+
+    /**
+     * Returns the outlier port object spec.
+     *
+     * @param inSpec the spec of the input data table
+     * @return the spec of the outlier port object
+     */
+    public DataTableSpec getOutlierPortSpec(final DataTableSpec inSpec) {
+        return OutlierModel.getModelSpec(m_calculator.getIntervalsTableSpec(inSpec), m_calculator.getGroupColumnNames(),
+            m_calculator.getOutlierColumnNames());
     }
 
     /**
@@ -262,8 +298,11 @@ public final class OutlierDetector {
         final double treatmentProgrss = 1 - intervalsProgress - writeProgress;
 
         // calculate the permitted intervals
-        final BufferedDataTable permittedIntervals =
+        final OutlierModel permittedIntervals =
             m_calculator.calculateIntervals(in, exec.createSubExecutionContext(intervalsProgress));
+
+        m_outlierPort = new OutlierPortObject(Arrays.stream(permittedIntervals.getOutlierColNames())
+            .collect(Collectors.joining(", ", "Outlier treatment for columns: ", "")), permittedIntervals, m_reviser);
 
         // treat the outliers
         m_reviser.treatOutliers(exec.createSubExecutionContext(treatmentProgrss), in, permittedIntervals);

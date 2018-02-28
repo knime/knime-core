@@ -46,17 +46,17 @@
  * History
  *   Jan 31, 2018 (ortmann): created
  */
-package org.knime.base.node.stats.outlier;
+package org.knime.base.node.stats.outlier.detector;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.knime.base.algorithms.outlier.OutlierDetector;
+import org.knime.base.algorithms.outlier.OutlierPortObject;
 import org.knime.base.algorithms.outlier.listeners.Warning;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
 import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
@@ -78,6 +78,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.filter.InputFilter;
 
 /**
@@ -95,12 +97,6 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
 
     /** Scalar exception text. */
     private static final String SCALAR_EXCEPTION = "The IQR scalar has to be greater than or equal 0.";
-
-    /** Number of data in-ports. */
-    private static final int NBR_INPORTS = 1;
-
-    /** Number of data out-ports. */
-    private static final int NBR_OUTPORTS = 2;
 
     /** Config key of the columns defining the groups. */
     static final String CFG_GROUP_COLS = "groups-list";
@@ -167,22 +163,22 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
 
     /** Init the outlier detector node model with one input and output. */
     OutlierDetectorNodeModel() {
-        super(NBR_INPORTS, NBR_OUTPORTS);
+        super(new PortType[]{BufferedDataTable.TYPE},
+            new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE, OutlierPortObject.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
-        throws Exception {
-        final BufferedDataTable in = inData[0];
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
+        final BufferedDataTable in = (BufferedDataTable)inData[0];
 
         final OutlierDetector outDet = createOutlierDetector(in.getDataTableSpec());
 
         outDet.execute(in, exec);
 
-        return new BufferedDataTable[]{outDet.getOutTable(), outDet.getSummaryTable()};
+        return new PortObject[]{outDet.getOutTable(), outDet.getSummaryTable(), outDet.getOutlierPort()};
     }
 
     /**
@@ -197,7 +193,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
             .calcInMemory(m_memorySetting.getBooleanValue())//
             .setEstimationType(EstimationType.valueOf(m_estimationSettings.getStringValue()))//
             .setGroupColumnNames(getGroupColNames(inSpec))//
-            .setIQRScalar(m_scalarModel.getDoubleValue())//
+            .setIQRMultiplier(m_scalarModel.getDoubleValue())//
             .setReplacementStrategy(OutlierReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue()))//
             .setTreatmentOption(OutlierTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue()))//
             .updateDomain(m_domainSetting.getBooleanValue())//
@@ -209,16 +205,18 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
      * list is returned.
      *
      * @param inSpec the input data table spec
-     * @return the list of group column names
+     * @return array of group column names
      */
-    private List<String> getGroupColNames(final DataTableSpec inSpec) {
-        final List<String> groupColNames;
+    private String[] getGroupColNames(final DataTableSpec inSpec) {
+        final String[] groupColNames;
         if (m_useGroupsSetting.getBooleanValue()) {
-            groupColNames = Arrays.stream(m_groupSettings.applyTo(inSpec).getIncludes()).collect(Collectors.toList());
+            final List<String> outliers =
+                Arrays.stream(m_outlierSettings.applyTo(inSpec).getIncludes()).collect(Collectors.toList());
             // remove columns for which the outliers have to be computed
-            groupColNames.removeAll(Arrays.asList(m_outlierSettings.applyTo(inSpec).getIncludes()));
+            groupColNames = Arrays.stream(m_groupSettings.applyTo(inSpec).getIncludes())
+                .filter(s -> !outliers.contains(s)).toArray(String[]::new);
         } else {
-            groupColNames = Collections.emptyList();
+            groupColNames = new String[]{};
         }
         return groupColNames;
     }
@@ -284,7 +282,8 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         OutlierDetector outDet = createOutlierDetector(inSpec);
 
         // return the output spec
-        return new DataTableSpec[]{outDet.getOutTableSpec(inSpec), outDet.getSummaryTableSpec(inSpec)};
+        return new DataTableSpec[]{outDet.getOutTableSpec(inSpec), outDet.getSummaryTableSpec(inSpec),
+            outDet.getOutlierPortSpec(inSpec)};
     }
 
     /**

@@ -46,7 +46,7 @@
  * History
  *   Jan 31, 2018 (ortmann): created
  */
-package org.knime.base.node.stats.outlier;
+package org.knime.base.node.stats.outlier.detector;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -109,7 +109,7 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
     private static final String ESTIMATION_TYPE = "Estimation type: ";
 
     /** The IQR scalar label name. */
-    private static final String QUARTILE_RANGE_MULT = "IQR scalar (k)";
+    private static final String QUARTILE_RANGE_MULT = "IQR multiplier (k)";
 
     /** The memory policy label name. */
     private static final String MEMORY_POLICY = "Process in memory";

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10"
+	type="Manipulator" icon="../outlier.png">
+	<name>Outlier Detector (Apply)</name>
+	<shortDescription>
+		Handles outliers for all numerical columns according to the provided model.
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+			 <p>
+        	This node treats outliers in the input data according to the parameters
+        	of the model input (typically coming from the Outlier-Detector node). It
+        	detects and treats the outliers of all columns in the input data that are
+        	also contained in the model input. The detection of the outliers in the
+        	input data relies soley on the rules learned by the model.
+        	</p>
+		</intro>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Model">Model holding the permitted interval bounds for each
+			outlier group and outlier treatment specifications
+		</inPort>
+		<inPort index="1" name="Numeric input data">Numeric input data to evaluate</inPort>
+		<outPort index="0" name="Outlier table">Data table where outliers are treated according
+		to the model's specifications
+		</outPort>
+		<outPort index="1" name="Summary">Data table holding the number of members, outliers, and
+			the lower and upper	bound for each outlier group
+		</outPort>
+	</ports>
+
+</knimeNode>

@@ -46,25 +46,25 @@
  * History
  *   Jan 31, 2018 (ortmann): created
  */
-package org.knime.base.node.stats.outlier;
+package org.knime.base.node.stats.outlier.applier;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * Factory class of the outlier detector node.
+ * Factory class of the outlier apply node.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class OutlierDetectorNodeFactory extends NodeFactory<OutlierDetectorNodeModel> {
+public class OutlierApplyNodeFactory extends NodeFactory<OutlierApplyNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public OutlierDetectorNodeModel createNodeModel() {
-        return new OutlierDetectorNodeModel();
+    public OutlierApplyNodeModel createNodeModel() {
+        return new OutlierApplyNodeModel();
     }
 
     /**
@@ -79,8 +79,7 @@ public class OutlierDetectorNodeFactory extends NodeFactory<OutlierDetectorNodeM
      * {@inheritDoc}
      */
     @Override
-    public NodeView<OutlierDetectorNodeModel> createNodeView(final int viewIndex,
-        final OutlierDetectorNodeModel nodeModel) {
+    public NodeView<OutlierApplyNodeModel> createNodeView(final int viewIndex, final OutlierApplyNodeModel nodeModel) {
         return null;
     }
 
@@ -97,7 +96,7 @@ public class OutlierDetectorNodeFactory extends NodeFactory<OutlierDetectorNodeM
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new OutlierDetectorNodeDialogPane();
+        return null;
     }
 
 }
