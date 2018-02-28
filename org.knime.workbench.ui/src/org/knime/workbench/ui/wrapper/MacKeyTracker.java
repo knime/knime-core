@@ -75,11 +75,11 @@ import org.eclipse.swt.widgets.Display;
  *       I am working around this unsavory situation by attaching key listeners throughout the SWT and AWT component
  *          trees for dialogs under Mac; pretty awful, but it gets us around some of the SWT_AWT issues here."
  */
-class QuiteHackyMacKeyTracker {
+final class MacKeyTracker {
 
-    static private QuiteHackyMacKeyTracker INSTANCE = new QuiteHackyMacKeyTracker();
+    static private MacKeyTracker INSTANCE = new MacKeyTracker();
 
-    static QuiteHackyMacKeyTracker getInstance () {
+    static MacKeyTracker getInstance () {
         return INSTANCE;
     }
 
@@ -87,7 +87,7 @@ class QuiteHackyMacKeyTracker {
     // This map tracks the mapping between any currently on screen SWT control and its SWTKeyListener
     protected HashMap<Control, SWTKeyListener> swtControlListenerMap;
 
-    private QuiteHackyMacKeyTracker () {
+    private MacKeyTracker () {
         this.swtControlListenerMap = new HashMap<>();
     }
 

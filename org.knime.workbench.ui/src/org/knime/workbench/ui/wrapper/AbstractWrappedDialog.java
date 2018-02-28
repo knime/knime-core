@@ -111,7 +111,7 @@ public abstract class AbstractWrappedDialog extends Dialog {
     @Override
     protected void handleShellCloseEvent() {
         if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-            QuiteHackyMacKeyTracker keyTracker = QuiteHackyMacKeyTracker.getInstance();
+            MacKeyTracker keyTracker = MacKeyTracker.getInstance();
 
             keyTracker.removeListeners(this.m_wrapper.getRootFrame(), this.getShell());
         }
@@ -135,7 +135,7 @@ public abstract class AbstractWrappedDialog extends Dialog {
                 throw new IllegalStateException("SWT KeyListener was never constructed.");
             }
 
-            QuiteHackyMacKeyTracker keyTracker = QuiteHackyMacKeyTracker.getInstance();
+            MacKeyTracker keyTracker = MacKeyTracker.getInstance();
 
             keyTracker.instrumentTree(this.m_wrapper.getRootFrame(), this.awtKeyListener,
                                       this.getShell(), this.swtKeyListener);
