@@ -354,6 +354,14 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
                     /* We may have to skip the temporal window and or the current rows to find a window containing at least one row. */
                     skipTemporalWindow(first, column, startInterval, windowDuration);
                     firstStart = m_nextStartTemporal;
+
+                    /* This fixes a bug (AP-8975) in the case where we only have to skip one window as the first applicable row lies within the
+                     * next window. In this case the skipTemporalWindow simply returns without any changes. */
+                    if (!m_bufferedRows.isEmpty()
+                        && compareTemporal(getTemporal(m_bufferedRows.getFirst().getCell(column)),
+                            firstStart.plus(windowDuration)) > 0) {
+                        firstStart = firstStart.plus(startInterval);
+                    }
                 }
 
                 if (m_bufferedRows.isEmpty()) {
@@ -615,6 +623,15 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
                         return new BufferedDataTable[]{container.getTable()};
                     }
 
+                    /* This fixes a bug (AP-8975) in the case where we only have to skip one window as the first applicable row lies within the
+                     * next window. In this case the skipTemporalWindow simply returns without any changes. */
+                    Temporal temp = firstEnd.plus(startInterval);
+                    if (!m_bufferedRows.isEmpty() && compareTemporal(firstEnd, getTemporal(m_bufferedRows.getFirst().getCell(column))) < 0
+                        && (compareTemporal(temp, temp.minus(windowDuration)) < 0
+                            || compareTemporal(temp.minus(windowDuration),
+                                getTemporal(m_bufferedRows.getFirst().getCell(column))) < 0)) {
+                        firstEnd = firstEnd.plus(startInterval);
+                    }
                 }
 
                 /* Check if we found a window which contains at least one row. */
@@ -865,7 +882,6 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
                 /* Current start temporal, m_nextStartTemporal is used to re-use the skipTemporalWindow method. */
                 m_nextStartTemporal = firstEnd.minus(windowDuration);
-                firstStart = firstEnd.minus(windowDuration.dividedBy(2));
                 m_windowEndTemporal = firstEnd;
 
                 /* Check for underflow of the current start. */
@@ -876,6 +892,19 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
                     /* Skip window until we find one which contains at least one row. */
                     skipTemporalWindow(first, column, startInterval, windowDuration);
                     firstEnd = m_nextStartTemporal.plus(windowDuration);
+
+                    firstStart = firstEnd.minus(windowDuration.dividedBy(2));
+
+                    /* This fixes a bug (AP-8975) in the case where we only have to skip one window as the first applicable row lies within the
+                     * next window. In this case the skipTemporalWindow simply returns without any changes. */
+                    Temporal temp = firstEnd.plus(startInterval);
+                    if (!m_bufferedRows.isEmpty()
+                        && compareTemporal(firstEnd, getTemporal(m_bufferedRows.getFirst().getCell(column))) < 0
+                        && (compareTemporal(temp, temp.minus(windowDuration)) < 0
+                            || compareTemporal(temp.minus(windowDuration),
+                                getTemporal(m_bufferedRows.getFirst().getCell(column))) < 0)) {
+                        firstStart = firstStart.plus(startInterval);
+                    }
                 }
 
                 /* Check if we found a window which contains at least one row. */
