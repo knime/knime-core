@@ -70,13 +70,9 @@ import org.knime.base.node.preproc.groupby.GroupByTable;
 import org.knime.base.node.preproc.groupby.GroupKey;
 import org.knime.base.node.preproc.groupby.MemoryGroupByTable;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.container.AbstractCellFactory;
-import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -270,29 +266,15 @@ final class OutlierIntervalsCalculator {
     }
 
     /**
-     * Returns the spec of the table storing the permitted intervals.
-     *
-     * @param inSpec the spec of the input data table
-     * @return the spec of the table storing the permitted intervals
-     */
-    DataTableSpec getIntervalsTableSpec(final DataTableSpec inSpec) {
-        return GroupByTable.createGroupByTableSpec(inSpec, Arrays.stream(m_groupColNames).collect(Collectors.toList()),
-            getAggretators(inSpec, GlobalSettings.DEFAULT), COLUMN_NAME_POLICY);
-    }
-
-    /**
      * Calculates the permitted intervals.
      *
-     * @param in the data table for which the outliers have to be detected
+     * @param inTable the data table for which the outliers have to be detected
      * @param exec the execution context
      * @return returns the mapping between groups and the permitted intervals for each outlier column
      * @throws Exception if the execution failed, due to internal reasons or cancelation from the outside
      */
-    OutlierModel calculateIntervals(final BufferedDataTable in, final ExecutionContext exec) throws Exception {
-
-        // calculate the first and third quartile of each outlier column wr.t. the groups this method might cause an
-        // out of memory exception while cloning the aggregators. However, this is very unlikely
-        final GroupByTable t;
+    OutlierModel calculatePermittedIntervals(final BufferedDataTable inTable, final ExecutionContext exec)
+        throws Exception {
 
         // the quartile calculation progress
         final double quartilesProgress = 0.8;
@@ -301,9 +283,14 @@ final class OutlierIntervalsCalculator {
 
         // start the computation of the first and third quartile (and some additional stuff)
         exec.setMessage(STATISTICS_MSG);
+
+        GroupByTable t;
+
+        // calculate the first and third quartile of each outlier column wr.t. the groups. This method might cause an
+        // out of memory exception while initializing/cloning the aggregators. However, this is very unlikely
         try {
             ExecutionContext quartilesCalcExec = exec.createSubExecutionContext(quartilesProgress);
-            t = getGroupByTable(in, quartilesCalcExec);
+            t = getGroupByTable(inTable, quartilesCalcExec);
             quartilesCalcExec.setProgress(1.0);
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(MEMORY_EXCEPTION, e);
@@ -320,11 +307,8 @@ final class OutlierIntervalsCalculator {
         // interval subexecution context
         ExecutionContext intervalExec = exec.createSubExecutionContext(intervalsProgress);
 
-        // calculate the intervals for each column w.r.t. to the groups
-        BufferedDataTable intervalsTable = calcIntervals(intervalExec, t.getBufferedTable());
-
-        // create the model and return it
-        final OutlierModel model = createModel(intervalExec, intervalsTable);
+        // calculate the permitted intervals and store them to the model
+        final OutlierModel model = calcPermittedIntervals(intervalExec, t.getBufferedTable());
 
         // update the progress and return the permitted intervals
         exec.setProgress(1);
@@ -334,91 +318,29 @@ final class OutlierIntervalsCalculator {
     }
 
     /**
-     * Creates the outlier model storing all information provided by the intervals table
-     *
-     * @param exec the execution context
-     * @param intervalsTable the table storing the permitted intervals for each group and outlier column
-     * @return the outlier model
-     * @throws CanceledExecutionException if the user has canceled the execution
-     */
-    private OutlierModel createModel(final ExecutionContext exec, final BufferedDataTable intervalsTable)
-        throws CanceledExecutionException {
-        // initialize the outlier model
-        final OutlierModel model = new OutlierModel(m_groupColNames, m_outlierColNames, intervalsTable.getSpec());
-
-        // get the table spec
-        final DataTableSpec intervalsSpec = intervalsTable.getDataTableSpec();
-
-        // store counters to update the progress
-        final long rowCount = intervalsTable.size();
-        long rowCounter = 1;
-
-        // first position where outlier columns can be found in the intervals table
-        final int outlierOffset = m_groupColNames.length;
-
-        for (final DataRow r : intervalsTable) {
-            exec.checkCanceled();
-            final long rowCounterLong = rowCounter++; // 'final' due to access in lambda expression
-            exec.setProgress(rowCounterLong / (double)rowCount,
-                () -> "Storing interval for row " + rowCounterLong + " of " + rowCount);
-
-            // calculate the groups key
-            final GroupKey key = model.getKey(r, intervalsSpec);
-
-            for (int i = 0; i < m_outlierColNames.length; i++) {
-                final double[] interval;
-                // the GroupByTable might return MissingValues, but only if
-                // the entire group consists of Missing Values
-                final int index = i * 2 + outlierOffset;
-                final DataCell fQuart = r.getCell(index);
-                final DataCell tQuart = r.getCell(index + 1);
-                if (!fQuart.isMissing() && !tQuart.isMissing()) {
-                    interval =
-                        new double[]{((DoubleValue)fQuart).getDoubleValue(), ((DoubleValue)tQuart).getDoubleValue()};
-                } else {
-                    interval = null;
-                    String groupNames = Arrays.stream(key.getGroupVals()).map(groupCell -> groupCell.toString())
-                        .collect(Collectors.joining(", "));
-                    if (groupNames.isEmpty()) {
-                        groupNames = DEFAULT_GROUPS_NAME;
-                    }
-                    warnListeners(
-                        "Group <" + groupNames + "> contains only missing values in column " + m_outlierColNames[i]);
-                }
-                // setting null here is no problem since during the update we will only access the interval
-                // if the cell is not missing. However, this implies that the interval is not null
-                model.addEntry(key, m_outlierColNames[i], interval);
-            }
-        }
-
-        // return the model
-        return model;
-    }
-
-    /**
      * Constructs the group by table in accordance with the given settings.
      *
-     * @param in the input data table
+     * @param inTable the input data table
      * @param exec the execution context
      * @return the group by table w.r.t. the selected settings
      * @throws CanceledExecutionException if the user has canceled the execution
      */
-    private GroupByTable getGroupByTable(final BufferedDataTable in, final ExecutionContext exec)
+    private GroupByTable getGroupByTable(final BufferedDataTable inTable, final ExecutionContext exec)
         throws CanceledExecutionException {
 
         // get the global settings
-        final GlobalSettings gSettings = getGlobalSettings(in);
+        final GlobalSettings gSettings = getGlobalSettings(inTable);
 
         // create the column aggregators
-        final ColumnAggregator[] agg = getAggretators(in.getDataTableSpec(), gSettings);
+        final ColumnAggregator[] agg = getAggretators(inTable.getDataTableSpec(), gSettings);
 
         // init and return the GroupByTable obeying the chosen memory settings
         final GroupByTable t;
         if (m_inMemory) {
-            t = new MemoryGroupByTable(exec, in, Arrays.stream(m_groupColNames).collect(Collectors.toList()), agg,
+            t = new MemoryGroupByTable(exec, inTable, Arrays.stream(m_groupColNames).collect(Collectors.toList()), agg,
                 gSettings, false, COLUMN_NAME_POLICY, false);
         } else {
-            t = new BigGroupByTable(exec, in, Arrays.stream(m_groupColNames).collect(Collectors.toList()), agg,
+            t = new BigGroupByTable(exec, inTable, Arrays.stream(m_groupColNames).collect(Collectors.toList()), agg,
                 gSettings, false, COLUMN_NAME_POLICY, false);
         }
         return t;
@@ -427,16 +349,16 @@ final class OutlierIntervalsCalculator {
     /**
      * Create the global settings used by the {@link GroupByTable}.
      *
-     * @param in the input data table
+     * @param inTable the input data table
      * @return the global settings
      */
-    private GlobalSettings getGlobalSettings(final BufferedDataTable in) {
+    private GlobalSettings getGlobalSettings(final BufferedDataTable inTable) {
         // set the number of unique values to the number of table rows (might cause OutOfMemoryException
         // during execution
         return GlobalSettings.builder()//
-            .setMaxUniqueValues(KnowsRowCountTable.checkRowCount(in.size())) //
+            .setMaxUniqueValues(KnowsRowCountTable.checkRowCount(inTable.size())) //
             .setAggregationContext(AggregationContext.COLUMN_AGGREGATION) //
-            .setDataTableSpec(in.getDataTableSpec()) //
+            .setDataTableSpec(inTable.getDataTableSpec()) //
             .setGroupColNames(Arrays.stream(m_groupColNames).collect(Collectors.toList())) //
             .setValueDelimiter(GlobalSettings.STANDARD_DELIMITER) //
             .build();
@@ -485,73 +407,71 @@ final class OutlierIntervalsCalculator {
      * @param exec the execution context
      * @param quartiles the data table holding the groups, and the first and third quartile for each of the outlier
      *            columns
-     * @return the data table storing the permitted interval
+     * @return the outlier model storing the permitted interval
      * @throws CanceledExecutionException if the user has canceled the execution
      */
-    private BufferedDataTable calcIntervals(final ExecutionContext exec, final BufferedDataTable quartiles)
+    private OutlierModel calcPermittedIntervals(final ExecutionContext exec, final BufferedDataTable quartiles)
         throws CanceledExecutionException {
-        final DataTableSpec intervalSpec = quartiles.getDataTableSpec();
+        final DataTableSpec quartilesSpec = quartiles.getDataTableSpec();
 
-        // create column re-arranger to overwrite cells corresponding to outliers
-        final ColumnRearranger colRearranger = new ColumnRearranger(intervalSpec);
-
-        // array storing the permitted intervals
-        final DataCell[] intervals = new DataCell[2 * m_outlierColNames.length];
+        // the group by table does not rename the group columns so we can use this spec, instead of the
+        // in table spec as well (if this is changed the quartilesSpec has to be replaced by the inSpec)
+        final OutlierModel model = new OutlierModel(quartilesSpec, m_groupColNames, m_outlierColNames);
 
         // first position where outlier columns can be found
         final int outlierOffset = m_groupColNames.length;
 
-        final int[] colsToRepInd = new int[intervals.length];
-        final DataColumnSpec[] colsToRepSpecs = new DataColumnSpec[intervals.length];
-        for (int i = 0; i < intervals.length; i++) {
-            colsToRepInd[i] = i + outlierOffset;
-            colsToRepSpecs[i] = intervalSpec.getColumnSpec(i + outlierOffset);
-        }
+        // store counters to update the progress
+        final long rowCount = quartiles.size();
+        long rowCounter = 1;
 
-        final OutlierDomainsUpdater domainsUpdater = new OutlierDomainsUpdater();
+        for (final DataRow row : quartiles) {
 
-        final String[] tableColNames = intervalSpec.getColumnNames();
+            exec.checkCanceled();
+            final long rowCounterLong = rowCounter++; // 'final' due to access in lambda expression
+            exec.setProgress(rowCounterLong / (double)rowCount,
+                () -> "Storing interval for row " + rowCounterLong + " of " + rowCount);
 
-        // replace the intervals table content by the permitted interval boundaries
-        final AbstractCellFactory fac = new AbstractCellFactory(colsToRepSpecs) {
-            @Override
-            public DataCell[] getCells(final DataRow row) {
-                for (int i = 0; i < intervals.length; i += 2) {
-                    final int index = i + outlierOffset;
-                    // the first quartile cell
-                    DataCell fQuart = row.getCell(index);
-                    // the third quartile cell
-                    DataCell tQuart = row.getCell(index + 1);
-                    if (!fQuart.isMissing() && !tQuart.isMissing()) {
-                        // value of the first quartile
-                        final double fQ = ((DoubleValue)fQuart).getDoubleValue();
-                        // value of the third quartile
-                        final double tQ = ((DoubleValue)tQuart).getDoubleValue();
+            // calculate the groups key
+            final GroupKey key = model.getKey(row, quartilesSpec);
 
-                        // calculate the scaled IQR
-                        final double iqr = m_iqrMultiplier * (tQ - fQ);
-
-                        // store the permitted interval boundaries
-                        final double lowerBound = fQ - iqr;
-                        fQuart = DoubleCellFactory.create(lowerBound);
-                        domainsUpdater.updateDomain(tableColNames[index], lowerBound);
-
-                        final double upperBound = tQ + iqr;
-                        tQuart = DoubleCellFactory.create(tQ + iqr);
-                        domainsUpdater.updateDomain(tableColNames[index + 1], upperBound);
-
+            for (int i = 0; i < m_outlierColNames.length; i++) {
+                // the permitted interval
+                final double[] permInterval;
+                // index of the outlier column in the quartiles table
+                final int index = i * 2 + outlierOffset;
+                // the first quartile cell
+                DataCell fQuart = row.getCell(index);
+                // the third quartile cell
+                DataCell tQuart = row.getCell(index + 1);
+                // the GroupByTable might return MissingValues, but only if
+                // the entire group consists of Missing Values
+                if (!fQuart.isMissing() && !tQuart.isMissing()) {
+                    // value of the first quartile
+                    final double fQ = ((DoubleValue)fQuart).getDoubleValue();
+                    // value of the third quartile
+                    final double tQ = ((DoubleValue)tQuart).getDoubleValue();
+                    // calculate the scaled IQR
+                    final double iqr = m_iqrMultiplier * (tQ - fQ);
+                    // store the interval
+                    permInterval = new double[]{fQ - iqr, tQ + iqr};
+                } else {
+                    permInterval = null;
+                    String groupNames = Arrays.stream(key.getGroupVals()).map(groupCell -> groupCell.toString())
+                        .collect(Collectors.joining(", "));
+                    if (groupNames.isEmpty()) {
+                        groupNames = DEFAULT_GROUPS_NAME;
                     }
-                    intervals[i] = fQuart;
-                    intervals[i + 1] = tQuart;
+                    warnListeners(
+                        "Group <" + groupNames + "> contains only missing values in column " + m_outlierColNames[i]);
                 }
-                return intervals;
+                // setting null here is vital and will be treated by the outlier reviser.
+                model.addEntry(key, m_outlierColNames[i], permInterval);
             }
-        };
-        // replace the outlier columns by their updated versions
-        colRearranger.replace(fac, colsToRepInd);
 
-        // return the table storing the permitted intervals with updated domains
-        return domainsUpdater.updateDomain(exec, exec.createColumnRearrangeTable(quartiles, colRearranger, exec));
+        }
+        return model;
+
     }
 
     /**

@@ -49,12 +49,16 @@
 package org.knime.base.algorithms.outlier;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
+import org.knime.base.algorithms.outlier.helpers.Helper4TypeExtraction;
 import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -75,6 +79,12 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     /** Convenience accessor for the port type. */
     @SuppressWarnings("hiding")
     public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(OutlierPortObject.class);
+
+    /** The name of the groups column spec . */
+    private static final String GROUP_SUFFIX = " (group)";
+
+    /** The name of the outlier column spec . */
+    private static final String OUTLIER_SUFFIX = " (outlier)";
 
     /** Config key of the outlier treatment. */
     private static final String CFG_OUTLIER_TREATMENT = "outlier-treatment";
@@ -101,7 +111,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     private OutlierReviser.Builder m_reviserBuilder;
 
     /** The outlier model. */
-    private OutlierModel m_permIntervalsModel;
+    private OutlierModel m_outlierModel;
 
     /** Empty constructor required by super class, should not be used. */
     public OutlierPortObject() {
@@ -113,15 +123,15 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      * Create new port object given the arguments.
      *
      * @param summary the tooltip
-     * @param permIntervalsTable ther permitted intervals table
-     * @param reviser the {@link OutlierReviser}
+     * @param outlierModel ther permitted intervals table
+     * @param reviser the outlier reviser
      */
-    OutlierPortObject(final String summary, final OutlierModel permIntervalsModel, final OutlierReviser reviser) {
+    OutlierPortObject(final String summary, final OutlierModel outlierModel, final OutlierReviser reviser) {
         // store the summary
         m_summary = summary;
 
-        // store the spec holding groups and outlier column names
-        m_permIntervalsModel = permIntervalsModel;
+        // store the permited intervals model
+        m_outlierModel = outlierModel;
 
         // store the reviser
         m_reviser = reviser;
@@ -144,9 +154,9 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      */
     public OutlierModel getOutlierModel(final DataTableSpec inSpec) {
         // remove all entries related to outlier columns not existent in the input spec
-        m_permIntervalsModel.dropOutliers(Arrays.stream(m_permIntervalsModel.getOutlierColNames())
+        m_outlierModel.dropOutliers(Arrays.stream(m_outlierModel.getOutlierColNames())
             .filter(s -> !inSpec.containsName(s)).collect(Collectors.toList()));
-        return m_permIntervalsModel;
+        return m_outlierModel;
     }
 
     /**
@@ -154,20 +164,8 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      */
     @Override
     public PortObjectSpec getSpec() {
-        return m_permIntervalsModel.getModelSpec();
-    }
-
-    /**
-     * Drops the given outlier columns from the outlier port spec.
-     *
-     * @param outlierPortSpec the outlier port spec to be adapted
-     * @param outlierColsToDrop the columns to be dropped
-     * @return the filtered port spec
-     * @throws IllegalArgumentException if any of the outlier columns to be drop is not available in the provided spec
-     */
-    public static DataTableSpec dropOutlierColsFromSpec(final DataTableSpec outlierPortSpec,
-        final List<String> outlierColsToDrop) throws IllegalArgumentException {
-        return OutlierModel.dropOutlierColsFromSpec(outlierPortSpec, outlierColsToDrop);
+        return getPortSpec(m_outlierModel.getGroupColTypes(), m_outlierModel.getGroupColNames(),
+            m_outlierModel.getOutlierColNames());
     }
 
     /**
@@ -176,8 +174,25 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      * @param outlierPortSpec the outlier port spec
      * @return the group column names used to calculate the outlier port spec
      */
-    public static String[] getGroups(final DataTableSpec outlierPortSpec) {
-        return OutlierModel.getGroups(outlierPortSpec);
+    public static String[] getGroupColNames(final DataTableSpec outlierPortSpec) {
+        return outlierPortSpec.stream()//
+            .filter(s -> s.getName().endsWith(GROUP_SUFFIX))//
+            .map(s -> s.getName().substring(0, s.getName().lastIndexOf(GROUP_SUFFIX)))//
+            .toArray(String[]::new);
+    }
+
+    /**
+     * Returns the group column names corresponding to groups used to calculate the outlier port spec.
+     *
+     * @param outlierPortSpec the outlier port spec
+     * @return the group column names corresponding to groups used to calculate the outlier port spec
+     */
+
+    public static String[] getGroupSpecNames(final DataTableSpec outlierPortSpec) {
+        return outlierPortSpec.stream()//
+            .filter(s -> s.getName().endsWith(GROUP_SUFFIX))//
+            .map(s -> s.getName())//
+            .toArray(String[]::new);
     }
 
     /**
@@ -186,8 +201,11 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      * @param outlierPortSpec the outlier port spec
      * @return the outlier column names used to calculate the outlier port spec
      */
-    public static String[] getOutliers(final DataTableSpec outlierPortSpec) {
-        return OutlierModel.getOutliers(outlierPortSpec);
+    public static String[] getOutlierColNames(final DataTableSpec outlierPortSpec) {
+        return outlierPortSpec.stream()//
+            .filter(s -> s.getName().endsWith(OUTLIER_SUFFIX))//
+            .map(s -> s.getName().substring(0, s.getName().lastIndexOf(OUTLIER_SUFFIX)))//
+            .toArray(String[]::new);
     }
 
     /**
@@ -204,7 +222,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     @Override
     protected void save(final ModelContentWO model, final ExecutionMonitor exec) throws CanceledExecutionException {
         saveReviser(model.addModelContent(CFG_REVISER));
-        m_permIntervalsModel.saveModel(model.addModelContent(CFG_INTERVALS));
+        m_outlierModel.saveModel(model.addModelContent(CFG_INTERVALS));
     }
 
     /**
@@ -232,7 +250,46 @@ public class OutlierPortObject extends AbstractSimplePortObject {
             .updateDomain(reviserModel.getBoolean(CFG_DOMAIN_POLICY));
 
         // initialize the permitted intervals model
-        m_permIntervalsModel = OutlierModel.loadModel(model.getModelContent(CFG_INTERVALS), (DataTableSpec)spec);
+        m_outlierModel = OutlierModel.loadInstance(model.getModelContent(CFG_INTERVALS));
+    }
+
+    /**
+     * Returns the oulier port spec.
+     *
+     * @param inSpec the in spec
+     * @param groupColNames the group column names
+     * @param outlierColNames the outlier column names
+     * @return the outlier port spec
+     */
+    static DataTableSpec getPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
+        final String[] outlierColNames) {
+        return getPortSpec(Helper4TypeExtraction.extractTypes(inSpec, groupColNames), groupColNames, outlierColNames);
+    }
+
+    /**
+     * Returns the oulier port spec.
+     *
+     * @param groupColTypes the data types of the group column
+     * @param groupColNames the group column names
+     * @param outlierColNames the outlier column names
+     * @return the outlier port spec
+     */
+    private static DataTableSpec getPortSpec(final DataType[] groupColTypes, final String[] groupColNames,
+        final String[] outlierColNames) {
+        final int numOfGroups = groupColNames.length;
+
+        final DataColumnSpec[] specs = new DataColumnSpec[numOfGroups + outlierColNames.length];
+
+        for (int i = 0; i < numOfGroups; i++) {
+            specs[i] = new DataColumnSpecCreator(groupColNames[i] + GROUP_SUFFIX, groupColTypes[i]).createSpec();
+        }
+
+        for (int i = 0; i < outlierColNames.length; i++) {
+            // DoubleCell is compatible with long and int cells and these are the only allowed types for outlier column names
+            specs[i + numOfGroups] =
+                new DataColumnSpecCreator(outlierColNames[i] + OUTLIER_SUFFIX, DoubleCell.TYPE).createSpec();
+        }
+        return new DataTableSpec(specs);
     }
 
 }

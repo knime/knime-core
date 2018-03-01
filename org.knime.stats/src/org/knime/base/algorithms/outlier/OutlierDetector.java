@@ -248,14 +248,12 @@ public final class OutlierDetector {
     /**
      * Returns the spec of the table storing the permitted intervals and additional information about member counts.
      *
-     * @param inSpec the spec of the input data table
+     * @param inSpec the in spec
+     *
      * @return the spec of the data table storing the summary
      */
     public DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec) {
-        return OutlierReviser.getSummaryTableSpec(
-            OutlierModel.getModelSpec(m_calculator.getIntervalsTableSpec(inSpec), m_calculator.getGroupColumnNames(),
-                m_calculator.getOutlierColumnNames()),
-            m_calculator.getGroupColumnNames().length, m_calculator.getOutlierColumnNames());
+        return OutlierReviser.getSummaryTableSpec(inSpec, m_calculator.getGroupColumnNames());
     }
 
     /**
@@ -274,7 +272,7 @@ public final class OutlierDetector {
      * @return the spec of the outlier port object
      */
     public DataTableSpec getOutlierPortSpec(final DataTableSpec inSpec) {
-        return OutlierModel.getModelSpec(m_calculator.getIntervalsTableSpec(inSpec), m_calculator.getGroupColumnNames(),
+        return OutlierPortObject.getPortSpec(inSpec, m_calculator.getGroupColumnNames(),
             m_calculator.getOutlierColumnNames());
     }
 
@@ -299,7 +297,7 @@ public final class OutlierDetector {
 
         // calculate the permitted intervals
         final OutlierModel permittedIntervals =
-            m_calculator.calculateIntervals(in, exec.createSubExecutionContext(intervalsProgress));
+            m_calculator.calculatePermittedIntervals(in, exec.createSubExecutionContext(intervalsProgress));
 
         m_outlierPort = new OutlierPortObject(Arrays.stream(permittedIntervals.getOutlierColNames())
             .collect(Collectors.joining(", ", "Outlier treatment for columns: ", "")), permittedIntervals, m_reviser);

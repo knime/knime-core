@@ -53,12 +53,14 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.knime.base.algorithms.outlier.OutlierPortObject;
 import org.knime.base.algorithms.outlier.OutlierReviser;
 import org.knime.base.algorithms.outlier.listeners.Warning;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -104,32 +106,50 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        final DataTableSpec modelSpec = (DataTableSpec)inSpecs[0];
+        final DataTableSpec outlierPortSpec = (DataTableSpec)inSpecs[0];
         final DataTableSpec inTableSpec = (DataTableSpec)inSpecs[1];
 
         // ensure that the in data table contains the group columns that were used to learn the outlier reviser
-        final String[] modelGroups = OutlierPortObject.getGroups(modelSpec);
-        if (!Arrays.stream(modelGroups).allMatch(inTableSpec::containsName)) {
-            throw new InvalidSettingsException(Arrays.stream(modelGroups).collect(Collectors.joining(", ",
-                "Outlier detector used groups (", ") which do not, or only partially, exist in the table")));
+        final String[] groupColNames = OutlierPortObject.getGroupColNames(outlierPortSpec);
+        if (!Arrays.stream(groupColNames)//
+            .allMatch(inTableSpec::containsName)) {
+            throw new InvalidSettingsException(Arrays.stream(groupColNames).collect(Collectors.joining(", ",
+                "Outlier detector used group(s) (", ") which does not, or only partially, exist in the table")));
         }
 
-        final String[] modelOutliers = OutlierPortObject.getOutliers(modelSpec);
+        // check if the data type for the groups differs between those the model was trained on and the input table
+        final String[] groupSpecNames = OutlierPortObject.getGroupSpecNames(outlierPortSpec);
+        final String[] wrongDataType = IntStream.range(0, groupColNames.length)//
+            .filter(i -> outlierPortSpec.getColumnSpec(groupSpecNames[i]).getType() != inTableSpec
+                .getColumnSpec(groupColNames[i]).getType())//
+            .mapToObj(i -> groupColNames[i])//
+            .toArray(String[]::new);
+        if (wrongDataType.length != 0) {
+            throw new InvalidSettingsException(Arrays.stream(wrongDataType)//
+                .collect(Collectors.joining(", ", "The data type for column(s) (",
+                    ") differs between the input table and that the model was created from")));
+        }
 
-        final List<String> nonExistingOutliers =
-            Arrays.stream(modelOutliers).filter(s -> !inTableSpec.containsName(s)).collect(Collectors.toList());
-        if (modelOutliers.length == nonExistingOutliers.size()) {
-            throw new InvalidSettingsException(Arrays.stream(modelOutliers).collect(Collectors.joining(", ",
-                "Outlier detector calculated outliers on columns (", ") which do not exist in the table")));
+        // get the outlier column names stored in the port spec
+        final String[] outlierColNames = OutlierPortObject.getOutlierColNames(outlierPortSpec);
+
+        // check for outlier columns that are missing the input table
+        final List<String> nonExistOrCompatibleOutliers = Arrays.stream(outlierColNames)
+            .filter(s -> (!inTableSpec.containsName(s)
+                || !inTableSpec.getColumnSpec(s).getType().isCompatible(DoubleValue.class)))//
+            .collect(Collectors.toList());
+        // if all of them  are missing throw an exception
+        if (outlierColNames.length == nonExistOrCompatibleOutliers.size()) {
+            throw new InvalidSettingsException(Arrays.stream(outlierColNames)//
+                .collect(Collectors.joining(", ", "The model was created for columns (",
+                    ") which does not exist in the table or is not compatible")));
         }
-        if (nonExistingOutliers.size() > 0) {
-            setWarningMessage(nonExistingOutliers.stream().collect(
-                Collectors.joining(", ", "Column(s) (", ") as specified by the outlier detector is not present.")));
+        if (nonExistOrCompatibleOutliers.size() > 0) {
+            setWarningMessage(nonExistOrCompatibleOutliers.stream()//
+                .collect(Collectors.joining(", ", "Column(s) (",
+                    ") as specified by the outlier detector is not present or compatible.")));
         }
-        return new PortObjectSpec[]{inTableSpec,
-            OutlierReviser.getSummaryTableSpec(OutlierPortObject.dropOutlierColsFromSpec(modelSpec, nonExistingOutliers),
-                modelGroups.length,
-                Arrays.stream(modelOutliers).filter(s -> !nonExistingOutliers.contains(s)).toArray(String[]::new))};
+        return new PortObjectSpec[]{inTableSpec, OutlierReviser.getSummaryTableSpec(inTableSpec, groupColNames)};
     }
 
     /**
