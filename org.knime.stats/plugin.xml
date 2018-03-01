@@ -61,4 +61,15 @@
               factory-class="org.knime.base.node.stats.outlier.applier.OutlierApplyNodeFactory">
         </node>
    </extension>
+   <extension
+         point="org.knime.core.PortType">
+      <portType
+            color="#FFFF99"
+            hidden="true"
+            name="Outlier"
+            objectClass="org.knime.base.algorithms.outlier.OutlierPortObject"
+            objectSerializer="org.knime.base.algorithms.outlier.OutlierPortObject$Serializer"
+            specClass="org.knime.core.data.DataTableSpec">
+      </portType>
+   </extension>
 </plugin>

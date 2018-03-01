@@ -76,6 +76,10 @@ import org.knime.core.node.port.PortTypeRegistry;
  */
 public class OutlierPortObject extends AbstractSimplePortObject {
 
+    /** @noreference This class is not intended to be referenced by clients. */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<OutlierPortObject> {
+    }
+
     /** Convenience accessor for the port type. */
     @SuppressWarnings("hiding")
     public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(OutlierPortObject.class);
@@ -104,19 +108,24 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     /** The summary (tooltip) text. */
     private final String m_summary;
 
-    /** The outlier reviser. */
-    private final OutlierReviser m_reviser;
-
     /** The outlier reviser builder, */
     private OutlierReviser.Builder m_reviserBuilder;
 
     /** The outlier model. */
     private OutlierModel m_outlierModel;
 
+    /** The outlieer treatment option. */
+    private String m_treatmentOption;
+
+    /** The outlier replacement strategy. */
+    private String m_repStrategy;
+
+    /** Flag indiciation whether the domain needs to be updated. */
+    private boolean m_updateDomain;
+
     /** Empty constructor required by super class, should not be used. */
     public OutlierPortObject() {
         m_summary = "";
-        m_reviser = null;
     }
 
     /**
@@ -133,17 +142,22 @@ public class OutlierPortObject extends AbstractSimplePortObject {
         // store the permited intervals model
         m_outlierModel = outlierModel;
 
-        // store the reviser
-        m_reviser = reviser;
+        // store the reviser settings
+        m_treatmentOption = reviser.getTreatmentOption().toString();
+        m_repStrategy = reviser.getReplacementStrategy().toString();
+        m_updateDomain = reviser.updateDomain();
     }
 
     /**
-     * Returns the proper instance of the outlier reviser
+     * Returns the proper instance of the outlier reviser builder
      *
-     * @return properly instantiated outlier reviser
+     * @return properly instantiated outlier reviser builder
      */
     public OutlierReviser.Builder getOutRevBuilder() {
-        return m_reviserBuilder;
+        return m_reviserBuilder = new OutlierReviser.Builder()//
+            .setTreatmentOption(OutlierTreatmentOption.getEnum(m_treatmentOption))//
+            .setReplacementStrategy(OutlierReplacementStrategy.getEnum(m_repStrategy))//
+            .updateDomain(m_updateDomain);
     }
 
     /**
@@ -231,9 +245,9 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      * @param model the model to save to
      */
     private void saveReviser(final ModelContentWO model) {
-        model.addString(CFG_OUTLIER_TREATMENT, m_reviser.getTreatmentOption().toString());
-        model.addString(CFG_OUTLIER_REPLACEMENT, m_reviser.getReplacementStrategy().toString());
-        model.addBoolean(CFG_DOMAIN_POLICY, m_reviser.updateDomain());
+        model.addString(CFG_OUTLIER_TREATMENT, m_treatmentOption);
+        model.addString(CFG_OUTLIER_REPLACEMENT, m_repStrategy);
+        model.addBoolean(CFG_DOMAIN_POLICY, m_updateDomain);
     }
 
     /**
@@ -244,10 +258,11 @@ public class OutlierPortObject extends AbstractSimplePortObject {
         throws InvalidSettingsException, CanceledExecutionException {
         // initialize the reviser builder
         final ModelContentRO reviserModel = model.getModelContent(CFG_REVISER);
-        m_reviserBuilder = new OutlierReviser.Builder()//
-            .setTreatmentOption(OutlierTreatmentOption.getEnum(reviserModel.getString(CFG_OUTLIER_TREATMENT)))//
-            .setReplacementStrategy(OutlierReplacementStrategy.getEnum(reviserModel.getString(CFG_OUTLIER_REPLACEMENT)))//
-            .updateDomain(reviserModel.getBoolean(CFG_DOMAIN_POLICY));
+
+        // load the reviser settings
+        m_treatmentOption = reviserModel.getString(CFG_OUTLIER_TREATMENT);
+        m_repStrategy = reviserModel.getString(CFG_OUTLIER_REPLACEMENT);
+        m_updateDomain = reviserModel.getBoolean(CFG_DOMAIN_POLICY);
 
         // initialize the permitted intervals model
         m_outlierModel = OutlierModel.loadInstance(model.getModelContent(CFG_INTERVALS));
