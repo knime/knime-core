@@ -68,8 +68,11 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 
 /**
- * Abstract super class for commands that insert new nodes into a workflow and
- * potentially auto-connect them to an existing node.
+ * Abstract super class for commands that insert new nodes into a workflow and potentially auto-connect them
+ *  to an existing node.
+ *
+ * TODO ldq sez: The naïve me says that this should be a subclass of CreateConnectionCommand
+ *          and that hierarchy downwards should be modified to suit descending from that class.
  *
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6

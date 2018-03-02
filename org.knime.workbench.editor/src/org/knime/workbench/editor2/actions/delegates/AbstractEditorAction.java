@@ -135,7 +135,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
             StructuredSelection sel = ((StructuredSelection)selection);
             if (sel != null) {
                 // register to new selection
-                for (Iterator itr = sel.iterator(); itr.hasNext();) {
+                for (Iterator<?> itr = sel.iterator(); itr.hasNext();) {
                     Object o = itr.next();
                     if (o instanceof NodeContainerEditPart) {
                         NodeContainerEditPart ncEP

@@ -66,6 +66,9 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
 /**
  * Command for creating connections between an in-port and an out-port.
  *
+ * TODO ldq sez: The naïve me says that this should be a superclass of AbstractCreateNewConnectedNodeCommand
+ *          and that hierarchy downwards should be modified to suit descending from that class.
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class CreateConnectionCommand extends AbstractKNIMECommand {
@@ -225,6 +228,8 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      */
     @Override
     public boolean canExecute() {
+        // TODO this could be handled better: we do ultimately useless work if source port id has never
+        //          been set
         if (!super.canExecute()) {
             return false;
         }
