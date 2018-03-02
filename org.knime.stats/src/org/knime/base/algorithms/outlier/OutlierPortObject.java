@@ -51,7 +51,6 @@ package org.knime.base.algorithms.outlier;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import org.knime.base.algorithms.outlier.helpers.Helper4TypeExtraction;
 import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
 import org.knime.core.data.DataColumnSpec;
@@ -90,6 +89,9 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     /** The name of the outlier column spec . */
     private static final String OUTLIER_SUFFIX = " (outlier)";
 
+    /** Config key for the group column types. */
+    private static final String CFG_GROUP_COL_TYPES = "group-col-types";
+
     /** Config key of the outlier treatment. */
     private static final String CFG_OUTLIER_TREATMENT = "outlier-treatment";
 
@@ -108,11 +110,11 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     /** The summary (tooltip) text. */
     private final String m_summary;
 
-    /** The outlier reviser builder, */
-    private OutlierReviser.Builder m_reviserBuilder;
-
     /** The outlier model. */
     private OutlierModel m_outlierModel;
+
+    /** The data types of the group columns . */
+    private DataType[] m_groupColTypes;
 
     /** The outlieer treatment option. */
     private String m_treatmentOption;
@@ -132,15 +134,20 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      * Create new port object given the arguments.
      *
      * @param summary the tooltip
+     * @param inSpec the in spec
      * @param outlierModel ther permitted intervals table
      * @param reviser the outlier reviser
      */
-    OutlierPortObject(final String summary, final OutlierModel outlierModel, final OutlierReviser reviser) {
+    OutlierPortObject(final String summary, final DataTableSpec inSpec, final OutlierModel outlierModel,
+        final OutlierReviser reviser) {
         // store the summary
         m_summary = summary;
 
         // store the permited intervals model
         m_outlierModel = outlierModel;
+
+        // store the group col types
+        m_groupColTypes = extractTypes(inSpec, m_outlierModel.getGroupColNames());
 
         // store the reviser settings
         m_treatmentOption = reviser.getTreatmentOption().toString();
@@ -154,7 +161,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      * @return properly instantiated outlier reviser builder
      */
     public OutlierReviser.Builder getOutRevBuilder() {
-        return m_reviserBuilder = new OutlierReviser.Builder()//
+        return new OutlierReviser.Builder()//
             .setTreatmentOption(OutlierTreatmentOption.getEnum(m_treatmentOption))//
             .setReplacementStrategy(OutlierReplacementStrategy.getEnum(m_repStrategy))//
             .updateDomain(m_updateDomain);
@@ -178,8 +185,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      */
     @Override
     public PortObjectSpec getSpec() {
-        return getPortSpec(m_outlierModel.getGroupColTypes(), m_outlierModel.getGroupColNames(),
-            m_outlierModel.getOutlierColNames());
+        return getPortSpec(m_groupColTypes, m_outlierModel.getGroupColNames(), m_outlierModel.getOutlierColNames());
     }
 
     /**
@@ -235,7 +241,8 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      */
     @Override
     protected void save(final ModelContentWO model, final ExecutionMonitor exec) throws CanceledExecutionException {
-        saveReviser(model.addModelContent(CFG_REVISER));
+        model.addDataTypeArray(CFG_GROUP_COL_TYPES, m_groupColTypes);
+        saveReviserSettings(model.addModelContent(CFG_REVISER));
         m_outlierModel.saveModel(model.addModelContent(CFG_INTERVALS));
     }
 
@@ -244,7 +251,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      *
      * @param model the model to save to
      */
-    private void saveReviser(final ModelContentWO model) {
+    private void saveReviserSettings(final ModelContentWO model) {
         model.addString(CFG_OUTLIER_TREATMENT, m_treatmentOption);
         model.addString(CFG_OUTLIER_REPLACEMENT, m_repStrategy);
         model.addBoolean(CFG_DOMAIN_POLICY, m_updateDomain);
@@ -256,6 +263,9 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     @Override
     protected void load(final ModelContentRO model, final PortObjectSpec spec, final ExecutionMonitor exec)
         throws InvalidSettingsException, CanceledExecutionException {
+        // load the types
+        m_groupColTypes = model.getDataTypeArray(CFG_GROUP_COL_TYPES);
+
         // initialize the reviser builder
         final ModelContentRO reviserModel = model.getModelContent(CFG_REVISER);
 
@@ -278,7 +288,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      */
     static DataTableSpec getPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
         final String[] outlierColNames) {
-        return getPortSpec(Helper4TypeExtraction.extractTypes(inSpec, groupColNames), groupColNames, outlierColNames);
+        return getPortSpec(extractTypes(inSpec, groupColNames), groupColNames, outlierColNames);
     }
 
     /**
@@ -305,6 +315,19 @@ public class OutlierPortObject extends AbstractSimplePortObject {
                 new DataColumnSpecCreator(outlierColNames[i] + OUTLIER_SUFFIX, DoubleCell.TYPE).createSpec();
         }
         return new DataTableSpec(specs);
+    }
+
+    /**
+     * Extracts the data types from the given in spec for the given column names.
+     *
+     * @param inSpec the spec holding the data types
+     * @param columnNames the column names for which the data types need to be extracted
+     * @return the data types for the provided column names
+     */
+    private static DataType[] extractTypes(final DataTableSpec inSpec, final String[] columnNames) {
+        return Arrays.stream(columnNames)//
+            .map(s -> inSpec.getColumnSpec(s).getType())//
+            .toArray(DataType[]::new);
     }
 
 }

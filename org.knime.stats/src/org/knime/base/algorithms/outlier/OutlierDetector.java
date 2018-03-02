@@ -214,7 +214,6 @@ public final class OutlierDetector {
         m_calculator = b.m_intervalsBuilder.build();
         m_reviser = b.m_reviserBuilder.build();
         b.m_listener.forEach(l -> m_reviser.addListener(l));
-        b.m_listener.forEach(l -> m_calculator.addListener(l));
     }
 
     /**
@@ -232,8 +231,8 @@ public final class OutlierDetector {
      * @param inSpec the spec of the input data table
      * @return the spec of the outlier free data table
      */
-    public DataTableSpec getOutTableSpec(final DataTableSpec inSpec) {
-        return m_reviser.getOutTableSpec(inSpec);
+    public static DataTableSpec getOutTableSpec(final DataTableSpec inSpec) {
+        return OutlierReviser.getOutTableSpec(inSpec);
     }
 
     /**
@@ -249,11 +248,34 @@ public final class OutlierDetector {
      * Returns the spec of the table storing the permitted intervals and additional information about member counts.
      *
      * @param inSpec the in spec
+     * @param groupColNames the group column names
      *
      * @return the spec of the data table storing the summary
      */
-    public DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec) {
-        return OutlierReviser.getSummaryTableSpec(inSpec, m_calculator.getGroupColumnNames());
+    public static DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec, final String[] groupColNames) {
+        return OutlierReviser.getSummaryTableSpec(inSpec, groupColNames);
+    }
+
+    /**
+     * Returns the table storing the outliers.
+     *
+     * @return the table storing the outliers
+     */
+    public BufferedDataTable getOutliersTable() {
+        return m_reviser.getOutliersTable();
+    }
+
+    /**
+     * Returns the spec of the table storing the outliers.
+     *
+     * @param inSpec the in spec
+     * @param groupColNames the group column names
+     * @param outlierColNames the outlier column names
+     * @return the spec of the table storing the outliers
+     */
+    public static DataTableSpec getOutliersTableSpec(final DataTableSpec inSpec, final String[] groupColNames,
+        final String[] outlierColNames) {
+        return OutlierReviser.getOutliersTableSpec(inSpec, groupColNames, outlierColNames);
     }
 
     /**
@@ -266,14 +288,16 @@ public final class OutlierDetector {
     }
 
     /**
-     * Returns the outlier port object spec.
+     * Returns the oulier port spec.
      *
-     * @param inSpec the spec of the input data table
-     * @return the spec of the outlier port object
+     * @param inSpec the in spec
+     * @param groupColNames the group column names
+     * @param outlierColNames the outlier column names
+     * @return the outlier port spec
      */
-    public DataTableSpec getOutlierPortSpec(final DataTableSpec inSpec) {
-        return OutlierPortObject.getPortSpec(inSpec, m_calculator.getGroupColumnNames(),
-            m_calculator.getOutlierColumnNames());
+    public static DataTableSpec getOutlierPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
+        final String[] outlierColNames) {
+        return OutlierPortObject.getPortSpec(inSpec, groupColNames, outlierColNames);
     }
 
     /**
@@ -299,8 +323,10 @@ public final class OutlierDetector {
         final OutlierModel permittedIntervals =
             m_calculator.calculatePermittedIntervals(in, exec.createSubExecutionContext(intervalsProgress));
 
-        m_outlierPort = new OutlierPortObject(Arrays.stream(permittedIntervals.getOutlierColNames())
-            .collect(Collectors.joining(", ", "Outlier treatment for columns: ", "")), permittedIntervals, m_reviser);
+        m_outlierPort = new OutlierPortObject(
+            Arrays.stream(permittedIntervals.getOutlierColNames())//
+                .collect(Collectors.joining(", ", "Outlier treatment for columns: ", ""))//
+            , in.getDataTableSpec(), permittedIntervals, m_reviser);
 
         // treat the outliers
         m_reviser.treatOutliers(exec.createSubExecutionContext(treatmentProgrss), in, permittedIntervals);

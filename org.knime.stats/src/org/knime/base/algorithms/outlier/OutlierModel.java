@@ -57,12 +57,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.knime.base.algorithms.outlier.helpers.Helper4TypeExtraction;
 import org.knime.base.node.preproc.groupby.GroupKey;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -86,9 +84,6 @@ public final class OutlierModel {
     /** Config key of group column names. */
     private static final String CFG_GROUP_COL_NAMES = "groups";
 
-    /** Config key of group column types. */
-    private static final String CFG_GROUP_TYPES = "group-types";
-
     /** Config key of the model content holding the interval. */
     private static final String CFG_INTERVAL = "interval";
 
@@ -107,9 +102,6 @@ public final class OutlierModel {
     /** Map storing the permitted intervals for each group and outlier column. */
     private final Map<GroupKey, Map<String, double[]>> m_permIntervals;
 
-    /** The group column data types. */
-    private DataType[] m_groupColTypes;
-
     /** The group column names, */
     private String[] m_groupColNames;
 
@@ -123,14 +115,7 @@ public final class OutlierModel {
      * @param groupColNames the group column names
      * @param outlierColNames the outlier column names
      */
-    OutlierModel(final DataTableSpec inSpec, final String[] groupColNames, final String[] outlierColNames) {
-        this(Helper4TypeExtraction.extractTypes(inSpec, groupColNames), groupColNames, outlierColNames);
-    }
-
-    private OutlierModel(final DataType[] groupColTypes, final String[] groupColNames, final String[] outlierColNames) {
-        // store the group column data types
-        m_groupColTypes = groupColTypes;
-
+    OutlierModel(final String[] groupColNames, final String[] outlierColNames) {
         // store the group column names
         m_groupColNames = groupColNames;
 
@@ -151,8 +136,8 @@ public final class OutlierModel {
      *             the intervals
      */
     static OutlierModel loadInstance(final ModelContentRO model) throws InvalidSettingsException {
-        final OutlierModel outlierModel = new OutlierModel(model.getDataTypeArray(CFG_GROUP_TYPES),
-            model.getStringArray(CFG_GROUP_COL_NAMES), model.getStringArray(CFG_OUTLIER_COL_NAMES));
+        final OutlierModel outlierModel =
+            new OutlierModel(model.getStringArray(CFG_GROUP_COL_NAMES), model.getStringArray(CFG_OUTLIER_COL_NAMES));
         outlierModel.loadModel(model.getModelContent(CFG_DATA));
         return outlierModel;
     }
@@ -177,15 +162,6 @@ public final class OutlierModel {
         }
         // store the permitted interval
         m_permIntervals.get(key).put(outlier, interval);
-    }
-
-    /**
-     * Get the group column types.
-     *
-     * @return the group column types
-     */
-    DataType[] getGroupColTypes() {
-        return m_groupColTypes;
     }
 
     /**
@@ -264,9 +240,6 @@ public final class OutlierModel {
      * @param model the model to save to
      */
     void saveModel(final ModelContentWO model) {
-        // store the groups specs
-        model.addDataTypeArray(CFG_GROUP_TYPES, m_groupColTypes);
-
         // store groups and outlier column names
         model.addStringArray(CFG_GROUP_COL_NAMES, m_groupColNames);
         model.addStringArray(CFG_OUTLIER_COL_NAMES, m_outlierColNames);

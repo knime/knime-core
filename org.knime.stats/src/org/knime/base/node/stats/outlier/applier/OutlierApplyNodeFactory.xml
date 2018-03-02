@@ -23,11 +23,13 @@
 			outlier group and outlier treatment specifications
 		</inPort>
 		<inPort index="1" name="Numeric input data">Numeric input data to evaluate</inPort>
-		<outPort index="0" name="Outlier table">Data table where outliers are treated according
-		to the model's specifications
+		<outPort index="0" name="Treated table">Data table where outliers were treated
+			according the model specifications
 		</outPort>
-		<outPort index="1" name="Summary">Data table holding the number of members, outliers, and
-			the lower and upper	bound for each outlier group
+		<outPort index="1" name="Outliers">Data table holding only the values of actual outliers
+		</outPort>
+		<outPort index="2" name="Summary">Data table holding the number of members, i.e., non-missing values 
+		and outliers as well as the lower and upper	bound for each outlier group
 		</outPort>
 	</ports>
 

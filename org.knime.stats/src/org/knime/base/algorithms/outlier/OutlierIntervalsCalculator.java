@@ -49,13 +49,9 @@
 package org.knime.base.algorithms.outlier;
 
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
-import org.knime.base.algorithms.outlier.listeners.Warning;
-import org.knime.base.algorithms.outlier.listeners.WarningListener;
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
@@ -88,9 +84,6 @@ final class OutlierIntervalsCalculator {
     /** The column name policy used by the {@link GroupByTable} */
     private static final ColumnNamePolicy COLUMN_NAME_POLICY = ColumnNamePolicy.AGGREGATION_METHOD_COLUMN_NAME;
 
-    /** The default groups name. */
-    private static final String DEFAULT_GROUPS_NAME = "none";
-
     /** Interval calculation routine message. */
     private static final String INTERVAL_MSG = "Calculating intervals";
 
@@ -121,9 +114,6 @@ final class OutlierIntervalsCalculator {
 
     /** Tells whether the computation is done in or out of memory. */
     private final boolean m_inMemory;
-
-    /** List of listeners receiving warning messages. */
-    private final List<WarningListener> m_listeners;
 
     /**
      * Builder of the IntervalsCalculator.
@@ -224,18 +214,6 @@ final class OutlierIntervalsCalculator {
         m_estimationType = b.m_estimationType;
         m_iqrMultiplier = b.m_iqrMultiplier;
         m_inMemory = b.m_inMemory;
-        m_listeners = new LinkedList<>();
-    }
-
-    /**
-     * Adds the given listener.
-     *
-     * @param listener the listener to add
-     */
-    void addListener(final WarningListener listener) {
-        if (!m_listeners.contains(listener)) {
-            m_listeners.add(listener);
-        }
     }
 
     /**
@@ -416,7 +394,7 @@ final class OutlierIntervalsCalculator {
 
         // the group by table does not rename the group columns so we can use this spec, instead of the
         // in table spec as well (if this is changed the quartilesSpec has to be replaced by the inSpec)
-        final OutlierModel model = new OutlierModel(quartilesSpec, m_groupColNames, m_outlierColNames);
+        final OutlierModel model = new OutlierModel(m_groupColNames, m_outlierColNames);
 
         // first position where outlier columns can be found
         final int outlierOffset = m_groupColNames.length;
@@ -457,13 +435,6 @@ final class OutlierIntervalsCalculator {
                     permInterval = new double[]{fQ - iqr, tQ + iqr};
                 } else {
                     permInterval = null;
-                    String groupNames = Arrays.stream(key.getGroupVals()).map(groupCell -> groupCell.toString())
-                        .collect(Collectors.joining(", "));
-                    if (groupNames.isEmpty()) {
-                        groupNames = DEFAULT_GROUPS_NAME;
-                    }
-                    warnListeners(
-                        "Group <" + groupNames + "> contains only missing values in column " + m_outlierColNames[i]);
                 }
                 // setting null here is vital and will be treated by the outlier reviser.
                 model.addEntry(key, m_outlierColNames[i], permInterval);
@@ -473,16 +444,4 @@ final class OutlierIntervalsCalculator {
         return model;
 
     }
-
-    /**
-     * Informs the listeners that a problem occured.
-     *
-     * @param msg the warning message
-     */
-    private void warnListeners(final String msg) {
-        final Warning warning = new Warning(msg);
-        // warn all listeners
-        m_listeners.forEach(l -> l.warning(warning));
-    }
-
 }

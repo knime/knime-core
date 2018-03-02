@@ -48,10 +48,14 @@
  */
 package org.knime.base.algorithms.outlier;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.IntStream;
 
 import org.knime.base.algorithms.outlier.listeners.Warning;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
@@ -63,16 +67,23 @@ import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.IntCell.IntCellFactory;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.LongCell.LongCellFactory;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.data.def.StringCell.StringCellFactory;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -108,6 +119,9 @@ public final class OutlierReviser {
 
     /** The table storing the summary. */
     private BufferedDataTable m_summaryTable;
+
+    /** The table storing the outliers. */
+    private BufferedDataTable m_outliersTable;
 
     /** Tells whether the domains of the outlier columns have to be updated after the computation or not. */
     private final boolean m_updateDomain;
@@ -226,7 +240,7 @@ public final class OutlierReviser {
      * @param inSpec the spec of the input data table
      * @return the spec of the outlier free data table
      */
-    public DataTableSpec getOutTableSpec(final DataTableSpec inSpec) {
+    public static DataTableSpec getOutTableSpec(final DataTableSpec inSpec) {
         return inSpec;
     }
 
@@ -248,7 +262,29 @@ public final class OutlierReviser {
      * @return the spec of the data table storing the summary
      */
     public static DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec, final String[] groupColNames) {
-        return OutlierSummaryTable.getExtendedModelSpec(inSpec, groupColNames);
+        return OutlierSummaryTable.getSpec(inSpec, groupColNames);
+    }
+
+    /**
+     * Returns the table storing the outliers.
+     *
+     * @return the table storing the outliers
+     */
+    public BufferedDataTable getOutliersTable() {
+        return m_outliersTable;
+    }
+
+    /**
+     * Returns the spec of the table storing the outliers.
+     *
+     * @param inSpec the in spec
+     * @param groupColNames the group column names
+     * @param outlierColNames the outlier column names
+     * @return the spec of the table storing the outliers
+     */
+    public static DataTableSpec getOutliersTableSpec(final DataTableSpec inSpec, final String[] groupColNames,
+        final String[] outlierColNames) {
+        return OutliersTable.getSpec(inSpec, groupColNames, outlierColNames);
     }
 
     /**
@@ -292,8 +328,8 @@ public final class OutlierReviser {
      * @param outlierModel the model storing the permitted intervals
      * @throws CanceledExecutionException if the user has canceled the execution
      */
-    public void treatOutliers(final ExecutionContext exec, final BufferedDataTable in,
-        final OutlierModel outlierModel) throws CanceledExecutionException {
+    public void treatOutliers(final ExecutionContext exec, final BufferedDataTable in, final OutlierModel outlierModel)
+        throws CanceledExecutionException {
         // start the treatment step
         exec.setMessage(TREATMENT_MSG);
 
@@ -309,13 +345,16 @@ public final class OutlierReviser {
         // the domains updater
         final OutlierDomainsUpdater domainsUpdater = new OutlierDomainsUpdater();
 
+        // the outlier table create
+        final OutliersTable outlierTableCreator = new OutliersTable(exec, in.getDataTableSpec(), outlierModel);
+
         // treat the outliers with respect to the selected treatment option
         if (m_treatment == OutlierTreatmentOption.REPLACE) {
             // replaces outliers according to the set replacement strategy
-            replaceOutliers(exec.createSubExecutionContext(.9), in, outlierModel, domainsUpdater);
+            replaceOutliers(exec.createSubExecutionContext(.9), in, outlierModel, domainsUpdater, outlierTableCreator);
         } else {
             // we remove all columns containing at least one outlier
-            removeRows(exec.createSubExecutionContext(.9), in, outlierModel, domainsUpdater);
+            removeRows(exec.createSubExecutionContext(.9), in, outlierModel, domainsUpdater, outlierTableCreator);
         }
 
         // reset the domain
@@ -324,8 +363,13 @@ public final class OutlierReviser {
         }
 
         // set the summary table
-        m_summaryTable = OutlierSummaryTable.getExtendedModel(exec.createSubExecutionContext(0.1), outlierModel,
-            m_memberCounter, m_outlierRepCounter, m_missingGroupsCounter);
+        m_summaryTable = OutlierSummaryTable.getTable(exec.createSubExecutionContext(0.05), in.getDataTableSpec(),
+            outlierModel, m_memberCounter, m_outlierRepCounter, m_missingGroupsCounter);
+
+        // set the outliers table
+        outlierTableCreator.close();
+        m_outliersTable =
+            exec.createBufferedDataTable(outlierTableCreator.getTable(), exec.createSubExecutionContext(0.05));
 
         // reset the counters
         m_memberCounter = null;
@@ -342,11 +386,12 @@ public final class OutlierReviser {
      * @param in the input data table
      * @param outlierModel the model storing the permitted intervals
      * @param domainsUpdater the domains updater
+     * @param outlierTableCreator the outlier table creator
      * @throws CanceledExecutionException if the user has canceled the execution
      */
     private void replaceOutliers(final ExecutionContext exec, final BufferedDataTable in,
-        final OutlierModel outlierModel, final OutlierDomainsUpdater domainsUpdater)
-        throws CanceledExecutionException {
+        final OutlierModel outlierModel, final OutlierDomainsUpdater domainsUpdater,
+        final OutliersTable outlierTableCreator) throws CanceledExecutionException {
         // total number of outlier columns
         final int noOutliers = m_outlierColNames.length;
 
@@ -356,7 +401,7 @@ public final class OutlierReviser {
         // create column re-arranger to overwrite cells corresponding to outliers
         final ColumnRearranger colRearranger = new ColumnRearranger(inSpec);
 
-        // store the positions where the outlier columns names can be found in the input table
+        // store the positions where the outlier column names can be found in the input table
         final int[] outlierIndices = calculateOutlierIndicies(inSpec);
 
         final DataColumnSpec[] outlierSpecs = new DataColumnSpec[noOutliers];
@@ -367,17 +412,10 @@ public final class OutlierReviser {
         // create new instances for each row
         final DataCell[] treatedVals = new DataCell[noOutliers];
 
-        final long rowCount = in.size();
-        final double divisor = rowCount;
-
         final AbstractCellFactory fac = new AbstractCellFactory(outlierSpecs) {
-
-            int m_curIter = 0;
 
             @Override
             public DataCell[] getCells(final DataRow row) {
-                final int iter = ++m_curIter;
-                exec.setProgress(m_curIter / divisor, () -> "treating outliers in row " + iter + " of " + rowCount);
                 final GroupKey key = outlierModel.getKey(row, inSpec);
                 final Map<String, double[]> colsMap = outlierModel.getGroupIntervals(key);
                 for (int i = 0; i < noOutliers; i++) {
@@ -400,6 +438,7 @@ public final class OutlierReviser {
                     }
                     // if we changed the value this is an outlier
                     if (!treatedCell.equals(curCell)) {
+                        outlierTableCreator.addEntry(curCell, i);
                         m_outlierRepCounter.incrementMemberCount(outlierColName, key);
                     }
                     // update the domain if necessary
@@ -408,6 +447,7 @@ public final class OutlierReviser {
                     }
                     treatedVals[i] = treatedCell;
                 }
+                outlierTableCreator.writeRow(row.getKey(), key);
                 return treatedVals;
             }
 
@@ -441,9 +481,7 @@ public final class OutlierReviser {
      * @return the new data cell after replacing its value if necessary
      */
     private DataCell treatCellValue(final double[] interval, final DataCell cell) {
-        // while the model hasn't saw only missing values for this group, the applier might contain non-missing entries
-        // for this group, hence we need to check for this
-        //TODO add warning?
+        // the model might not have learned anything about this key
         if (interval == null) {
             return cell;
         }
@@ -481,15 +519,16 @@ public final class OutlierReviser {
      * @param in the input data table
      * @param permIntervalsModel the model storing the permitted intervals
      * @param domainsUpdater the domains updater
+     * @param outlierTableCreator the outlier table creator
      * @throws CanceledExecutionException if the user has canceled the execution
      */
     private void removeRows(final ExecutionContext exec, final BufferedDataTable in,
-        final OutlierModel permIntervalsModel, final OutlierDomainsUpdater domainsUpdater)
-        throws CanceledExecutionException {
+        final OutlierModel permIntervalsModel, final OutlierDomainsUpdater domainsUpdater,
+        final OutliersTable outlierTableCreator) throws CanceledExecutionException {
         // the in spec
         final DataTableSpec inSpec = in.getDataTableSpec();
 
-        // store the positions where the outlier columns names can be found in the input table
+        // store the positions where the outlier column names can be found in the input table
         final int[] outlierIndices = calculateOutlierIndicies(inSpec);
 
         // total number of outlier columns
@@ -525,11 +564,12 @@ public final class OutlierReviser {
                         m_memberCounter.incrementMemberCount(outlierColName, key);
                         final double val = ((DoubleValue)cell).getDoubleValue();
                         // the model might not have learned anything about this key - outlier column combination
-                        //TODO add warning?
                         if (interval != null && (val < interval[0] || val > interval[1])) {
                             toInsert = false;
                             // increment the outlier counter
                             m_outlierRepCounter.incrementMemberCount(outlierColName, key);
+                            // store to outlier table
+                            outlierTableCreator.addEntry(cell, i);
                         }
                     }
                 } else {
@@ -550,6 +590,7 @@ public final class OutlierReviser {
                     }
                 }
             }
+            outlierTableCreator.writeRow(row.getKey(), key);
         }
         container.close();
         m_outTable = container.getTable();
@@ -659,4 +700,240 @@ public final class OutlierReviser {
             domainVals[1] = Math.max(domainVals[1], val);
         }
     }
+
+    /**
+     * Class responsible for creating the outlier summary table.
+     *
+     * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+     */
+    private static final class OutlierSummaryTable {
+
+        /** The name of the outlier column. */
+        private static final String OUTLIER_COL_NAME = "Outlier column";
+
+        /** The name of the outlier replacement count column. */
+        private static final String REPLACEMENT_COUNT = "Outlier count";
+
+        /** The name of the member count column. */
+        private static final String MEMBER_COUNT = "Member count";
+
+        /** The name of the column storing the upper bound. */
+        private static final String UPPER_BOUND = "Upper bound";
+
+        /** The name of the column storing the lower bound. */
+        private static final String LOWER_BOUND = "Lower bound";
+
+        /** The number of columns in the table. */
+        private static final int NUM_ADD_COLUMNS = 5;
+
+        /**
+         * Returns the spec of the table storing the permitted intervals and additional information about member counts.
+         *
+         * @param inSpec the in table spec
+         * @param groupColNames the group column names
+         * @return the spec of the table storing the permitted intervals and additional information about member counts
+         */
+        static DataTableSpec getSpec(final DataTableSpec inSpec, final String[] groupColNames) {
+            // init the specs
+            final DataColumnSpec[] specs = new DataColumnSpec[NUM_ADD_COLUMNS + groupColNames.length];
+
+            int pos = 0;
+
+            // first column is the outlier column name
+            specs[pos++] = new DataColumnSpecCreator(OUTLIER_COL_NAME, StringCell.TYPE).createSpec();
+
+            // add for each group column name an additional column
+            for (final String groupColName : groupColNames) {
+                specs[pos++] = inSpec.getColumnSpec(groupColName);
+            }
+
+            // add the counter and bound columns
+            specs[pos++] = new DataColumnSpecCreator(MEMBER_COUNT, IntCell.TYPE).createSpec();
+            specs[pos++] = new DataColumnSpecCreator(REPLACEMENT_COUNT, IntCell.TYPE).createSpec();
+            specs[pos++] = new DataColumnSpecCreator(LOWER_BOUND, DoubleCell.TYPE).createSpec();
+            specs[pos++] = new DataColumnSpecCreator(UPPER_BOUND, DoubleCell.TYPE).createSpec();
+
+            // return the spec
+            return new DataTableSpec(specs);
+        }
+
+        /**
+         * Returns of the data table storing the permitted intervals and additional information about member counts.
+         *
+         * @param exec the execution context
+         * @param inSpec the in spec
+         * @param outlierModel the outlier model
+         * @param memberCounter the member counter
+         * @param outlierRepCounter the outlier replacement counter
+         * @param missingGroups the missing groups counter
+         *
+         * @return the data table storing the permitted intervals and additional information about member counts.
+         * @throws CanceledExecutionException if the user has canceled the execution
+         */
+        private static BufferedDataTable getTable(final ExecutionContext exec, final DataTableSpec inSpec,
+            final OutlierModel outlierModel, final GroupsMemberCounterPerColumn memberCounter,
+            final GroupsMemberCounterPerColumn outlierRepCounter, final GroupsMemberCounterPerColumn missingGroups)
+            throws CanceledExecutionException {
+            // create the data container storing the table
+            final DataContainer container = exec.createDataContainer(getSpec(inSpec, outlierModel.getGroupColNames()));
+
+            // create the array storing the rows
+            final DataCell[] row = new DataCell[container.getTableSpec().getNumColumns()];
+
+            int rowCount = 0;
+
+            // the missing group keys
+            Set<GroupKey> missingGroupKeys = missingGroups.getGroupKeys();
+
+            // numerics used for the progress update
+            final long outlierCount = outlierModel.getOutlierColNames().length;
+            final double divisor = outlierCount;
+            int colCount = 0;
+
+            // write the rows
+            for (final String outlierColName : outlierModel.getOutlierColNames()) {
+                exec.checkCanceled();
+                row[0] = StringCellFactory.create(outlierColName);
+                for (Entry<GroupKey, Map<String, double[]>> entry : outlierModel.getEntries()) {
+                    final GroupKey key = entry.getKey();
+                    final double[] permInterval = entry.getValue().get(outlierColName);
+                    addRow(container, rowCount++, row, key, outlierColName, memberCounter, outlierRepCounter,
+                        permInterval);
+                }
+                if (missingGroupKeys.size() != 0) {
+                    for (final GroupKey key : missingGroupKeys) {
+                        addRow(container, rowCount++, row, key, outlierColName, missingGroups, outlierRepCounter, null);
+                    }
+                }
+                final int count = ++colCount;
+                exec.setProgress(count / divisor, () -> "Writing summary for column " + count + " of " + outlierCount);
+            }
+            // close the container and return the data table
+            container.close();
+            return exec.createBufferedDataTable(container.getTable(), exec);
+        }
+
+        /**
+         * Adds the row to the container
+         *
+         * @param container the data container
+         * @param rowCount the row count
+         * @param row the data cell row
+         * @param key the groups key
+         * @param outlierColName the outlier column name
+         * @param memberCounter the member counter
+         * @param outlierRepCounter the outlier replacement counter
+         * @param permInterval the permitted interval
+         */
+        private static void addRow(final DataContainer container, final int rowCount, final DataCell[] row,
+            final GroupKey key, final String outlierColName, final GroupsMemberCounterPerColumn memberCounter,
+            final GroupsMemberCounterPerColumn outlierRepCounter, final double[] permInterval) {
+            int pos = 1;
+            for (final DataCell gVal : key.getGroupVals()) {
+                row[pos++] = gVal;
+            }
+            row[pos++] = memberCounter.getCount(outlierColName, key);
+            row[pos++] = outlierRepCounter.getCount(outlierColName, key);
+            if (permInterval != null) {
+                row[pos++] = DoubleCellFactory.create(permInterval[0]);
+                row[pos++] = DoubleCellFactory.create(permInterval[1]);
+            } else {
+                row[pos++] = DataType.getMissingCell();
+                row[pos++] = DataType.getMissingCell();
+            }
+            container.addRowToTable(new DefaultRow("Row" + rowCount, row));
+        }
+    }
+
+    /**
+     * Class responsible for creating the table storing the outliers.
+     *
+     * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+     */
+    private static class OutliersTable {
+
+        /** The prefix for outlier columns. */
+        private static final String OUTLIER_PREFIX = "Outlier";
+
+        private final int m_numGroupCols;
+
+        private final DataCell[] m_row;
+
+        private final DataContainer m_container;
+
+        private boolean m_write;
+
+        /**
+         * The constructor
+         *
+         * @param exec the execution context
+         * @param inSpec the in table spec
+         * @param outlierModel the outlier model holding the group and outlier column names
+         */
+        public OutliersTable(final ExecutionContext exec, final DataTableSpec inSpec, final OutlierModel outlierModel) {
+            m_numGroupCols = outlierModel.getGroupColNames().length;
+            m_row = new DataCell[m_numGroupCols + outlierModel.getOutlierColNames().length];
+            m_container = exec.createDataContainer(
+                getSpec(inSpec, outlierModel.getGroupColNames(), outlierModel.getOutlierColNames()));
+            reset();
+        }
+
+        /**
+         * Returns the spec of the table storing the outliers.
+         *
+         * @param inSpec the in table spec
+         * @param groupColNames the group column names
+         * @param outlierColNames the outlier column names
+         * @return the spec of the outliers table
+         */
+        private static DataTableSpec getSpec(final DataTableSpec inSpec, final String[] groupColNames,
+            final String[] outlierColNames) {
+            final DataColumnSpec[] specs = new DataColumnSpec[groupColNames.length + outlierColNames.length];
+            int pos = 0;
+            for (final String groupColName : groupColNames) {
+                specs[pos++] = inSpec.getColumnSpec(groupColName);
+            }
+            for (final String outlierColName : outlierColNames) {
+                // create the renamed column
+                final DataColumnSpec outlierSpec = inSpec.getColumnSpec(outlierColName);
+                specs[pos++] = new DataColumnSpecCreator(OUTLIER_PREFIX + " (" + outlierSpec.getName() + ")",
+                    outlierSpec.getType()).createSpec();
+            }
+
+            return new DataTableSpec(specs);
+
+        }
+
+        private void addEntry(final DataCell entry, final int index) {
+            m_row[index + m_numGroupCols] = entry;
+            m_write = true;
+        }
+
+        private void writeRow(final RowKey rKey, final GroupKey gKey) {
+            if (m_write) {
+                final DataCell[] gVals = gKey.getGroupVals();
+                // add the gKey to the row
+                IntStream.range(0, gVals.length)//
+                    .forEach(i -> m_row[i] = gVals[i]);
+                m_container.addRowToTable(new DefaultRow(rKey, m_row));
+            }
+            reset();
+        }
+
+        private void reset() {
+            // reset everything
+            m_write = false;
+            Arrays.fill(m_row, DataType.getMissingCell());
+        }
+
+        private void close() {
+            m_container.close();
+        }
+
+        private DataTable getTable() {
+            return m_container.getTable();
+        }
+
+    }
+
 }

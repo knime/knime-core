@@ -163,8 +163,8 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
 
     /** Init the outlier detector node model with one input and output. */
     OutlierDetectorNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE},
-            new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE, OutlierPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE,
+            BufferedDataTable.TYPE, OutlierPortObject.TYPE});
     }
 
     /**
@@ -178,7 +178,8 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
 
         outDet.execute(in, exec);
 
-        return new PortObject[]{outDet.getOutTable(), outDet.getSummaryTable(), outDet.getOutlierPort()};
+        return new PortObject[]{outDet.getOutTable(), outDet.getOutliersTable(), outDet.getSummaryTable(),
+            outDet.getOutlierPort()};
     }
 
     /**
@@ -188,7 +189,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
      * @return an instance of outlier detector
      */
     private OutlierDetector createOutlierDetector(final DataTableSpec inSpec) {
-        return new OutlierDetector.Builder(m_outlierSettings.applyTo(inSpec).getIncludes())//
+        return new OutlierDetector.Builder(getOutlierColNames(inSpec))//
             .addWarningListener(this)//
             .calcInMemory(m_memorySetting.getBooleanValue())//
             .setEstimationType(EstimationType.valueOf(m_estimationSettings.getStringValue()))//
@@ -201,6 +202,16 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     }
 
     /**
+     * Returns the outlier column names.
+     *
+     * @param inSpec the input data table spec
+     * @return the outlier column names
+     */
+    private String[] getOutlierColNames(final DataTableSpec inSpec) {
+        return m_outlierSettings.applyTo(inSpec).getIncludes();
+    }
+
+    /**
      * Convenience method returning the group column names stored in a list. If no group columns are selected an empty
      * list is returned.
      *
@@ -210,8 +221,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     private String[] getGroupColNames(final DataTableSpec inSpec) {
         final String[] groupColNames;
         if (m_useGroupsSetting.getBooleanValue()) {
-            final List<String> outliers =
-                Arrays.stream(m_outlierSettings.applyTo(inSpec).getIncludes()).collect(Collectors.toList());
+            final List<String> outliers = Arrays.stream(getOutlierColNames(inSpec)).collect(Collectors.toList());
             // remove columns for which the outliers have to be computed
             groupColNames = Arrays.stream(m_groupSettings.applyTo(inSpec).getIncludes())
                 .filter(s -> !outliers.contains(s)).toArray(String[]::new);
@@ -278,12 +288,14 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
             throw new InvalidSettingsException(SCALAR_EXCEPTION);
         }
 
-        // get the tables specs
-        OutlierDetector outDet = createOutlierDetector(inSpec);
-
         // return the output spec
-        return new DataTableSpec[]{outDet.getOutTableSpec(inSpec), outDet.getSummaryTableSpec(inSpec),
-            outDet.getOutlierPortSpec(inSpec)};
+        final String[] outlierColNames = getOutlierColNames(inSpec);
+        final String[] groupColNames = getGroupColNames(inSpec);
+
+        return new DataTableSpec[]{OutlierDetector.getOutTableSpec(inSpec),
+            OutlierDetector.getOutliersTableSpec(inSpec, groupColNames, outlierColNames),
+            OutlierDetector.getSummaryTableSpec(inSpec, groupColNames),
+            OutlierDetector.getOutlierPortSpec(inSpec, groupColNames, outlierColNames)};
     }
 
     /**
