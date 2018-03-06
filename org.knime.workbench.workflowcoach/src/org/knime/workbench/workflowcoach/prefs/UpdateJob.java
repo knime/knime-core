@@ -137,6 +137,7 @@ public class UpdateJob extends Job {
             }
         }
 
+        monitor.done();
         if (exception == null) {
             m_listener.updateFinished(Optional.empty());
             return Status.OK_STATUS;

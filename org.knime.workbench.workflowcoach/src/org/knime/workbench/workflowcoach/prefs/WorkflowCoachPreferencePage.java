@@ -292,7 +292,6 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
             if (ntp instanceof CommunityTripleProvider) {
                 if (m_checkCommunityProvider.getSelection() && ((CommunityTripleProvider)ntp).updateRequired()) {
                     setErrorMessage("Please update the community node usage statistics.");
-                    return false;
                 }
             }
         }
