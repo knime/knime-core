@@ -48,8 +48,16 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -103,8 +111,19 @@ public class UnlinkNodesAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        // TODO Auto-generated method stub
+        final WorkflowManager wm = this.getManager();
+        final Collection<ConnectionContainer> toRemove = this.findRemoveableConnections(nodeParts);
 
+        for (final ConnectionContainer cc : toRemove) {
+            try {
+                wm.removeConnection(cc);
+            }
+            catch (Exception e) {
+                LOGGER.error("Could not delete existing connection from " + cc.getSource()
+                                    + ":" + cc.getSourcePort() + " to " + cc.getDest() + ":"
+                                    + cc.getDestPort());
+            }
+        }
     }
 
     /**
@@ -114,15 +133,47 @@ public class UnlinkNodesAction extends AbstractNodeAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        NodeContainerEditPart[] selected = this.getSelectedParts(NodeContainerEditPart.class);
+        final NodeContainerEditPart[] selected = this.getSelectedParts(NodeContainerEditPart.class);
 
         if (selected.length < 2) {
             return false;
         }
 
-        // TODO verify a shared connection
+        final Collection<ConnectionContainer> toRemove = this.findRemoveableConnections(selected);
 
-        return false;
+        return (toRemove.size() > 0);
+    }
+
+    /**
+     * @param nodes
+     * @return a collection of 0-M ConnectionContainer instances representing connections which should
+     *              be removed (the are connections between elements of the set of nodes specified
+     *              via <code>nodes</code>
+     */
+    protected Collection<ConnectionContainer> findRemoveableConnections(final NodeContainerEditPart[] nodes) {
+        final WorkflowManager wm = this.getManager();
+        // relying on a correct hashCode() implementation in ConnectionContainer to let us use
+        //          HashSet to avoid duplicates
+        final Collection<ConnectionContainer> rhett = new HashSet<>();
+        final HashSet<NodeID> nodeIdSet = new HashSet<>();
+        Set<ConnectionContainer> connections;
+
+        Arrays.asList(nodes).forEach((node) -> {
+            nodeIdSet.add(node.getNodeContainer().getID());
+        });
+
+        for (final NodeContainerEditPart node : nodes) {
+            // We should only need check incoming *or* outgoing, since members of the set which connect to
+            //      other members of the set will each have references to themselves defined in both.
+            connections = wm.getIncomingConnectionsFor(node.getNodeContainer().getID());
+            connections.forEach((connection) -> {
+                if (nodeIdSet.contains(connection.getSource()) && nodeIdSet.contains(connection.getDest())) {
+                    rhett.add(connection);
+                }
+            });
+        }
+
+        return rhett;
     }
 
 }
