@@ -61,6 +61,9 @@ import org.eclipse.ui.IEditorSite;
  * edit part and the <code>NodeTemplateDropTargetListener</code> that is responsible for dropping
  * <code>NodeTemplates</code> into the viewer. (which get converted into <code>NodeContainer</code> objects.)
  *
+ * TODO loki sez: we should consider deprecating this class and moving the createViewer(Composite) code
+ *          elsewhere; the usage of this class within the codebase appears to be restricted to one place in
+ *          the WorkflowEditor in which it is instantiated and dumped.
  *
  * @author Florian Georg, University of Konstanz
  */
