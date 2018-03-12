@@ -572,6 +572,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
         // include list
         m_inclTable.setShowGrid(false);
+        m_inclTable.setFillsViewportHeight(true);
         m_inclTable.setTableHeader(null);
         m_inclTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         m_inclTable.addMouseListener(new DoubleClickMouseAdapter(m_inclTable));
@@ -607,6 +608,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
         // exclude list
         m_exclTable.setShowGrid(false);
+        m_exclTable.setFillsViewportHeight(true);
         m_exclTable.setTableHeader(null);
         m_exclTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         m_exclTable.addMouseListener(new DoubleClickMouseAdapter(m_exclTable));
