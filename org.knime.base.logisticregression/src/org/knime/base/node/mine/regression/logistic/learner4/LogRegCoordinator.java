@@ -120,29 +120,22 @@ class LogRegCoordinator {
     }
 
     PortObjectSpec[] getOutputSpecs() {
-        DataTableSpec coeffTableOutSpec = createCoeffStatisticsTableSpec(m_settings.isCalcCovMatrix());
+        DataTableSpec coeffTableOutSpec = createCoeffStatisticsTableSpec();
         DataTableSpec modelStatsTableOutSpec = LogisticRegressionContent.createModelStatisticsTableSpec();
         return new PortObjectSpec[]{m_pmmlOutSpec, coeffTableOutSpec, modelStatsTableOutSpec};
     }
 
-    static DataTableSpec createCoeffStatisticsTableSpec(final boolean covMatPresent) {
+    static DataTableSpec createCoeffStatisticsTableSpec() {
         DataTableSpecCreator tableSpecCreator = new DataTableSpecCreator();
-        tableSpecCreator.addColumns(new DataColumnSpec[] {
+        tableSpecCreator.addColumns(
             new DataColumnSpecCreator("Logit", StringCell.TYPE).createSpec(),
             new DataColumnSpecCreator("Variable", StringCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Coeff.", DoubleCell.TYPE).createSpec()
-        });
-
-        if (!covMatPresent) {
-            tableSpecCreator.setName("Coefficients");
-        } else {
-            tableSpecCreator.setName("Coefficients and Statistics");
-            tableSpecCreator.addColumns(new DataColumnSpec[] {
-                new DataColumnSpecCreator("Std. Err.", DoubleCell.TYPE).createSpec(),
-                new DataColumnSpecCreator("z-score", DoubleCell.TYPE).createSpec(),
-                new DataColumnSpecCreator("P>|z|", DoubleCell.TYPE).createSpec()
-            });
-        }
+            new DataColumnSpecCreator("Coeff.", DoubleCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Std. Err.", DoubleCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("z-score", DoubleCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("P>|z|", DoubleCell.TYPE).createSpec()
+        );
+        tableSpecCreator.setName("Coefficients and Statistics");
         return tableSpecCreator.createSpec();
     }
 

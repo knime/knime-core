@@ -75,6 +75,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -100,6 +101,9 @@ import org.knime.core.node.util.CheckUtils;
  * @author Adrian Nembach, KNIME.com
  */
 final class LogisticRegressionContent {
+
+    private static MissingCell NOT_INVERTIBLE_MISSING = new MissingCell("Fisher matrix was not invertible.");
+
     private final PMMLPortObjectSpec m_outSpec;
 
     private final List<String> m_factorList;
@@ -461,7 +465,7 @@ final class LogisticRegressionContent {
     public BufferedDataTable createCoeffStatisticsTablePortObject(
             final ExecutionContext exec) {
 
-        DataTableSpec tableOutSpec = LogRegCoordinator.createCoeffStatisticsTableSpec(m_covMat != null);
+        DataTableSpec tableOutSpec = LogRegCoordinator.createCoeffStatisticsTableSpec();
         BufferedDataContainer dc = exec.createDataContainer(tableOutSpec);
         List<DataCell> logits = this.getLogits();
         List<String> parameters = this.getParameters();
@@ -484,7 +488,7 @@ final class LogisticRegressionContent {
             }
 
             for (String parameter : parameters) {
-                List<DataCell> cells = new ArrayList<DataCell>();
+                List<DataCell> cells = new ArrayList<>();
                 cells.add(new StringCell(logit.toString()));
                 cells.add(new StringCell(parameter));
                 cells.add(new DoubleCell(coefficients.get(parameter)));
@@ -492,11 +496,15 @@ final class LogisticRegressionContent {
                     cells.add(new DoubleCell(stdErrs.get(parameter)));
                     cells.add(new DoubleCell(zScores.get(parameter)));
                     cells.add(new DoubleCell(pValues.get(parameter)));
+                } else {
+                    cells.add(NOT_INVERTIBLE_MISSING);
+                    cells.add(NOT_INVERTIBLE_MISSING);
+                    cells.add(NOT_INVERTIBLE_MISSING);
                 }
                 c++;
                 dc.addRowToTable(new DefaultRow("Row" + c, cells));
             }
-            List<DataCell> cells = new ArrayList<DataCell>();
+            List<DataCell> cells = new ArrayList<>();
             cells.add(new StringCell(logit.toString()));
             cells.add(new StringCell("Constant"));
             cells.add(new DoubleCell(this.getIntercept(logit)));
@@ -504,6 +512,10 @@ final class LogisticRegressionContent {
                 cells.add(new DoubleCell(this.getInterceptStdErr(logit)));
                 cells.add(new DoubleCell(this.getInterceptZScore(logit)));
                 cells.add(new DoubleCell(this.getInterceptPValue(logit)));
+            } else {
+                cells.add(NOT_INVERTIBLE_MISSING);
+                cells.add(NOT_INVERTIBLE_MISSING);
+                cells.add(NOT_INVERTIBLE_MISSING);
             }
             c++;
             dc.addRowToTable(new DefaultRow("Row" + c, cells));
@@ -676,12 +688,8 @@ final class LogisticRegressionContent {
         double[] coeff = parContent.getDoubleArray(CFG_COEFFICIENTS);
         double likelihood = parContent.getDouble(CFG_LOG_LIKELIHOOD);
         RealMatrix covMat = null;
-        DataTableSpec coeffStatsTableSpec;
         if (parContent.getBoolean(CFG_COVMAT_PRESENT)) {
             covMat = toMatrix(parContent.getDoubleArray(CFG_COVARIANCE_MATRIX), coeff.length);
-            coeffStatsTableSpec = LogRegCoordinator.createCoeffStatisticsTableSpec(true);
-        } else {
-            coeffStatsTableSpec = LogRegCoordinator.createCoeffStatisticsTableSpec(false);
         }
         int iter = parContent.getInt(CFG_ITER);
         // introduced in 2.9
