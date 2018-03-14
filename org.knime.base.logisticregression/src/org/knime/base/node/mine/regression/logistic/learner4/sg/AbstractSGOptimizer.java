@@ -152,7 +152,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
                     warnBuilder.append("\n");
                 }
                 warnBuilder.append("The covariance matrix could not be calculated because the"
-                    + " observed fisher information matrix was singular.");
+                    + " observed fisher information matrix was singular. Did you properly normalize the numerical features?");
                 covMat = null;
             }
         }
