@@ -79,8 +79,10 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  */
 public class LinkNodesAction extends AbstractNodeAction {
 
+    /** actions registry ID for this action. **/
+    static public final String ID = "knime.actions.linknodes";
     /** org.eclipse.ui.commands command ID for this action. **/
-    static public final String ID = "knime.commands.linknodes";
+    static private final String COMMAND_ID = "knime.commands.linknodes";
 
     static private final NodeLogger LOGGER = NodeLogger.getLogger(LinkNodesAction.class);
     static private final NodeSpatialComparator SPATIAL_COMPARATOR = new NodeSpatialComparator();
@@ -105,8 +107,32 @@ public class LinkNodesAction extends AbstractNodeAction {
      * {@inheritDoc}
      */
     @Override
+    public String getText() {
+        return "Link selected nodes\t" + this.getHotkey(COMMAND_ID);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/link_nodes.png");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ImageDescriptor getDisabledImageDescriptor() {
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/link_nodes_disabled.png");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText() {
+        return "Link selected nodes";
     }
 
     /**

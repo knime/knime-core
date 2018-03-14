@@ -216,6 +216,7 @@ import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
 import org.knime.workbench.editor2.actions.ExpandSubNodeAction;
 import org.knime.workbench.editor2.actions.HideNodeNamesAction;
+import org.knime.workbench.editor2.actions.LinkNodesAction;
 import org.knime.workbench.editor2.actions.LockMetaNodeAction;
 import org.knime.workbench.editor2.actions.LockSubNodeAction;
 import org.knime.workbench.editor2.actions.MetaNodeReconfigureAction;
@@ -237,6 +238,7 @@ import org.knime.workbench.editor2.actions.ShowNodeIdsAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
+import org.knime.workbench.editor2.actions.UnlinkNodesAction;
 import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNewConnectedNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
@@ -656,6 +658,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             new ToggleFlowVarPortsAction(this);
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
 
+        AbstractNodeAction linkNodes = new LinkNodesAction(this);
+        AbstractNodeAction unlinkNodes = new UnlinkNodesAction(this);
+
         AbstractNodeAction metaNodeReConfigure = new MetaNodeReconfigureAction(this);
         AbstractNodeAction metaNodeChangeLink = new ChangeMetaNodeLinkAction(this);
         AbstractNodeAction defineMetaNodeTemplate = new SaveAsMetaNodeTemplateAction(this);
@@ -710,6 +715,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(setNameAndDescription);
         m_actionRegistry.registerAction(defaultOpenView);
 
+        m_actionRegistry.registerAction(linkNodes);
+        m_actionRegistry.registerAction(unlinkNodes);
+
         m_actionRegistry.registerAction(copy);
         m_actionRegistry.registerAction(cut);
         m_actionRegistry.registerAction(paste);
@@ -763,6 +771,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(collapse.getId());
         m_editorActions.add(expand.getId());
         m_editorActions.add(unWrap.getId());
+
+        m_editorActions.add(linkNodes.getId());
+        m_editorActions.add(unlinkNodes.getId());
 
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());

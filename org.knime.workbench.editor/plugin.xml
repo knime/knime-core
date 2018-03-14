@@ -213,13 +213,12 @@
          <action
                class="org.knime.workbench.editor2.actions.delegates.UnlinkNodesEditorAction"
                definitionId="knime.commands.unlinknodes"
-               disabledIcon="icons/link_nodes_disabled.png"
+               disabledIcon="icons/unlink_nodes_disabled.png"
                icon="icons/unlink_nodes.png"
                id="org.knime.workbench.editor.actions.unlinkSelectedNodes"
                label="Unlink selected nodes"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Unlink selected nodes"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.LinkNodesEditorAction"
@@ -230,7 +229,6 @@
                label="Link selected nodes"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Link selected nodes"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.HideNodeNamesEditorAction"

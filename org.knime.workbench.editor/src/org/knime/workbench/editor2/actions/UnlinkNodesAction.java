@@ -77,8 +77,10 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  */
 public class UnlinkNodesAction extends AbstractNodeAction {
 
+    /** actions registry ID for this action. **/
+    static public final String ID = "knime.actions.unlinknodes";
     /** org.eclipse.ui.commands command ID for this action. **/
-    static public final String ID = "knime.commands.unlinknodes";
+    static private final String COMMAND_ID = "knime.commands.unlinknodes";
 
     static private final NodeLogger LOGGER = NodeLogger.getLogger(UnlinkNodesAction.class);
 
@@ -102,8 +104,33 @@ public class UnlinkNodesAction extends AbstractNodeAction {
      * {@inheritDoc}
      */
     @Override
+    public String getText() {
+        return "Unlink selected nodes\t" + this.getHotkey(COMMAND_ID);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/unlink_nodes.png");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ImageDescriptor getDisabledImageDescriptor() {
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID,
+                                                 "icons/unlink_nodes_disabled.png");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText() {
+        return "Unlink selected nodes";
     }
 
     /**
