@@ -314,6 +314,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     private List<String> m_editorActions;
 
     private GraphicalViewer m_graphicalViewer;
+    private ZoomWheelListener m_zoomWheelListener;
 
     /** path to the workflow directory (that contains the workflow.knime file). */
     private URI m_fileResource;
@@ -527,6 +528,9 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void dispose() {
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
+        if (m_zoomWheelListener != null) {
+            m_zoomWheelListener.dispose();
+        }
         if (m_fileResource != null && m_manager != null) {
             // disposed is also called when workflow load fails or is canceled
             ProjectWorkflowMap.unregisterClientFrom(m_fileResource, this);
@@ -887,10 +891,11 @@ public class WorkflowEditor extends GraphicalEditor implements
         updateEditorBackgroundColor();
         updateJobManagerDisplay();
         updateTempRemoteWorkflowMessage();
-        ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart()
-                .getChildren().get(0))
-                .createToolTipHelper(getSite().getShell());
+        RootEditPart rep = getGraphicalViewer().getRootEditPart();
+        ((WorkflowRootEditPart)rep.getChildren().get(0)).createToolTipHelper(getSite().getShell());
 
+        m_zoomWheelListener = new ZoomWheelListener(this.getZoomManager(),
+                                                    (FigureCanvas)getViewer().getControl());
     }
 
     /**
@@ -2506,13 +2511,16 @@ public class WorkflowEditor extends GraphicalEditor implements
         return loc;
     }
 
+    private ZoomManager getZoomManager() {
+        return (ZoomManager)(getViewer().getProperty(ZoomManager.class.toString()));
+    }
 
     private double getZoomfactor() {
         GraphicalViewer viewer = getViewer();
         if (viewer == null) {
             return 1.0;
         }
-        ZoomManager zoomManager = (ZoomManager)(viewer.getProperty(ZoomManager.class.toString()));
+        ZoomManager zoomManager = this.getZoomManager();
         if (zoomManager == null) {
             return 1.0;
         }
@@ -2520,9 +2528,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     private void setZoomfactor(final double z) {
-        ZoomManager zoomManager =
-            (ZoomManager)(getViewer().getProperty(ZoomManager.class
-                    .toString()));
+        ZoomManager zoomManager = this.getZoomManager();
         zoomManager.setZoom(z);
     }
 
