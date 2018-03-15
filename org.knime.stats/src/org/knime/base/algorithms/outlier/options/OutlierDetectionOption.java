@@ -44,6 +44,59 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Mar 1, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Mar 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
-package org.knime.base.algorithms.outlier;
+package org.knime.base.algorithms.outlier.options;
+
+import java.util.Arrays;
+
+import org.knime.core.node.util.CheckUtils;
+
+/**
+ * Enum allowing to restrict the outlier detection.
+ *
+ * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ */
+public enum OutlierDetectionOption {
+
+        /** Indicates that there is no restriction. */
+        ALL("All outliers"),
+
+        /** Indicates that the outlier detection is restricted to values below the lower bound. */
+        LOWER_BOUND("Outliers below lower bound"),
+
+        /** Indicates that the outlier detection is restricted to values above the upper bound. */
+        UPPER_BOUND("Outliers above upper bound");
+
+    /** Missing name exception. */
+    private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
+
+    /** IllegalArgumentException prefix. */
+    private static final String ARGUMENT_EXCEPTION_PREFIX = "No OutlierDetectionOption constant with name: ";
+
+    private final String m_name;
+
+    OutlierDetectionOption(final String name) {
+        m_name = name;
+    }
+
+    @Override
+    public String toString() {
+        return m_name;
+    }
+
+    /**
+     * Returns the enum for a given String
+     *
+     * @param name enum name
+     * @return the enum
+     * @throws IllegalArgumentException if the given name is not associated with an TREATMENT_OPTIONS value
+     */
+    public static OutlierDetectionOption getEnum(final String name) throws IllegalArgumentException {
+        CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
+
+        return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
+    }
+
+}

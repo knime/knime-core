@@ -115,6 +115,9 @@ final class OutlierIntervalsCalculator {
     /** Tells whether the computation is done in or out of memory. */
     private final boolean m_inMemory;
 
+    /** Tells how the quartiles have to be calculated. */
+    private final boolean m_useHeuristic;
+
     /**
      * Builder of the IntervalsCalculator.
      *
@@ -137,6 +140,9 @@ final class OutlierIntervalsCalculator {
 
         /** Tells whether the computation is done in or out of memory. */
         private boolean m_inMemory = false;
+
+        /** Tells how the quartiles have to be calculated. */
+        private boolean m_useHeuristic = true;
 
         /**
          * Sets the outlier column names.
@@ -194,6 +200,17 @@ final class OutlierIntervalsCalculator {
         }
 
         /**
+         * Sets the quartiles computation type.
+         *
+         * @param useHeuristic the accuracy to be used
+         * @return the builder itself
+         */
+        Builder useHeuristic(final boolean useHeuristic) {
+            m_useHeuristic = useHeuristic;
+            return this;
+        }
+
+        /**
          * Constructs the outlier detector using the settings provided by the builder.
          *
          * @return the outlier detector using the settings provided by the builder
@@ -213,6 +230,7 @@ final class OutlierIntervalsCalculator {
         m_groupColNames = b.m_groupColNames;
         m_estimationType = b.m_estimationType;
         m_iqrMultiplier = b.m_iqrMultiplier;
+        m_useHeuristic = b.m_useHeuristic;
         m_inMemory = b.m_inMemory;
     }
 
@@ -359,21 +377,20 @@ final class OutlierIntervalsCalculator {
             final OperatorColumnSettings cSettings =
                 new OperatorColumnSettings(INCL_MISSING_CELLS, inSpec.getColumnSpec(outlierColName));
             // add the aggregators for calculating the first and third quartile with respect to the selected
-            // memory policy
+            // setting
             for (final double percentile : PERCENTILES) {
                 final AggregationMethod method;
-                if (m_inMemory) {
+                if (m_useHeuristic) {
+                    method = new PSquarePercentileOperator(gSettings, cSettings, 100 * percentile);
+                } else {
                     method = new QuantileOperator(
                         new OperatorData("Quantile", true, false, DoubleValue.class, INCL_MISSING_CELLS), gSettings,
                         cSettings, percentile, m_estimationType.name());
-                } else {
-                    method = new PSquarePercentileOperator(gSettings, cSettings, 100 * percentile);
                 }
                 aggregators[pos++] = new ColumnAggregator(cSettings.getOriginalColSpec(), method);
             }
 
         }
-
         // return the aggregators
         return aggregators;
     }

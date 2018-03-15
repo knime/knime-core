@@ -83,7 +83,7 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
     /** Init the outlier detector node model with one input and output. */
     OutlierApplyNodeModel() {
         super(new PortType[]{OutlierPortObject.TYPE, BufferedDataTable.TYPE},
-            new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE, BufferedDataTable.TYPE});
+            new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE});
     }
 
     /**
@@ -98,8 +98,7 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
         outlierReviser.addListener(this);
 
         outlierReviser.treatOutliers(exec, in, outlierPort.getOutlierModel(in.getDataTableSpec()));
-        return new PortObject[]{outlierReviser.getOutTable(), outlierReviser.getOutliersTable(),
-            outlierReviser.getSummaryTable()};
+        return new PortObject[]{outlierReviser.getOutTable(), outlierReviser.getSummaryTable()};
     }
 
     /**
@@ -150,13 +149,7 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
                 .collect(Collectors.joining(", ", "Column(s) (",
                     ") as specified by the outlier detector is not present or compatible.")));
         }
-        // the compatible outlier columns
-        final String[] compatibleOutlierColNames = Arrays.stream(outlierColNames)//
-            .filter(s -> (inTableSpec.containsName(s)
-                && inTableSpec.getColumnSpec(s).getType().isCompatible(DoubleValue.class)))//
-            .toArray(String[]::new);
         return new PortObjectSpec[]{OutlierReviser.getOutTableSpec(inTableSpec),
-            OutlierReviser.getOutliersTableSpec(inTableSpec, groupColNames, compatibleOutlierColNames),
             OutlierReviser.getSummaryTableSpec(inTableSpec, groupColNames)};
     }
 

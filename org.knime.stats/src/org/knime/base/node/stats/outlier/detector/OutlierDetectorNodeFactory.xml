@@ -52,8 +52,8 @@
 
 		</tab>
 		
-		<tab name="General settings (Outlier Settings)">
-			<option name="IQR multiplier (k)">
+		<tab name="General Settings (Outlier Settings)">
+			<option name="interquartile range multiplier (k)">
 				Allows to scale the interquartile range (IQR).
 				The default is k = 1.5.
 			</option>
@@ -63,55 +63,73 @@
 				is updated.
 			</option>
 
-			<option name="Process in memory">
-				Process the table in the memory. Requires more
-				memory, but is faster
-				since the table does not need to be sorted in advance.
-				If in memory is selected more accurate values of 
-				Q<sub>1</sub> and Q<sub>3</sub>
-				are computed, otherwise these quartiles will
-				entirely be estimated
-				irrespective of the selected "Estimation type".
-				<br />
-				<br />
-				Note that the more accurate computation of the quartiles comes
-				with higher memory requirements. If the additionally required memory
-				exceeds the available memory this node will fail.
+			<option name="Use heuristic for quartile calculation (memory friendly)">
+				If use heuristic is selected the quartiles will be calculated using
+				a different approach than otherwise. While this heuristic is strongly
+				favorable for large data sets due to its lower memory requirements
+				while being rather precise, its results can be pretty far away from the
+				accurate results for smaller data.
+				<br/>
+				<br/>
+				Consequently, we recommend to check this option only if the data set
+				is large enough, or memory is an issue.			
 			</option>
 
 			<option name="Estimation type">
 				Typically the value of the quartiles is not part of the input, but
 				lies between two observations. The estimation type allows to specify
-				how to deal with this problem, e.g., by using linear-interpolation.
+				how to deal with this problem, e.g., R_4 applies linear-interpolation.
 				A detailed explanation of the different options can be found
 				<a
 					href="https://en.wikipedia.org/wiki/Quantile#Estimating_quantiles_from_a_sample"> here</a>
+				<br/>
+				<br/>
+				Note this option is only available if the use heuristic option is not selected.
 			</option>
 
 		</tab>
 
-		<tab name="Outlier treatment (Outlier Settings)">
+		<tab name="Outlier Treatment (Outlier Settings)">
 
-			<option name="Treatment">
-				Defines two different strategies to treat outliers:
+			<option name="Treatment option">
+				Defines three different strategies to treat outliers:
 				<ul>
 					<li>
-						<b>Replace Value:</b>
+						<b>Replace outlier values:</b>
 						Allows to replace outliers based on the selected "Replacement
 						strategy"
 					</li>
 					<li>
-						<b>Remove Row:</b>
+						<b>Remove outlier rows:</b>
 						Removes all rows from the input data that contain in any of the
 						selected columns at least one outlier
+					</li>
+					<li>
+						<b>Exclusively retain outlier rows:</b>
+						Retains only those rows of the input data that contain at
+						least one outlier in any of the selected columns
 					</li>
 
 				</ul>
 			</option>
+			
+			<option name="Apply to">
+				Allows to apply the selected treatment strategy to
+				<ul>
+					<li>
+						<b>All outliers</b>
+					</li>
+					<li>
+						<b>Outliers below lower bound</b>
+					</li>
+					<li>
+						<b>Outliers above upper bound</b>
+					</li>
+				</ul> 
+			</option>
 
 			<option name="Replacement strategy ">
-				Defines two different strategies to replace
-				outliers:
+				Defines two different strategies to replace outliers:
 				<ul>
 					<li>
 						<b>Missing values:</b>
@@ -124,13 +142,14 @@
 						replacement value is the closest integer within the permitted interval.
 					</li>
 				</ul>
+				Note that this option is only enabled if outliers have to be replaced.
 			</option>
 
 		</tab>
 		
 		<tab name="Group Selection (Group Settings)">
 			<option name="Compute outlier statistics on groups">
-				If enabled, allows the selection of columns to identify groups. A group comprises all
+				If selected, allows the selection of columns to identify groups. A group comprises all
 				rows of the input exhibiting the same values in every single column (similar to the GroupBy node).
 				The outliers will finally be computed with respect to each of the
 				individual groups.
@@ -142,18 +161,25 @@
 			</option>
 
 		</tab>
+		<tab name="Memory Policy (Group Settings)">
+			<option name="Process groups in memory">
+				Processes the groups in the memory. This option comes with higher
+				memory requirements, but is faster since the table does not 
+				need any additional treatment.
+			</option>
+		
+		
+		</tab>
 	</fullDescription>
 	<ports>
 		<inPort index="0" name="Input data">Numeric input data to evaluate + optional group information</inPort>
-		<outPort index="0" name="Treated table">Data table where outliers are either
-			replaced or rows containing outliers were removed
+		<outPort index="0" name="Treated table">Data table where outliers were either
+			replaced, rows containing outliers were removed, or exclusively retained
 		</outPort>
-		<outPort index="1" name="Outliers">Data table holding only the values of actual outliers
-		</outPort>
-		<outPort index="2" name="Summary">Data table holding the number of members, i.e., non-missing values 
+		<outPort index="1" name="Summary">Data table holding the number of members, i.e., non-missing values 
 		and outliers as well as the lower and upper	bound for each outlier group
 		</outPort>
-		<outPort index="3" name="Model">Model holding the permitted interval bounds for each
+		<outPort index="2" name="Model">Model holding the permitted interval bounds for each
 			outlier group and the outlier treatment specifications
 		</outPort>
 	</ports>

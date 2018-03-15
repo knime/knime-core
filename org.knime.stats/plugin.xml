@@ -64,7 +64,7 @@
    <extension
          point="org.knime.core.PortType">
       <portType
-            color="#FFFF99"
+            color="#1eb9dc"
             hidden="true"
             name="Outlier"
             objectClass="org.knime.base.algorithms.outlier.OutlierPortObject"

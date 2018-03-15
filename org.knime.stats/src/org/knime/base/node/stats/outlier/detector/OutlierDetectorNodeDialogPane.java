@@ -49,19 +49,21 @@
 package org.knime.base.node.stats.outlier.detector;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
+import org.knime.base.algorithms.outlier.options.OutlierDetectionOption;
 import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
 import org.knime.core.node.InvalidSettingsException;
@@ -71,10 +73,10 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
@@ -84,17 +86,32 @@ import org.knime.core.node.port.PortObjectSpec;
  */
 final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
 
+    /** Default insets to create space between panels. */
+    private static final Insets INSET = new Insets(15, 0, 0, 0);
+
+    /** The label of the treatment option. */
+    private static final String TREATMENT_OPTION_LABEL = "Treatment Option";
+
+    /** The restrict outlier handling border label. */
+    private static final String RESTRICTION_BORDER_TITLE = "Apply to";
+
+    /** The heuristic dialog label. */
+    private static final String HEURISTIC_LABEL = "Use heuristic for quartile calculation (memory friendly)";
+
     /** The outlier selection border label. */
-    private static final String OUTLIER_SELECTION_BORDER_TITLE = "Outlier selection";
+    private static final String OUTLIER_SELECTION_BORDER_TITLE = "Outlier Selection";
 
     /** The group selection border label. */
-    private static final String GROUP_SELECTION_BORDER_TITLE = "Group selection";
+    private static final String GROUP_SELECTION_BORDER_TITLE = "Group Selection";
 
     /** The title of the outlier treatment panel. */
-    private static final String TREATMENT_BORDER_TITLE = "Outlier treatment";
+    private static final String TREATMENT_BORDER_TITLE = "Outlier Treatment";
+
+    /** The memory policy border label. */
+    private static final String MEMORY_BORDER_TITLE = "Memory Policy";
 
     /** The title of the general settings panel. */
-    private static final String SETTINGS_BORDER_TITLE = "General settings";
+    private static final String SETTINGS_BORDER_TITLE = "General Settings";
 
     /** The apply to groups checkbox name. */
     private static final String APPLY_TO_GROUPS = "Compute outlier statistics on groups";
@@ -106,17 +123,18 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
     private static final String OUTLIER_TAB = "Outlier Settings";
 
     /** The estimation type name. */
-    private static final String ESTIMATION_TYPE = "Estimation type: ";
+    private static final String ESTIMATION_TYPE = "Estimation type";
 
     /** The IQR scalar label name. */
-    private static final String QUARTILE_RANGE_MULT = "IQR multiplier (k)";
-
-    /** The memory policy label name. */
-    private static final String MEMORY_POLICY = "Process in memory";
+    private static final String QUARTILE_RANGE_MULT = "Interquartile range multiplier (k)";
 
     /** The outlier replacement strategy label name. */
     private static final String REPLACEMENT_STRATEGY = "Replacement strategy";
 
+    /** The memory policy label name. */
+    private static final String MEMORY_POLICY = "Process groups in in memory";
+
+    /** The domain policy label name. */
     private static final String DOMAIN_POLICY = "Update domain";
 
     /** Dialog indicating whether the algorithm should be executed in or out of memory. */
@@ -137,14 +155,20 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
     /** Dialog indicating whether the algorithm should create groups. */
     private DialogComponentBoolean m_useGroupsDialog;
 
-    /** Dialog informing about the treatment of the outliers. */
-    private DialogComponentButtonGroup m_outlierTreatmentDialog;
-
     /** Dialog informing about the outlier replacement strategy. */
     private DialogComponentStringSelection m_outlierReplacementDialog;
 
+    /** Dialog informing about the accuracy of the quartiles computation. */
+    private DialogComponentBoolean m_heuristicDialog;
+
     /** Dialog indicating whether the algorithm should create groups. */
-    private DialogComponentBoolean m_resetDomainDialog;
+    private DialogComponentBoolean m_updateDomainDialog;
+
+    /** Dialog informing about the treatment of the outliers. */
+    private DialogComponentStringSelection m_outlierTreatmentDialog;
+
+    /** Dialog informing about the outlier detection restrictions. */
+    private DialogComponentStringSelection m_restrictionDialog;
 
     /** Array holding all dialog components (convenience). */
     private final DialogComponent[] m_diaComp;
@@ -155,9 +179,9 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
         addTab(GROUPS_TAB, createGroupDialog());
         addListeners();
 
-        m_diaComp =
-            new DialogComponent[]{m_groupsDialog, m_outlierDialog, m_scalarDialog, m_estimationDialog, m_memoryDialog,
-                m_useGroupsDialog, m_outlierTreatmentDialog, m_outlierReplacementDialog, m_resetDomainDialog};
+        m_diaComp = new DialogComponent[]{m_groupsDialog, m_outlierDialog, m_scalarDialog, m_estimationDialog,
+            m_memoryDialog, m_useGroupsDialog, m_outlierTreatmentDialog, m_restrictionDialog,
+            m_outlierReplacementDialog, m_heuristicDialog, m_updateDomainDialog};
     }
 
     /**
@@ -183,6 +207,7 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
         // add outlier selection panel
         panel.add(createOutlierSelectionDialog(), gbc);
 
+        gbc.insets = INSET;
         ++gbc.gridy;
         gbc.weighty = 0;
         gbc.gridwidth = 1;
@@ -213,17 +238,49 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
 
+        // add the outlier selection dialog
         m_outlierDialog = new DialogComponentColumnFilter2(OutlierDetectorNodeModel.createOutlierFilterModel(), 0);
         panel.add(m_outlierDialog.getComponentPanel(), gbc);
         return panel;
     }
 
     /**
-     * Creates the groups selection dialog.
+     * Creates the groups dialog.
+     *
+     * @return the group dialog
+     */
+    private JPanel createGroupDialog() {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.fill = GridBagConstraints.BOTH;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        // add the group selection panel
+        panel.add(getGroupSelectionPanel(), gbc);
+
+        gbc.insets = INSET;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        ++gbc.gridy;
+
+        // add the memory policy panel
+        panel.add(getMemoryPanel(), gbc);
+
+        // return the panel
+        return panel;
+    }
+
+    /**
+     * Creates the groups selection panel.
      *
      * @return the group selection dialog
      */
-    private JPanel createGroupDialog() {
+    private JPanel getGroupSelectionPanel() {
         final JPanel panel = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.LINE_START;
@@ -241,12 +298,30 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
             new DialogComponentBoolean(OutlierDetectorNodeModel.createUseGroupsModel(), APPLY_TO_GROUPS);
         panel.add(m_useGroupsDialog.getComponentPanel(), gbc);
 
+        gbc.insets = INSET;
         ++gbc.gridy;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-
         m_groupsDialog = new DialogComponentColumnFilter2(OutlierDetectorNodeModel.createGroupFilterModel(), 0);
         panel.add(m_groupsDialog.getComponentPanel(), gbc);
+        return panel;
+    }
+
+    private JPanel getMemoryPanel() {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.fill = GridBagConstraints.NONE;
+
+        gbc.weightx = 1;
+
+        // add panel border
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), MEMORY_BORDER_TITLE));
+
+        // add memory policy dialog
+        m_memoryDialog = new DialogComponentBoolean(OutlierDetectorNodeModel.createMemoryModel(), MEMORY_POLICY);
+        panel.add(m_memoryDialog.getComponentPanel(), gbc);
+
         return panel;
     }
 
@@ -263,7 +338,7 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1;
-        gbc.weighty = 1;
+        gbc.weighty = 0;
 
         // add panel border
         panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), SETTINGS_BORDER_TITLE));
@@ -275,15 +350,16 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
 
         ++gbc.gridy;
 
-        // add the reset domain dialog
-        m_resetDomainDialog = new DialogComponentBoolean(OutlierDetectorNodeModel.createDomainModel(), DOMAIN_POLICY);
-        panel.add(m_resetDomainDialog.getComponentPanel(), gbc);
+        // add the update domain dialog
+        m_updateDomainDialog = new DialogComponentBoolean(OutlierDetectorNodeModel.createDomainModel(), DOMAIN_POLICY);
+        panel.add(m_updateDomainDialog.getComponentPanel(), gbc);
 
         ++gbc.gridy;
 
-        // add memory policy dialog
-        m_memoryDialog = new DialogComponentBoolean(OutlierDetectorNodeModel.createMemoryModel(), MEMORY_POLICY);
-        panel.add(m_memoryDialog.getComponentPanel(), gbc);
+        // add the heuristic dialog
+        m_heuristicDialog =
+            new DialogComponentBoolean(OutlierDetectorNodeModel.createHeuristicModel(), HEURISTIC_LABEL);
+        panel.add(m_heuristicDialog.getComponentPanel(), gbc);
 
         ++gbc.gridy;
 
@@ -315,23 +391,59 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
         // add panel border
         panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), TREATMENT_BORDER_TITLE));
 
-        // add component to select the outlier treatment option
-        m_outlierTreatmentDialog =
-            new DialogComponentButtonGroup(OutlierDetectorNodeModel.createOutlierTreatmentModel(), false, null,
-                Arrays.stream(OutlierTreatmentOption.values()).map(val -> val.toString()).toArray(String[]::new));
-        panel.add(m_outlierTreatmentDialog.getComponentPanel(), gbc);
+        // create component to select the outlier treatment option
+        m_outlierTreatmentDialog = new DialogComponentStringSelection(
+            OutlierDetectorNodeModel.createOutlierTreatmentModel(), "Treatment option",
+            Arrays.stream(OutlierTreatmentOption.values()).map(val -> val.toString()).toArray(String[]::new));
 
-        ++gbc.gridy;
+        // create component to restrict the outlier treatment
+        m_restrictionDialog = new DialogComponentStringSelection(OutlierDetectorNodeModel.createOutlierDetectionModel(),
+            RESTRICTION_BORDER_TITLE,
+            Arrays.stream(OutlierDetectionOption.values()).map(val -> val.toString()).toArray(String[]::new));
 
         // add component to select the outlier replacement strategy
         m_outlierReplacementDialog = new DialogComponentStringSelection(
             OutlierDetectorNodeModel.createOutlierReplacementModel(), REPLACEMENT_STRATEGY,
             Arrays.stream(OutlierReplacementStrategy.values()).map(val -> val.toString()).toArray(String[]::new));
-        panel.add(m_outlierReplacementDialog.getComponentPanel(), gbc);
-        gbc.weighty = 1;
+
+        updatePrefSize(0, 10, m_outlierTreatmentDialog.getComponentPanel(), m_restrictionDialog.getComponentPanel(),
+            m_outlierReplacementDialog.getComponentPanel());
+
+        updatePrefSize(1, 0, m_outlierTreatmentDialog.getComponentPanel(), m_restrictionDialog.getComponentPanel(),
+            m_outlierReplacementDialog.getComponentPanel());
+
+        // add all dialogs
+        panel.add(m_outlierTreatmentDialog.getComponentPanel(), gbc);
+
         ++gbc.gridy;
-        panel.add(Box.createGlue(), gbc);
+
+        panel.add(m_restrictionDialog.getComponentPanel(), gbc);
+
+        ++gbc.gridy;
+
+        panel.add(m_outlierReplacementDialog.getComponentPanel(), gbc);
+
         return panel;
+    }
+
+    /**
+     * Ensures that all provided components have the same preferred dimensionality at the given index
+     *
+     * @param cInd the component index
+     * @param offset the offset
+     * @param components the components whose preferred dimensionaility needs to be updated
+     */
+    private void updatePrefSize(final int cInd, final int offset, final JPanel... components) {
+        final Dimension prefDim = new Dimension(offset, 0);
+        for (final JPanel comp : components) {
+            prefDim.setSize(Math.max(prefDim.getWidth(), comp.getComponent(cInd).getMinimumSize().getWidth() + offset),
+                0);
+        }
+        for (final JPanel comp : components) {
+            Component compToRes = comp.getComponent(cInd);
+            prefDim.setSize(prefDim.getWidth(), compToRes.getMinimumSize().getHeight());
+            compToRes.setPreferredSize(prefDim);
+        }
     }
 
     /**
@@ -339,7 +451,7 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
      */
     private void addListeners() {
         // only enable estimation types if in-memory calculation is selected
-        m_memoryDialog.getModel().addChangeListener(new ChangeListener() {
+        m_heuristicDialog.getModel().addChangeListener(new ChangeListener() {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -369,7 +481,7 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
      * Enables and disables the estimation dialog depending on the memory selection.
      */
     private void toggleEstimationDialog() {
-        m_estimationDialog.getModel().setEnabled(m_memoryDialog.isSelected());
+        m_estimationDialog.getModel().setEnabled(!m_heuristicDialog.isSelected());
     }
 
     /**
@@ -377,14 +489,15 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
      */
     private void toggleGroupsDialog() {
         m_groupsDialog.getModel().setEnabled(m_useGroupsDialog.isSelected());
+        m_memoryDialog.getModel().setEnabled(m_useGroupsDialog.isSelected());
     }
 
     /**
      * Enables and disables the replacement dialog depending on the treatment choice.
      */
     private void toggleReplacement() {
-        m_outlierReplacementDialog.getModel()
-            .setEnabled(m_outlierTreatmentDialog.getButton(OutlierTreatmentOption.REPLACE.toString()).isSelected());
+        m_outlierReplacementDialog.getModel().setEnabled(((SettingsModelString)m_outlierTreatmentDialog.getModel())
+            .getStringValue().equals(OutlierTreatmentOption.REPLACE.toString()));
     }
 
     /**
@@ -401,7 +514,6 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        // TODO: Intersection von den Outlier und Groups.
         for (final DialogComponent dia : m_diaComp) {
             dia.saveSettingsTo(settings);
         }

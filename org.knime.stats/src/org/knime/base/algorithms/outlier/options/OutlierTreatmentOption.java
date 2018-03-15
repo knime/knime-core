@@ -54,14 +54,19 @@ import org.knime.core.node.util.CheckUtils;
 
 /**
  * Enum encoding the outlier treatment.
+ *
+ * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
 public enum OutlierTreatmentOption {
 
-        /** Indicates that the outliers have to be replaced */
-        REPLACE("Replace Value"),
+        /** Indicates that the outliers have to be replaced. */
+        REPLACE("Replace outlier values"),
 
-        /** Indicates that rows containing outliers have to be removed */
-        FILTER("Remove Row");
+        /** Indicates that rows containing outliers have to be removed. */
+        FILTER("Remove outlier rows"),
+
+        /** Indicates that only rows containing outliers have to be retained. */
+        RETAIN("Exclusively retain outlier rows");
 
     /** Missing name exception. */
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";

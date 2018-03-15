@@ -55,6 +55,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
+import org.knime.base.algorithms.outlier.options.OutlierDetectionOption;
 import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
 import org.knime.core.data.DataTableSpec;
@@ -139,6 +140,17 @@ public final class OutlierDetector {
         }
 
         /**
+         * Defines the outlier detection option, see {@link OutlierDetectionOption}
+         *
+         * @param detectionOption the detection option
+         * @return the builder itself
+         */
+        public Builder setDetectionOption(final OutlierDetectionOption detectionOption) {
+            m_reviserBuilder.setDetectionOption(detectionOption);
+            return this;
+        }
+
+        /**
          * Sets the group column names.
          *
          * @param groupColNames the group column names
@@ -147,6 +159,18 @@ public final class OutlierDetector {
         public Builder setGroupColumnNames(final String[] groupColNames) {
             m_intervalsBuilder.setGroupColumnNames(groupColNames);
             return this;
+        }
+
+        /**
+         * Sets the quartiles computation type.
+         *
+         * @param useHeuristic the accuracy to be used
+         * @return the builder itself
+         */
+        public Builder useHeuristic(final boolean useHeuristic) {
+            m_intervalsBuilder.useHeuristic(useHeuristic);
+            return this;
+
         }
 
         /**
@@ -254,28 +278,6 @@ public final class OutlierDetector {
      */
     public static DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec, final String[] groupColNames) {
         return OutlierReviser.getSummaryTableSpec(inSpec, groupColNames);
-    }
-
-    /**
-     * Returns the table storing the outliers.
-     *
-     * @return the table storing the outliers
-     */
-    public BufferedDataTable getOutliersTable() {
-        return m_reviser.getOutliersTable();
-    }
-
-    /**
-     * Returns the spec of the table storing the outliers.
-     *
-     * @param inSpec the in spec
-     * @param groupColNames the group column names
-     * @param outlierColNames the outlier column names
-     * @return the spec of the table storing the outliers
-     */
-    public static DataTableSpec getOutliersTableSpec(final DataTableSpec inSpec, final String[] groupColNames,
-        final String[] outlierColNames) {
-        return OutlierReviser.getOutliersTableSpec(inSpec, groupColNames, outlierColNames);
     }
 
     /**

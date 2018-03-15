@@ -51,12 +51,14 @@ package org.knime.base.algorithms.outlier;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import org.knime.base.algorithms.outlier.options.OutlierDetectionOption;
 import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -98,6 +100,9 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     /** Config key of the outlier replacement strategy. */
     private static final String CFG_OUTLIER_REPLACEMENT = "replacement-strategy";
 
+    /** Config key of the outlier detection option. */
+    private static final String CFG_DETECTION_OPTION = "detection-option";
+
     /** Config key of the domain policy. */
     private static final String CFG_DOMAIN_POLICY = "update-domain";
 
@@ -116,11 +121,14 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     /** The data types of the group columns . */
     private DataType[] m_groupColTypes;
 
-    /** The outlieer treatment option. */
+    /** The outlier treatment option. */
     private String m_treatmentOption;
 
     /** The outlier replacement strategy. */
     private String m_repStrategy;
+
+    /** The outlier detection option. */
+    private String m_detectionOption;
 
     /** Flag indiciation whether the domain needs to be updated. */
     private boolean m_updateDomain;
@@ -152,6 +160,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
         // store the reviser settings
         m_treatmentOption = reviser.getTreatmentOption().toString();
         m_repStrategy = reviser.getReplacementStrategy().toString();
+        m_detectionOption = reviser.getRestrictionOption().toString();
         m_updateDomain = reviser.updateDomain();
     }
 
@@ -164,11 +173,12 @@ public class OutlierPortObject extends AbstractSimplePortObject {
         return new OutlierReviser.Builder()//
             .setTreatmentOption(OutlierTreatmentOption.getEnum(m_treatmentOption))//
             .setReplacementStrategy(OutlierReplacementStrategy.getEnum(m_repStrategy))//
+            .setDetectionOption(OutlierDetectionOption.getEnum(m_detectionOption))//
             .updateDomain(m_updateDomain);
     }
 
     /**
-     * Returns the outlier model only containing columns that that exist in the in spec.
+     * Returns the outlier model only containing columns that that exist in and are compatible with the in spec.
      *
      * @param inSpec the in spec of the table whose outlier have to be treated
      * @return the filtered outlier model
@@ -176,7 +186,8 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     public OutlierModel getOutlierModel(final DataTableSpec inSpec) {
         // remove all entries related to outlier columns not existent in the input spec
         m_outlierModel.dropOutliers(Arrays.stream(m_outlierModel.getOutlierColNames())
-            .filter(s -> !inSpec.containsName(s)).collect(Collectors.toList()));
+            .filter(s -> !inSpec.containsName(s) || !inSpec.getColumnSpec(s).getType().isCompatible(DoubleValue.class))
+            .collect(Collectors.toList()));
         return m_outlierModel;
     }
 
@@ -254,6 +265,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     private void saveReviserSettings(final ModelContentWO model) {
         model.addString(CFG_OUTLIER_TREATMENT, m_treatmentOption);
         model.addString(CFG_OUTLIER_REPLACEMENT, m_repStrategy);
+        model.addString(CFG_DETECTION_OPTION, m_detectionOption);
         model.addBoolean(CFG_DOMAIN_POLICY, m_updateDomain);
     }
 
@@ -272,6 +284,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
         // load the reviser settings
         m_treatmentOption = reviserModel.getString(CFG_OUTLIER_TREATMENT);
         m_repStrategy = reviserModel.getString(CFG_OUTLIER_REPLACEMENT);
+        m_detectionOption = reviserModel.getString(CFG_DETECTION_OPTION);
         m_updateDomain = reviserModel.getBoolean(CFG_DOMAIN_POLICY);
 
         // initialize the permitted intervals model

@@ -59,6 +59,7 @@ import org.knime.base.algorithms.outlier.OutlierDetector;
 import org.knime.base.algorithms.outlier.OutlierPortObject;
 import org.knime.base.algorithms.outlier.listeners.Warning;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
+import org.knime.base.algorithms.outlier.options.OutlierDetectionOption;
 import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
 import org.knime.core.data.DataColumnSpec;
@@ -122,8 +123,14 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     /** Config key of the outlier replacement strategy. */
     private static final String CFG_OUTLIER_REPLACEMENT = "replacement-strategy";
 
+    /** Config key of the outlier detection option. */
+    private static final String CFG_DETECTION_OPTION = "detection-option";
+
     /** Config key of the domain policy. */
     private static final String CFG_DOMAIN_POLICY = "update-domain";
+
+    /** Config key of the quartiles algorithm setting. */
+    private static final String CFG_HEURISTIC = "use-heuristic";
 
     /** Default scalar to scale the interquartile range */
     private static final double DEFAULT_SCALAR = 1.5d;
@@ -132,7 +139,10 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     private static final boolean DEFAULT_DOMAIN_POLICY = false;
 
     /** Default memory policy */
-    private static final boolean DEFAULT_MEM_POLICY = true;
+    private static final boolean DEFAULT_MEM_POLICY = false;
+
+    /** Default quartiles algorithm setting. */
+    private static final boolean HEURISTIC_DEFAULT = false;
 
     /** Settings model of the selected groups. */
     private SettingsModelColumnFilter2 m_groupSettings;
@@ -149,6 +159,9 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     /** Settings model holding the information on the outlier treatment. */
     private SettingsModelString m_outlierTreatmentSettings;
 
+    /** Settings model holding the information on the outlier detection options. */
+    private SettingsModelString m_detectionSettings;
+
     /** Settings model holding the information on the outlier replacement strategy. */
     private SettingsModelString m_outlierReplacementSettings;
 
@@ -161,10 +174,13 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     /** Settings model indicating whether the algorithm has to update the domain of the output table, or not. */
     private SettingsModelBoolean m_domainSetting;
 
+    /** Settings model indiciting how the quartiles have to be calculated. */
+    private SettingsModelBoolean m_heuristicSetting;
+
     /** Init the outlier detector node model with one input and output. */
     OutlierDetectorNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE,
-            BufferedDataTable.TYPE, OutlierPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE},
+            new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE, OutlierPortObject.TYPE});
     }
 
     /**
@@ -178,8 +194,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
 
         outDet.execute(in, exec);
 
-        return new PortObject[]{outDet.getOutTable(), outDet.getOutliersTable(), outDet.getSummaryTable(),
-            outDet.getOutlierPort()};
+        return new PortObject[]{outDet.getOutTable(), outDet.getSummaryTable(), outDet.getOutlierPort()};
     }
 
     /**
@@ -197,6 +212,8 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
             .setIQRMultiplier(m_scalarModel.getDoubleValue())//
             .setReplacementStrategy(OutlierReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue()))//
             .setTreatmentOption(OutlierTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue()))//
+            .setDetectionOption(OutlierDetectionOption.getEnum(m_detectionSettings.getStringValue()))//
+            .useHeuristic(m_heuristicSetting.getBooleanValue())//
             .updateDomain(m_domainSetting.getBooleanValue())//
             .build();
     }
@@ -278,6 +295,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         try {
             EstimationType.valueOf(m_estimationSettings.getStringValue());
             OutlierTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue());
+            OutlierDetectionOption.getEnum(m_detectionSettings.getStringValue());
             OutlierReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue());
         } catch (IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage());
@@ -293,7 +311,6 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         final String[] groupColNames = getGroupColNames(inSpec);
 
         return new DataTableSpec[]{OutlierDetector.getOutTableSpec(inSpec),
-            OutlierDetector.getOutliersTableSpec(inSpec, groupColNames, outlierColNames),
             OutlierDetector.getSummaryTableSpec(inSpec, groupColNames),
             OutlierDetector.getOutlierPortSpec(inSpec, groupColNames, outlierColNames)};
     }
@@ -327,9 +344,16 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         if (m_outlierTreatmentSettings != null) {
             m_outlierTreatmentSettings.saveSettingsTo(settings);
         }
+        if (m_detectionSettings != null) {
+            m_detectionSettings.saveSettingsTo(settings);
+        }
         if (m_domainSetting != null) {
             m_domainSetting.saveSettingsTo(settings);
         }
+        if (m_heuristicSetting != null) {
+            m_heuristicSetting.saveSettingsTo(settings);
+        }
+
     }
 
     /**
@@ -387,7 +411,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         init();
         return new SettingsModel[]{m_groupSettings, m_outlierSettings, m_estimationSettings, m_scalarModel,
             m_memorySetting, m_useGroupsSetting, m_outlierReplacementSettings, m_outlierTreatmentSettings,
-            m_domainSetting};
+            m_detectionSettings, m_domainSetting, m_heuristicSetting};
     }
 
     /**
@@ -418,8 +442,14 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         if (m_outlierTreatmentSettings == null) {
             m_outlierTreatmentSettings = createOutlierTreatmentModel();
         }
+        if (m_detectionSettings == null) {
+            m_detectionSettings = createOutlierDetectionModel();
+        }
         if (m_domainSetting == null) {
             m_domainSetting = createDomainModel();
+        }
+        if (m_heuristicSetting == null) {
+            m_heuristicSetting = createHeuristicModel();
         }
     }
 
@@ -498,6 +528,10 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         return new SettingsModelString(CFG_OUTLIER_REPLACEMENT, OutlierReplacementStrategy.values()[0].toString());
     }
 
+    public static SettingsModelString createOutlierDetectionModel() {
+        return new SettingsModelString(CFG_DETECTION_OPTION, OutlierDetectionOption.values()[0].toString());
+    }
+
     /**
      * Returns the settings model informing about the selected domain policy.
      *
@@ -505,6 +539,15 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
      */
     public static SettingsModelBoolean createDomainModel() {
         return new SettingsModelBoolean(CFG_DOMAIN_POLICY, DEFAULT_DOMAIN_POLICY);
+    }
+
+    /**
+     * Returns the settings model informing about the selected heuristic option.
+     *
+     * @return the heuristic settings model
+     */
+    public static SettingsModelBoolean createHeuristicModel() {
+        return new SettingsModelBoolean(CFG_HEURISTIC, HEURISTIC_DEFAULT);
     }
 
     /**
