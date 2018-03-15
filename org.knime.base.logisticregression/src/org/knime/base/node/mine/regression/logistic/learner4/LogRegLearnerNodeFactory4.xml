@@ -30,6 +30,8 @@
         Note, however, that the normalization will lead to different coefficients and statistics of those (standard error, z-score, etc.).
         Hence if you want to use the learner for statistics (obtaining the mentioned statistics) rather than machine learning (obtaining a classifier),
         you should carefully consider if normalization makes sense for your task at hand.
+        If the node outputs missing values for the parameter statistics, this is very likely caused by insufficient normalization and you will have
+        to use the IRLS solver if you can't normalize your data.
             
             <br />
             
@@ -49,7 +51,7 @@
         	converge considerably faster than vanilla stochastic gradient descent. For more information on the algorithm see 
         	the following <a href="https://arxiv.org/abs/1309.2388">paper</a>. It works well for large tables and also tables with
         	more columns than rows. Note that in the later case a regularization prior other than <i>uniform</i> must be selected.
-        	The default learning rate of 0.01 was selected because it often works well but ultimately the optimal learning rate always
+        	The default learning rate of 0.1 was selected because it often works well but ultimately the optimal learning rate always
         	depends on the data and should be treated as a hyperparameter.
         </li>
         </ul>
