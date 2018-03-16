@@ -48,6 +48,8 @@
  */
 package org.knime.workbench.editor2;
 
+import java.util.Arrays;
+
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.FigureCanvas;
 import org.eclipse.gef.editparts.ZoomManager;
@@ -58,39 +60,52 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 
 /**
- * This class came into existence to address AP-5062 which asks for the functionality of CTRL+MouseWheel
- *  should change the zoom level on the workflow editor.
+ * This class came into existence to address AP-5062 which asks for the functionality of CTRL+MouseWheel should change
+ * the zoom level on the workflow editor.
  *
- * There will be one of these listeners per WorkflowEditor instance (since there is a 1-1 between an
- *  instance of such and a ZoomManager instance.)
+ * There will be one of these listeners per WorkflowEditor instance (since there is a 1-1 between an instance of such
+ * and a ZoomManager instance.)
  */
-public class ZoomWheelListener implements MouseWheelListener {
+final class ZoomWheelListener implements MouseWheelListener {
 
-    static private final double SCROLL_ZOOM_MULTIPLIER = 0.02;
-    static private final NodeLogger LOGGER = NodeLogger.getLogger(ZoomWheelListener.class);
+    private static final double SCROLL_ZOOM_MULTIPLIER = 0.02;
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ZoomWheelListener.class);
 
-    private final int platformStateMaskModifier;
-    private final ZoomManager zoomManager;
-    private final FigureCanvas figureCanvas;
+    private final int m_platformStateMaskModifier;
+
+    private final ZoomManager m_zoomManager;
+
+    private final FigureCanvas m_figureCanvas;
 
     /**
      * Default constructor.
+     *
      * @param zm
      * @param fc the canvas from which we want wheel event notifications
      */
-    public ZoomWheelListener (final ZoomManager zm, final FigureCanvas fc) {
+    ZoomWheelListener(final ZoomManager zm, final FigureCanvas fc) {
         if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-            this.platformStateMaskModifier = SWT.COMMAND;
-        }
-        else {
-            this.platformStateMaskModifier = SWT.CTRL;
+            m_platformStateMaskModifier = SWT.COMMAND;
+        } else {
+            m_platformStateMaskModifier = SWT.CTRL;
         }
 
-        this.zoomManager = zm;
+        m_zoomManager = zm;
 
-        this.figureCanvas = fc;
-        this.figureCanvas.addMouseWheelListener(this);
+        m_figureCanvas = fc;
+        m_figureCanvas.addMouseWheelListener(this);
+    }
+
+    private int getIndexOrNearestForZoomLevel(final double zoom) {
+        int rhett = Arrays.binarySearch(m_zoomManager.getZoomLevels(), zoom);
+
+        if (rhett < 0) {
+            rhett += 1;
+            rhett *= -1;
+        }
+
+        return rhett;
     }
 
     /**
@@ -101,11 +116,10 @@ public class ZoomWheelListener implements MouseWheelListener {
             try {
                 ZoomWheelListener outer = ZoomWheelListener.this;
 
-                outer.figureCanvas.removeMouseWheelListener(this);
-            }
-            catch (Exception e) {
+                outer.m_figureCanvas.removeMouseWheelListener(this);
+            } catch (Exception e) {
                 // canvas has likely already gone.
-                LOGGER.debug("We encountered an exception disposing of the zoom wheel listener.");
+                LOGGER.debug("We encountered an exception disposing of the zoom wheel listener.", e);
             }
         });
     }
@@ -115,11 +129,33 @@ public class ZoomWheelListener implements MouseWheelListener {
      */
     @Override
     public void mouseScrolled(final MouseEvent me) {
-        if ((me.stateMask & this.platformStateMaskModifier) == this.platformStateMaskModifier) {
+        if ((me.stateMask & m_platformStateMaskModifier) == m_platformStateMaskModifier) {
             final int scrollEventChange = me.count;
-            final double zoomChange = SCROLL_ZOOM_MULTIPLIER * scrollEventChange;
+            final double newZoom;
 
-            this.zoomManager.setZoom(this.zoomManager.getZoom() + zoomChange);
+            if ((me.stateMask & SWT.ALT) == SWT.ALT) {
+                newZoom = m_zoomManager.getZoom() + (SCROLL_ZOOM_MULTIPLIER * scrollEventChange);
+            } else {
+                final double currentZoom = m_zoomManager.getZoom();
+                int index = getIndexOrNearestForZoomLevel(currentZoom);
+
+                if (scrollEventChange < 0) {
+                    index--;
+                } else {
+                    index++;
+                }
+
+                double[] zoomLevels = m_zoomManager.getZoomLevels();
+                if (index < 0) {
+                    index = 0;
+                } else if (index >= zoomLevels.length) {
+                    index = zoomLevels.length - 1;
+                }
+
+                newZoom = zoomLevels[index];
+            }
+
+            m_zoomManager.setZoom(newZoom);
         }
     }
 

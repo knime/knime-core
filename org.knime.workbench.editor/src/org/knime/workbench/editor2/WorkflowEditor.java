@@ -298,6 +298,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     private static final Color BG_COLOR_DEFAULT =
         Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
 
+    private static final double[] ZOOM_LEVELS = { 0.25, 0.5, 1.0, 1.5, 2.0, 2.5};
+
     /** root model object (=editor input) that is handled by the editor. * */
     private WorkflowManagerUI m_manager;
 
@@ -894,8 +896,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         RootEditPart rep = getGraphicalViewer().getRootEditPart();
         ((WorkflowRootEditPart)rep.getChildren().get(0)).createToolTipHelper(getSite().getShell());
 
-        m_zoomWheelListener = new ZoomWheelListener(this.getZoomManager(),
-                                                    (FigureCanvas)getViewer().getControl());
+        ZoomManager zm = this.getZoomManager();
+        zm.setZoomLevels(ZOOM_LEVELS);
+        m_zoomWheelListener = new ZoomWheelListener(zm, (FigureCanvas)getViewer().getControl());
     }
 
     /**
