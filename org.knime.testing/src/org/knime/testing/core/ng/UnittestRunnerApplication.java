@@ -61,6 +61,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
+import javax.swing.ImageIcon;
+import javax.swing.SwingUtilities;
+
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTaskMirror.JUnitTestRunnerMirror;
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner;
@@ -123,9 +126,13 @@ public class UnittestRunnerApplication implements IApplication {
 
     @Override
     public Object start(final IApplicationContext context) throws Exception {
+        PlatformUI.createDisplay(); // create a display because some tests may need it
+
+        // this is just a hack to initialize AWT in the correct thread under macOS
+        SwingUtilities.invokeLater(() -> new ImageIcon());
+
         ProfileManager.getInstance().applyProfiles();
 
-        PlatformUI.createDisplay(); // create a display because some tests may need it
         context.applicationRunning();
         Object args = context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
 
