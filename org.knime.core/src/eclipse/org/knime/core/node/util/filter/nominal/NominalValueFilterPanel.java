@@ -55,12 +55,12 @@ import java.util.Set;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JCheckBox;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.util.DataColumnSpecTableCellRenderer;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 import org.knime.core.node.util.filter.NameFilterPanel;
@@ -184,7 +184,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
      */
     @Override
     protected TableCellRenderer getTableCellRenderer() {
-        return new DefaultTableCellRenderer();
+        return new DataColumnSpecTableCellRenderer();
     }
 
     /**

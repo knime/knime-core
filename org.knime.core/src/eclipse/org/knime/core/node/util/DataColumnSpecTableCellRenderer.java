@@ -54,6 +54,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.def.StringCell;
 
 /**
  * Renderer that checks if the value being renderer is of type {@link DataColumnSpec} if so it will renderer the
@@ -80,12 +81,15 @@ public class DataColumnSpecTableCellRenderer extends DefaultTableCellRenderer {
             final DataColumnSpec spec = (DataColumnSpec)value;
             setText(spec.getName());
             setIcon(spec.getType().getIcon());
+            setToolTipText(spec.getName());
             if (DataColumnSpecListCellRenderer.isInvalid(spec)) {
                 //this is an invalid data column
                 setBorder(BorderFactory.createLineBorder(Color.red));
             } else {
                 setBorder(null);
             }
+        } else if (value instanceof StringCell) {
+            setToolTipText(value.toString());
         }
         return this;
     }

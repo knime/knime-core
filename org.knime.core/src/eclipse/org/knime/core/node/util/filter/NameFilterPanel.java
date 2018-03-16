@@ -1613,7 +1613,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         gbc.weightx = 1;
         gbc.weighty = 1;
         panel.add(m_filterPanel, gbc);
-        this.add(new JScrollPane(panel));
+        this.add(panel);
         updateTypePanel();
         updateFilterPanel();
     }

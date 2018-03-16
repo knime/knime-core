@@ -115,4 +115,12 @@ public class StringFilterPanel extends NameFilterPanel<String> {
         return new DataColumnSpecTableCellRenderer();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getEntryDescription() {
+        return "values";
+    }
+
 }
