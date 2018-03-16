@@ -51,9 +51,9 @@ package org.knime.base.algorithms.outlier;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import org.knime.base.algorithms.outlier.options.OutlierDetectionOption;
-import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
-import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
+import org.knime.base.algorithms.outlier.options.NumericOutliersDetectionOption;
+import org.knime.base.algorithms.outlier.options.NumericOutliersReplacementStrategy;
+import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -75,15 +75,15 @@ import org.knime.core.node.port.PortTypeRegistry;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class OutlierPortObject extends AbstractSimplePortObject {
+public class NumericOutlierPortObject extends AbstractSimplePortObject {
 
     /** @noreference This class is not intended to be referenced by clients. */
-    public static final class Serializer extends AbstractSimplePortObjectSerializer<OutlierPortObject> {
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<NumericOutlierPortObject> {
     }
 
     /** Convenience accessor for the port type. */
     @SuppressWarnings("hiding")
-    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(OutlierPortObject.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(NumericOutlierPortObject.class);
 
     /** The name of the groups column spec . */
     private static final String GROUP_SUFFIX = " (group)";
@@ -116,7 +116,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     private final String m_summary;
 
     /** The outlier model. */
-    private OutlierModel m_outlierModel;
+    private NumericOutliersModel m_outlierModel;
 
     /** The data types of the group columns . */
     private DataType[] m_groupColTypes;
@@ -134,7 +134,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
     private boolean m_updateDomain;
 
     /** Empty constructor required by super class, should not be used. */
-    public OutlierPortObject() {
+    public NumericOutlierPortObject() {
         m_summary = "";
     }
 
@@ -146,8 +146,8 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      * @param outlierModel ther permitted intervals table
      * @param reviser the outlier reviser
      */
-    OutlierPortObject(final String summary, final DataTableSpec inSpec, final OutlierModel outlierModel,
-        final OutlierReviser reviser) {
+    NumericOutlierPortObject(final String summary, final DataTableSpec inSpec, final NumericOutliersModel outlierModel,
+        final NumericOutliersReviser reviser) {
         // store the summary
         m_summary = summary;
 
@@ -169,11 +169,11 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      *
      * @return properly instantiated outlier reviser builder
      */
-    public OutlierReviser.Builder getOutRevBuilder() {
-        return new OutlierReviser.Builder()//
-            .setTreatmentOption(OutlierTreatmentOption.getEnum(m_treatmentOption))//
-            .setReplacementStrategy(OutlierReplacementStrategy.getEnum(m_repStrategy))//
-            .setDetectionOption(OutlierDetectionOption.getEnum(m_detectionOption))//
+    public NumericOutliersReviser.Builder getOutRevBuilder() {
+        return new NumericOutliersReviser.Builder()//
+            .setTreatmentOption(NumericOutliersTreatmentOption.getEnum(m_treatmentOption))//
+            .setReplacementStrategy(NumericOutliersReplacementStrategy.getEnum(m_repStrategy))//
+            .setDetectionOption(NumericOutliersDetectionOption.getEnum(m_detectionOption))//
             .updateDomain(m_updateDomain);
     }
 
@@ -183,7 +183,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
      * @param inSpec the in spec of the table whose outlier have to be treated
      * @return the filtered outlier model
      */
-    public OutlierModel getOutlierModel(final DataTableSpec inSpec) {
+    public NumericOutliersModel getOutlierModel(final DataTableSpec inSpec) {
         // remove all entries related to outlier columns not existent in the input spec
         m_outlierModel.dropOutliers(Arrays.stream(m_outlierModel.getOutlierColNames())
             .filter(s -> !inSpec.containsName(s) || !inSpec.getColumnSpec(s).getType().isCompatible(DoubleValue.class))
@@ -288,7 +288,7 @@ public class OutlierPortObject extends AbstractSimplePortObject {
         m_updateDomain = reviserModel.getBoolean(CFG_DOMAIN_POLICY);
 
         // initialize the permitted intervals model
-        m_outlierModel = OutlierModel.loadInstance(model.getModelContent(CFG_INTERVALS));
+        m_outlierModel = NumericOutliersModel.loadInstance(model.getModelContent(CFG_INTERVALS));
     }
 
     /**

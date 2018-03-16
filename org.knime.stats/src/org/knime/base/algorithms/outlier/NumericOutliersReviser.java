@@ -63,9 +63,9 @@ import java.util.stream.Collectors;
 
 import org.knime.base.algorithms.outlier.listeners.Warning;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
-import org.knime.base.algorithms.outlier.options.OutlierDetectionOption;
-import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
-import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
+import org.knime.base.algorithms.outlier.options.NumericOutliersDetectionOption;
+import org.knime.base.algorithms.outlier.options.NumericOutliersReplacementStrategy;
+import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
 import org.knime.base.node.preproc.groupby.GroupKey;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -106,7 +106,7 @@ import org.knime.core.node.streamable.StreamableOperatorInternals;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public final class OutlierReviser {
+public final class NumericOutliersReviser {
 
     /** Outlier treatment and output generation routine message. */
     private static final String TREATMENT_MSG = "Treating outliers and generating output";
@@ -115,13 +115,13 @@ public final class OutlierReviser {
     private static final String EMPTY_TABLE_WARNING = "Node created an empty data table";
 
     /** The outlier treatment option. */
-    private final OutlierTreatmentOption m_treatment;
+    private final NumericOutliersTreatmentOption m_treatment;
 
     /** The outlier replacement strategy. */
-    private final OutlierReplacementStrategy m_repStrategy;
+    private final NumericOutliersReplacementStrategy m_repStrategy;
 
     /** The outlier detection option. */
-    private final OutlierDetectionOption m_detectionOption;
+    private final NumericOutliersDetectionOption m_detectionOption;
 
     /** List of listeners receiving warning messages. */
     private final List<WarningListener> m_listeners;
@@ -159,13 +159,13 @@ public final class OutlierReviser {
 
         // Optional parameters
         /** The outlier treatment option. */
-        private OutlierTreatmentOption m_treatment = OutlierTreatmentOption.REPLACE;
+        private NumericOutliersTreatmentOption m_treatment = NumericOutliersTreatmentOption.REPLACE;
 
         /** The outlier replacement strategy. */
-        private OutlierReplacementStrategy m_repStrategy = OutlierReplacementStrategy.INTERVAL_BOUNDARY;
+        private NumericOutliersReplacementStrategy m_repStrategy = NumericOutliersReplacementStrategy.INTERVAL_BOUNDARY;
 
         /** The outlier detection option. */
-        private OutlierDetectionOption m_detectionOption = OutlierDetectionOption.ALL;
+        private NumericOutliersDetectionOption m_detectionOption = NumericOutliersDetectionOption.ALL;
 
         /** Tells whether the domains of the outlier columns have to be update after the computation or not. */
         private boolean m_updateDomain = false;
@@ -178,34 +178,34 @@ public final class OutlierReviser {
         }
 
         /**
-         * Defines how outlier have to be treated, see {@link OutlierTreatmentOption}.
+         * Defines how outlier have to be treated, see {@link NumericOutliersTreatmentOption}.
          *
          * @param treatment the treatment option to be used
          * @return the builder itself
          */
-        public Builder setTreatmentOption(final OutlierTreatmentOption treatment) {
+        public Builder setTreatmentOption(final NumericOutliersTreatmentOption treatment) {
             m_treatment = treatment;
             return this;
         }
 
         /**
-         * Defines the outlier replacement strategy, see {@link OutlierReplacementStrategy}.
+         * Defines the outlier replacement strategy, see {@link NumericOutliersReplacementStrategy}.
          *
          * @param repStrategy the replacement strategy
          * @return the builder itself
          */
-        public Builder setReplacementStrategy(final OutlierReplacementStrategy repStrategy) {
+        public Builder setReplacementStrategy(final NumericOutliersReplacementStrategy repStrategy) {
             m_repStrategy = repStrategy;
             return this;
         }
 
         /**
-         * Defines the outlier detection option, see {@link OutlierDetectionOption}
+         * Defines the outlier detection option, see {@link NumericOutliersDetectionOption}
          *
          * @param detectionOption the detection option
          * @return the builder itself
          */
-        public Builder setDetectionOption(final OutlierDetectionOption detectionOption) {
+        public Builder setDetectionOption(final NumericOutliersDetectionOption detectionOption) {
             m_detectionOption = detectionOption;
             return this;
         }
@@ -226,8 +226,8 @@ public final class OutlierReviser {
          *
          * @return the outlier reviser using the settings provided by the builder
          */
-        public OutlierReviser build() {
-            return new OutlierReviser(this);
+        public NumericOutliersReviser build() {
+            return new NumericOutliersReviser(this);
         }
     }
 
@@ -236,7 +236,7 @@ public final class OutlierReviser {
      *
      * @param b the builder
      */
-    private OutlierReviser(final Builder b) {
+    private NumericOutliersReviser(final Builder b) {
         m_treatment = b.m_treatment;
         m_repStrategy = b.m_repStrategy;
         m_detectionOption = b.m_detectionOption;
@@ -300,7 +300,7 @@ public final class OutlierReviser {
      *
      * @return the outlier treatment option
      */
-    OutlierTreatmentOption getTreatmentOption() {
+    NumericOutliersTreatmentOption getTreatmentOption() {
         return m_treatment;
     }
 
@@ -309,7 +309,7 @@ public final class OutlierReviser {
      *
      * @return the outlier replacement strategy
      */
-    OutlierReplacementStrategy getReplacementStrategy() {
+    NumericOutliersReplacementStrategy getReplacementStrategy() {
         return m_repStrategy;
     }
 
@@ -318,7 +318,7 @@ public final class OutlierReviser {
      *
      * @return the outlier detection option
      */
-    OutlierDetectionOption getRestrictionOption() {
+    NumericOutliersDetectionOption getRestrictionOption() {
         return m_detectionOption;
     }
 
@@ -342,7 +342,7 @@ public final class OutlierReviser {
      * @throws Exception any exception to indicate an error, cancelation.
      */
     public BufferedDataTable treatOutliers(final ExecutionContext exec, final BufferedDataTable in,
-        final OutlierModel outlierModel) throws Exception {
+        final NumericOutliersModel outlierModel) throws Exception {
         final BufferedDataTableRowOutput out =
             new BufferedDataTableRowOutput(exec.createDataContainer(getOutTableSpec(in.getDataTableSpec())));
 
@@ -386,7 +386,7 @@ public final class OutlierReviser {
      * @throws Exception any exception to indicate an error, cancelation.
      */
     public void treatOutliers(final ExecutionContext exec, final RowInput in, final RowOutput out,
-        final OutlierModel outlierModel) throws Exception {
+        final NumericOutliersModel outlierModel) throws Exception {
         treatOutliers(exec, in, out, outlierModel, -1, true);
     }
 
@@ -412,7 +412,7 @@ public final class OutlierReviser {
      * @throws Exception any exception to indicate an error, cancelation.
      */
     private void treatOutliers(final ExecutionContext exec, final RowInput in, final RowOutput out,
-        final OutlierModel outlierModel, final long rowCount, final boolean inStreamingMode) throws Exception {
+        final NumericOutliersModel outlierModel, final long rowCount, final boolean inStreamingMode) throws Exception {
         // start the treatment step
         exec.setMessage(TREATMENT_MSG);
 
@@ -440,7 +440,7 @@ public final class OutlierReviser {
         m_domainUpdater = new OutlierDomainsUpdater();
 
         // treat the outliers with respect to the selected treatment option
-        if (m_treatment == OutlierTreatmentOption.REPLACE) {
+        if (m_treatment == NumericOutliersTreatmentOption.REPLACE) {
             // replaces outliers according to the set replacement strategy
             replaceOutliers(exec.createSubExecutionContext(treatmentProgress), in, out, outlierModel);
         } else {
@@ -471,7 +471,7 @@ public final class OutlierReviser {
      * @throws Exception any exception to indicate an error, cancelation
      */
     private void replaceOutliers(final ExecutionContext exec, final RowInput in, final RowOutput out,
-        final OutlierModel outlierModel) throws Exception {
+        final NumericOutliersModel outlierModel) throws Exception {
         // total number of outlier columns
         final int noOutliers = m_outlierColNames.length;
 
@@ -568,32 +568,32 @@ public final class OutlierReviser {
         }
         double val = ((DoubleValue)cell).getDoubleValue();
         // checks if the value is an outlier
-        if (m_repStrategy == OutlierReplacementStrategy.MISSING && isOutlier(interval, val)) {
+        if (m_repStrategy == NumericOutliersReplacementStrategy.MISSING && isOutlier(interval, val)) {
             return DataType.getMissingCell();
         }
         if (cell.getType() == DoubleCell.TYPE) {
             // sets to the lower interval bound if necessary
-            if (m_detectionOption == OutlierDetectionOption.LOWER_BOUND
-                || m_detectionOption == OutlierDetectionOption.ALL) {
+            if (m_detectionOption == NumericOutliersDetectionOption.LOWER_BOUND
+                || m_detectionOption == NumericOutliersDetectionOption.ALL) {
                 val = Math.max(val, interval[0]);
             }
             // sets to the higher interval bound if necessary
-            if (m_detectionOption == OutlierDetectionOption.UPPER_BOUND
-                || m_detectionOption == OutlierDetectionOption.ALL) {
+            if (m_detectionOption == NumericOutliersDetectionOption.UPPER_BOUND
+                || m_detectionOption == NumericOutliersDetectionOption.ALL) {
                 val = Math.min(val, interval[1]);
             }
             return DoubleCellFactory.create(val);
         } else {
             // sets to the lower interval bound if necessary
             // to the smallest integer inside the permitted interval
-            if (m_detectionOption == OutlierDetectionOption.LOWER_BOUND
-                || m_detectionOption == OutlierDetectionOption.ALL) {
+            if (m_detectionOption == NumericOutliersDetectionOption.LOWER_BOUND
+                || m_detectionOption == NumericOutliersDetectionOption.ALL) {
                 val = Math.max(val, Math.ceil(interval[0]));
             }
             // sets to the higher interval bound if necessary
             // to the largest integer inside the permitted interval
-            if (m_detectionOption == OutlierDetectionOption.UPPER_BOUND
-                || m_detectionOption == OutlierDetectionOption.ALL) {
+            if (m_detectionOption == NumericOutliersDetectionOption.UPPER_BOUND
+                || m_detectionOption == NumericOutliersDetectionOption.ALL) {
                 val = Math.min(val, Math.floor(interval[1]));
             }
             // return the proper DataCell
@@ -610,12 +610,12 @@ public final class OutlierReviser {
      * @return
      */
     private boolean isOutlier(final double[] interval, final double val) {
-        if (val < interval[0] && (m_detectionOption == OutlierDetectionOption.LOWER_BOUND
-            || m_detectionOption == OutlierDetectionOption.ALL)) {
+        if (val < interval[0] && (m_detectionOption == NumericOutliersDetectionOption.LOWER_BOUND
+            || m_detectionOption == NumericOutliersDetectionOption.ALL)) {
             return true;
         }
-        if (val > interval[1] && (m_detectionOption == OutlierDetectionOption.UPPER_BOUND
-            || m_detectionOption == OutlierDetectionOption.ALL)) {
+        if (val > interval[1] && (m_detectionOption == NumericOutliersDetectionOption.UPPER_BOUND
+            || m_detectionOption == NumericOutliersDetectionOption.ALL)) {
             return true;
         }
         return false;
@@ -634,7 +634,7 @@ public final class OutlierReviser {
      * @throws InterruptedException if canceled
      */
     private void treatRows(final ExecutionContext exec, final RowInput in, final RowOutput out,
-        final OutlierModel permIntervalsModel, final long rowCount)
+        final NumericOutliersModel permIntervalsModel, final long rowCount)
         throws CanceledExecutionException, InterruptedException {
         // the in spec
         final DataTableSpec inSpec = in.getDataTableSpec();
@@ -685,8 +685,8 @@ public final class OutlierReviser {
                     }
                 }
             }
-            if ((outlierFreeRow && m_treatment == OutlierTreatmentOption.FILTER)
-                || (!outlierFreeRow && m_treatment == OutlierTreatmentOption.RETAIN)) {
+            if ((outlierFreeRow && m_treatment == NumericOutliersTreatmentOption.FILTER)
+                || (!outlierFreeRow && m_treatment == NumericOutliersTreatmentOption.RETAIN)) {
                 out.push(row);
                 // update the domain if necessary
                 if (m_updateDomain) {
@@ -874,7 +874,7 @@ public final class OutlierReviser {
          * @throws InterruptedException if canceled
          */
         private static BufferedDataTable getTable(final ExecutionContext exec, final DataTableSpec inSpec,
-            final OutlierModel outlierModel, final MemberCounter memberCounter, final MemberCounter outlierRepCounter,
+            final NumericOutliersModel outlierModel, final MemberCounter memberCounter, final MemberCounter outlierRepCounter,
             final MemberCounter missingGroups) throws CanceledExecutionException, InterruptedException {
             // create the data container storing the table
 
@@ -902,7 +902,7 @@ public final class OutlierReviser {
          *
          */
         private static void writeTable(final ExecutionContext exec, final int numCols, final RowOutput rowOutputTable,
-            final OutlierModel outlierModel, final MemberCounter memberCounter, final MemberCounter outlierRepCounter,
+            final NumericOutliersModel outlierModel, final MemberCounter memberCounter, final MemberCounter outlierRepCounter,
             final MemberCounter missingGroups) throws CanceledExecutionException, InterruptedException {
             // create the array storing the rows
             final DataCell[] row = new DataCell[numCols];
@@ -1004,7 +1004,7 @@ public final class OutlierReviser {
         private int m_numCols;
 
         /** The outlier model. */
-        private OutlierModel m_outlierModel;
+        private NumericOutliersModel m_outlierModel;
 
         /** The member counter. */
         private MemberCounter m_memberCounter;
@@ -1023,7 +1023,7 @@ public final class OutlierReviser {
 
         }
 
-        private SummaryInternals(final DataTableSpec inSpec, final OutlierModel outlierModel,
+        private SummaryInternals(final DataTableSpec inSpec, final NumericOutliersModel outlierModel,
             final MemberCounter memberCounter, final MemberCounter outlierRepCounter,
             final MemberCounter missingGroups) {
             super();
@@ -1086,7 +1086,7 @@ public final class OutlierReviser {
                 m_numCols = model.getInt(NUM_COL_KEY);
                 m_warnings = Arrays.stream(model.getStringArray(WARNINGS_KEY))
                     .collect(Collectors.toCollection(LinkedHashSet::new));
-                m_outlierModel = OutlierModel.loadInstance(model.getModelContent(MODEL_KEY));
+                m_outlierModel = NumericOutliersModel.loadInstance(model.getModelContent(MODEL_KEY));
                 m_memberCounter = MemberCounter.loadInstance(model.getModelContent(MEMBER_KEY));
                 m_outlierRepCounter = MemberCounter.loadInstance(model.getModelContent(REP_KEY));
                 m_missingGroupsCounter = MemberCounter.loadInstance(model.getModelContent(MISSING_GROUPS_KEY));

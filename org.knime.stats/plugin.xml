@@ -54,11 +54,11 @@
         </node>
         <node
               category-path="/analytics/statistics"
-              factory-class="org.knime.base.node.stats.outlier.detector.OutlierDetectorNodeFactory">
+              factory-class="org.knime.base.node.stats.outlier.handler.NumericOutliersNodeFactory">
         </node>
         <node
               category-path="/analytics/statistics"
-              factory-class="org.knime.base.node.stats.outlier.applier.OutlierApplyNodeFactory">
+              factory-class="org.knime.base.node.stats.outlier.applier.NumericOutliersApplyNodeFactory">
         </node>
    </extension>
    <extension
@@ -67,8 +67,8 @@
             color="#1eb9dc"
             hidden="true"
             name="Outlier"
-            objectClass="org.knime.base.algorithms.outlier.OutlierPortObject"
-            objectSerializer="org.knime.base.algorithms.outlier.OutlierPortObject$Serializer"
+            objectClass="org.knime.base.algorithms.outlier.NumericOutlierPortObject"
+            objectSerializer="org.knime.base.algorithms.outlier.NumericOutlierPortObject$Serializer"
             specClass="org.knime.core.data.DataTableSpec">
       </portType>
    </extension>

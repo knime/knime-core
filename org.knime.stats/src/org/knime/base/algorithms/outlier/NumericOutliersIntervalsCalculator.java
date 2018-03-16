@@ -79,7 +79,7 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-final class OutlierIntervalsCalculator {
+final class NumericOutliersIntervalsCalculator {
 
     /** The column name policy used by the {@link GroupByTable} */
     private static final ColumnNamePolicy COLUMN_NAME_POLICY = ColumnNamePolicy.AGGREGATION_METHOD_COLUMN_NAME;
@@ -211,12 +211,12 @@ final class OutlierIntervalsCalculator {
         }
 
         /**
-         * Constructs the outlier detector using the settings provided by the builder.
+         * Constructs the {@link NumericOutliersIntervalsCalculator} using the settings provided by the builder.
          *
-         * @return the outlier detector using the settings provided by the builder
+         * @return the {@link NumericOutliersIntervalsCalculator} using the settings provided by the builder
          */
-        OutlierIntervalsCalculator build() {
-            return new OutlierIntervalsCalculator(this);
+        NumericOutliersIntervalsCalculator build() {
+            return new NumericOutliersIntervalsCalculator(this);
         }
     }
 
@@ -225,7 +225,7 @@ final class OutlierIntervalsCalculator {
      *
      * @param b the builder providing all settings
      */
-    private OutlierIntervalsCalculator(final Builder b) {
+    private NumericOutliersIntervalsCalculator(final Builder b) {
         m_outlierColNames = b.m_outlierColNames;
         m_groupColNames = b.m_groupColNames;
         m_estimationType = b.m_estimationType;
@@ -269,7 +269,7 @@ final class OutlierIntervalsCalculator {
      * @return returns the mapping between groups and the permitted intervals for each outlier column
      * @throws Exception if the execution failed, due to internal reasons or cancelation from the outside
      */
-    OutlierModel calculatePermittedIntervals(final BufferedDataTable inTable, final ExecutionContext exec)
+    NumericOutliersModel calculatePermittedIntervals(final BufferedDataTable inTable, final ExecutionContext exec)
         throws Exception {
 
         // the quartile calculation progress
@@ -304,7 +304,7 @@ final class OutlierIntervalsCalculator {
         ExecutionContext intervalExec = exec.createSubExecutionContext(intervalsProgress);
 
         // calculate the permitted intervals and store them to the model
-        final OutlierModel model = calcPermittedIntervals(intervalExec, t.getBufferedTable());
+        final NumericOutliersModel model = calcPermittedIntervals(intervalExec, t.getBufferedTable());
 
         // update the progress and return the permitted intervals
         exec.setProgress(1);
@@ -405,13 +405,13 @@ final class OutlierIntervalsCalculator {
      * @return the outlier model storing the permitted interval
      * @throws CanceledExecutionException if the user has canceled the execution
      */
-    private OutlierModel calcPermittedIntervals(final ExecutionContext exec, final BufferedDataTable quartiles)
+    private NumericOutliersModel calcPermittedIntervals(final ExecutionContext exec, final BufferedDataTable quartiles)
         throws CanceledExecutionException {
         final DataTableSpec quartilesSpec = quartiles.getDataTableSpec();
 
         // the group by table does not rename the group columns so we can use this spec, instead of the
         // in table spec as well (if this is changed the quartilesSpec has to be replaced by the inSpec)
-        final OutlierModel model = new OutlierModel(m_groupColNames, m_outlierColNames);
+        final NumericOutliersModel model = new NumericOutliersModel(m_groupColNames, m_outlierColNames);
 
         // first position where outlier columns can be found
         final int outlierOffset = m_groupColNames.length;

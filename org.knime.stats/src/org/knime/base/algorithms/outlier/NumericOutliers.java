@@ -55,9 +55,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
-import org.knime.base.algorithms.outlier.options.OutlierDetectionOption;
-import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
-import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
+import org.knime.base.algorithms.outlier.options.NumericOutliersDetectionOption;
+import org.knime.base.algorithms.outlier.options.NumericOutliersReplacementStrategy;
+import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -67,32 +67,32 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public final class OutlierDetector {
+public final class NumericOutliers {
 
     /** The intervals calculator. */
-    private final OutlierIntervalsCalculator m_calculator;
+    private final NumericOutliersIntervalsCalculator m_calculator;
 
     /** The outlier reviser. */
-    private final OutlierReviser m_reviser;
+    private final NumericOutliersReviser m_reviser;
 
     /** The port object. */
-    private OutlierPortObject m_outlierPort;
+    private NumericOutlierPortObject m_outlierPort;
 
     /** The table after all outliers have been treated. */
     private BufferedDataTable m_outTable;
 
     /**
-     * Builder of the OutlierDetector.
+     * Builder of the NumericOutliers.
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
     public static class Builder {
 
         /** The builder of the outlier intervals calculator. */
-        private final OutlierIntervalsCalculator.Builder m_intervalsBuilder;
+        private final NumericOutliersIntervalsCalculator.Builder m_intervalsBuilder;
 
         /** The builder of the outlier reviser calculator. */
-        private final OutlierReviser.Builder m_reviserBuilder;
+        private final NumericOutliersReviser.Builder m_reviserBuilder;
 
         /** The list managing the warning listeners. */
         private final List<WarningListener> m_listener;
@@ -103,8 +103,8 @@ public final class OutlierDetector {
          * @param outlierColNames the outlier column names to be used
          */
         public Builder(final String[] outlierColNames) {
-            m_intervalsBuilder = new OutlierIntervalsCalculator.Builder(outlierColNames);
-            m_reviserBuilder = new OutlierReviser.Builder();
+            m_intervalsBuilder = new NumericOutliersIntervalsCalculator.Builder(outlierColNames);
+            m_reviserBuilder = new NumericOutliersReviser.Builder();
             m_listener = new LinkedList<WarningListener>();
         }
 
@@ -121,34 +121,34 @@ public final class OutlierDetector {
         }
 
         /**
-         * Defines how outlier have to be treated, see {@link OutlierTreatmentOption}.
+         * Defines how outlier have to be treated, see {@link NumericOutliersTreatmentOption}.
          *
          * @param treatment the treatment option to be used
          * @return the builder itself
          */
-        public Builder setTreatmentOption(final OutlierTreatmentOption treatment) {
+        public Builder setTreatmentOption(final NumericOutliersTreatmentOption treatment) {
             m_reviserBuilder.setTreatmentOption(treatment);
             return this;
         }
 
         /**
-         * Defines the outlier replacement strategy, see {@link OutlierReplacementStrategy}.
+         * Defines the outlier replacement strategy, see {@link NumericOutliersReplacementStrategy}.
          *
          * @param repStrategy the replacement strategy
          * @return the builder itself
          */
-        public Builder setReplacementStrategy(final OutlierReplacementStrategy repStrategy) {
+        public Builder setReplacementStrategy(final NumericOutliersReplacementStrategy repStrategy) {
             m_reviserBuilder.setReplacementStrategy(repStrategy);
             return this;
         }
 
         /**
-         * Defines the outlier detection option, see {@link OutlierDetectionOption}
+         * Defines the outlier detection option, see {@link NumericOutliersDetectionOption}
          *
          * @param detectionOption the detection option
          * @return the builder itself
          */
-        public Builder setDetectionOption(final OutlierDetectionOption detectionOption) {
+        public Builder setDetectionOption(final NumericOutliersDetectionOption detectionOption) {
             m_reviserBuilder.setDetectionOption(detectionOption);
             return this;
         }
@@ -200,7 +200,7 @@ public final class OutlierDetector {
         }
 
         /**
-         * Adds a listener that gets triggered whenever the {@link OutlierDetector} creates a warning.
+         * Adds a listener that gets triggered whenever the {@link NumericOutliers} creates a warning.
          *
          * @param listener the listener to be added
          * @return the builder itself
@@ -222,12 +222,12 @@ public final class OutlierDetector {
         }
 
         /**
-         * Constructs the outlier detector using the settings provided by the builder.
+         * Constructs the {@link NumericOutliers} using the settings provided by the builder.
          *
-         * @return the outlier detector using the settings provided by the builder
+         * @return the {@link NumericOutliers} using the settings provided by the builder
          */
-        public OutlierDetector build() {
-            return new OutlierDetector(this);
+        public NumericOutliers build() {
+            return new NumericOutliers(this);
         }
 
     }
@@ -237,7 +237,7 @@ public final class OutlierDetector {
      *
      * @param b the builder providing all settings
      */
-    private OutlierDetector(final Builder b) {
+    private NumericOutliers(final Builder b) {
         m_calculator = b.m_intervalsBuilder.build();
         m_reviser = b.m_reviserBuilder.build();
         b.m_listener.forEach(l -> m_reviser.addListener(l));
@@ -259,7 +259,7 @@ public final class OutlierDetector {
      * @return the spec of the outlier free data table
      */
     public static DataTableSpec getOutTableSpec(final DataTableSpec inSpec) {
-        return OutlierReviser.getOutTableSpec(inSpec);
+        return NumericOutliersReviser.getOutTableSpec(inSpec);
     }
 
     /**
@@ -280,7 +280,7 @@ public final class OutlierDetector {
      * @return the spec of the data table storing the summary
      */
     public static DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec, final String[] groupColNames) {
-        return OutlierReviser.getSummaryTableSpec(inSpec, groupColNames);
+        return NumericOutliersReviser.getSummaryTableSpec(inSpec, groupColNames);
     }
 
     /**
@@ -288,7 +288,7 @@ public final class OutlierDetector {
      *
      * @return the outlier port object
      */
-    public OutlierPortObject getOutlierPort() {
+    public NumericOutlierPortObject getOutlierPort() {
         return m_outlierPort;
     }
 
@@ -302,7 +302,7 @@ public final class OutlierDetector {
      */
     public static DataTableSpec getOutlierPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
         final String[] outlierColNames) {
-        return OutlierPortObject.getPortSpec(inSpec, groupColNames, outlierColNames);
+        return NumericOutlierPortObject.getPortSpec(inSpec, groupColNames, outlierColNames);
     }
 
     /**
@@ -324,10 +324,10 @@ public final class OutlierDetector {
         final double treatmentProgress = 1 - intervalsProgress;
 
         // calculate the permitted intervals
-        final OutlierModel permittedIntervals =
+        final NumericOutliersModel permittedIntervals =
             m_calculator.calculatePermittedIntervals(in, exec.createSubExecutionContext(intervalsProgress));
 
-        m_outlierPort = new OutlierPortObject(
+        m_outlierPort = new NumericOutlierPortObject(
             Arrays.stream(permittedIntervals.getOutlierColNames())//
                 .collect(Collectors.joining(", ", "Outlier treatment for columns: ", ""))//
             , in.getDataTableSpec(), permittedIntervals, m_reviser);

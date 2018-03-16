@@ -44,59 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jan 31, 2018 (ortmann): created
+ *   Feb 15, 2018 (ortmann): created
  */
-package org.knime.base.node.stats.outlier.applier;
+package org.knime.base.algorithms.outlier.options;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.util.Arrays;
+
+import org.knime.core.node.util.CheckUtils;
 
 /**
- * Factory class of the outlier apply node.
+ * Enum encoding the replacement strategy.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class OutlierApplyNodeFactory extends NodeFactory<OutlierApplyNodeModel> {
+public enum NumericOutliersReplacementStrategy {
+        /** Indicates that outliers have to be replaced by missing values */
+        MISSING("Missing values"),
 
-    /**
-     * {@inheritDoc}
-     */
+        /** Indicates that outliers have to be replaced by the closest value in the permitted interval */
+        INTERVAL_BOUNDARY("Closest permitted value");
+
+    /** Missing name exception. */
+    private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
+
+    /** IllegalArgumentException prefix. */
+    private static final String ARGUMENT_EXCEPTION_PREFIX = "No NumericOutliersReplacementStrategy constant with name: ";
+
+    private final String m_name;
+
+    NumericOutliersReplacementStrategy(final String name) {
+        m_name = name;
+    }
+
     @Override
-    public OutlierApplyNodeModel createNodeModel() {
-        return new OutlierApplyNodeModel();
+    public String toString() {
+        return m_name;
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the enum for a given String
+     *
+     * @param name the enum name
+     * @return the enum
+     * @throws IllegalArgumentException if the given name is not associated with an REPLACEMENT_STRATEGY value
      */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
+    public static NumericOutliersReplacementStrategy getEnum(final String name) throws IllegalArgumentException {
+        CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<OutlierApplyNodeModel> createNodeView(final int viewIndex, final OutlierApplyNodeModel nodeModel) {
-        return null;
-    }
+        return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return null;
     }
 
 }

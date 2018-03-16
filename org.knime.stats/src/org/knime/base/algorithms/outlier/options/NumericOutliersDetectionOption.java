@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 15, 2018 (ortmann): created
+ *   Mar 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.algorithms.outlier.options;
 
@@ -53,26 +53,30 @@ import java.util.Arrays;
 import org.knime.core.node.util.CheckUtils;
 
 /**
- * Enum encoding the replacement strategy.
+ * Enum allowing to restrict the outlier detection.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public enum OutlierReplacementStrategy {
-        /** Indicates that outliers have to be replaced by missing values */
-        MISSING("Missing values"),
+public enum NumericOutliersDetectionOption {
 
-        /** Indicates that outliers have to be replaced by the closest value in the permitted interval */
-        INTERVAL_BOUNDARY("Closest permitted value");
+        /** Indicates that there is no restriction. */
+        ALL("All outliers"),
+
+        /** Indicates that the outlier detection is restricted to values below the lower bound. */
+        LOWER_BOUND("Outliers below lower bound"),
+
+        /** Indicates that the outlier detection is restricted to values above the upper bound. */
+        UPPER_BOUND("Outliers above upper bound");
 
     /** Missing name exception. */
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
 
     /** IllegalArgumentException prefix. */
-    private static final String ARGUMENT_EXCEPTION_PREFIX = "No OutlierReplacementStrategy constant with name: ";
+    private static final String ARGUMENT_EXCEPTION_PREFIX = "No NumericOutliersDetectionOption constant with name: ";
 
     private final String m_name;
 
-    OutlierReplacementStrategy(final String name) {
+    NumericOutliersDetectionOption(final String name) {
         m_name = name;
     }
 
@@ -84,16 +88,15 @@ public enum OutlierReplacementStrategy {
     /**
      * Returns the enum for a given String
      *
-     * @param name the enum name
+     * @param name enum name
      * @return the enum
-     * @throws IllegalArgumentException if the given name is not associated with an REPLACEMENT_STRATEGY value
+     * @throws IllegalArgumentException if the given name is not associated with an TREATMENT_OPTIONS value
      */
-    public static OutlierReplacementStrategy getEnum(final String name) throws IllegalArgumentException {
+    public static NumericOutliersDetectionOption getEnum(final String name) throws IllegalArgumentException {
         CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
 
         return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
             .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
-
     }
 
 }

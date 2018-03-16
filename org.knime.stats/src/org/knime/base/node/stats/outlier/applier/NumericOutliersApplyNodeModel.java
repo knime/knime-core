@@ -55,9 +55,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.knime.base.algorithms.outlier.OutlierPortObject;
-import org.knime.base.algorithms.outlier.OutlierReviser;
-import org.knime.base.algorithms.outlier.OutlierReviser.SummaryInternals;
+import org.knime.base.algorithms.outlier.NumericOutlierPortObject;
+import org.knime.base.algorithms.outlier.NumericOutliersReviser;
+import org.knime.base.algorithms.outlier.NumericOutliersReviser.SummaryInternals;
 import org.knime.base.algorithms.outlier.listeners.Warning;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
 import org.knime.core.data.DataTableSpec;
@@ -86,14 +86,14 @@ import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 
 /**
- * Model to identify outliers based on interquartile ranges.
+ * Model to identify numeric outliers based on interquartile ranges.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
+final class NumericOutliersApplyNodeModel extends NodeModel implements WarningListener {
 
     /** The missing groups exception prefix. */
-    private static final String MISSING_GROUPS_EXCEPTION_PREFIX = "Outlier detector used group(s) (";
+    private static final String MISSING_GROUPS_EXCEPTION_PREFIX = "Numeric outliers used group(s) (";
 
     /** The missing groups exception suffix. */
     private static final String MISSING_GROUPS_EXCEPTION_SUFFIX =
@@ -118,11 +118,11 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
 
     /** The missing outliers warning suffix. */
     private static final String MISSING_OUTLIERS_WARNING_SUFFIX =
-        ") as specified by the outlier detector is not present or compatible";
+        ") as specified by the numeric outliers is not present or compatible";
 
-    /** Init the outlier detector node model with one input and output. */
-    OutlierApplyNodeModel() {
-        super(new PortType[]{OutlierPortObject.TYPE, BufferedDataTable.TYPE},
+    /** Init the numeric outliers node model with one input and output. */
+    NumericOutliersApplyNodeModel() {
+        super(new PortType[]{NumericOutlierPortObject.TYPE, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE});
     }
 
@@ -131,10 +131,10 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
-        final OutlierPortObject outlierPort = (OutlierPortObject)inData[0];
+        final NumericOutlierPortObject outlierPort = (NumericOutlierPortObject)inData[0];
         final BufferedDataTable in = (BufferedDataTable)inData[1];
 
-        OutlierReviser outlierReviser = outlierPort.getOutRevBuilder().build();
+        NumericOutliersReviser outlierReviser = outlierPort.getOutRevBuilder().build();
         outlierReviser.addListener(this);
 
         final BufferedDataTable outTable =
@@ -151,7 +151,7 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
         final DataTableSpec inTableSpec = (DataTableSpec)inSpecs[1];
 
         // ensure that the in data table contains the group columns that were used to learn the outlier reviser
-        final String[] groupColNames = OutlierPortObject.getGroupColNames(outlierPortSpec);
+        final String[] groupColNames = NumericOutlierPortObject.getGroupColNames(outlierPortSpec);
         if (!Arrays.stream(groupColNames)//
             .allMatch(inTableSpec::containsName)) {
             throw new InvalidSettingsException(Arrays.stream(groupColNames)
@@ -159,7 +159,7 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
         }
 
         // check if the data type for the groups differs between those the model was trained on and the input table
-        final String[] groupSpecNames = OutlierPortObject.getGroupSpecNames(outlierPortSpec);
+        final String[] groupSpecNames = NumericOutlierPortObject.getGroupSpecNames(outlierPortSpec);
         final String[] wrongDataType = IntStream.range(0, groupColNames.length)//
             .filter(i -> outlierPortSpec.getColumnSpec(groupSpecNames[i]).getType() != inTableSpec
                 .getColumnSpec(groupColNames[i]).getType())//
@@ -172,7 +172,7 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
         }
 
         // get the outlier column names stored in the port spec
-        final String[] outlierColNames = OutlierPortObject.getOutlierColNames(outlierPortSpec);
+        final String[] outlierColNames = NumericOutlierPortObject.getOutlierColNames(outlierPortSpec);
 
         // check for outlier columns that are missing the input table
         final List<String> nonExistOrCompatibleOutliers = Arrays.stream(outlierColNames)
@@ -189,8 +189,8 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
             setWarningMessage(nonExistOrCompatibleOutliers.stream()//
                 .collect(Collectors.joining(", ", MISSING_OUTLIERS_WARNING_PREFIX, MISSING_OUTLIERS_WARNING_SUFFIX)));
         }
-        return new PortObjectSpec[]{OutlierReviser.getOutTableSpec(inTableSpec),
-            OutlierReviser.getSummaryTableSpec(inTableSpec, groupColNames)};
+        return new PortObjectSpec[]{NumericOutliersReviser.getOutTableSpec(inTableSpec),
+            NumericOutliersReviser.getSummaryTableSpec(inTableSpec, groupColNames)};
     }
 
     /**
@@ -206,8 +206,8 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
                 throws Exception {
-                final OutlierPortObject outlierPort = (OutlierPortObject)((PortObjectInput)inputs[0]).getPortObject();
-                OutlierReviser outlierReviser = outlierPort.getOutRevBuilder().build();
+                final NumericOutlierPortObject outlierPort = (NumericOutlierPortObject)((PortObjectInput)inputs[0]).getPortObject();
+                NumericOutliersReviser outlierReviser = outlierPort.getOutRevBuilder().build();
                 outlierReviser.treatOutliers(exec, (RowInput)inputs[1], (RowOutput)outputs[0],
                     outlierPort.getOutlierModel(((RowInput)inputs[1]).getDataTableSpec()));
                 m_summaryInternals = outlierReviser.getSummaryInternals();
@@ -245,7 +245,7 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
      */
     @Override
     public MergeOperator createMergeOperator() {
-        return new OutlierReviser.SummaryMerger();
+        return new NumericOutliersReviser.SummaryMerger();
     }
 
     /**
@@ -254,7 +254,7 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
     @Override
     public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
         final PortOutput[] output) throws Exception {
-        SummaryInternals sumInt = ((OutlierReviser.SummaryInternals)internals);
+        SummaryInternals sumInt = ((NumericOutliersReviser.SummaryInternals)internals);
         sumInt.writeTable(exec, (RowOutput)output[1]);
         for (final String warning : sumInt.getWarnings()) {
             setWarningMessage(warning);

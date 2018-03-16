@@ -44,59 +44,60 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 15, 2018 (ortmann): created
+ *   Jan 31, 2018 (ortmann): created
  */
-package org.knime.base.algorithms.outlier.options;
+package org.knime.base.node.stats.outlier.handler;
 
-import java.util.Arrays;
-
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * Enum encoding the outlier treatment.
+ * Factory class of the outlier detector node.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public enum OutlierTreatmentOption {
+public class NumericOutliersNodeFactory extends NodeFactory<NumericOutliersNodeModel> {
 
-        /** Indicates that the outliers have to be replaced. */
-        REPLACE("Replace outlier values"),
-
-        /** Indicates that rows containing outliers have to be removed. */
-        FILTER("Remove outlier rows"),
-
-        /** Indicates that only rows containing outliers have to be retained. */
-        RETAIN("Exclusively retain outlier rows");
-
-    /** Missing name exception. */
-    private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
-
-    /** IllegalArgumentException prefix. */
-    private static final String ARGUMENT_EXCEPTION_PREFIX = "No OutlierTreatmentOption constant with name: ";
-
-    private final String m_name;
-
-    OutlierTreatmentOption(final String name) {
-        m_name = name;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public String toString() {
-        return m_name;
+    public NumericOutliersNodeModel createNodeModel() {
+        return new NumericOutliersNodeModel();
     }
 
     /**
-     * Returns the enum for a given String
-     *
-     * @param name enum name
-     * @return the enum
-     * @throws IllegalArgumentException if the given name is not associated with an TREATMENT_OPTIONS value
+     * {@inheritDoc}
      */
-    public static OutlierTreatmentOption getEnum(final String name) throws IllegalArgumentException {
-        CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
 
-        return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
-            .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<NumericOutliersNodeModel> createNodeView(final int viewIndex,
+        final NumericOutliersNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new NumericOutliersNodeDialogPane();
     }
 
 }

@@ -46,7 +46,7 @@
  * History
  *   Jan 31, 2018 (ortmann): created
  */
-package org.knime.base.node.stats.outlier.detector;
+package org.knime.base.node.stats.outlier.handler;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,13 +55,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
-import org.knime.base.algorithms.outlier.OutlierDetector;
-import org.knime.base.algorithms.outlier.OutlierPortObject;
+import org.knime.base.algorithms.outlier.NumericOutliers;
+import org.knime.base.algorithms.outlier.NumericOutlierPortObject;
 import org.knime.base.algorithms.outlier.listeners.Warning;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
-import org.knime.base.algorithms.outlier.options.OutlierDetectionOption;
-import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
-import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
+import org.knime.base.algorithms.outlier.options.NumericOutliersDetectionOption;
+import org.knime.base.algorithms.outlier.options.NumericOutliersReplacementStrategy;
+import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -88,7 +88,7 @@ import org.knime.core.node.util.filter.InputFilter;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-final class OutlierDetectorNodeModel extends NodeModel implements WarningListener {
+final class NumericOutliersNodeModel extends NodeModel implements WarningListener {
 
     /** Invalid input exception text. */
     private static final String INVALID_INPUT_EXCEPTION = "No double compatible columns in input";
@@ -178,9 +178,9 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     private SettingsModelBoolean m_heuristicSetting;
 
     /** Init the outlier detector node model with one input and output. */
-    OutlierDetectorNodeModel() {
+    NumericOutliersNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
-            new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE, OutlierPortObject.TYPE});
+            new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE, NumericOutlierPortObject.TYPE});
     }
 
     /**
@@ -190,7 +190,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         final BufferedDataTable in = (BufferedDataTable)inData[0];
 
-        final OutlierDetector outDet = createOutlierDetector(in.getDataTableSpec());
+        final NumericOutliers outDet = createOutlierDetector(in.getDataTableSpec());
 
         outDet.execute(in, exec);
 
@@ -203,16 +203,16 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
      * @param inSpec the input data table spec
      * @return an instance of outlier detector
      */
-    private OutlierDetector createOutlierDetector(final DataTableSpec inSpec) {
-        return new OutlierDetector.Builder(getOutlierColNames(inSpec))//
+    private NumericOutliers createOutlierDetector(final DataTableSpec inSpec) {
+        return new NumericOutliers.Builder(getOutlierColNames(inSpec))//
             .addWarningListener(this)//
             .calcInMemory(m_memorySetting.getBooleanValue())//
             .setEstimationType(EstimationType.valueOf(m_estimationSettings.getStringValue()))//
             .setGroupColumnNames(getGroupColNames(inSpec))//
             .setIQRMultiplier(m_scalarModel.getDoubleValue())//
-            .setReplacementStrategy(OutlierReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue()))//
-            .setTreatmentOption(OutlierTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue()))//
-            .setDetectionOption(OutlierDetectionOption.getEnum(m_detectionSettings.getStringValue()))//
+            .setReplacementStrategy(NumericOutliersReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue()))//
+            .setTreatmentOption(NumericOutliersTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue()))//
+            .setDetectionOption(NumericOutliersDetectionOption.getEnum(m_detectionSettings.getStringValue()))//
             .useHeuristic(m_heuristicSetting.getBooleanValue())//
             .updateDomain(m_domainSetting.getBooleanValue())//
             .build();
@@ -294,9 +294,9 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         // test if flow variables violate settings related to enums
         try {
             EstimationType.valueOf(m_estimationSettings.getStringValue());
-            OutlierTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue());
-            OutlierDetectionOption.getEnum(m_detectionSettings.getStringValue());
-            OutlierReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue());
+            NumericOutliersTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue());
+            NumericOutliersDetectionOption.getEnum(m_detectionSettings.getStringValue());
+            NumericOutliersReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue());
         } catch (IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage());
         }
@@ -310,9 +310,9 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         final String[] outlierColNames = getOutlierColNames(inSpec);
         final String[] groupColNames = getGroupColNames(inSpec);
 
-        return new DataTableSpec[]{OutlierDetector.getOutTableSpec(inSpec),
-            OutlierDetector.getSummaryTableSpec(inSpec, groupColNames),
-            OutlierDetector.getOutlierPortSpec(inSpec, groupColNames, outlierColNames)};
+        return new DataTableSpec[]{NumericOutliers.getOutTableSpec(inSpec),
+            NumericOutliers.getSummaryTableSpec(inSpec, groupColNames),
+            NumericOutliers.getOutlierPortSpec(inSpec, groupColNames, outlierColNames)};
     }
 
     /**
@@ -516,7 +516,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
      * @return the outlier treatment settings model
      */
     public static SettingsModelString createOutlierTreatmentModel() {
-        return new SettingsModelString(CFG_OUTLIER_TREATMENT, OutlierTreatmentOption.values()[0].toString());
+        return new SettingsModelString(CFG_OUTLIER_TREATMENT, NumericOutliersTreatmentOption.values()[0].toString());
     }
 
     /**
@@ -525,11 +525,11 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
      * @return the outlier replacement settings model
      */
     public static SettingsModelString createOutlierReplacementModel() {
-        return new SettingsModelString(CFG_OUTLIER_REPLACEMENT, OutlierReplacementStrategy.values()[0].toString());
+        return new SettingsModelString(CFG_OUTLIER_REPLACEMENT, NumericOutliersReplacementStrategy.values()[0].toString());
     }
 
     public static SettingsModelString createOutlierDetectionModel() {
-        return new SettingsModelString(CFG_DETECTION_OPTION, OutlierDetectionOption.values()[0].toString());
+        return new SettingsModelString(CFG_DETECTION_OPTION, NumericOutliersDetectionOption.values()[0].toString());
     }
 
     /**

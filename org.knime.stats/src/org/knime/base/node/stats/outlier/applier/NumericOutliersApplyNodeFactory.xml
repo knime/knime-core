@@ -2,7 +2,7 @@
 <knimeNode xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10"
 	type="Manipulator" icon="../outlier.png">
-	<name>Outlier Detector (Apply)</name>
+	<name>Numeric Outliers (Apply)</name>
 	<shortDescription>
 		Handles outliers for all numerical columns according to the provided model.
 	</shortDescription>
@@ -11,7 +11,7 @@
 		<intro>
 			 <p>
         	This node treats outliers in the input data according to the parameters
-        	of the model input (typically coming from the Outlier-Detector node). It
+        	of the model input (typically coming from the Numeric Outliers node). It
         	detects and treats the outliers of all columns in the input data that are
         	also contained in the model input. The detection of the outliers in the
         	input data relies soley on the rules learned by the model.

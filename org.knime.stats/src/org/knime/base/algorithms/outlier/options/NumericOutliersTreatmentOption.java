@@ -44,60 +44,59 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jan 31, 2018 (ortmann): created
+ *   Feb 15, 2018 (ortmann): created
  */
-package org.knime.base.node.stats.outlier.detector;
+package org.knime.base.algorithms.outlier.options;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.util.Arrays;
+
+import org.knime.core.node.util.CheckUtils;
 
 /**
- * Factory class of the outlier detector node.
+ * Enum encoding the outlier treatment.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class OutlierDetectorNodeFactory extends NodeFactory<OutlierDetectorNodeModel> {
+public enum NumericOutliersTreatmentOption {
 
-    /**
-     * {@inheritDoc}
-     */
+        /** Indicates that the outliers have to be replaced. */
+        REPLACE("Replace outlier values"),
+
+        /** Indicates that rows containing outliers have to be removed. */
+        FILTER("Remove outlier rows"),
+
+        /** Indicates that only rows containing outliers have to be retained. */
+        RETAIN("Exclusively retain outlier rows");
+
+    /** Missing name exception. */
+    private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
+
+    /** IllegalArgumentException prefix. */
+    private static final String ARGUMENT_EXCEPTION_PREFIX = "No NumericOutliersTreatmentOption constant with name: ";
+
+    private final String m_name;
+
+    NumericOutliersTreatmentOption(final String name) {
+        m_name = name;
+    }
+
     @Override
-    public OutlierDetectorNodeModel createNodeModel() {
-        return new OutlierDetectorNodeModel();
+    public String toString() {
+        return m_name;
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the enum for a given String
+     *
+     * @param name enum name
+     * @return the enum
+     * @throws IllegalArgumentException if the given name is not associated with an TREATMENT_OPTIONS value
      */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
+    public static NumericOutliersTreatmentOption getEnum(final String name) throws IllegalArgumentException {
+        CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<OutlierDetectorNodeModel> createNodeView(final int viewIndex,
-        final OutlierDetectorNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new OutlierDetectorNodeDialogPane();
+        return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
     }
 
 }

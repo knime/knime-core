@@ -2,10 +2,9 @@
 <knimeNode xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10"
 	type="Manipulator" icon="../outlier.png">
-	<name>Outlier Detector</name>
+	<name>Numeric Outliers</name>
 	<shortDescription>
-		Detects and handles outliers for all numerical
-		columns.
+		Detects and handles outliers for all numerical columns.
 	</shortDescription>
 
 	<fullDescription>

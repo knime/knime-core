@@ -70,7 +70,7 @@ import org.knime.core.node.ModelContentWO;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public final class OutlierModel {
+public final class NumericOutliersModel {
 
     /** Missing group column exception prefix. */
     private static final String MISSING_GROUP_EXECPTION_PREFIX = "Table does not contain group column ";
@@ -115,7 +115,7 @@ public final class OutlierModel {
      * @param groupColNames the group column names
      * @param outlierColNames the outlier column names
      */
-    OutlierModel(final String[] groupColNames, final String[] outlierColNames) {
+    NumericOutliersModel(final String[] groupColNames, final String[] outlierColNames) {
         // store the group column names
         m_groupColNames = groupColNames;
 
@@ -135,9 +135,9 @@ public final class OutlierModel {
      * @throws InvalidSettingsException if the outliers defined by the model content differs from the outliers defining
      *             the intervals
      */
-    static OutlierModel loadInstance(final ModelContentRO model) throws InvalidSettingsException {
-        final OutlierModel outlierModel =
-            new OutlierModel(model.getStringArray(CFG_GROUP_COL_NAMES), model.getStringArray(CFG_OUTLIER_COL_NAMES));
+    static NumericOutliersModel loadInstance(final ModelContentRO model) throws InvalidSettingsException {
+        final NumericOutliersModel outlierModel = new NumericOutliersModel(model.getStringArray(CFG_GROUP_COL_NAMES),
+            model.getStringArray(CFG_OUTLIER_COL_NAMES));
         outlierModel.loadModel(model.getModelContent(CFG_DATA));
         return outlierModel;
     }
