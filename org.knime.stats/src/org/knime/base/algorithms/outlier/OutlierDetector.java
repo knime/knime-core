@@ -317,12 +317,11 @@ public final class OutlierDetector {
         // the intervals calculation progress
         final double intervalsProgress;
         if (m_calculator.inMemory()) {
-            intervalsProgress = 0.4;
+            intervalsProgress = 0.6;
         } else {
             intervalsProgress = 0.8;
         }
-        final double writeProgress = 0.02;
-        final double treatmentProgrss = 1 - intervalsProgress - writeProgress;
+        final double treatmentProgress = 1 - intervalsProgress;
 
         // calculate the permitted intervals
         final OutlierModel permittedIntervals =
@@ -334,7 +333,7 @@ public final class OutlierDetector {
             , in.getDataTableSpec(), permittedIntervals, m_reviser);
 
         // treat the outliers
-        m_outTable = m_reviser.treatOutliers(exec.createSubExecutionContext(treatmentProgrss), in, permittedIntervals);
+        m_outTable = m_reviser.treatOutliers(exec.createSubExecutionContext(treatmentProgress), in, permittedIntervals);
 
         exec.setProgress(1);
     }

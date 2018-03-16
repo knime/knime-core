@@ -92,6 +92,34 @@ import org.knime.core.node.streamable.StreamableOperatorInternals;
  */
 final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
 
+    /** The missing groups exception prefix. */
+    private static final String MISSING_GROUPS_EXCEPTION_PREFIX = "Outlier detector used group(s) (";
+
+    /** The missing groups exception suffix. */
+    private static final String MISSING_GROUPS_EXCEPTION_SUFFIX =
+        ") which does not, or only partially, exist in the table";
+
+    /** The groups compatibility exception prefix. */
+    private static final String GROUPS_COMPATIBILITY_EXCEPTION_PREFIX = "The data type for column(s) (";
+
+    /** The groups compatibility exception suffix. */
+    private static final String GROUPS_COMPATIBILITY_EXCEPTION_SUFFIX =
+        ") differs between the input table and that the model was created from";
+
+    /** The missing outliers exception prefix. */
+    private static final String MISSING_OUTLIERS_EXCEPTION_PREFIX = "The model was created for column(s) (";
+
+    /** The missing outliers exception suffix. */
+    private static final String MISSING_OUTLIERS_EXCEPTION_SUFFIX =
+        ") which does not exist in the table or is not compatible";
+
+    /** The missing outliers warning prefix. */
+    private static final String MISSING_OUTLIERS_WARNING_PREFIX = "Column(s) (";
+
+    /** The missing outliers warning suffix. */
+    private static final String MISSING_OUTLIERS_WARNING_SUFFIX =
+        ") as specified by the outlier detector is not present or compatible";
+
     /** Init the outlier detector node model with one input and output. */
     OutlierApplyNodeModel() {
         super(new PortType[]{OutlierPortObject.TYPE, BufferedDataTable.TYPE},
@@ -126,8 +154,8 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
         final String[] groupColNames = OutlierPortObject.getGroupColNames(outlierPortSpec);
         if (!Arrays.stream(groupColNames)//
             .allMatch(inTableSpec::containsName)) {
-            throw new InvalidSettingsException(Arrays.stream(groupColNames).collect(Collectors.joining(", ",
-                "Outlier detector used group(s) (", ") which does not, or only partially, exist in the table")));
+            throw new InvalidSettingsException(Arrays.stream(groupColNames)
+                .collect(Collectors.joining(", ", MISSING_GROUPS_EXCEPTION_PREFIX, MISSING_GROUPS_EXCEPTION_SUFFIX)));
         }
 
         // check if the data type for the groups differs between those the model was trained on and the input table
@@ -139,8 +167,8 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
             .toArray(String[]::new);
         if (wrongDataType.length != 0) {
             throw new InvalidSettingsException(Arrays.stream(wrongDataType)//
-                .collect(Collectors.joining(", ", "The data type for column(s) (",
-                    ") differs between the input table and that the model was created from")));
+                .collect(Collectors.joining(", ", GROUPS_COMPATIBILITY_EXCEPTION_PREFIX,
+                    GROUPS_COMPATIBILITY_EXCEPTION_SUFFIX)));
         }
 
         // get the outlier column names stored in the port spec
@@ -154,13 +182,12 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
         // if all of them  are missing throw an exception
         if (outlierColNames.length == nonExistOrCompatibleOutliers.size()) {
             throw new InvalidSettingsException(Arrays.stream(outlierColNames)//
-                .collect(Collectors.joining(", ", "The model was created for columns (",
-                    ") which does not exist in the table or is not compatible")));
+                .collect(
+                    Collectors.joining(", ", MISSING_OUTLIERS_EXCEPTION_PREFIX, MISSING_OUTLIERS_EXCEPTION_SUFFIX)));
         }
         if (nonExistOrCompatibleOutliers.size() > 0) {
             setWarningMessage(nonExistOrCompatibleOutliers.stream()//
-                .collect(Collectors.joining(", ", "Column(s) (",
-                    ") as specified by the outlier detector is not present or compatible.")));
+                .collect(Collectors.joining(", ", MISSING_OUTLIERS_WARNING_PREFIX, MISSING_OUTLIERS_WARNING_SUFFIX)));
         }
         return new PortObjectSpec[]{OutlierReviser.getOutTableSpec(inTableSpec),
             OutlierReviser.getSummaryTableSpec(inTableSpec, groupColNames)};
@@ -181,7 +208,6 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
                 throws Exception {
                 final OutlierPortObject outlierPort = (OutlierPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 OutlierReviser outlierReviser = outlierPort.getOutRevBuilder().build();
-                outlierReviser.addListener(OutlierApplyNodeModel.this);
                 outlierReviser.treatOutliers(exec, (RowInput)inputs[1], (RowOutput)outputs[0],
                     outlierPort.getOutlierModel(((RowInput)inputs[1]).getDataTableSpec()));
                 m_summaryInternals = outlierReviser.getSummaryInternals();
@@ -228,7 +254,11 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
     @Override
     public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
         final PortOutput[] output) throws Exception {
-        output[1] = ((OutlierReviser.SummaryInternals)internals).getTable(exec);
+        SummaryInternals sumInt = ((OutlierReviser.SummaryInternals)internals);
+        sumInt.writeTable(exec, (RowOutput)output[1]);
+        for (final String warning : sumInt.getWarnings()) {
+            setWarningMessage(warning);
+        }
     }
 
     /**

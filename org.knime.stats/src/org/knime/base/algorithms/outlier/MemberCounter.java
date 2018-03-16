@@ -83,7 +83,7 @@ final class MemberCounter {
     /**
      *
      */
-    private static final String GROUP_COUNT_KEY = "group-count";
+    private static final String GROUP_COUNT_KEY = "group-count_";
 
     /**
      *
@@ -198,13 +198,14 @@ final class MemberCounter {
      * @param model the model content to save to
      */
     void saveModel(final ModelContentWO model) {
-        int pos = 0;
+        int gInd = 0;
         for (Entry<String, Map<GroupKey, Integer>> entry : m_groupCounts.entrySet()) {
-            final ModelContentWO colSettings = model.addModelContent(OUT_COL_KEY + pos++);
+            final ModelContentWO colSettings = model.addModelContent(OUT_COL_KEY + gInd++);
             colSettings.addString(OUT_COL_NAME_KEY, entry.getKey());
             final ModelContentWO groupCounts = colSettings.addModelContent(GROUP_COUNTS_KEY);
+            int oInd = 0;
             for (Entry<GroupKey, Integer> gCountEntry : entry.getValue().entrySet()) {
-                final ModelContentWO groupCount = groupCounts.addModelContent(GROUP_COUNT_KEY);
+                final ModelContentWO groupCount = groupCounts.addModelContent(GROUP_COUNT_KEY + oInd++);
                 groupCount.addDataCellArray(GROUP_KEY_KEY, gCountEntry.getKey().getGroupVals());
                 groupCount.addInt(GROUP_VAL_KEY, gCountEntry.getValue());
             }
@@ -220,7 +221,10 @@ final class MemberCounter {
      */
     @SuppressWarnings("unchecked")
     static MemberCounter loadInstance(final ModelContentRO model) throws InvalidSettingsException {
+        // init the counter
         final MemberCounter counter = new MemberCounter();
+
+        // load all the data
         final Enumeration<ModelContentRO> colSettings = model.children();
         while (colSettings.hasMoreElements()) {
             final ModelContentRO colSetting = colSettings.nextElement();
@@ -233,6 +237,8 @@ final class MemberCounter {
                 counter.incrementMemberCount(outlierColName, key, count);
             }
         }
+
+        // return the counter
         return counter;
     }
 
