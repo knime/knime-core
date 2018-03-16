@@ -48,22 +48,54 @@
  */
 package org.knime.base.algorithms.outlier;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.knime.base.node.preproc.groupby.GroupKey;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.IntCell.IntCellFactory;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 
 /**
  * Counts the number of members for each column and group combination.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-final class GroupsMemberCounterPerColumn {
+final class MemberCounter {
+
+    /**
+     *
+     */
+    private static final String GROUP_VAL_KEY = "group-val";
+
+    /**
+     *
+     */
+    private static final String GROUP_KEY_KEY = "group-key";
+
+    /**
+     *
+     */
+    private static final String GROUP_COUNT_KEY = "group-count";
+
+    /**
+     *
+     */
+    private static final String GROUP_COUNTS_KEY = "group-counts";
+
+    /**
+     *
+     */
+    private static final String OUT_COL_NAME_KEY = "outlier-column-name";
+
+    private static final String OUT_COL_KEY = "outlier-column_";
 
     /** Map storing the number of members for each column respective the different groups. */
     final Map<String, Map<GroupKey, Integer>> m_groupCounts;
@@ -71,8 +103,25 @@ final class GroupsMemberCounterPerColumn {
     /**
      * Constructor.
      */
-    GroupsMemberCounterPerColumn() {
+    MemberCounter() {
         m_groupCounts = new LinkedHashMap<>();
+    }
+
+    /**
+     * Constructs the member counter by merging various counters.
+     *
+     * @param array of member counters to be merged
+     */
+    static MemberCounter merge(final MemberCounter[] counters) {
+        final MemberCounter mCounter = new MemberCounter();
+        for (final MemberCounter counter : counters) {
+            for (Entry<String, Map<GroupKey, Integer>> oEntry : counter.m_groupCounts.entrySet()) {
+                for (Entry<GroupKey, Integer> cEntry : oEntry.getValue().entrySet()) {
+                    mCounter.incrementMemberCount(oEntry.getKey(), cEntry.getKey(), cEntry.getValue());
+                }
+            }
+        }
+        return mCounter;
     }
 
     /**
@@ -97,12 +146,23 @@ final class GroupsMemberCounterPerColumn {
     }
 
     /**
-     * Increment the member count for the given outlier column - key pair.
+     * Increments the member count for the given outlier column - key pair by one.
      *
      * @param outlierColName the outlier column name
      * @param key the key of the group whose count needs to be incremented
      */
     void incrementMemberCount(final String outlierColName, final GroupKey key) {
+        incrementMemberCount(outlierColName, key, 1);
+    }
+
+    /**
+     * Increments the member count for the given outlier column - key pair by the provided value.
+     *
+     * @param outlierColName the outlier column name
+     * @param key the key of the group whose count needs to be incremented
+     * @param increment the increment value
+     */
+    private void incrementMemberCount(final String outlierColName, final GroupKey key, final int increment) {
         if (!m_groupCounts.containsKey(outlierColName)) {
             m_groupCounts.put(outlierColName, new HashMap<GroupKey, Integer>());
         }
@@ -112,7 +172,7 @@ final class GroupsMemberCounterPerColumn {
             map.put(key, 0);
         }
         // increment the value
-        map.put(key, map.get(key) + 1);
+        map.put(key, map.get(key) + increment);
     }
 
     /**
@@ -130,6 +190,50 @@ final class GroupsMemberCounterPerColumn {
             }
         }
         return IntCellFactory.create(0);
+    }
+
+    /**
+     * Saves the member counter to the provided model content.
+     *
+     * @param model the model content to save to
+     */
+    void saveModel(final ModelContentWO model) {
+        int pos = 0;
+        for (Entry<String, Map<GroupKey, Integer>> entry : m_groupCounts.entrySet()) {
+            final ModelContentWO colSettings = model.addModelContent(OUT_COL_KEY + pos++);
+            colSettings.addString(OUT_COL_NAME_KEY, entry.getKey());
+            final ModelContentWO groupCounts = colSettings.addModelContent(GROUP_COUNTS_KEY);
+            for (Entry<GroupKey, Integer> gCountEntry : entry.getValue().entrySet()) {
+                final ModelContentWO groupCount = groupCounts.addModelContent(GROUP_COUNT_KEY);
+                groupCount.addDataCellArray(GROUP_KEY_KEY, gCountEntry.getKey().getGroupVals());
+                groupCount.addInt(GROUP_VAL_KEY, gCountEntry.getValue());
+            }
+        }
+    }
+
+    /**
+     * Load a member counter from the provided model content.
+     *
+     * @param model the model content
+     * @return the proper initialized member counter
+     * @throws InvalidSettingsException if the input settings cannot be parsed
+     */
+    @SuppressWarnings("unchecked")
+    static MemberCounter loadInstance(final ModelContentRO model) throws InvalidSettingsException {
+        final MemberCounter counter = new MemberCounter();
+        final Enumeration<ModelContentRO> colSettings = model.children();
+        while (colSettings.hasMoreElements()) {
+            final ModelContentRO colSetting = colSettings.nextElement();
+            final String outlierColName = colSetting.getString(OUT_COL_NAME_KEY);
+            final Enumeration<ModelContentRO> groupCounts = colSetting.getModelContent(GROUP_COUNTS_KEY).children();
+            while (groupCounts.hasMoreElements()) {
+                final ModelContentRO groupCount = groupCounts.nextElement();
+                final GroupKey key = new GroupKey(groupCount.getDataCellArray(GROUP_KEY_KEY));
+                final int count = groupCount.getInt(GROUP_VAL_KEY);
+                counter.incrementMemberCount(outlierColName, key, count);
+            }
+        }
+        return counter;
     }
 
 }

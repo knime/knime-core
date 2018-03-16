@@ -57,6 +57,7 @@ import java.util.stream.IntStream;
 
 import org.knime.base.algorithms.outlier.OutlierPortObject;
 import org.knime.base.algorithms.outlier.OutlierReviser;
+import org.knime.base.algorithms.outlier.OutlierReviser.SummaryInternals;
 import org.knime.base.algorithms.outlier.listeners.Warning;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
 import org.knime.core.data.DataTableSpec;
@@ -72,6 +73,17 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.MergeOperator;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
 
 /**
  * Model to identify outliers based on interquartile ranges.
@@ -97,8 +109,9 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
         OutlierReviser outlierReviser = outlierPort.getOutRevBuilder().build();
         outlierReviser.addListener(this);
 
-        outlierReviser.treatOutliers(exec, in, outlierPort.getOutlierModel(in.getDataTableSpec()));
-        return new PortObject[]{outlierReviser.getOutTable(), outlierReviser.getSummaryTable()};
+        final BufferedDataTable outTable =
+            outlierReviser.treatOutliers(exec, in, outlierPort.getOutlierModel(in.getDataTableSpec()));
+        return new PortObject[]{outTable, outlierReviser.getSummaryTable()};
     }
 
     /**
@@ -151,6 +164,71 @@ final class OutlierApplyNodeModel extends NodeModel implements WarningListener {
         }
         return new PortObjectSpec[]{OutlierReviser.getOutTableSpec(inTableSpec),
             OutlierReviser.getSummaryTableSpec(inTableSpec, groupColNames)};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            SummaryInternals m_summaryInternals;
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                final OutlierPortObject outlierPort = (OutlierPortObject)((PortObjectInput)inputs[0]).getPortObject();
+                OutlierReviser outlierReviser = outlierPort.getOutRevBuilder().build();
+                outlierReviser.addListener(OutlierApplyNodeModel.this);
+                outlierReviser.treatOutliers(exec, (RowInput)inputs[1], (RowOutput)outputs[0],
+                    outlierPort.getOutlierModel(((RowInput)inputs[1]).getDataTableSpec()));
+                m_summaryInternals = outlierReviser.getSummaryInternals();
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public StreamableOperatorInternals saveInternals() {
+                return m_summaryInternals;
+            }
+
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE, InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED, OutputPortRole.NONDISTRIBUTED};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MergeOperator createMergeOperator() {
+        return new OutlierReviser.SummaryMerger();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
+        final PortOutput[] output) throws Exception {
+        output[1] = ((OutlierReviser.SummaryInternals)internals).getTable(exec);
     }
 
     /**

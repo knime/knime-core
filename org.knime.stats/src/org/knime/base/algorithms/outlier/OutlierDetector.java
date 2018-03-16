@@ -78,6 +78,9 @@ public final class OutlierDetector {
     /** The port object. */
     private OutlierPortObject m_outlierPort;
 
+    /** The table after all outliers have been treated. */
+    private BufferedDataTable m_outTable;
+
     /**
      * Builder of the OutlierDetector.
      *
@@ -246,7 +249,7 @@ public final class OutlierDetector {
      * @return the outlier free data table
      */
     public BufferedDataTable getOutTable() {
-        return m_reviser.getOutTable();
+        return m_outTable;
     }
 
     /**
@@ -331,7 +334,7 @@ public final class OutlierDetector {
             , in.getDataTableSpec(), permittedIntervals, m_reviser);
 
         // treat the outliers
-        m_reviser.treatOutliers(exec.createSubExecutionContext(treatmentProgrss), in, permittedIntervals);
+        m_outTable = m_reviser.treatOutliers(exec.createSubExecutionContext(treatmentProgrss), in, permittedIntervals);
 
         exec.setProgress(1);
     }

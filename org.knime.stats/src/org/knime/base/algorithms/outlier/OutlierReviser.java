@@ -48,6 +48,10 @@
  */
 package org.knime.base.algorithms.outlier;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -71,7 +75,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
@@ -81,10 +84,20 @@ import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.LongCell.LongCellFactory;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.def.StringCell.StringCellFactory;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.MergeOperator;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
 
 /**
  * The algorithm to treat outliers based on the permitted intervals provided.
@@ -114,9 +127,6 @@ public final class OutlierReviser {
     /** The outlier column names. */
     private String[] m_outlierColNames;
 
-    /** The outlier free table. */
-    private BufferedDataTable m_outTable;
-
     /** The table storing the summary. */
     private BufferedDataTable m_summaryTable;
 
@@ -124,13 +134,19 @@ public final class OutlierReviser {
     private final boolean m_updateDomain;
 
     /** Counter storing the number of outliers per column and group. */
-    private GroupsMemberCounterPerColumn m_outlierRepCounter;
+    private MemberCounter m_outlierRepCounter;
 
     /** Counter storing the number of members (non-missings) per column and group. */
-    private GroupsMemberCounterPerColumn m_memberCounter;
+    private MemberCounter m_memberCounter;
 
     /** Counter storing for each missing group the number of members per column. */
-    private GroupsMemberCounterPerColumn m_missingGroupsCounter;
+    private MemberCounter m_missingGroupsCounter;
+
+    /** Responsible to update the domain. */
+    private OutlierDomainsUpdater m_domainUpdater;
+
+    /** The summary internals. */
+    private SummaryInternals m_summaryInterals;
 
     /**
      * Builder of the OutlierReviser.
@@ -238,15 +254,6 @@ public final class OutlierReviser {
     }
 
     /**
-     * Returns the outlier free data table.
-     *
-     * @return the outlier free data table
-     */
-    public BufferedDataTable getOutTable() {
-        return m_outTable;
-    }
-
-    /**
      * Returns the spec of the outlier free data table.
      *
      * @param inSpec the spec of the input data table
@@ -275,6 +282,15 @@ public final class OutlierReviser {
      */
     public static DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec, final String[] groupColNames) {
         return OutlierSummaryTable.getSpec(inSpec, groupColNames);
+    }
+
+    /**
+     * Returns the summary internals. Only set if in streamable mode.
+     *
+     * @return the summary internals
+     */
+    public SummaryInternals getSummaryInternals() {
+        return m_summaryInterals;
     }
 
     /**
@@ -314,6 +330,45 @@ public final class OutlierReviser {
     }
 
     /**
+     * Removes/Retains all rows from the input table that contain outliers. Additionally, the outlier and group related
+     * counts, and the new domains are calculated.
+     *
+     * @param exec the execution context
+     * @param in the input data table
+     * @param outlierModel the model storing the permitted intervals
+     * @return returns the data table whose outliers have been treated
+     * @throws Exception any exception to indicate an error, cancelation.
+     */
+    public BufferedDataTable treatOutliers(final ExecutionContext exec, final BufferedDataTable in,
+        final OutlierModel outlierModel) throws Exception {
+        final BufferedDataTableRowOutput out =
+            new BufferedDataTableRowOutput(exec.createDataContainer(getOutTableSpec(in.getDataTableSpec())));
+
+        // treat the outliers
+        treatOutliers(exec, new DataTableRowInput(in), out, outlierModel, in.size(), false);
+
+        // store the result
+        final BufferedDataTable outTable;
+
+        // update the domain if necessary. This cannot be done if we are in streaming mode
+        if (updateDomain()) {
+            outTable = m_domainUpdater.updateDomain(exec, out.getDataTable());
+            m_domainUpdater = null;
+        } else {
+            outTable = out.getDataTable();
+        }
+
+        // set empty table message only if not both tables are empty
+        if (outTable.size() == 0 && m_summaryTable.size() > 0) {
+            warnListeners(EMPTY_TABLE_WARNING);
+        }
+
+        // return the table
+        return outTable;
+
+    }
+
+    /**
      * Clears the input data table of its outliers according to the defined outlier treatment settings.
      *
      * <p>
@@ -323,12 +378,39 @@ public final class OutlierReviser {
      * </p>
      *
      * @param exec the execution context
-     * @param in the data table whose outliers have to be treated
+     * @param in the row input whose outliers have to be treated
+     * @param out the row output whose outliers have been treated
      * @param outlierModel the model storing the permitted intervals
-     * @throws CanceledExecutionException if the user has canceled the execution
+     * @throws Exception any exception to indicate an error, cancelation.
      */
-    public void treatOutliers(final ExecutionContext exec, final BufferedDataTable in, final OutlierModel outlierModel)
-        throws CanceledExecutionException {
+    public void treatOutliers(final ExecutionContext exec, final RowInput in, final RowOutput out,
+        final OutlierModel outlierModel) throws Exception {
+        treatOutliers(exec, in, out, outlierModel, -1, true);
+    }
+
+    /**
+     * Clears the input data table of its outliers according to the defined outlier treatment settings.
+     *
+     * <p>
+     * Given that outliers have to be replaced, each of the cells containing an outlier is either replaced by an missing
+     * value or set to value of the closest value within the permitted interval. Otherwise all rows containing an
+     * outlier are removed from the input data table.
+     * </p>
+     * <p>
+     * If the node is executed in streaming mode instead of the summary table a summary internals object will be
+     * created.
+     * </p>
+     *
+     * @param exec the execution context
+     * @param in the row input whose outliers have to be treated
+     * @param out the row output whose outliers have been treated
+     * @param outlierModel the model storing the permitted intervals
+     * @param the row count of the row input
+     * @param inStreamingMode tells whether this method is executed in streaming mode, or not
+     * @throws Exception any exception to indicate an error, cancelation.
+     */
+    private void treatOutliers(final ExecutionContext exec, final RowInput in, final RowOutput out,
+        final OutlierModel outlierModel, final long rowCount, final boolean inStreamingMode) throws Exception {
         // start the treatment step
         exec.setMessage(TREATMENT_MSG);
 
@@ -337,31 +419,31 @@ public final class OutlierReviser {
 
         // counters for the number of non-missing values and outliers contained in each outlier column respective
         // the different groups
-        m_outlierRepCounter = new GroupsMemberCounterPerColumn();
-        m_memberCounter = new GroupsMemberCounterPerColumn();
-        m_missingGroupsCounter = new GroupsMemberCounterPerColumn();
+        m_outlierRepCounter = new MemberCounter();
+        m_memberCounter = new MemberCounter();
+        m_missingGroupsCounter = new MemberCounter();
 
         // the domains updater
-        final OutlierDomainsUpdater domainsUpdater = new OutlierDomainsUpdater();
+        m_domainUpdater = new OutlierDomainsUpdater();
 
         // treat the outliers with respect to the selected treatment option
         if (m_treatment == OutlierTreatmentOption.REPLACE) {
             // replaces outliers according to the set replacement strategy
-            replaceOutliers(exec.createSubExecutionContext(.9), in, outlierModel, domainsUpdater);
+            replaceOutliers(exec.createSubExecutionContext(.9), in, out, outlierModel);
         } else {
             // we remove/retain all columns containing at least one outlier
-            treatRows(exec.createSubExecutionContext(.9), in, outlierModel, domainsUpdater);
+            treatRows(exec.createSubExecutionContext(.9), in, out, outlierModel, rowCount);
         }
 
-        // reset the domain
-        if (m_updateDomain) {
-            m_outTable = domainsUpdater.updateDomain(exec, m_outTable);
+        if (inStreamingMode) {
+            // set the summary internals
+            m_summaryInterals = new SummaryInternals(in.getDataTableSpec(), outlierModel, m_memberCounter,
+                m_outlierRepCounter, m_missingGroupsCounter);
+        } else {
+            // set the summary table
+            m_summaryTable = OutlierSummaryTable.getTable(exec.createSubExecutionContext(0.05), in.getDataTableSpec(),
+                outlierModel, m_memberCounter, m_outlierRepCounter, m_missingGroupsCounter).getDataTable();
         }
-
-        // set the summary table
-        m_summaryTable = OutlierSummaryTable.getTable(exec.createSubExecutionContext(0.05), in.getDataTableSpec(),
-            outlierModel, m_memberCounter, m_outlierRepCounter, m_missingGroupsCounter);
-
         // reset the counters
         m_memberCounter = null;
         m_outlierRepCounter = null;
@@ -370,17 +452,17 @@ public final class OutlierReviser {
     }
 
     /**
-     * Replaces outliers found in the input table according to the selected replacement option. Additionally, the
-     * outlier replacement counts and new domains are calculated.
+     * Replaces outliers found in the row input according to the selected replacement option. Additionally, the outlier
+     * replacement counts and new domains are calculated.
      *
      * @param exec the execution context
-     * @param in the input data table
+     * @param in the row input whose outliers have to be treated
+     * @param out the row output whose outliers have been treated
      * @param outlierModel the model storing the permitted intervals
-     * @param domainsUpdater the domains updater
-     * @throws CanceledExecutionException if the user has canceled the execution
+     * @throws Exception any exception to indicate an error, cancelation
      */
-    private void replaceOutliers(final ExecutionContext exec, final BufferedDataTable in,
-        final OutlierModel outlierModel, final OutlierDomainsUpdater domainsUpdater) throws CanceledExecutionException {
+    private void replaceOutliers(final ExecutionContext exec, final RowInput in, final RowOutput out,
+        final OutlierModel outlierModel) throws Exception {
         // total number of outlier columns
         final int noOutliers = m_outlierColNames.length;
 
@@ -431,7 +513,7 @@ public final class OutlierReviser {
                     }
                     // update the domain if necessary
                     if (m_updateDomain && !treatedCell.isMissing()) {
-                        domainsUpdater.updateDomain(outlierColName, ((DoubleValue)treatedCell).getDoubleValue());
+                        m_domainUpdater.updateDomain(outlierColName, ((DoubleValue)treatedCell).getDoubleValue());
                     }
                     treatedVals[i] = treatedCell;
                 }
@@ -441,7 +523,10 @@ public final class OutlierReviser {
         };
         // replace the outlier columns by their updated versions
         colRearranger.replace(fac, outlierIndices);
-        m_outTable = exec.createColumnRearrangeTable(in, colRearranger, exec);
+
+        // stream it
+        colRearranger.createStreamableFunction().runFinal(new PortInput[]{in}, new PortOutput[]{out}, exec);
+
         exec.setProgress(1);
     }
 
@@ -528,18 +613,20 @@ public final class OutlierReviser {
     }
 
     /**
-     * Removes/Retains all rows from the input table that contain outliers. Additionally, the outlier and group related
+     * Removes/Retains all rows from the row input that contain outliers. Additionally, the outlier and group related
      * counts, and the new domains are calculated.
      *
      * @param exec the execution context
-     * @param in the input data table
+     * @param in the row input whose outliers have to be treated
+     * @param out the row output whose outliers have been treated
      * @param permIntervalsModel the model storing the permitted intervals
-     * @param domainsUpdater the domains updater
+     * @param rowCount the row count of the row input
      * @throws CanceledExecutionException if the user has canceled the execution
+     * @throws InterruptedException if canceled
      */
-    private void treatRows(final ExecutionContext exec, final BufferedDataTable in,
-        final OutlierModel permIntervalsModel, final OutlierDomainsUpdater domainsUpdater)
-        throws CanceledExecutionException {
+    private void treatRows(final ExecutionContext exec, final RowInput in, final RowOutput out,
+        final OutlierModel permIntervalsModel, final long rowCount)
+        throws CanceledExecutionException, InterruptedException {
         // the in spec
         final DataTableSpec inSpec = in.getDataTableSpec();
 
@@ -549,20 +636,18 @@ public final class OutlierReviser {
         // total number of outlier columns
         final int noOutliers = m_outlierColNames.length;
 
-        // the outlier free data table container
-        BufferedDataContainer container = exec.createDataContainer(inSpec);
-
-        final long rowCount = in.size();
         final double divisor = rowCount;
         long rowCounter = 1;
 
         // for each row test if it contains an outlier
-        for (final DataRow row : in) {
+        DataRow row;
+        while ((row = in.poll()) != null) {
             exec.checkCanceled();
-            final long rowCounterLong = rowCounter++; // 'final' due to access in lambda expression
-            exec.setProgress(rowCounterLong / divisor,
-                () -> "Testing row " + rowCounterLong + " of " + rowCount + " for outliers");
-
+            if (rowCount > 0) {
+                final long rowCounterLong = rowCounter++; // 'final' due to access in lambda expression
+                exec.setProgress(rowCounterLong / divisor,
+                    () -> "Testing row " + rowCounterLong + " of " + rowCount + " for outliers");
+            }
             // get the group key of the currently processed row
             final GroupKey key = permIntervalsModel.getKey(row, inSpec);
             //get the map holding the permitted intervals for the given groups key
@@ -593,24 +678,19 @@ public final class OutlierReviser {
             }
             if ((outlierFreeRow && m_treatment == OutlierTreatmentOption.FILTER)
                 || (!outlierFreeRow && m_treatment == OutlierTreatmentOption.RETAIN)) {
-                container.addRowToTable(row);
+                out.push(row);
                 // update the domain if necessary
                 if (m_updateDomain) {
                     DataCell cell;
                     for (int i = 0; i < noOutliers; i++) {
                         if (!(cell = row.getCell(outlierIndices[i])).isMissing()) {
-                            domainsUpdater.updateDomain(m_outlierColNames[i], ((DoubleValue)cell).getDoubleValue());
+                            m_domainUpdater.updateDomain(m_outlierColNames[i], ((DoubleValue)cell).getDoubleValue());
                         }
                     }
                 }
             }
         }
-        container.close();
-        m_outTable = container.getTable();
-        if (m_outTable.size() == 0) {
-            // NodeModel#executeModel only sets the empty table warning if no other warnings were set before
-            warnListeners(EMPTY_TABLE_WARNING);
-        }
+        out.close();
     }
 
     /**
@@ -782,16 +862,19 @@ public final class OutlierReviser {
          *
          * @return the data table storing the permitted intervals and additional information about member counts.
          * @throws CanceledExecutionException if the user has canceled the execution
+         * @throws InterruptedException if canceled
          */
-        private static BufferedDataTable getTable(final ExecutionContext exec, final DataTableSpec inSpec,
-            final OutlierModel outlierModel, final GroupsMemberCounterPerColumn memberCounter,
-            final GroupsMemberCounterPerColumn outlierRepCounter, final GroupsMemberCounterPerColumn missingGroups)
-            throws CanceledExecutionException {
+        private static BufferedDataTableRowOutput getTable(final ExecutionContext exec, final DataTableSpec inSpec,
+            final OutlierModel outlierModel, final MemberCounter memberCounter, final MemberCounter outlierRepCounter,
+            final MemberCounter missingGroups) throws CanceledExecutionException, InterruptedException {
             // create the data container storing the table
-            final DataContainer container = exec.createDataContainer(getSpec(inSpec, outlierModel.getGroupColNames()));
+
+            final DataTableSpec outSpec = getSpec(inSpec, outlierModel.getGroupColNames());
+            final BufferedDataTableRowOutput rowOutputTable =
+                new BufferedDataTableRowOutput(exec.createDataContainer(outSpec));
 
             // create the array storing the rows
-            final DataCell[] row = new DataCell[container.getTableSpec().getNumColumns()];
+            final DataCell[] row = new DataCell[outSpec.getNumColumns()];
 
             int rowCount = 0;
 
@@ -810,26 +893,27 @@ public final class OutlierReviser {
                 for (Entry<GroupKey, Map<String, double[]>> entry : outlierModel.getEntries()) {
                     final GroupKey key = entry.getKey();
                     final double[] permInterval = entry.getValue().get(outlierColName);
-                    addRow(container, rowCount++, row, key, outlierColName, memberCounter, outlierRepCounter,
+                    addRow(rowOutputTable, rowCount++, row, key, outlierColName, memberCounter, outlierRepCounter,
                         permInterval);
                 }
                 if (missingGroupKeys.size() != 0) {
                     for (final GroupKey key : missingGroupKeys) {
-                        addRow(container, rowCount++, row, key, outlierColName, missingGroups, outlierRepCounter, null);
+                        addRow(rowOutputTable, rowCount++, row, key, outlierColName, missingGroups, outlierRepCounter,
+                            null);
                     }
                 }
                 final int count = ++colCount;
                 exec.setProgress(count / divisor, () -> "Writing summary for column " + count + " of " + outlierCount);
             }
             // close the container and return the data table
-            container.close();
-            return exec.createBufferedDataTable(container.getTable(), exec);
+            rowOutputTable.close();
+            return rowOutputTable;
         }
 
         /**
-         * Adds the row to the container
+         * Adds the row to the row output.
          *
-         * @param container the data container
+         * @param rowOutput the row output
          * @param rowCount the row count
          * @param row the data cell row
          * @param key the groups key
@@ -837,10 +921,11 @@ public final class OutlierReviser {
          * @param memberCounter the member counter
          * @param outlierRepCounter the outlier replacement counter
          * @param permInterval the permitted interval
+         * @throws InterruptedException if canceled
          */
-        private static void addRow(final DataContainer container, final int rowCount, final DataCell[] row,
-            final GroupKey key, final String outlierColName, final GroupsMemberCounterPerColumn memberCounter,
-            final GroupsMemberCounterPerColumn outlierRepCounter, final double[] permInterval) {
+        private static void addRow(final BufferedDataTableRowOutput rowOutput, final int rowCount, final DataCell[] row,
+            final GroupKey key, final String outlierColName, final MemberCounter memberCounter,
+            final MemberCounter outlierRepCounter, final double[] permInterval) throws InterruptedException {
             int pos = 1;
             for (final DataCell gVal : key.getGroupVals()) {
                 row[pos++] = gVal;
@@ -854,8 +939,144 @@ public final class OutlierReviser {
                 row[pos++] = DataType.getMissingCell();
                 row[pos++] = DataType.getMissingCell();
             }
-            container.addRowToTable(new DefaultRow("Row" + rowCount, row));
+            rowOutput.push(new DefaultRow("Row" + rowCount, row));
         }
+
+    }
+
+    public static class SummaryInternals extends StreamableOperatorInternals {
+
+        /** The data table spec key. */
+        private final String SPEC_KEY = "spec";
+
+        /** The outlier model settings key. */
+        private final String MODEL_KEY = "model";
+
+        /** The member counter settings key. */
+        private final String MEMBER_KEY = "member-counter";
+
+        /** The outlier replacement counter settings key. */
+        private final String REP_KEY = "replacement-counter";
+
+        /** The missing groups counter settings key. */
+        private final String MISSING_GROUPS_KEY = "missing-groups-counter";
+
+        /** The data table in spec. */
+        private DataTableSpec m_inSpec;
+
+        /** The outlier model. */
+        private OutlierModel m_outlierModel;
+
+        /** The member counter. */
+        private MemberCounter m_memberCounter;
+
+        /** The outlier replacement counter. */
+        private MemberCounter m_outlierRepCounter;
+
+        /** The missing groups counter. */
+        private MemberCounter m_missingGroupsCounter;
+
+        SummaryInternals() {
+            super();
+        }
+
+        private SummaryInternals(final DataTableSpec inSpec, final OutlierModel outlierModel,
+            final MemberCounter memberCounter, final MemberCounter outlierRepCounter,
+            final MemberCounter missingGroups) {
+            super();
+            m_inSpec = inSpec;
+            m_outlierModel = outlierModel;
+            m_memberCounter = memberCounter;
+            m_outlierRepCounter = outlierRepCounter;
+            m_missingGroupsCounter = missingGroups;
+        }
+
+        private SummaryInternals(final SummaryInternals[] internals) {
+            m_inSpec = internals[0].m_inSpec;
+            m_outlierModel = internals[0].m_outlierModel;
+            m_memberCounter = MemberCounter.merge(Arrays.stream(internals)//
+                .map(i -> i.m_memberCounter)//
+                .toArray(MemberCounter[]::new));
+            m_outlierRepCounter = MemberCounter.merge(Arrays.stream(internals)//
+                .map(i -> i.m_outlierRepCounter)//
+                .toArray(MemberCounter[]::new));
+            m_missingGroupsCounter = MemberCounter.merge(Arrays.stream(internals)//
+                .map(i -> i.m_missingGroupsCounter)//
+                .toArray(MemberCounter[]::new));
+        }
+
+        /**
+         * Returns of the data table storing the permitted intervals and additional information about member counts.
+         *
+         * @param exec the execution context
+         * @return the data table storing the permitted intervals and additional information about member counts.
+         * @throws CanceledExecutionException if the user has canceled the execution
+         * @throws InterruptedException if canceled
+         */
+        public BufferedDataTableRowOutput getTable(final ExecutionContext exec)
+            throws CanceledExecutionException, InterruptedException {
+            return OutlierSummaryTable.getTable(exec, m_inSpec, m_outlierModel, m_memberCounter, m_outlierRepCounter,
+                m_missingGroupsCounter);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @SuppressWarnings("unchecked")
+        @Override
+        public void load(final DataInputStream input) throws IOException {
+            final ModelContentRO model = ModelContent.loadFromXML(input);
+            try {
+                m_inSpec = DataTableSpec.load(model);
+                m_outlierModel = OutlierModel.loadInstance(model.getModelContent(MODEL_KEY));
+                m_memberCounter = MemberCounter.loadInstance(model.getModelContent(MEMBER_KEY));
+                m_outlierRepCounter = MemberCounter.loadInstance(model.getModelContent(REP_KEY));
+                m_missingGroupsCounter = MemberCounter.loadInstance(model.getModelContent(MISSING_GROUPS_KEY));
+            } catch (InvalidSettingsException e) {
+                e.printStackTrace();
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void save(final DataOutputStream output) throws IOException {
+            final ModelContent model = new ModelContent(getClass().getSimpleName());
+            m_inSpec.save(model.addModelContent(SPEC_KEY));
+            m_outlierModel.saveModel(model.addModelContent(MODEL_KEY));
+            m_memberCounter.saveModel(model.addModelContent(MEMBER_KEY));
+            m_outlierRepCounter.saveModel(model.addModelContent(REP_KEY));
+            m_missingGroupsCounter.saveModel(model.addModelContent(MISSING_GROUPS_KEY));
+            model.saveToXML(output);
+        }
+
+    }
+
+    public static class SummaryMerger extends MergeOperator {
+
+        public SummaryMerger() {
+            super();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isHierarchical() {
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public StreamableOperatorInternals mergeFinal(final StreamableOperatorInternals[] operators) {
+            return new SummaryInternals(Arrays.stream(operators)//
+                .map(o -> (SummaryInternals)o)//
+                .toArray(SummaryInternals[]::new));
+        }
+
     }
 
 }
