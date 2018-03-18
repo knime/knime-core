@@ -77,6 +77,9 @@ import org.knime.workbench.editor2.editparts.FontStore;
  */
 public class NodeAnnotationFigure extends Figure {
 
+    /**
+     * The flow figure which we are wrapping.
+     */
     protected final FlowPage m_page;
 
     /**
@@ -95,6 +98,9 @@ public class NodeAnnotationFigure extends Figure {
         newContent(annotation);
     }
 
+    /**
+     * @param annotation the new annotation content
+     */
     public void newContent(final Annotation annotation) {
         boolean isNodeAnnotation = (annotation instanceof NodeAnnotation);
         String text;
@@ -213,7 +219,7 @@ public class NodeAnnotationFigure extends Figure {
     }
 
     private TextFlow getNodeAnnotationSystemDefaultStyled(final String text, final Font font1, final Color bg) {
-        TextFlow unstyledText = new TextFlow();
+        WiderTextFlow unstyledText = new WiderTextFlow();
         unstyledText.setForegroundColor(AnnotationEditPart.getAnnotationDefaultForegroundColor());
         unstyledText.setBackgroundColor(bg);
         unstyledText.setFont(font1);
@@ -222,7 +228,7 @@ public class NodeAnnotationFigure extends Figure {
     }
 
     private TextFlow getWorkflowAnnotationSystemDefaultStyled(final String text, final Font font1, final Color bg) {
-        TextFlow unstyledText = new TextFlow();
+        WiderTextFlow unstyledText = new WiderTextFlow();
         unstyledText.setForegroundColor(AnnotationEditPart.getAnnotationDefaultForegroundColor());
         unstyledText.setBackgroundColor(bg);
         unstyledText.setFont(font1);
@@ -230,11 +236,10 @@ public class NodeAnnotationFigure extends Figure {
         return unstyledText;
     }
 
-    private TextFlow getStyled(final String text,
-            final AnnotationData.StyleRange style, final Color bg,
-            final Font defaultFont) {
+    private TextFlow getStyled(final String text, final AnnotationData.StyleRange style, final Color bg,
+                               final Font defaultFont) {
         Font styledFont = FontStore.INSTANCE.getAnnotationFont(style, defaultFont);
-        TextFlow styledText = new TextFlow(text);
+        WiderTextFlow styledText = new WiderTextFlow(text);
         styledText.setFont(styledFont);
         styledText.setForegroundColor(new Color(null, AnnotationEditPart.RGBintToRGBObj(style.getFgColor())));
         styledText.setBackgroundColor(bg);
