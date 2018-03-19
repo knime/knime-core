@@ -155,6 +155,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
@@ -905,11 +906,24 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
         // Check additional bundles
         for (final String bundleName : m_settings.getBundles()) {
-            final Bundle bundle = Platform.getBundle(bundleName);
+            final String[] split = bundleName.split(" ");
+
+            final Bundle bundle = Platform.getBundle(split[0]);
             if (bundle == null) {
                 errors.add("Bundle \"" + bundleName + "\" required by this snippet was not found.");
             } else {
-                // TODO Version warning?
+                if(split.length > 1) {
+                    final Version installedVersion = bundle.getVersion();
+                    final Version v = Version.parseVersion(split[1]);
+
+                    final boolean versionsDiffer =
+                        installedVersion.getMajor() != v.getMajor() || installedVersion.getMinor() != v.getMinor();
+                    if (versionsDiffer) {
+                        warnings.add(String.format(
+                            "Versions of bundle \"%s\" required by this snippet differ:\nnode was saved with version %s but version % is currently installed.",
+                            bundle.getSymbolicName(), v, installedVersion));
+                    }
+                }
             }
         }
 

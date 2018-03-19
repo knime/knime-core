@@ -130,12 +130,12 @@ public class BundleListPanelTest extends UiTest {
         /* Test getBundles() */
         final String[] bundleNames = panel.getBundles();
         assertArrayEquals("getBundles should return array of bundles in list model",
-            new String[]{panel.m_listModel.getElementAt(0).name, panel.m_listModel.getElementAt(1).name}, bundleNames);
+            new String[]{panel.m_listModel.getElementAt(0).toString(), panel.m_listModel.getElementAt(1).toString()}, bundleNames);
 
         panel.setBundles(new String[]{});
         panel.addBundles(Arrays.asList(bundleNames[0], bundleNames[1], bundleNames[1]));
         assertArrayEquals("getBundles should return array of bundles in list model",
-            new String[]{panel.m_listModel.getElementAt(0).name, panel.m_listModel.getElementAt(1).name}, bundleNames);
+            new String[]{panel.m_listModel.getElementAt(0).toString(), panel.m_listModel.getElementAt(1).toString()}, bundleNames);
         assertEquals("Duplicates should be skipped while adding bundles.", 2, panel.m_listModel.size());
 
         /* Select multiple and remove */

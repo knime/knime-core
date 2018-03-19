@@ -89,6 +89,7 @@ import org.knime.core.node.util.filter.ArrayListModel;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.Version;
 
 /**
  * Panel for adding Bundles to the Java Snippet node for compilation.
@@ -108,23 +109,31 @@ public class BundleListPanel extends JPanel {
         /** Name of the bundle */
         final String name;
 
-        /** Whether the bundle is found in the currently running system */
-        final boolean exists;
+        final Version installedVersion;
+        final Version savedVersion;
 
         /**
          * Constructor
          *
          * @param name
-         * @param exists
+         * @param installedVersion
+         * @param savedVersion Version the bundle was saved with, in case it significantly differs from the installed
+         *            version.
          */
-        public BundleListEntry(final String name, final boolean exists) {
+        public BundleListEntry(final String name, final Version installedVersion, final Version savedVersion) {
             this.name = name;
-            this.exists = exists;
+            this.installedVersion = installedVersion;
+            this.savedVersion = savedVersion;
         }
 
         @Override
         public String toString() {
-            return this.name;
+            return this.name + " " + this.installedVersion.toString();
+        }
+
+        /** Whether this bundle is installed in the current eclipse runtime */
+        public boolean exists() {
+            return installedVersion != null;
         }
 
         @Override
@@ -152,10 +161,15 @@ public class BundleListPanel extends JPanel {
             final boolean isSelected, final boolean cellHasFocus) {
             final BundleListEntry e = ((BundleListEntry)value);
             final Component c = super.getListCellRendererComponent(list, e.name, index, isSelected, cellHasFocus);
-            if (!e.exists) {
+            if (!e.exists()) {
                 c.setForeground(Color.RED);
                 if (c instanceof JLabel) {
                     ((JLabel)c).setToolTipText("Bundle is not installed.");
+                }
+            } else if (e.savedVersion != null) {
+                c.setForeground(Color.YELLOW);
+                if (c instanceof JLabel) {
+                    ((JLabel)c).setToolTipText(String.format("Installed version (%s) is different than the version when this workflow was saved (%s).", e.installedVersion, e.savedVersion));
                 }
             }
 
@@ -408,7 +422,7 @@ public class BundleListPanel extends JPanel {
         final String[] bundles = new String[m_listModel.getSize()];
 
         for (int i = 0; i < m_listModel.getSize(); ++i) {
-            bundles[i] = m_listModel.get(i).name;
+            bundles[i] = m_listModel.get(i).toString();
         }
 
         return bundles;
@@ -477,13 +491,29 @@ public class BundleListPanel extends JPanel {
         if (bundleName == null) {
             return null;
         }
-        final String nameWithoutVersion = bundleName.split(" ")[0];
+
+        final String[] split = bundleName.split(" ");
+        final String nameWithoutVersion = split[0];
         final Bundle firstBundle = Platform.getBundle(nameWithoutVersion);
 
-        final boolean bundleFound = (firstBundle != null);
-        final String symbolicName = (bundleFound) ? firstBundle.getSymbolicName() : nameWithoutVersion;
+        if (firstBundle != null) {
+            final Version installedVersion = firstBundle.getVersion();
+            Version savedVersion = null;
+            if(split.length > 1) {
+                final Version v = Version.parseVersion(split[1]);
 
-        return new BundleListEntry(symbolicName, bundleFound);
+                // check whether the versions differ up to minor version.
+                final boolean versionsDiffer = installedVersion.getMajor() != v.getMajor()
+                    || installedVersion.getMinor() != v.getMinor();
+                if(versionsDiffer) {
+                    savedVersion = v;
+                }
+            }
+
+            return new BundleListEntry(firstBundle.getSymbolicName(), installedVersion, savedVersion);
+        } else {
+            return new BundleListEntry(nameWithoutVersion, null, null);
+        }
     }
 
     /**
