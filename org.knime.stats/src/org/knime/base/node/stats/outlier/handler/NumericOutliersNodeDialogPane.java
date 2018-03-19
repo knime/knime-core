@@ -89,9 +89,6 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
     /** Default insets to create space between panels. */
     private static final Insets INSET = new Insets(15, 0, 0, 0);
 
-    /** The label of the treatment option. */
-    private static final String TREATMENT_OPTION_LABEL = "Treatment Option";
-
     /** The restrict outlier handling border label. */
     private static final String RESTRICTION_BORDER_TITLE = "Apply to";
 

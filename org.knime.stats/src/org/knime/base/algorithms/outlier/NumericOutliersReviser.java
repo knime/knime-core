@@ -136,13 +136,13 @@ public final class NumericOutliersReviser {
     private final boolean m_updateDomain;
 
     /** Counter storing the number of outliers per column and group. */
-    private MemberCounter m_outlierRepCounter;
+    //    private MemberCounter m_outlierRepCounter;
 
     /** Counter storing the number of members (non-missings) per column and group. */
-    private MemberCounter m_memberCounter;
+    //    private MemberCounter m_memberCounter;
 
     /** Counter storing for each missing group the number of members per column. */
-    private MemberCounter m_missingGroupsCounter;
+    //    private MemberCounter m_missingGroupsCounter;
 
     /** Responsible to update the domain. */
     private OutlierDomainsUpdater m_domainUpdater;
@@ -421,17 +421,17 @@ public final class NumericOutliersReviser {
 
         // counters for the number of non-missing values and outliers contained in each outlier column respective
         // the different groups
-        m_outlierRepCounter = new MemberCounter();
-        m_memberCounter = new MemberCounter();
-        m_missingGroupsCounter = new MemberCounter();
+        final MemberCounter outlierRepCounter = new MemberCounter();
+        final MemberCounter memberCounter = new MemberCounter();
+        final MemberCounter missingGroupsCounter = new MemberCounter();
 
         // the progress
         double treatmentProgress = 0.9;
 
         if (inStreamingMode) {
             // set the summary internals
-            m_summaryInterals = new SummaryInternals(in.getDataTableSpec(), outlierModel, m_memberCounter,
-                m_outlierRepCounter, m_missingGroupsCounter);
+            m_summaryInterals = new SummaryInternals(in.getDataTableSpec(), outlierModel, memberCounter,
+                outlierRepCounter, missingGroupsCounter);
             addListener(m_summaryInterals);
             treatmentProgress = 1;
         }
@@ -442,21 +442,20 @@ public final class NumericOutliersReviser {
         // treat the outliers with respect to the selected treatment option
         if (m_treatment == NumericOutliersTreatmentOption.REPLACE) {
             // replaces outliers according to the set replacement strategy
-            replaceOutliers(exec.createSubExecutionContext(treatmentProgress), in, out, outlierModel);
+            replaceOutliers(exec.createSubExecutionContext(treatmentProgress), in, out, outlierModel, memberCounter,
+                outlierRepCounter, missingGroupsCounter);
         } else {
             // we remove/retain all columns containing at least one outlier
-            treatRows(exec.createSubExecutionContext(treatmentProgress), in, out, outlierModel, rowCount);
+            treatRows(exec.createSubExecutionContext(treatmentProgress), in, out, outlierModel, rowCount, memberCounter,
+                outlierRepCounter, missingGroupsCounter);
         }
 
         if (!inStreamingMode) {
             // set the summary table
             m_summaryTable = OutlierSummaryTable.getTable(exec.createSubExecutionContext(1 - treatmentProgress),
-                in.getDataTableSpec(), outlierModel, m_memberCounter, m_outlierRepCounter, m_missingGroupsCounter);
+                in.getDataTableSpec(), outlierModel, memberCounter, outlierRepCounter, missingGroupsCounter);
         }
-        // reset the counters
-        m_memberCounter = null;
-        m_outlierRepCounter = null;
-        m_missingGroupsCounter = null;
+        // cleare some memory
         m_outlierColNames = null;
     }
 
@@ -468,10 +467,14 @@ public final class NumericOutliersReviser {
      * @param in the row input whose outliers have to be treated
      * @param out the row output whose outliers have been treated
      * @param outlierModel the model storing the permitted intervals
+     * @param memberCounter the member counter
+     * @param outlierRepCounter the outlier replacement counter
+     * @param missingGroupsCounter the missing groups counter
      * @throws Exception any exception to indicate an error, cancelation
      */
     private void replaceOutliers(final ExecutionContext exec, final RowInput in, final RowOutput out,
-        final NumericOutliersModel outlierModel) throws Exception {
+        final NumericOutliersModel outlierModel, final MemberCounter memberCounter,
+        final MemberCounter outlierRepCounter, final MemberCounter missingGroupsCounter) throws Exception {
         // total number of outlier columns
         final int noOutliers = m_outlierColNames.length;
 
@@ -506,11 +509,11 @@ public final class NumericOutliersReviser {
                         // if the key exists treat the value otherwise we process an unkown group
                         if (colsMap != null) {
                             // increment the member counter
-                            m_memberCounter.incrementMemberCount(outlierColName, key);
+                            memberCounter.incrementMemberCount(outlierColName, key);
                             // treat the value of the cell if its a outlier
                             treatedCell = treatCellValue(colsMap.get(outlierColName), curCell);
                         } else {
-                            m_missingGroupsCounter.incrementMemberCount(outlierColName, key);
+                            missingGroupsCounter.incrementMemberCount(outlierColName, key);
                             treatedCell = curCell;
                         }
                     } else {
@@ -518,7 +521,7 @@ public final class NumericOutliersReviser {
                     }
                     // if we changed the value this is an outlier
                     if (!treatedCell.equals(curCell)) {
-                        m_outlierRepCounter.incrementMemberCount(outlierColName, key);
+                        outlierRepCounter.incrementMemberCount(outlierColName, key);
                     }
                     // update the domain if necessary
                     if (m_updateDomain && !treatedCell.isMissing()) {
@@ -630,11 +633,15 @@ public final class NumericOutliersReviser {
      * @param out the row output whose outliers have been treated
      * @param permIntervalsModel the model storing the permitted intervals
      * @param rowCount the row count of the row input
+     * @param memberCounter the member counter
+     * @param outlierRepCounter the outlier replacement counter
+     * @param missingGroupsCounter the missing groups counter
      * @throws CanceledExecutionException if the user has canceled the execution
      * @throws InterruptedException if canceled
      */
     private void treatRows(final ExecutionContext exec, final RowInput in, final RowOutput out,
-        final NumericOutliersModel permIntervalsModel, final long rowCount)
+        final NumericOutliersModel permIntervalsModel, final long rowCount, final MemberCounter memberCounter,
+        final MemberCounter outlierRepCounter, final MemberCounter missingGroupsCounter)
         throws CanceledExecutionException, InterruptedException {
         // the in spec
         final DataTableSpec inSpec = in.getDataTableSpec();
@@ -670,18 +677,18 @@ public final class NumericOutliersReviser {
                     final double[] interval = colsMap.get(outlierColName);
                     if (!cell.isMissing()) {
                         // increment the member counter
-                        m_memberCounter.incrementMemberCount(outlierColName, key);
+                        memberCounter.incrementMemberCount(outlierColName, key);
                         final double val = ((DoubleValue)cell).getDoubleValue();
                         // the model might not have learned anything about this key - outlier column combination
                         if (interval != null && isOutlier(interval, val)) {
                             outlierFreeRow = false;
                             // increment the outlier counter
-                            m_outlierRepCounter.incrementMemberCount(outlierColName, key);
+                            outlierRepCounter.incrementMemberCount(outlierColName, key);
                         }
                     }
                 } else {
                     if (!cell.isMissing()) {
-                        m_missingGroupsCounter.incrementMemberCount(outlierColName, key);
+                        missingGroupsCounter.incrementMemberCount(outlierColName, key);
                     }
                 }
             }
@@ -867,22 +874,22 @@ public final class NumericOutliersReviser {
          * @param outlierModel the outlier model
          * @param memberCounter the member counter
          * @param outlierRepCounter the outlier replacement counter
-         * @param missingGroups the missing groups counter
-         *
+         * @param missingGroupsCounter the missing groups counter
          * @return the data table storing the permitted intervals and additional information about member counts.
          * @throws CanceledExecutionException if the user has canceled the execution
          * @throws InterruptedException if canceled
          */
         private static BufferedDataTable getTable(final ExecutionContext exec, final DataTableSpec inSpec,
-            final NumericOutliersModel outlierModel, final MemberCounter memberCounter, final MemberCounter outlierRepCounter,
-            final MemberCounter missingGroups) throws CanceledExecutionException, InterruptedException {
+            final NumericOutliersModel outlierModel, final MemberCounter memberCounter,
+            final MemberCounter outlierRepCounter, final MemberCounter missingGroupsCounter)
+            throws CanceledExecutionException, InterruptedException {
             // create the data container storing the table
 
             final DataTableSpec outSpec = getSpec(inSpec, outlierModel.getGroupColNames());
             final BufferedDataTableRowOutput rowOutputTable =
                 new BufferedDataTableRowOutput(exec.createDataContainer(outSpec));
             writeTable(exec, outSpec.getNumColumns(), rowOutputTable, outlierModel, memberCounter, outlierRepCounter,
-                missingGroups);
+                missingGroupsCounter);
             return rowOutputTable.getDataTable();
         }
 
@@ -896,14 +903,14 @@ public final class NumericOutliersReviser {
          * @param memberCounter the member counter
          * @param outlierRepCounter the outlier replacement counter
          * @param missingGroups the missing groups counter
-         *
          * @throws CanceledExecutionException if the user has canceled the execution
          * @throws InterruptedException if canceled
          *
          */
         private static void writeTable(final ExecutionContext exec, final int numCols, final RowOutput rowOutputTable,
-            final NumericOutliersModel outlierModel, final MemberCounter memberCounter, final MemberCounter outlierRepCounter,
-            final MemberCounter missingGroups) throws CanceledExecutionException, InterruptedException {
+            final NumericOutliersModel outlierModel, final MemberCounter memberCounter,
+            final MemberCounter outlierRepCounter, final MemberCounter missingGroups)
+            throws CanceledExecutionException, InterruptedException {
             // create the array storing the rows
             final DataCell[] row = new DataCell[numCols];
 
@@ -1023,6 +1030,15 @@ public final class NumericOutliersReviser {
 
         }
 
+        /**
+         * Constructor.
+         *
+         * @param inSpec the in spec
+         * @param outlierModel the outlier model
+         * @param memberCounter the member counter
+         * @param outlierRepCounter the outlier replacement counter
+         * @param missingGroupsCounter the missing groups counter
+         */
         private SummaryInternals(final DataTableSpec inSpec, final NumericOutliersModel outlierModel,
             final MemberCounter memberCounter, final MemberCounter outlierRepCounter,
             final MemberCounter missingGroups) {
@@ -1035,22 +1051,30 @@ public final class NumericOutliersReviser {
             m_warnings = new LinkedHashSet<String>();
         }
 
-        private SummaryInternals(final SummaryInternals[] internals) {
-            m_numCols = internals[0].m_numCols;
-            m_outlierModel = internals[0].m_outlierModel;
-            m_memberCounter = MemberCounter.merge(Arrays.stream(internals)//
+        /**
+         * Creates a summary internals object that merges all information from the provided summary internals.
+         *
+         * @param internals the internals to merge
+         * @return the merged summary internals
+         */
+        private static SummaryInternals mergeInternals(final SummaryInternals[] internals) {
+            final SummaryInternals sumInt = new SummaryInternals();
+            sumInt.m_numCols = internals[0].m_numCols;
+            sumInt.m_outlierModel = internals[0].m_outlierModel;
+            sumInt.m_memberCounter = MemberCounter.merge(Arrays.stream(internals)//
                 .map(i -> i.m_memberCounter)//
                 .toArray(MemberCounter[]::new));
-            m_outlierRepCounter = MemberCounter.merge(Arrays.stream(internals)//
+            sumInt.m_outlierRepCounter = MemberCounter.merge(Arrays.stream(internals)//
                 .map(i -> i.m_outlierRepCounter)//
                 .toArray(MemberCounter[]::new));
-            m_missingGroupsCounter = MemberCounter.merge(Arrays.stream(internals)//
+            sumInt.m_missingGroupsCounter = MemberCounter.merge(Arrays.stream(internals)//
                 .map(i -> i.m_missingGroupsCounter)//
                 .toArray(MemberCounter[]::new));
-            m_warnings = Arrays.stream(internals)//
+            sumInt.m_warnings = Arrays.stream(internals)//
                 .map(i -> i.m_warnings)//
                 .flatMap(Set::stream)//
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet<String>::new));
+            return sumInt;
         }
 
         /**
@@ -1084,8 +1108,8 @@ public final class NumericOutliersReviser {
             final ModelContentRO model = ModelContent.loadFromXML(input);
             try {
                 m_numCols = model.getInt(NUM_COL_KEY);
-                m_warnings = Arrays.stream(model.getStringArray(WARNINGS_KEY))
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
+                m_warnings = Arrays.stream(model.getStringArray(WARNINGS_KEY))//
+                    .collect(Collectors.toCollection(LinkedHashSet<String>::new));
                 m_outlierModel = NumericOutliersModel.loadInstance(model.getModelContent(MODEL_KEY));
                 m_memberCounter = MemberCounter.loadInstance(model.getModelContent(MEMBER_KEY));
                 m_outlierRepCounter = MemberCounter.loadInstance(model.getModelContent(REP_KEY));
@@ -1147,7 +1171,7 @@ public final class NumericOutliersReviser {
          */
         @Override
         public StreamableOperatorInternals mergeFinal(final StreamableOperatorInternals[] operators) {
-            return new SummaryInternals(Arrays.stream(operators)//
+            return SummaryInternals.mergeInternals(Arrays.stream(operators)//
                 .map(o -> (SummaryInternals)o)//
                 .toArray(SummaryInternals[]::new));
         }

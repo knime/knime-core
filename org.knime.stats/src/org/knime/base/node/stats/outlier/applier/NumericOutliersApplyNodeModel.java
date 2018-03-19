@@ -206,7 +206,8 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements WarningLi
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
                 throws Exception {
-                final NumericOutlierPortObject outlierPort = (NumericOutlierPortObject)((PortObjectInput)inputs[0]).getPortObject();
+                final NumericOutlierPortObject outlierPort =
+                    (NumericOutlierPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 NumericOutliersReviser outlierReviser = outlierPort.getOutRevBuilder().build();
                 outlierReviser.treatOutliers(exec, (RowInput)inputs[1], (RowOutput)outputs[0],
                     outlierPort.getOutlierModel(((RowInput)inputs[1]).getDataTableSpec()));
@@ -316,8 +317,7 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements WarningLi
      */
     @Override
     public void warning(final Warning warning) {
-        // TODO Auto-generated method stub
-
+        setWarningMessage(warning.getMessage());
     }
 
 }
