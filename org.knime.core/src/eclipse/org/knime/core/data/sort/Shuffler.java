@@ -79,7 +79,9 @@ public class Shuffler {
     private final BufferedDataTable m_table;
 
     /**
-     * @param table the table that should be shuffled
+     * Initializes a shuffler for <b>table</b> with random <b>seed</b>
+     *
+     * @param table the table that should be shuffled, must not contain more than {@link Integer}.MAX_VALUE rows
      * @param seed random seed for shuffling
      */
     public Shuffler(final BufferedDataTable table, final long seed) {
@@ -90,11 +92,13 @@ public class Shuffler {
     }
 
     /**
+     * Shuffles the table using <b>exec</b> for table creations and progress report.
+     *
      * @param exec execution context use for creating tables and reporting progress
-     * @return a shuffled table
+     * @return the shuffled table
      * @throws CanceledExecutionException
      */
-    public BufferedDataTable shuffle(final ExecutionContext exec) throws CanceledExecutionException{
+    public BufferedDataTable shuffle(final ExecutionContext exec) throws CanceledExecutionException {
 
         RandomNumberAppendFactory randomnumfac =
                 RandomNumberAppendFactory.create(m_seed, m_table);

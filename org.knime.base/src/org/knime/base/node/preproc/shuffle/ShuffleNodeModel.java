@@ -51,13 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.data.sort.Shuffler;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -185,68 +179,4 @@ public class ShuffleNodeModel extends NodeModel {
         }
     }
 
-    /*
-     * The CellFactory adds a shuffled number to each input DataRow.
-     */
-    private static final class RandomNumberAppendFactory
-        extends SingleCellFactory {
-
-        /** Shuffled row number array. */
-        private int[] m_shuffle;
-
-        /** Position in array. */
-        private int m_pos = 0;
-
-        /** Constructor. */
-        private RandomNumberAppendFactory(final Long seed,
-                final int rowCount, final DataColumnSpec appendSpec) {
-            super(appendSpec);
-            Random random;
-            if (seed != null) {
-                random = new Random(seed.longValue());
-            } else {
-                random = new Random();
-            }
-            int nrRows = rowCount;
-
-            // initialize
-            m_shuffle = new int[nrRows];
-            for (int i = 0; i < nrRows; i++) {
-                m_shuffle[i] = i;
-            }
-
-            // let's shuffle
-            for (int i = 0; i < m_shuffle.length; i++) {
-                int r = random.nextInt(i + 1);
-                int swap = m_shuffle[r];
-                m_shuffle[r] = m_shuffle[i];
-                m_shuffle[i] = swap;
-            }
-       }
-
-        /** {@inheritDoc} */
-        @Override
-        public DataCell getCell(final DataRow row) {
-           assert (m_pos <= m_shuffle.length);
-           DataCell nextRandomNumberCell = new IntCell(m_shuffle[m_pos]);
-           m_pos++;
-           return nextRandomNumberCell;
-        }
-
-        /** Factory method to create a new random number append factory. */
-        private static RandomNumberAppendFactory create(final Long seed,
-                final BufferedDataTable inData) {
-            final DataTableSpec spec = inData.getDataTableSpec();
-            final int rowCount = inData.getRowCount();
-            String appendName = "random_row_number";
-            int uniquifier = 1;
-            while (spec.containsName(appendName)) {
-                appendName = "random_row_number_#" + uniquifier++;
-            }
-            DataColumnSpec s = new DataColumnSpecCreator(
-                    appendName, IntCell.TYPE).createSpec();
-            return new RandomNumberAppendFactory(seed, rowCount, s);
-        }
-
-    }
 }
