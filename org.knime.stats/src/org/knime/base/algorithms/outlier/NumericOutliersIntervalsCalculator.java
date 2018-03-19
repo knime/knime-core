@@ -235,24 +235,6 @@ final class NumericOutliersIntervalsCalculator {
     }
 
     /**
-     * Returns the outlier column names.
-     *
-     * @return the outlier column names
-     */
-    String[] getOutlierColumnNames() {
-        return m_outlierColNames;
-    }
-
-    /**
-     * Returns the group column names.
-     *
-     * @return the group column names
-     */
-    String[] getGroupColumnNames() {
-        return m_groupColNames;
-    }
-
-    /**
      * Tells whether the computation is done in or out of memory.
      *
      * @return the memory policy

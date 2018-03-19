@@ -135,15 +135,6 @@ public final class NumericOutliersReviser {
     /** Tells whether the domains of the outlier columns have to be updated after the computation or not. */
     private final boolean m_updateDomain;
 
-    /** Counter storing the number of outliers per column and group. */
-    //    private MemberCounter m_outlierRepCounter;
-
-    /** Counter storing the number of members (non-missings) per column and group. */
-    //    private MemberCounter m_memberCounter;
-
-    /** Counter storing for each missing group the number of members per column. */
-    //    private MemberCounter m_missingGroupsCounter;
-
     /** Responsible to update the domain. */
     private OutlierDomainsUpdater m_domainUpdater;
 
