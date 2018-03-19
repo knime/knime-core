@@ -75,6 +75,7 @@ import org.knime.core.node.port.PortTypeRegistry;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
+//TODO Mark: make final
 public class NumericOutlierPortObject extends AbstractSimplePortObject {
 
     /** @noreference This class is not intended to be referenced by clients. */
@@ -122,12 +123,15 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
     private DataType[] m_groupColTypes;
 
     /** The outlier treatment option. */
+    // TODO Mark: change to concrete class / enum
     private String m_treatmentOption;
 
     /** The outlier replacement strategy. */
+    // TODO Mark: change to concrete class / enum
     private String m_repStrategy;
 
     /** The outlier detection option. */
+    // TODO Mark: change to concrete class / enum
     private String m_detectionOption;
 
     /** Flag indiciation whether the domain needs to be updated. */
@@ -135,6 +139,7 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
 
     /** Empty constructor required by super class, should not be used. */
     public NumericOutlierPortObject() {
+        // TODO Mark: does the summary get properly restored when the workflow is loaded?
         m_summary = "";
     }
 

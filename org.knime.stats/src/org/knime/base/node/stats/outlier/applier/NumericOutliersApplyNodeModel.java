@@ -154,6 +154,8 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements WarningLi
         final String[] groupColNames = NumericOutlierPortObject.getGroupColNames(outlierPortSpec);
         if (!Arrays.stream(groupColNames)//
             .allMatch(inTableSpec::containsName)) {
+            // TODO Mark: Error message possibly too long and may contain irrelevant columns
+            // (Am I picky?)
             throw new InvalidSettingsException(Arrays.stream(groupColNames)
                 .collect(Collectors.joining(", ", MISSING_GROUPS_EXCEPTION_PREFIX, MISSING_GROUPS_EXCEPTION_SUFFIX)));
         }

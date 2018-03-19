@@ -86,6 +86,7 @@ public final class NumericOutliers {
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
+    // TODO Mark: final
     public static class Builder {
 
         /** The builder of the outlier intervals calculator. */
@@ -329,6 +330,8 @@ public final class NumericOutliers {
 
         m_outlierPort = new NumericOutlierPortObject(
             Arrays.stream(permittedIntervals.getOutlierColNames())//
+            // TODO Mark: name to long for tables with 20+ columns, abbreviate (see
+            // ConvenienceMethods.getShortStringFrom(Collection<?>, int) -- and don't make fun of the class name)
                 .collect(Collectors.joining(", ", "Outlier treatment for columns: ", ""))//
             , in.getDataTableSpec(), permittedIntervals, m_reviser);
 

@@ -53,6 +53,8 @@ package org.knime.base.algorithms.outlier.listeners;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
+// TODO Mark Do you mind renaming both classes in this package to "NumericOutlierWarning(Listener)"?
+// (Otherwise this is a very prominent search hit in Ctrl-Shift-T)
 public final class Warning {
 
     /** The warning mesage */

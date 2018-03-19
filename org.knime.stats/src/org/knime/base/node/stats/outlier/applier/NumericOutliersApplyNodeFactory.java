@@ -89,6 +89,7 @@ public class NumericOutliersApplyNodeFactory extends NodeFactory<NumericOutliers
      */
     @Override
     protected boolean hasDialog() {
+        // TODO Mark: ... hm.
         return true;
     }
 

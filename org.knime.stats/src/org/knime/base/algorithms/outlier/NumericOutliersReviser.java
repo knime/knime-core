@@ -486,6 +486,8 @@ public final class NumericOutliersReviser {
         // create new instances for each row
         final DataCell[] treatedVals = new DataCell[noOutliers];
 
+        // TODO Mark: If you use a different super constructor you can enable "processConcurrently"
+        // (won't bring anything until we change StreamableFunction.runFinal)
         final AbstractCellFactory fac = new AbstractCellFactory(outlierSpecs) {
 
             @Override
@@ -1106,7 +1108,7 @@ public final class NumericOutliersReviser {
                 m_outlierRepCounter = MemberCounter.loadInstance(model.getModelContent(REP_KEY));
                 m_missingGroupsCounter = MemberCounter.loadInstance(model.getModelContent(MISSING_GROUPS_KEY));
             } catch (InvalidSettingsException e) {
-                e.printStackTrace();
+                throw new IOException(e.getMessage());
             }
         }
 

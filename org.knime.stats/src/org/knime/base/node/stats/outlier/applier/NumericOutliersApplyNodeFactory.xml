@@ -18,7 +18,8 @@
         	</p>
         	<p>
         	Note that all observations belonging to groups not seen by the model
-        	will be considered non-outliers.
+        	will be considered non-outliers. Furthermore, no domain updated will
+        	be performed if this node is executed in streaming-mode. 
         	</p>
 		</intro>
 	</fullDescription>

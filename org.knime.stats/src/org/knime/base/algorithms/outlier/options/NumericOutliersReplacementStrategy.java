@@ -88,6 +88,7 @@ public enum NumericOutliersReplacementStrategy {
      * @return the enum
      * @throws IllegalArgumentException if the given name is not associated with an REPLACEMENT_STRATEGY value
      */
+    // TODO Mark: checked exception (ISException)
     public static NumericOutliersReplacementStrategy getEnum(final String name) throws IllegalArgumentException {
         CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
 
