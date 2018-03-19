@@ -178,35 +178,28 @@ public class CachedConnectionFactory implements DBConnectionFactory {
             new ConnectionKey(user, pass, jdbcUrl, NodeContext.getWorkflowUser().orElse(null));
 
         // retrieve original key and/or modify connection key map
+        Connection conn = null;
         synchronized (CONNECTION_KEYS) {
             if (CONNECTION_KEYS.containsKey(databaseConnKey)) {
                 databaseConnKey = CONNECTION_KEYS.get(databaseConnKey);
             } else {
                 CONNECTION_KEYS.put(databaseConnKey, databaseConnKey);
             }
-        }
+            conn = CONNECTION_MAP.get(databaseConnKey);
 
-        // sync database connection key: unique with database url and user name
-        synchronized (databaseConnKey) {
-            Connection conn = CONNECTION_MAP.get(databaseConnKey);
-            // if connection already exists
             if (conn != null) {
-                try {
-                    if (conn.isClosed()) {
-                        LOGGER.debug("Closed connection found in cache with key: " + databaseConnKey);
-                    } else if (!settings.getUtility().isValid(conn)) {
-                        LOGGER.debug("Invalid connection found in cache with key: " + databaseConnKey);
-                    } else {
-                        LOGGER.debug("Valid connection found in cache with key: " + databaseConnKey);
-                        conn.clearWarnings();
+                synchronized (conn) {
+                    if (isOpenAndValid(settings, conn, databaseConnKey)) {
                         return conn;
                     }
-                    removeConnectionFromCache(databaseConnKey, conn);
-                } catch (Exception e) { // remove invalid connection
-                    LOGGER.debug("Invalid connection with key: " + databaseConnKey + " Exception: " + e.getMessage());
-                    removeConnectionFromCache(databaseConnKey, conn);
+                    //close invalid connection if it is not already closed
+                    closeSafely(databaseConnKey, conn);
+                    //remove the connection from the cache also if an exception occurs during closing
+                    LOGGER.debug("Removing closed connection from cache with key: " + databaseConnKey);
+                    CONNECTION_MAP.remove(databaseConnKey);
                 }
             }
+
             final Driver d;
             try {
                 d = getDriverFactory().getDriver(settings);
@@ -247,13 +240,25 @@ public class CachedConnectionFactory implements DBConnectionFactory {
         }
     }
 
-    /**
-     * Always use this method to remove a connection from the {@link #CONNECTION_MAP} since it ensures
-     * that the connection is closed before removing it from the map.
-     * @param databaseConnKey the key of the connection in the {@link #CONNECTION_MAP}
-     * @param conn the {@link Connection} to remove from the {@link #CONNECTION_MAP}
-     */
-    private void removeConnectionFromCache(final ConnectionKey databaseConnKey, final Connection conn) {
+    private boolean isOpenAndValid(final DatabaseConnectionSettings settings, final Connection conn,
+        final ConnectionKey databaseConnKey) {
+        try {
+            if (conn.isClosed()) {
+                LOGGER.debug("Closed connection found in cache with key: " + databaseConnKey);
+            } else if (!settings.getUtility().isValid(conn)) {
+                LOGGER.debug("Invalid connection found in cache with key: " + databaseConnKey);
+            } else {
+                LOGGER.debug("Valid connection found in cache with key: " + databaseConnKey);
+                conn.clearWarnings();
+                return true;
+            }
+        } catch (Exception e) { // remove invalid connection
+            LOGGER.debug("Invalid connection with key: " + databaseConnKey + " Exception: " + e.getMessage());
+        }
+        return false;
+    }
+
+    private void closeSafely(final ConnectionKey databaseConnKey, final Connection conn) {
         try {
             if (!conn.isClosed()) {
                 LOGGER.debug("Closing connection with key: " + databaseConnKey);
@@ -262,9 +267,6 @@ public class CachedConnectionFactory implements DBConnectionFactory {
         } catch (Exception ex) {
             LOGGER.debug("Error closing connection:" + ex.getMessage(), ex);
         }
-        //remove the connection from the cache also if an exception occurs during closing
-        LOGGER.debug("Removing closed connection from cache with key: " + databaseConnKey);
-        CONNECTION_MAP.remove(databaseConnKey);
     }
 
     /**

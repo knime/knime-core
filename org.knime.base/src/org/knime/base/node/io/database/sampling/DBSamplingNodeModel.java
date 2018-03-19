@@ -45,8 +45,6 @@
  */
 package org.knime.base.node.io.database.sampling;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -55,9 +53,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 
 import org.knime.base.node.io.database.DBNodeModel;
 import org.knime.core.data.DataTableSpec;
@@ -219,22 +214,23 @@ final class DBSamplingNodeModel extends DBNodeModel {
      */
     private DatabasePortObjectSpec createDbOutSpec(final DatabasePortObjectSpec inSpec, final ExecutionMonitor exec,
         final boolean checkRetrieveMetadata) throws InvalidSettingsException, CanceledExecutionException {
-        DatabaseQueryConnectionSettings connectionSettings = inSpec.getConnectionSettings(getCredentialsProvider());
+        final DatabaseQueryConnectionSettings connectionSettings = inSpec.getConnectionSettings(getCredentialsProvider());
         final StatementManipulator statementManipulator = connectionSettings.getUtility().getStatementManipulator();
         try {
-            Connection connection = connectionSettings.createConnection(getCredentialsProvider());
-            String newQuery = createQuery(connection, connectionSettings.getQuery(), statementManipulator,
-                inSpec.getDataTableSpec(), exec);
-            connectionSettings = createDBQueryConnection(inSpec, newQuery);
+//            Connection connection = connectionSettings.createConnection(getCredentialsProvider());
+            final String newQuery = connectionSettings.execute(getCredentialsProvider(), conn -> {
+                return createQuery(conn, connectionSettings.getQuery(), statementManipulator,
+                    inSpec.getDataTableSpec(), exec);
+            });
+            DatabaseQueryConnectionSettings resultSettings = createDBQueryConnection(inSpec, newQuery);
             DatabaseQueryConnectionSettings querySettings =
-                new DatabaseQueryConnectionSettings(connectionSettings, newQuery);
+                new DatabaseQueryConnectionSettings(resultSettings, newQuery);
             DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
             DataTableSpec tableSpec;
             exec.setMessage("Retrieving result specification.");
             tableSpec = conn.getDataTableSpec(getCredentialsProvider());
-            return new DatabasePortObjectSpec(tableSpec, connectionSettings.createConnectionModel());
-        } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException
-                | IOException e1) {
+            return new DatabasePortObjectSpec(tableSpec, resultSettings.createConnectionModel());
+        } catch (SQLException e1) {
             throw new InvalidSettingsException("Failure during query generation. Error: " + e1.getMessage(), e1);
         }
     }

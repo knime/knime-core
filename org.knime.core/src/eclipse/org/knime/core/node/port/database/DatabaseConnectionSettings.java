@@ -94,6 +94,9 @@ public class DatabaseConnectionSettings {
      */
     public static final Version LEGACY_VERSION = new Version(3, 3, 0);
 
+    /**Maximum number of tries to get a valid connection and enter a synchronize block with it.*/
+    private static final int MAX_CONNECTION_TRIES = 10;
+
     private static final Version CURRENT_VERSION =
             new Version(KNIMEConstants.MAJOR, KNIMEConstants.MINOR, KNIMEConstants.REV);
 
@@ -440,7 +443,9 @@ public class DatabaseConnectionSettings {
      * @throws BadPaddingException {@link BadPaddingException}
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
+     * @deprecated see #execute(CredentialsProvider, ExecuteStatement)
      */
+    @Deprecated
     public Connection createConnection(final CredentialsProvider cp)
             throws InvalidSettingsException, SQLException,
             BadPaddingException, IllegalBlockSizeException,
@@ -614,30 +619,53 @@ public class DatabaseConnectionSettings {
     }
 
     /**
+     * @param cp {@link CredentialsProvider} to use
+     * @param stmt the {@link ExecuteStatement} implementation that can use the {@link Connection}
+     * @return T the return type of the {@link ExecuteStatement} method
+     * @throws SQLException if an exception during execution occurs
+     * @since 3.5.3
+     */
+    @SuppressWarnings("resource")
+    public <T> T execute(final CredentialsProvider cp, final ExecuteStatement<T> stmt) throws SQLException {
+        try {
+            for (int i = 0; i < MAX_CONNECTION_TRIES; i++) {
+                final Connection conn = createConnection(cp);
+                synchronized (syncConnection(conn)) {
+                    try {
+                        if (conn.isClosed() || !getUtility().isValid(conn)) {
+                            LOGGER.debug("Invalid or closed connection found. Retry to get valid connection."
+                                + " Retry counter: " + i);
+                            continue;
+                        }
+                    } catch (Exception ex) {
+                        //continue if an exception is thrown during connection validation
+                        continue;
+                    }
+                    return stmt.apply(conn);
+                }
+            }
+        } catch (Exception ex) {
+            throw new SQLException(ex);
+        }
+        throw new SQLException("Maximum number of retries to get a valid connection reached.");
+    }
+
+    /**
      * Execute statement on current database connection.
      * @param statement to be executed
      * @param cp {@link CredentialsProvider} providing user/password
      * @throws SQLException {@link SQLException}
-     * @throws InvalidSettingsException {@link InvalidSettingsException}
-     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
-     * @throws BadPaddingException {@link BadPaddingException}
-     * @throws InvalidKeyException {@link InvalidKeyException}
-     * @throws IOException {@link IOException}
      */
-    @SuppressWarnings("resource")
     public void execute(final String statement, final CredentialsProvider cp)
-                throws InvalidKeyException,
-            BadPaddingException, IllegalBlockSizeException,
-            InvalidSettingsException,
-            SQLException, IOException {
-        Connection conn = createConnection(cp);
-        synchronized (syncConnection(conn)) {
+                throws SQLException {
+        execute(cp, conn -> {
             try (final Statement stmt = conn.createStatement()) {
                 LOGGER.debug("Executing SQL statement \"" + statement + "\"");
                 stmt.execute(statement);
                 if (!conn.getAutoCommit()) {
                     conn.commit();
                 }
+                return null;
             } catch (SQLException ex) {
                 try {
                     if ((conn != null) && !conn.getAutoCommit()) {
@@ -649,7 +677,7 @@ public class DatabaseConnectionSettings {
                 }
                 throw ex;
             }
-        }
+        });
     }
 
     private static final Set<Class<? extends Connection>> AUTOCOMMIT_EXCEPTIONS =

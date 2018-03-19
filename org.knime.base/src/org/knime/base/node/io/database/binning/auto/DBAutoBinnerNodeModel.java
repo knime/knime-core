@@ -44,13 +44,7 @@
  */
 package org.knime.base.node.io.database.binning.auto;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.sql.Connection;
 import java.sql.SQLException;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 
 import org.knime.base.node.io.database.DBNodeModel;
 import org.knime.base.node.io.database.binning.DBAutoBinner;
@@ -196,19 +190,12 @@ public final class DBAutoBinnerNodeModel extends DBNodeModel {
     private PMMLPortObject createPMMLPortObject(final DatabasePortObjectSpec inSpec,
         final DatabaseQueryConnectionSettings connectionSettings, final ExecutionMonitor exec)
             throws InvalidSettingsException {
-        Connection connection = null;
-        try {
-            connection = connectionSettings.createConnection(getCredentialsProvider());
-        } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException | IOException e) {
-            throw new InvalidSettingsException("Failure during query generation. Error: " + e.getMessage());
-        }
-        final StatementManipulator statementManipulator = connectionSettings.getUtility().getStatementManipulator();
         DataTableSpec dataTableSpec = inSpec.getDataTableSpec();
         DBAutoBinner autoBinner = new DBAutoBinner(m_settings, dataTableSpec);
         PMMLPreprocDiscretize pMMLPrepocDiscretize;
         try {
-            pMMLPrepocDiscretize = autoBinner.createPMMLPrepocDiscretize(connection,
-                connectionSettings.getQuery(), statementManipulator, dataTableSpec);
+            pMMLPrepocDiscretize = autoBinner.createPMMLPrepocDiscretize(getCredentialsProvider(),
+                connectionSettings, dataTableSpec);
         PMMLPortObject pmmlPortObject = DBAutoBinner.translate(pMMLPrepocDiscretize, dataTableSpec);
         return pmmlPortObject;
         } catch (SQLException e) {

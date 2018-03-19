@@ -44,8 +44,6 @@
  */
 package org.knime.core.node.port.database.reader;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -54,9 +52,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.TimeZone;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.knime.core.data.DataCell;
@@ -78,7 +73,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseHelper;
@@ -140,14 +134,10 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
             final CredentialsProvider cp) throws SQLException {
         try {
             final DatabaseQueryConnectionSettings dbConn = getQueryConnection();
-            final Connection conn = dbConn.createConnection(cp);
-            synchronized (dbConn.syncConnection(conn)) {
-                return conn.getMetaData();
-            }
+            return dbConn.execute(cp, (conn) -> conn.getMetaData());
         } catch (SQLException sql) {
             throw sql;
-        } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | InvalidSettingsException
-                | IOException ex) {
+        } catch (Exception ex) {
             throw new SQLException(ex);
         }
     }
@@ -162,13 +152,13 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
         }
     }
 
-    private Connection initConnection(final CredentialsProvider cp) throws SQLException {
-        try {
-            return getQueryConnection().createConnection(cp);
-        } catch (Exception e) {
-            throw new SQLException(e);
-        }
-    }
+//    private Connection initConnection(final CredentialsProvider cp) throws SQLException {
+//        try {
+//            return getQueryConnection().createConnection(cp);
+//        } catch (Exception e) {
+//            throw new SQLException(e);
+//        }
+//    }
 
     /**
      * Returns a data table spec that reflects the meta data form the database
@@ -185,9 +175,11 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
             return m_spec;
         }
         // retrieve connection
-        final Connection conn = initConnection(cp);
-        final DatabaseQueryConnectionSettings dbConn = getQueryConnection();
-        synchronized (dbConn.syncConnection(conn)) {
+//        final Connection conn = initConnection(cp);
+
+        m_spec = getQueryConnection().execute(cp, conn -> {
+
+            final DatabaseQueryConnectionSettings dbConn = getQueryConnection();
             final String[] oQueries =  dbConn.getQuery().split(SQL_QUERY_SEPARATOR);
             final int selectIndex = oQueries.length - 1;
             if (oQueries[selectIndex].trim().endsWith(";")) {
@@ -208,7 +200,7 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
                 LOGGER.debug("Executing SQL statement as executeQuery: " + oQueries[selectIndex]);
                 result = stmt.executeQuery(oQueries[selectIndex]);
                 LOGGER.debug("Reading meta data from database ResultSet...");
-                m_spec = createTableSpec(result.getMetaData());
+                return createTableSpec(result.getMetaData());
             } finally {
                 if (result != null) {
                     result.close();
@@ -221,7 +213,7 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
                     conn.commit();
                 }
             }
-        }
+        });
         return m_spec;
     }
 
@@ -242,8 +234,9 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
     @Override
     public BufferedDataTable createTable(final ExecutionContext exec, final CredentialsProvider cp,
         final boolean useDbRowId) throws CanceledExecutionException, SQLException {
-        final Connection conn = initConnection(cp);
-        synchronized (getQueryConnection().syncConnection(conn)) {
+//        final Connection conn = initConnection(cp);
+//        synchronized (getQueryConnection().syncConnection(conn)) {
+        return getQueryConnection().execute(cp, conn -> {
             try (DBRowIterator ric = createRowIteratorConnection(conn, exec, cp, useDbRowId)) {
                 return exec.createBufferedDataTable(new DataTable() {
                     /** {@inheritDoc} */
@@ -260,7 +253,7 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
 
                 }, exec);
             }
-        }
+        });
     }
 
 
@@ -327,9 +320,10 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
             m_blobFactory = new BinaryObjectCellFactory();
         }
         // retrieve connection
-        final Connection conn = initConnection(cp);
+//        final Connection conn = initConnection(cp);
         final DatabaseQueryConnectionSettings dbConn = getQueryConnection();
-        synchronized (dbConn.syncConnection(conn)) {
+//        synchronized (dbConn.syncConnection(conn)) {
+        return dbConn.execute(cp, conn -> {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
             final Statement stmt = initStatement(cp, conn);
@@ -384,7 +378,7 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
                     stmt.close();
                 }
             }
-        }
+        });
     }
 
     @SuppressWarnings("javadoc")
@@ -417,10 +411,11 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
         }
 
         final DatabaseQueryConnectionSettings dbConn = getQueryConnection();
-        final Connection conn = getQueryConnection().createConnection(cp);
-        exec.setMessage("Waiting for free database connection...");
-        synchronized (dbConn.syncConnection(conn)) {
+//        final Connection conn = getQueryConnection().createConnection(cp);
+//        exec.setMessage("Waiting for free database connection...");
+//        synchronized (dbConn.syncConnection(conn)) {
 
+        return getQueryConnection().execute(cp, conn -> {
             /* Get the selected timezone */
             final TimeZone timezone = dbConn.getTimeZone();
 
@@ -572,7 +567,7 @@ public class DBReaderImpl extends DatabaseHelper implements DBReader {
                 }
             }
             return output;
-        }
+        });
     }
 
     /**

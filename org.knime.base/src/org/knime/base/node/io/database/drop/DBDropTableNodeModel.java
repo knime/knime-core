@@ -133,7 +133,7 @@ public class DBDropTableNodeModel extends NodeModel {
         final String table2Drop = m_tableName.getStringValue();
         try {
             if (m_failIfNotExists.getBooleanValue()
-                    || dbUtility.tableExists(connSettings.createConnection(cp), table2Drop)) {
+                    || connSettings.execute(cp, conn -> {return dbUtility.tableExists(conn, table2Drop);})) {
                 connSettings.execute(manipulator.dropTable(table2Drop, m_cascade.getBooleanValue()), cp);
                 exec.setMessage("Table " + table2Drop + " sucessful droped");
             } else {

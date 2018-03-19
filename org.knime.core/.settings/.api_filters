@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="3.5.3"/>
+                <message_argument value="3.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/DatabaseConnectionSettings.java" type="org.knime.core.node.port.database.DatabaseConnectionSettings">
+        <filter id="1142947843">
+            <message_arguments>
+                <message_argument value="3.5.3"/>
+                <message_argument value="execute(CredentialsProvider, ExecuteStatement&lt;T&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/ExecuteStatement.java" type="org.knime.core.node.port.database.ExecuteStatement">
+        <filter id="1109393411">
+            <message_arguments>
+                <message_argument value="3.5.3"/>
+                <message_argument value="org.knime.core.node.port.database.ExecuteStatement"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

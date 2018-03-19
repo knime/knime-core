@@ -50,7 +50,6 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.security.InvalidKeyException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -66,9 +65,6 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.knime.core.data.BooleanValue;
@@ -98,7 +94,6 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.workflow.CredentialsProvider;
@@ -161,17 +156,11 @@ public final class DatabaseReaderConnection {
      */
     public final DatabaseMetaData getDatabaseMetaData(
             final CredentialsProvider cp) throws SQLException {
-        try {
-            final Connection conn = m_conn.createConnection(cp);
-            synchronized (m_conn.syncConnection(conn)) {
-                return conn.getMetaData();
-            }
-        } catch (SQLException sql) {
-            throw sql;
-        } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | InvalidSettingsException
-                | IOException ex) {
-            throw new SQLException(ex);
-        }
+//            final Connection conn = m_conn.createConnection(cp);
+//            synchronized (m_conn.syncConnection(conn)) {
+        return m_conn.execute(cp, conn -> {
+            return conn.getMetaData();
+        });
     }
 
     /**
@@ -184,13 +173,13 @@ public final class DatabaseReaderConnection {
         }
     }
 
-    private Connection initConnection(final CredentialsProvider cp) throws SQLException {
-        try {
-            return m_conn.createConnection(cp);
-        } catch (Exception e) {
-            throw new SQLException(e);
-        }
-    }
+//    private Connection initConnection(final CredentialsProvider cp) throws SQLException {
+//        try {
+//            return m_conn.createConnection(cp);
+//        } catch (Exception e) {
+//            throw new SQLException(e);
+//        }
+//    }
 
     /**
      * Returns a data table spec that reflects the meta data form the database
@@ -206,8 +195,9 @@ public final class DatabaseReaderConnection {
             return m_spec;
         }
         // retrieve connection
-        final Connection conn = initConnection(cp);
-        synchronized (m_conn.syncConnection(conn)) {
+//        final Connection conn = initConnection(cp);
+//        synchronized (m_conn.syncConnection(conn)) {
+        m_spec =  m_conn.execute(cp, conn -> {
             final String[] oQueries =  m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
             final int selectIndex = oQueries.length - 1;
             if (oQueries[selectIndex].trim().endsWith(";")) {
@@ -228,7 +218,7 @@ public final class DatabaseReaderConnection {
                 LOGGER.debug("Executing SQL statement as executeQuery: " + oQueries[selectIndex]);
                 result = stmt.executeQuery(oQueries[selectIndex]);
                 LOGGER.debug("Reading meta data from database ResultSet...");
-                m_spec = createTableSpec(result.getMetaData());
+                return createTableSpec(result.getMetaData());
             } finally {
                 if (result != null) {
                     result.close();
@@ -238,7 +228,7 @@ public final class DatabaseReaderConnection {
                     stmt.close();
                 }
             }
-        }
+        });
         return m_spec;
     }
 
@@ -311,9 +301,10 @@ public final class DatabaseReaderConnection {
             m_blobFactory = new BinaryObjectCellFactory(exec);
         }
         // retrieve connection
-        final Connection conn = initConnection(cp);
-        exec.setMessage("Waiting for free database connection...");
-        synchronized (m_conn.syncConnection(conn)) {
+//        final Connection conn = initConnection(cp);
+//        exec.setMessage("Waiting for free database connection...");
+//        synchronized (m_conn.syncConnection(conn)) {
+        return m_conn.execute(cp, conn -> {
             exec.setMessage("Start reading rows from database...");
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
@@ -334,7 +325,7 @@ public final class DatabaseReaderConnection {
             m_spec = createTableSpec(result.getMetaData());
             LOGGER.debug("Parsing database ResultSet...");
             return new RowIteratorConnection(conn, stmt, result, m_spec, autoCommit, useDbRowId);
-        }
+        });
     }
 
     /** Called from the database port to read the first n-number of rows.
@@ -348,8 +339,9 @@ public final class DatabaseReaderConnection {
             m_blobFactory = new BinaryObjectCellFactory();
         }
         // retrieve connection
-        final Connection conn = initConnection(cp);
-        synchronized (m_conn.syncConnection(conn)) {
+//        final Connection conn = initConnection(cp);
+//        synchronized (m_conn.syncConnection(conn)) {
+        return m_conn.execute(cp, conn -> {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
             final Statement stmt = initStatement(cp, conn);
@@ -403,7 +395,7 @@ public final class DatabaseReaderConnection {
                     stmt.close();
                 }
             }
-        }
+        });
     }
 
     private DataTableSpec createTableSpec(final ResultSetMetaData meta)
