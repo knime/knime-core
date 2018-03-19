@@ -50,12 +50,8 @@ package org.knime.base.node.io.database.connection.util;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.io.IOException;
-import java.security.InvalidKeyException;
 import java.sql.SQLException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
@@ -159,9 +155,8 @@ public class DBMiscPanel<T extends DatabaseConnectionSettings> extends JPanel {
 
         if (m_settings.getValidateConnection()) {
             try {
-                m_settings.createConnection(credentialProvider);
-            } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException
-                    | IOException ex) {
+                m_settings.execute(credentialProvider, conn -> {return conn != null;});
+            } catch (SQLException ex) {
                 Throwable cause = ExceptionUtils.getRootCause(ex);
                 if (cause == null) {
                     cause = ex;

@@ -139,8 +139,8 @@ public class DBTableCreatorImpl implements DBTableCreator {
      */
     protected boolean tableExists(final DatabaseConnectionSettings conn, final CredentialsProvider cp,
         final String schema, final String tableName) throws Exception {
-        return conn.getUtility().tableExists(conn.createConnection(cp),
-            createSchemaTableName(schema, tableName));
+        return conn.execute(cp, c -> {
+            return conn.getUtility().tableExists(c, createSchemaTableName(schema, tableName));});
     }
 
     /**

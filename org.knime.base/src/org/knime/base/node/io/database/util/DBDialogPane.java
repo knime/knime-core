@@ -53,7 +53,6 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.sql.SQLException;
@@ -415,9 +414,8 @@ public final class DBDialogPane extends JPanel {
         s.setRetrieveMetadataInConfigure(m_retrieveMetadataInConfigure.isSelected());
         if (s.getValidateConnection()) {
             try {
-                s.createConnection(credProvider);
-            } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException
-                    | IOException ex) {
+                s.execute(credProvider, conn -> {return conn != null;});
+            } catch (SQLException ex) {
                 Throwable cause = ExceptionUtils.getRootCause(ex);
                 if (cause == null) {
                     cause = ex;

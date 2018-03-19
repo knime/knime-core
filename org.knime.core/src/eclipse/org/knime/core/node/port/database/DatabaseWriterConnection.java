@@ -162,11 +162,13 @@ public final class DatabaseWriterConnection {
         final RowInput input, final long rowCount, final boolean appendData,
         final ExecutionMonitor exec, final Map<String, String> sqlTypes, final CredentialsProvider cp,
         final int batchSize, final boolean insertNullForMissingCols) throws Exception {
-        final Connection conn = dbConn.createConnection(cp);
-        exec.setMessage("Waiting for free database connection...");
+//        final Connection conn = dbConn.createConnection(cp);
+//        exec.setMessage("Waiting for free database connection...");
+//
+//    synchronized (dbConn.syncConnection(conn)) {
+        return dbConn.execute(cp, conn -> {
 
-    final StringBuilder columnNamesForInsertStatement = new StringBuilder("(");
-    synchronized (dbConn.syncConnection(conn)) {
+        final StringBuilder columnNamesForInsertStatement = new StringBuilder("(");
         exec.setMessage("Start writing rows in database...");
         DataTableSpec spec = input.getDataTableSpec();
         // mapping from spec columns to database columns
@@ -488,8 +490,8 @@ public final class DatabaseWriterConnection {
             DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
             stmt.close();
         }
+    });
     }
-}
 
     private static Map<Integer, Integer> getColumnTypes(final Connection conn, final String table) throws SQLException {
         // TODO move this block to DatabaseUtility
@@ -544,9 +546,10 @@ public final class DatabaseWriterConnection {
             final ExecutionMonitor exec,
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
-        final Connection conn = dbConn.createConnection(cp);
-        exec.setMessage("Waiting for free database connection...");
-        synchronized (dbConn.syncConnection(conn)) {
+//        final Connection conn = dbConn.createConnection(cp);
+//        exec.setMessage("Waiting for free database connection...");
+//        synchronized (dbConn.syncConnection(conn)) {
+        return dbConn.execute(cp, conn -> {
             exec.setMessage("Start updating rows in database...");
             final DataTableSpec spec = data.getDataTableSpec();
 
@@ -676,7 +679,7 @@ public final class DatabaseWriterConnection {
                 DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 stmt.close();
             }
-        }
+        });
     }
 
     /** Create connection to update table in database.
@@ -701,9 +704,10 @@ public final class DatabaseWriterConnection {
             final ExecutionMonitor exec,
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
-        final Connection conn = dbConn.createConnection(cp);
-        exec.setMessage("Waiting for free database connection...");
-        synchronized (dbConn.syncConnection(conn)) {
+//        final Connection conn = dbConn.createConnection(cp);
+//        exec.setMessage("Waiting for free database connection...");
+//        synchronized (dbConn.syncConnection(conn)) {
+        return dbConn.execute(cp, conn -> {
             exec.setMessage("Start deleting rows from database...");
             final DataTableSpec spec = data.getDataTableSpec();
 
@@ -816,7 +820,7 @@ public final class DatabaseWriterConnection {
                 DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 stmt.close();
             }
-        }
+        });
     }
 
     /**

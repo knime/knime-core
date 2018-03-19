@@ -44,7 +44,6 @@
  */
 package org.knime.core.node.port.database.writer;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -105,10 +104,11 @@ public class DBWriterImpl extends DatabaseHelper implements DBWriter {
         final ExecutionMonitor exec, final Map<String, String> sqlTypes, final CredentialsProvider cp,
         final int batchSize, final boolean insertNullForMissingCols, final boolean failOnError) throws Exception {
         final DatabaseConnectionSettings conSettings = getDatabaseConnectionSettings();
-        final Connection conn = conSettings.createConnection(cp);
+//        final Connection conn = conSettings.createConnection(cp);
+        return conSettings.execute(cp, conn -> {
         exec.setMessage("Waiting for free database connection...");
         final StringBuilder columnNamesForInsertStatement = new StringBuilder("(");
-        synchronized (conSettings.syncConnection(conn)) {
+//        synchronized (conSettings.syncConnection(conn)) {
             exec.setMessage("Start writing rows in database...");
             DataTableSpec spec = input.getDataTableSpec();
             // mapping from spec columns to database columns
@@ -436,7 +436,7 @@ public class DBWriterImpl extends DatabaseHelper implements DBWriter {
                 DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 stmt.close();
             }
-        }
+        });
     }
 
     /** Create connection to update table in database.
@@ -461,9 +461,10 @@ public class DBWriterImpl extends DatabaseHelper implements DBWriter {
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
         final DatabaseConnectionSettings conSettings = getDatabaseConnectionSettings();
-        final Connection conn = conSettings.createConnection(cp);
-        exec.setMessage("Waiting for free database connection...");
-        synchronized (conSettings.syncConnection(conn)) {
+//        final Connection conn = conSettings.createConnection(cp);
+//        exec.setMessage("Waiting for free database connection...");
+//        synchronized (conSettings.syncConnection(conn)) {
+        return conSettings.execute(cp, conn -> {
             exec.setMessage("Start updating rows in database...");
             final DataTableSpec spec = data.getDataTableSpec();
             final String updateStmt = createUpdateStatement(table, setColumns, whereColumns);
@@ -574,7 +575,7 @@ public class DBWriterImpl extends DatabaseHelper implements DBWriter {
                 DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 stmt.close();
             }
-        }
+        });
     }
 
     /** Create connection to update table in database.
@@ -599,9 +600,10 @@ public class DBWriterImpl extends DatabaseHelper implements DBWriter {
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
         DatabaseConnectionSettings conSettings = getDatabaseConnectionSettings();
-        final Connection conn = conSettings.createConnection(cp);
-        exec.setMessage("Waiting for free database connection...");
-        synchronized (conSettings.syncConnection(conn)) {
+//        final Connection conn = conSettings.createConnection(cp);
+//        exec.setMessage("Waiting for free database connection...");
+//        synchronized (conSettings.syncConnection(conn)) {
+        return conSettings.execute(cp, conn -> {
             exec.setMessage("Start deleting rows from database...");
             final DataTableSpec spec = data.getDataTableSpec();
 
@@ -714,6 +716,6 @@ public class DBWriterImpl extends DatabaseHelper implements DBWriter {
                 DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 stmt.close();
             }
-        }
+        });
     }
 }

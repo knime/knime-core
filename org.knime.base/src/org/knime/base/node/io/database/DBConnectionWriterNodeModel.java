@@ -154,7 +154,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         try {
             final DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
             if (conn.getRetrieveMetadataInConfigure()) {
-                conn.createConnection(getCredentialsProvider());
+                conn.execute(getCredentialsProvider(), c -> {return c != null;});
             }
         } catch (InvalidSettingsException ise) {
             throw ise;

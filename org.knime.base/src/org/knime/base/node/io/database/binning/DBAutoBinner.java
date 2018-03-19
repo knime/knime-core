@@ -48,7 +48,6 @@
  */
 package org.knime.base.node.io.database.binning;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -83,10 +82,12 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
+import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.util.Pair;
 
 /**
@@ -109,15 +110,16 @@ public class DBAutoBinner extends AutoBinner {
     /**
      * This method creates a {@link PMMLPreprocDiscretize} object and is used in {@link DBAutoBinnerNodeModel}
      *
-     * @param connection Connection to database
-     * @param query Input database table
-     * @param statementManipulator {@link StatementManipulator} to use
+     * @param cp {@link CredentialsProvider}
+     * @param connectionSettings {@link DatabaseQueryConnectionSettings}
      * @param dataTableSpec DataTableSpec of incoming {@link BufferedDataTable}
      * @return a {@link PMMLPreprocDiscretize} object containing required parameters for binning operation
      * @throws SQLException
      */
-    public PMMLPreprocDiscretize createPMMLPrepocDiscretize(final Connection connection, final String query,
-        final StatementManipulator statementManipulator, final DataTableSpec dataTableSpec) throws SQLException {
+    public PMMLPreprocDiscretize createPMMLPrepocDiscretize(final CredentialsProvider cp,
+        final DatabaseQueryConnectionSettings connectionSettings, final DataTableSpec dataTableSpec) throws SQLException {
+        final String query = connectionSettings.getQuery();
+        final StatementManipulator statementManipulator = connectionSettings.getUtility().getStatementManipulator();
         AutoBinnerLearnSettings settings = getSettings();
         String[] includeCols = settings.getFilterConfiguration().applyTo(dataTableSpec).getIncludes();
 
@@ -125,8 +127,6 @@ public class DBAutoBinner extends AutoBinner {
             return createDisretizeOp(new LinkedHashMap<>());
         }
 
-        double max = 0;
-        double min = 0;
         StringBuilder minMaxQuery = new StringBuilder();
         minMaxQuery.append("SELECT");
         for (int i = 0; i < includeCols.length; i++) {
@@ -139,16 +139,21 @@ public class DBAutoBinner extends AutoBinner {
             }
         }
         minMaxQuery.append(" FROM (" + query + ") T");
-        HashMap<String, Pair<Double, Double>> maxAndMin = new LinkedHashMap<>();
-        try (ResultSet valueSet = connection.createStatement().executeQuery(minMaxQuery.toString());) {
-            while (valueSet.next()) {
-                for (int i = 0; i < includeCols.length; i++) {
-                    max = valueSet.getDouble("max_" + includeCols[i]);
-                    min = valueSet.getDouble("min_" + includeCols[i]);
-                    maxAndMin.put(includeCols[i], new Pair<Double, Double>(min, max));
+        HashMap<String, Pair<Double, Double>> maxAndMin = connectionSettings.execute(cp, conn -> {
+            double max = 0;
+            double min = 0;
+            HashMap<String, Pair<Double, Double>> maxMinMap = new LinkedHashMap<>();
+            try (ResultSet valueSet = conn.createStatement().executeQuery(minMaxQuery.toString());) {
+                while (valueSet.next()) {
+                    for (int i = 0; i < includeCols.length; i++) {
+                        max = valueSet.getDouble("max_" + includeCols[i]);
+                        min = valueSet.getDouble("min_" + includeCols[i]);
+                        maxMinMap.put(includeCols[i], new Pair<Double, Double>(min, max));
+                    }
                 }
             }
-        }
+            return maxMinMap;
+        });
         int number = settings.getBinCount();
         Map<String, double[]> edgesMap = new LinkedHashMap<>();
         for (Entry<String, Pair<Double, Double>> entry : maxAndMin.entrySet()) {

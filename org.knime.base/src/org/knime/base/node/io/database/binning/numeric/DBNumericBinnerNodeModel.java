@@ -46,7 +46,6 @@ package org.knime.base.node.io.database.binning.numeric;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -248,8 +247,7 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
             InvalidKeyException, IOException {
 
         final StatementManipulator statementManipulator = connectionSettings.getUtility().getStatementManipulator();
-        final Connection connection = connectionSettings.createConnection(getCredentialsProvider());
-        final String newQuery = createQuery(connection, connectionSettings.getQuery(), statementManipulator,
+        final String newQuery = createQuery(connectionSettings.getQuery(), statementManipulator,
             inDatabasePortObjectSpec.getDataTableSpec(), binnerMaps);
         connectionSettings = createDBQueryConnection(inDatabasePortObjectSpec, newQuery);
         final DatabaseQueryConnectionSettings querySettings =
@@ -320,7 +318,7 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
         return new PortObjectSpec[]{outDatabasePortObjectSpec, outPMMLPortObject.getSpec()};
     }
 
-    private String createQuery(final Connection connection, final String query,
+    private String createQuery(final String query,
         final StatementManipulator statementManipulator, final DataTableSpec dataTableSpec,
         final DBBinnerMaps binnerMaps) throws SQLException {
         String[] includeCols = m_columnToBins.keySet().toArray(new String[m_columnToBins.keySet().size()]);

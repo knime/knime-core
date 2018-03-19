@@ -45,9 +45,6 @@
  */
 package org.knime.base.node.io.database.pivot;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -58,9 +55,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 
 import org.knime.base.node.io.database.DBNodeModel;
 import org.knime.base.node.io.database.groupby.dialog.column.DBColumnAggregationFunctionRow;
@@ -266,9 +260,9 @@ final class DBPivotNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings connectionSettings = inSpec.getConnectionSettings(getCredentialsProvider());
         final StatementManipulator statementManipulator = connectionSettings.getUtility().getStatementManipulator();
         try {
-            Connection connection = connectionSettings.createConnection(getCredentialsProvider());
+//            Connection connection = connectionSettings.createConnection(getCredentialsProvider());
             String newQuery =
-                createQuery(connection, connectionSettings.getQuery(), statementManipulator, inSpec.getDataTableSpec(), exec);
+                createQuery(connectionSettings, inSpec.getDataTableSpec(), exec);
             connectionSettings = createDBQueryConnection(inSpec, newQuery);
             DatabaseQueryConnectionSettings querySettings =
                 new DatabaseQueryConnectionSettings(connectionSettings, newQuery);
@@ -277,38 +271,45 @@ final class DBPivotNodeModel extends DBNodeModel {
             exec.setMessage("Retrieving result specification.");
             tableSpec = reader.getDataTableSpec(getCredentialsProvider());
             return new DatabasePortObjectSpec(tableSpec, connectionSettings.createConnectionModel());
-        } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException
-                | IOException e1) {
+        } catch (SQLException e1) {
             throw new InvalidSettingsException("Failure during query generation. Error: " + e1.getMessage(), e1);
         }
     }
 
-    private String createQuery(final Connection connection, final String query, final StatementManipulator manipulator,
-        final DataTableSpec dataTableSpec, final ExecutionMonitor exec) throws SQLException, CanceledExecutionException {
+    private String createQuery(final DatabaseQueryConnectionSettings connectionSettings, final DataTableSpec dataTableSpec,
+        final ExecutionMonitor exec) throws SQLException, CanceledExecutionException {
 
+        final StatementManipulator manipulator = connectionSettings.getUtility().getStatementManipulator();
+        final String query = connectionSettings.getQuery();
         exec.setMessage("Getting pivot values.");
         ExecutionMonitor subExec = exec.createSubProgress(0.7);
-        final Map<DataColumnSpec, Set<Object>> pivotElements = new LinkedHashMap<>();
         final List<String> pivotColumns = m_pivotCols.getIncludeList();
-        int counter = 1;
-        for (String pivotColumn : pivotColumns) {
-            subExec.setProgress(counter / (double) pivotColumns.size(), "Fetching unique values for column " + pivotColumn + ". There are " + (pivotColumns.size() - counter) + " columns left.");
-            DataColumnSpec columnSpec = dataTableSpec.getColumnSpec(pivotColumn);
-            final String valueQuery =
-                "SELECT DISTINCT " + manipulator.quoteIdentifier(pivotColumn) + " FROM (" + query + ") T";
-            try (ResultSet valueSet = connection.createStatement().executeQuery(valueQuery);) {
-                exec.checkCanceled();
-                final Set<Object> vals = new HashSet<>();
-                while (valueSet.next()) {
-                    final Object dbVal = valueSet.getObject(1);
-                    if (!valueSet.wasNull()) {
-                        vals.add(dbVal);
+        final Map<DataColumnSpec, Set<Object>> pivotElements =
+                connectionSettings.execute(getCredentialsProvider(), conn -> {
+            int counter = 1;
+            final Map<DataColumnSpec, Set<Object>> pivotMap = new LinkedHashMap<>();
+            for (String pivotColumn : pivotColumns) {
+                subExec.setProgress(counter / (double) pivotColumns.size(), "Fetching unique values for column "
+                        + pivotColumn + ". There are " + (pivotColumns.size() - counter) + " columns left.");
+                DataColumnSpec columnSpec = dataTableSpec.getColumnSpec(pivotColumn);
+                final String valueQuery =
+                    "SELECT DISTINCT " + manipulator.quoteIdentifier(pivotColumn) + " FROM (" + query + ") T";
+
+                    try (ResultSet valueSet = conn.createStatement().executeQuery(valueQuery);) {
+                        exec.checkCanceled();
+                        final Set<Object> vals = new HashSet<>();
+                        while (valueSet.next()) {
+                            final Object dbVal = valueSet.getObject(1);
+                            if (!valueSet.wasNull()) {
+                                vals.add(dbVal);
+                            }
+                        }
+                        pivotMap.put(columnSpec, vals);
+                        counter++;
                     }
-                }
-                pivotElements.put(columnSpec, vals);
-                counter++;
             }
-        }
+            return pivotMap;
+        });
 
 
         exec.setProgress(0.8, "Getting aggregation methods and columns.");

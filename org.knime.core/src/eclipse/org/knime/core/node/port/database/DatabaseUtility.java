@@ -345,7 +345,7 @@ public class DatabaseUtility {
      * @throws SQLException if an SQL error occurs
      * @since 2.12
      */
-    public synchronized boolean isValid(final Connection conn) throws SQLException {
+    public boolean isValid(final Connection conn) throws SQLException {
         if (!m_supportsIsValid) {
             try (Statement st = conn.createStatement()) {
                 try (ResultSet rs = st.executeQuery("SELECT 1")) {
