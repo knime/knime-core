@@ -231,7 +231,7 @@ public abstract class RegressionPredictorCellFactory extends AbstractCellFactory
             final DataTableSpec tableSpec,
             final RegressionPredictorSettings settings
             ) throws InvalidSettingsException {
-        super(createColumnSpec(portSpec, tableSpec, settings));
+        super(true, createColumnSpec(portSpec, tableSpec, settings));
     }
 
 
