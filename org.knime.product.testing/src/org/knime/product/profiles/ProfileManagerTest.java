@@ -118,7 +118,7 @@ public class ProfileManagerTest {
     public void testVariablesReplacement() throws Exception {
         IEclipsePreferences prefs = DefaultScope.INSTANCE.getNode("org.knime.product");
 
-        String expectedEnv = System.getenv("TEMP");
+        String expectedEnv = System.getenv("USER");
         assertThat("Unexpected value for environment variable", prefs.get("environment-variable", "XXX"),
             is(expectedEnv));
 
