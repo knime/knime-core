@@ -140,16 +140,16 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
 
         m_includeProbs = settings.getIncludeProbabilities();
         m_content = content;
-        m_baseLabelToColName = Arrays.asList(m_content.getParameterList()).stream().collect(Collectors.toMap(k -> k.getName(), v->{
+        m_baseLabelToColName = Arrays.asList(m_content.getParameterList()).stream().collect(Collectors.toMap(PMMLParameter::getName, v->{
             final String param = v.getLabel();
             return param.matches("(.*?)\\[(\\d+)\\]") ?
                 param.substring(0, param.lastIndexOf('['))
                 : param;}));
         m_ppMatrix = new PPMatrix(m_content.getPPMatrix());
-        m_parameters = new ArrayList<String>();
-        m_predictors = new ArrayList<String>();
+        m_parameters = new ArrayList<>();
+        m_predictors = new ArrayList<>();
         m_vectorLengths = m_content.getVectorLengths();
-        m_parameterI = new HashMap<String, Integer>();
+        m_parameterI = new HashMap<>();
         for (PMMLParameter parameter : m_content.getParameterList()) {
             m_parameters.add(parameter.getName());
             String predictor = m_ppMatrix.getPredictor(parameter.getName());
@@ -204,8 +204,8 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
      */
     private Map<Integer, Integer> createTargetCategoryToOutputMap(final List<DataCell> targetCategories,
         final DataColumnSpec targetColSpec) {
-        Map<Integer, Integer> targetCategoryIndex = new HashMap<Integer, Integer>();
-        List<DataCell> domainValues = new ArrayList<DataCell>();
+        Map<Integer, Integer> targetCategoryIndex = new HashMap<>();
+        List<DataCell> domainValues = new ArrayList<>();
         domainValues.addAll(targetColSpec.getDomain().getValues());
         int i = 0;
         for (DataCell cell : targetCategories) {
@@ -223,18 +223,18 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
      */
     private static List<DataCell> determineTargetCategories(final DataColumnSpec targetCol,
             final PMMLGeneralRegressionContent content) throws InvalidSettingsException {
-        Map<String, DataCell> domainValues = new HashMap<String, DataCell>();
+        Map<String, DataCell> domainValues = new HashMap<>();
         for (DataCell cell : targetCol.getDomain().getValues()) {
             domainValues.put(cell.toString(), cell);
         }
         // Collect target categories from model
-        Set<DataCell> modelTargetCategories = new LinkedHashSet<DataCell>();
+        Set<DataCell> modelTargetCategories = new LinkedHashSet<>();
         for (PMMLPCell cell : content.getParamMatrix()) {
             modelTargetCategories.add(domainValues.get(cell.getTargetCategory()));
         }
         String targetReferenceCategory = content.getTargetReferenceCategory();
         if (targetReferenceCategory == null || targetReferenceCategory.isEmpty()) {
-            List<DataCell> targetCategories = new ArrayList<DataCell>();
+            List<DataCell> targetCategories = new ArrayList<>();
             targetCategories.addAll(targetCol.getDomain().getValues());
             Collections.sort(targetCategories, targetCol.getType().getComparator());
             if (targetCategories.size() == modelTargetCategories.size() + 1) {
@@ -249,9 +249,20 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
         }
         modelTargetCategories.add(domainValues.get(targetReferenceCategory));
 
-        List<DataCell> toReturn = new ArrayList<DataCell>();
+        List<DataCell> toReturn = new ArrayList<>();
         toReturn.addAll(modelTargetCategories);
         return toReturn;
+    }
+
+
+    @Override
+    public DataCell[] getCells(final DataRow row) {
+        Optional<PredictionRow> predictionRow = createPredictionRow(row);
+        if (!predictionRow.isPresent()) {
+            return createMissingOutput();
+        }
+        double[] logits = predictionRow.get().sparseMarixMultiply(m_beta);
+        return postProcessResult(logits);
     }
 
 
@@ -413,16 +424,6 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
         } else {
             return new DoubleCell(0);
         }
-    }
-
-    @Override
-    public DataCell[] getCells(final DataRow row) {
-        Optional<PredictionRow> predictionRow = createPredictionRow(row);
-        if (!predictionRow.isPresent()) {
-            return createMissingOutput();
-        }
-        double[] result = predictionRow.get().sparseMarixMultiply(m_beta);
-        return postProcessResult(result);
     }
 
     private DataCell[] createMissingOutput() {
