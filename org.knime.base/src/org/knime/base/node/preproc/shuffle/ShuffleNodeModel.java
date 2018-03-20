@@ -100,8 +100,8 @@ public class ShuffleNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        Shuffler shuffler = new Shuffler(inData[0], m_seed == null ? new Random().nextLong() : m_seed);
-        return new BufferedDataTable[]{shuffler.shuffle(exec)};
+        return new BufferedDataTable[]{Shuffler.shuffle(inData[0], exec,
+            m_seed == null ? new Random().nextLong() : m_seed)};
     }
 
     /**

@@ -73,40 +73,33 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-public class Shuffler {
+public final class Shuffler {
 
-    private final long m_seed;
-    private final BufferedDataTable m_table;
-
-    /**
-     * Initializes a shuffler for <b>table</b> with random <b>seed</b>
-     *
-     * @param table the table that should be shuffled, must not contain more than {@link Integer}.MAX_VALUE rows
-     * @param seed random seed for shuffling
-     */
-    public Shuffler(final BufferedDataTable table, final long seed) {
-        m_seed = seed;
-        CheckUtils.checkArgument(table.size() <= Integer.MAX_VALUE,
-                "It's currently not possible to shuffle tables with more than Integer.MAX_VALUE rows.");
-        m_table = table;
+    private Shuffler() {
+        // static utility class
     }
 
     /**
-     * Shuffles the table using <b>exec</b> for table creations and progress report.
+     * Shuffles the <b>table</b> using <b>exec</b> for table creations and progress report.
+     * The <b>seed</b> is used to enable reproducibility.
      *
+     * @param table the table to shuffle
      * @param exec execution context use for creating tables and reporting progress
+     * @param seed random seed for permutation generation
      * @return the shuffled table
      * @throws CanceledExecutionException
      */
-    public BufferedDataTable shuffle(final ExecutionContext exec) throws CanceledExecutionException {
+    public static BufferedDataTable shuffle(final BufferedDataTable table, final ExecutionContext exec, final long seed) throws CanceledExecutionException {
+        CheckUtils.checkArgument(table.size() <= Integer.MAX_VALUE,
+                "It's currently not possible to shuffle tables with more than Integer.MAX_VALUE rows.");
 
         RandomNumberAppendFactory randomnumfac =
-                RandomNumberAppendFactory.create(m_seed, m_table);
+                RandomNumberAppendFactory.create(seed, table);
         ColumnRearranger colre =
-                new ColumnRearranger(m_table.getDataTableSpec());
+                new ColumnRearranger(table.getDataTableSpec());
         colre.append(randomnumfac);
         BufferedDataTable intermediate =
-                exec.createColumnRearrangeTable(m_table, colre, exec
+                exec.createColumnRearrangeTable(table, colre, exec
                         .createSubProgress(.2));
         List<String> include = new ArrayList<>();
         String randomcol = randomnumfac.getColumnSpecs()[0].getName();
@@ -172,7 +165,10 @@ public class Shuffler {
         private static RandomNumberAppendFactory create(final Long seed,
                 final BufferedDataTable inData) {
             final DataTableSpec spec = inData.getDataTableSpec();
-            final int rowCount = inData.getRowCount();
+            final long tableSize = inData.size();
+            CheckUtils.checkArgument(tableSize < Integer.MAX_VALUE,
+                "It's currently not possible to shuffle tables with more than Integer.MAX_VALUE rows.");
+            final int rowCount = (int) tableSize;
             String appendName = "random_row_number";
             int uniquifier = 1;
             while (spec.containsName(appendName)) {
