@@ -173,7 +173,16 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         if (nc.isPresent()) {
             execs =
                 new LinkedList<String>(NodeExecutionJobManagerPool.getAllJobManagerFactoryIDs().stream().filter(s -> {
-                    return NodeExecutionJobManagerPool.getJobManagerFactory(s).getInstance().canExecute(nc.get());
+                    NodeExecutionJobManagerFactory factory = NodeExecutionJobManagerPool.getJobManagerFactory(s);
+                    try {
+                        NodeExecutionJobManager ins = factory.getInstance();
+                        return ins.canExecute(nc.get());
+                    } catch (Throwable e) {
+                        // seen with SGE job manager throwing NoClassDefFoundError
+                        LOGGER.warn(String.format("Failed to load job manager of class \"%s\": (%s) %s",
+                            factory.getClass().getSimpleName(), e.getClass().getSimpleName(), e.getMessage()), e);
+                        return false;
+                    }
                 }).collect(Collectors.toList()));
         } else {
             execs = new LinkedList<String>(NodeExecutionJobManagerPool.getAllJobManagerFactoryIDs());
