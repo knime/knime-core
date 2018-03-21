@@ -51,12 +51,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.log4j.FileAppender;
+import org.apache.log4j.RollingFileAppender;
 import org.apache.log4j.helpers.LogLog;
-import org.apache.log4j.spi.LoggingEvent;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 
@@ -68,7 +67,7 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class LogfileAppender extends FileAppender {
+public class LogfileAppender extends RollingFileAppender {
     private final File m_logFile;
     /** Maximum size of log file before it is split (in bytes). */
     public static final long MAX_LOG_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB
@@ -86,6 +85,16 @@ public class LogfileAppender extends FileAppender {
      * @since 2.12
      */
     public LogfileAppender(final File logFileDir) {
+        initMaxLogFileSize();
+        ensureLogFileDirectoryExists(logFileDir);
+        m_logFile = new File(logFileDir, NodeLogger.LOG_FILE);
+        setFile(m_logFile.getAbsolutePath());
+        setAppend(true);
+        setImmediateFlush(true);
+        setEncoding("UTF-8");
+    }
+
+    private void initMaxLogFileSize() {
         String maxSizeString = System.getProperty(PROPERTY_MAX_LOGFILESIZE);
         if (maxSizeString == null) {
             m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
@@ -94,12 +103,10 @@ public class LogfileAppender extends FileAppender {
             int multiplier;
             if (maxSizeString.endsWith("m")) {
                 multiplier = 1024 * 1024;
-                maxSizeString = maxSizeString.substring(
-                    0, maxSizeString.length() - 1).trim();
+                maxSizeString = maxSizeString.substring(0, maxSizeString.length() - 1).trim();
             } else if (maxSizeString.endsWith("k")) {
                 multiplier = 1024;
-                maxSizeString = maxSizeString.substring(
-                    0, maxSizeString.length() - 1).trim();
+                maxSizeString = maxSizeString.substring(0, maxSizeString.length() - 1).trim();
             } else {
                 multiplier = 1;
             }
@@ -113,50 +120,54 @@ public class LogfileAppender extends FileAppender {
                 m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
             }
         }
-        // check if log file directory exists
+        setMaximumFileSize(m_maxLogSize);
+    }
+
+    private void ensureLogFileDirectoryExists(final File logFileDir) {
         if (!logFileDir.exists()) {
             logFileDir.mkdirs();
         }
-        m_logFile = new File(logFileDir, NodeLogger.LOG_FILE);
-        setFile(m_logFile.getAbsolutePath());
-        setImmediateFlush(true);
-        setEncoding("UTF-8");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void activateOptions() {
-        if (m_maxLogSize > 0 && m_logFile.exists()
-                && (m_logFile.length() > m_maxLogSize) && m_logFile.canRead()) {
-            compressOldLog();
+    public void rollOver() {
+        super.rollOver();
+        compressRotatedLog();
+        try {
+            // This will also close the file. This is OK since multiple
+            // close operations are safe.
+            setFile(m_logFile.getAbsolutePath(), false, bufferedIO, bufferSize);
+        } catch (IOException e) {
+            LogLog.error("setFile(" + fileName + ", false) call failed.", e);
         }
-        super.activateOptions();
     }
 
-    /** This is not private only because that it is visible inside the thread
+    /**
+     * RollingFileAppenders rollOver() method creates an uncompressed rotated log file
+     * named 'knime.log.1'. This method finds this file by appending a .1 suffix to
+     * the absolute path of the original log file and then compresses it.
+     *
+     * This is not private only because that it is visible inside the thread
      * below.
      */
-    private void compressOldLog() {
+    private void compressRotatedLog() {
         synchronized (m_logFile) {
-            LogLog.debug("Compressing log file '" + m_logFile + "'");
-            final File tmpFile = new File(m_logFile.getAbsolutePath() + ".old");
+            String rotatedLogFilePath = m_logFile.getAbsolutePath() + ".1";
+            LogLog.debug("Compressing rotated log file '" + rotatedLogFilePath + "'");
+            final File rotatedLogFile = new File(rotatedLogFilePath);
             closeFile();
-            try {
-                Files.move(m_logFile.toPath(), tmpFile.toPath());
-            } catch (IOException e) {
-                LogLog.warn("Can not move log file: " + e.getMessage());
-            }
             setFile(m_logFile.getAbsolutePath());
             final Thread t = new Thread() {
                 @Override
                 public void run() {
                     synchronized (m_logFile) {
-                        if (tmpFile.exists()) {
-                            try (final BufferedInputStream in = new BufferedInputStream(new FileInputStream(tmpFile));
+                        if (rotatedLogFile.exists()) {
+                            try (final BufferedInputStream in = new BufferedInputStream(new FileInputStream(rotatedLogFile));
                                     final GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(
-                                        new File(tmpFile.getAbsolutePath() + ".gz")));) {
+                                        new File(correctName(rotatedLogFile))));) {
                                 byte[] buf = new byte[4096];
                                 int count;
                                 while ((count = in.read(buf)) > 0) {
@@ -165,11 +176,25 @@ public class LogfileAppender extends FileAppender {
                             } catch (IOException ex) {
                                 ex.printStackTrace();
                             }
-                            if (!tmpFile.delete()) {
+                            if (!rotatedLogFile.delete()) {
                                 LogLog.warn("Failed to delete temporary log file");
                             }
                         }
                     }
+                }
+
+                /**
+                 * The rotated log file should be named knime.log.old.gz, but the rollOver method in
+                 * RollingFileAppender names it knime.log.1. In order to stay consistent with the previous
+                 * naming convention the trailing one is here replaced by old.gz.
+                 *
+                 * @param file the rotated old log file
+                 * @return name of the rotated log file
+                 */
+                private String correctName(final File file) {
+                    String path = file.getAbsolutePath();
+                    String pathWithoutTrailingOne = path.substring(0, path.length() - 1);
+                    return pathWithoutTrailingOne + "old.gz";
                 }
             };
             t.setPriority(Thread.MIN_PRIORITY);
@@ -177,26 +202,6 @@ public class LogfileAppender extends FileAppender {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void subAppend(final LoggingEvent event) {
-        super.subAppend(event);
-        if (m_maxLogSize > 0 && m_logFile.length() > m_maxLogSize) {
-            compressOldLog();
-
-            try {
-                // This will also close the file. This is OK since multiple
-                // close operations are safe.
-                setFile(m_logFile.getAbsolutePath(), false, bufferedIO,
-                        bufferSize);
-            } catch (IOException e) {
-                LogLog.error("setFile(" + fileName + ", false) call failed.",
-                                e);
-            }
-        }
-    }
     /**
      * {@inheritDoc}
      */
