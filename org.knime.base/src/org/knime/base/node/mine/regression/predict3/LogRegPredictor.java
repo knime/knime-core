@@ -105,7 +105,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
     private Map<String, List<DataCell>> m_values;
     private List<DataCell> m_targetCategories;
 
-    private final int[] m_paramIdx2PredictorIdx;
+    private final String[] m_paramIdx2Predictor;
 
     // matrix
     // Number of Rows: dim(x)
@@ -165,7 +165,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
             }
         }
 
-        m_paramIdx2PredictorIdx = createParameter2PredictorIdxMap();
+        m_paramIdx2Predictor = createParameterIdx2PredictorMap();
 
         m_trainingSpec = portSpec.getDataTableSpec();
         DataColumnSpec targetColSpec = m_trainingSpec.getColumnSpec(targetVariableName);
@@ -180,18 +180,18 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
     }
 
 
-    private int[] createParameter2PredictorIdxMap() {
-        int[] idxMap = new int[m_parameters.size()];
+    private String[] createParameterIdx2PredictorMap() {
+        String[] map = new String[m_parameters.size()];
         for (int i = 0; i < m_parameters.size(); i++) {
             Optional<String> optPredictor = findPredictor(m_parameters.get(i));
             if (optPredictor.isPresent()) {
-                idxMap[i] = m_predictors.indexOf(optPredictor.get());
+                map[i] = optPredictor.get();
             } else {
                 // intercept
-                idxMap[i] = -1;
+                map[i] = null;
             }
         }
-        return idxMap;
+        return map;
     }
 
     /**
@@ -257,12 +257,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
 
     @Override
     public DataCell[] getCells(final DataRow row) {
-        Optional<PredictionRow> predictionRow = createPredictionRow(row);
-        if (!predictionRow.isPresent()) {
-            return createMissingOutput();
-        }
-        double[] logits = predictionRow.get().sparseMarixMultiply(m_beta);
-        return postProcessResult(logits);
+        return new Prediction(row).getOutput();
     }
 
 
@@ -279,164 +274,6 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
         return Optional.empty();
     }
 
-    private Optional<PredictionRow> createPredictionRow(final DataRow row) {
-        int[] nonZeroIndices = new int[m_parameters.size()];
-        double[] nonZeroValues = new double[nonZeroIndices.length];
-        int nonZeroCounter = 0;
-        HelperStruct returnStruct = new HelperStruct();
-        for (int i = 0; i < m_parameters.size(); i += returnStruct.m_step) {
-            String parameter = m_parameters.get(i);
-            int predictorIdx = m_paramIdx2PredictorIdx[i];
-            if (predictorIdx != -1) {
-                String predictor = m_predictors.get(predictorIdx);
-                String value = m_ppMatrix.getValue(parameter, predictor, null);
-                DataCell cell = row.getCell(m_parameterI.get(parameter));
-                if (cell.isMissing()) {
-                    return Optional.empty();
-                }
-                if (m_factors.contains(predictor)) {
-                    handleFactor(predictor, cell, returnStruct);
-                } else if (correspondsToVector(parameter)) {
-                    handleVector(predictor, cell, Integer.parseInt(value), returnStruct);
-                } else {
-                    // numerical
-                    handleNumerical(cell, Integer.parseInt(value), returnStruct);
-                }
-            } else {
-                // intercept
-                returnStruct.m_step = 1;
-                returnStruct.m_deltaToNonZeroIdx = 0;
-                returnStruct.m_value = 1.0;
-            }
-
-            if (returnStruct.m_value != 0.0) {
-                nonZeroValues[nonZeroCounter] = returnStruct.m_value;
-                nonZeroIndices[nonZeroCounter] = i + returnStruct.m_deltaToNonZeroIdx;
-                nonZeroCounter++;
-            }
-        }
-
-        if (nonZeroCounter < nonZeroIndices.length) {
-            // mark end of sequence
-            nonZeroIndices[nonZeroCounter] = -1;
-        }
-
-        return Optional.of(new PredictionRow(nonZeroValues, nonZeroIndices));
-    }
-
-    private boolean correspondsToVector(final String parameter) {
-        return m_baseLabelToColName.containsKey(parameter) && m_vectorLengths.containsKey(m_baseLabelToColName.get(parameter));
-    }
-
-    private void handleFactor(final String predictor, final DataCell cell, final HelperStruct returnStruct) {
-        List<DataCell> values = m_values.get(predictor);
-        int index = values.indexOf(cell);
-        // these are design variables
-        /* When building a general regression model, for each
-        categorical fields, there is one category used as the
-        default baseline and therefore it didn't show in the
-        ParameterList in PMML. This design for the training is fine,
-        but in the prediction, when the input of Employment is
-        the default baseline, the parameters should all be 0.
-        See the commit message for an example and more details.
-        */
-        if (index > 0) {
-            returnStruct.m_value = 1.0;
-            returnStruct.m_deltaToNonZeroIdx = index - 1;
-        } else {
-            returnStruct.m_value = 0.0;
-        }
-        returnStruct.m_step = values.size() - 1;
-    }
-
-    private void handleVector(final String predictor, final DataCell cell, final double exponent,
-        final HelperStruct returnStruct) {
-        NameAndIndex vectorValue = VectorHandling.parse(predictor)
-                .orElseThrow(()-> new IllegalStateException("Can't find vector value for " + predictor));
-            int j = vectorValue.getIndex();
-            double radix = RegressionTrainingRow.getValue(cell, j, MISSING_HANDLING);
-            returnStruct.set(1, radix != 0.0 ? Math.pow(radix, exponent) : 0.0, 0);
-    }
-
-    private void handleNumerical(final DataCell cell, final double exponent, final HelperStruct returnStruct) {
-        double radix = ((DoubleValue)cell).getDoubleValue();
-        returnStruct.set(1, radix != 0.0 ? Math.pow(radix, exponent) : 0.0, 0);
-    }
-
-    private static class HelperStruct {
-        private int m_step;
-        private double m_value;
-        private int m_deltaToNonZeroIdx;
-
-        public void set(final int step, final double value, final int deltaToNonZeroIdx) {
-            m_step = step;
-            m_value = value;
-            m_deltaToNonZeroIdx = deltaToNonZeroIdx;
-        }
-    }
-
-    private int argMax(final double[] vector) {
-        int maxIndex = 0;
-        double maxValue = vector[0];
-        for (int i = 1; i < vector.length; i++) {
-            if (vector[i] > maxValue) {
-                maxValue = vector[i];
-                maxIndex = i;
-            }
-        }
-        return maxIndex;
-    }
-
-    private DataCell[] postProcessResult(final double[] result) {
-     // determine the column with highest probability
-        int maxIndex = argMax(result);
-
-        DataCell[] cells = m_includeProbs
-                ? new DataCell[1 + m_targetDomainValuesCount]
-                : new DataCell[1];
-
-
-        if (m_includeProbs) {
-            // compute probabilities of the target categories
-            for (int i = 0; i < m_targetCategories.size(); i++) {
-                    cells[m_targetCategoryIndex.get(i)] = calculateProbability(result, i);
-            }
-        }
-        // the last cell is the prediction
-        cells[cells.length - 1] = m_targetCategories.get(maxIndex);
-        return cells;
-    }
-
-    private DoubleCell calculateProbability(final double[] logits, final int classIdx) {
-     // test if calculation would overflow
-        boolean overflow = false;
-        for (int k = 0; k < logits.length; k++) {
-            if ((logits[k] - logits[classIdx]) > OVERFLOW_LIMIT) {
-                overflow = true;
-            }
-        }
-        if (!overflow) {
-            double sum = 0;
-            for (int k = 0; k < logits.length; k++) {
-                sum += Math.exp(logits[k] - logits[classIdx]);
-            }
-            return new DoubleCell(1.0 / sum);
-        } else {
-            return new DoubleCell(0);
-        }
-    }
-
-    private DataCell[] createMissingOutput() {
-        int numTargetCategories = m_targetCategories.size();
-
-        DataCell[] cells = m_includeProbs
-                                  ? new DataCell[1 + numTargetCategories]
-                                  : new DataCell[1];
-        for (int i = 0; i < cells.length; i++) {
-            cells[i] = DataType.getMissingCell();
-        }
-        return cells;
-    }
 
     private RealMatrix getBetaMatrix() {
         ParamMatrix paramMatrix = new ParamMatrix(m_content.getParamMatrix());
@@ -450,31 +287,169 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
         return beta;
     }
 
-    private static class PredictionRow {
-        private final double[] m_nonZeroValues;
-        private final int[] m_nonZeroIndices;
+    private class Prediction {
 
-        public PredictionRow(final double[] nonZeroValues, final int[] nonZeroIndices) {
-            assert nonZeroValues.length == nonZeroIndices.length;
-            m_nonZeroValues = nonZeroValues;
-            m_nonZeroIndices = nonZeroIndices;
-        }
+        private DataCell[] m_predition;
+        private double[] m_logits;
+        private int m_step;
+        private double m_value;
+        private int m_offsetToNonZero;
 
-        public double[] sparseMarixMultiply(final RealMatrix matrix) {
-            int columnCount = matrix.getColumnDimension();
-            int nonZero = m_nonZeroIndices.length;
-            double[] result = new double[columnCount];
-            for (int i = 0; i < nonZero; i++) {
-                int currentRowIndex = m_nonZeroIndices[i];
-                if (currentRowIndex == -1) {
-                    break;
+        public Prediction(final DataRow row) {
+            m_logits = new double[m_beta.getColumnDimension()];
+            for (int i = 0; i < m_parameters.size(); i += m_step) {
+                String parameter = m_parameters.get(i);
+                String predictor = m_paramIdx2Predictor[i];
+                if (predictor != null) {
+                    String value = m_ppMatrix.getValue(parameter, predictor, null);
+                    DataCell cell = row.getCell(m_parameterI.get(parameter));
+                    if (cell.isMissing()) {
+                        // abort if missing value is encountered
+                        m_predition = createMissingOutput();
+                        return;
+                    }
+                    if (m_factors.contains(predictor)) {
+                        handleFactor(predictor, cell);
+                    } else if (correspondsToVector(parameter)) {
+                        handleVector(predictor, cell, Integer.parseInt(value));
+                    } else {
+                        // numerical
+                        handleNumerical(cell, Integer.parseInt(value));
+                    }
+                } else {
+                    handleIntercept();
                 }
-                double currentValue = m_nonZeroValues[i];
-                for (int c = 0; c < columnCount; c++) {
-                    result[c] += matrix.getEntry(currentRowIndex, c) * currentValue;
+
+                if (m_value != 0.0) {
+                    updateLogits(i);
                 }
             }
-            return result;
+            m_predition = createOutput();
+        }
+
+        public DataCell[] getOutput() {
+            return m_predition;
+        }
+
+        private DataCell[] createOutput() {
+         // determine the column with highest probability
+            int maxIndex = argMax(m_logits);
+
+            DataCell[] cells = m_includeProbs
+                    ? new DataCell[1 + m_targetDomainValuesCount]
+                    : new DataCell[1];
+
+
+            if (m_includeProbs) {
+                // compute probabilities of the target categories
+                for (int i = 0; i < m_targetCategories.size(); i++) {
+                        cells[m_targetCategoryIndex.get(i)] = calculateProbability(m_logits, i);
+                }
+            }
+            // the last cell is the prediction
+            cells[cells.length - 1] = m_targetCategories.get(maxIndex);
+            return cells;
+        }
+
+        private DataCell[] createMissingOutput() {
+            int numTargetCategories = m_targetCategories.size();
+
+            DataCell[] cells = m_includeProbs
+                                      ? new DataCell[1 + numTargetCategories]
+                                      : new DataCell[1];
+            for (int i = 0; i < cells.length; i++) {
+                cells[i] = DataType.getMissingCell();
+            }
+            return cells;
+        }
+
+        private void updateLogits(final int parameterIdx) {
+            for (int j = 0; j < m_logits.length; j++) {
+                m_logits[j] += m_beta.getEntry(parameterIdx + m_offsetToNonZero, j) * m_value;
+            }
+        }
+
+        private void handleIntercept() {
+            m_step = 1;
+            m_offsetToNonZero = 0;
+            m_value = 1.0;
+        }
+
+        private void handleFactor(final String predictor, final DataCell cell) {
+            List<DataCell> values = m_values.get(predictor);
+            int index = values.indexOf(cell);
+            // these are design variables
+            /* When building a general regression model, for each
+            categorical fields, there is one category used as the
+            default baseline and therefore it didn't show in the
+            ParameterList in PMML. This design for the training is fine,
+            but in the prediction, when the input of Employment is
+            the default baseline, the parameters should all be 0.
+            See the commit message for an example and more details.
+            */
+            if (index > 0) {
+                m_value = 1.0;
+                m_offsetToNonZero = index - 1;
+            } else {
+                m_value = 0.0;
+            }
+            // jump over all positions of the one-hot vector
+            m_step = values.size() - 1;
+        }
+
+        private void handleVector(final String predictor, final DataCell cell, final double exponent) {
+            NameAndIndex vectorValue = VectorHandling.parse(predictor)
+                    .orElseThrow(()-> new IllegalStateException("Can't find vector value for " + predictor));
+                int j = vectorValue.getIndex();
+                double radix = RegressionTrainingRow.getValue(cell, j, MISSING_HANDLING);
+               updateStateForNumerical(radix, exponent);
+        }
+
+        private void handleNumerical(final DataCell cell, final double exponent) {
+            double radix = ((DoubleValue)cell).getDoubleValue();
+            updateStateForNumerical(radix, exponent);
+        }
+
+        private void updateStateForNumerical(final double radix, final double exponent) {
+            m_step = 1;
+            m_value = radix != 0.0 ? Math.pow(radix, exponent) : 0.0;
+            m_offsetToNonZero = 0;
+        }
+
+        private boolean correspondsToVector(final String parameter) {
+            return m_baseLabelToColName.containsKey(parameter) && m_vectorLengths.containsKey(m_baseLabelToColName.get(parameter));
+        }
+
+
+        private int argMax(final double[] vector) {
+            int maxIndex = 0;
+            double maxValue = vector[0];
+            for (int i = 1; i < vector.length; i++) {
+                if (vector[i] > maxValue) {
+                    maxValue = vector[i];
+                    maxIndex = i;
+                }
+            }
+            return maxIndex;
+        }
+
+        private DoubleCell calculateProbability(final double[] logits, final int classIdx) {
+         // test if calculation would overflow
+            boolean overflow = false;
+            for (int k = 0; k < logits.length; k++) {
+                if ((logits[k] - logits[classIdx]) > OVERFLOW_LIMIT) {
+                    overflow = true;
+                }
+            }
+            if (!overflow) {
+                double sum = 0;
+                for (int k = 0; k < logits.length; k++) {
+                    sum += Math.exp(logits[k] - logits[classIdx]);
+                }
+                return new DoubleCell(1.0 / sum);
+            } else {
+                return new DoubleCell(0);
+            }
         }
     }
 }
