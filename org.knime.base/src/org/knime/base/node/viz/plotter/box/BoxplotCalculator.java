@@ -270,8 +270,10 @@ public class BoxplotCalculator {
                 }, false, exec);
 
                 double min = 0, max = 0, q1 = 0, q3 = 0, median = 0;
+                boolean dq1 = catTable.size() % 4 == 0;
                 long q1Idx = catTable.size() / 4;
-                long q3Idx = (long)Math.ceil((double)catTable.size() * 3 / 4);
+                boolean dq3 = 3 * catTable.size() % 4 == 0;
+                long q3Idx = 3 * catTable.size() / 4;
                 boolean dMedian = catTable.size() % 2 == 0;
                 long medianIdx = catTable.size() / 2;
                 int counter = 0;
@@ -283,18 +285,35 @@ public class BoxplotCalculator {
                     if (counter == catTable.size() - 1) {
                         max = val;
                     }
-                    if (counter == q1Idx || (counter == 0 && st.size() <= 3)) {
+                    if (counter == q1Idx - 1 && dq1) {
                         q1 = val;
                     }
-                    if (counter == q3Idx || (counter == st.size() - 1 && st.size() <= 3)) {
+                    if (counter == q1Idx || (counter == 0 && st.size() <= 3)) {
+                        if (dq1) {
+                            q1 = (q1 + val) / 2.0;
+                        } else {
+                            q1 = val;
+                        }
+                    }
+                    if (counter == medianIdx - 1 && dMedian) {
+                        median = val;
+                    }
+                    if (counter == medianIdx) {
+                        if (dMedian) {
+                            median = (median + val) / 2;
+                        } else {
+                            median = val;
+                        }
+                    }
+                    if (counter == q3Idx - 1 && dq3) {
                         q3 = val;
                     }
-                    if (counter == medianIdx && dMedian) {
-                        median = val;
-                    } else if (counter == medianIdx) {
-                        median = val;
-                    } else if (counter == medianIdx + 1 && dMedian) {
-                        median = (median + val) / 2;
+                    if (counter == q3Idx || (counter == st.size() - 1 && st.size() <= 3)) {
+                        if (dq3) {
+                            q3 = (q3 + val) / 2.0;
+                        } else {
+                            q3 = val;
+                        }
                     }
                     counter++;
                 }
@@ -415,8 +434,10 @@ public class BoxplotCalculator {
             }, false, exec);
 
             double min = 0, max = 0, q1 = 0, q3 = 0, median = 0;
+            boolean dq1 = catTable.size() % 4 == 0;
             long q1Idx = catTable.size() / 4;
-            long q3Idx = (long)Math.ceil((double)catTable.size() * 3 / 4);
+            boolean dq3 = 3 * catTable.size() % 4 == 0;
+            long q3Idx = 3 * catTable.size() / 4;
             boolean dMedian = catTable.size() % 2 == 0;
             long medianIdx = catTable.size() / 2;
             int counter = 0;
@@ -428,18 +449,35 @@ public class BoxplotCalculator {
                 if (counter == catTable.size() - 1) {
                     max = val;
                 }
-                if (counter == q1Idx || (counter == 0 && st.size() <= 3)) {
+                if (counter == q1Idx - 1 && dq1) {
                     q1 = val;
                 }
-                if (counter == q3Idx || (counter == st.size() - 1 && st.size() <= 3)) {
+                if (counter == q1Idx || (counter == 0 && st.size() <= 3)) {
+                    if (dq1) {
+                        q1 = (q1 + val) / 2.0;
+                    } else {
+                        q1 = val;
+                    }
+                }
+                if (counter == medianIdx - 1 && dMedian) {
+                    median = val;
+                }
+                if (counter == medianIdx) {
+                    if (dMedian) {
+                        median = (median + val) / 2;
+                    } else {
+                        median = val;
+                    }
+                }
+                if (counter == q3Idx - 1 && dq3) {
                     q3 = val;
                 }
-                if (counter == medianIdx && dMedian) {
-                    median = val;
-                } else if (counter == medianIdx) {
-                    median = val;
-                } else if (counter == medianIdx + 1 && dMedian) {
-                    median = (median + val) / 2;
+                if (counter == q3Idx || (counter == st.size() - 1 && st.size() <= 3)) {
+                    if (dq3) {
+                        q3 = (q3 + val) / 2.0;
+                    } else {
+                        q3 = val;
+                    }
                 }
                 counter++;
             }
