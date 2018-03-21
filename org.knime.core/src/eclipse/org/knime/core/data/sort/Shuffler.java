@@ -72,6 +72,7 @@ import org.knime.core.node.util.CheckUtils;
  * from Dictionary of Algorithms and Data Structures, Paul E. Black, ed., NIST.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @since 3.6
  */
 public final class Shuffler {
 
@@ -88,6 +89,8 @@ public final class Shuffler {
      * @param seed random seed for permutation generation
      * @return the shuffled table
      * @throws CanceledExecutionException
+     *
+     * @since 3.6
      */
     public static BufferedDataTable shuffle(final BufferedDataTable table, final ExecutionContext exec, final long seed) throws CanceledExecutionException {
         CheckUtils.checkArgument(table.size() <= Integer.MAX_VALUE,
