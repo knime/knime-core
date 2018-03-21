@@ -47,6 +47,7 @@ package org.knime.core.node.util.filter;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -102,6 +103,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import javax.swing.table.TableStringConverter;
@@ -1718,6 +1720,27 @@ public abstract class NameFilterPanel<T> extends JPanel {
             } else {
                 cl.show(cardsPanel, ID_CARDLAYOUT_LIST);
             }
+        }
+        // Resize table to fill the viewport or match the largest cell (if larger than viewport)
+        TableColumn tableColumn = table.getColumnModel().getColumn(0);
+        double maxCellWidth = 0;
+        for (int row = 0; row < table.getRowCount(); row++) {
+            Component c = getTableCellRenderer().getTableCellRendererComponent(table, table.getModel().getValueAt(row, 0), false, false, row, 0);
+            double width = c.getPreferredSize().getWidth() + 8;
+            // width of the largest cell
+            maxCellWidth = Math.max(width, maxCellWidth);
+        }
+        // set width to either fill the viewport or to largest cell
+        int scrollPaneWidth = table.getParent().getWidth();
+        // FIXME width is 0 when dialog is first shown
+        scrollPaneWidth = scrollPaneWidth == 0 ? 250 : scrollPaneWidth;
+
+        // There is enough space for the cells to be fully displayed, column should fit available space
+        if (scrollPaneWidth > maxCellWidth) {
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        } else { // cells are larger than the available space, set column width manually
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            tableColumn.setPreferredWidth(Math.max(scrollPaneWidth, (int)maxCellWidth));
         }
     }
 
