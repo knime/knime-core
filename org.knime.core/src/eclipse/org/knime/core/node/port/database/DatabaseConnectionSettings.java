@@ -66,6 +66,8 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.port.database.connection.CachedConnectionFactory;
+import org.knime.core.node.port.database.connection.CachedConnectionFactory.ConnectionKey;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.workflow.CredentialsProvider;
@@ -470,6 +472,19 @@ public class DatabaseConnectionSettings {
     }
 
     /**
+     * Used to sync access to all databases depending if <code>SQL_CONCURRENCY</code> is true.
+     * @param key connection used to sync access to all databases
+     * @return sync object which is either the given connection or an new object (no sync necessary)
+     */
+    private Object syncKey(final ConnectionKey key) {
+        if (SQL_CONCURRENCY && key != null) {
+            return key;
+        } else {
+            return new Object();
+        }
+    }
+
+    /**
      * Save settings.
      * @param settings connection settings
      */
@@ -628,16 +643,19 @@ public class DatabaseConnectionSettings {
     @SuppressWarnings("resource")
     public <T> T execute(final CredentialsProvider cp, final ExecuteStatement<T> stmt) throws SQLException {
         try {
-            for (int i = 0; i < MAX_CONNECTION_TRIES; i++) {
+            for (int i = 1; i <= MAX_CONNECTION_TRIES; i++) {
                 final Connection conn = createConnection(cp);
-                synchronized (syncConnection(conn)) {
+                final ConnectionKey databaseConnKey = CachedConnectionFactory.getConnectionKey(cp, this);
+                synchronized (syncKey(databaseConnKey)) {
                     try {
                         if (conn.isClosed() || !getUtility().isValid(conn)) {
-                            LOGGER.debug("Invalid or closed connection found. Retry to get valid connection."
-                                + " Retry counter: " + i);
+                            LOGGER.debug("Invalid or closed connection found. Retry counter: " + i +
+                                "Retry to get valid connection for key: " + databaseConnKey);
                             continue;
                         }
                     } catch (Exception ex) {
+                        LOGGER.debug("Exception: " + ex.getMessage() + " during validation of connection with key: "
+                            + databaseConnKey, ex);
                         //continue if an exception is thrown during connection validation
                         continue;
                     }
@@ -647,7 +665,7 @@ public class DatabaseConnectionSettings {
         } catch (Exception ex) {
             throw new SQLException(ex);
         }
-        throw new SQLException("Maximum number of retries to get a valid connection reached.");
+        throw new SQLException("Maximum number of retries to get a valid connection reached. JDBC URL: " + getJDBCUrl());
     }
 
     /**

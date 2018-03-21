@@ -89,7 +89,11 @@ public class CachedConnectionFactory implements DBConnectionFactory {
     private static final ExecutorService CONNECTION_CREATOR_EXECUTOR = ThreadUtils.executorServiceWithContext(Executors.newCachedThreadPool());
     private DBDriverFactory m_driverFactory;
 
-    private static final class ConnectionKey {
+    /**
+     * Unique key to identify a database connection based on the provided input parameter.
+     * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
+     */
+    public static final class ConnectionKey {
         private final String m_un;
         private final String m_pw;
         private final String m_dn;
@@ -173,9 +177,7 @@ public class CachedConnectionFactory implements DBConnectionFactory {
         final String pass = settings.getPassword(cp);
         final boolean kerberos = settings.useKerberos();
 
-        // database connection key with user, password and database URL
-        ConnectionKey databaseConnKey =
-            new ConnectionKey(user, pass, jdbcUrl, NodeContext.getWorkflowUser().orElse(null));
+        ConnectionKey databaseConnKey = createConnectionKey(cp, settings);
 
         // retrieve original key and/or modify connection key map
         Connection conn = null;
@@ -188,7 +190,7 @@ public class CachedConnectionFactory implements DBConnectionFactory {
             conn = CONNECTION_MAP.get(databaseConnKey);
 
             if (conn != null) {
-                synchronized (conn) {
+                synchronized (databaseConnKey) {
                     if (isOpenAndValid(settings, conn, databaseConnKey)) {
                         return conn;
                     }
@@ -237,6 +239,29 @@ public class CachedConnectionFactory implements DBConnectionFactory {
             } catch (TimeoutException ex) {
                 throw new IOException("Connection to database '" + jdbcUrl + "' timed out");
             }
+        }
+    }
+
+    private static ConnectionKey createConnectionKey(final CredentialsProvider cp, final DatabaseConnectionSettings settings) {
+        final String jdbcUrl = settings.getJDBCUrl();
+        final String user = settings.getUserName(cp);
+        final String pass = settings.getPassword(cp);
+        // database connection key with user, password and database URL
+        ConnectionKey databaseConnKey =
+            new ConnectionKey(user, pass, jdbcUrl, NodeContext.getWorkflowUser().orElse(null));
+        return databaseConnKey;
+    }
+
+    /**
+     * @param cp {@link CredentialsProvider}
+     * @param settings {@link DatabaseConnectionSettings}
+     * @return the {@link ConnectionKey}
+     */
+    public static ConnectionKey getConnectionKey(final CredentialsProvider cp,
+        final DatabaseConnectionSettings settings) {
+        ConnectionKey key = createConnectionKey(cp, settings);
+        synchronized (CONNECTION_KEYS) {
+            return CONNECTION_KEYS.get(key);
         }
     }
 
