@@ -24,4 +24,18 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/connection/CachedConnectionFactory.java" type="org.knime.core.node.port.database.connection.CachedConnectionFactory">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getConnectionKey(CredentialsProvider, DatabaseConnectionSettings)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/connection/CachedConnectionFactory.java" type="org.knime.core.node.port.database.connection.CachedConnectionFactory$ConnectionKey">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.connection.CachedConnectionFactory.ConnectionKey"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
