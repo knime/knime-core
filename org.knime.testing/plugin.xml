@@ -126,6 +126,11 @@
             category-path="/testing"
             factory-class="org.knime.testing.node.logging.LoggerOptionNodeFactory"
             >
+      </node>
+      <node
+            category-path="/testing"
+            deprecated="false"
+            factory-class="org.knime.testing.node.database.DBConnectionCloserNodeFactory">
       </node>     
    </extension>
    <extension
