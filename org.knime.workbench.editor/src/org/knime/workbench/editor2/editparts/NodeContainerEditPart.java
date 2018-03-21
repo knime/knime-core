@@ -639,22 +639,39 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     }
 
     /**
-     * Marks this node parts figure. Used to hilite it from the rest of the parts.
+     * Marks this node parts figure as slated for delete. Used to hilite it from the rest of the parts.
      *
-     * @see NodeContainerEditPart#unmark()
+     * @see NodeContainerEditPart#unmarkForDelete()
      */
-    public void mark() {
-        ((NodeContainerFigure)getFigure()).mark();
+    public void markForDelete() {
+        ((NodeContainerFigure)getFigure()).markForDelete();
     }
 
     /**
-     * Resets the marked part.
+     * Resets the delete-marked part.
      *
-     * @see NodeContainerEditPart#mark()
+     * @see NodeContainerEditPart#markForDelete()
      */
-    public void unmark() {
+    public void unmarkForDelete() {
+        ((NodeContainerFigure)getFigure()).unmarkForDelete();
+    }
 
-        ((NodeContainerFigure)getFigure()).unmark();
+    /**
+     * Marks this node parts figure as slated for replacement. Used to hilite it from the rest of the parts.
+     *
+     * @see NodeContainerEditPart#unmarkForReplacement()
+     */
+    public void markForReplacement() {
+        ((NodeContainerFigure)getFigure()).markForReplacement();
+    }
+
+    /**
+     * Resets the replacement-marked part.
+     *
+     * @see NodeContainerEditPart#markForReplacement()
+     */
+    public void unmarkForReplacement() {
+        ((NodeContainerFigure)getFigure()).unmarkForReplacement();
     }
 
     /**

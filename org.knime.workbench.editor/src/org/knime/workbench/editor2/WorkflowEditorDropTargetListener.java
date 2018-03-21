@@ -64,7 +64,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
@@ -73,15 +72,12 @@ import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.CreateDropRequest.RequestType;
 import org.knime.workbench.editor2.actions.CreateSpaceAction.CreateSpaceDirection;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowOutPortBarEditPart;
-import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
-import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
 import org.knime.workbench.explorer.view.ContentObject;
 import org.knime.workbench.repository.util.ContextAwareNodeFactoryMapper;
 
@@ -110,45 +106,33 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
      */
     private static final int MINIMUM_NODE_DISTANCE = MINIMUM_NODE_DISTANCE_BEFORE_INSERTION / 2;
 
-    /**
-     * The color of dragged over edges.
-     */
-    private static final Color RED = new Color(null, 255, 0, 0);
-
-    private NodeContainerEditPart m_markedNode;
-
-    private ConnectionContainerEditPart m_markedEdge;
-
-    private int m_nodeCount;
-
-    private int m_edgeCount;
-
-    private NodeContainerEditPart m_node;
-
-    private ConnectionContainerEditPart m_edge;
-
-    private Color m_edgeColor;
 
     private final T m_factory;
 
     private int m_distanceToMoveTarget = 0;
 
-    private int m_edgeWidth;
+    private DragPositionProcessor m_dragPositionProcessor;
 
     /**
      * @param viewer the edit part viewer this drop target listener is attached to
+     * @param factory the creation factory for the item which will be dropped
      */
     protected WorkflowEditorDropTargetListener(final EditPartViewer viewer, final T factory) {
         super(viewer);
+
         m_factory = factory;
+
+        m_dragPositionProcessor = new DragPositionProcessor(viewer);
     }
 
     /**
      * @param url the URL of the file
      * @return a node factory creating a node that is registered for handling this type of file
      */
+    @SuppressWarnings("unchecked")
     protected ContextAwareNodeFactory<NodeModel> getNodeFactory(final URL url) {
         String path = url.getPath();
+        @SuppressWarnings("rawtypes")
         Class<? extends ContextAwareNodeFactory> clazz = ContextAwareNodeFactoryMapper.getNodeFactory(path);
         if (clazz == null) {
             LOGGER.warn("No node factory is registered for handling " + " \"" + path + "\"");
@@ -199,15 +183,17 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
     @Override
     protected void updateTargetRequest() {
         CreateDropRequest request = (CreateDropRequest)getTargetRequest();
-        if (m_node != null && m_nodeCount >= m_edgeCount) {
+
+        if ((m_dragPositionProcessor.getNode() != null)
+                    && (m_dragPositionProcessor.getNodeCount() >= m_dragPositionProcessor.getEdgeCount())) {
             request.setRequestType(RequestType.REPLACE);
             request.setLocation(getDropLocation());
-            request.setEditPart(m_node);
+            request.setEditPart(m_dragPositionProcessor.getNode());
             request.setCreateSpace(m_distanceToMoveTarget > 0);
-        } else if (m_edge != null) {
+        } else if (m_dragPositionProcessor.getEdge() != null) {
             request.setRequestType(RequestType.INSERT);
             request.setLocation(getInsertLocation());
-            request.setEditPart(m_edge);
+            request.setEditPart(m_dragPositionProcessor.getEdge());
             request.setCreateSpace(m_distanceToMoveTarget > 0);
             request.setDirection(CreateSpaceDirection.RIGHT);
             request.setDistance(m_distanceToMoveTarget);
@@ -218,7 +204,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
             request.setCreateSpace(m_distanceToMoveTarget > 0);
         }
 
-        unmark(((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getWorkflowManager());
+        m_dragPositionProcessor.unmarkSelection();
     }
 
     /**
@@ -241,8 +227,8 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
         int[] targetBounds = null;
         int sourceAnnotationHeight = 0;
         int targetAnnotationHeight = 0;
-        EditPart source = m_edge.getSource().getParent();
-        EditPart target = m_edge.getTarget().getParent();
+        EditPart source = m_dragPositionProcessor.getEdge().getSource().getParent();
+        EditPart target = m_dragPositionProcessor.getEdge().getTarget().getParent();
 
         NodeContainerEditPart nextNode = null;
 
@@ -420,91 +406,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
      */
     @Override
     public void dragOver(final DropTargetEvent event) {
-        WorkflowManagerUI wfm = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getWorkflowManager();
-        m_node = null;
-        m_edge = null;
-        m_nodeCount = 0;
-        m_edgeCount = 0;
-
-        // edge-/nodedist
-        double edgedist = Integer.MAX_VALUE;
-        double nodedist = Integer.MAX_VALUE;
-        Point dropLocation = getDropLocation(event);
-        EditPart ep = getViewer().findObjectAt(dropLocation.getTranslated(0, 0));
-        if (ep instanceof NodeContainerEditPart) {
-            double temp = dropLocation.getDistance(dropLocation.getTranslated(0, 0));
-            // choose nearest node to mouse position
-            if (nodedist >= temp) {
-                m_node = (NodeContainerEditPart)ep;
-                nodedist = temp;
-            }
-            m_nodeCount++;
-        } else if (ep instanceof ConnectionContainerEditPart) {
-            double temp = dropLocation.getDistance(dropLocation.getTranslated(0, 0));
-            // choose nearest edge to mouse-position
-            if (edgedist >= temp) {
-                m_edge = (ConnectionContainerEditPart)ep;
-                edgedist = temp;
-            }
-            m_edgeCount++;
-        }
-
-        unmark(wfm);
-
-        if (m_node != null && m_nodeCount >= m_edgeCount) {
-            m_markedNode = m_node;
-            m_markedNode.mark();
-            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
-            WindowsDNDHelper.hideDragImage();
-        } else if (m_edge != null) {
-            m_edgeColor = m_edge.getFigure().getForegroundColor();
-            m_edgeWidth = ((ProgressPolylineConnection)m_edge.getFigure()).getLineWidth();
-            m_markedEdge = m_edge;
-            ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(m_edgeWidth + 3);
-            m_markedEdge.getFigure().setForegroundColor(RED);
-
-            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
-            WindowsDNDHelper.hideDragImage();
-        }
-    }
-
-    /**
-     * Converts the event mouse location to editor relative coordinates.
-     * @param event drop target event containing the position (relative to whole display)
-     * @return point converted to the editor coordinates
-     */
-    protected Point getDropLocation(final DropTargetEvent event) {
-        /* NB: don't break in this method - it ruins the cursor location! */
-        event.x = event.display.getCursorLocation().x;
-        event.y = event.display.getCursorLocation().y;
-        Point p =
-            new Point(getViewer().getControl().toControl(event.x, event.y).x, getViewer().getControl().toControl(
-                event.x, event.y).y);
-        return p;
-    }
-
-    /**
-     * Unmark node and edge.
-     *
-     * @param wfm the workflow manager
-     */
-    private void unmark(final WorkflowManagerUI wfm) {
-        if (m_markedNode != null) {
-            m_markedNode.unmark();
-            m_markedNode = null;
-
-            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
-            WindowsDNDHelper.showDragImage();
-        }
-
-        if (m_markedEdge != null) {
-            m_markedEdge.getFigure().setForegroundColor(m_edgeColor);
-            ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(m_edgeWidth);
-            m_markedEdge = null;
-
-            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
-            WindowsDNDHelper.showDragImage();
-        }
+        m_dragPositionProcessor.processDragEventAtPoint(event.display.getCursorLocation());
     }
 
     /**
@@ -525,6 +427,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked") // generics casting...
     @Override
     protected void handleDrop() {
         updateTargetRequest();
@@ -537,7 +440,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
                 // create space for the new node and therefore moves other nodes.
                 // The commands are executed one after another so the user can undo
                 // the move if wanted but still has the new node inserted.
-                List commands = ((CompoundCommand)command).getCommands();
+                List<?> commands = ((CompoundCommand)command).getCommands();
                 if (commands instanceof ArrayList<?>) {
                     for (Command c : (ArrayList<Command>)commands) {
 

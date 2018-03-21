@@ -148,6 +148,9 @@ public class NodeContainerFigure extends RectangleFigure {
     public static final Image LOOP_NO_STATUS =
         ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/loop_nostatus.png");
 
+    /** Replace-node sign. */
+    public static final Image REPLACE_SIGN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/replace-node.png");
+
     /** State: Node not configured. */
     public static final int STATE_NOT_CONFIGURED = 0;
 
@@ -757,6 +760,7 @@ public class NodeContainerFigure extends RectangleFigure {
         private final Label m_iconFigure;
 
         private final Label m_deleteIcon;
+        private final Label m_replaceIcon;
 
         private static final String BACKGROUND_OTHER = "icons/node/"
                 + "background_other.png";
@@ -846,6 +850,11 @@ public class NodeContainerFigure extends RectangleFigure {
             m_deleteIcon = new Label();
             m_deleteIcon.setOpaque(false);
             m_deleteIcon.setIcon(DELETE_SIGN);
+
+            // create the replacement icon
+            m_replaceIcon = new Label();
+            m_replaceIcon.setOpaque(false);
+            m_replaceIcon.setIcon(REPLACE_SIGN);
 
             // center the icon figure
             add(m_backgroundIcon);
@@ -1274,12 +1283,11 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * Marks this node parts figure. Used to hilite it from the rest of the
-     * parts.
+     * Marks this node parts figure as slated for delete. Used to hilite it from the rest of the parts.
      *
-     * @see NodeContainerFigure#unmark()
+     * @see NodeContainerFigure#unmarkForDelete()
      */
-    public void mark() {
+    public void markForDelete() {
         m_symbolFigure.m_backgroundIcon.add(m_symbolFigure.m_deleteIcon);
         m_symbolFigure.m_backgroundIcon.setConstraint(
                 m_symbolFigure.m_deleteIcon, new RelativeLocator(
@@ -1287,12 +1295,33 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * Resets the marked figure.
+     * Resets the delete-marked figure.
      *
-     * @see NodeContainerFigure#mark()
+     * @see NodeContainerFigure#markForDelete()
      */
-    public void unmark() {
+    public void unmarkForDelete() {
         m_symbolFigure.m_backgroundIcon.remove(m_symbolFigure.m_deleteIcon);
+    }
+
+    /**
+     * Marks this node parts figure as slated for replacement. Used to hilite it from the rest of the parts.
+     *
+     * @see NodeContainerFigure#unmarkForReplacement()
+     */
+    public void markForReplacement() {
+        m_symbolFigure.m_backgroundIcon.add(m_symbolFigure.m_replaceIcon);
+        m_symbolFigure.m_backgroundIcon.setConstraint(
+                m_symbolFigure.m_replaceIcon, new RelativeLocator(
+                        m_symbolFigure.m_backgroundIcon, 0.5, 0.5));
+    }
+
+    /**
+     * Resets the replacement-marked figure.
+     *
+     * @see NodeContainerFigure#markForReplacement()
+     */
+    public void unmarkForReplacement() {
+        m_symbolFigure.m_backgroundIcon.remove(m_symbolFigure.m_replaceIcon);
     }
 
     /**

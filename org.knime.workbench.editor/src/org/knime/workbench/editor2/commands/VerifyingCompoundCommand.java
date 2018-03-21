@@ -1,6 +1,6 @@
-/* @(#)$RCSfile$ 
+/* @(#)$RCSfile$
  * $Revision$ $Date$ $Author$
- * 
+ *
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -43,7 +43,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   28.02.2006 (sieb): created
  */
@@ -64,7 +64,7 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
 /**
  * Overrides the default <code>CompoundCommand</code> to add a verification
  * dialog. The display text can be specified.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class VerifyingCompoundCommand extends CompoundCommand {
@@ -84,7 +84,7 @@ public class VerifyingCompoundCommand extends CompoundCommand {
 
     /**
      * Constructs an empty CompoundCommand.
-     * 
+     *
      * @since 2.0
      */
     public VerifyingCompoundCommand() {
@@ -92,7 +92,7 @@ public class VerifyingCompoundCommand extends CompoundCommand {
 
     /**
      * Constructs an empty VerifyingCompoundCommand with the specified label.
-     * 
+     *
      * @param label the label for the Command
      */
     public VerifyingCompoundCommand(final String label) {
@@ -102,27 +102,24 @@ public class VerifyingCompoundCommand extends CompoundCommand {
     /**
      * Overrides the execute method of <code>CompoundCommand</code> to add a
      * verification dialog with the given message.
-     * 
+     *
      * @see org.eclipse.gef.commands.Command#execute()
      */
     @Override
     public void execute() {
         // before showing the confirmation dialog, mark the node part figures
         for (NodeContainerEditPart nodePart : m_nodeParts) {
-            nodePart.mark();
+            nodePart.markForDelete();
         }
         try {
             // the following code has mainly been copied from
             // IDEWorkbenchWindowAdvisor#preWindowShellClose
-            IPreferenceStore store = 
-                KNIMEUIPlugin.getDefault().getPreferenceStore();
+            IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
             if (!store.contains(PreferenceConstants.P_CONFIRM_DELETE)
-                    || store.getBoolean(PreferenceConstants.P_CONFIRM_DELETE)) {
-                MessageDialogWithToggle dialog = 
-                    MessageDialogWithToggle.openOkCancelConfirm(
-                        Display.getDefault().getActiveShell(), 
-                        "Confirm ...", m_dialogDisplayText, 
-                        "Do not ask again", false, null, null);
+                || store.getBoolean(PreferenceConstants.P_CONFIRM_DELETE)) {
+                MessageDialogWithToggle dialog =
+                    MessageDialogWithToggle.openOkCancelConfirm(Display.getDefault().getActiveShell(), "Confirm ...",
+                        m_dialogDisplayText, "Do not ask again", false, null, null);
                 if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
                     return;
                 }
@@ -131,13 +128,13 @@ public class VerifyingCompoundCommand extends CompoundCommand {
                     KNIMEUIPlugin.getDefault().savePluginPreferences();
                 }
             }
-            
+
             // in all other cases execute the commands
             LOGGER.debug("Executing <" + size() + "> commands.");
             super.execute();
         } finally {
             for (NodeContainerEditPart nodePart : m_nodeParts) {
-                nodePart.unmark();
+                nodePart.unmarkForDelete();
             }
         }
     }
@@ -151,7 +148,7 @@ public class VerifyingCompoundCommand extends CompoundCommand {
 
     /**
      * Sets the node parts affected by this compound command.
-     * 
+     *
      * @param nodeParts the affected parts.
      */
     public void setNodeParts(final List<NodeContainerEditPart> nodeParts) {

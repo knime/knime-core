@@ -318,7 +318,10 @@ public class WorkflowEditor extends GraphicalEditor implements
     private List<String> m_editorActions;
 
     private GraphicalViewer m_graphicalViewer;
+
     private ZoomWheelListener m_zoomWheelListener;
+
+    private NodeSupplantDragListener m_nodeSupplantDragListener;
 
     /** path to the workflow directory (that contains the workflow.knime file). */
     private URI m_fileResource;
@@ -543,6 +546,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
         if (m_zoomWheelListener != null) {
             m_zoomWheelListener.dispose();
+        }
+        if (m_nodeSupplantDragListener != null) {
+            m_nodeSupplantDragListener.dispose();
         }
         if (m_fileResource != null && m_manager != null) {
             // disposed is also called when workflow load fails or is canceled
@@ -923,6 +929,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         ZoomManager zm = this.getZoomManager();
         zm.setZoomLevels(ZOOM_LEVELS);
         m_zoomWheelListener = new ZoomWheelListener(zm, (FigureCanvas)getViewer().getControl());
+
+        m_nodeSupplantDragListener = new NodeSupplantDragListener(this);
     }
 
     /**
