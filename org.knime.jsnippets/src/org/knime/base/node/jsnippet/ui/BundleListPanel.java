@@ -63,12 +63,12 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.AbstractListModel;
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -76,12 +76,20 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JTree;
 import javax.swing.ListModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeWillExpandListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.ExpandVetoException;
+import javax.swing.tree.TreePath;
 
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.KNIMEConstants;
@@ -90,6 +98,9 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.Version;
+import org.osgi.framework.namespace.BundleNamespace;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * Panel for adding Bundles to the Java Snippet node for compilation.
@@ -100,7 +111,7 @@ import org.osgi.framework.Version;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-public class BundleListPanel extends JPanel {
+public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
     private static final long serialVersionUID = 1L;
 
@@ -110,6 +121,7 @@ public class BundleListPanel extends JPanel {
         final String name;
 
         final Version installedVersion;
+
         final Version savedVersion;
 
         /**
@@ -131,7 +143,11 @@ public class BundleListPanel extends JPanel {
             return this.name + " " + this.installedVersion.toString();
         }
 
-        /** Whether this bundle is installed in the current eclipse runtime */
+        /**
+         * Whether this bundle is installed in the current eclipse runtime
+         *
+         * @return whether this bundle is installed.
+         */
         public boolean exists() {
             return installedVersion != null;
         }
@@ -152,24 +168,36 @@ public class BundleListPanel extends JPanel {
         }
     }
 
-    class BundleListEntryRenderer extends DefaultListCellRenderer {
+    class BundleListEntryRenderer extends DefaultTreeCellRenderer {
         /**
          * {@inheritDoc}
          */
         @Override
-        public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index,
-            final boolean isSelected, final boolean cellHasFocus) {
-            final BundleListEntry e = ((BundleListEntry)value);
-            final Component c = super.getListCellRendererComponent(list, e.name, index, isSelected, cellHasFocus);
+        public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean sel,
+            final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
+            final Object userObject = ((DefaultMutableTreeNode)value).getUserObject();
+            if (!(userObject instanceof BundleListEntry)) {
+                /* Bundle dependency */
+                final Component c = super.getTreeCellRendererComponent(tree, userObject, sel, expanded, leaf, row, hasFocus);
+                c.setForeground(Color.GRAY);
+                return c;
+            }
+
+            final BundleListEntry e = (BundleListEntry)userObject;
+            final Component c = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
             if (!e.exists()) {
+                /* Bundle not found */
                 c.setForeground(Color.RED);
                 if (c instanceof JLabel) {
                     ((JLabel)c).setToolTipText("Bundle is not installed.");
                 }
             } else if (e.savedVersion != null) {
-                c.setForeground(Color.YELLOW);
+                /* Bundle version changed */
+                c.setForeground(Color.ORANGE);
                 if (c instanceof JLabel) {
-                    ((JLabel)c).setToolTipText(String.format("Installed version (%s) is different than the version when this workflow was saved (%s).", e.installedVersion, e.savedVersion));
+                    ((JLabel)c).setToolTipText(String.format(
+                        "Installed version (%s) is different than the version when this workflow was saved (%s).",
+                        e.installedVersion, e.savedVersion));
                 }
             }
 
@@ -177,11 +205,16 @@ public class BundleListPanel extends JPanel {
         }
     }
 
+    /* Bundle Tree display */
+    final DefaultMutableTreeNode m_rootNode = new DefaultMutableTreeNode();
+
+    final JTree m_tree = new JTree(m_rootNode);
+
     /* Filterable list model containing all available bundles */
     final ArrayListModel<BundleListEntry> m_listModel = new ArrayListModel<>();
 
     /* List displaying all available bundles */
-    final JList<BundleListEntry> m_list = new JList<>(m_listModel);
+    //final JList<BundleListEntry> m_list = new JList<>(m_listModel);
 
     /* Field for filtering the bundle list */
     final JTextField m_filterField = new JTextField();
@@ -263,8 +296,11 @@ public class BundleListPanel extends JPanel {
 
         initBundleNames();
 
-        m_list.setCellRenderer(new BundleListEntryRenderer());
-        add(new JScrollPane(m_list), BorderLayout.CENTER);
+        final BundleListEntryRenderer renderer = new BundleListEntryRenderer();
+        m_tree.setCellRenderer(renderer);
+        add(new JScrollPane(m_tree), BorderLayout.CENTER);
+        m_tree.addTreeWillExpandListener(this);
+        m_tree.expandPath(new TreePath(m_rootNode));
 
         final JPanel northPane = new JPanel(new FlowLayout());
         northPane.add(new JLabel("Add bundles from the current eclipse environment as dependencies."));
@@ -412,7 +448,17 @@ public class BundleListPanel extends JPanel {
 
     /* Remove all bundles currently selected in list */
     void removeSelectedBundles() {
-        m_listModel.removeAll(m_list.getSelectedValuesList());
+        for (final TreePath p : m_tree.getSelectionPaths()) {
+            if(p.getPathCount() != 2) {
+                /* Either root or a dependency */
+                continue;
+            }
+            final DefaultMutableTreeNode node = (DefaultMutableTreeNode)p.getLastPathComponent();
+            ((DefaultTreeModel)m_tree.getModel()).removeNodeFromParent(node);
+
+            final Object o = node.getUserObject();
+            m_listModel.remove(o);
+        }
     }
 
     /**
@@ -432,6 +478,7 @@ public class BundleListPanel extends JPanel {
      * @param bundles
      */
     public void setBundles(final String[] bundles) {
+        m_rootNode.removeAllChildren();
         m_listModel.clear();
 
         addBundles(Arrays.asList(bundles));
@@ -455,6 +502,11 @@ public class BundleListPanel extends JPanel {
 
         //final Set<String> bundleNameSet = new HashSet<String>();
         m_listModel.add(e);
+
+        final DefaultMutableTreeNode node = new DefaultMutableTreeNode(e);
+
+        addDependenciesForNode(node, Platform.getBundle(e.name));
+        ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(node, m_rootNode, m_rootNode.getChildCount());
 
         //for (final String bn : bundleNameSet) {
         //    listToAddTo.addElement(bn);
@@ -481,6 +533,9 @@ public class BundleListPanel extends JPanel {
             }
 
             entries.add(e);
+            DefaultMutableTreeNode node = new DefaultMutableTreeNode(e);
+            m_rootNode.add(node);
+            addDependenciesForNode(node, Platform.getBundle(e.name));
         }
 
         m_listModel.addAll(entries);
@@ -499,13 +554,13 @@ public class BundleListPanel extends JPanel {
         if (firstBundle != null) {
             final Version installedVersion = firstBundle.getVersion();
             Version savedVersion = null;
-            if(split.length > 1) {
+            if (split.length > 1) {
                 final Version v = Version.parseVersion(split[1]);
 
                 // check whether the versions differ up to minor version.
-                final boolean versionsDiffer = installedVersion.getMajor() != v.getMajor()
-                    || installedVersion.getMinor() != v.getMinor();
-                if(versionsDiffer) {
+                final boolean versionsDiffer =
+                    installedVersion.getMajor() != v.getMajor() || installedVersion.getMinor() != v.getMinor();
+                if (versionsDiffer) {
                     savedVersion = v;
                 }
             }
@@ -522,4 +577,39 @@ public class BundleListPanel extends JPanel {
     public ListModel<BundleListEntry> getListModel() {
         return m_listModel;
     }
+
+    private void addDependenciesForNode(final DefaultMutableTreeNode node, final Bundle b) {
+        if (b == null) {
+            return;
+        }
+
+        for (BundleWire dep : b.adapt(BundleWiring.class).getRequiredWires(BundleNamespace.BUNDLE_NAMESPACE)) {
+            final Bundle depBundle = dep.getProviderWiring().getBundle();
+            final DefaultMutableTreeNode child = new DefaultMutableTreeNode(depBundle);
+            node.add(child);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void treeWillExpand(final TreeExpansionEvent event) throws ExpandVetoException {
+        final DefaultMutableTreeNode node = (DefaultMutableTreeNode)event.getPath().getLastPathComponent();
+        Enumeration<DefaultMutableTreeNode> children = node.children();
+        while (children.hasMoreElements()) {
+            DefaultMutableTreeNode child = children.nextElement();
+            if (child != null && child.getUserObject() instanceof Bundle) {
+                addDependenciesForNode(child, (Bundle)child.getUserObject());
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void treeWillCollapse(final TreeExpansionEvent event) throws ExpandVetoException {
+    }
+
 }

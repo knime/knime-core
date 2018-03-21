@@ -139,12 +139,12 @@ public class BundleListPanelTest extends UiTest {
         assertEquals("Duplicates should be skipped while adding bundles.", 2, panel.m_listModel.size());
 
         /* Select multiple and remove */
-        panel.m_list.setSelectedIndices(new int[]{0, 1});
+        //panel.m_list.setSelectedIndices(new int[]{0, 1});
         panel.removeSelectedBundles();
         assertEquals("Removing selected elements should remove them", 0, panel.m_listModel.size());
 
         /* Test that removeSelectetedBundles without selection doesn't error */
-        panel.m_list.clearSelection();
+        //panel.m_list.clearSelection();
         panel.removeSelectedBundles();
     }
 }
