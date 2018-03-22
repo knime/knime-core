@@ -97,7 +97,7 @@ public class DatabaseConnectionSettings {
     public static final Version LEGACY_VERSION = new Version(3, 3, 0);
 
     /**Maximum number of tries to get a valid connection and enter a synchronize block with it.*/
-    private static final int MAX_CONNECTION_TRIES = 10;
+    private static final int MAX_CONNECTION_TRIES;
 
     private static final Version CURRENT_VERSION =
             new Version(KNIMEConstants.MAJOR, KNIMEConstants.MINOR, KNIMEConstants.REV);
@@ -128,6 +128,23 @@ public class DatabaseConnectionSettings {
         if (databaseTimeout >= 0) {
             setDatabaseTimeout(databaseTimeout);
         }
+        final String maxRetry = System.getProperty("knime.database.max.connection.retry", "100");
+        int maxRetryCounter = 100;
+        if (maxRetry != null) {
+            try {
+                final int counter = Integer.parseInt(maxRetry);
+                if (counter <= 0) {
+                    LOGGER.warn("Maximum connection retry counter set via system propery not valid (<= 0) '"
+                            + maxRetry + "' using default.");
+                } else {
+                    maxRetryCounter = counter;
+                }
+            } catch (NumberFormatException nfe) {
+                LOGGER.warn("Maximum connection retry counter set via system propery not valid '" 
+                        + maxRetry + "' using default.");
+            }
+        }
+        MAX_CONNECTION_TRIES = maxRetryCounter;
     }
 
     /**
