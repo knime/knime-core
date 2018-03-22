@@ -50,7 +50,7 @@ package org.knime.base.algorithms.outlier.options;
 
 import java.util.Arrays;
 
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  * Enum allowing to restrict the outlier detection.
@@ -90,14 +90,15 @@ public enum NumericOutliersDetectionOption {
      *
      * @param name enum name
      * @return the enum
-     * @throws IllegalArgumentException if the given name is not associated with an TREATMENT_OPTIONS value
+     * @throws InvalidSettingsException if the given name is not associated with an
+     *             {@link NumericOutliersDetectionOption} value
      */
-    // TODO Mark: checked exception (ISException)
-    public static NumericOutliersDetectionOption getEnum(final String name) throws IllegalArgumentException {
-        CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
-
+    public static NumericOutliersDetectionOption getEnum(final String name) throws InvalidSettingsException {
+        if (name == null) {
+            throw new InvalidSettingsException(NAME_MUST_NOT_BE_NULL);
+        }
         return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
-            .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
+            .orElseThrow(() -> new InvalidSettingsException(ARGUMENT_EXCEPTION_PREFIX + name));
     }
 
 }

@@ -44,22 +44,36 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 16, 2018 (ortmann): created
+ *   Feb 16, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.algorithms.outlier.listeners;
 
 /**
- * Interface allowing to react to warnings.
+ * Class encoding a warning for outlier treatment node(s).
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public interface WarningListener {
+public final class NumericOutlierWarning {
+
+    /** The warning mesage */
+    private final String m_msg;
 
     /**
-     * Invoked when a warning is created.
+     * Constructor
      *
-     * @param warning the warning
+     * @param message the warning message
      */
-    public void warning(final Warning warning);
+    public NumericOutlierWarning(final String message) {
+        m_msg = message;
+    }
+
+    /**
+     * Returns the warning message.
+     *
+     * @return the warning message
+     */
+    public String getMessage() {
+        return m_msg;
+    }
 
 }

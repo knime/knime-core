@@ -44,23 +44,23 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 15, 2018 (ortmann): created
+ *   Feb 15, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.algorithms.outlier;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
-import org.knime.base.algorithms.outlier.listeners.WarningListener;
+import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarningListener;
 import org.knime.base.algorithms.outlier.options.NumericOutliersDetectionOption;
 import org.knime.base.algorithms.outlier.options.NumericOutliersReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * The algorithm to identify and treat outliers based on the interquartile range.
@@ -68,6 +68,12 @@ import org.knime.core.node.ExecutionContext;
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
 public final class NumericOutliers {
+
+    /** Maximum number of outlier columns to print. */
+    private static final int MAX_PRINT = 3;
+
+    /** The summary prefix. */
+    private static final String SUMMARY_PREFIX = "Outlier treatment for columns: ";
 
     /** The intervals calculator. */
     private final NumericOutliersIntervalsCalculator m_calculator;
@@ -86,8 +92,7 @@ public final class NumericOutliers {
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
-    // TODO Mark: final
-    public static class Builder {
+    public final static class Builder {
 
         /** The builder of the outlier intervals calculator. */
         private final NumericOutliersIntervalsCalculator.Builder m_intervalsBuilder;
@@ -96,7 +101,7 @@ public final class NumericOutliers {
         private final NumericOutliersReviser.Builder m_reviserBuilder;
 
         /** The list managing the warning listeners. */
-        private final List<WarningListener> m_listener;
+        private final List<NumericOutlierWarningListener> m_listener;
 
         /**
          * Constructor initializting all builders and setting the outlier column names.
@@ -106,7 +111,7 @@ public final class NumericOutliers {
         public Builder(final String[] outlierColNames) {
             m_intervalsBuilder = new NumericOutliersIntervalsCalculator.Builder(outlierColNames);
             m_reviserBuilder = new NumericOutliersReviser.Builder();
-            m_listener = new LinkedList<WarningListener>();
+            m_listener = new LinkedList<NumericOutlierWarningListener>();
         }
 
         /**
@@ -206,7 +211,7 @@ public final class NumericOutliers {
          * @param listener the listener to be added
          * @return the builder itself
          */
-        public Builder addWarningListener(final WarningListener listener) {
+        public Builder addWarningListener(final NumericOutlierWarningListener listener) {
             m_listener.add(listener);
             return this;
         }
@@ -329,11 +334,9 @@ public final class NumericOutliers {
             m_calculator.calculatePermittedIntervals(in, exec.createSubExecutionContext(intervalsProgress));
 
         m_outlierPort = new NumericOutlierPortObject(
-            Arrays.stream(permittedIntervals.getOutlierColNames())//
-            // TODO Mark: name to long for tables with 20+ columns, abbreviate (see
-            // ConvenienceMethods.getShortStringFrom(Collection<?>, int) -- and don't make fun of the class name)
-                .collect(Collectors.joining(", ", "Outlier treatment for columns: ", ""))//
-            , in.getDataTableSpec(), permittedIntervals, m_reviser);
+            SUMMARY_PREFIX + ConvenienceMethods
+                .getShortStringFrom(Arrays.asList(permittedIntervals.getOutlierColNames()), MAX_PRINT),
+            in.getDataTableSpec(), permittedIntervals, m_reviser);
 
         // treat the outliers
         m_outTable = m_reviser.treatOutliers(exec.createSubExecutionContext(treatmentProgress), in, permittedIntervals);

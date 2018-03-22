@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 23, 2018 (ortmann): created
+ *   Feb 23, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.algorithms.outlier;
 
@@ -75,8 +75,7 @@ import org.knime.core.node.port.PortTypeRegistry;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-//TODO Mark: make final
-public class NumericOutlierPortObject extends AbstractSimplePortObject {
+public final class NumericOutlierPortObject extends AbstractSimplePortObject {
 
     /** @noreference This class is not intended to be referenced by clients. */
     public static final class Serializer extends AbstractSimplePortObjectSerializer<NumericOutlierPortObject> {
@@ -91,6 +90,9 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
 
     /** The name of the outlier column spec . */
     private static final String OUTLIER_SUFFIX = " (outlier)";
+
+    /** Config key of the summary text. */
+    private static final String CFG_SUMMARY = "summary";
 
     /** Config key for the group column types. */
     private static final String CFG_GROUP_COL_TYPES = "group-col-types";
@@ -114,7 +116,7 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
     private static final String CFG_INTERVALS = "permitted intervals";
 
     /** The summary (tooltip) text. */
-    private final String m_summary;
+    private String m_summary;
 
     /** The outlier model. */
     private NumericOutliersModel m_outlierModel;
@@ -123,24 +125,19 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
     private DataType[] m_groupColTypes;
 
     /** The outlier treatment option. */
-    // TODO Mark: change to concrete class / enum
-    private String m_treatmentOption;
+    private NumericOutliersTreatmentOption m_treatmentOption;
 
     /** The outlier replacement strategy. */
-    // TODO Mark: change to concrete class / enum
-    private String m_repStrategy;
+    private NumericOutliersReplacementStrategy m_repStrategy;
 
     /** The outlier detection option. */
-    // TODO Mark: change to concrete class / enum
-    private String m_detectionOption;
+    private NumericOutliersDetectionOption m_detectionOption;
 
     /** Flag indiciation whether the domain needs to be updated. */
     private boolean m_updateDomain;
 
     /** Empty constructor required by super class, should not be used. */
     public NumericOutlierPortObject() {
-        // TODO Mark: does the summary get properly restored when the workflow is loaded?
-        m_summary = "";
     }
 
     /**
@@ -163,9 +160,9 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
         m_groupColTypes = extractTypes(inSpec, m_outlierModel.getGroupColNames());
 
         // store the reviser settings
-        m_treatmentOption = reviser.getTreatmentOption().toString();
-        m_repStrategy = reviser.getReplacementStrategy().toString();
-        m_detectionOption = reviser.getRestrictionOption().toString();
+        m_treatmentOption = reviser.getTreatmentOption();
+        m_repStrategy = reviser.getReplacementStrategy();
+        m_detectionOption = reviser.getRestrictionOption();
         m_updateDomain = reviser.updateDomain();
     }
 
@@ -176,9 +173,9 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
      */
     public NumericOutliersReviser.Builder getOutRevBuilder() {
         return new NumericOutliersReviser.Builder()//
-            .setTreatmentOption(NumericOutliersTreatmentOption.getEnum(m_treatmentOption))//
-            .setReplacementStrategy(NumericOutliersReplacementStrategy.getEnum(m_repStrategy))//
-            .setDetectionOption(NumericOutliersDetectionOption.getEnum(m_detectionOption))//
+            .setTreatmentOption(m_treatmentOption)//
+            .setReplacementStrategy(m_repStrategy)//
+            .setDetectionOption(m_detectionOption)//
             .updateDomain(m_updateDomain);
     }
 
@@ -257,6 +254,7 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
      */
     @Override
     protected void save(final ModelContentWO model, final ExecutionMonitor exec) throws CanceledExecutionException {
+        model.addString(CFG_SUMMARY, m_summary);
         model.addDataTypeArray(CFG_GROUP_COL_TYPES, m_groupColTypes);
         saveReviserSettings(model.addModelContent(CFG_REVISER));
         m_outlierModel.saveModel(model.addModelContent(CFG_INTERVALS));
@@ -268,9 +266,9 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
      * @param model the model to save to
      */
     private void saveReviserSettings(final ModelContentWO model) {
-        model.addString(CFG_OUTLIER_TREATMENT, m_treatmentOption);
-        model.addString(CFG_OUTLIER_REPLACEMENT, m_repStrategy);
-        model.addString(CFG_DETECTION_OPTION, m_detectionOption);
+        model.addString(CFG_OUTLIER_TREATMENT, m_treatmentOption.toString());
+        model.addString(CFG_OUTLIER_REPLACEMENT, m_repStrategy.toString());
+        model.addString(CFG_DETECTION_OPTION, m_detectionOption.toString());
         model.addBoolean(CFG_DOMAIN_POLICY, m_updateDomain);
     }
 
@@ -280,6 +278,9 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
     @Override
     protected void load(final ModelContentRO model, final PortObjectSpec spec, final ExecutionMonitor exec)
         throws InvalidSettingsException, CanceledExecutionException {
+        // load the summary
+        m_summary = model.getString(CFG_SUMMARY);
+
         // load the types
         m_groupColTypes = model.getDataTypeArray(CFG_GROUP_COL_TYPES);
 
@@ -287,9 +288,9 @@ public class NumericOutlierPortObject extends AbstractSimplePortObject {
         final ModelContentRO reviserModel = model.getModelContent(CFG_REVISER);
 
         // load the reviser settings
-        m_treatmentOption = reviserModel.getString(CFG_OUTLIER_TREATMENT);
-        m_repStrategy = reviserModel.getString(CFG_OUTLIER_REPLACEMENT);
-        m_detectionOption = reviserModel.getString(CFG_DETECTION_OPTION);
+        m_treatmentOption = NumericOutliersTreatmentOption.getEnum(reviserModel.getString(CFG_OUTLIER_TREATMENT));
+        m_repStrategy = NumericOutliersReplacementStrategy.getEnum(reviserModel.getString(CFG_OUTLIER_REPLACEMENT));
+        m_detectionOption = NumericOutliersDetectionOption.getEnum(reviserModel.getString(CFG_DETECTION_OPTION));
         m_updateDomain = reviserModel.getBoolean(CFG_DOMAIN_POLICY);
 
         // initialize the permitted intervals model

@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 21, 2018 (ortmann): created
+ *   Feb 21, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.algorithms.outlier;
 
@@ -61,8 +61,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.knime.base.algorithms.outlier.listeners.Warning;
-import org.knime.base.algorithms.outlier.listeners.WarningListener;
+import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarning;
+import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarningListener;
 import org.knime.base.algorithms.outlier.options.NumericOutliersDetectionOption;
 import org.knime.base.algorithms.outlier.options.NumericOutliersReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
@@ -124,7 +124,7 @@ public final class NumericOutliersReviser {
     private final NumericOutliersDetectionOption m_detectionOption;
 
     /** List of listeners receiving warning messages. */
-    private final List<WarningListener> m_listeners;
+    private final List<NumericOutlierWarningListener> m_listeners;
 
     /** The outlier column names. */
     private String[] m_outlierColNames;
@@ -232,7 +232,7 @@ public final class NumericOutliersReviser {
         m_repStrategy = b.m_repStrategy;
         m_detectionOption = b.m_detectionOption;
         m_updateDomain = b.m_updateDomain;
-        m_listeners = new LinkedList<WarningListener>();
+        m_listeners = new LinkedList<NumericOutlierWarningListener>();
     }
 
     /**
@@ -240,7 +240,7 @@ public final class NumericOutliersReviser {
      *
      * @param listener the listener to add
      */
-    public void addListener(final WarningListener listener) {
+    public void addListener(final NumericOutlierWarningListener listener) {
         if (!m_listeners.contains(listener)) {
             m_listeners.add(listener);
         }
@@ -486,9 +486,7 @@ public final class NumericOutliersReviser {
         // create new instances for each row
         final DataCell[] treatedVals = new DataCell[noOutliers];
 
-        // TODO Mark: If you use a different super constructor you can enable "processConcurrently"
-        // (won't bring anything until we change StreamableFunction.runFinal)
-        final AbstractCellFactory fac = new AbstractCellFactory(outlierSpecs) {
+        final AbstractCellFactory fac = new AbstractCellFactory(true, outlierSpecs) {
 
             @Override
             public DataCell[] getCells(final DataRow row) {
@@ -708,7 +706,7 @@ public final class NumericOutliersReviser {
      * @param msg the warning message
      */
     private void warnListeners(final String msg) {
-        final Warning warning = new Warning(msg);
+        final NumericOutlierWarning warning = new NumericOutlierWarning(msg);
         // warn all listeners
         m_listeners.forEach(l -> l.warning(warning));
     }
@@ -793,7 +791,7 @@ public final class NumericOutliersReviser {
          * @param colName the outlier column name
          * @param val the value
          */
-        private void updateDomain(final String colName, final double val) {
+        synchronized private void updateDomain(final String colName, final double val) {
             if (!m_domainsMap.containsKey(colName)) {
                 m_domainsMap.put(colName, new double[]{val, val});
             }
@@ -980,7 +978,7 @@ public final class NumericOutliersReviser {
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
-    public static class SummaryInternals extends StreamableOperatorInternals implements WarningListener {
+    public static final class SummaryInternals extends StreamableOperatorInternals implements NumericOutlierWarningListener {
 
         /** The warnings key. */
         private static final String WARNINGS_KEY = "warnings";
@@ -1131,7 +1129,7 @@ public final class NumericOutliersReviser {
          * {@inheritDoc}
          */
         @Override
-        public void warning(final Warning warning) {
+        public void warning(final NumericOutlierWarning warning) {
             m_warnings.add(warning.getMessage());
         }
 
@@ -1142,7 +1140,7 @@ public final class NumericOutliersReviser {
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
-    public static class SummaryMerger extends MergeOperator {
+    public static final class SummaryMerger extends MergeOperator {
 
         /**
          * Constructor.

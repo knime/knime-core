@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jan 31, 2018 (ortmann): created
+ *   Jan 31, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.node.stats.outlier.handler;
 
@@ -55,10 +55,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
-import org.knime.base.algorithms.outlier.NumericOutliers;
 import org.knime.base.algorithms.outlier.NumericOutlierPortObject;
-import org.knime.base.algorithms.outlier.listeners.Warning;
-import org.knime.base.algorithms.outlier.listeners.WarningListener;
+import org.knime.base.algorithms.outlier.NumericOutliers;
+import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarning;
+import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarningListener;
 import org.knime.base.algorithms.outlier.options.NumericOutliersDetectionOption;
 import org.knime.base.algorithms.outlier.options.NumericOutliersReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
@@ -88,7 +88,7 @@ import org.knime.core.node.util.filter.InputFilter;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-final class NumericOutliersNodeModel extends NodeModel implements WarningListener {
+final class NumericOutliersNodeModel extends NodeModel implements NumericOutlierWarningListener {
 
     /** Invalid input exception text. */
     private static final String INVALID_INPUT_EXCEPTION = "No double compatible columns in input";
@@ -202,15 +202,17 @@ final class NumericOutliersNodeModel extends NodeModel implements WarningListene
      *
      * @param inSpec the input data table spec
      * @return an instance of outlier detector
+     * @throws InvalidSettingsException if there is no corresponding enum type
      */
-    private NumericOutliers createOutlierDetector(final DataTableSpec inSpec) {
+    private NumericOutliers createOutlierDetector(final DataTableSpec inSpec) throws InvalidSettingsException {
         return new NumericOutliers.Builder(getOutlierColNames(inSpec))//
             .addWarningListener(this)//
             .calcInMemory(m_memorySetting.getBooleanValue())//
             .setEstimationType(EstimationType.valueOf(m_estimationSettings.getStringValue()))//
             .setGroupColumnNames(getGroupColNames(inSpec))//
             .setIQRMultiplier(m_scalarModel.getDoubleValue())//
-            .setReplacementStrategy(NumericOutliersReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue()))//
+            .setReplacementStrategy(
+                NumericOutliersReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue()))//
             .setTreatmentOption(NumericOutliersTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue()))//
             .setDetectionOption(NumericOutliersDetectionOption.getEnum(m_detectionSettings.getStringValue()))//
             .useHeuristic(m_heuristicSetting.getBooleanValue())//
@@ -294,12 +296,12 @@ final class NumericOutliersNodeModel extends NodeModel implements WarningListene
         // test if flow variables violate settings related to enums
         try {
             EstimationType.valueOf(m_estimationSettings.getStringValue());
-            NumericOutliersTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue());
-            NumericOutliersDetectionOption.getEnum(m_detectionSettings.getStringValue());
-            NumericOutliersReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue());
         } catch (IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage());
         }
+        NumericOutliersTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue());
+        NumericOutliersDetectionOption.getEnum(m_detectionSettings.getStringValue());
+        NumericOutliersReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue());
 
         // test if IQR scalar is < 0
         if (m_scalarModel.getDoubleValue() < 0) {
@@ -525,7 +527,8 @@ final class NumericOutliersNodeModel extends NodeModel implements WarningListene
      * @return the outlier replacement settings model
      */
     public static SettingsModelString createOutlierReplacementModel() {
-        return new SettingsModelString(CFG_OUTLIER_REPLACEMENT, NumericOutliersReplacementStrategy.values()[0].toString());
+        return new SettingsModelString(CFG_OUTLIER_REPLACEMENT,
+            NumericOutliersReplacementStrategy.values()[0].toString());
     }
 
     public static SettingsModelString createOutlierDetectionModel() {
@@ -554,7 +557,7 @@ final class NumericOutliersNodeModel extends NodeModel implements WarningListene
      * {@inheritDoc}
      */
     @Override
-    public void warning(final Warning warning) {
+    public void warning(final NumericOutlierWarning warning) {
         setWarningMessage(warning.getMessage());
     }
 

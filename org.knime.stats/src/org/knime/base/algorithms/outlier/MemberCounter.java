@@ -70,32 +70,23 @@ import org.knime.core.node.ModelContentWO;
  */
 final class MemberCounter {
 
-    /**
-     *
-     */
-    private static final String GROUP_VAL_KEY = "group-val";
+    /** Config key of the the group vals. */
+    private static final String CFG_GROUP_VAL = "group-val";
 
-    /**
-     *
-     */
-    private static final String GROUP_KEY_KEY = "group-key";
+    /** Config key of the group keys. */
+    private static final String CFG_GROUP_KEY = "group-key";
 
-    /**
-     *
-     */
-    private static final String GROUP_COUNT_KEY = "group-count_";
+    /** Config key of the group count model. */
+    private static final String CFG_GROUP_COUNT = "group-count_";
 
-    /**
-     *
-     */
-    private static final String GROUP_COUNTS_KEY = "group-counts";
+    /** Config key of the group counts. */
+    private static final String CFG_GROUP_COUNTS = "group-counts";
 
-    /**
-     *
-     */
-    private static final String OUT_COL_NAME_KEY = "outlier-column-name";
+    /** Config key of the outlier column name. */
+    private static final String CFG_OUT_COL_NAME = "outlier-column-name";
 
-    private static final String OUT_COL_KEY = "outlier-column_";
+    /** Config key of the outlier column model. */
+    private static final String CFG_OUT_COL = "outlier-column_";
 
     /** Map storing the number of members for each column respective the different groups. */
     final Map<String, Map<GroupKey, Integer>> m_groupCounts;
@@ -162,7 +153,8 @@ final class MemberCounter {
      * @param key the key of the group whose count needs to be incremented
      * @param increment the increment value
      */
-    private void incrementMemberCount(final String outlierColName, final GroupKey key, final int increment) {
+    synchronized private void incrementMemberCount(final String outlierColName, final GroupKey key,
+        final int increment) {
         if (!m_groupCounts.containsKey(outlierColName)) {
             m_groupCounts.put(outlierColName, new HashMap<GroupKey, Integer>());
         }
@@ -200,14 +192,14 @@ final class MemberCounter {
     void saveModel(final ModelContentWO model) {
         int gInd = 0;
         for (Entry<String, Map<GroupKey, Integer>> entry : m_groupCounts.entrySet()) {
-            final ModelContentWO colSettings = model.addModelContent(OUT_COL_KEY + gInd++);
-            colSettings.addString(OUT_COL_NAME_KEY, entry.getKey());
-            final ModelContentWO groupCounts = colSettings.addModelContent(GROUP_COUNTS_KEY);
+            final ModelContentWO colSettings = model.addModelContent(CFG_OUT_COL + gInd++);
+            colSettings.addString(CFG_OUT_COL_NAME, entry.getKey());
+            final ModelContentWO groupCounts = colSettings.addModelContent(CFG_GROUP_COUNTS);
             int oInd = 0;
             for (Entry<GroupKey, Integer> gCountEntry : entry.getValue().entrySet()) {
-                final ModelContentWO groupCount = groupCounts.addModelContent(GROUP_COUNT_KEY + oInd++);
-                groupCount.addDataCellArray(GROUP_KEY_KEY, gCountEntry.getKey().getGroupVals());
-                groupCount.addInt(GROUP_VAL_KEY, gCountEntry.getValue());
+                final ModelContentWO groupCount = groupCounts.addModelContent(CFG_GROUP_COUNT + oInd++);
+                groupCount.addDataCellArray(CFG_GROUP_KEY, gCountEntry.getKey().getGroupVals());
+                groupCount.addInt(CFG_GROUP_VAL, gCountEntry.getValue());
             }
         }
     }
@@ -228,12 +220,12 @@ final class MemberCounter {
         final Enumeration<ModelContentRO> colSettings = model.children();
         while (colSettings.hasMoreElements()) {
             final ModelContentRO colSetting = colSettings.nextElement();
-            final String outlierColName = colSetting.getString(OUT_COL_NAME_KEY);
-            final Enumeration<ModelContentRO> groupCounts = colSetting.getModelContent(GROUP_COUNTS_KEY).children();
+            final String outlierColName = colSetting.getString(CFG_OUT_COL_NAME);
+            final Enumeration<ModelContentRO> groupCounts = colSetting.getModelContent(CFG_GROUP_COUNTS).children();
             while (groupCounts.hasMoreElements()) {
                 final ModelContentRO groupCount = groupCounts.nextElement();
-                final GroupKey key = new GroupKey(groupCount.getDataCellArray(GROUP_KEY_KEY));
-                final int count = groupCount.getInt(GROUP_VAL_KEY);
+                final GroupKey key = new GroupKey(groupCount.getDataCellArray(CFG_GROUP_KEY));
+                final int count = groupCount.getInt(CFG_GROUP_VAL);
                 counter.incrementMemberCount(outlierColName, key, count);
             }
         }

@@ -44,13 +44,13 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 15, 2018 (ortmann): created
+ *   Feb 15, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.algorithms.outlier.options;
 
 import java.util.Arrays;
 
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  * Enum encoding the outlier treatment.
@@ -90,14 +90,15 @@ public enum NumericOutliersTreatmentOption {
      *
      * @param name enum name
      * @return the enum
-     * @throws IllegalArgumentException if the given name is not associated with an TREATMENT_OPTIONS value
+     * @throws InvalidSettingsException if the given name is not associated with an
+     *             {@link NumericOutliersTreatmentOption} value
      */
-    // TODO Mark: could this also declare a InvalidSettingsException (a checked exception)
-    public static NumericOutliersTreatmentOption getEnum(final String name) throws IllegalArgumentException {
-        CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
-
+    public static NumericOutliersTreatmentOption getEnum(final String name) throws InvalidSettingsException {
+        if (name == null) {
+            throw new InvalidSettingsException(NAME_MUST_NOT_BE_NULL);
+        }
         return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
-            .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
+            .orElseThrow(() -> new InvalidSettingsException(ARGUMENT_EXCEPTION_PREFIX + name));
     }
 
 }

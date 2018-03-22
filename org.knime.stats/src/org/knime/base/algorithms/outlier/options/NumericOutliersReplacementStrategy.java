@@ -44,13 +44,13 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 15, 2018 (ortmann): created
+ *   Feb 15, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.algorithms.outlier.options;
 
 import java.util.Arrays;
 
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  * Enum encoding the replacement strategy.
@@ -68,7 +68,8 @@ public enum NumericOutliersReplacementStrategy {
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
 
     /** IllegalArgumentException prefix. */
-    private static final String ARGUMENT_EXCEPTION_PREFIX = "No NumericOutliersReplacementStrategy constant with name: ";
+    private static final String ARGUMENT_EXCEPTION_PREFIX =
+        "No NumericOutliersReplacementStrategy constant with name: ";
 
     private final String m_name;
 
@@ -86,15 +87,15 @@ public enum NumericOutliersReplacementStrategy {
      *
      * @param name the enum name
      * @return the enum
-     * @throws IllegalArgumentException if the given name is not associated with an REPLACEMENT_STRATEGY value
+     * @throws InvalidSettingsException if the given name is not associated with an
+     *             {@link NumericOutliersReplacementStrategy} value
      */
-    // TODO Mark: checked exception (ISException)
-    public static NumericOutliersReplacementStrategy getEnum(final String name) throws IllegalArgumentException {
-        CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
-
+    public static NumericOutliersReplacementStrategy getEnum(final String name) throws InvalidSettingsException {
+        if (name == null) {
+            throw new InvalidSettingsException(NAME_MUST_NOT_BE_NULL);
+        }
         return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
-            .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
-
+            .orElseThrow(() -> new InvalidSettingsException(ARGUMENT_EXCEPTION_PREFIX + name));
     }
 
 }

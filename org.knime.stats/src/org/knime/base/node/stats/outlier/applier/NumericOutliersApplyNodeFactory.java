@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jan 31, 2018 (ortmann): created
+ *   Jan 31, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.node.stats.outlier.applier;
 
@@ -57,7 +57,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class NumericOutliersApplyNodeFactory extends NodeFactory<NumericOutliersApplyNodeModel> {
+public final class NumericOutliersApplyNodeFactory extends NodeFactory<NumericOutliersApplyNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -89,8 +89,7 @@ public class NumericOutliersApplyNodeFactory extends NodeFactory<NumericOutliers
      */
     @Override
     protected boolean hasDialog() {
-        // TODO Mark: ... hm.
-        return true;
+        return false;
     }
 
     /**

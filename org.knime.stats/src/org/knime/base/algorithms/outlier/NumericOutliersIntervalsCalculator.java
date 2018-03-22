@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 21, 2018 (ortmann): created
+ *   Feb 21, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.algorithms.outlier;
 

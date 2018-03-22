@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jan 31, 2018 (ortmann): created
+ *   Jan 31, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.node.stats.outlier.applier;
 
@@ -58,8 +58,8 @@ import java.util.stream.IntStream;
 import org.knime.base.algorithms.outlier.NumericOutlierPortObject;
 import org.knime.base.algorithms.outlier.NumericOutliersReviser;
 import org.knime.base.algorithms.outlier.NumericOutliersReviser.SummaryInternals;
-import org.knime.base.algorithms.outlier.listeners.Warning;
-import org.knime.base.algorithms.outlier.listeners.WarningListener;
+import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarning;
+import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarningListener;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.BufferedDataTable;
@@ -84,41 +84,32 @@ import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
- * Model to identify numeric outliers based on interquartile ranges.
+ * Model to identify and treat numeric outliers based on interquartile ranges.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-final class NumericOutliersApplyNodeModel extends NodeModel implements WarningListener {
+final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOutlierWarningListener {
+
+    /** Maximum number of columns to print. */
+    private static final int MAX_PRINT = 3;
 
     /** The missing groups exception prefix. */
-    private static final String MISSING_GROUPS_EXCEPTION_PREFIX = "Numeric outliers used group(s) (";
-
-    /** The missing groups exception suffix. */
-    private static final String MISSING_GROUPS_EXCEPTION_SUFFIX =
-        ") which does not, or only partially, exist in the table";
+    private static final String MISSING_GROUPS_EXCEPTION_PREFIX = "Some group(s) is not present in the data: ";
 
     /** The groups compatibility exception prefix. */
-    private static final String GROUPS_COMPATIBILITY_EXCEPTION_PREFIX = "The data type for column(s) (";
-
-    /** The groups compatibility exception suffix. */
-    private static final String GROUPS_COMPATIBILITY_EXCEPTION_SUFFIX =
-        ") differs between the input table and that the model was created from";
+    private static final String GROUPS_COMPATIBILITY_EXCEPTION_PREFIX =
+        "Some group(s) is not compatible with the data: ";
 
     /** The missing outliers exception prefix. */
-    private static final String MISSING_OUTLIERS_EXCEPTION_PREFIX = "The model was created for column(s) (";
-
-    /** The missing outliers exception suffix. */
-    private static final String MISSING_OUTLIERS_EXCEPTION_SUFFIX =
-        ") which does not exist in the table or is not compatible";
+    private static final String MISSING_OUTLIERS_EXCEPTION_PREFIX =
+        "None of the outlier column(s) is compatible or exists in the data: ";
 
     /** The missing outliers warning prefix. */
-    private static final String MISSING_OUTLIERS_WARNING_PREFIX = "Column(s) (";
-
-    /** The missing outliers warning suffix. */
-    private static final String MISSING_OUTLIERS_WARNING_SUFFIX =
-        ") as specified by the numeric outliers is not present or compatible";
+    private static final String MISSING_OUTLIERS_WARNING_PREFIX =
+        "Some outlier column(s) is not present/compatible with the data: ";
 
     /** Init the numeric outliers node model with one input and output. */
     NumericOutliersApplyNodeModel() {
@@ -152,12 +143,13 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements WarningLi
 
         // ensure that the in data table contains the group columns that were used to learn the outlier reviser
         final String[] groupColNames = NumericOutlierPortObject.getGroupColNames(outlierPortSpec);
-        if (!Arrays.stream(groupColNames)//
-            .allMatch(inTableSpec::containsName)) {
-            // TODO Mark: Error message possibly too long and may contain irrelevant columns
-            // (Am I picky?)
-            throw new InvalidSettingsException(Arrays.stream(groupColNames)
-                .collect(Collectors.joining(", ", MISSING_GROUPS_EXCEPTION_PREFIX, MISSING_GROUPS_EXCEPTION_SUFFIX)));
+
+        final String[] missingGroupColNames = Arrays.stream(groupColNames)//
+            .filter(g -> !inTableSpec.containsName(g))//
+            .toArray(String[]::new);
+        if (missingGroupColNames.length > 0) {
+            throw new InvalidSettingsException(MISSING_GROUPS_EXCEPTION_PREFIX
+                + ConvenienceMethods.getShortStringFrom(Arrays.asList(missingGroupColNames), MAX_PRINT));
         }
 
         // check if the data type for the groups differs between those the model was trained on and the input table
@@ -168,9 +160,8 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements WarningLi
             .mapToObj(i -> groupColNames[i])//
             .toArray(String[]::new);
         if (wrongDataType.length != 0) {
-            throw new InvalidSettingsException(Arrays.stream(wrongDataType)//
-                .collect(Collectors.joining(", ", GROUPS_COMPATIBILITY_EXCEPTION_PREFIX,
-                    GROUPS_COMPATIBILITY_EXCEPTION_SUFFIX)));
+            throw new InvalidSettingsException(GROUPS_COMPATIBILITY_EXCEPTION_PREFIX
+                + ConvenienceMethods.getShortStringFrom(Arrays.asList(wrongDataType), MAX_PRINT));
         }
 
         // get the outlier column names stored in the port spec
@@ -183,13 +174,12 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements WarningLi
             .collect(Collectors.toList());
         // if all of them  are missing throw an exception
         if (outlierColNames.length == nonExistOrCompatibleOutliers.size()) {
-            throw new InvalidSettingsException(Arrays.stream(outlierColNames)//
-                .collect(
-                    Collectors.joining(", ", MISSING_OUTLIERS_EXCEPTION_PREFIX, MISSING_OUTLIERS_EXCEPTION_SUFFIX)));
+            throw new InvalidSettingsException(MISSING_OUTLIERS_EXCEPTION_PREFIX
+                + ConvenienceMethods.getShortStringFrom(Arrays.asList(outlierColNames), MAX_PRINT));
         }
         if (nonExistOrCompatibleOutliers.size() > 0) {
-            setWarningMessage(nonExistOrCompatibleOutliers.stream()//
-                .collect(Collectors.joining(", ", MISSING_OUTLIERS_WARNING_PREFIX, MISSING_OUTLIERS_WARNING_SUFFIX)));
+            setWarningMessage(MISSING_OUTLIERS_WARNING_PREFIX
+                + ConvenienceMethods.getShortStringFrom(nonExistOrCompatibleOutliers, MAX_PRINT));
         }
         return new PortObjectSpec[]{NumericOutliersReviser.getOutTableSpec(inTableSpec),
             NumericOutliersReviser.getSummaryTableSpec(inTableSpec, groupColNames)};
@@ -318,7 +308,7 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements WarningLi
      * {@inheritDoc}
      */
     @Override
-    public void warning(final Warning warning) {
+    public void warning(final NumericOutlierWarning warning) {
         setWarningMessage(warning.getMessage());
     }
 
