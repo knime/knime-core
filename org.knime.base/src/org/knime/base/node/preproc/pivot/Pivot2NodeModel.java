@@ -294,10 +294,12 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             // true then sort table by group&pivot columns
             if (isProcessInMemory()) {
                 exec.setMessage("Sorting group table");
+                final boolean[] sortDirection = new boolean[groupAndPivotCols.size()];
+                //ensure that missing values are at the end by sorting in ascending order
+                Arrays.fill(sortDirection, true);
                 final SortedTable sortedGroupByTable = new SortedTable(
                         groupByTable.getBufferedTable(), groupAndPivotCols,
-                        new boolean[groupAndPivotCols.size()],
-                        groupAndPivotExec.createSubExecutionContext(
+                        sortDirection, groupAndPivotExec.createSubExecutionContext(
                                 progMainTableInMemSort / progMainTotal));
                 groupTable = sortedGroupByTable.getBufferedDataTable();
             } else {
