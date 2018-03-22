@@ -136,7 +136,7 @@ public final class NumericOutliersReviser {
     private final boolean m_updateDomain;
 
     /** Responsible to update the domain. */
-    private OutlierDomainsUpdater m_domainUpdater;
+    private NumericOutliersDomainsUpdater m_domainUpdater;
 
     /** The summary internals. */
     private SummaryInternals m_summaryInterals;
@@ -274,7 +274,7 @@ public final class NumericOutliersReviser {
      * @return the spec of the data table storing the summary
      */
     public static DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec, final String[] groupColNames) {
-        return OutlierSummaryTable.getSpec(inSpec, groupColNames);
+        return NumiercOutliersSummaryTable.getSpec(inSpec, groupColNames);
     }
 
     /**
@@ -428,7 +428,7 @@ public final class NumericOutliersReviser {
         }
 
         // the domains updater
-        m_domainUpdater = new OutlierDomainsUpdater();
+        m_domainUpdater = new NumericOutliersDomainsUpdater();
 
         // treat the outliers with respect to the selected treatment option
         if (m_treatment == NumericOutliersTreatmentOption.REPLACE) {
@@ -443,7 +443,7 @@ public final class NumericOutliersReviser {
 
         if (!inStreamingMode) {
             // set the summary table
-            m_summaryTable = OutlierSummaryTable.getTable(exec.createSubExecutionContext(1 - treatmentProgress),
+            m_summaryTable = NumiercOutliersSummaryTable.getTable(exec.createSubExecutionContext(1 - treatmentProgress),
                 in.getDataTableSpec(), outlierModel, memberCounter, outlierRepCounter, missingGroupsCounter);
         }
         // cleare some memory
@@ -716,12 +716,12 @@ public final class NumericOutliersReviser {
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
-    private final class OutlierDomainsUpdater {
+    private final class NumericOutliersDomainsUpdater {
 
         /** Map containing the min and max values for the column domains to update. */
         private final Map<String, double[]> m_domainsMap;
 
-        private OutlierDomainsUpdater() {
+        private NumericOutliersDomainsUpdater() {
             m_domainsMap = new HashMap<String, double[]>();
         }
 
@@ -806,7 +806,7 @@ public final class NumericOutliersReviser {
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
-    private static final class OutlierSummaryTable {
+    private static final class NumiercOutliersSummaryTable {
 
         /** The name of the outlier column. */
         private static final String OUTLIER_COL_NAME = "Outlier column";
@@ -823,7 +823,7 @@ public final class NumericOutliersReviser {
         /** The name of the column storing the lower bound. */
         private static final String LOWER_BOUND = "Lower bound";
 
-        /** The number of columns in the table. */
+        /** The number of additional columns in the table. */
         private static final int NUM_ADD_COLUMNS = 5;
 
         /**
@@ -1087,7 +1087,7 @@ public final class NumericOutliersReviser {
          */
         public void writeTable(final ExecutionContext exec, final RowOutput out)
             throws CanceledExecutionException, InterruptedException {
-            OutlierSummaryTable.writeTable(exec, m_numCols, out, m_outlierModel, m_memberCounter, m_outlierRepCounter,
+            NumiercOutliersSummaryTable.writeTable(exec, m_numCols, out, m_outlierModel, m_memberCounter, m_outlierRepCounter,
                 m_missingGroupsCounter);
         }
 
