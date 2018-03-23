@@ -140,7 +140,7 @@ public class DatabaseConnectionSettings {
                     maxRetryCounter = counter;
                 }
             } catch (NumberFormatException nfe) {
-                LOGGER.warn("Maximum connection retry counter set via system propery not valid '" 
+                LOGGER.warn("Maximum connection retry counter set via system propery not valid '"
                         + maxRetry + "' using default.");
             }
         }
@@ -667,7 +667,7 @@ public class DatabaseConnectionSettings {
                     try {
                         if (conn.isClosed() || !getUtility().isValid(conn)) {
                             LOGGER.debug("Invalid or closed connection found. Retry counter: " + i +
-                                "Retry to get valid connection for key: " + databaseConnKey);
+                                ". Retry to get valid connection for key: " + databaseConnKey);
                             continue;
                         }
                     } catch (Exception ex) {
@@ -680,6 +680,9 @@ public class DatabaseConnectionSettings {
                 }
             }
         } catch (Exception ex) {
+            if (ex instanceof SQLException) {
+                throw (SQLException)ex;
+            }
             throw new SQLException(ex);
         }
         throw new SQLException("Maximum number of retries to get a valid connection reached. JDBC URL: " + getJDBCUrl());
