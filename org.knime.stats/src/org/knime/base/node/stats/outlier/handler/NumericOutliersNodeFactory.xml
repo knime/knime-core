@@ -40,7 +40,7 @@
 				flagged as an outlier.
 			</p>
 		</intro>
-		<tab name="Outlier Selection (Outlier Settings)">
+		<tab name="Outlier Selection (tab: Outlier Settings)">
 			<option name="Outlier selection">
 				Allows the selection of columns for which outliers have to be
 				detected
@@ -51,10 +51,10 @@
 
 		</tab>
 		
-		<tab name="General Settings (Outlier Settings)">
+		<tab name="General Settings (tab: Outlier Settings)">
 			<option name="interquartile range multiplier (k)">
-				Allows to scale the interquartile range (IQR).
-				The default is k = 1.5.
+				Allows scaling the interquartile range (IQR).
+				The default is k = 1.5. Larger values will cause less values to be considered outliers.
 			</option>
 			
 			<option name="Update domain">
@@ -88,7 +88,7 @@
 
 		</tab>
 
-		<tab name="Outlier Treatment (Outlier Settings)">
+		<tab name="Outlier Treatment (tab: Outlier Settings)">
 
 			<option name="Treatment option">
 				Defines three different strategies to treat outliers:
@@ -146,7 +146,7 @@
 
 		</tab>
 		
-		<tab name="Group Selection (Group Settings)">
+		<tab name="Group Selection (tab: Group Settings)">
 			<option name="Compute outlier statistics on groups">
 				If selected, allows the selection of columns to identify groups. A group comprises all
 				rows of the input exhibiting the same values in every single column (similar to the GroupBy node).
@@ -160,7 +160,7 @@
 			</option>
 
 		</tab>
-		<tab name="Memory Policy (Group Settings)">
+		<tab name="Memory Policy (tab: Group Settings)">
 			<option name="Process groups in memory">
 				Processes the groups in the memory. This option comes with higher
 				memory requirements, but is faster since the table does not 
