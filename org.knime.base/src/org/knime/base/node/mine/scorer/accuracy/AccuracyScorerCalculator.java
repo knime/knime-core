@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Mar 15, 2018 (plee): created
+ *   Mar 15, 2018 (Pascal Lee): created
  */
 package org.knime.base.node.mine.scorer.accuracy;
 
@@ -85,10 +85,14 @@ import org.knime.core.node.util.CheckUtils;
  * @author Pascal Lee, KNIME GmbH, Berlin, Germany
  */
 public class AccuracyScorerCalculator {
+    private String[] m_targetValues;                        //Names of classifications
     private int[][] m_confusionMatrix;
-    private List<AccuracyScorerValue> m_possibleValueStats;
+    private List<String>[][] m_keyStore;                    //Keys are stored as strings values
+    private List<ValueStats> m_valueStats;
     private double m_accuracy;
     private double m_cohensKappa;
+    private BufferedDataTable m_confusionMatrixDatatable;   //Output to the former Java Scorer Node
+    private BufferedDataTable m_accuracyDatatable;          //Output to the former Java Scorer Node
 
 
     private SortingStrategy m_sortingStrategy =  SortingStrategy.InsertionOrder;
@@ -113,13 +117,13 @@ public class AccuracyScorerCalculator {
 
     public AccuracyScorerCalculator(final BufferedDataTable table, final String firstColumnName, final String secondColumnName, final ExecutionContext exec) {
         try {
-            BufferedDataTable[] results = calculate(table, firstColumnName, secondColumnName, exec);
+            calculate(table, firstColumnName, secondColumnName, exec);
         } catch (CanceledExecutionException e) {
             // TODO Auto-generated catch block
         }
     }
 
-    public BufferedDataTable[] calculate(final BufferedDataTable data, final String firstColumnName, final String secondColumnName, final ExecutionContext exec)
+    public void calculate(final BufferedDataTable data, final String firstColumnName, final String secondColumnName, final ExecutionContext exec)
             throws CanceledExecutionException {
         // check input data
         assert (data != null);
@@ -142,6 +146,7 @@ public class AccuracyScorerCalculator {
 
         // the key store remembers the row key for later hiliting
         List<RowKey>[][] keyStore = new List[values.length][values.length];
+        m_keyStore = new List[values.length][values.length];
         // the scorerCount counts the confusions
         int[][] scorerCount = new int[values.length][values.length];
 
@@ -149,9 +154,11 @@ public class AccuracyScorerCalculator {
         for (int i = 0; i < keyStore.length; i++) {
             for (int j = 0; j < keyStore[i].length; j++) {
                 keyStore[i][j] = new ArrayList<RowKey>();
+                m_keyStore[i][j] = new ArrayList<String>();
             }
         }
 
+        // filling in the confusion matrix and the keystore
         long rowCnt = in.size();
         int numberOfRows = 0;
         int correctCount = 0;
@@ -187,6 +194,7 @@ public class AccuracyScorerCalculator {
             // i2 must be equal to i1 if cells are equal (implication)
             assert (!areEqual || i1 == valuesList.indexOf(cell2));
             keyStore[i1][i2].add(row.getKey());
+            m_keyStore[i1][i2].add(row.getKey().getString());
             scorerCount[i1][i2]++;
 
             if (areEqual) {
@@ -197,6 +205,7 @@ public class AccuracyScorerCalculator {
         }
         m_confusionMatrix = scorerCount;
 
+        // determining the target values
         HashSet<String> valuesAsStringSet = new HashSet<String>();
         HashSet<String> duplicateValuesAsString = new HashSet<String>();
         for (DataCell c : values) {
@@ -208,7 +217,6 @@ public class AccuracyScorerCalculator {
                 duplicateValuesAsString.add(cAsString);
             }
         }
-
         boolean hasPrintedWarningOnAmbiguousValues = false;
         String[] targetValues = new String[values.length];
         for (int i = 0; i < targetValues.length; i++) {
@@ -242,9 +250,12 @@ public class AccuracyScorerCalculator {
                 targetValues[i] = newName;
             }
         }
+        m_targetValues = targetValues;
+
 //        if (missingCount > 0) {
 //            addWarning("There were missing values in the reference or in the prediction class columns.");
 //        }
+
         DataType[] colTypes = new DataType[targetValues.length];
         Arrays.fill(colTypes, IntCell.TYPE);
         BufferedDataContainer container = exec.createDataContainer(new DataTableSpec(targetValues, colTypes));
@@ -257,46 +268,66 @@ public class AccuracyScorerCalculator {
         ScorerViewData viewData =
             new ScorerViewData(scorerCount, numberOfRows, falseCount, correctCount, firstColumnName,
                 secondColumnName, targetValues, keyStore);
+        m_accuracy = viewData.getAccuracy();
+        m_cohensKappa = viewData.getCohenKappa();
 
         // print info
         int missing = numberOfRows - correctCount - falseCount;
 //        LOGGER.info("error=" + viewData.getError() + ", #correct=" + viewData.getCorrectCount() + ", #false="
 //            + viewData.getFalseCount() + ", #rows=" + numberOfRows + ", #missing=" + missing);
         // our view displays the table - we must keep a reference in the model.
-        BufferedDataTable result = container.getTable();
+        m_confusionMatrixDatatable = container.getTable();
 
         // start creating accuracy statistics
         BufferedDataContainer accTable = exec.createDataContainer(new DataTableSpec(QUALITY_MEASURES_SPECS));
+        m_valueStats =  new ArrayList<ValueStats>();
         for (int r = 0; r < targetValues.length; r++) {
+            ValueStats valueStats = new ValueStats();
+            valueStats.setValueName(targetValues[r]);
             int tp = viewData.getTP(r); // true positives
             int fp = viewData.getFP(r); // false positives
             int tn = viewData.getTN(r); // true negatives
             int fn = viewData.getFN(r); // false negatives
+            valueStats.setTP(tp);
+            valueStats.setFP(fp);
+            valueStats.setTN(tn);
+            valueStats.setFN(fn);
             final DataCell sensitivity; // TP / (TP + FN)
             DoubleCell recall = null; // TP / (TP + FN)
             if (tp + fn > 0) {
                 recall = new DoubleCell(1.0 * tp / (tp + fn));
+                valueStats.setRecall(recall.getDoubleValue());
                 sensitivity = new DoubleCell(1.0 * tp / (tp + fn));
+                valueStats.setSensitivity(((DoubleCell)sensitivity).getDoubleValue());
             } else {
                 sensitivity = DataType.getMissingCell();
+                valueStats.setRecall(Double.NaN);
+                valueStats.setSensitivity(Double.NaN);
             }
             DoubleCell prec = null; // TP / (TP + FP)
             if (tp + fp > 0) {
                 prec = new DoubleCell(1.0 * tp / (tp + fp));
+                valueStats.setPrecision(prec.getDoubleValue());
+            } else {
+                valueStats.setPrecision(Double.NaN);
             }
             final DataCell specificity; // TN / (TN + FP)
             if (tn + fp > 0) {
                 specificity = new DoubleCell(1.0 * tn / (tn + fp));
+                valueStats.setSpecificity(((DoubleCell)specificity).getDoubleValue());
             } else {
                 specificity = DataType.getMissingCell();
+                valueStats.setSpecificity(Double.NaN);
             }
             final DataCell fmeasure; // 2 * Prec. * Recall / (Prec. + Recall)
             if (recall != null && prec != null) {
                 fmeasure =
                     new DoubleCell(2.0 * prec.getDoubleValue() * recall.getDoubleValue()
                         / (prec.getDoubleValue() + recall.getDoubleValue()));
+                valueStats.setFmeasure(((DoubleCell)fmeasure).getDoubleValue());
             } else {
                 fmeasure = DataType.getMissingCell();
+                valueStats.setFmeasure(Double.NaN);
             }
             // add complete row for class value to table
             DataRow row =
@@ -305,6 +336,8 @@ public class AccuracyScorerCalculator {
                     prec == null ? DataType.getMissingCell() : prec, sensitivity, specificity, fmeasure,
                     DataType.getMissingCell(), DataType.getMissingCell()});
             accTable.addRowToTable(row);
+            // store accuracy statistics in list of AccuracyScorerValue for JS
+            m_valueStats.add(valueStats);
         }
         List<String> classIds = Arrays.asList(targetValues);
         RowKey overallID = new RowKey("Overall");
@@ -321,8 +354,9 @@ public class AccuracyScorerCalculator {
 
         m_viewData = viewData;
 //        pushFlowVars(false);
+        m_accuracyDatatable = accTable.getTable();
 
-        return new BufferedDataTable[]{result, accTable.getTable()};
+        return;
     }
 
     /**
@@ -479,15 +513,52 @@ public class AccuracyScorerCalculator {
         m_viewData = null;
     }
 
-
-
+    public String[] getTargetValues() {
+        return m_targetValues;
+    }
 
     public int[][] getConfusionMatrix() {
         return m_confusionMatrix;
     }
 
+    public List<String>[][] getKeyStore() {
+        return m_keyStore;
+    }
 
-    public double getOverallAccuracy() {
+    public List<ValueStats> getValueStats() {
+        return m_valueStats;
+    }
+
+    public BufferedDataTable getConfusionMatrixDatatable() {
+        return m_confusionMatrixDatatable;
+    }
+
+    public BufferedDataTable getAccuracyDatatable() {
+        return m_accuracyDatatable;
+    }
+
+    public SortingStrategy getSortingStrategy() {
+        return m_sortingStrategy;
+
+    }
+
+    public boolean isSortingReversed() {
+        return m_sortingReversed;
+    }
+
+    public boolean ignoreMissingValues() {
+        return m_ignoreMissingValues;
+    }
+
+    public ScorerViewData getViewData() {
+        return m_viewData;
+    }
+
+    public static DataColumnSpec[] getQualityMeasuresSpecs() {
+        return QUALITY_MEASURES_SPECS;
+    }
+
+    public double getAccuracy() {
         return m_accuracy;
     }
 
@@ -495,26 +566,103 @@ public class AccuracyScorerCalculator {
         return m_cohensKappa;
     }
 
-    public Iterator<AccuracyScorerValue> getIterator() {
-        return m_possibleValueStats.iterator();
+    public Iterator<ValueStats> getIterator() {
+        return m_valueStats.iterator();
     }
 
-    static class AccuracyScorerValue {
+    public class ValueStats {
+        private String m_valueName;
+        private int m_TP;   // True Positive
+        private int m_TN;   // True Negative
+        private int m_FP;   // False Positive
+        private int m_FN;   // False Negative
+        private double m_recall;
+        private double m_precision;
+        private double m_sensitivity;
+        private double m_specificity;
+        private double m_fmeasure;
 
-        private String m_name;
-        private int[][] m_confusionMatrix;
-        private double m_tp;
+        public ValueStats() {
+        }
 
-        AccuracyScorerValue(final String name, final int[][] confusionMatrix) {
-            m_name = name;
-            m_confusionMatrix = confusionMatrix;
-//            m_tp =
+        public String getValueName() {
+            return m_valueName;
+        }
+
+        public void setValueName(final String valueName) {
+            this.m_valueName = valueName;
+        }
+
+        public int getTP() {
+            return m_TP;
+        }
+
+        public void setTP(final int TP) {
+            this.m_TP = TP;
+        }
+
+        public int getTN() {
+            return m_TN;
+        }
+
+        public void setTN(final int TN) {
+            this.m_TN = TN;
+        }
+
+        public int getFP() {
+            return m_FP;
+        }
+
+        public void setFP(final int FP) {
+            this.m_FP = FP;
+        }
+
+        public int getFN() {
+            return m_FN;
+        }
+
+        public void setFN(final int FN) {
+            this.m_FN = FN;
+        }
+
+        public double getRecall() {
+            return m_recall;
+        }
+
+        public void setRecall(final double recall) {
+            this.m_recall = recall;
+        }
+
+        public double getPrecision() {
+            return m_precision;
+        }
+
+        public void setPrecision(final double precision) {
+            this.m_precision = precision;
         }
 
         public double getSensitivity() {
-            return 0;
+            return m_sensitivity;
         }
 
-    }
+        public void setSensitivity(final double sensitivity) {
+            this.m_sensitivity = sensitivity;
+        }
 
+        public double getSpecificity() {
+            return m_specificity;
+        }
+
+        public void setSpecificity(final double specificity) {
+            this.m_specificity = specificity;
+        }
+
+        public double getFmeasure() {
+            return m_fmeasure;
+        }
+
+        public void setFmeasure(final double fmeasure) {
+            this.m_fmeasure = fmeasure;
+        }
+    }
 }
