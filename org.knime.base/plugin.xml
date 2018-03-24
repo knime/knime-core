@@ -475,9 +475,8 @@
             description="Nodes for Deep Learning"
             icon="icons/16x16/category_dl.png"
             level-id="deeplearning"
-            locked="true"
             name="Deep Learning"
-            path="/labs/">
+            path="/labs">
       </category>
    </extension>
             
