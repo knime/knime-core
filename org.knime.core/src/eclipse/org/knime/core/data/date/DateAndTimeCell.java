@@ -607,4 +607,12 @@ public class DateAndTimeCell extends DataCell
         return getStringValue();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
 }

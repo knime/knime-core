@@ -185,4 +185,12 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
             return false;
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
 }

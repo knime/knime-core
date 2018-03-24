@@ -228,6 +228,14 @@ public final class FuzzyIntervalCell extends DataCell implements
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
+    /**
      * Factory for {@link FuzzyIntervalCell}s.
      *
      * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland

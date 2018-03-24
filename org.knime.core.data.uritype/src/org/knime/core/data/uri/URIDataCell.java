@@ -137,6 +137,14 @@ public class URIDataCell extends DataCell implements URIDataValue, StringValue {
     public int hashCode() {
         return getURIContent().hashCode();
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
 
     /**
      * Serializer for {@link URIDataCell}s.

@@ -205,6 +205,14 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
+    /**
      * Factory for {@link DenseByteVectorCell}s.
      *
      * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland

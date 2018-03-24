@@ -103,4 +103,8 @@ public final class PeriodCell extends DataCell implements PeriodValue, BoundedVa
         return getStringValue();
     }
 
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
 }

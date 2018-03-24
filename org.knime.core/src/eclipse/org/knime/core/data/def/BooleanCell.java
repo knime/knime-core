@@ -248,6 +248,14 @@ public final class BooleanCell extends DataCell implements BooleanValue,
         return Boolean.toString(m_boolean);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
     /** Recommended by java.io.Serializable to return singletons.
      * @throws ObjectStreamException Never actually thrown.
      */

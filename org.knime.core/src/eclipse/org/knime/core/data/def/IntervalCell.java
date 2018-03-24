@@ -255,6 +255,11 @@ public final class IntervalCell extends DataCell implements IntervalValue, Fuzzy
                 + getRightBracket();
     }
 
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
     /**
      * Factory for {@link IntervalCell}s.
      *

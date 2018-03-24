@@ -196,4 +196,12 @@ public class XMLCell extends DataCell implements XMLValue<Document>, StringValue
     public LockedSupplier<Document> getDocumentSupplier() {
         return m_content.getDocumentSupplier();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
 }

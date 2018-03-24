@@ -146,6 +146,14 @@ implements StringValue, NominalValue {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
+    /**
      * Factory for (de-)serializing a {@link StringCell}s.
      *
      * @noreference This class is not intended to be referenced by clients.

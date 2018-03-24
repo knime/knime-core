@@ -186,6 +186,14 @@ public class SparseByteVectorCell extends DataCell implements ByteVectorValue {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
+    /**
      * Returns a clone of the internal sparse byte vector.
      * @return a copy of the internal sparse byte vector.
      */

@@ -103,4 +103,9 @@ public final class LocalDateTimeCell extends DataCell implements LocalDateTimeVa
         return getStringValue();
     }
 
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
 }

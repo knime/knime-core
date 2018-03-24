@@ -213,6 +213,14 @@ public final class DoubleCell extends DataCell
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
+    /**
      * Factory for (de-)serializing a {@link DoubleCell}s.
      *
      * @noreference This class is not intended to be referenced by clients.

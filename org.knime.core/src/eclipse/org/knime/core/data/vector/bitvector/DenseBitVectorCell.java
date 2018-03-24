@@ -205,6 +205,14 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
         return m_bitVector.nextSetBit(startIdx);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
 
     /**
      * @see BitVectorUtil#cardinalityOfIntersection(BitVectorValue, BitVectorValue)

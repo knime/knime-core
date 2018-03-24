@@ -150,4 +150,10 @@ public class PortObjectCell extends DataCell implements PortObjectValue {
         return m_content.hashCode();
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
 }

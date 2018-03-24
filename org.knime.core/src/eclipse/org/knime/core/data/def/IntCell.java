@@ -222,6 +222,14 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
+    /**
      * Serializer for an {@link IntCell}.
      *
      * @noreference This class is not intended to be referenced by clients.

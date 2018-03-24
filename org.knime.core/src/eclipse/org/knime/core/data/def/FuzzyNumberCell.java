@@ -227,6 +227,14 @@ public final class FuzzyNumberCell extends DataCell implements
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
+    /**
      * Factory for {@link FuzzyNumberCell}s.
      *
      * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland

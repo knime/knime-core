@@ -103,4 +103,12 @@ public final class DurationCell extends DataCell implements DurationValue, Bound
         return getStringValue();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
 }

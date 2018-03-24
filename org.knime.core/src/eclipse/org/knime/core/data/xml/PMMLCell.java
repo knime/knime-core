@@ -229,4 +229,12 @@ public class PMMLCell extends DataCell implements PMMLValue, StringValue {
         return m_content.getDocumentSupplier();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
 }

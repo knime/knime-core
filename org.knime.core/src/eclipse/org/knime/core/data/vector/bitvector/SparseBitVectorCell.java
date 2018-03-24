@@ -214,6 +214,14 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
+    /**
      * @see BitVectorUtil#cardinalityOfIntersection(BitVectorValue, BitVectorValue)
      * @param bitVectorCell the other cell containing the operand
      * @return the cardinality of intersection

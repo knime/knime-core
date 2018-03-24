@@ -209,6 +209,14 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
+    /**
      * Factory for {@link LongCell}s.
      *
      * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland

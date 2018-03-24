@@ -103,4 +103,12 @@ public final class ZonedDateTimeCell extends DataCell implements ZonedDateTimeVa
         return getStringValue();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType() {
+        return TYPE;
+    }
+
 }
