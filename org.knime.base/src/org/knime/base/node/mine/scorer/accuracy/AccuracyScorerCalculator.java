@@ -93,6 +93,7 @@ public class AccuracyScorerCalculator {
     private double m_cohensKappa;
     private BufferedDataTable m_confusionMatrixDatatable;   //Output to the former Java Scorer Node
     private BufferedDataTable m_accuracyDatatable;          //Output to the former Java Scorer Node
+    private List<String> m_warnings;
 
 
     private SortingStrategy m_sortingStrategy =  SortingStrategy.InsertionOrder;
@@ -143,6 +144,9 @@ public class AccuracyScorerCalculator {
         DataCell[] values = determineColValues(in, index1, index2, exec.createSubProgress(0.5));
         List<DataCell> valuesList = Arrays.asList(values);
         Set<DataCell> valuesInCol2 = new HashSet<DataCell>();
+
+        // initializing warnings list
+        m_warnings =  new ArrayList<String>();
 
         // the key store remembers the row key for later hiliting
         List<RowKey>[][] keyStore = new List[values.length][values.length];
@@ -237,9 +241,9 @@ public class AccuracyScorerCalculator {
                 targetValues[i] = newName;
                 if (!hasPrintedWarningOnAmbiguousValues) {
                     hasPrintedWarningOnAmbiguousValues = true;
-//                    addWarning("Ambiguous value \"" + c.toString()
-//                        + "\" encountered. Preserving individual instances;"
-//                        + " consider to convert input columns to string");
+                    addWarning("Ambiguous value \"" + c.toString()
+                        + "\" encountered. Preserving individual instances;"
+                        + " consider to convert input columns to string");
                 }
             } else {
                 int uniquifier = 1;
@@ -252,9 +256,9 @@ public class AccuracyScorerCalculator {
         }
         m_targetValues = targetValues;
 
-//        if (missingCount > 0) {
-//            addWarning("There were missing values in the reference or in the prediction class columns.");
-//        }
+        if (missingCount > 0) {
+            addWarning("There were missing values in the reference or in the prediction class columns.");
+        }
 
         DataType[] colTypes = new DataType[targetValues.length];
         Arrays.fill(colTypes, IntCell.TYPE);
@@ -506,6 +510,10 @@ public class AccuracyScorerCalculator {
         }
     }
 
+    private void addWarning(final String warning) {
+        m_warnings.add(warning);
+    }
+
     /**
      * Resets all internal data.
      */
@@ -568,6 +576,10 @@ public class AccuracyScorerCalculator {
 
     public Iterator<ValueStats> getIterator() {
         return m_valueStats.iterator();
+    }
+
+    public List<String> getWarnings() {
+        return m_warnings;
     }
 
     public class ValueStats {
