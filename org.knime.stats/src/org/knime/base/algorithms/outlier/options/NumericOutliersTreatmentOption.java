@@ -66,7 +66,7 @@ public enum NumericOutliersTreatmentOption {
         FILTER("Remove outlier rows"),
 
         /** Indicates that only rows containing outliers have to be retained. */
-        RETAIN("Exclusively retain outlier rows");
+        RETAIN("Remove non-outlier rows");
 
     /** Missing name exception. */
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";

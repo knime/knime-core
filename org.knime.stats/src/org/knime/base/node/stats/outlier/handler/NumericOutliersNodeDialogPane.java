@@ -410,11 +410,11 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
             m_outlierReplacementDialog.getComponentPanel());
 
         // add all dialogs
-        panel.add(m_outlierTreatmentDialog.getComponentPanel(), gbc);
+        panel.add(m_restrictionDialog.getComponentPanel(), gbc);
 
         ++gbc.gridy;
 
-        panel.add(m_restrictionDialog.getComponentPanel(), gbc);
+        panel.add(m_outlierTreatmentDialog.getComponentPanel(), gbc);
 
         ++gbc.gridy;
 
