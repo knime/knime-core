@@ -50,6 +50,7 @@ package org.knime.core.node.util.filter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 
 import javax.swing.AbstractListModel;
@@ -323,5 +324,14 @@ public class ArrayListModel<E> extends AbstractListModel<E> implements Iterable<
     @Override
     public Iterator<E> iterator() {
         return m_delegate.iterator();
+    }
+
+    /**
+     * Get all elements in this model as an {@link Collections#unmodifiableList(java.util.List) unmodifiableList}.
+     *
+     * @return All elements in this list model.
+     */
+    public Collection<?> getAllElements() {
+        return Collections.unmodifiableList(m_delegate);
     }
 }

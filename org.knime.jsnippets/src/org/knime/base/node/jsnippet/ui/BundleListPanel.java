@@ -51,11 +51,8 @@ package org.knime.base.node.jsnippet.ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Point;
-import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -69,8 +66,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.AbstractListModel;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -78,7 +75,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.ListModel;
-import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeExpansionEvent;
@@ -92,7 +88,6 @@ import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.util.filter.ArrayListModel;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -178,7 +173,8 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             final Object userObject = ((DefaultMutableTreeNode)value).getUserObject();
             if (!(userObject instanceof BundleListEntry)) {
                 /* Bundle dependency */
-                final Component c = super.getTreeCellRendererComponent(tree, userObject, sel, expanded, leaf, row, hasFocus);
+                final Component c =
+                    super.getTreeCellRendererComponent(tree, userObject, sel, expanded, leaf, row, hasFocus);
                 c.setForeground(Color.GRAY);
                 return c;
             }
@@ -219,6 +215,10 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
     /* Field for filtering the bundle list */
     final JTextField m_filterField = new JTextField();
 
+    final JList<String> m_bundleList;
+
+    final FilterableListModel m_bundleModel = new FilterableListModel(bundleNames);
+
     /* All available bundle names */
     final static ArrayList<String> bundleNames = new ArrayList<>();
 
@@ -236,8 +236,8 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         Collections.sort(bundleNames);
     }
 
-    /* List model which filters bundleNames acording to a search string */
-    static final class FilterableListModel extends AbstractListModel<String> {
+    /* List model which filters bundleNames according to a search string */
+    final class FilterableListModel extends AbstractListModel<String> {
 
         private static final long serialVersionUID = 1L;
 
@@ -245,6 +245,9 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
         private List<String> m_filtered;
 
+        private List<String> m_excluded;
+
+        /* Filter string, only ever null to force refiltering */
         private String m_filter = "";
 
         /**
@@ -272,10 +275,10 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
          * @param filter Filter string
          */
         public synchronized void setFilter(final String filter) {
-            if (m_filter.equals(filter)) {
+            if (m_filter != null && m_filter.equals(filter)) {
                 return;
             }
-            if (filter.startsWith(m_filter)) {
+            if (m_filter != null && filter.startsWith(m_filter)) {
                 // the most common use case will be a list gradually refined by user typing more characters
                 m_filtered = m_filtered.stream().filter(s -> s.contains(filter)).collect(Collectors.toList());
             } else if (filter.isEmpty()) {
@@ -284,7 +287,20 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                 m_filtered = m_unfiltered.stream().filter(s -> s.contains(filter)).collect(Collectors.toList());
             }
             m_filter = filter;
+            m_filtered.removeAll(m_excluded);
             this.fireContentsChanged(this, 0, bundleNames.size());
+        }
+
+        /**
+         * Set list of excluded elements. Will cause the list to be refiltered.
+         *
+         * @param list List of elements to exclude.
+         */
+        public synchronized void setExcluded(final List<String> list) {
+            m_excluded = list;
+            final String filter = m_filter;
+            m_filter = null;
+            setFilter(filter);
         }
     }
 
@@ -292,58 +308,18 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
      * Constructor
      */
     public BundleListPanel() {
-        super(new BorderLayout());
+        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
         initBundleNames();
 
         final BundleListEntryRenderer renderer = new BundleListEntryRenderer();
         m_tree.setCellRenderer(renderer);
-        add(new JScrollPane(m_tree), BorderLayout.CENTER);
+        add(new JScrollPane(m_tree));
         m_tree.addTreeWillExpandListener(this);
         m_tree.expandPath(new TreePath(m_rootNode));
 
-        final JPanel northPane = new JPanel(new FlowLayout());
-        northPane.add(new JLabel("Add bundles from the current eclipse environment as dependencies."));
-        add(northPane, BorderLayout.NORTH);
-
-        final JButton addBundleButton = new JButton("Add Bundle");
-        addBundleButton.addActionListener(e -> openAddBundleDialog());
-
-        final JButton removeBundleButton = new JButton("Remove");
-        removeBundleButton.addActionListener(e -> removeSelectedBundles());
-
-        final JPanel southPane = new JPanel(new FlowLayout());
-        southPane.add(addBundleButton);
-        southPane.add(removeBundleButton);
-        add(southPane, BorderLayout.SOUTH);
-    }
-
-    /**
-     * Dialog that displays a list of available bundles for selection.
-     *
-     * @author Jonathan Hale, KNIME GmbH, Konstanz, Germany
-     */
-    class AddBundleDialog extends JDialog {
-        private static final long serialVersionUID = 1L;
-
-        final JList<String> m_bundleList;
-
-        final FilterableListModel m_bundleModel = new FilterableListModel(bundleNames);
-
-        public AddBundleDialog(final Window window, final String title) {
-            final int width = 480;
-            final int height = 360;
-
-            final Point p = window.getLocationOnScreen();
-            final Dimension d = getSize();
-            setLocation(p.x + (d.width - width) / 2, p.y + (d.height - height) / 2);
-
-            if (KNIMEConstants.KNIME16X16 != null) {
-                setIconImage(KNIMEConstants.KNIME16X16.getImage());
-            }
-
-            final JPanel pane = new JPanel(new BorderLayout());
-
+        final JPanel pane = new JPanel(new BorderLayout());
+        {
             final JPanel northPane = new JPanel(new GridLayout(2, 1));
             northPane.add(new JLabel("Double-click bundle to add it together with its dependencies."));
 
@@ -353,7 +329,6 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
             m_bundleList = new JList<>(m_bundleModel);
             final JScrollPane scrollPane = new JScrollPane(m_bundleList);
-            scrollPane.setPreferredSize(new Dimension(width, height));
             pane.add(scrollPane, BorderLayout.CENTER);
 
             m_bundleList.addMouseListener(new MouseListener() {
@@ -380,9 +355,8 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                         // Double click closes the dialog
                         final String bundleName = m_bundleList.getSelectedValue();
                         addBundle(bundleName);
-
-                        setVisible(false);
-                        dispose();
+                        m_bundleModel.setExcluded(m_listModel.getAllElements().stream().map(Object::toString).collect(Collectors.toList()));
+                        m_bundleList.clearSelection();
                     }
                 }
             });
@@ -400,8 +374,8 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                 public void keyPressed(final KeyEvent e) {
                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                         addBundles(m_bundleList.getSelectedValuesList());
-                        setVisible(false);
-                        dispose();
+                        m_bundleModel.setExcluded(m_listModel.getAllElements().stream().map(Object::toString).collect(Collectors.toList()));
+                        m_bundleList.clearSelection();
                     }
                 }
             });
@@ -432,24 +406,28 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                     }
                 }
             });
-
-            add(pane);
         }
-    }
 
-    /* Opens the "Add Bundle" dialog */
-    AddBundleDialog openAddBundleDialog() {
-        final AddBundleDialog frame = new AddBundleDialog(SwingUtilities.getWindowAncestor(this), "Add Bundle");
-        frame.pack();
-        frame.setVisible(true);
+        /* Remove button */
+        final JButton removeBundleButton = new JButton("Remove");
+        removeBundleButton.addActionListener(e -> removeSelectedBundles());
 
-        return frame;
+        final JPanel southPane = new JPanel(new FlowLayout());
+        southPane.add(removeBundleButton);
+        add(southPane);
+
+        /* Label for list of available bundles */
+        final JPanel northPane = new JPanel(new FlowLayout());
+        northPane.add(new JLabel("Add bundles from the current eclipse environment as dependencies."));
+        add(northPane);
+
+        add(pane);
     }
 
     /* Remove all bundles currently selected in list */
     void removeSelectedBundles() {
         for (final TreePath p : m_tree.getSelectionPaths()) {
-            if(p.getPathCount() != 2) {
+            if (p.getPathCount() != 2) {
                 /* Either root or a dependency */
                 continue;
             }
@@ -534,7 +512,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
             entries.add(e);
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(e);
-            m_rootNode.add(node);
+            ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(node, m_rootNode, m_rootNode.getChildCount());
             addDependenciesForNode(node, Platform.getBundle(e.name));
         }
 
