@@ -29,10 +29,10 @@
 		</inPort>
 		<inPort index="1" name="Numeric input data">Numeric input data to evaluate</inPort>
 		<outPort index="0" name="Treated table">Data table where outliers were either
-			replaced, rows containing outliers were removed, or exclusively retained
+			replaced or rows containing (non-)outliers were removed
 		</outPort>
 		<outPort index="1" name="Summary">Data table holding the number of members, i.e., non-missing values 
-		and outliers as well as the lower and upper	bound for each outlier group
+		and outliers as well as the lower and upper	bound for each outlier groups
 		</outPort>
 	</ports>
 

@@ -57,6 +57,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
@@ -73,11 +74,13 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
  * The node dialog of the numeric outliers node.
@@ -92,8 +95,14 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
     /** The restrict outlier handling border label. */
     private static final String RESTRICTION_BORDER_TITLE = "Apply to";
 
-    /** The heuristic dialog label. */
-    private static final String HEURISTIC_LABEL = "Use heuristic for quartile calculation (memory friendly)";
+    /** The algorithm selection border panel title. */
+    private static final String COMPUTATION_BORDER_TITLE = "Quartile calculation";
+
+    /** The estimation algorithm label. */
+    private static final String ESTIMATION_LABEL = "Full data estimate";
+
+    /** The heuristic algorithm label. */
+    private static final String HEURISTIC_LABEL = "Use heuristic (memory friendly)";
 
     /** The outlier selection border label. */
     private static final String OUTLIER_SELECTION_BORDER_TITLE = "Outlier Selection";
@@ -120,16 +129,19 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
     private static final String OUTLIER_TAB = "Outlier Settings";
 
     /** The estimation type name. */
-    private static final String ESTIMATION_TYPE = "Estimation type";
+    private static final String ESTIMATION_TYPE = "using";
 
     /** The IQR scalar label name. */
     private static final String QUARTILE_RANGE_MULT = "Interquartile range multiplier (k)";
+
+    /** The treatment option label name . */
+    private static final String TREATMENT_OPTION = "Treatment option";
 
     /** The outlier replacement strategy label name. */
     private static final String REPLACEMENT_STRATEGY = "Replacement strategy";
 
     /** The memory policy label name. */
-    private static final String MEMORY_POLICY = "Process groups in in memory";
+    private static final String MEMORY_POLICY = "Process groups in memory";
 
     /** The domain policy label name. */
     private static final String DOMAIN_POLICY = "Update domain";
@@ -156,7 +168,7 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
     private DialogComponentStringSelection m_outlierReplacementDialog;
 
     /** Dialog informing about the accuracy of the quartiles computation. */
-    private DialogComponentBoolean m_heuristicDialog;
+    private DialogComponentButtonGroup m_heuristicDialog;
 
     /** Dialog indicating whether the algorithm should create groups. */
     private DialogComponentBoolean m_updateDomainDialog;
@@ -351,23 +363,113 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
         m_updateDomainDialog = new DialogComponentBoolean(NumericOutliersNodeModel.createDomainModel(), DOMAIN_POLICY);
         panel.add(m_updateDomainDialog.getComponentPanel(), gbc);
 
+        // add same space to the boarder title
+        gbc.insets = new Insets(5, 0, 0, 0);
         ++gbc.gridy;
 
         // add the heuristic dialog
-        m_heuristicDialog =
-            new DialogComponentBoolean(NumericOutliersNodeModel.createHeuristicModel(), HEURISTIC_LABEL);
-        panel.add(m_heuristicDialog.getComponentPanel(), gbc);
+        panel.add(createComputationPanel(), gbc);
+
+        return panel;
+    }
+
+    /**
+     * Creates the computational panel holding the selection buttons for the computation and the estimation type panel.
+     *
+     * @return the computational panel
+     */
+    private Component createComputationPanel() {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+
+        // add panel border
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), COMPUTATION_BORDER_TITLE));
+
+        final SettingsModelString heuristicModel = NumericOutliersNodeModel.createHeuristicModel();
+        m_heuristicDialog = new DialogComponentButtonGroup(heuristicModel, null, true,
+            new ButtonGroupEnumInterface[]{getEnumInterface(heuristicModel, HEURISTIC_LABEL, null, true),
+                getEnumInterface(heuristicModel, ESTIMATION_LABEL, null, false)});
+
+        panel.add(m_heuristicDialog.getButton(String.valueOf(true)), gbc);
 
         ++gbc.gridy;
+
+        panel.add(createEstimationPanel(m_heuristicDialog.getButton(String.valueOf(false))), gbc);
+
+        return panel;
+
+    }
+
+    /**
+     * Creates the estimation panel.
+     *
+     * @param button the button to the left
+     * @return the estimation panel
+     */
+    private Component createEstimationPanel(final AbstractButton button) {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+
+        panel.add(button, gbc);
+
+        ++gbc.gridx;
 
         // add a component to select the percentile estimation type
         List<String> eTypes =
             Arrays.stream(EstimationType.values()).map(val -> val.toString()).collect(Collectors.toList());
         m_estimationDialog = new DialogComponentStringSelection(NumericOutliersNodeModel.createEstimationModel(),
             ESTIMATION_TYPE, eTypes);
+
         panel.add(m_estimationDialog.getComponentPanel(), gbc);
 
         return panel;
+    }
+
+    /**
+     * Creates an instance of the ButtonGroupEnumInterface from the provided parameters.
+     *
+     * @param model the settings model
+     * @param text the label text
+     * @param toolTip the tool tip
+     * @param action the action (name)
+     * @return a properly intialized instance of ButtonGroupEnumInterface
+     */
+    private ButtonGroupEnumInterface getEnumInterface(final SettingsModelString model, final String text,
+        final String toolTip, final boolean action) {
+        return new ButtonGroupEnumInterface() {
+
+            @Override
+            public boolean isDefault() {
+                return model.getStringValue().equals(String.valueOf(action));
+            }
+
+            @Override
+            public String getToolTip() {
+                return toolTip;
+            }
+
+            @Override
+            public String getText() {
+                return text;
+            }
+
+            @Override
+            public String getActionCommand() {
+                return String.valueOf(action);
+            }
+        };
     }
 
     /**
@@ -390,7 +492,7 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
 
         // create component to select the outlier treatment option
         m_outlierTreatmentDialog = new DialogComponentStringSelection(
-            NumericOutliersNodeModel.createOutlierTreatmentModel(), "Treatment option",
+            NumericOutliersNodeModel.createOutlierTreatmentModel(), TREATMENT_OPTION,
             Arrays.stream(NumericOutliersTreatmentOption.values()).map(val -> val.toString()).toArray(String[]::new));
 
         // create component to restrict the outlier treatment
@@ -400,8 +502,8 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
 
         // add component to select the outlier replacement strategy
         m_outlierReplacementDialog = new DialogComponentStringSelection(
-            NumericOutliersNodeModel.createOutlierReplacementModel(), REPLACEMENT_STRATEGY,
-            Arrays.stream(NumericOutliersReplacementStrategy.values()).map(val -> val.toString()).toArray(String[]::new));
+            NumericOutliersNodeModel.createOutlierReplacementModel(), REPLACEMENT_STRATEGY, Arrays
+                .stream(NumericOutliersReplacementStrategy.values()).map(val -> val.toString()).toArray(String[]::new));
 
         updatePrefSize(0, 10, m_outlierTreatmentDialog.getComponentPanel(), m_restrictionDialog.getComponentPanel(),
             m_outlierReplacementDialog.getComponentPanel());
@@ -478,7 +580,8 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
      * Enables and disables the estimation dialog depending on the memory selection.
      */
     private void toggleEstimationDialog() {
-        m_estimationDialog.getModel().setEnabled(!m_heuristicDialog.isSelected());
+        m_estimationDialog.getModel()
+            .setEnabled(!Boolean.parseBoolean(((SettingsModelString)m_heuristicDialog.getModel()).getStringValue()));
     }
 
     /**

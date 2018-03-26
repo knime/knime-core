@@ -175,7 +175,7 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
     private SettingsModelBoolean m_domainSetting;
 
     /** Settings model indiciting how the quartiles have to be calculated. */
-    private SettingsModelBoolean m_heuristicSetting;
+    private SettingsModelString m_heuristicSetting;
 
     /** Init the outlier detector node model with one input and output. */
     NumericOutliersNodeModel() {
@@ -215,7 +215,7 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
                 NumericOutliersReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue()))//
             .setTreatmentOption(NumericOutliersTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue()))//
             .setDetectionOption(NumericOutliersDetectionOption.getEnum(m_detectionSettings.getStringValue()))//
-            .useHeuristic(m_heuristicSetting.getBooleanValue())//
+            .useHeuristic(Boolean.parseBoolean(m_heuristicSetting.getStringValue()))//
             .updateDomain(m_domainSetting.getBooleanValue())//
             .build();
     }
@@ -299,6 +299,14 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
         } catch (IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage());
         }
+
+        // check if the heuristic settings is configured via flow variables
+        if (!m_heuristicSetting.getStringValue().equals(String.valueOf(true))
+            && !m_heuristicSetting.getStringValue().equals(String.valueOf(false))) {
+            throw new InvalidSettingsException("The selected <Quartile calculation> has to be " + String.valueOf(true)
+                + " or " + String.valueOf(false));
+        }
+
         NumericOutliersTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue());
         NumericOutliersDetectionOption.getEnum(m_detectionSettings.getStringValue());
         NumericOutliersReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue());
@@ -549,8 +557,8 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
      *
      * @return the heuristic settings model
      */
-    public static SettingsModelBoolean createHeuristicModel() {
-        return new SettingsModelBoolean(CFG_HEURISTIC, HEURISTIC_DEFAULT);
+    public static SettingsModelString createHeuristicModel() {
+        return new SettingsModelString(CFG_HEURISTIC, String.valueOf(HEURISTIC_DEFAULT));
     }
 
     /**
