@@ -55,6 +55,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -106,7 +107,9 @@ import org.knime.base.node.jsnippet.ui.JSnippetTextArea;
 import org.knime.base.node.jsnippet.ui.JarListPanel;
 import org.knime.base.node.jsnippet.ui.OutFieldsTable;
 import org.knime.base.node.jsnippet.ui.OutFieldsTableModel;
+import org.knime.base.node.jsnippet.util.JavaSnippetFields;
 import org.knime.base.node.jsnippet.util.JavaSnippetSettings;
+import org.knime.base.node.jsnippet.util.field.JavaColumnField;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -117,6 +120,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.FlowVariable;
+import org.osgi.framework.Bundle;
 
 /**
  * The dialog of the java snippet node.
@@ -554,6 +558,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         m_snippet.setSettings(m_settings);
         m_jarPanel.setJarFiles(m_settings.getJarFiles());
         m_bundleListPanel.setBundles(m_settings.getBundles());
+        updateCustomTypesBundles();
 
         m_fieldsController.updateData(m_settings, specs[0], getAvailableFlowVariables());
 
@@ -601,6 +606,8 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         m_jarPanel.setJarFiles(m_settings.getJarFiles());
         m_bundleListPanel.setBundles(m_settings.getBundles());
 
+        updateCustomTypesBundles();
+
         m_fieldsController.updateData(m_settings, spec, flowVariables);
         // update template info panel
         m_templateLocation.setText(createTemplateLocationText(template));
@@ -611,6 +618,27 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
             m_snippet.getDocument().getGuardedSection(JavaSnippetDocument.GUARDED_BODY_START).getEnd().getOffset() + 1);
         m_snippetTextArea.requestFocus();
 
+    }
+
+    /**
+     * Update bundles included with custom types
+     */
+    private void updateCustomTypesBundles() {
+        final ArrayList<Bundle> bundles = new ArrayList<>();
+        final JavaSnippetFields fields = m_settings.getJavaSnippetFields();
+        for (JavaColumnField f : fields.getInColFields()) {
+            final Bundle b = JavaSnippet.resolveBundleForJavaType(f.getJavaType());
+            if(b != null) {
+                bundles.add(b);
+            }
+        }
+        for (JavaColumnField f : fields.getOutColFields()) {
+            final Bundle b = JavaSnippet.resolveBundleForJavaType(f.getJavaType());
+            if(b != null) {
+                bundles.add(b);
+            }
+        }
+        m_bundleListPanel.setCustomTypeBundles(bundles);
     }
 
     /**

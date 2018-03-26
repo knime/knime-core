@@ -1317,6 +1317,15 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         }
     }
 
+    public synchronized static Bundle resolveBundleForJavaType(final Class<?> javaType) {
+        if(javaType.getClassLoader() instanceof ModuleClassLoader) {
+            final ModuleClassLoader moduleClassLoader = (ModuleClassLoader)javaType.getClassLoader();
+            return moduleClassLoader.getBundle();
+        } else {
+            return null;
+        }
+    }
+
     /**
      * Get file and jar urls required for compiling with given java type
      */

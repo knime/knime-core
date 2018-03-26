@@ -51,7 +51,10 @@ package org.knime.base.node.jsnippet.ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -59,6 +62,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
@@ -202,15 +206,14 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
     }
 
     /* Bundle Tree display */
-    final DefaultMutableTreeNode m_rootNode = new DefaultMutableTreeNode();
+    final DefaultMutableTreeNode m_rootNode = new DefaultMutableTreeNode("Active Bundles");
+    final DefaultMutableTreeNode m_customTypeRoot = new DefaultMutableTreeNode("Custom Type Bundles");
 
     final JTree m_tree = new JTree(m_rootNode);
+    final JTree m_customTypeTree = new JTree(m_customTypeRoot);
 
     /* Filterable list model containing all available bundles */
     final ArrayListModel<BundleListEntry> m_listModel = new ArrayListModel<>();
-
-    /* List displaying all available bundles */
-    //final JList<BundleListEntry> m_list = new JList<>(m_listModel);
 
     /* Field for filtering the bundle list */
     final JTextField m_filterField = new JTextField();
@@ -312,11 +315,28 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
         initBundleNames();
 
+        final JPanel treesPane = new JPanel();
+        treesPane.setLayout(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
         final BundleListEntryRenderer renderer = new BundleListEntryRenderer();
         m_tree.setCellRenderer(renderer);
-        add(new JScrollPane(m_tree));
         m_tree.addTreeWillExpandListener(this);
         m_tree.expandPath(new TreePath(m_rootNode));
+        treesPane.add(m_tree, gbc);
+
+        m_customTypeTree.setCellRenderer(renderer);
+        m_customTypeTree.addTreeWillExpandListener(this);
+        m_customTypeTree.expandPath(new TreePath(m_customTypeRoot));
+        gbc.weighty = 1.0;
+        treesPane.add(m_customTypeTree, gbc);
+
+        final JScrollPane scroll = new JScrollPane(treesPane);
+        scroll.setMinimumSize(new Dimension(300, 300));
+        scroll.setPreferredSize(new Dimension(300, 300));
+        add(scroll);
 
         final JPanel pane = new JPanel(new BorderLayout());
         {
@@ -588,6 +608,13 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
      */
     @Override
     public void treeWillCollapse(final TreeExpansionEvent event) throws ExpandVetoException {
+    }
+
+    /** @brief Bundles used for custom types. */
+    public void setCustomTypeBundles(final Collection<Bundle> bundles) {
+        for(Bundle b : bundles) {
+            ((DefaultTreeModel)m_customTypeTree.getModel()).insertNodeInto(new DefaultMutableTreeNode(b), m_customTypeRoot, 0);
+        }
     }
 
 }
