@@ -69,7 +69,9 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -131,6 +133,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         FrameworkUtil.getBundle(CommunityTripleProvider.class).getSymbolicName());
 
     private static final String NO_WORKFLOW_OPENED_MESSAGE = "No workflow opened.";
+    private static final int DEFAULT_FIRST_COLUMN_WIDTH = 200;
+    private static final int DEFAULT_OTHER_COLUMNS_WIDTH = 100;
+
 
     /** Whether nodes are being loaded, loaded, being updated, disposed, etc. */
     private AtomicReference<LoadState> m_loadState = new AtomicReference<>(LoadState.LoadingNodes);
@@ -144,6 +149,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      * The table with the recommendation or a message.
      */
     private TableViewer m_viewer;
+    private TableColumnLayout m_tableLayout;
 
     /**
      * Current state of the viewer.
@@ -215,6 +221,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         m_viewer.setComparator(new TableColumnSorter(m_viewer));
         Table table = m_viewer.getTable();
 
+        m_tableLayout = new TableColumnLayout();
+        table.getParent().setLayout(m_tableLayout);
+
         //drag & drop
         Transfer[] transfers = new Transfer[]{LocalSelectionTransfer.getTransfer()};
         m_viewer.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new WorkflowCoachDragSource(this));
@@ -223,7 +232,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         TableColumn column = new TableColumn(table, SWT.LEFT, 0);
         column.setText("Recommended Nodes");
         column.setToolTipText("Nodes recommended to use next (e.g. based on the currently selected node).");
-        column.setWidth(200);
+        column.setWidth(DEFAULT_FIRST_COLUMN_WIDTH);
+
+        m_tableLayout.setColumnData(column, new ColumnWeightData(100, DEFAULT_FIRST_COLUMN_WIDTH));
 
         table.setHeaderVisible(true);
         table.setLinesVisible(false);
@@ -653,6 +664,16 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         });
     }
 
+    private void pruneTableColumns(final Table table, final boolean willAppendColumns) {
+        while (table.getColumnCount() > 1) {
+            table.getColumns()[1].dispose();
+        }
+
+        if (!willAppendColumns) {
+            m_tableLayout.setColumnData(table.getColumns()[0], new ColumnWeightData(100, DEFAULT_FIRST_COLUMN_WIDTH));
+        }
+    }
+
     /**
      * Changes the state of the table viewer or leaves it unchanged (if the provided one is the same as the current one).
      *
@@ -676,33 +697,39 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                         table.removeMouseListener(m_openPrefPageMouseListener);
                         table.setHeaderVisible(false);
                         m_viewer.setLabelProvider(new WorkflowCoachLabelProvider());
-                        while (table.getColumnCount() > 1) {
-                            table.getColumns()[1].dispose();
-                        }
+                        pruneTableColumns(table, false);
                         table.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_ARROW));
                         break;
                     case RECOMMENDATIONS:
+                        final int tipsCount = m_namesAndToolTips.size();
+                        final int otherColumnsWeighting = 60 / tipsCount;
+
                         table.removeMouseListener(m_openPrefPageMouseListener);
                         table.setHeaderVisible(true);
                         m_viewer.setLabelProvider(new WorkflowCoachLabelProvider());
-                        while (table.getColumnCount() > 1) {
-                            table.getColumns()[1].dispose();
-                        }
+                        pruneTableColumns(table, true);
+
                         for (int i = 0; i < m_namesAndToolTips.size(); i++) {
                             TableColumn column = new TableColumn(table, SWT.LEFT, i + 1);
                             column.setText(m_namesAndToolTips.get(i).getFirst());
                             column.setToolTipText(m_namesAndToolTips.get(i).getSecond());
-                            column.setWidth(100);
                             column.addSelectionListener((TableColumnSorter) m_viewer.getComparator());
+                        }
+
+                        for (int i = 0; i <= m_namesAndToolTips.size(); i++) {
+                            final int weight = (i == 0) ? 40 : otherColumnsWeighting;
+                            final int width = (i == 0) ? DEFAULT_FIRST_COLUMN_WIDTH
+                                                       : DEFAULT_OTHER_COLUMNS_WIDTH;
+
+                            m_tableLayout.setColumnData(table.getColumns()[i],
+                                                        new ColumnWeightData(weight, width, true));
                         }
                         table.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_ARROW));
                         break;
                     case LINK:
                         table.addMouseListener(m_openPrefPageMouseListener);
                         table.setHeaderVisible(false);
-                        while (table.getColumnCount() > 1) {
-                            table.getColumns()[1].dispose();
-                        }
+                        pruneTableColumns(table, false);
                         m_viewer.setLabelProvider(new LinkStyleLabelProvider());
                         table.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_HAND));
                 }
