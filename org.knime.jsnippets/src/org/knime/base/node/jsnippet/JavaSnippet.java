@@ -1091,6 +1091,16 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
     }
 
     /**
+     * @param bundles
+     */
+    public void setAdditionalBundles(final String[] bundles) {
+        if (!Arrays.equals(m_settings.getBundles(), bundles)) {
+            m_settings.setBundles(bundles);
+            m_snippetCache.invalidate();
+        }
+    }
+
+    /**
      * Create the class file of the snippet.
      *
      * Creates a URLClassLoader which may open jar files referenced by the Java Snippet class. Make sure to match every

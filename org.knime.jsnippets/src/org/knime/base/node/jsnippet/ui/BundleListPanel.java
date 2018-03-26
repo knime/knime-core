@@ -168,9 +168,6 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
     }
 
     class BundleListEntryRenderer extends DefaultTreeCellRenderer {
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean sel,
             final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
@@ -248,7 +245,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
         private List<String> m_filtered;
 
-        private List<String> m_excluded;
+        private List<String> m_excluded = Collections.emptyList();
 
         /* Filter string, only ever null to force refiltering */
         private String m_filter = "";
@@ -490,25 +487,16 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
      */
     public boolean addBundle(final String bundleName) {
         final BundleListEntry e = makeBundleListEntry(bundleName);
-        if (e == null) {
+        if (e == null || m_listModel.contains(e.name)) {
             return false;
         }
 
-        if (m_listModel.contains(e)) {
-            return false;
-        }
-
-        //final Set<String> bundleNameSet = new HashSet<String>();
         m_listModel.add(e);
 
         final DefaultMutableTreeNode node = new DefaultMutableTreeNode(e);
 
         addDependenciesForNode(node, Platform.getBundle(e.name));
         ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(node, m_rootNode, m_rootNode.getChildCount());
-
-        //for (final String bn : bundleNameSet) {
-        //    listToAddTo.addElement(bn);
-        //}
 
         return true;
     }

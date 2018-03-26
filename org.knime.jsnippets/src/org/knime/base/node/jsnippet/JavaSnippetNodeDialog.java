@@ -86,6 +86,7 @@ import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.folding.Fold;
 import org.fife.ui.rsyntaxtextarea.folding.FoldManager;
+import org.fife.ui.rsyntaxtextarea.parser.ParserNotice.Level;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.base.node.jsnippet.guarded.GuardedDocument;
 import org.knime.base.node.jsnippet.guarded.JavaSnippetDocument;
@@ -165,6 +166,8 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
     protected Class<?> m_templateMetaCategory;
 
     private JLabel m_templateLocation;
+
+    private ErrorStrip es = null;
 
     /**
      * Create a new Dialog.
@@ -330,12 +333,20 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
     final ListDataListener forceReparseListener = new ListDataListener() {
         private void updateSnippet() {
             m_snippet.setJarFiles(m_jarPanel.getJarFiles());
+            m_snippet.setAdditionalBundles(m_bundleListPanel.getBundles());
+
             // force reparsing of the snippet
             for (int i = 0; i < m_snippetTextArea.getParserCount(); i++) {
                 m_snippetTextArea.forceReparsing(i);
             }
+
             // update autocompletion
             updateAutocompletion();
+
+            // update error strip:
+            // HACK: This forces refreshMarkers(), which is not triggered by reparsing of the document for some reason.
+            // We are just re-setting the default again here.
+            es.setLevelThreshold(Level.WARNING);
         }
 
         @Override
@@ -412,6 +423,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
      */
     private JComponent createSnippetPanel() {
         m_snippetTextArea = new JSnippetTextArea(m_snippet);
+        es = new ErrorStrip(m_snippetTextArea);
 
         // reset style which causes a recreation of the folds
         // this code is also executed in "onOpen" but that is not called for the template viewer tab
@@ -424,7 +436,6 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         final JPanel snippet = new JPanel(new BorderLayout());
         snippet.add(snippetScroller, BorderLayout.CENTER);
 
-        final ErrorStrip es = new ErrorStrip(m_snippetTextArea);
         snippet.add(es, BorderLayout.LINE_END);
 
         return snippet;
@@ -465,15 +476,15 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
     }
 
     private void updateAutocompletion() {
-        final LanguageSupportFactory lsf = LanguageSupportFactory.get();
-        final LanguageSupport support =
-            lsf.getSupportFor(org.fife.ui.rsyntaxtextarea.SyntaxConstants.SYNTAX_STYLE_JAVA);
-        final JavaLanguageSupport jls = (JavaLanguageSupport)support;
-        final JarManager jarManager = jls.getJarManager();
-
         try {
             if (m_autoCompletionJars == null || !Arrays.stream(m_autoCompletionJars).allMatch(file -> file.exists())
                 || !Arrays.equals(m_autoCompletionJars, m_snippet.getCompiletimeClassPath())) {
+
+                final LanguageSupportFactory lsf = LanguageSupportFactory.get();
+                final LanguageSupport support =
+                    lsf.getSupportFor(org.fife.ui.rsyntaxtextarea.SyntaxConstants.SYNTAX_STYLE_JAVA);
+                final JavaLanguageSupport jls = (JavaLanguageSupport)support;
+                final JarManager jarManager = jls.getJarManager();
 
                 m_autoCompletionJars = m_snippet.getCompiletimeClassPath();
                 jarManager.clearClassFileSources();
