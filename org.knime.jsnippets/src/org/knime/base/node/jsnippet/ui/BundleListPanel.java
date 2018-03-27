@@ -53,8 +53,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -203,11 +201,13 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
     }
 
     /* Bundle Tree display */
-    final DefaultMutableTreeNode m_rootNode = new DefaultMutableTreeNode("Active Bundles");
+    final DefaultMutableTreeNode m_root = new DefaultMutableTreeNode("This node should be invisible.");
+
+    final DefaultMutableTreeNode m_userBundlesRoot = new DefaultMutableTreeNode("Active Bundles");
+
     final DefaultMutableTreeNode m_customTypeRoot = new DefaultMutableTreeNode("Custom Type Bundles");
 
-    final JTree m_tree = new JTree(m_rootNode);
-    final JTree m_customTypeTree = new JTree(m_customTypeRoot);
+    final JTree m_tree = new JTree(m_root);
 
     /* Filterable list model containing all available bundles */
     final ArrayListModel<BundleListEntry> m_listModel = new ArrayListModel<>();
@@ -312,41 +312,50 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
         initBundleNames();
 
-        final JPanel treesPane = new JPanel();
-        treesPane.setLayout(new GridBagLayout());
-        final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.weightx = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
         final BundleListEntryRenderer renderer = new BundleListEntryRenderer();
         m_tree.setCellRenderer(renderer);
+        m_tree.setRootVisible(false);
         m_tree.addTreeWillExpandListener(this);
-        m_tree.expandPath(new TreePath(m_rootNode));
-        treesPane.add(m_tree, gbc);
 
-        m_customTypeTree.setCellRenderer(renderer);
-        m_customTypeTree.addTreeWillExpandListener(this);
-        m_customTypeTree.expandPath(new TreePath(m_customTypeRoot));
-        gbc.weighty = 1.0;
-        treesPane.add(m_customTypeTree, gbc);
+        m_root.add(m_userBundlesRoot);
+        m_root.add(m_customTypeRoot);
+        m_tree.expandPath(new TreePath(m_root));
 
-        final JScrollPane scroll = new JScrollPane(treesPane);
+        final JScrollPane scroll = new JScrollPane(m_tree);
         scroll.setMinimumSize(new Dimension(300, 300));
         scroll.setPreferredSize(new Dimension(300, 300));
         add(scroll);
 
-        final JPanel pane = new JPanel(new BorderLayout());
+        /* Remove button */
+        final JButton removeBundleButton = new JButton("Remove Selected");
+        removeBundleButton.addActionListener(e -> removeSelectedBundles());
+
+        final JPanel southPane = new JPanel(new FlowLayout());
+        southPane.add(removeBundleButton);
+        add(southPane);
+
+        /* Label for list of available bundles */
+        final JPanel labelPane = new JPanel(new FlowLayout());
+        labelPane.add(new JLabel("Add bundles from the current eclipse environment as dependencies."));
+        add(labelPane);
+
+        final JPanel availableBundlesPane = new JPanel(new BorderLayout());
         {
             final JPanel northPane = new JPanel(new GridLayout(2, 1));
-            northPane.add(new JLabel("Double-click bundle to add it together with its dependencies."));
+            {
+                /* Add bundles button */
+                final JButton addBundlesButton = new JButton("Add Selected");
+                addBundlesButton.addActionListener(e -> addSelectedBundles());
+                northPane.add(addBundlesButton);
 
-            m_filterField.requestFocusInWindow();
-            northPane.add(m_filterField);
-            pane.add(northPane, BorderLayout.NORTH);
+                m_filterField.requestFocusInWindow();
+                northPane.add(m_filterField);
+            }
+            availableBundlesPane.add(northPane, BorderLayout.NORTH);
 
             m_bundleList = new JList<>(m_bundleModel);
             final JScrollPane scrollPane = new JScrollPane(m_bundleList);
-            pane.add(scrollPane, BorderLayout.CENTER);
+            availableBundlesPane.add(scrollPane, BorderLayout.CENTER);
 
             m_bundleList.addMouseListener(new MouseListener() {
 
@@ -372,7 +381,8 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                         // Double click closes the dialog
                         final String bundleName = m_bundleList.getSelectedValue();
                         addBundle(bundleName);
-                        m_bundleModel.setExcluded(m_listModel.getAllElements().stream().map(Object::toString).collect(Collectors.toList()));
+                        m_bundleModel.setExcluded(
+                            m_listModel.getAllElements().stream().map(Object::toString).collect(Collectors.toList()));
                         m_bundleList.clearSelection();
                     }
                 }
@@ -390,9 +400,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                 @Override
                 public void keyPressed(final KeyEvent e) {
                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        addBundles(m_bundleList.getSelectedValuesList());
-                        m_bundleModel.setExcluded(m_listModel.getAllElements().stream().map(Object::toString).collect(Collectors.toList()));
-                        m_bundleList.clearSelection();
+                        addSelectedBundles();
                     }
                 }
             });
@@ -425,30 +433,24 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             });
         }
 
-        /* Remove button */
-        final JButton removeBundleButton = new JButton("Remove");
-        removeBundleButton.addActionListener(e -> removeSelectedBundles());
+        add(availableBundlesPane);
+    }
 
-        final JPanel southPane = new JPanel(new FlowLayout());
-        southPane.add(removeBundleButton);
-        add(southPane);
-
-        /* Label for list of available bundles */
-        final JPanel northPane = new JPanel(new FlowLayout());
-        northPane.add(new JLabel("Add bundles from the current eclipse environment as dependencies."));
-        add(northPane);
-
-        add(pane);
+    private void addSelectedBundles() {
+        addBundles(m_bundleList.getSelectedValuesList());
+        m_bundleModel
+            .setExcluded(m_listModel.getAllElements().stream().map(Object::toString).collect(Collectors.toList()));
+        m_bundleList.clearSelection();
     }
 
     /* Remove all bundles currently selected in list */
     void removeSelectedBundles() {
         for (final TreePath p : m_tree.getSelectionPaths()) {
-            if (p.getPathCount() != 2) {
-                /* Either root or a dependency */
+            final DefaultMutableTreeNode node = (DefaultMutableTreeNode)p.getLastPathComponent();
+            if (node.getParent() != m_userBundlesRoot) {
+                /* User can only edit user bundles */
                 continue;
             }
-            final DefaultMutableTreeNode node = (DefaultMutableTreeNode)p.getLastPathComponent();
             ((DefaultTreeModel)m_tree.getModel()).removeNodeFromParent(node);
 
             final Object o = node.getUserObject();
@@ -473,7 +475,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
      * @param bundles
      */
     public void setBundles(final String[] bundles) {
-        m_rootNode.removeAllChildren();
+        removeAllChildren(m_tree, m_userBundlesRoot);
         m_listModel.clear();
 
         addBundles(Arrays.asList(bundles));
@@ -496,7 +498,10 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         final DefaultMutableTreeNode node = new DefaultMutableTreeNode(e);
 
         addDependenciesForNode(node, Platform.getBundle(e.name));
-        ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(node, m_rootNode, m_rootNode.getChildCount());
+        ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(node, m_userBundlesRoot,
+            m_userBundlesRoot.getChildCount());
+
+        ensureRootsExpanded();
 
         return true;
     }
@@ -520,11 +525,24 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
             entries.add(e);
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(e);
-            ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(node, m_rootNode, m_rootNode.getChildCount());
+            ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(node, m_userBundlesRoot,
+                m_userBundlesRoot.getChildCount());
             addDependenciesForNode(node, Platform.getBundle(e.name));
         }
 
         m_listModel.addAll(entries);
+
+        ensureRootsExpanded();
+    }
+
+    /**
+     * Expanding a path in JTree does not have an effect when the path is a leaf. As the root starts out as a leaf, we
+     * can only expand it once it has children, hence with this function we can ensure the roots both are expanded once
+     * some children have been added.
+     */
+    private void ensureRootsExpanded() {
+        m_tree.expandPath(new TreePath(m_userBundlesRoot.getPath()));
+        m_tree.expandPath(new TreePath(m_customTypeRoot.getPath()));
     }
 
     /* Create a BundleListEntry from bundleName */
@@ -596,12 +614,28 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
      */
     @Override
     public void treeWillCollapse(final TreeExpansionEvent event) throws ExpandVetoException {
+        final Object node = event.getPath().getLastPathComponent();
+        if (node == m_userBundlesRoot || node == m_customTypeRoot) {
+            throw new ExpandVetoException(event);
+        }
     }
 
     /** @brief Bundles used for custom types. */
     public void setCustomTypeBundles(final Collection<Bundle> bundles) {
-        for(Bundle b : bundles) {
-            ((DefaultTreeModel)m_customTypeTree.getModel()).insertNodeInto(new DefaultMutableTreeNode(b), m_customTypeRoot, 0);
+        removeAllChildren(m_tree, m_customTypeRoot);
+        for (Bundle b : bundles) {
+            ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(new DefaultMutableTreeNode(b), m_customTypeRoot, 0);
+        }
+
+        ensureRootsExpanded();
+    }
+
+    /* Helper method that allows removing all children properly in a way that notifies a JTree and causes a redraw. */
+    private static void removeAllChildren(final JTree tree, final DefaultMutableTreeNode node) {
+        Enumeration<DefaultMutableTreeNode> children = node.children();
+        while (children.hasMoreElements()) {
+            DefaultMutableTreeNode child = children.nextElement();
+            ((DefaultTreeModel)tree.getModel()).removeNodeFromParent(child);
         }
     }
 
