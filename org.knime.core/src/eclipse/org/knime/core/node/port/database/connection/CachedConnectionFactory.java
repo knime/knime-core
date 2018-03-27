@@ -278,7 +278,7 @@ public class CachedConnectionFactory implements DBConnectionFactory {
                 return true;
             }
         } catch (Exception e) { // remove invalid connection
-            LOGGER.debug("Invalid connection with key: " + databaseConnKey + " Exception: " + e.getMessage());
+            LOGGER.debug("Invalid connection with key '" + databaseConnKey + "': " + e.getMessage(), e);
         }
         return false;
     }

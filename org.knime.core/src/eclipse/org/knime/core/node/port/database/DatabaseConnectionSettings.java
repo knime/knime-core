@@ -651,13 +651,15 @@ public class DatabaseConnectionSettings {
     }
 
     /**
+     * Executes a block of SQL commands using a valid connection. The method makes sure that the connection
+     * passed into the {@link ExecuteStatement} is valid and synchronized if required.
+     *
      * @param cp {@link CredentialsProvider} to use
      * @param stmt the {@link ExecuteStatement} implementation that can use the {@link Connection}
-     * @return T the return type of the {@link ExecuteStatement} method
+     * @return the return value of the {@link ExecuteStatement}
      * @throws SQLException if an exception during execution occurs
      * @since 3.5.3
      */
-    @SuppressWarnings("resource")
     public <T> T execute(final CredentialsProvider cp, final ExecuteStatement<T> stmt) throws SQLException {
         try {
             for (int i = 1; i <= MAX_CONNECTION_TRIES; i++) {
@@ -706,7 +708,7 @@ public class DatabaseConnectionSettings {
                 return null;
             } catch (SQLException ex) {
                 try {
-                    if ((conn != null) && !conn.getAutoCommit()) {
+                    if (!conn.getAutoCommit()) {
                         conn.rollback();
                     }
                 } catch (SQLException ex2) {

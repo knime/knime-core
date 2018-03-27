@@ -59,12 +59,13 @@ import java.sql.Connection;
  */
 @FunctionalInterface
 public interface ExecuteStatement<T> {
-
     /**
+     * Executes a block of database commands using the provided connection. Implementors can rely on the connection
+     * being valid.
+     *
      * @param conn {@link Connection} that can be used to execute SQL operations
      * @return the result of this method
      * @throws Exception if an {@link Exception} occurred during runtime
      */
     public T apply(Connection conn) throws Exception;
-
 }
