@@ -57,11 +57,6 @@
 				The default is k = 1.5. Larger values will cause less values to be considered outliers.
 			</option>
 			
-			<option name="Update domain">
-				If checked the domain of the selected outlier columns
-				is updated.
-			</option>
-
 			<option name="Quartile calculation">
 				Allows to specify how the quartiles are computed.
 				<ul>
@@ -89,6 +84,11 @@
 						here</a>.
 					</li>
 				</ul>
+			</option>
+
+			<option name="Update domain">
+				If checked the domain of the selected outlier columns
+				is updated.
 			</option>
 
 		</tab>

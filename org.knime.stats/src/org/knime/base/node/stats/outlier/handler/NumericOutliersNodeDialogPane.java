@@ -357,18 +357,20 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
             new DialogComponentNumberEdit(NumericOutliersNodeModel.createScalarModel(), QUARTILE_RANGE_MULT);
         panel.add(m_scalarDialog.getComponentPanel(), gbc);
 
-        ++gbc.gridy;
-
-        // add the update domain dialog
-        m_updateDomainDialog = new DialogComponentBoolean(NumericOutliersNodeModel.createDomainModel(), DOMAIN_POLICY);
-        panel.add(m_updateDomainDialog.getComponentPanel(), gbc);
-
         // add same space to the boarder title
         gbc.insets = new Insets(5, 0, 0, 0);
         ++gbc.gridy;
 
         // add the heuristic dialog
         panel.add(createComputationPanel(), gbc);
+
+        // reduce space to the boarder title
+        gbc.insets = new Insets(0, 0, 0, 0);
+        ++gbc.gridy;
+
+        // add the update domain dialog
+        m_updateDomainDialog = new DialogComponentBoolean(NumericOutliersNodeModel.createDomainModel(), DOMAIN_POLICY);
+        panel.add(m_updateDomainDialog.getComponentPanel(), gbc);
 
         return panel;
     }
