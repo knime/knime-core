@@ -52,6 +52,7 @@ import java.time.format.TextStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.WeekFields;
 import java.util.Locale;
+import java.util.MissingResourceException;
 
 import org.apache.commons.lang3.LocaleUtils;
 import org.knime.core.data.DataCell;
@@ -138,7 +139,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
     }
 
     static SettingsModelString createLocaleModel() {
-        return new SettingsModelString("locale", Locale.getDefault().toString());
+        return new SettingsModelString("locale", Locale.getDefault().toLanguageTag());
     }
 
     static boolean isDateType(final DataType type) {
@@ -223,7 +224,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
         final boolean isLocalDateTime = selectedColType.isCompatible(LocalDateTimeValue.class);
         final boolean isZonedDateTime = selectedColType.isCompatible(ZonedDateTimeValue.class);
 
-        final Locale locale = LocaleUtils.toLocale(m_localeModel.getStringValue());
+        final Locale locale = Locale.forLanguageTag(m_localeModel.getStringValue());
 
         final UniqueNameGenerator nameGenerator = new UniqueNameGenerator(spec);
         final DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
@@ -773,6 +774,13 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
         for (final SettingsModelBoolean sm : m_timeZoneModels) {
             sm.saveSettingsTo(settings);
         }
+        try {
+            // conversion necessary for backwards compatibility (AP-8915)
+            final Locale locale = LocaleUtils.toLocale(m_localeModel.getStringValue());
+            m_localeModel.setStringValue(locale.toLanguageTag());
+        } catch (IllegalArgumentException e) {
+            // do nothing, locale is already in correct format
+        }
         m_localeModel.saveSettingsTo(settings);
     }
 
@@ -812,6 +820,22 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             sm.loadSettingsFrom(settings);
         }
         m_localeModel.loadSettingsFrom(settings);
+
+        try {
+            // check for backwards compatibility (AP-8915)
+            LocaleUtils.toLocale(m_localeModel.getStringValue());
+        } catch (IllegalArgumentException e) {
+            try {
+                final String iso3Country = Locale.forLanguageTag(m_localeModel.getStringValue()).getISO3Country();
+                final String iso3Language = Locale.forLanguageTag(m_localeModel.getStringValue()).getISO3Language();
+                if (iso3Country.isEmpty() && iso3Language.isEmpty()) {
+                    throw new InvalidSettingsException("Unsupported locale '" + m_localeModel.getStringValue() + "'");
+                }
+            } catch (MissingResourceException ex) {
+                throw new InvalidSettingsException(
+                    "Unsupported locale '" + m_localeModel.getStringValue() + "': " + ex.getMessage(), ex);
+            }
+        }
     }
 
     private DataColumnSpec createBoundedIntColumn(final DataColumnDomainCreator domainCreator,
