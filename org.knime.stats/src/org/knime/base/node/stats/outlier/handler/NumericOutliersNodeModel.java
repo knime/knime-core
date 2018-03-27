@@ -55,7 +55,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
-import org.knime.base.algorithms.outlier.NumericOutlierPortObject;
+import org.knime.base.algorithms.outlier.NumericOutliersPortObject;
 import org.knime.base.algorithms.outlier.NumericOutliers;
 import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarning;
 import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarningListener;
@@ -180,7 +180,7 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
     /** Init the outlier detector node model with one input and output. */
     NumericOutliersNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
-            new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE, NumericOutlierPortObject.TYPE});
+            new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE, NumericOutliersPortObject.TYPE});
     }
 
     /**

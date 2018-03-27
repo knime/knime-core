@@ -82,7 +82,7 @@ public final class NumericOutliers {
     private final NumericOutliersReviser m_reviser;
 
     /** The port object. */
-    private NumericOutlierPortObject m_outlierPort;
+    private NumericOutliersPortObject m_outlierPort;
 
     /** The table after all outliers have been treated. */
     private BufferedDataTable m_outTable;
@@ -294,7 +294,7 @@ public final class NumericOutliers {
      *
      * @return the outlier port object
      */
-    public NumericOutlierPortObject getOutlierPort() {
+    public NumericOutliersPortObject getOutlierPort() {
         return m_outlierPort;
     }
 
@@ -308,7 +308,7 @@ public final class NumericOutliers {
      */
     public static DataTableSpec getOutlierPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
         final String[] outlierColNames) {
-        return NumericOutlierPortObject.getPortSpec(inSpec, groupColNames, outlierColNames);
+        return NumericOutliersPortObject.getPortSpec(inSpec, groupColNames, outlierColNames);
     }
 
     /**
@@ -333,7 +333,7 @@ public final class NumericOutliers {
         final NumericOutliersModel permittedIntervals =
             m_calculator.calculatePermittedIntervals(in, exec.createSubExecutionContext(intervalsProgress));
 
-        m_outlierPort = new NumericOutlierPortObject(
+        m_outlierPort = new NumericOutliersPortObject(
             SUMMARY_PREFIX + ConvenienceMethods
                 .getShortStringFrom(Arrays.asList(permittedIntervals.getOutlierColNames()), MAX_PRINT),
             in.getDataTableSpec(), permittedIntervals, m_reviser);

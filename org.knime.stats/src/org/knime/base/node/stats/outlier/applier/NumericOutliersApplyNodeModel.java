@@ -55,7 +55,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.knime.base.algorithms.outlier.NumericOutlierPortObject;
+import org.knime.base.algorithms.outlier.NumericOutliersPortObject;
 import org.knime.base.algorithms.outlier.NumericOutliersReviser;
 import org.knime.base.algorithms.outlier.NumericOutliersReviser.SummaryInternals;
 import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarning;
@@ -113,7 +113,7 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
 
     /** Init the numeric outliers node model with one input and output. */
     NumericOutliersApplyNodeModel() {
-        super(new PortType[]{NumericOutlierPortObject.TYPE, BufferedDataTable.TYPE},
+        super(new PortType[]{NumericOutliersPortObject.TYPE, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE});
     }
 
@@ -122,7 +122,7 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
      */
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
-        final NumericOutlierPortObject outlierPort = (NumericOutlierPortObject)inData[0];
+        final NumericOutliersPortObject outlierPort = (NumericOutliersPortObject)inData[0];
         final BufferedDataTable in = (BufferedDataTable)inData[1];
 
         NumericOutliersReviser outlierReviser = outlierPort.getOutRevBuilder().build();
@@ -142,7 +142,7 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
         final DataTableSpec inTableSpec = (DataTableSpec)inSpecs[1];
 
         // ensure that the in data table contains the group columns that were used to learn the outlier reviser
-        final String[] groupColNames = NumericOutlierPortObject.getGroupColNames(outlierPortSpec);
+        final String[] groupColNames = NumericOutliersPortObject.getGroupColNames(outlierPortSpec);
 
         final String[] missingGroupColNames = Arrays.stream(groupColNames)//
             .filter(g -> !inTableSpec.containsName(g))//
@@ -153,7 +153,7 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
         }
 
         // check if the data type for the groups differs between those the model was trained on and the input table
-        final String[] groupSpecNames = NumericOutlierPortObject.getGroupSpecNames(outlierPortSpec);
+        final String[] groupSpecNames = NumericOutliersPortObject.getGroupSpecNames(outlierPortSpec);
         final String[] wrongDataType = IntStream.range(0, groupColNames.length)//
             .filter(i -> outlierPortSpec.getColumnSpec(groupSpecNames[i]).getType() != inTableSpec
                 .getColumnSpec(groupColNames[i]).getType())//
@@ -165,7 +165,7 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
         }
 
         // get the outlier column names stored in the port spec
-        final String[] outlierColNames = NumericOutlierPortObject.getOutlierColNames(outlierPortSpec);
+        final String[] outlierColNames = NumericOutliersPortObject.getOutlierColNames(outlierPortSpec);
 
         // check for outlier columns that are missing the input table
         final List<String> nonExistOrCompatibleOutliers = Arrays.stream(outlierColNames)
@@ -198,8 +198,8 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
                 throws Exception {
-                final NumericOutlierPortObject outlierPort =
-                    (NumericOutlierPortObject)((PortObjectInput)inputs[0]).getPortObject();
+                final NumericOutliersPortObject outlierPort =
+                    (NumericOutliersPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 NumericOutliersReviser outlierReviser = outlierPort.getOutRevBuilder().build();
                 outlierReviser.treatOutliers(exec, (RowInput)inputs[1], (RowOutput)outputs[0],
                     outlierPort.getOutlierModel(((RowInput)inputs[1]).getDataTableSpec()));

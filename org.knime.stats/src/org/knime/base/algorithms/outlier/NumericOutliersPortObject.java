@@ -75,15 +75,15 @@ import org.knime.core.node.port.PortTypeRegistry;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public final class NumericOutlierPortObject extends AbstractSimplePortObject {
+public final class NumericOutliersPortObject extends AbstractSimplePortObject {
 
     /** @noreference This class is not intended to be referenced by clients. */
-    public static final class Serializer extends AbstractSimplePortObjectSerializer<NumericOutlierPortObject> {
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<NumericOutliersPortObject> {
     }
 
     /** Convenience accessor for the port type. */
     @SuppressWarnings("hiding")
-    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(NumericOutlierPortObject.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(NumericOutliersPortObject.class);
 
     /** The name of the groups column spec . */
     private static final String GROUP_SUFFIX = " (group)";
@@ -137,7 +137,7 @@ public final class NumericOutlierPortObject extends AbstractSimplePortObject {
     private boolean m_updateDomain;
 
     /** Empty constructor required by super class, should not be used. */
-    public NumericOutlierPortObject() {
+    public NumericOutliersPortObject() {
     }
 
     /**
@@ -148,7 +148,7 @@ public final class NumericOutlierPortObject extends AbstractSimplePortObject {
      * @param outlierModel ther permitted intervals table
      * @param reviser the outlier reviser
      */
-    NumericOutlierPortObject(final String summary, final DataTableSpec inSpec, final NumericOutliersModel outlierModel,
+    NumericOutliersPortObject(final String summary, final DataTableSpec inSpec, final NumericOutliersModel outlierModel,
         final NumericOutliersReviser reviser) {
         // store the summary
         m_summary = summary;

@@ -67,8 +67,8 @@
             color="#1eb9dc"
             hidden="true"
             name="Outlier"
-            objectClass="org.knime.base.algorithms.outlier.NumericOutlierPortObject"
-            objectSerializer="org.knime.base.algorithms.outlier.NumericOutlierPortObject$Serializer"
+            objectClass="org.knime.base.algorithms.outlier.NumericOutliersPortObject"
+            objectSerializer="org.knime.base.algorithms.outlier.NumericOutliersPortObject$Serializer"
             specClass="org.knime.core.data.DataTableSpec">
       </portType>
    </extension>
