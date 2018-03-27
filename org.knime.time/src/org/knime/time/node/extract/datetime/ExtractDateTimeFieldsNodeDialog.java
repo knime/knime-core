@@ -146,7 +146,7 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
         final Locale[] availableLocales = Locale.getAvailableLocales();
         final String[] availableLocalesString = new String[availableLocales.length];
         for (int i = 0; i < availableLocales.length; i++) {
-            availableLocalesString[i] = availableLocales[i].toString();
+            availableLocalesString[i] = availableLocales[i].toLanguageTag();
         }
         Arrays.sort(availableLocalesString);
 
