@@ -59,6 +59,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.time.chrono.Chronology;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
@@ -146,7 +147,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         final Locale[] availableLocales = Locale.getAvailableLocales();
         final String[] availableLocalesString = new String[availableLocales.length];
         for (int i = 0; i < availableLocales.length; i++) {
-            availableLocalesString[i] = availableLocales[i].toString();
+            availableLocalesString[i] = availableLocales[i].toLanguageTag();
         }
         Arrays.sort(availableLocalesString);
 
@@ -286,7 +287,10 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
     private void guessFormat(final String preview) {
         final Collection<String> formats = StringToDateTimeNodeModel.createPredefinedFormats();
         for (final String format : formats) {
-            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+            final Locale locale =
+                Locale.forLanguageTag(((SettingsModelString)m_dialogCompLocale.getModel()).getStringValue());
+            final DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern(format, locale).withChronology(Chronology.ofLocale(locale));
             try {
                 ZonedDateTime.parse(preview, formatter);
                 m_typeCombobox.setSelectedItem(DateTimeType.ZONED_DATE_TIME);

@@ -52,12 +52,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.time.chrono.Chronology;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.Set;
 
 import org.apache.commons.lang3.LocaleUtils;
@@ -150,7 +152,7 @@ final class StringToDateTimeNodeModel extends SimpleStreamableFunctionNodeModel 
 
     /** @return the string select model, used in both dialog and model. */
     static SettingsModelString createLocaleModel() {
-        return new SettingsModelString("locale", Locale.getDefault().toString());
+        return new SettingsModelString("locale", Locale.getDefault().toLanguageTag());
     }
 
     /** @return the boolean model, used in both dialog and model. */
@@ -265,9 +267,16 @@ final class StringToDateTimeNodeModel extends SimpleStreamableFunctionNodeModel 
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
         m_format.saveSettingsTo(settings);
-        m_locale.saveSettingsTo(settings);
         m_cancelOnFail.saveSettingsTo(settings);
         settings.addString("typeEnum", m_selectedType);
+        try {
+            // conversion necessary for backwards compatibility (AP-8915)
+            final Locale locale = LocaleUtils.toLocale(m_locale.getStringValue());
+            m_locale.setStringValue(locale.toLanguageTag());
+        } catch (IllegalArgumentException e) {
+            // do nothing, locale is already in correct format
+        }
+        m_locale.saveSettingsTo(settings);
     }
 
     /**
@@ -280,12 +289,6 @@ final class StringToDateTimeNodeModel extends SimpleStreamableFunctionNodeModel 
         m_suffix.validateSettings(settings);
         m_format.validateSettings(settings);
         m_locale.validateSettings(settings);
-        try {
-            LocaleUtils.toLocale(m_locale.getStringValue());
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidSettingsException(
-                "Unsupported locale in setting (" + m_locale.getStringValue() + "): " + ex.getMessage(), ex);
-        }
         m_cancelOnFail.validateSettings(settings);
         final SettingsModelString formatClone = m_format.createCloneWithValidatedValue(settings);
         final String format = formatClone.getStringValue();
@@ -323,6 +326,22 @@ final class StringToDateTimeNodeModel extends SimpleStreamableFunctionNodeModel 
             StringHistory.getInstance(FORMAT_HISTORY_KEY).add(dateformat);
         }
         m_hasValidatedConfiguration = true;
+
+        try {
+            // check for backwards compatibility (AP-8915)
+            LocaleUtils.toLocale(m_locale.getStringValue());
+        } catch (IllegalArgumentException e) {
+            try {
+                final String iso3Country = Locale.forLanguageTag(m_locale.getStringValue()).getISO3Country();
+                final String iso3Language = Locale.forLanguageTag(m_locale.getStringValue()).getISO3Language();
+                if (iso3Country.isEmpty() && iso3Language.isEmpty()) {
+                    throw new InvalidSettingsException("Unsupported locale '" + m_locale.getStringValue() + "'");
+                }
+            } catch (MissingResourceException ex) {
+                throw new InvalidSettingsException(
+                    "Unsupported locale '" + m_locale.getStringValue() + "': " + ex.getMessage(), ex);
+            }
+        }
     }
 
     /**
@@ -359,8 +378,9 @@ final class StringToDateTimeNodeModel extends SimpleStreamableFunctionNodeModel 
             }
             try {
                 final String input = ((StringValue)cell).getStringValue();
-                final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_format.getStringValue(),
-                    LocaleUtils.toLocale(m_locale.getStringValue()));
+                final Locale locale = Locale.forLanguageTag(m_locale.getStringValue());
+                final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_format.getStringValue(), locale)
+                    .withChronology(Chronology.ofLocale(locale));
 
                 switch (DateTimeType.valueOf(m_selectedType)) {
                     case LOCAL_DATE: {
