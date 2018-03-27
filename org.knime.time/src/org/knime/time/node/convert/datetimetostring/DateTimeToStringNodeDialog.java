@@ -57,6 +57,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.time.chrono.Chronology;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Locale;
@@ -68,7 +69,6 @@ import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.apache.commons.lang3.LocaleUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.time.localdate.LocalDateValue;
@@ -107,7 +107,7 @@ final class DateTimeToStringNodeDialog extends NodeDialogPane {
 
     private final SettingsModelString m_formatModel;
 
-    private SettingsModelString m_localeModel;
+    private final SettingsModelString m_localeModel;
 
     private final JLabel m_previewLabel;
 
@@ -140,7 +140,7 @@ final class DateTimeToStringNodeDialog extends NodeDialogPane {
         final Locale[] availableLocales = Locale.getAvailableLocales();
         final String[] availableLocalesString = new String[availableLocales.length];
         for (int i = 0; i < availableLocales.length; i++) {
-            availableLocalesString[i] = availableLocales[i].toString();
+            availableLocalesString[i] = availableLocales[i].toLanguageTag();
         }
         Arrays.sort(availableLocalesString);
 
@@ -308,8 +308,9 @@ final class DateTimeToStringNodeDialog extends NodeDialogPane {
 
     private void updatePreview() {
         try {
-            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_formatModel.getStringValue(),
-                LocaleUtils.toLocale(m_localeModel.getStringValue()));
+            final Locale locale = Locale.forLanguageTag(m_localeModel.getStringValue());
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_formatModel.getStringValue(), locale)
+                .withChronology(Chronology.ofLocale(locale));
             final String result = m_currentZDT.format(formatter);
             m_previewLabel.setText("Preview: " + result);
         } catch (IllegalArgumentException e) {

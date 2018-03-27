@@ -50,12 +50,14 @@ package org.knime.time.node.convert.datetimetostring;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.chrono.Chronology;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.Set;
 
 import javax.swing.event.ChangeEvent;
@@ -180,7 +182,7 @@ final class DateTimeToStringNodeModel extends NodeModel {
 
     /** @return the string select model, used in both dialog and model. */
     static SettingsModelString createLocaleModel() {
-        return new SettingsModelString("locale", Locale.getDefault().toString());
+        return new SettingsModelString("locale", Locale.getDefault().toLanguageTag());
     }
 
     /**
@@ -354,6 +356,13 @@ final class DateTimeToStringNodeModel extends NodeModel {
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
         m_format.saveSettingsTo(settings);
+        try {
+            // conversion necessary for backwards compatibility (AP-8915)
+            final Locale locale = LocaleUtils.toLocale(m_locale.getStringValue());
+            m_locale.setStringValue(locale.toLanguageTag());
+        } catch (IllegalArgumentException e) {
+            // do nothing, locale is already in correct format
+        }
         m_locale.saveSettingsTo(settings);
     }
 
@@ -367,13 +376,6 @@ final class DateTimeToStringNodeModel extends NodeModel {
         m_suffix.validateSettings(settings);
         m_format.validateSettings(settings);
         m_locale.validateSettings(settings);
-
-        try {
-            LocaleUtils.toLocale(m_locale.getStringValue());
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidSettingsException(
-                "Unsupported locale in setting (" + m_locale.getStringValue() + "): " + ex.getMessage(), ex);
-        }
 
         final SettingsModelString formatClone = m_format.createCloneWithValidatedValue(settings);
         final String format = formatClone.getStringValue();
@@ -408,6 +410,22 @@ final class DateTimeToStringNodeModel extends NodeModel {
             StringHistory.getInstance(FORMAT_HISTORY_KEY).add(dateformat);
         }
         m_hasValidatedConfiguration = true;
+
+        try {
+            // check for backwards compatibility (AP-8915)
+            LocaleUtils.toLocale(m_locale.getStringValue());
+        } catch (IllegalArgumentException e) {
+            try {
+                final String iso3Country = Locale.forLanguageTag(m_locale.getStringValue()).getISO3Country();
+                final String iso3Language = Locale.forLanguageTag(m_locale.getStringValue()).getISO3Language();
+                if (iso3Country.isEmpty() && iso3Language.isEmpty()) {
+                    throw new InvalidSettingsException("Unsupported locale '" + m_locale.getStringValue() + "'");
+                }
+            } catch (MissingResourceException ex) {
+                throw new InvalidSettingsException(
+                    "Unsupported locale '" + m_locale.getStringValue() + "': " + ex.getMessage(), ex);
+            }
+        }
     }
 
     /**
@@ -441,8 +459,9 @@ final class DateTimeToStringNodeModel extends NodeModel {
                 return cell;
             }
             try {
-                final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_format.getStringValue(),
-                    LocaleUtils.toLocale(m_locale.getStringValue()));
+                final Locale locale = Locale.forLanguageTag(m_locale.getStringValue());
+                final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_format.getStringValue(), locale)
+                    .withChronology(Chronology.ofLocale(locale));
                 final DataType type = cell.getType();
                 if (type.equals(LocalDateCellFactory.TYPE)) {
                     final String result = ((LocalDateCell)cell).getLocalDate().format(formatter);
