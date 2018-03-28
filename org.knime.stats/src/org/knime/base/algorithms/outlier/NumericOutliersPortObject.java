@@ -54,12 +54,9 @@ import java.util.stream.Collectors;
 import org.knime.base.algorithms.outlier.options.NumericOutliersDetectionOption;
 import org.knime.base.algorithms.outlier.options.NumericOutliersReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -202,46 +199,6 @@ public final class NumericOutliersPortObject extends AbstractSimplePortObject {
     }
 
     /**
-     * Returns the group column names used to calculate the given outlier port spec.
-     *
-     * @param outlierPortSpec the outlier port spec
-     * @return the group column names used to calculate the outlier port spec
-     */
-    public static String[] getGroupColNames(final DataTableSpec outlierPortSpec) {
-        return outlierPortSpec.stream()//
-            .filter(s -> s.getName().endsWith(GROUP_SUFFIX))//
-            .map(s -> s.getName().substring(0, s.getName().lastIndexOf(GROUP_SUFFIX)))//
-            .toArray(String[]::new);
-    }
-
-    /**
-     * Returns the group column names corresponding to groups used to calculate the outlier port spec.
-     *
-     * @param outlierPortSpec the outlier port spec
-     * @return the group column names corresponding to groups used to calculate the outlier port spec
-     */
-
-    public static String[] getGroupSpecNames(final DataTableSpec outlierPortSpec) {
-        return outlierPortSpec.stream()//
-            .filter(s -> s.getName().endsWith(GROUP_SUFFIX))//
-            .map(s -> s.getName())//
-            .toArray(String[]::new);
-    }
-
-    /**
-     * Returns the outlier column names used to calculate the given outlier port spec.
-     *
-     * @param outlierPortSpec the outlier port spec
-     * @return the outlier column names used to calculate the outlier port spec
-     */
-    public static String[] getOutlierColNames(final DataTableSpec outlierPortSpec) {
-        return outlierPortSpec.stream()//
-            .filter(s -> s.getName().endsWith(OUTLIER_SUFFIX))//
-            .map(s -> s.getName().substring(0, s.getName().lastIndexOf(OUTLIER_SUFFIX)))//
-            .toArray(String[]::new);
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -305,7 +262,7 @@ public final class NumericOutliersPortObject extends AbstractSimplePortObject {
      * @param outlierColNames the outlier column names
      * @return the outlier port spec
      */
-    static DataTableSpec getPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
+    static PortObjectSpec getPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
         final String[] outlierColNames) {
         return getPortSpec(extractTypes(inSpec, groupColNames), groupColNames, outlierColNames);
     }
@@ -318,22 +275,9 @@ public final class NumericOutliersPortObject extends AbstractSimplePortObject {
      * @param outlierColNames the outlier column names
      * @return the outlier port spec
      */
-    private static DataTableSpec getPortSpec(final DataType[] groupColTypes, final String[] groupColNames,
+    private static PortObjectSpec getPortSpec(final DataType[] groupColTypes, final String[] groupColNames,
         final String[] outlierColNames) {
-        final int numOfGroups = groupColNames.length;
-
-        final DataColumnSpec[] specs = new DataColumnSpec[numOfGroups + outlierColNames.length];
-
-        for (int i = 0; i < numOfGroups; i++) {
-            specs[i] = new DataColumnSpecCreator(groupColNames[i] + GROUP_SUFFIX, groupColTypes[i]).createSpec();
-        }
-
-        for (int i = 0; i < outlierColNames.length; i++) {
-            // DoubleCell is compatible with long and int cells and these are the only allowed types for outlier column names
-            specs[i + numOfGroups] =
-                new DataColumnSpecCreator(outlierColNames[i] + OUTLIER_SUFFIX, DoubleCell.TYPE).createSpec();
-        }
-        return new DataTableSpec(specs);
+        return new NumericOutliersPortObjectSpec(groupColTypes, groupColNames, outlierColNames);
     }
 
     /**

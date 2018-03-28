@@ -56,11 +56,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.base.algorithms.outlier.NumericOutliersPortObject;
+import org.knime.base.algorithms.outlier.NumericOutliersPortObjectSpec;
 import org.knime.base.algorithms.outlier.NumericOutliersReviser;
 import org.knime.base.algorithms.outlier.NumericOutliersReviser.SummaryInternals;
 import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarning;
 import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarningListener;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -138,11 +140,11 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        final DataTableSpec outlierPortSpec = (DataTableSpec)inSpecs[0];
+        final NumericOutliersPortObjectSpec outlierPortSpec = (NumericOutliersPortObjectSpec)inSpecs[0];
         final DataTableSpec inTableSpec = (DataTableSpec)inSpecs[1];
 
         // ensure that the in data table contains the group columns that were used to learn the outlier reviser
-        final String[] groupColNames = NumericOutliersPortObject.getGroupColNames(outlierPortSpec);
+        final String[] groupColNames = outlierPortSpec.getGroupColNames();
 
         final String[] missingGroupColNames = Arrays.stream(groupColNames)//
             .filter(g -> !inTableSpec.containsName(g))//
@@ -153,10 +155,9 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
         }
 
         // check if the data type for the groups differs between those the model was trained on and the input table
-        final String[] groupSpecNames = NumericOutliersPortObject.getGroupSpecNames(outlierPortSpec);
+        final DataType[] groupColTypes = outlierPortSpec.getGroupColTypes();
         final String[] wrongDataType = IntStream.range(0, groupColNames.length)//
-            .filter(i -> outlierPortSpec.getColumnSpec(groupSpecNames[i]).getType() != inTableSpec
-                .getColumnSpec(groupColNames[i]).getType())//
+            .filter(i -> groupColTypes[i] != inTableSpec.getColumnSpec(groupColNames[i]).getType())//
             .mapToObj(i -> groupColNames[i])//
             .toArray(String[]::new);
         if (wrongDataType.length != 0) {
@@ -165,7 +166,7 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
         }
 
         // get the outlier column names stored in the port spec
-        final String[] outlierColNames = NumericOutliersPortObject.getOutlierColNames(outlierPortSpec);
+        final String[] outlierColNames = outlierPortSpec.getOutlierColNames();
 
         // check for outlier columns that are missing the input table
         final List<String> nonExistOrCompatibleOutliers = Arrays.stream(outlierColNames)

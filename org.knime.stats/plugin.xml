@@ -69,7 +69,8 @@
             name="Outlier"
             objectClass="org.knime.base.algorithms.outlier.NumericOutliersPortObject"
             objectSerializer="org.knime.base.algorithms.outlier.NumericOutliersPortObject$Serializer"
-            specClass="org.knime.core.data.DataTableSpec">
+            specClass="org.knime.base.algorithms.outlier.NumericOutliersPortObjectSpec"
+            specSerializer="org.knime.base.algorithms.outlier.NumericOutliersPortObjectSpec$Serializer">
       </portType>
    </extension>
 </plugin>

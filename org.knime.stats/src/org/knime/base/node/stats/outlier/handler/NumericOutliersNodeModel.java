@@ -55,8 +55,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
-import org.knime.base.algorithms.outlier.NumericOutliersPortObject;
 import org.knime.base.algorithms.outlier.NumericOutliers;
+import org.knime.base.algorithms.outlier.NumericOutliersPortObject;
 import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarning;
 import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarningListener;
 import org.knime.base.algorithms.outlier.options.NumericOutliersDetectionOption;
@@ -80,6 +80,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.filter.InputFilter;
 
@@ -254,9 +255,9 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         // check if the table contains any row holding numerical values
-        DataTableSpec inSpec = inSpecs[0];
+        DataTableSpec inSpec = (DataTableSpec)inSpecs[0];
         if (!inSpec.containsCompatibleType(DoubleValue.class)) {
             throw new InvalidSettingsException(INVALID_INPUT_EXCEPTION);
         }
@@ -320,7 +321,7 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
         final String[] outlierColNames = getOutlierColNames(inSpec);
         final String[] groupColNames = getGroupColNames(inSpec);
 
-        return new DataTableSpec[]{NumericOutliers.getOutTableSpec(inSpec),
+        return new PortObjectSpec[]{NumericOutliers.getOutTableSpec(inSpec),
             NumericOutliers.getSummaryTableSpec(inSpec, groupColNames),
             NumericOutliers.getOutlierPortSpec(inSpec, groupColNames, outlierColNames)};
     }

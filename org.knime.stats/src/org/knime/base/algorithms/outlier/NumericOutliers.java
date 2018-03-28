@@ -60,6 +60,7 @@ import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -306,7 +307,7 @@ public final class NumericOutliers {
      * @param outlierColNames the outlier column names
      * @return the outlier port spec
      */
-    public static DataTableSpec getOutlierPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
+    public static PortObjectSpec getOutlierPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
         final String[] outlierColNames) {
         return NumericOutliersPortObject.getPortSpec(inSpec, groupColNames, outlierColNames);
     }
