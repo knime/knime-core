@@ -65,116 +65,127 @@ import org.knime.workbench.editor2.figures.WorkflowFigure;
 /**
  * This class exists to provide a render hint to the workflow editor user when they are dragging so that
  *      they are made aware that the canvas will auto-scroll.
+ *
+ * @author loki der quaeler
  */
 class DragScrollingHintRenderer implements MouseListener, MouseMoveListener, SelectionListener {
 
-    static private final float SPATIAL_ZONE_PERCENTAGE = 0.1f;
-    static private final float SPATIAL_INSET_PERCENTAGE = 0.165f;
+    /*
+     * This was getting instantiated at the end of WorkflowEditor.createGraphicalViewer thusly:
+     *
+     *  WorkflowFigure figure = ((WorkflowRootEditPart)rep.getContents()).getFigure();
+     *  m_scrollingHintRenderer = new DragScrollingHintRenderer(getGraphicalViewer(), figure);
+     */
 
-    static private final int MIN_HINT_ZONE_ALPHA = 11;
-    static private final int MAX_HINT_ZONE_ALPHA = 136;
-    static private final int ALPHA_TWEAK_ANIMATION_SLEEP = 76;
+    private static final float SPATIAL_ZONE_PERCENTAGE = 0.1f;
+    private static final float SPATIAL_INSET_PERCENTAGE = 0.165f;
 
-    static private final Dimension CORNER_DIMENSION = new Dimension(7, 7);
+    private static final int MIN_HINT_ZONE_ALPHA = 11;
+    private static final int MAX_HINT_ZONE_ALPHA = 136;
+    private static final int ALPHA_TWEAK_ANIMATION_SLEEP = 76;
+
+    private static final Dimension CORNER_DIMENSION = new Dimension(7, 7);
 
     // Makes for better code readability
-    static private final int NORTH = 0;
-    static private final int WEST = 1;
-    static private final int SOUTH = 2;
-    static private final int EAST = 3;
+    private static final int NORTH = 0;
+    private static final int WEST = 1;
+    private static final int SOUTH = 2;
+    private static final int EAST = 3;
 
 
-    final private FigureCanvas backingCanvas;
-    final private WorkflowFigure rootFigure;
+    private final FigureCanvas m_backingCanvas;
+    private final WorkflowFigure m_rootFigure;
 
-    final private Color fillColor;
+    private final Color m_fillColor;
 
-    private RoundedRectangle[] currentlyDisplayedRegions;
+    private RoundedRectangle[] m_currentlyDisplayedRegions;
 
     // This will only be consulted from the SWT thread, so i'm content making it neither volatile nor
     //  AtomicBoolean
-    private boolean weAreInADrag;
+    private boolean m_weAreInADrag;
 
 
     // We cache these at mouse-down time to save calculation time during the drag
 
     // Similarly, this will only be interacted with on the SWT thread; the indices represent N,W,S,E.
-    private int[] renderSpatialThresholds;
+    private int[] m_renderSpatialThresholds;
     // Similarly ...; this is used to store the reduced width, 0, or height, 1, of a highlight region.
-    private int[] renderDimensions;
-    private int[] locationInsetOffsets;
+    private int[] m_renderDimensions;
+    private int[] m_locationInsetOffsets;
 
 
     /**
+     * This constructs on instance of the renderer.
+     *
      * @param viewer we assume this instance is being created by WorkflowGraphicalViewerCreator
      */
     DragScrollingHintRenderer(final GraphicalViewer viewer, final WorkflowFigure figure) {
-        this.backingCanvas = (FigureCanvas)viewer.getControl();
+        m_backingCanvas = (FigureCanvas)viewer.getControl();
 
-        this.backingCanvas.addMouseListener(this);
-        this.backingCanvas.addMouseMoveListener(this);
+        m_backingCanvas.addMouseListener(this);
+        m_backingCanvas.addMouseMoveListener(this);
 
         // See comments on widgetSelected(SelectionEvent)
-        this.backingCanvas.getHorizontalBar().addSelectionListener(this);
-        this.backingCanvas.getVerticalBar().addSelectionListener(this);
+        m_backingCanvas.getHorizontalBar().addSelectionListener(this);
+        m_backingCanvas.getVerticalBar().addSelectionListener(this);
 
-        this.rootFigure = figure;
+        m_rootFigure = figure;
 
-        this.fillColor = new Color(this.backingCanvas.getDisplay(), 0, 134, 197);
+        m_fillColor = new Color(m_backingCanvas.getDisplay(), 0, 134, 197);
     }
 
     // This will always be called on the SWT thread
     private RoundedRectangle makeRoundedRectangle(final Rectangle viewportBounds, final int side) {
-        final RoundedRectangle rhett = new RoundedRectangle();
+        final RoundedRectangle roundedRectangle = new RoundedRectangle();
 
-        rhett.setFill(true);
-        rhett.setBackgroundColor(this.fillColor);
-        rhett.setCornerDimensions(CORNER_DIMENSION);
-        rhett.setAlpha(MIN_HINT_ZONE_ALPHA);
+        roundedRectangle.setFill(true);
+        roundedRectangle.setBackgroundColor(m_fillColor);
+        roundedRectangle.setCornerDimensions(CORNER_DIMENSION);
+        roundedRectangle.setAlpha(MIN_HINT_ZONE_ALPHA);
 
         switch (side) {
             case NORTH:
             case SOUTH:
-                rhett.setPreferredSize((viewportBounds.width - (2 * this.locationInsetOffsets[0])),
-                                       this.renderDimensions[1]);
+                roundedRectangle.setPreferredSize((viewportBounds.width - (2 * m_locationInsetOffsets[0])),
+                                                  m_renderDimensions[1]);
                 break;
             default:
-                rhett.setPreferredSize(this.renderDimensions[0],
-                                       (viewportBounds.height - (2 * this.locationInsetOffsets[1])));
+                roundedRectangle.setPreferredSize(m_renderDimensions[0],
+                                                  (viewportBounds.height - (2 * m_locationInsetOffsets[1])));
                 break;
         }
 
-        this.rootFigure.add(rhett);
-        this.backingCanvas.getDisplay().timerExec(ALPHA_TWEAK_ANIMATION_SLEEP, new AlphaTweaker(side, 5));
+        m_rootFigure.add(roundedRectangle);
+        m_backingCanvas.getDisplay().timerExec(ALPHA_TWEAK_ANIMATION_SLEEP, new AlphaTweaker(side, 5));
 
-        return rhett;
+        return roundedRectangle;
     }
 
     // This will always be called on the SWT thread
-    private void updateLocation (final Rectangle viewportBounds, final int side) {
+    private void updateLocation(final Rectangle viewportBounds, final int side) {
         final int x;
         final int y;
 
         switch (side) {
             case NORTH:
-                x = viewportBounds.x + this.locationInsetOffsets[0];
+                x = viewportBounds.x + m_locationInsetOffsets[0];
                 y = viewportBounds.y;
                 break;
             case SOUTH:
-                x = viewportBounds.x + this.locationInsetOffsets[0];
-                y = viewportBounds.y + viewportBounds.height - this.renderDimensions[1];
+                x = viewportBounds.x + m_locationInsetOffsets[0];
+                y = viewportBounds.y + viewportBounds.height - m_renderDimensions[1];
                 break;
             case WEST:
                 x = viewportBounds.x;
-                y = viewportBounds.y + this.locationInsetOffsets[1];
+                y = viewportBounds.y + m_locationInsetOffsets[1];
                 break;
             default:
-                x = viewportBounds.x + viewportBounds.width - this.renderDimensions[0];
-                y = viewportBounds.y + this.locationInsetOffsets[1];
+                x = viewportBounds.x + viewportBounds.width - m_renderDimensions[0];
+                y = viewportBounds.y + m_locationInsetOffsets[1];
                 break;
         }
 
-        this.currentlyDisplayedRegions[side].setLocation(new Point(x, y));
+        m_currentlyDisplayedRegions[side].setLocation(new Point(x, y));
     }
 
 
@@ -183,27 +194,26 @@ class DragScrollingHintRenderer implements MouseListener, MouseMoveListener, Sel
      */
     @Override
     public void mouseMove(final MouseEvent me) {
-        if (this.weAreInADrag) {
-            final Rectangle bounds = this.backingCanvas.getViewport().getBounds();
+        if (m_weAreInADrag) {
+            final Rectangle bounds = m_backingCanvas.getViewport().getBounds();
             final boolean[] renders = new boolean[4];
 
-            renders[NORTH] = (me.y <= (this.renderSpatialThresholds[NORTH] + bounds.y));
-            renders[WEST] = (me.x <= (this.renderSpatialThresholds[WEST] + bounds.x));
-            renders[SOUTH] = (me.y >= (this.renderSpatialThresholds[SOUTH] + bounds.y));
-            renders[EAST] = (me.x >= (this.renderSpatialThresholds[EAST] + bounds.x));
+            renders[NORTH] = (me.y <= (m_renderSpatialThresholds[NORTH] + bounds.y));
+            renders[WEST] = (me.x <= (m_renderSpatialThresholds[WEST] + bounds.x));
+            renders[SOUTH] = (me.y >= (m_renderSpatialThresholds[SOUTH] + bounds.y));
+            renders[EAST] = (me.x >= (m_renderSpatialThresholds[EAST] + bounds.x));
 
             for (int i = 0; i < 4; i++) {
                 if (renders[i]) {
-                    if (this.currentlyDisplayedRegions[i] == null) {
-                        this.currentlyDisplayedRegions[i] = this.makeRoundedRectangle(bounds, i);
+                    if (m_currentlyDisplayedRegions[i] == null) {
+                        m_currentlyDisplayedRegions[i] = makeRoundedRectangle(bounds, i);
                     }
 
-                    this.updateLocation(bounds, i);
-                }
-                else if (this.currentlyDisplayedRegions[i] != null) {
-                    this.rootFigure.remove(this.currentlyDisplayedRegions[i]);
+                    updateLocation(bounds, i);
+                } else if (m_currentlyDisplayedRegions[i] != null) {
+                    m_rootFigure.remove(m_currentlyDisplayedRegions[i]);
 
-                    this.currentlyDisplayedRegions[i] = null;
+                    m_currentlyDisplayedRegions[i] = null;
                 }
             }
         }
@@ -220,27 +230,25 @@ class DragScrollingHintRenderer implements MouseListener, MouseMoveListener, Sel
      */
     @Override
     public void mouseDown(final MouseEvent me) {
-        final Rectangle viewportBounds;
+        m_weAreInADrag = true;
 
-        this.weAreInADrag = true;
+        final Rectangle viewportBounds = m_backingCanvas.getViewport().getBounds();
 
-        viewportBounds = this.backingCanvas.getViewport().getBounds();
+        m_renderSpatialThresholds = new int[4];
+        m_renderSpatialThresholds[NORTH] = (int)(SPATIAL_ZONE_PERCENTAGE * viewportBounds.height);
+        m_renderSpatialThresholds[WEST] = (int)(SPATIAL_ZONE_PERCENTAGE * viewportBounds.width);
+        m_renderSpatialThresholds[SOUTH] = viewportBounds.height - m_renderSpatialThresholds[0];
+        m_renderSpatialThresholds[EAST] = viewportBounds.width - m_renderSpatialThresholds[1];
 
-        this.renderSpatialThresholds = new int[4];
-        this.renderSpatialThresholds[NORTH] = (int)(SPATIAL_ZONE_PERCENTAGE * viewportBounds.height);
-        this.renderSpatialThresholds[WEST] = (int)(SPATIAL_ZONE_PERCENTAGE * viewportBounds.width);
-        this.renderSpatialThresholds[SOUTH] = viewportBounds.height - this.renderSpatialThresholds[0];
-        this.renderSpatialThresholds[EAST] = viewportBounds.width - this.renderSpatialThresholds[1];
+        m_renderDimensions = new int[2];
+        m_renderDimensions[0] = m_renderSpatialThresholds[WEST];
+        m_renderDimensions[1] = m_renderSpatialThresholds[NORTH];
 
-        this.renderDimensions = new int[2];
-        this.renderDimensions[0] = this.renderSpatialThresholds[WEST];
-        this.renderDimensions[1] = this.renderSpatialThresholds[NORTH];
+        m_locationInsetOffsets = new int[2];
+        m_locationInsetOffsets[0] = (int)(SPATIAL_INSET_PERCENTAGE * viewportBounds.width);
+        m_locationInsetOffsets[1] = (int)(SPATIAL_INSET_PERCENTAGE * viewportBounds.height);
 
-        this.locationInsetOffsets = new int[2];
-        this.locationInsetOffsets[0] = (int)(SPATIAL_INSET_PERCENTAGE * viewportBounds.width);
-        this.locationInsetOffsets[1] = (int)(SPATIAL_INSET_PERCENTAGE * viewportBounds.height);
-
-        this.currentlyDisplayedRegions = new RoundedRectangle[4];
+        m_currentlyDisplayedRegions = new RoundedRectangle[4];
     }
 
     /**
@@ -248,21 +256,19 @@ class DragScrollingHintRenderer implements MouseListener, MouseMoveListener, Sel
      */
     @Override
     public void mouseUp(final MouseEvent me) {
-        this.weAreInADrag = false;
+        m_weAreInADrag = false;
 
-        this.renderSpatialThresholds = null;
-        this.renderDimensions = null;
-        this.locationInsetOffsets = null;
+        m_renderSpatialThresholds = null;
+        m_renderDimensions = null;
+        m_locationInsetOffsets = null;
 
         for (int i = 0; i < 4; i++) {
-            if (this.currentlyDisplayedRegions[i] != null) {
-                this.rootFigure.remove(this.currentlyDisplayedRegions[i]);
+            if (m_currentlyDisplayedRegions[i] != null) {
+                m_rootFigure.remove(m_currentlyDisplayedRegions[i]);
             }
         }
-        this.currentlyDisplayedRegions = null;
+        m_currentlyDisplayedRegions = null;
     }
-
-//static private final NodeLogger LOGGER = NodeLogger.getLogger(DragScrollingHintRenderer.class);
 
     /**
      * {@inheritDoc}
@@ -279,13 +285,12 @@ class DragScrollingHintRenderer implements MouseListener, MouseMoveListener, Sel
          * I am suspicious that i see no notifications here when the scrollbars themselves auto-appear
          *  and change range, but i suppose that is not technically scrolling behaviour.
          */
-//LOGGER.warn("widget selected: " + se);
-        if (this.weAreInADrag) {
-            final Rectangle bounds = this.backingCanvas.getViewport().getBounds();
+        if (m_weAreInADrag) {
+            final Rectangle bounds = m_backingCanvas.getViewport().getBounds();
 
             for (int i = 0; i < 4; i++) {
-                if (this.currentlyDisplayedRegions[i] != null) {
-                    this.updateLocation(bounds, i);
+                if (m_currentlyDisplayedRegions[i] != null) {
+                    updateLocation(bounds, i);
                 }
             }
         }
@@ -296,53 +301,54 @@ class DragScrollingHintRenderer implements MouseListener, MouseMoveListener, Sel
      */
     @Override
     public void widgetDefaultSelected(final SelectionEvent se) {
-        this.widgetSelected(se);
+        widgetSelected(se);
     }
 
 
-    private class AlphaTweaker implements Runnable {
+    class AlphaTweaker implements Runnable {
 
-        final protected int regionIndex;
-        final protected int alphaDelta;
-        protected boolean increasing;
-        protected int alpha;
+        private final int m_regionIndex;
+        private final int m_alphaDelta;
+        private boolean m_increasing;
+        private int m_alpha;
 
-        private AlphaTweaker (final int index, final int delta) {
-            this.regionIndex = index;
+        AlphaTweaker(final int index, final int delta) {
+            m_regionIndex = index;
 
-            this.alphaDelta = delta;
+            m_alphaDelta = delta;
 
-            this.increasing = true;
+            m_increasing = true;
 
-            this.alpha = MIN_HINT_ZONE_ALPHA;
+            m_alpha = MIN_HINT_ZONE_ALPHA;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void run() {
-            final DragScrollingHintRenderer outer = DragScrollingHintRenderer.this;
-            final RoundedRectangle region = outer.currentlyDisplayedRegions[this.regionIndex];
+            final RoundedRectangle region = m_currentlyDisplayedRegions[m_regionIndex];
 
             if (region != null) {
-                region.setAlpha(this.alpha);
+                region.setAlpha(m_alpha);
 
-                if (this.increasing) {
-                    this.alpha += this.alphaDelta;
+                if (m_increasing) {
+                    m_alpha += m_alphaDelta;
 
-                    if (this.alpha > MAX_HINT_ZONE_ALPHA) {
-                        this.increasing = false;
-                        this.alpha = MAX_HINT_ZONE_ALPHA;
+                    if (m_alpha > MAX_HINT_ZONE_ALPHA) {
+                        m_increasing = false;
+                        m_alpha = MAX_HINT_ZONE_ALPHA;
+                    }
+                } else {
+                    m_alpha -= m_alphaDelta;
+
+                    if (m_alpha < MIN_HINT_ZONE_ALPHA) {
+                        m_increasing = true;
+                        m_alpha = MIN_HINT_ZONE_ALPHA;
                     }
                 }
-                else {
-                    this.alpha -= this.alphaDelta;
 
-                    if (this.alpha < MIN_HINT_ZONE_ALPHA) {
-                        this.increasing = true;
-                        this.alpha = MIN_HINT_ZONE_ALPHA;
-                    }
-                }
-
-                outer.backingCanvas.getDisplay().timerExec(ALPHA_TWEAK_ANIMATION_SLEEP, this);
+                m_backingCanvas.getDisplay().timerExec(ALPHA_TWEAK_ANIMATION_SLEEP, this);
             }
         }
 

@@ -319,7 +319,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private GraphicalViewer m_graphicalViewer;
     private ZoomWheelListener m_zoomWheelListener;
-    private DragScrollingHintRenderer m_scrollingHintRenderer;
 
     /** path to the workflow directory (that contains the workflow.knime file). */
     private URI m_fileResource;
@@ -912,8 +911,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         ZoomManager zm = this.getZoomManager();
         zm.setZoomLevels(ZOOM_LEVELS);
         m_zoomWheelListener = new ZoomWheelListener(zm, (FigureCanvas)getViewer().getControl());
-//        WorkflowFigure figure = ((WorkflowRootEditPart)rep.getContents()).getFigure();
-//        m_scrollingHintRenderer = new DragScrollingHintRenderer(getGraphicalViewer(), figure);
     }
 
     /**

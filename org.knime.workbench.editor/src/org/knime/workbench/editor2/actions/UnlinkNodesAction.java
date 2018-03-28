@@ -48,10 +48,10 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
@@ -74,18 +74,22 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  *
  *          A>----<B>    <C>
  *            \------<D>---<E
+ *
+ * @author loki der quaeler
  */
 public class UnlinkNodesAction extends AbstractNodeAction {
 
     /** actions registry ID for this action. **/
-    static public final String ID = "knime.actions.unlinknodes";
+    public static final String ID = "knime.actions.unlinknodes";
     /** org.eclipse.ui.commands command ID for this action. **/
-    static private final String COMMAND_ID = "knime.commands.unlinknodes";
+    private static final String COMMAND_ID = "knime.commands.unlinknodes";
 
-    static private final NodeLogger LOGGER = NodeLogger.getLogger(UnlinkNodesAction.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(UnlinkNodesAction.class);
 
 
     /**
+     * Constructs an instance of <code>UnlinkNodesAction</code>.
+     *
      * @param editor The workflow editor which this action will work within
      */
     public UnlinkNodesAction(final WorkflowEditor editor) {
@@ -105,7 +109,7 @@ public class UnlinkNodesAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Unlink selected nodes\t" + this.getHotkey(COMMAND_ID);
+        return "Unlink selected nodes\t" + getHotkey(COMMAND_ID);
     }
 
     /**
@@ -121,8 +125,7 @@ public class UnlinkNodesAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID,
-                                                 "icons/unlink_nodes_disabled.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/unlink_nodes_disabled.png");
     }
 
     /**
@@ -138,69 +141,73 @@ public class UnlinkNodesAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final WorkflowManager wm = this.getManager();
-        final Collection<ConnectionContainer> toRemove = this.findRemoveableConnections(nodeParts);
+        final WorkflowManager wm = getManager();
+        final Collection<ConnectionContainer> toRemove = findRemoveableConnections(nodeParts);
 
         for (final ConnectionContainer cc : toRemove) {
             try {
                 wm.removeConnection(cc);
-            }
-            catch (Exception e) {
-                LOGGER.error("Could not delete existing connection from " + cc.getSource()
-                                    + ":" + cc.getSourcePort() + " to " + cc.getDest() + ":"
-                                    + cc.getDestPort());
+            } catch (Exception e) {
+                LOGGER.error("Could not delete existing connection from " + cc.getSource() + ":" + cc.getSourcePort()
+                                    + " to " + cc.getDest() + ":" + cc.getDestPort() + " due to: " + e.getMessage(),
+                             e);
             }
         }
     }
 
     /**
+     * {@inheritDoc}
+     *
      * @return <code>true</code> if we have:
      *                  • at least two nodes which share a connection
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        final NodeContainerEditPart[] selected = this.getSelectedParts(NodeContainerEditPart.class);
+        final NodeContainerEditPart[] selected = getSelectedParts(NodeContainerEditPart.class);
 
         if (selected.length < 2) {
             return false;
         }
 
-        final Collection<ConnectionContainer> toRemove = this.findRemoveableConnections(selected);
+        final Collection<ConnectionContainer> toRemove = findRemoveableConnections(selected);
 
-        return (toRemove.size() > 0);
+        return !toRemove.isEmpty();
     }
 
     /**
-     * @param nodes
+     * This method examines the nodes passed in for connections that exist between elements of that set.
+     *
+     * @param nodes the currently selected nodes
      * @return a collection of 0-M ConnectionContainer instances representing connections which should
      *              be removed (the are connections between elements of the set of nodes specified
      *              via <code>nodes</code>
      */
-    protected Collection<ConnectionContainer> findRemoveableConnections(final NodeContainerEditPart[] nodes) {
-        final WorkflowManager wm = this.getManager();
+    private Collection<ConnectionContainer> findRemoveableConnections(final NodeContainerEditPart[] nodes) {
+        final WorkflowManager wm = getManager();
         // relying on a correct hashCode() implementation in ConnectionContainer to let us use
         //          HashSet to avoid duplicates
-        final Collection<ConnectionContainer> rhett = new HashSet<>();
         final HashSet<NodeID> nodeIdSet = new HashSet<>();
-        Set<ConnectionContainer> connections;
 
-        Arrays.asList(nodes).forEach((node) -> {
+        Stream.of(nodes).forEach((node) -> {
             nodeIdSet.add(node.getNodeContainer().getID());
         });
 
+        final Collection<ConnectionContainer> removeableConnections = new HashSet<>();
         for (final NodeContainerEditPart node : nodes) {
+            final Set<ConnectionContainer> connections;
+
             // We should only need check incoming *or* outgoing, since members of the set which connect to
             //      other members of the set will each have references to themselves defined in both.
             connections = wm.getIncomingConnectionsFor(node.getNodeContainer().getID());
             connections.forEach((connection) -> {
                 if (nodeIdSet.contains(connection.getSource()) && nodeIdSet.contains(connection.getDest())) {
-                    rhett.add(connection);
+                    removeableConnections.add(connection);
                 }
             });
         }
 
-        return rhett;
+        return removeableConnections;
     }
 
 }

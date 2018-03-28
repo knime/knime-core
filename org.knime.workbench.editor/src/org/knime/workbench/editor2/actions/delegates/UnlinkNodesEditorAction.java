@@ -55,6 +55,8 @@ import org.knime.workbench.editor2.actions.UnlinkNodesAction;
 /**
  * This provides the delegate to the action responsible for deleting the connection between nodes in a set
  *  of cardinality two or more.
+ *
+ * @author loki der quaeler
  */
 public class UnlinkNodesEditorAction extends AbstractEditorAction {
 

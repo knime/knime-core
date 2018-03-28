@@ -54,6 +54,8 @@ import org.knime.workbench.editor2.actions.LinkNodesAction;
 
 /**
  * This provides the delegate to the action responsible for connecting two or more nodes.
+ *
+ * @author loki der quaeler
  */
 public class LinkNodesEditorAction extends AbstractEditorAction {
 
