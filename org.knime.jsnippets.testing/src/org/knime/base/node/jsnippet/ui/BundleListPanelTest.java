@@ -12,7 +12,6 @@ import java.util.Arrays;
 import org.eclipse.core.runtime.Platform;
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.base.node.jsnippet.ui.BundleListPanel.AddBundleDialog;
 import org.knime.base.testing.UiTest;
 import org.osgi.framework.Bundle;
 
@@ -115,16 +114,11 @@ public class BundleListPanelTest extends UiTest {
         assertNotNull("Expected symbolic name of an existing bundle in the list",
             Platform.getBundle(panel.m_listModel.getElementAt(0).name));
 
-        /* Test that opening the dialog does not throw any exceptions */
-        final AddBundleDialog dialog = panel.openAddBundleDialog();
-
         /* Select first value */
-        dialog.m_bundleList.setSelectedIndex(1);
+        panel.m_bundleList.setSelectedIndex(1);
         /* Simulate a double-click to close and add */
-        dialog.m_bundleList
-            .dispatchEvent(new MouseEvent(dialog, MouseEvent.MOUSE_CLICKED, 1, MouseEvent.BUTTON1, 0, 0, 2, false));
-
-        assertFalse("Double-Click should close AddBundleDialog", dialog.isVisible());
+        panel.m_bundleList
+            .dispatchEvent(new MouseEvent(panel, MouseEvent.MOUSE_CLICKED, 1, MouseEvent.BUTTON1, 0, 0, 2, false));
         assertEquals("Double-Click should add a bundle", 2, panel.m_listModel.size());
 
         /* Test getBundles() */
@@ -138,13 +132,13 @@ public class BundleListPanelTest extends UiTest {
             new String[]{panel.m_listModel.getElementAt(0).toString(), panel.m_listModel.getElementAt(1).toString()}, bundleNames);
         assertEquals("Duplicates should be skipped while adding bundles.", 2, panel.m_listModel.size());
 
-        /* Select multiple and remove */
-        //panel.m_list.setSelectedIndices(new int[]{0, 1});
+        /* Select everything and remove */
+        panel.m_tree.setSelectionInterval(0, panel.m_tree.getRowCount());
         panel.removeSelectedBundles();
         assertEquals("Removing selected elements should remove them", 0, panel.m_listModel.size());
 
-        /* Test that removeSelectetedBundles without selection doesn't error */
-        //panel.m_list.clearSelection();
+        /* Test that removeSelectedBundles without selection doesn't error */
+        panel.m_tree.clearSelection();
         panel.removeSelectedBundles();
     }
 }

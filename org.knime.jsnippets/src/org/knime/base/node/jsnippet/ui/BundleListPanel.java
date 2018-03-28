@@ -137,7 +137,11 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
         @Override
         public String toString() {
-            return this.name + " " + this.installedVersion.toString();
+            if (installedVersion == null) {
+                return this.name + " (Not installed!)";
+            } else {
+                return this.name + " " + this.installedVersion.toString();
+            }
         }
 
         /**
@@ -237,7 +241,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
     }
 
     /* List model which filters bundleNames according to a search string */
-    final class FilterableListModel extends AbstractListModel<String> {
+    final static class FilterableListModel extends AbstractListModel<String> {
 
         private static final long serialVersionUID = 1L;
 
@@ -445,7 +449,13 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
     /* Remove all bundles currently selected in list */
     void removeSelectedBundles() {
-        for (final TreePath p : m_tree.getSelectionPaths()) {
+        final TreePath[] paths = m_tree.getSelectionPaths();
+        if (paths == null) {
+            /* No selection */
+            return;
+        }
+
+        for (final TreePath p : paths) {
             final DefaultMutableTreeNode node = (DefaultMutableTreeNode)p.getLastPathComponent();
             if (node.getParent() != m_userBundlesRoot) {
                 /* User can only edit user bundles */
@@ -489,7 +499,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
      */
     public boolean addBundle(final String bundleName) {
         final BundleListEntry e = makeBundleListEntry(bundleName);
-        if (e == null || m_listModel.contains(e.name)) {
+        if (e == null || m_listModel.contains(e)) {
             return false;
         }
 
@@ -519,7 +529,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             }
 
             final BundleListEntry e = makeBundleListEntry(b);
-            if (m_listModel.contains(e.name)) {
+            if (m_listModel.contains(e)) {
                 continue;
             }
 
@@ -594,9 +604,6 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void treeWillExpand(final TreeExpansionEvent event) throws ExpandVetoException {
         final DefaultMutableTreeNode node = (DefaultMutableTreeNode)event.getPath().getLastPathComponent();
@@ -609,9 +616,6 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void treeWillCollapse(final TreeExpansionEvent event) throws ExpandVetoException {
         final Object node = event.getPath().getLastPathComponent();
