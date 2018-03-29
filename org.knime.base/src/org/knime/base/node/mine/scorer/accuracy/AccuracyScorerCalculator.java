@@ -94,11 +94,12 @@ public class AccuracyScorerCalculator {
     private BufferedDataTable m_confusionMatrixDatatable;   //Output to the former Java Scorer Node
     private BufferedDataTable m_accuracyDatatable;          //Output to the former Java Scorer Node
     private List<String> m_warnings;
+    private int m_rowsNumber;                               //Total number of rows in the input DataTable
 
 
-    private SortingStrategy m_sortingStrategy =  SortingStrategy.InsertionOrder;
-    private boolean m_sortingReversed = false;  //TODO: configure in dialog options
-    private boolean m_ignoreMissingValues = true;   //TODO: configure in dialog options
+    private SortingStrategy m_sortingStrategy = SortingStrategy.InsertionOrder;
+    private boolean m_sortingReversed = false;
+    private boolean m_ignoreMissingValues = true;
     private ScorerViewData m_viewData;
 
     private static final DataColumnSpec[] QUALITY_MEASURES_SPECS = new DataColumnSpec[]{
@@ -115,15 +116,21 @@ public class AccuracyScorerCalculator {
         new DataColumnSpecCreator("Cohen's kappa", DoubleCell.TYPE).createSpec()
     };
 
-
-    public AccuracyScorerCalculator(final BufferedDataTable table, final String firstColumnName, final String secondColumnName, final ExecutionContext exec) {
-        try {
-            calculate(table, firstColumnName, secondColumnName, exec);
-        } catch (CanceledExecutionException e) {
-            // TODO Auto-generated catch block
-        }
+    /**
+     * Creates a new default instance of the accuracy scorer calculator.
+     */
+    public AccuracyScorerCalculator() {
+        super();
     }
 
+    /**
+     * Calculates an accuracy scorer confusion matrix, overall statistics and statistics specific to each class
+     * @param data  the input data
+     * @param firstColumnName   the column selected containing the real classes
+     * @param secondColumnName  the column selected containing the predicted classes
+     * @param exec Execution context to report progress to
+     * @throws CanceledExecutionException when the user cancels the execution
+     */
     public void calculate(final BufferedDataTable data, final String firstColumnName, final String secondColumnName, final ExecutionContext exec)
             throws CanceledExecutionException {
         // check input data
@@ -154,7 +161,7 @@ public class AccuracyScorerCalculator {
         // the scorerCount counts the confusions
         int[][] scorerCount = new int[values.length][values.length];
 
-        // init the matrix
+        // initializing the matrix
         for (int i = 0; i < keyStore.length; i++) {
             for (int j = 0; j < keyStore[i].length; j++) {
                 keyStore[i][j] = new ArrayList<RowKey>();
@@ -208,6 +215,7 @@ public class AccuracyScorerCalculator {
             }
         }
         m_confusionMatrix = scorerCount;
+        m_rowsNumber = numberOfRows;
 
         // determining the target values
         HashSet<String> valuesAsStringSet = new HashSet<String>();
@@ -550,12 +558,24 @@ public class AccuracyScorerCalculator {
 
     }
 
+    public void setSortingStrategy(final SortingStrategy sortingStrategy) {
+        m_sortingStrategy = sortingStrategy;
+    }
+
     public boolean isSortingReversed() {
         return m_sortingReversed;
     }
 
-    public boolean ignoreMissingValues() {
+    public void setSortingReversed(final boolean sortingReversed) {
+        this.m_sortingReversed = sortingReversed;
+    }
+
+    public boolean isIgnoreMissingValues() {
         return m_ignoreMissingValues;
+    }
+
+    public void setIgnoreMissingValues(final boolean ignoreMissingValues) {
+        this.m_ignoreMissingValues = ignoreMissingValues;
     }
 
     public ScorerViewData getViewData() {
@@ -580,6 +600,10 @@ public class AccuracyScorerCalculator {
 
     public List<String> getWarnings() {
         return m_warnings;
+    }
+
+    public int getRowsNumber() {
+        return m_rowsNumber;
     }
 
     public class ValueStats {
