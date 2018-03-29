@@ -915,6 +915,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
         try {
             // test if snippet compiles and if the file can be created
+            // also checks additional jar files.
             createSnippetClass();
         } catch (Exception e) {
             errors.add(e.getMessage());

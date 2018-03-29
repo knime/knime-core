@@ -46,6 +46,8 @@
 package org.knime.base.node.jsnippet.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -58,6 +60,7 @@ import java.util.Set;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -99,9 +102,9 @@ public class JarListPanel extends JPanel {
 
     private String[] m_filesCache;
 
-    private DefaultListModel<String> m_listModel = new DefaultListModel<String>();
+    private DefaultListModel<JarListEntry> m_listModel = new DefaultListModel<>();
 
-    private final JList<String> m_addJarList = new JList<String>(m_listModel) {
+    private final JList<JarListEntry> m_addJarList = new JList<JarListEntry>(m_listModel) {
         @Override
         protected void processComponentKeyEvent(final KeyEvent e) {
             if (e.getKeyCode() == KeyEvent.VK_A && e.isControlDown()) {
@@ -115,11 +118,87 @@ public class JarListPanel extends JPanel {
         }
     };
 
+    /**
+     * Wrapper around a String with some metadata to display to the user (e.g. whether the JarFile was found)
+     *
+     * @author Jonathan Hale
+     */
+    private static class JarListEntry {
+        String m_jarFilename;
+
+        boolean m_exists = true;
+
+        /**
+         * Constructor
+         *
+         * @param filename Filename of the jar
+         */
+        public JarListEntry(final String filename) {
+            m_jarFilename = filename;
+        }
+
+        /** Whether the jar file was not found and should produce a warning. */
+        public void setExists(final boolean b) {
+            m_exists = b;
+        }
+
+        /**
+         * Whether the jar file was not found and should produce a warning.
+         *
+         * @return true if this jar file was not found
+         */
+        public boolean exists() {
+            return m_exists;
+        }
+
+        @Override
+        public String toString() {
+            return m_jarFilename;
+        }
+
+        @Override
+        public int hashCode() {
+            return m_jarFilename.hashCode();
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            return m_jarFilename.equals(obj);
+        }
+
+        /**
+         * @return Filename of the jar file
+         */
+        public String getFilename() {
+            return m_jarFilename;
+        }
+    }
+
+    class JarListCellRenderer extends ConvenientComboBoxRenderer {
+        @Override
+        public Component getListCellRendererComponent(final JList list, final Object value, final int index,
+            final boolean isSelected, final boolean cellHasFocus) {
+            final Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            /* Mark not found jar files RED and set tooltip to inform the user */
+            if (value instanceof JarListEntry) {
+                if (!((JarListEntry)value).exists()) {
+                    c.setForeground(Color.RED);
+                    if (c instanceof JComponent) {
+                        ((JComponent)c).setToolTipText(value.toString() + " was not found.");
+                    }
+                }
+            }
+
+            return c;
+        }
+    }
+
     /** Inits GUI. */
     public JarListPanel() {
         super(new BorderLayout());
 
-        m_addJarList.setCellRenderer(new ConvenientComboBoxRenderer());
+        m_addJarList.setCellRenderer(new JarListCellRenderer());
 
         add(new JScrollPane(m_addJarList), BorderLayout.CENTER);
 
@@ -146,7 +225,7 @@ public class JarListPanel extends JPanel {
     }
 
     private void onJarFileAdd() {
-        final Set<String> hash = new HashSet<>(Collections.list(m_listModel.elements()));
+        final Set<JarListEntry> hash = new HashSet<>(Collections.list(m_listModel.elements()));
         final StringHistory history = StringHistory.getInstance("java_snippet_jar_dirs");
         if (m_jarFileChooser == null) {
             File dir = null;
@@ -166,8 +245,9 @@ public class JarListPanel extends JPanel {
         if (result == JFileChooser.APPROVE_OPTION) {
             for (final File f : m_jarFileChooser.getSelectedFiles()) {
                 final String s = f.getAbsolutePath();
-                if (hash.add(s)) {
-                    m_listModel.addElement(s);
+                final JarListEntry e = new JarListEntry(s);
+                if (hash.add(e)) {
+                    m_listModel.addElement(e);
                 }
             }
             history.add(m_jarFileChooser.getCurrentDirectory().getAbsolutePath());
@@ -176,7 +256,7 @@ public class JarListPanel extends JPanel {
 
     @SuppressWarnings("null")
     private void onJarURLAdd() {
-        final Set<String> hash = new HashSet<>(Collections.list(m_listModel.elements()));
+        final Set<JarListEntry> hash = new HashSet<>(Collections.list(m_listModel.elements()));
         String input = "knime://knime.workflow/example.jar";
 
         boolean valid = false;
@@ -199,8 +279,9 @@ public class JarListPanel extends JPanel {
             }
         }
 
-        if (!StringUtils.isEmpty(input) && hash.add(input)) {
-            m_listModel.addElement(input);
+        final JarListEntry e = new JarListEntry(input);
+        if (!StringUtils.isEmpty(input) && hash.add(e)) {
+            m_listModel.addElement(e);
         }
     }
 
@@ -234,12 +315,13 @@ public class JarListPanel extends JPanel {
 
             m_listModel.removeAllElements();
             for (final String f : files) {
+                final JarListEntry e = new JarListEntry(f);
                 try {
                     JavaSnippetUtil.toFile(f); // validate existence etc.
-                    m_listModel.addElement(f);
-                } catch (InvalidSettingsException e) {
-                    // ignore (skips adding the file to jarListModel)
+                } catch (InvalidSettingsException ex) {
+                    e.setExists(false);
                 }
+                m_listModel.addElement(e);
             }
         }
     }
@@ -251,8 +333,8 @@ public class JarListPanel extends JPanel {
      */
     public String[] getJarFiles() {
         final String[] copy = new String[m_listModel.getSize()];
-        if (!m_listModel.isEmpty()) {
-            m_listModel.copyInto(copy);
+        for (int i = 0; i < m_listModel.getSize(); ++i) {
+            copy[i] = m_listModel.get(i).getFilename();
         }
         return copy;
     }
