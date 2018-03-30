@@ -77,7 +77,6 @@ public class LogfileAppender extends RollingFileAppender {
     private final File m_logFile;
     /** Maximum size of log file before it is split (in bytes). */
     public static final long MAX_LOG_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB
-    private long m_maxLogSize;
 
     private final ExecutorService m_logCompressor = Executors.newSingleThreadExecutor(new ThreadFactory() {
         @Override
@@ -111,8 +110,9 @@ public class LogfileAppender extends RollingFileAppender {
 
     private void initMaxLogFileSize() {
         String maxSizeString = System.getProperty(PROPERTY_MAX_LOGFILESIZE);
+        long maxLogSize;
         if (maxSizeString == null) {
-            m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
+            maxLogSize = MAX_LOG_SIZE_DEFAULT;
         } else {
             maxSizeString = maxSizeString.toLowerCase().trim();
             int multiplier;
@@ -126,16 +126,16 @@ public class LogfileAppender extends RollingFileAppender {
                 multiplier = 1;
             }
             try {
-                m_maxLogSize = multiplier * Long.parseLong(maxSizeString);
+                maxLogSize = multiplier * Long.parseLong(maxSizeString);
             } catch (Throwable e) {
                 System.err.println("Unable to parse maximum log size property "
                         + PROPERTY_MAX_LOGFILESIZE + " (\""
                         + System.getProperty(PROPERTY_MAX_LOGFILESIZE) + "\"), "
                         + "using default size");
-                m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
+                maxLogSize = MAX_LOG_SIZE_DEFAULT;
             }
         }
-        setMaximumFileSize(m_maxLogSize);
+        setMaximumFileSize(maxLogSize < 0 ? Long.MAX_VALUE : maxLogSize);
     }
 
     private void ensureLogFileDirectoryExists(final File logFileDir) {
