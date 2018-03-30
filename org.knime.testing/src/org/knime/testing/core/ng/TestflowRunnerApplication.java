@@ -124,10 +124,10 @@ public class TestflowRunnerApplication implements IApplication {
 
         ViewUtils.setLookAndFeel();
 
-        ProfileManager.getInstance().applyProfiles();
-
         // make sure the logfile doesn't get split.
         System.setProperty(KNIMEConstants.PROPERTY_MAX_LOGFILESIZE, "-1");
+
+        ProfileManager.getInstance().applyProfiles();
 
         Object args = context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
 
