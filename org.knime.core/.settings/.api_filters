@@ -261,6 +261,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/filter/NameFilterPanel.java" type="org.knime.core.node.util.filter.NameFilterPanel">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.filter.NameFilterPanel"/>
+                <message_argument value="getEntryDescription()"/>
+            </message_arguments>
+        </filter>
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.filter.NameFilterPanel"/>
+                <message_argument value="getTableCellRenderer()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/wizard/AbstractWizardNodeView.java" type="org.knime.core.node.wizard.AbstractWizardNodeView">
         <filter id="336695337">
             <message_arguments>
