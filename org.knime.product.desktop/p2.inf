@@ -1,16 +1,16 @@
 #
-#Mon Feb 05 14:27:50 CET 2018
+#Tue Apr 03 12:59:13 CEST 2018
 requires.0.greedy=true
-units.0.version=3.5.2.1517837270445
+units.0.version=3.5.3.1522753153023
 units.0.filter=(osgi.os\=macosx)
 units.0.provides.0.name=org.knime.product.macosx.configure
 instructions.configure=org.eclipse.equinox.p2.touchpoint.natives.mkdir(path\:${installFolder}/dropins)
 requires.0.namespace=org.eclipse.equinox.p2.iu
 requires.0.name=org.knime.product.macosx.configure
 units.0.provides.0.namespace=org.eclipse.equinox.p2.iu
-units.0.provides.0.version=3.5.2.1517837270445
+units.0.provides.0.version=3.5.3.1522753153023
 units.0.id=org.knime.product.macosx.configure
-requires.0.range=[3.5.2.1517837270445,3.5.2.1517837270445]
+requires.0.range=[3.5.3.1522753153023,3.5.3.1522753153023]
 units.0.update.range=[0,999]
 units.0.instructions.configure=org.eclipse.equinox.p2.touchpoint.natives.copy(source\:${installFolder}/Info.plist,target\:${installFolder}/../Info.plist,overwrite\:true);org.eclipse.equinox.p2.touchpoint.natives.remove(path\:${installFolder}/Info.plist)
 requires.0.filter=(osgi.os\=macosx)

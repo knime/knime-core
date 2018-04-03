@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Logistic Regression for KNIME
 Bundle-SymbolicName: org.knime.base.logisticregression;singleton:=true
-Bundle-Version: 3.5.0.qualifier
+Bundle-Version: 3.5.3.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Require-Bundle: org.knime.core.pmml;bundle-version="[3.2.0,4.0.0)",
  org.knime.base;bundle-version="[3.0.0,4.0.0)",
