@@ -61,9 +61,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
@@ -73,6 +71,7 @@ import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.LinkNodesCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -166,40 +165,9 @@ public class LinkNodesAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         final Collection<PlannedConnection> plan = generateConnections(nodeParts);
         final WorkflowManager wm = getManager();
+        final LinkNodesCommand command = new LinkNodesCommand(plan, wm);
 
-        for (final PlannedConnection planAction : plan) {
-            final NodeID sourceNodeID = planAction.getSourceNode().getID();
-            final NodeContainer sourceNode = wm.getNodeContainer(sourceNodeID);
-            final NodeID destinationNodeID = planAction.getDestinationNode().getID();
-            final NodeContainer destinationNode = wm.getNodeContainer(destinationNodeID);
-
-            if (planAction.shouldDetachDestinationFirst()) {
-                final ConnectionContainer cc =
-                    wm.getIncomingConnectionFor(destinationNodeID, planAction.getDestinationInportIndex());
-
-                try {
-                    wm.removeConnection(cc);
-
-                } catch (Exception e) {
-                    LOGGER.error("Could not delete existing inport connection for " + destinationNodeID + ":"
-                        + planAction.getDestinationInportIndex() + "; skipping new connection task from " + sourceNodeID
-                        + ":" + planAction.getSourceOutportIndex() + " to " + destinationNodeID + ":"
-                        + planAction.getDestinationInportIndex() + " due to: " + e.getMessage(), e);
-                    continue;
-                }
-            }
-
-            try {
-                wm.addConnection(sourceNodeID, planAction.getSourceOutportIndex(), destinationNodeID,
-                    planAction.getDestinationInportIndex());
-
-                NodeTimer.GLOBAL_TIMER.addConnectionCreation(sourceNode, destinationNode);
-            } catch (Exception e) {
-                LOGGER.error("Failed to connect " + sourceNodeID + ":" + planAction.getSourceOutportIndex() + " to "
-                        + destinationNodeID + ":" + planAction.getDestinationInportIndex() + " due to: " + e.getMessage(),
-                        e);
-            }
-        }
+        execute(command);
     }
 
     /**
@@ -615,7 +583,13 @@ public class LinkNodesAction extends AbstractNodeAction {
     }
 
 
-    static class PlannedConnection {
+    /**
+     * This class is a close representation of the ConnectionContainer class; that plus its limited use gives me pause
+     * in extracting this out as its own first class class.
+     *
+     * @author loki der quaeler
+     */
+    public static class PlannedConnection {
         private final NodeContainerUI m_sourceNode;
         private final int m_sourceOutportIndex;
 
@@ -643,38 +617,41 @@ public class LinkNodesAction extends AbstractNodeAction {
         /**
          * @return the sourceNode
          */
-        NodeContainerUI getSourceNode() {
+        public NodeContainerUI getSourceNode() {
             return m_sourceNode;
         }
 
         /**
          * @return the sourceOutportIndex
          */
-        int getSourceOutportIndex() {
+        public int getSourceOutportIndex() {
             return m_sourceOutportIndex;
         }
 
         /**
          * @return the destinationNode
          */
-        NodeContainerUI getDestinationNode() {
+        public NodeContainerUI getDestinationNode() {
             return m_destinationNode;
         }
 
         /**
          * @return the destinationInportIndex
          */
-        int getDestinationInportIndex() {
+        public int getDestinationInportIndex() {
             return m_destinationInportIndex;
         }
 
         /**
          * @return the detachDestinationFirst
          */
-        boolean shouldDetachDestinationFirst() {
+        public boolean shouldDetachDestinationFirst() {
             return m_detachDestinationFirst;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String toString() {
             return m_sourceNode.getNameWithID() + ":" + m_sourceOutportIndex + " -> "

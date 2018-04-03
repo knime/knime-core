@@ -55,13 +55,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.UnlinkNodesCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -83,8 +83,6 @@ public class UnlinkNodesAction extends AbstractNodeAction {
     public static final String ID = "knime.actions.unlinknodes";
     /** org.eclipse.ui.commands command ID for this action. **/
     private static final String COMMAND_ID = "knime.commands.unlinknodes";
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(UnlinkNodesAction.class);
 
 
     /**
@@ -143,15 +141,9 @@ public class UnlinkNodesAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         final WorkflowManager wm = getManager();
         final Collection<ConnectionContainer> toRemove = findRemoveableConnections(nodeParts);
+        final UnlinkNodesCommand command = new UnlinkNodesCommand(toRemove, wm);
 
-        for (final ConnectionContainer cc : toRemove) {
-            try {
-                wm.removeConnection(cc);
-            } catch (Exception e) {
-                LOGGER.error("Could not delete existing connection from " + cc.getSource() + ":" + cc.getSourcePort()
-                    + " to " + cc.getDest() + ":" + cc.getDestPort() + " due to: " + e.getMessage(), e);
-            }
-        }
+        execute(command);
     }
 
     /**
