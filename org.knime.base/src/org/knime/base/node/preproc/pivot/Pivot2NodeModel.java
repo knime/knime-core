@@ -74,6 +74,7 @@ import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -295,13 +296,11 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             if (isProcessInMemory()) {
                 exec.setMessage("Sorting group table");
                 final boolean[] sortDirection = new boolean[groupAndPivotCols.size()];
-                //ensure that missing values are at the end by sorting in ascending order
-                Arrays.fill(sortDirection, true);
-                final SortedTable sortedGroupByTable = new SortedTable(
-                        groupByTable.getBufferedTable(), groupAndPivotCols,
-                        sortDirection, groupAndPivotExec.createSubExecutionContext(
-                                progMainTableInMemSort / progMainTotal));
-                groupTable = sortedGroupByTable.getBufferedDataTable();
+                //ensure that missing values are at the end by setting the boolean flag
+                final BufferedDataTableSorter sortedGroupByTable = new BufferedDataTableSorter(
+                    groupByTable.getBufferedTable(), groupAndPivotCols, sortDirection, true);
+                groupTable = sortedGroupByTable.sort(
+                    groupAndPivotExec.createSubExecutionContext(progMainTableInMemSort / progMainTotal));
             } else {
                 groupTable = groupByTable.getBufferedTable();
             }
