@@ -51,6 +51,7 @@ package org.knime.workbench.editor2.actions;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -78,7 +79,6 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author loki der quaeler
  */
 public class UnlinkNodesAction extends AbstractNodeAction {
-
     /** actions registry ID for this action. **/
     public static final String ID = "knime.actions.unlinknodes";
     /** org.eclipse.ui.commands command ID for this action. **/
@@ -149,8 +149,7 @@ public class UnlinkNodesAction extends AbstractNodeAction {
                 wm.removeConnection(cc);
             } catch (Exception e) {
                 LOGGER.error("Could not delete existing connection from " + cc.getSource() + ":" + cc.getSourcePort()
-                                    + " to " + cc.getDest() + ":" + cc.getDestPort() + " due to: " + e.getMessage(),
-                             e);
+                    + " to " + cc.getDest() + ":" + cc.getDestPort() + " due to: " + e.getMessage(), e);
             }
         }
     }
@@ -187,11 +186,7 @@ public class UnlinkNodesAction extends AbstractNodeAction {
         final WorkflowManager wm = getManager();
         // relying on a correct hashCode() implementation in ConnectionContainer to let us use
         //          HashSet to avoid duplicates
-        final HashSet<NodeID> nodeIdSet = new HashSet<>();
-
-        Stream.of(nodes).forEach((node) -> {
-            nodeIdSet.add(node.getNodeContainer().getID());
-        });
+        Set<NodeID> nodeIdSet = Stream.of(nodes).map(n -> n.getNodeContainer().getID()).collect(Collectors.toSet());
 
         final Collection<ConnectionContainer> removeableConnections = new HashSet<>();
         for (final NodeContainerEditPart node : nodes) {
@@ -209,5 +204,4 @@ public class UnlinkNodesAction extends AbstractNodeAction {
 
         return removeableConnections;
     }
-
 }

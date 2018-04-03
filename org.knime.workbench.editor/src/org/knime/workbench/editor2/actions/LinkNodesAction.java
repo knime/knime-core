@@ -93,9 +93,9 @@ public class LinkNodesAction extends AbstractNodeAction {
     /**
      * This method determines whether the UI representation of the two nodes have an overlap in the x-domain.
      *
-     * @param node1
-     * @param node2
-     * @return true is the two nodes overlap in the x-domain
+     * @param node1 the first node, must not be <code>null</code>
+     * @param node2 the second node, must not be <code>null</code>
+     * @return <code>true</code> is the two nodes overlap in the x-domain, <code>false</code> otherwise
      */
    protected static boolean nodesOverlapInXDomain(final NodeContainerUI node1, final NodeContainerUI node2) {
         final NodeUIInformation ui1 = node1.getUIInformation();
@@ -106,14 +106,14 @@ public class LinkNodesAction extends AbstractNodeAction {
         final int node2x2 = bounds2[0] + bounds2[2];
 
         return (((bounds1[0] <= bounds2[0]) && (bounds2[0] <= node1x2))
-                    || ((bounds2[0] <= bounds1[0]) && (bounds1[0] <= node2x2)));
+            || ((bounds2[0] <= bounds1[0]) && (bounds1[0] <= node2x2)));
     }
 
 
     /**
      * Constructs an instance of <code>LinkNodesAction</code>.
      *
-     * @param editor The workflow editor which this action will work within
+     * @param editor the workflow editor which this action will work within
      */
     public LinkNodesAction(final WorkflowEditor editor) {
         super(editor);
@@ -174,33 +174,30 @@ public class LinkNodesAction extends AbstractNodeAction {
             final NodeContainer destinationNode = wm.getNodeContainer(destinationNodeID);
 
             if (planAction.shouldDetachDestinationFirst()) {
-                final ConnectionContainer cc = wm.getIncomingConnectionFor(destinationNodeID,
-                                                                           planAction.getDestinationInportIndex());
+                final ConnectionContainer cc =
+                    wm.getIncomingConnectionFor(destinationNodeID, planAction.getDestinationInportIndex());
 
                 try {
                     wm.removeConnection(cc);
+
                 } catch (Exception e) {
                     LOGGER.error("Could not delete existing inport connection for " + destinationNodeID + ":"
-                                    + planAction.getDestinationInportIndex() + "; skipping new connection task from "
-                                    + sourceNodeID + ":" + planAction.getSourceOutportIndex() + " to "
-                                    + destinationNodeID + ":" + planAction.getDestinationInportIndex() + " due to: "
-                                    + e.getMessage(),
-                                 e);
-
+                        + planAction.getDestinationInportIndex() + "; skipping new connection task from " + sourceNodeID
+                        + ":" + planAction.getSourceOutportIndex() + " to " + destinationNodeID + ":"
+                        + planAction.getDestinationInportIndex() + " due to: " + e.getMessage(), e);
                     continue;
                 }
             }
 
             try {
                 wm.addConnection(sourceNodeID, planAction.getSourceOutportIndex(), destinationNodeID,
-                                 planAction.getDestinationInportIndex());
+                    planAction.getDestinationInportIndex());
 
                 NodeTimer.GLOBAL_TIMER.addConnectionCreation(sourceNode, destinationNode);
             } catch (Exception e) {
                 LOGGER.error("Failed to connect " + sourceNodeID + ":" + planAction.getSourceOutportIndex() + " to "
-                                    + destinationNodeID + ":" + planAction.getDestinationInportIndex() + " due to: "
-                                    + e.getMessage(),
-                             e);
+                        + destinationNodeID + ":" + planAction.getDestinationInportIndex() + " due to: " + e.getMessage(),
+                        e);
             }
         }
     }
@@ -272,15 +269,14 @@ public class LinkNodesAction extends AbstractNodeAction {
                     final int destinationPortStart = (destinationNode instanceof WorkflowManagerUI) ? 0 : 1;
 
                     if ((destinationNode.getNrInPorts() > destinationPortStart)
-                                        && (!nodesOverlapInXDomain(sourceNode, destinationNode)
-                                        && (!nodeHasConnectionWithinSet(destinationNode, orderedNodes)))) {
-                        final Optional<PlannedConnection> pc = createConnectionPlan(sourceNode, destinationNode,
-                                                                                    plannedConnections);
+                        && (!nodesOverlapInXDomain(sourceNode, destinationNode)
+                            && (!nodeHasConnectionWithinSet(destinationNode, orderedNodes)))) {
+                        final Optional<PlannedConnection> pc =
+                            createConnectionPlan(sourceNode, destinationNode, plannedConnections);
 
                         if (pc.isPresent()) {
                             hasDestination[currentIndex - 1] = true;
                             plannedConnections.add(pc.get());
-
                             break;
                         }
                     }
@@ -307,15 +303,14 @@ public class LinkNodesAction extends AbstractNodeAction {
                         final int sourcePortStart = (sourceNode instanceof WorkflowManagerUI) ? 0 : 1;
 
                         if (sourceNode.getNrOutPorts() > sourcePortStart) {
-                            final Optional<PlannedConnection> pc = createConnectionPlan(sourceNode, destinationNode,
-                                                                                        plannedConnections);
+                            final Optional<PlannedConnection> pc =
+                                createConnectionPlan(sourceNode, destinationNode, plannedConnections);
 
                             if (pc.isPresent()) {
                                 // there's no existing reason to set this to true (it's not used afterwards)
                                 //      but i'm a fan of consistent state
                                 hasDestination[i - 1] = true;
                                 plannedConnections.add(pc.get());
-
                                 break;
                             }
                         }
@@ -343,8 +338,7 @@ public class LinkNodesAction extends AbstractNodeAction {
      *         returned.
      */
     protected Optional<PlannedConnection> createConnectionPlan(final NodeContainerUI source,
-                                                               final NodeContainerUI destination,
-                                                               final List<PlannedConnection> existingPlan) {
+        final NodeContainerUI destination, final List<PlannedConnection> existingPlan) {
         final WorkflowManager wm = getManager();
         final int sourceStartIndex = (source instanceof WorkflowManagerUI) ? 0 : 1;
         final int sourcePortCount = source.getNrOutPorts();
@@ -412,8 +406,8 @@ public class LinkNodesAction extends AbstractNodeAction {
                     final PortType destinationPortType = destinationPort.getPortType();
 
                     if (sourcePortType.isSuperTypeOf(destinationPortType)) {
-                        final boolean mustDetach = portAlreadyHasConnection(destination, j, true,  Collections.emptyList(),
-                                                                            existingInConnections);
+                        final boolean mustDetach = portAlreadyHasConnection(destination, j, true,
+                            Collections.emptyList(), existingInConnections);
 
                         return Optional.of(new PlannedConnection(source, i, destination, j, mustDetach));
                     }
@@ -439,8 +433,7 @@ public class LinkNodesAction extends AbstractNodeAction {
      * @throws IllegalArgumentException if either existingPlan or existingConnections is null
      */
     protected boolean portAlreadyHasConnection(final NodeContainerUI node, final int port, final boolean inport,
-                                               final List<PlannedConnection> existingPlan,
-                                               final Set<ConnectionContainer> existingConnections) {
+        final List<PlannedConnection> existingPlan, final Set<ConnectionContainer> existingConnections) {
         if (existingPlan == null) {
             throw new IllegalArgumentException("existingPlan cannot be null.");
         }
@@ -458,7 +451,7 @@ public class LinkNodesAction extends AbstractNodeAction {
 
         for (final PlannedConnection pc : existingPlan) {
             if ((inport && pc.getDestinationNode().getID().equals(nid) && (pc.getDestinationInportIndex() == port))
-                 || ((!inport) && pc.getSourceNode().getID().equals(nid) && (pc.getSourceOutportIndex() == port))) {
+                || ((!inport) && pc.getSourceNode().getID().equals(nid) && (pc.getSourceOutportIndex() == port))) {
                 return true;
             }
         }
@@ -470,9 +463,10 @@ public class LinkNodesAction extends AbstractNodeAction {
      * This method determines whether the specified node has a connection to one of its imports by a node contained in
      * the <code>set</code>.
      *
-     * @param node
-     * @param set
-     * @return true if the specified node already has an inport connected to the outport of a node in the set
+     * @param node a node, must not be <code>null</code>
+     * @param set a set of nodes, must not be <code>null</code>
+     * @return <code>true</code> if the specified node already has an inport connected to the outport of a node in the
+     *         set, <code>false</code> otherwise
      */
     protected boolean nodeHasConnectionWithinSet(final NodeContainerUI node, final Collection<NodeContainerUI> set) {
         final WorkflowManager wm = getManager();
@@ -502,7 +496,6 @@ public class LinkNodesAction extends AbstractNodeAction {
      * @return an instance of ScreenedSelectionSet
      */
     protected ScreenedSelectionSet screenNodeSelection(final NodeContainerEditPart[] nodes) {
-        final NodeContainerUI[] spatialBounds = new NodeContainerUI[2];
         final ArrayList<NodeContainerUI> validLeft = new ArrayList<>();
         final ArrayList<NodeContainerUI> validRight = new ArrayList<>();
 
@@ -535,6 +528,7 @@ public class LinkNodesAction extends AbstractNodeAction {
             return new ScreenedSelectionSet(Collections.emptySet(), null, null);
         }
 
+        final NodeContainerUI[] spatialBounds = new NodeContainerUI[2];
         spatialBounds[0] = validLeft.get(0);
         spatialBounds[1] = validRight.get(validRight.size() - 1);
 
@@ -593,13 +587,12 @@ public class LinkNodesAction extends AbstractNodeAction {
 
 
     static class ScreenedSelectionSet {
-
         private final List<NodeContainerUI> m_connectableNodes;
         private final NodeContainerUI m_spatiallyLeftMostNode;
         private final NodeContainerUI m_spatiallyRightMostNode;
 
         ScreenedSelectionSet(final Collection<NodeContainerUI> connectables, final NodeContainerUI left,
-                             final NodeContainerUI right) {
+            final NodeContainerUI right) {
             m_connectableNodes = new ArrayList<>(connectables);
             m_spatiallyLeftMostNode = left;
             m_spatiallyRightMostNode = right;
@@ -608,10 +601,8 @@ public class LinkNodesAction extends AbstractNodeAction {
         }
 
         boolean setIsConnectable() {
-            return ((m_spatiallyLeftMostNode != null)
-                        && (m_spatiallyRightMostNode != null)
-                        && (m_spatiallyLeftMostNode != m_spatiallyRightMostNode)
-                        && (m_connectableNodes.size() > 1));
+            return ((m_spatiallyLeftMostNode != null) && (m_spatiallyRightMostNode != null)
+                && (m_spatiallyLeftMostNode != m_spatiallyRightMostNode) && (m_connectableNodes.size() > 1));
         }
 
         /**
@@ -621,12 +612,10 @@ public class LinkNodesAction extends AbstractNodeAction {
         List<NodeContainerUI> getConnectableNodes() {
             return m_connectableNodes;
         }
-
     }
 
 
     static class PlannedConnection {
-
         private final NodeContainerUI m_sourceNode;
         private final int m_sourceOutportIndex;
 
@@ -636,12 +625,12 @@ public class LinkNodesAction extends AbstractNodeAction {
         private final boolean m_detachDestinationFirst;
 
         PlannedConnection(final NodeContainerUI source, final int sourcePort, final NodeContainerUI destination,
-                          final int destinationPort) {
+            final int destinationPort) {
             this(source, sourcePort, destination, destinationPort, false);
         }
 
         PlannedConnection(final NodeContainerUI source, final int sourcePort, final NodeContainerUI destination,
-                          final int destinationPort, final boolean destinationRequiresDetachEvent) {
+            final int destinationPort, final boolean destinationRequiresDetachEvent) {
             m_sourceNode = source;
             m_sourceOutportIndex = sourcePort;
 
@@ -689,10 +678,9 @@ public class LinkNodesAction extends AbstractNodeAction {
         @Override
         public String toString() {
             return m_sourceNode.getNameWithID() + ":" + m_sourceOutportIndex + " -> "
-                        + m_destinationNode.getNameWithID() + ":" + m_destinationInportIndex
-                        + (m_detachDestinationFirst ? " [DETACH]" : "");
+                + m_destinationNode.getNameWithID() + ":" + m_destinationInportIndex
+                + (m_detachDestinationFirst ? " [DETACH]" : "");
         }
-
     }
 
 
@@ -700,7 +688,6 @@ public class LinkNodesAction extends AbstractNodeAction {
      * This orders ascending first by x-coordinate and second by y-coordinate.
      */
     static class NodeSpatialComparator implements Comparator<NodeContainerUI> {
-
         /**
          * {@inheritDoc}
          */
@@ -717,7 +704,5 @@ public class LinkNodesAction extends AbstractNodeAction {
 
             return bounds1[1] - bounds2[1];
         }
-
     }
-
 }

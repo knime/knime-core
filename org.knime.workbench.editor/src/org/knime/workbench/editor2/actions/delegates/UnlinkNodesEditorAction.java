@@ -59,7 +59,6 @@ import org.knime.workbench.editor2.actions.UnlinkNodesAction;
  * @author loki der quaeler
  */
 public class UnlinkNodesEditorAction extends AbstractEditorAction {
-
     /**
      * {@inheritDoc}
      */
@@ -67,5 +66,4 @@ public class UnlinkNodesEditorAction extends AbstractEditorAction {
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {
         return new UnlinkNodesAction(editor);
     }
-
 }
