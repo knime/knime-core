@@ -92,5 +92,13 @@ public class FilterableListModelTest {
         /* Test clearing the filter */
         model.setFilter("");
         assertEquals(model.getSize(), 5);
+
+        /* Test explicit exclusion */
+        model.setExcluded(new String[]{"a", "ab", "b", "c"});
+        assertEquals(model.getSize(), 1);
+        assertEquals(model.getElementAt(0), "abc");
+
+        model.setExcluded(new String[0]);
+        assertEquals(model.getSize(), 5);
     }
 }

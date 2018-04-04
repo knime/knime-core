@@ -144,6 +144,11 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             }
         }
 
+        /** Symbolic name of the bundle */
+        public String getName() {
+            return this.name;
+        }
+
         /**
          * Whether this bundle is installed in the current eclipse runtime
          *
@@ -315,6 +320,13 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             m_filter = null;
             setFilter(filter);
         }
+
+        /**
+         * @return Currently excluded elements
+         */
+        public Collection<String> getExcluded() {
+            return Collections.unmodifiableCollection(m_excluded);
+        }
     }
 
     /**
@@ -450,8 +462,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
     private void addSelectedBundles() {
         addBundles(m_bundleList.getSelectedValuesList());
-        m_bundleModel
-            .setExcluded(m_listModel.getAllElements().stream().map(Object::toString).collect(Collectors.toList()));
+        updateFilterModel();
         m_bundleList.clearSelection();
     }
 
@@ -475,14 +486,14 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             m_listModel.remove(o);
         }
 
-        m_bundleModel.setExcluded(getBundles());
+        updateFilterModel();
     }
 
     /**
      * @return All added bundles.
      */
     public String[] getBundles() {
-        return m_listModel.getAllElements().stream().map(Object::toString).toArray(n -> new String[n]);
+        return m_listModel.getAllElements().stream().map(BundleListEntry::getName).toArray(n -> new String[n]);
     }
 
     /**
@@ -516,8 +527,16 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             m_userBundlesRoot.getChildCount());
 
         ensureRootsExpanded();
+        updateFilterModel();
 
         return true;
+    }
+
+    /**
+     * Update m_bundleModel to hide the elements that were already added to the available bundles.
+     */
+    private void updateFilterModel() {
+        m_bundleModel.setExcluded(getBundles());
     }
 
     /**
@@ -549,6 +568,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         m_listModel.addAll(entries);
 
         ensureRootsExpanded();
+        updateFilterModel();
     }
 
     /**

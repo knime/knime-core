@@ -331,7 +331,7 @@ public class ArrayListModel<E> extends AbstractListModel<E> implements Iterable<
      *
      * @return All elements in this list model.
      */
-    public Collection<?> getAllElements() {
+    public Collection<E> getAllElements() {
         return Collections.unmodifiableList(m_delegate);
     }
 }
