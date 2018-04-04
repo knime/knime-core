@@ -249,7 +249,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
         private List<String> m_filtered;
 
-        private List<String> m_excluded = Collections.emptyList();
+        private Collection<String> m_excluded = Collections.emptyList();
 
         /* Filter string, only ever null to force refiltering */
         private String m_filter = "";
@@ -298,9 +298,18 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         /**
          * Set list of excluded elements. Will cause the list to be refiltered.
          *
-         * @param list List of elements to exclude.
+         * @param list Collection of elements to exclude.
          */
-        public synchronized void setExcluded(final List<String> list) {
+        public synchronized void setExcluded(final String[] list) {
+            setExcluded(Arrays.asList(list));
+        }
+
+        /**
+         * Set list of excluded elements. Will cause the list to be refiltered.
+         *
+         * @param list Collection of elements to exclude.
+         */
+        public synchronized void setExcluded(final Collection<String> list) {
             m_excluded = list;
             final String filter = m_filter;
             m_filter = null;
@@ -385,8 +394,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                         // Double click closes the dialog
                         final String bundleName = m_bundleList.getSelectedValue();
                         addBundle(bundleName);
-                        m_bundleModel.setExcluded(
-                            m_listModel.getAllElements().stream().map(Object::toString).collect(Collectors.toList()));
+                        m_bundleModel.setExcluded(getBundles());
                         m_bundleList.clearSelection();
                     }
                 }
@@ -466,19 +474,15 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             final Object o = node.getUserObject();
             m_listModel.remove(o);
         }
+
+        m_bundleModel.setExcluded(getBundles());
     }
 
     /**
      * @return All added bundles.
      */
     public String[] getBundles() {
-        final String[] bundles = new String[m_listModel.getSize()];
-
-        for (int i = 0; i < m_listModel.getSize(); ++i) {
-            bundles[i] = m_listModel.get(i).toString();
-        }
-
-        return bundles;
+        return m_listModel.getAllElements().stream().map(Object::toString).toArray(n -> new String[n]);
     }
 
     /**
@@ -522,6 +526,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
      * @param list The bundle names to add
      */
     public void addBundles(final List<String> list) {
+        /* Set allows us to prevent adding bundles duplicate in list */
         final LinkedHashSet<BundleListEntry> entries = new LinkedHashSet<>(list.size());
         for (final String b : list) {
             if (b == null) {
@@ -533,11 +538,12 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                 continue;
             }
 
-            entries.add(e);
-            DefaultMutableTreeNode node = new DefaultMutableTreeNode(e);
-            ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(node, m_userBundlesRoot,
-                m_userBundlesRoot.getChildCount());
-            addDependenciesForNode(node, Platform.getBundle(e.name));
+            if(entries.add(e)) {
+                DefaultMutableTreeNode node = new DefaultMutableTreeNode(e);
+                ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(node, m_userBundlesRoot,
+                    m_userBundlesRoot.getChildCount());
+                addDependenciesForNode(node, Platform.getBundle(e.name));
+            }
         }
 
         m_listModel.addAll(entries);
@@ -636,9 +642,15 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
     /* Helper method that allows removing all children properly in a way that notifies a JTree and causes a redraw. */
     private static void removeAllChildren(final JTree tree, final DefaultMutableTreeNode node) {
+        @SuppressWarnings("unchecked")
         Enumeration<DefaultMutableTreeNode> children = node.children();
+        final ArrayList<DefaultMutableTreeNode> toRemove = new ArrayList<>();
         while (children.hasMoreElements()) {
             DefaultMutableTreeNode child = children.nextElement();
+            toRemove.add(child);
+        }
+
+        for(DefaultMutableTreeNode child : toRemove) {
             ((DefaultTreeModel)tree.getModel()).removeNodeFromParent(child);
         }
     }

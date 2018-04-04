@@ -93,24 +93,29 @@ public class BundleListPanelTest extends UiTest {
         /* Test adding a bundle */
         assertFalse(panel.addBundle(null));
         assertEquals("Adding null bundle should not add anything", 0, panel.m_listModel.size());
+        assertEquals("Tree view out of sync.", 0 + 2, panel.m_tree.getRowCount());
 
         assertTrue(panel.addBundle(firstBundle));
         assertEquals(1, panel.m_listModel.size());
+        assertEquals("Tree view out of sync.", 1 + 2, panel.m_tree.getRowCount());
         final Bundle bundle = Platform.getBundle(panel.m_listModel.getElementAt(0).name);
         assertNotNull("Expected symbolic name of an existing bundle to have been added", bundle);
 
         assertFalse("Adding an already added bundle should not be permitted", panel.addBundle(bundle.getSymbolicName()));
         assertEquals("Adding a bundle a second time should not increase size of list", 1, panel.m_listModel.size());
+        assertEquals("Tree view out of sync.", 1 + 2, panel.m_tree.getRowCount());
 
         assertTrue("Adding non-existent bundles should be allowed.", panel.addBundle("i.dont.exist"));
 
         /* Test clearing */
         panel.setBundles(new String[]{});
         assertEquals(0, panel.m_listModel.size());
+        assertEquals("Tree view out of sync.", 0 + 2, panel.m_tree.getRowCount());
 
         /* Test initially setting bundles */
         panel.setBundles(new String[]{firstBundle});
         assertEquals(1, panel.m_listModel.size());
+        assertEquals("Tree view out of sync.", 1 + 2, panel.m_tree.getRowCount());
         assertNotNull("Expected symbolic name of an existing bundle in the list",
             Platform.getBundle(panel.m_listModel.getElementAt(0).name));
 
@@ -120,6 +125,7 @@ public class BundleListPanelTest extends UiTest {
         panel.m_bundleList
             .dispatchEvent(new MouseEvent(panel, MouseEvent.MOUSE_CLICKED, 1, MouseEvent.BUTTON1, 0, 0, 2, false));
         assertEquals("Double-Click should add a bundle", 2, panel.m_listModel.size());
+        assertEquals("Tree view out of sync.", 2 + 2, panel.m_tree.getRowCount());
 
         /* Test getBundles() */
         final String[] bundleNames = panel.getBundles();
@@ -131,6 +137,7 @@ public class BundleListPanelTest extends UiTest {
         assertArrayEquals("getBundles should return array of bundles in list model",
             new String[]{panel.m_listModel.getElementAt(0).toString(), panel.m_listModel.getElementAt(1).toString()}, bundleNames);
         assertEquals("Duplicates should be skipped while adding bundles.", 2, panel.m_listModel.size());
+        assertEquals("Tree view out of sync.", 2 + 2, panel.m_tree.getRowCount());
 
         /* Select everything and remove */
         panel.m_tree.setSelectionInterval(0, panel.m_tree.getRowCount());
