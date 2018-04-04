@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -97,6 +98,86 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Thomas Gabriel, KNIME.com AG, Switzerland
  */
 public class Pivot2NodeModel extends GroupByNodeModel {
+
+    /**
+     * The private class InMemoryRowComparator sorts descending but with the missing values on top.
+     */
+    private static final class InMemoryRowComparator implements Comparator<DataRow> {
+
+        /**
+         * The included column indices.
+         */
+        private final int[] m_indices;
+
+        /**
+         * The comparators for the different columns (value in array is null if sorted according to row key). Fetched at
+         * constructor time to reduce number of DataType accesses during compare() call
+         */
+        private final DataValueComparator[] m_colComparators;
+
+
+        /**
+         * @param colNames column names to sort
+         * @param spec The spec to the table.
+         */
+        InMemoryRowComparator(final List<String> colNames, final DataTableSpec spec) {
+            m_indices = new int[colNames.size()];
+            m_colComparators = new DataValueComparator[m_indices.length];
+            int curIndex = 0;
+            for (String name : colNames) {
+                int index = spec.findColumnIndex(name);
+                if (index == -1) {
+                    throw new IllegalArgumentException("Could not find column name:" + name.toString());
+                }
+                m_indices[curIndex] = index;
+                if (index == -1) {
+                    m_colComparators[curIndex] = null;
+                } else {
+                    m_colComparators[curIndex] = spec.getColumnSpec(index).getType().getComparator();
+                }
+                curIndex++;
+            }
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int compare(final DataRow dr1, final DataRow dr2) {
+
+            if (dr1 == dr2) {
+                return 0;
+            }
+            if (dr1 == null) {
+                return 1;
+            }
+            if (dr2 == null) {
+                return -1;
+            }
+
+            assert (dr1.getNumCells() == dr2.getNumCells());
+
+            for (int i = 0; i < m_indices.length; i++) {
+                final int cellComparison;
+                final DataCell c1 = dr1.getCell(m_indices[i]);
+                final DataCell c2 = dr2.getCell(m_indices[i]);
+                final boolean c1Missing = c1.isMissing();
+                final boolean c2Missing = c2.isMissing();
+                if (c1Missing && c2Missing) {
+                    cellComparison = 0;
+                } else if (c1Missing) {
+                    cellComparison = +1;
+                } else if (c2Missing) {
+                    cellComparison = -1;
+                } else {
+                    final DataValueComparator comp = m_colComparators[i];
+                    cellComparison = comp.compare(c1, c2);
+                }
+                if (cellComparison != 0) {
+                    return -cellComparison;
+                }
+            }
+            return 0; // all cells in the DataRow have the same value
+        }
+    }
 
     /** Configuration key of the selected group by columns.*/
     protected static final String CFG_PIVOT_COLUMNS = "pivotColumns";
@@ -293,16 +374,16 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                     Arrays.asList(aggrs));
             // table is not sorted by group&pivot columns; if process in memory
             // true then sort table by group&pivot columns
+            final BufferedDataTable origGroupByTable = groupByTable.getBufferedTable();
             if (isProcessInMemory()) {
                 exec.setMessage("Sorting group table");
-                final boolean[] sortDirection = new boolean[groupAndPivotCols.size()];
                 //ensure that missing values are at the end by setting the boolean flag
                 final BufferedDataTableSorter sortedGroupByTable = new BufferedDataTableSorter(
-                    groupByTable.getBufferedTable(), groupAndPivotCols, sortDirection, true);
+                    origGroupByTable, new InMemoryRowComparator(groupAndPivotCols, origGroupByTable.getSpec()));
                 groupTable = sortedGroupByTable.sort(
                     groupAndPivotExec.createSubExecutionContext(progMainTableInMemSort / progMainTotal));
             } else {
-                groupTable = groupByTable.getBufferedTable();
+                groupTable = origGroupByTable;
             }
         } else {
             exec.setMessage("Grouping main table");
