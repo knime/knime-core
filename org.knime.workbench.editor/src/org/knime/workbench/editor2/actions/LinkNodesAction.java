@@ -456,6 +456,11 @@ public class LinkNodesAction extends AbstractNodeAction {
     }
 
     /**
+     * We desire this method in particular to be as computationally unintensive as possible as it is called per node
+     * selection change; unfortunately in addition to spatial arrangement and port cardinality, we need also gate upon
+     * port type which brings this functionality ever closer to the actual full plan creation logic performed at action
+     * execution time.
+     *
      * This performs the first pass screening which consists of determining the spatially leftmost and rightmost nodes
      * in the selection, that are valid, and discards any invalid nodes (nodes which are spatially leftmost but have
      * only inports or are spatially rightmost but have only outports.)
@@ -543,6 +548,54 @@ public class LinkNodesAction extends AbstractNodeAction {
             }
         }
         validRight.removeAll(discards);
+
+
+        // We should consider changing this to use an approach with maps should the common use case ever become scores
+        //  of nodes being selected - this is currently a poly-time solution.
+        boolean haveFoundALegalConnection = false;
+        for (final NodeContainerUI left : validLeft) {
+            final int sourcePortStart = (left instanceof WorkflowManagerUI) ? 0 : 1;
+            final NodeUIInformation leftUIInfo = left.getUIInformation();
+
+            for (int i = sourcePortStart; (i < left.getNrOutPorts()) && (!haveFoundALegalConnection); i++) {
+                final NodeOutPortUI sourcePort = left.getOutPort(i);
+                final PortType sourcePortType = sourcePort.getPortType();
+
+                for (final NodeContainerUI right : validRight) {
+                    if (left != right) {
+                        final NodeUIInformation rightUIInfo = right.getUIInformation();
+
+                        if (leftUIInfo.getBounds()[0] < rightUIInfo.getBounds()[0]) {
+                            final int destinationPortStart = (right instanceof WorkflowManagerUI) ? 0 : 1;
+
+                            for (int j = destinationPortStart; j < right.getNrInPorts(); j++) {
+                                final NodeInPortUI destinationPort = right.getInPort(j);
+                                final PortType destinationPortType = destinationPort.getPortType();
+
+                                if (sourcePortType.isSuperTypeOf(destinationPortType)) {
+                                    haveFoundALegalConnection = true;
+
+                                    break;
+                                }
+                            }
+
+                            if (haveFoundALegalConnection) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (haveFoundALegalConnection) {
+                break;
+            }
+        }
+
+        if (!haveFoundALegalConnection) {
+            return new ScreenedSelectionSet(Collections.emptySet(), null, null);
+        }
+
 
         final HashSet<NodeContainerUI> connectableNodes = new HashSet<>();
         // cramming them into a HashSet rids us of the problem that there will usually be a non-null intersection
