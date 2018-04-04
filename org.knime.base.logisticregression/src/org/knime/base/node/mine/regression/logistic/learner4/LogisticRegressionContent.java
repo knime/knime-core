@@ -117,6 +117,7 @@ final class LogisticRegressionContent {
 
     private final double m_loglike;
     private final RealMatrix m_covMat;
+    private final boolean m_calcCoefficientStatistics;
 
     private final int m_iter;
 
@@ -150,9 +151,10 @@ final class LogisticRegressionContent {
         final boolean sortTargetCategories,
         final boolean sortFactorsCategories,
         final RealMatrix beta, final double loglike,
-        final RealMatrix covMat, final int iter) {
+        final RealMatrix covMat, final int iter,
+        final boolean calcCoefficientStatistics) {
         this(outSpec, factorList, covariateList, Collections.emptyMap(), targetReferenceCategory, sortTargetCategories,
-            sortFactorsCategories, beta, loglike, covMat, iter);
+            sortFactorsCategories, beta, loglike, covMat, iter, calcCoefficientStatistics);
     }
 
     /**
@@ -178,7 +180,7 @@ final class LogisticRegressionContent {
             final boolean sortTargetCategories,
             final boolean sortFactorsCategories,
             final RealMatrix beta, final double loglike,
-            final RealMatrix covMat, final int iter) {
+            final RealMatrix covMat, final int iter, final boolean calcCoefficientStatistics) {
         m_iter = iter;
         m_outSpec = outSpec;
         m_factorList = factorList;
@@ -187,6 +189,7 @@ final class LogisticRegressionContent {
         m_targetReferenceCategory = targetReferenceCategory;
         m_sortTargetCategories = sortTargetCategories;
         m_sortFactorsCategories = sortFactorsCategories;
+        m_calcCoefficientStatistics = calcCoefficientStatistics;
 
         DataTableSpec inSpec = outSpec.getDataTableSpec();
         for (String factor : factorList) {
@@ -465,7 +468,7 @@ final class LogisticRegressionContent {
     public BufferedDataTable createCoeffStatisticsTablePortObject(
             final ExecutionContext exec) {
 
-        DataTableSpec tableOutSpec = LogRegCoordinator.createCoeffStatisticsTableSpec();
+        DataTableSpec tableOutSpec = LogRegCoordinator.createCoeffStatisticsTableSpec(m_covMat != null);
         BufferedDataContainer dc = exec.createDataContainer(tableOutSpec);
         List<DataCell> logits = this.getLogits();
         List<String> parameters = this.getParameters();
@@ -476,7 +479,7 @@ final class LogisticRegressionContent {
             Map<String, Double> stdErrs;
             Map<String, Double> zScores;
             Map<String, Double> pValues;
-            if (m_covMat == null) {
+            if (m_covMat == null || (!m_calcCoefficientStatistics)) {
                 HashMap<String, Double> emptyMap = new HashMap<>();
                 stdErrs = emptyMap;
                 zScores = emptyMap;
@@ -492,11 +495,11 @@ final class LogisticRegressionContent {
                 cells.add(new StringCell(logit.toString()));
                 cells.add(new StringCell(parameter));
                 cells.add(new DoubleCell(coefficients.get(parameter)));
-                if (m_covMat != null) {
+                if (m_covMat != null && m_calcCoefficientStatistics) {
                     cells.add(new DoubleCell(stdErrs.get(parameter)));
                     cells.add(new DoubleCell(zScores.get(parameter)));
                     cells.add(new DoubleCell(pValues.get(parameter)));
-                } else {
+                } else if (m_calcCoefficientStatistics) {
                     cells.add(NOT_INVERTIBLE_MISSING);
                     cells.add(NOT_INVERTIBLE_MISSING);
                     cells.add(NOT_INVERTIBLE_MISSING);
@@ -508,11 +511,11 @@ final class LogisticRegressionContent {
             cells.add(new StringCell(logit.toString()));
             cells.add(new StringCell("Constant"));
             cells.add(new DoubleCell(this.getIntercept(logit)));
-            if (m_covMat != null) {
+            if (m_covMat != null && m_calcCoefficientStatistics) {
                 cells.add(new DoubleCell(this.getInterceptStdErr(logit)));
                 cells.add(new DoubleCell(this.getInterceptZScore(logit)));
                 cells.add(new DoubleCell(this.getInterceptPValue(logit)));
-            } else {
+            } else if (m_calcCoefficientStatistics) {
                 cells.add(NOT_INVERTIBLE_MISSING);
                 cells.add(NOT_INVERTIBLE_MISSING);
                 cells.add(NOT_INVERTIBLE_MISSING);
@@ -655,6 +658,7 @@ final class LogisticRegressionContent {
     private static final String CFG_COEFFICIENTS = "coefficients";
     private static final String CFG_COVARIANCE_MATRIX = "covariance_matrix";
     private static final String CFG_COVMAT_PRESENT = "covMatPresent";
+    private static final String CFG_CALC_STATISTICS = "calcCoefficientStatistics";
     private static final String CFG_LOG_LIKELIHOOD = "likelihood";
     private static final String CFG_ITER = "iteration";
     private static final String CFG_TARGET_REFERENCE_CATEGORY = "target_reference_category";
@@ -688,9 +692,11 @@ final class LogisticRegressionContent {
         double[] coeff = parContent.getDoubleArray(CFG_COEFFICIENTS);
         double likelihood = parContent.getDouble(CFG_LOG_LIKELIHOOD);
         RealMatrix covMat = null;
-        if (parContent.getBoolean(CFG_COVMAT_PRESENT)) {
+        boolean covMatPresent = parContent.getBoolean(CFG_COVMAT_PRESENT);
+        if (covMatPresent) {
             covMat = toMatrix(parContent.getDoubleArray(CFG_COVARIANCE_MATRIX), coeff.length);
         }
+        boolean calcCoefficientStatistics = parContent.getBoolean(CFG_CALC_STATISTICS, covMatPresent);
         int iter = parContent.getInt(CFG_ITER);
         // introduced in 2.9
         DataCell targetReferenceCategory = parContent.getDataCell(CFG_TARGET_REFERENCE_CATEGORY, null);
@@ -702,7 +708,7 @@ final class LogisticRegressionContent {
                 targetReferenceCategory,
                 sortTargetCategories, sortFactorsCategories,
                 toMatrix(coeff, coeff.length), likelihood,
-                covMat, iter);
+                covMat, iter, calcCoefficientStatistics);
 
 
     }

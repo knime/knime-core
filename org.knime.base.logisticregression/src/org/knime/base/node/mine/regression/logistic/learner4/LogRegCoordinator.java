@@ -120,21 +120,24 @@ class LogRegCoordinator {
     }
 
     PortObjectSpec[] getOutputSpecs() {
-        DataTableSpec coeffTableOutSpec = createCoeffStatisticsTableSpec();
+        DataTableSpec coeffTableOutSpec = createCoeffStatisticsTableSpec(m_settings.isCalcCovMatrix());
         DataTableSpec modelStatsTableOutSpec = LogisticRegressionContent.createModelStatisticsTableSpec();
         return new PortObjectSpec[]{m_pmmlOutSpec, coeffTableOutSpec, modelStatsTableOutSpec};
     }
 
-    static DataTableSpec createCoeffStatisticsTableSpec() {
+    static DataTableSpec createCoeffStatisticsTableSpec(final boolean calcStatistics) {
         DataTableSpecCreator tableSpecCreator = new DataTableSpecCreator();
         tableSpecCreator.addColumns(
             new DataColumnSpecCreator("Logit", StringCell.TYPE).createSpec(),
             new DataColumnSpecCreator("Variable", StringCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Coeff.", DoubleCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Std. Err.", DoubleCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("z-score", DoubleCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("P>|z|", DoubleCell.TYPE).createSpec()
+            new DataColumnSpecCreator("Coeff.", DoubleCell.TYPE).createSpec()
         );
+        if (calcStatistics) {
+            tableSpecCreator.addColumns(
+                new DataColumnSpecCreator("Std. Err.", DoubleCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("z-score", DoubleCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("P>|z|", DoubleCell.TYPE).createSpec());
+        }
         tableSpecCreator.setName("Coefficients and Statistics");
         return tableSpecCreator.createSpec();
     }
@@ -379,13 +382,10 @@ class LogRegCoordinator {
             covMat = result.getCovariateMatrix();
         }
         // create content
-        LogisticRegressionContent content =
-            new LogisticRegressionContent(m_pmmlOutSpec,
+        return new LogisticRegressionContent(m_pmmlOutSpec,
                 factorList, covariateList, specialVectorLengths,
                 m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories(),
-                betaMat, result.getLogLike(), covMat, result.getIter());
-        return content;
-
+                betaMat, result.getLogLike(), covMat, result.getIter(), m_settings.isCalcCovMatrix());
     }
 
     private void checkConstantLearningFields(final BufferedDataTable data) throws InvalidSettingsException {
