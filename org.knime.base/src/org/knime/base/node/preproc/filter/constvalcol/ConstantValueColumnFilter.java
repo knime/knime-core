@@ -85,57 +85,63 @@ public class ConstantValueColumnFilter {
     public static final String EXCLUDE_LIST_TITLE = "Pass Through";
 
     /**
-     * A new configuration to store the settings. Also enables the type filter.
+     * A method to generate a new configuration to store the settings.
      *
-     * @return ...
+     * @return the new configuration
      */
     public static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
         return new DataColumnSpecFilterConfiguration(SELECTED_COLS);
     }
 
     /**
+     * A method that, from a selection of columns, determines the columns that contain only the same (duplicate /
+     * constant) value over and over.
      *
-     * @param inputTable
-     * @param colNamesToFilter
-     * @return
+     * @param inputTable the input table that is to be investigated for columns with constant values
+     * @param colNamesToFilter the names of columns that potentially contain constant values only
+     * @return the names of columns that provably contain constant values only
      */
-    public String[] determineConstantValueColumns(final BufferedDataTable inputTable, final String[] colNamesToFilter) {
+    public static final String[] determineConstantValueColumns(final BufferedDataTable inputTable,
+        final String[] colNamesToFilter) {
+        // if (inputTable.size() < 1) {
+        //     return new String[0];
+        // }
+
+        // if the inputTable only has a single row (or no rows at all), each column only contains constant values
         if (inputTable.size() < 2) {
             return colNamesToFilter;
         }
 
         Set<String> colNamesToFilterSet = new HashSet<>(Arrays.asList(colNamesToFilter));
         String[] colNames = inputTable.getDataTableSpec().getColumnNames();
+        RowIterator rowIt = inputTable.iterator();
+        DataRow firstRow = rowIt.next();
 
-        // a set containing the indices of all columns that potentially contain only duplicate values
-        Map<Integer, DataCell> colIndicesToFilter = new HashMap<>();
+        // a map that maps the indices of columns that potentially contain only duplicate values to their last observed value
+        Map<Integer, DataCell> indicesToCells = new HashMap<>();
         for (int i = 0; i < colNames.length; i++) {
             if (colNamesToFilterSet.contains(colNames[i])) {
-                colIndicesToFilter.put(i, null);
+                indicesToCells.put(i, firstRow.getCell(i));
             }
         }
 
-        RowIterator rowIt = inputTable.iterator();
+        // across all columns, check if there are two (vertically) successive cells with different values
         while (rowIt.hasNext()) {
             DataRow currentRow = rowIt.next();
-            for (Iterator<Entry<Integer, DataCell>> entryIt = colIndicesToFilter.entrySet().iterator(); entryIt.hasNext(); ) {
+            for (Iterator<Entry<Integer, DataCell>> entryIt = indicesToCells.entrySet().iterator(); entryIt
+                .hasNext();) {
                 Entry<Integer, DataCell> e = entryIt.next();
                 DataCell currentCell = currentRow.getCell(e.getKey());
                 DataCell lastCell = e.getValue();
-                if (lastCell == null) {
-                    e.setValue(currentCell);
-                } else if (!currentCell.equals(lastCell)) {
+                // if successive cells with different values are found, this column is not constant and should be removed from the indicesToCells map
+                if (currentCell != null && lastCell != null && !currentCell.equals(lastCell)) {
                     entryIt.remove();
                 }
             }
         }
 
-        String[] colNamesToRemove = new String[colIndicesToFilter.size()];
-        int j = 0;
-        for (int i : colIndicesToFilter.keySet()) {
-            colNamesToRemove[j] = colNames[i];
-            j++;
-        }
+        // obtain the names of to-be-filtered columns from the indicesToCells map
+        String[] colNamesToRemove = indicesToCells.keySet().stream().map(i -> colNames[i]).toArray(String[]::new);
 
         return colNamesToRemove;
     }

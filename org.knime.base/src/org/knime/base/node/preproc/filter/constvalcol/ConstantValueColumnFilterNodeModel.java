@@ -140,7 +140,8 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        // can not be determined beforehand...
+        // The columns containing only constant values cannot be determined without looking at the data contained within the table.
+        // Hence, the DataTableSpec cannot be determined before execution onset.
         return null;
     }
 
@@ -154,11 +155,9 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
         DataTableSpec inputTableSpec = inputTable.getDataTableSpec();
         FilterResult filterResult = m_conf.applyTo(inputTableSpec);
         String[] toFilter = filterResult.getIncludes();
-
-        ConstantValueColumnFilter constantValueColumnFilter = new ConstantValueColumnFilter();
-
+        String[] toRemove = ConstantValueColumnFilter.determineConstantValueColumns(inputTable, toFilter);
         ColumnRearranger columnRearranger = new ColumnRearranger(inputTableSpec);
-        columnRearranger.remove(constantValueColumnFilter.determineConstantValueColumns(inputTable, toFilter));
+        columnRearranger.remove(toRemove);
         BufferedDataTable outputTable = exec.createColumnRearrangeTable(inputTable, columnRearranger, exec);
         return new BufferedDataTable[]{outputTable};
     }
