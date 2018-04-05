@@ -42,7 +42,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   4 Apr 2018 (Marc): created
  */
@@ -57,18 +57,33 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
- * 
- * @author Marc
+ * The model for the constant value column filter node. Contains the logic for filtering columns containing only
+ * duplicates of the same value from the input data table.
+ *
+ * @author Marc Bux, KNIME AG, Zurich, Switzerland
+ * @since 3.6
  */
 public class ConstantValueColumnFilterNodeModel extends NodeModel {
 
+    // the to-be-assembled configuration of a column filtering
+    private DataColumnSpecFilterConfiguration conf;
+
+    /**
+     * Creates a new constant value column filter model with one and input and one output.
+     */
+    public ConstantValueColumnFilterNodeModel() {
+        super(1, 1);
+        conf = createDCSFilterConfiguration();
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(File nodeInternDir, ExecutionMonitor exec)
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         // TODO Auto-generated method stub
 
@@ -78,7 +93,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(File nodeInternDir, ExecutionMonitor exec)
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         // TODO Auto-generated method stub
 
@@ -88,7 +103,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         // TODO Auto-generated method stub
 
     }
@@ -97,7 +112,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         // TODO Auto-generated method stub
 
     }
@@ -106,7 +121,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         // TODO Auto-generated method stub
 
     }
@@ -118,6 +133,15 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     protected void reset() {
         // TODO Auto-generated method stub
 
+    }
+
+    /**
+     * Returns a new configuration to store the settings for the column filtering.
+     *
+     * @return a new configuration of a column filtering
+     */
+    static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
+        return new DataColumnSpecFilterConfiguration("column-filter");
     }
 
 }

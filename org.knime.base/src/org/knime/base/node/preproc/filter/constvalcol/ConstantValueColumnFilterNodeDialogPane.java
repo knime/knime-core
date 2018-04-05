@@ -42,7 +42,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   4 Apr 2018 (Marc): created
  */
@@ -51,9 +51,27 @@ package org.knime.base.node.preproc.filter.constvalcol;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 
 /**
- * 
- * @author Marc
+ * The dialog for the constant value column filter. The user can specify which columns should be checked for containing
+ * only identical values.
+ *
+ * @author Marc Bux, KNIME AG, Zurich, Switzerland
+ * @since 3.6
  */
 public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsPane {
+
+    /**
+     * Creates a new {@link DefaultNodeSettingsPane} for the column filter in order to set the desired columns.
+     */
+    public ConstantValueColumnFilterNodeDialogPane() {
+        // TODO Auto-generated method stub
+
+        //        DialogComponentButtonGroup group = new DialogComponentButtonGroup(
+        //            ColumnFilterRefNodeModel.createInExcludeModel(), true, ColumnFilterRefNodeModel.INCLUDE,
+        //            new String[]{ColumnFilterRefNodeModel.INCLUDE, ColumnFilterRefNodeModel.EXCLUDE});
+        //        group.setToolTipText("Include or exclude columns in first table " + "according to the second reference table.");
+        //        addDialogComponent(group);
+        //        addDialogComponent(new DialogComponentBoolean(AbstractColumnRefNodeModel.createTypeModel(),
+        //            "Ensure compatibility of column types"));
+    }
 
 }

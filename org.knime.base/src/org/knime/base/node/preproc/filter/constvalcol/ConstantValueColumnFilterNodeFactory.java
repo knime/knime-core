@@ -42,18 +42,53 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   4 Apr 2018 (Marc): created
  */
 package org.knime.base.node.preproc.filter.constvalcol;
 
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * 
- * @author Marc
+ * The factory for the constant value column filter node.
+ *
+ * @author Marc Bux, KNIME AG, Zurich, Switzerland
+ * @since 3.6
  */
-public class ConstantValueColumnFilterNodeFactory extends NodeFactory<T> {
+public class ConstantValueColumnFilterNodeFactory extends NodeFactory<ConstantValueColumnFilterNodeModel> {
+
+    /** {@inheritDoc} */
+    @Override
+    public ConstantValueColumnFilterNodeModel createNodeModel() {
+        return new ConstantValueColumnFilterNodeModel();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<ConstantValueColumnFilterNodeModel> createNodeView(final int i,
+        final ConstantValueColumnFilterNodeModel nodeModel) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new ConstantValueColumnFilterNodeDialogPane();
+    }
 
 }
