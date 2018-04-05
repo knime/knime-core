@@ -65,9 +65,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import javax.swing.AbstractListModel;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -144,7 +142,9 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             }
         }
 
-        /** Symbolic name of the bundle */
+        /**
+         * @return Symbolic name of the bundle
+         */
         public String getName() {
             return this.name;
         }
@@ -229,7 +229,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
     final FilterableListModel m_bundleModel = new FilterableListModel(bundleNames);
 
     /* All available bundle names */
-    final static ArrayList<String> bundleNames = new ArrayList<>();
+    final static List<String> bundleNames = new ArrayList<>();
 
     /* Find all available bundles */
     private static void initBundleNames() {
@@ -243,90 +243,22 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         }
 
         Collections.sort(bundleNames);
-    }
 
-    /* List model which filters bundleNames according to a search string */
-    final static class FilterableListModel extends AbstractListModel<String> {
-
-        private static final long serialVersionUID = 1L;
-
-        private final List<String> m_unfiltered;
-
-        private List<String> m_filtered;
-
-        private Collection<String> m_excluded = Collections.emptyList();
-
-        /* Filter string, only ever null to force refiltering */
-        private String m_filter = "";
-
-        /**
-         * Constructor
-         *
-         * @param unfiltered Unfiltered list of elements
-         */
-        public FilterableListModel(final List<String> unfiltered) {
-            m_filtered = m_unfiltered = unfiltered;
-        }
-
-        @Override
-        public int getSize() {
-            return m_filtered.size();
-        }
-
-        @Override
-        public String getElementAt(final int index) {
-            return m_filtered.get(index);
-        }
-
-        /**
-         * Set the string with which to filter the elements of this list.
-         *
-         * @param filter Filter string
-         */
-        public synchronized void setFilter(final String filter) {
-            if (m_filter != null && m_filter.equals(filter)) {
-                return;
+        /* Only keep latest versions of bundles of which multiple versions are installed */
+        String[] lastSplit = new String[]{null, null};
+        final ArrayList<String> toRemove = new ArrayList<>();
+        for (final String s : bundleNames) {
+            final String[] split = s.split(" ");
+            if(split[0].equals(lastSplit[0])) {
+                if(Version.parseVersion(split[1]).compareTo(Version.parseVersion(lastSplit[1])) < 0) {
+                    toRemove.add(s);
+                } else {
+                    toRemove.add(String.join(" ", lastSplit));
+                }
             }
-            if (m_filter != null && filter.startsWith(m_filter)) {
-                // the most common use case will be a list gradually refined by user typing more characters
-                m_filtered = m_filtered.stream().filter(s -> s.contains(filter)).collect(Collectors.toList());
-            } else if (filter.isEmpty()) {
-                m_filtered = m_unfiltered;
-            } else {
-                m_filtered = m_unfiltered.stream().filter(s -> s.contains(filter)).collect(Collectors.toList());
-            }
-            m_filter = filter;
-            m_filtered.removeAll(m_excluded);
-            this.fireContentsChanged(this, 0, bundleNames.size());
+            lastSplit = split;
         }
-
-        /**
-         * Set list of excluded elements. Will cause the list to be refiltered.
-         *
-         * @param list Collection of elements to exclude.
-         */
-        public synchronized void setExcluded(final String[] list) {
-            setExcluded(Arrays.asList(list));
-        }
-
-        /**
-         * Set list of excluded elements. Will cause the list to be refiltered.
-         *
-         * @param list Collection of elements to exclude.
-         */
-        public synchronized void setExcluded(final Collection<String> list) {
-            m_excluded = list;
-            final String filter = m_filter;
-            m_filter = null;
-            setFilter(filter);
-        }
-
-        /**
-         * @return Currently excluded elements
-         */
-        public Collection<String> getExcluded() {
-            return Collections.unmodifiableCollection(m_excluded);
-        }
+        bundleNames.removeAll(toRemove);
     }
 
     /**
@@ -352,7 +284,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         add(scroll);
 
         /* Remove button */
-        final JButton removeBundleButton = new JButton("Remove Selected");
+        final JButton removeBundleButton = new JButton("Remove Selected Bundles");
         removeBundleButton.addActionListener(e -> removeSelectedBundles());
 
         final JPanel southPane = new JPanel(new FlowLayout());
@@ -369,7 +301,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             final JPanel northPane = new JPanel(new GridLayout(2, 1));
             {
                 /* Add bundles button */
-                final JButton addBundlesButton = new JButton("Add Selected");
+                final JButton addBundlesButton = new JButton("Add Selected Bundles");
                 addBundlesButton.addActionListener(e -> addSelectedBundles());
                 northPane.add(addBundlesButton);
 
@@ -382,6 +314,48 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             final JScrollPane scrollPane = new JScrollPane(m_bundleList);
             availableBundlesPane.add(scrollPane, BorderLayout.CENTER);
 
+            m_tree.addKeyListener(new KeyListener() {
+
+                @Override
+                public void keyTyped(final KeyEvent e) {
+                }
+
+                @Override
+                public void keyReleased(final KeyEvent e) {
+                }
+
+                @Override
+                public void keyPressed(final KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                        removeSelectedBundles();
+                    }
+                }
+            });
+            m_tree.addMouseListener(new MouseListener() {
+
+                @Override
+                public void mouseReleased(final MouseEvent e) {
+                }
+
+                @Override
+                public void mousePressed(final MouseEvent e) {
+                }
+
+                @Override
+                public void mouseExited(final MouseEvent e) {
+                }
+
+                @Override
+                public void mouseEntered(final MouseEvent e) {
+                }
+
+                @Override
+                public void mouseClicked(final MouseEvent e) {
+                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
+                        removeSelectedBundles();
+                    }
+                }
+            });
             m_bundleList.addMouseListener(new MouseListener() {
 
                 @Override
@@ -402,11 +376,10 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
                 @Override
                 public void mouseClicked(final MouseEvent e) {
-                    if (e.getClickCount() == 2) {
-                        // Double click closes the dialog
+                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
                         final String bundleName = m_bundleList.getSelectedValue();
                         addBundle(bundleName);
-                        m_bundleModel.setExcluded(getBundles());
+                        updateFilterModel();
                         m_bundleList.clearSelection();
                     }
                 }
@@ -536,7 +509,8 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
      * Update m_bundleModel to hide the elements that were already added to the available bundles.
      */
     private void updateFilterModel() {
-        m_bundleModel.setExcluded(getBundles());
+        m_bundleModel.setExcluded(m_listModel.getAllElements().stream().map(BundleListEntry::toString)
+            .filter(s -> !s.endsWith(")")).toArray(n -> new String[n]));
     }
 
     /**
@@ -557,7 +531,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                 continue;
             }
 
-            if(entries.add(e)) {
+            if (entries.add(e)) {
                 DefaultMutableTreeNode node = new DefaultMutableTreeNode(e);
                 ((DefaultTreeModel)m_tree.getModel()).insertNodeInto(node, m_userBundlesRoot,
                     m_userBundlesRoot.getChildCount());
@@ -670,7 +644,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             toRemove.add(child);
         }
 
-        for(DefaultMutableTreeNode child : toRemove) {
+        for (DefaultMutableTreeNode child : toRemove) {
             ((DefaultTreeModel)tree.getModel()).removeNodeFromParent(child);
         }
     }

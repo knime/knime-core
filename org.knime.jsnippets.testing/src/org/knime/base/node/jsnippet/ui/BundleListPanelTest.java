@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.Platform;
 import org.junit.Before;
@@ -88,6 +89,11 @@ public class BundleListPanelTest extends UiTest {
         /* Test initialization */
         assertFalse(BundleListPanel.bundleNames.isEmpty());
 
+        /* Check for duplicate bundles */
+        assertEquals("Bundlenames should only contain latest versions, no duplicates.",
+            BundleListPanel.bundleNames.stream().map(s -> s.split(" ")[0]).collect(Collectors.toSet()).size(),
+            BundleListPanel.bundleNames.size());
+
         final String firstBundle = BundleListPanel.bundleNames.get(0);
 
         /* Test adding a bundle */
@@ -103,10 +109,9 @@ public class BundleListPanelTest extends UiTest {
         assertNotNull("Expected symbolic name of an existing bundle to have been added", bundle);
 
         assertTrue("Available bundles should not contain the added bundle",
-            panel.m_bundleModel.getExcluded().contains(bundleName));
+            panel.m_bundleModel.getExcluded().contains(panel.m_listModel.getElementAt(0).toString()));
 
-        assertFalse("Adding an already added bundle should not be permitted",
-            panel.addBundle(bundleName));
+        assertFalse("Adding an already added bundle should not be permitted", panel.addBundle(bundleName));
         assertEquals("Adding a bundle a second time should not increase size of list", 1, panel.m_listModel.size());
         assertEquals("Tree view out of sync.", 1 + 2, panel.m_tree.getRowCount());
 
@@ -126,40 +131,36 @@ public class BundleListPanelTest extends UiTest {
         assertNotNull("Expected symbolic name of an existing bundle in the list",
             Platform.getBundle(panel.m_listModel.getElementAt(0).name));
         assertTrue("Available bundles should not contain added bundle",
-            panel.m_bundleModel.getExcluded().contains(panel.m_listModel.getElementAt(0).name));
+            panel.m_bundleModel.getExcluded().contains(panel.m_listModel.getElementAt(0).toString()));
 
         /* Select first value */
         panel.m_bundleList.setSelectedIndex(1);
         /* Simulate a double-click to close and add */
         panel.m_bundleList
-            .dispatchEvent(new MouseEvent(panel, MouseEvent.MOUSE_CLICKED, 1, MouseEvent.BUTTON1, 0, 0, 2, false));
+            .dispatchEvent(new MouseEvent(panel, MouseEvent.MOUSE_CLICKED, 1, 0, 0, 0, 2, false, MouseEvent.BUTTON1));
         assertEquals("Double-Click should add a bundle", 2, panel.m_listModel.size());
         assertEquals("Tree view out of sync.", 2 + 2, panel.m_tree.getRowCount());
 
         /* Test getBundles() */
         final String[] bundleNames = panel.getBundles();
         assertArrayEquals("getBundles should return array of bundles in list model",
-            new String[]{panel.m_listModel.getElementAt(0).name, panel.m_listModel.getElementAt(1).name},
-            bundleNames);
+            new String[]{panel.m_listModel.getElementAt(0).name, panel.m_listModel.getElementAt(1).name}, bundleNames);
 
-        panel.setBundles(new String[]{});
-        panel.addBundles(Arrays.asList(bundleNames[0], bundleNames[1], bundleNames[1]));
-        assertArrayEquals("getBundles should return array of bundles in list model",
-            new String[]{panel.m_listModel.getElementAt(0).name, panel.m_listModel.getElementAt(1).name},
-            bundleNames);
-        assertEquals("Duplicates should be skipped while adding bundles.", 2, panel.m_listModel.size());
+        panel.setBundles(new String[]{bundleNames[0]});
+        panel.addBundles(Arrays.asList(bundleNames[0], bundleNames[1], bundleNames[1], null));
+        assertEquals("Duplicates and null should be skipped while adding bundles.", 2, panel.m_listModel.size());
         assertEquals("Tree view out of sync.", 2 + 2, panel.m_tree.getRowCount());
         assertTrue("Available bundles should not contain added bundles",
-            panel.m_bundleModel.getExcluded().contains(bundleNames[0]));
+            panel.m_bundleModel.getExcluded().contains(panel.m_listModel.getElementAt(0).toString()));
         assertTrue("Available bundles should not contain added bundles",
-            panel.m_bundleModel.getExcluded().contains(bundleNames[1]));
+            panel.m_bundleModel.getExcluded().contains(panel.m_listModel.getElementAt(1).toString()));
 
         /* Select everything and remove */
         panel.m_tree.setSelectionInterval(0, panel.m_tree.getRowCount());
         panel.removeSelectedBundles();
         assertEquals("Removing selected elements should remove them", 0, panel.m_listModel.size());
         assertFalse("Available bundles should contain removed bundles again",
-            panel.m_bundleModel.getExcluded().contains(bundle.getSymbolicName()));
+            panel.m_bundleModel.getExcluded().contains(bundle.toString()));
 
         /* Test that removeSelectedBundles without selection doesn't error */
         panel.m_tree.clearSelection();
