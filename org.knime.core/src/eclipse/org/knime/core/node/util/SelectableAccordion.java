@@ -49,7 +49,6 @@
 package org.knime.core.node.util;import java.awt.Component;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
@@ -67,8 +66,8 @@ import javax.swing.event.ChangeListener;
 @SuppressWarnings("serial")
 @Deprecated
 final class SelectableAccordion extends JTabbedPane {
-    private static final Icon NOT_SELECTED_ICON = new ImageIcon(SelectableAccordion.class.getResource("down.png")),
-            SELECTED_ICON = new ImageIcon(SelectableAccordion.class.getResource("right.png"));
+    private static final Icon NOT_SELECTED_ICON = SharedIcons.getImageIcon(SharedIcons.SMALL_ARROW_DOWN_ICON),
+            SELECTED_ICON = SharedIcons.getImageIcon(SharedIcons.SMALL_ARROW_RIGHT_ICON);
 
 //    private String m_key;
 

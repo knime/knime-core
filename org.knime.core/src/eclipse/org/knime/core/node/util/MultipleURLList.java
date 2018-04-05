@@ -60,7 +60,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
@@ -95,14 +94,11 @@ public class MultipleURLList extends JScrollPane {
 
         private final FilesHistoryPanel m_filesPanel;
 
-        final JButton m_remove = new JButton(new ImageIcon(
-                MultipleURLList.class.getResource("trash.png")));
+        final JButton m_remove = new JButton(SharedIcons.getImageIcon(SharedIcons.TRASH_ICON));
 
-        final JButton m_up = new JButton(new ImageIcon(
-                MultipleURLList.class.getResource("arrow_up.png")));
+        final JButton m_up = new JButton(SharedIcons.getImageIcon(SharedIcons.ARROW_UP_ICON));
 
-        final JButton m_down = new JButton(new ImageIcon(
-                MultipleURLList.class.getResource("arrow_down.png")));
+        final JButton m_down = new JButton(SharedIcons.getImageIcon(SharedIcons.ARROW_DOWN_ICON));
 
         public MyFilePanel(final String historyId,
                 final boolean markIfNonexisting, final int mode, final String... suffixes) {
