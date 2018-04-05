@@ -82,12 +82,6 @@ public final class NumericOutliersPortObject extends AbstractSimplePortObject {
     @SuppressWarnings("hiding")
     public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(NumericOutliersPortObject.class);
 
-    /** The name of the groups column spec . */
-    private static final String GROUP_SUFFIX = " (group)";
-
-    /** The name of the outlier column spec . */
-    private static final String OUTLIER_SUFFIX = " (outlier)";
-
     /** Config key of the summary text. */
     private static final String CFG_SUMMARY = "summary";
 
