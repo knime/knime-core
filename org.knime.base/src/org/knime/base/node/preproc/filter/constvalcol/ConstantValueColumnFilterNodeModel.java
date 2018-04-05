@@ -51,12 +51,17 @@ package org.knime.base.node.preproc.filter.constvalcol;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
@@ -69,14 +74,14 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 public class ConstantValueColumnFilterNodeModel extends NodeModel {
 
     // the to-be-assembled configuration of a column filtering
-    private DataColumnSpecFilterConfiguration m_conf;
+    private final DataColumnSpecFilterConfiguration m_conf;
 
     /**
      * Creates a new constant value column filter model with one and input and one output.
      */
     public ConstantValueColumnFilterNodeModel() {
         super(1, 1);
-        m_conf = createDCSFilterConfiguration();
+        m_conf = ConstantValueColumnFilter.createDCSFilterConfiguration();
     }
 
     /**
@@ -85,8 +90,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+        // no internal state to load
     }
 
     /**
@@ -95,8 +99,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+        // no internal state to save
     }
 
     /**
@@ -104,8 +107,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // TODO Auto-generated method stub
-
+        m_conf.saveConfiguration(settings);
     }
 
     /**
@@ -113,8 +115,8 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        DataColumnSpecFilterConfiguration conf = ConstantValueColumnFilter.createDCSFilterConfiguration();
+        conf.loadConfigurationInModel(settings);
     }
 
     /**
@@ -122,8 +124,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        m_conf.loadConfigurationInModel(settings);
     }
 
     /**
@@ -131,17 +132,21 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // TODO Auto-generated method stub
-
+        // no internal state to reset
     }
 
     /**
-     * Returns a new configuration to store the settings for the column filtering.
-     *
-     * @return a new configuration of a column filtering
+     * {@inheritDoc}
      */
-    static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
-        return new DataColumnSpecFilterConfiguration("column-filter");
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
+        BufferedDataTable inputTable = inData[0];
+        DataTableSpec inputTableSpec = inputTable.getDataTableSpec();
+        FilterResult filterResult = m_conf.applyTo(inputTableSpec);
+        String[] includes = filterResult.getIncludes();
+        ColumnRearranger columnRearranger = new ColumnRearranger(inputTableSpec);
+        columnRearranger.keepOnly(includes);
+        BufferedDataTable outputTable = exec.createColumnRearrangeTable(inputTable, columnRearranger, exec);
+        return new BufferedDataTable[]{outputTable};
     }
-
 }

@@ -44,49 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   4 Apr 2018 (Marc): created
+ *   5 Apr 2018 (Marc Bux): created
  */
 package org.knime.base.node.preproc.filter.constvalcol;
 
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
- * The dialog for the constant value column filter. The user can specify which columns should be checked for containing
- * only identical values.
  *
  * @author Marc Bux, KNIME AG, Zurich, Switzerland
- * @since 3.6
  */
-public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsPane {
+public class ConstantValueColumnFilter {
 
     /**
-     * The name of the settings tag which holds the names of the columns the user has selected in the dialog as to-be-filtered
+     * A new configuration to store the settings. Also enables the type filter.
+     *
+     * @return ...
      */
-    public static final String SELECTED_COLS = "filter-list";
-
-    /**
-     * The title of the list of columns that is selected to be considered for filtering
-     */
-    public static final String INCLUDE_LIST_TITLE = "Filter";
-
-    //
-    /**
-     * The title of the list of columns that is selected to be passed through
-     */
-    public static final String EXCLUDE_LIST_TITLE = "Pass Through";
-
-    /**
-     * Creates a new {@link DefaultNodeSettingsPane} for the column filter in order to set the desired columns.
-     */
-    public ConstantValueColumnFilterNodeDialogPane() {
-        SettingsModelColumnFilter2 settings = new SettingsModelColumnFilter2(SELECTED_COLS);
-        DialogComponentColumnFilter2 dialog = new DialogComponentColumnFilter2(settings, 0);
-        dialog.setIncludeTitle(INCLUDE_LIST_TITLE);
-        dialog.setExcludeTitle(EXCLUDE_LIST_TITLE);
-        dialog.setToolTipText("Select which columns to consider for filtering and which columns to pass through.");
-        addDialogComponent(dialog);
+    public static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
+        return new DataColumnSpecFilterConfiguration("column-filter");
     }
-
 }
