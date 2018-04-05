@@ -69,14 +69,14 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 public class ConstantValueColumnFilterNodeModel extends NodeModel {
 
     // the to-be-assembled configuration of a column filtering
-    private DataColumnSpecFilterConfiguration conf;
+    private DataColumnSpecFilterConfiguration m_conf;
 
     /**
      * Creates a new constant value column filter model with one and input and one output.
      */
     public ConstantValueColumnFilterNodeModel() {
         super(1, 1);
-        conf = createDCSFilterConfiguration();
+        m_conf = createDCSFilterConfiguration();
     }
 
     /**

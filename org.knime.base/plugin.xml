@@ -1075,6 +1075,10 @@
             >
       </node>
       <node
+            factory-class="org.knime.base.node.preproc.filter.constvalcol.ConstantValueColumnFilterNodeFactory"
+            category-path="/manipulation/column/column-filter"
+            />
+      <node
             factory-class="org.knime.base.node.preproc.filter.missingvaluecolfilter.MissingValueColumnFilterNodeFactory"
             category-path="/manipulation/column/column-filter"
             />
