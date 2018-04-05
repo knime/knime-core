@@ -57,11 +57,26 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 public class ConstantValueColumnFilter {
 
     /**
+     * The name of the settings tag which holds the names of the columns the user has selected in the dialog as to-be-filtered
+     */
+    public static final String SELECTED_COLS = "filter-list";
+
+    /**
+     * The title of the list of columns that is selected to be considered for filtering
+     */
+    public static final String INCLUDE_LIST_TITLE = "Filter";
+
+    /**
+     * The title of the list of columns that is selected to be passed through
+     */
+    public static final String EXCLUDE_LIST_TITLE = "Pass Through";
+
+    /**
      * A new configuration to store the settings. Also enables the type filter.
      *
      * @return ...
      */
     public static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
-        return new DataColumnSpecFilterConfiguration("column-filter");
+        return new DataColumnSpecFilterConfiguration(SELECTED_COLS);
     }
 }

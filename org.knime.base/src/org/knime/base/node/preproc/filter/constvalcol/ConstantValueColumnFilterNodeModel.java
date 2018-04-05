@@ -139,7 +139,17 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        // can not be determined beforehand...
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
+        throws Exception {
         BufferedDataTable inputTable = inData[0];
         DataTableSpec inputTableSpec = inputTable.getDataTableSpec();
         FilterResult filterResult = m_conf.applyTo(inputTableSpec);

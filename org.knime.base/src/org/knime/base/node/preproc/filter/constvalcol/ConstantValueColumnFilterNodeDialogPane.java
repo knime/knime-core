@@ -62,29 +62,13 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsPane {
 
     /**
-     * The name of the settings tag which holds the names of the columns the user has selected in the dialog as to-be-filtered
-     */
-    public static final String SELECTED_COLS = "filter-list";
-
-    /**
-     * The title of the list of columns that is selected to be considered for filtering
-     */
-    public static final String INCLUDE_LIST_TITLE = "Filter";
-
-    //
-    /**
-     * The title of the list of columns that is selected to be passed through
-     */
-    public static final String EXCLUDE_LIST_TITLE = "Pass Through";
-
-    /**
      * Creates a new {@link DefaultNodeSettingsPane} for the column filter in order to set the desired columns.
      */
     public ConstantValueColumnFilterNodeDialogPane() {
-        SettingsModelColumnFilter2 settings = new SettingsModelColumnFilter2(SELECTED_COLS);
+        SettingsModelColumnFilter2 settings = new SettingsModelColumnFilter2(ConstantValueColumnFilter.SELECTED_COLS);
         DialogComponentColumnFilter2 dialog = new DialogComponentColumnFilter2(settings, 0);
-        dialog.setIncludeTitle(INCLUDE_LIST_TITLE);
-        dialog.setExcludeTitle(EXCLUDE_LIST_TITLE);
+        dialog.setIncludeTitle(ConstantValueColumnFilter.INCLUDE_LIST_TITLE);
+        dialog.setExcludeTitle(ConstantValueColumnFilter.EXCLUDE_LIST_TITLE);
         dialog.setToolTipText("Select which columns to consider for filtering and which columns to pass through.");
         addDialogComponent(dialog);
     }
