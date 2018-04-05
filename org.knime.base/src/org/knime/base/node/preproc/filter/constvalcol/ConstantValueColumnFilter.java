@@ -48,6 +48,18 @@
  */
 package org.knime.base.node.preproc.filter.constvalcol;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.RowIterator;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
@@ -57,7 +69,8 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 public class ConstantValueColumnFilter {
 
     /**
-     * The name of the settings tag which holds the names of the columns the user has selected in the dialog as to-be-filtered
+     * The name of the settings tag which holds the names of the columns the user has selected in the dialog as
+     * to-be-filtered
      */
     public static final String SELECTED_COLS = "filter-list";
 
@@ -78,5 +91,52 @@ public class ConstantValueColumnFilter {
      */
     public static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
         return new DataColumnSpecFilterConfiguration(SELECTED_COLS);
+    }
+
+    /**
+     *
+     * @param inputTable
+     * @param colNamesToFilter
+     * @return
+     */
+    public String[] determineConstantValueColumns(final BufferedDataTable inputTable, final String[] colNamesToFilter) {
+        if (inputTable.size() < 2) {
+            return colNamesToFilter;
+        }
+
+        Set<String> colNamesToFilterSet = new HashSet<>(Arrays.asList(colNamesToFilter));
+        String[] colNames = inputTable.getDataTableSpec().getColumnNames();
+
+        // a set containing the indices of all columns that potentially contain only duplicate values
+        Map<Integer, DataCell> colIndicesToFilter = new HashMap<>();
+        for (int i = 0; i < colNames.length; i++) {
+            if (colNamesToFilterSet.contains(colNames[i])) {
+                colIndicesToFilter.put(i, null);
+            }
+        }
+
+        RowIterator rowIt = inputTable.iterator();
+        while (rowIt.hasNext()) {
+            DataRow currentRow = rowIt.next();
+            for (Iterator<Entry<Integer, DataCell>> entryIt = colIndicesToFilter.entrySet().iterator(); entryIt.hasNext(); ) {
+                Entry<Integer, DataCell> e = entryIt.next();
+                DataCell currentCell = currentRow.getCell(e.getKey());
+                DataCell lastCell = e.getValue();
+                if (lastCell == null) {
+                    e.setValue(currentCell);
+                } else if (!currentCell.equals(lastCell)) {
+                    entryIt.remove();
+                }
+            }
+        }
+
+        String[] colNamesToRemove = new String[colIndicesToFilter.size()];
+        int j = 0;
+        for (int i : colIndicesToFilter.keySet()) {
+            colNamesToRemove[j] = colNames[i];
+            j++;
+        }
+
+        return colNamesToRemove;
     }
 }

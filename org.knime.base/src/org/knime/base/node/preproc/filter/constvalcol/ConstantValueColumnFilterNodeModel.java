@@ -153,9 +153,12 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
         BufferedDataTable inputTable = inData[0];
         DataTableSpec inputTableSpec = inputTable.getDataTableSpec();
         FilterResult filterResult = m_conf.applyTo(inputTableSpec);
-        String[] includes = filterResult.getIncludes();
+        String[] toFilter = filterResult.getIncludes();
+
+        ConstantValueColumnFilter constantValueColumnFilter = new ConstantValueColumnFilter();
+
         ColumnRearranger columnRearranger = new ColumnRearranger(inputTableSpec);
-        columnRearranger.keepOnly(includes);
+        columnRearranger.remove(constantValueColumnFilter.determineConstantValueColumns(inputTable, toFilter));
         BufferedDataTable outputTable = exec.createColumnRearrangeTable(inputTable, columnRearranger, exec);
         return new BufferedDataTable[]{outputTable};
     }
