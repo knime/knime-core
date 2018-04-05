@@ -194,7 +194,7 @@ public final class NumericOutliersPortObject extends AbstractSimplePortObject {
      * {@inheritDoc}
      */
     @Override
-    public PortObjectSpec getSpec() {
+    public NumericOutliersPortObjectSpec getSpec() {
         return getPortSpec(m_groupColTypes, m_outlierModel.getGroupColNames(), m_outlierModel.getOutlierColNames());
     }
 
@@ -262,7 +262,7 @@ public final class NumericOutliersPortObject extends AbstractSimplePortObject {
      * @param outlierColNames the outlier column names
      * @return the outlier port spec
      */
-    static PortObjectSpec getPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
+    static NumericOutliersPortObjectSpec getPortSpec(final DataTableSpec inSpec, final String[] groupColNames,
         final String[] outlierColNames) {
         return getPortSpec(extractTypes(inSpec, groupColNames), groupColNames, outlierColNames);
     }
@@ -275,7 +275,7 @@ public final class NumericOutliersPortObject extends AbstractSimplePortObject {
      * @param outlierColNames the outlier column names
      * @return the outlier port spec
      */
-    private static PortObjectSpec getPortSpec(final DataType[] groupColTypes, final String[] groupColNames,
+    private static NumericOutliersPortObjectSpec getPortSpec(final DataType[] groupColTypes, final String[] groupColNames,
         final String[] outlierColNames) {
         return new NumericOutliersPortObjectSpec(groupColTypes, groupColNames, outlierColNames);
     }
