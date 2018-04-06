@@ -73,6 +73,24 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  */
 public class ConstantValueColumnFilterNodeModel extends NodeModel {
 
+    /**
+     * The name of the settings tag which holds the names of the columns the user has selected in the dialog as
+     * to-be-filtered
+     */
+    public static final String SELECTED_COLS = "filter-list";
+
+    public static final String FILTER_ALL = "filter-all";
+
+    public static final String FILTER_NUMERIC = "filter-numeric";
+
+    public static final String FILTER_NUMERIC_VALUE = "filter-numeric-value";
+
+    public static final String FILTER_STRING = "filter-string";
+
+    public static final String FILTER_STRING_VALUE = "filter-string-value";
+
+    public static final String FILTER_MISSING = "filter-missing";
+
     // the to-be-assembled configuration of a column filtering
     private final DataColumnSpecFilterConfiguration m_conf;
 
@@ -81,7 +99,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     public ConstantValueColumnFilterNodeModel() {
         super(1, 1);
-        m_conf = ConstantValueColumnFilter.createDCSFilterConfiguration();
+        m_conf = createDCSFilterConfiguration();
     }
 
     /**
@@ -115,7 +133,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        DataColumnSpecFilterConfiguration conf = ConstantValueColumnFilter.createDCSFilterConfiguration();
+        DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
         conf.loadConfigurationInModel(settings);
     }
 
@@ -160,5 +178,14 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
         columnRearranger.remove(toRemove);
         BufferedDataTable outputTable = exec.createColumnRearrangeTable(inputTable, columnRearranger, exec);
         return new BufferedDataTable[]{outputTable};
+    }
+
+    /**
+     * A method to generate a new configuration to store the settings.
+     *
+     * @return the new configuration
+     */
+    public static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
+        return new DataColumnSpecFilterConfiguration(SELECTED_COLS);
     }
 }

@@ -60,28 +60,12 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
  *
  * @author Marc Bux, KNIME AG, Zurich, Switzerland
  */
 public class ConstantValueColumnFilter {
-
-    /**
-     * The name of the settings tag which holds the names of the columns the user has selected in the dialog as
-     * to-be-filtered
-     */
-    public static final String SELECTED_COLS = "filter-list";
-
-    /**
-     * A method to generate a new configuration to store the settings.
-     *
-     * @return the new configuration
-     */
-    public static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
-        return new DataColumnSpecFilterConfiguration(SELECTED_COLS);
-    }
 
     /**
      * A method that, from a selection of columns, determines the columns that contain only the same (duplicate /

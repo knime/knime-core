@@ -50,19 +50,28 @@ package org.knime.base.node.preproc.filter.constvalcol;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.LinkedList;
+import java.util.List;
 
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
+import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * The dialog for the constant value column filter. The user can specify which columns should be checked for containing
@@ -72,6 +81,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
  * @since 3.6
  */
 public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsPane {
+
+    private final List<DialogComponent> m_additionalComponents;
 
     /**
      * The title of the list of columns that is selected to be considered for filtering
@@ -116,7 +127,10 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
      * Creates a new {@link DefaultNodeSettingsPane} for the column filter in order to set the desired columns.
      */
     public ConstantValueColumnFilterNodeDialogPane() {
-        SettingsModelColumnFilter2 settings = new SettingsModelColumnFilter2(ConstantValueColumnFilter.SELECTED_COLS);
+        m_additionalComponents = new LinkedList<>();
+
+        SettingsModelColumnFilter2 settings =
+            new SettingsModelColumnFilter2(ConstantValueColumnFilterNodeModel.SELECTED_COLS);
         DialogComponentColumnFilter2 dialog = new DialogComponentColumnFilter2(settings, 0);
         dialog.setIncludeTitle(INCLUDE_LIST_TITLE);
         dialog.setExcludeTitle(EXCLUDE_LIST_TITLE);
@@ -127,67 +141,92 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
         innerPanel.setBorder(new TitledBorder(FILTER_OPTIONS_TITLE));
 
         GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
+        c.fill = GridBagConstraints.NONE;
         c.anchor = GridBagConstraints.NORTHWEST;
-        c.insets = new Insets(5, 5, 0, 0);
 
         c.gridx = 0;
         c.gridy = 0;
         c.gridwidth = 2;
-        JCheckBox allBox = new JCheckBox(FILTER_OPTIONS_ALL_LABEL);
-        allBox.setToolTipText(FILTER_OPTIONS_ALL_TOOLTIP);
-        innerPanel.add(allBox, c);
+        SettingsModelBoolean settingsAll =
+            new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_ALL, false);
+        DialogComponentBoolean dialogAll = new DialogComponentBoolean(settingsAll, FILTER_OPTIONS_ALL_LABEL);
+        dialogAll.setToolTipText(FILTER_OPTIONS_ALL_TOOLTIP);
+        innerPanel.add(dialogAll.getComponentPanel(), c);
+        m_additionalComponents.add(dialogAll);
 
         c.gridx = 0;
         c.gridy = 1;
         c.gridwidth = 1;
-        JCheckBox numericBox = new JCheckBox(FILTER_OPTIONS_NUMERIC_LABEL);
-        numericBox.setToolTipText(FILTER_OPTIONS_NUMERIC_TOOLTIP);
-        innerPanel.add(numericBox, c);
+        SettingsModelBoolean settingsNumeric =
+            new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_NUMERIC, false);
+        DialogComponentBoolean dialogNumeric =
+            new DialogComponentBoolean(settingsNumeric, FILTER_OPTIONS_NUMERIC_LABEL);
+        dialogNumeric.setToolTipText(FILTER_OPTIONS_NUMERIC_TOOLTIP);
+        innerPanel.add(dialogNumeric.getComponentPanel(), c);
+        m_additionalComponents.add(dialogNumeric);
 
         c.gridx = 1;
         c.gridy = 1;
         c.gridwidth = 1;
-        JTextField textField = new JTextField(13);
-        innerPanel.add(textField, c);
+        SettingsModelNumber settingsNumericValue =
+            new SettingsModelDouble(ConstantValueColumnFilterNodeModel.FILTER_NUMERIC_VALUE, 0);
+        DialogComponentNumberEdit dialogNumericValue = new DialogComponentNumberEdit(settingsNumericValue, "");
+        dialogNumericValue.setToolTipText(FILTER_OPTIONS_NUMERIC_TOOLTIP);
+        innerPanel.add(dialogNumericValue.getComponentPanel(), c);
+        m_additionalComponents.add(dialogNumericValue);
 
         c.gridx = 0;
         c.gridy = 2;
-        c.gridwidth = 2;
-        JCheckBox stringBox = new JCheckBox(FILTER_OPTIONS_STRING_LABEL);
-        stringBox.setToolTipText(FILTER_OPTIONS_STRING_TOOLTIP);
-        innerPanel.add(stringBox, c);
+        c.gridwidth = 1;
+        SettingsModelBoolean settingsString =
+            new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_STRING, false);
+        DialogComponentBoolean dialogString = new DialogComponentBoolean(settingsString, FILTER_OPTIONS_STRING_LABEL);
+        dialogString.setToolTipText(FILTER_OPTIONS_STRING_TOOLTIP);
+        innerPanel.add(dialogString.getComponentPanel(), c);
+        m_additionalComponents.add(dialogString);
 
         c.gridx = 1;
         c.gridy = 2;
         c.gridwidth = 1;
-        JTextField text2 = new JTextField(13);
-        innerPanel.add(text2, c);
+        SettingsModelString settingsStringValue =
+            new SettingsModelString(ConstantValueColumnFilterNodeModel.FILTER_STRING_VALUE, "");
+        DialogComponentString dialogStringValue = new DialogComponentString(settingsStringValue, "");
+        dialogStringValue.setToolTipText(FILTER_OPTIONS_STRING_TOOLTIP);
+        innerPanel.add(dialogStringValue.getComponentPanel(), c);
+        m_additionalComponents.add(dialogStringValue);
 
         c.gridx = 0;
         c.gridy = 3;
         c.gridwidth = 2;
-        JCheckBox missingBox = new JCheckBox(FILTER_OPTIONS_MISSING_LABEL);
-        missingBox.setToolTipText(FILTER_OPTIONS_MISSING_TOOLTIP);
-        innerPanel.add(missingBox, c);
+        SettingsModelBoolean settingsMissing =
+            new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_MISSING, false);
+        DialogComponentBoolean dialogMissing =
+            new DialogComponentBoolean(settingsMissing, FILTER_OPTIONS_MISSING_LABEL);
+        dialogMissing.setToolTipText(FILTER_OPTIONS_MISSING_TOOLTIP);
+        innerPanel.add(dialogMissing.getComponentPanel(), c);
+        m_additionalComponents.add(dialogMissing);
 
-        allBox.addActionListener(new ActionListener() {
+        settingsAll.addChangeListener(new ChangeListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
-                if (allBox.isSelected()) {
-                    numericBox.setEnabled(false);
-                    stringBox.setEnabled(false);
-                    missingBox.setEnabled(false);
+            public void stateChanged(final ChangeEvent e) {
+                if (settingsAll.getBooleanValue()) {
+                    settingsNumeric.setEnabled(false);
+                    settingsNumericValue.setEnabled(false);
+                    settingsString.setEnabled(false);
+                    settingsStringValue.setEnabled(false);
+                    settingsMissing.setEnabled(false);
                 } else {
-                    numericBox.setEnabled(true);
-                    stringBox.setEnabled(true);
-                    missingBox.setEnabled(true);
+                    settingsNumeric.setEnabled(true);
+                    settingsNumericValue.setEnabled(true);
+                    settingsString.setEnabled(true);
+                    settingsStringValue.setEnabled(true);
+                    settingsMissing.setEnabled(true);
                 }
+
             }
         });
 
         JPanel outerPanel = new JPanel(new GridBagLayout());
-
         c.gridx = 0;
         c.gridy = 0;
         c.gridwidth = 1;
@@ -201,6 +240,16 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
 
         addTabAt(0, FILTER_OPTIONS_TAG, outerPanel);
         selectTab(FILTER_OPTIONS_TAG);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveAdditionalSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        for (DialogComponent comp : m_additionalComponents) {
+            comp.saveSettingsTo(settings);
+        }
     }
 
 }
