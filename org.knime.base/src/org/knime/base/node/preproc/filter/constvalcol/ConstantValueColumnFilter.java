@@ -75,16 +75,6 @@ public class ConstantValueColumnFilter {
     public static final String SELECTED_COLS = "filter-list";
 
     /**
-     * The title of the list of columns that is selected to be considered for filtering
-     */
-    public static final String INCLUDE_LIST_TITLE = "Filter";
-
-    /**
-     * The title of the list of columns that is selected to be passed through
-     */
-    public static final String EXCLUDE_LIST_TITLE = "Pass Through";
-
-    /**
      * A method to generate a new configuration to store the settings.
      *
      * @return the new configuration
