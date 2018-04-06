@@ -87,6 +87,7 @@ import org.knime.core.node.util.CheckUtils;
 public class AccuracyScorerCalculator {
     private String[] m_targetValues;                        //Names of classifications
     private int[][] m_confusionMatrix;
+    private double[][] m_confusionMatrixWithRates;           //confusion matrix with rates of correct predictions for each row and column
     private List<String>[][] m_keyStore;                    //Keys are stored as strings values
     private List<ValueStats> m_valueStats;
     private double m_accuracy;
@@ -216,6 +217,26 @@ public class AccuracyScorerCalculator {
         }
         m_confusionMatrix = scorerCount;
         m_rowsNumber = numberOfRows;
+        m_confusionMatrixWithRates = new double[values.length+1][values.length+1];
+        for (int i = 0; i < m_confusionMatrix.length; i++) {
+            for (int j = 0; j < m_confusionMatrix[i].length; j++) {
+                m_confusionMatrixWithRates[i][j] = m_confusionMatrix[i][j];
+            }
+        }
+        for (int i = 0; i < m_confusionMatrixWithRates.length-1; i++) {
+            double rowSum = 0;
+            for (int j = 0; j < m_confusionMatrixWithRates[i].length-1; j++) {
+                rowSum += m_confusionMatrixWithRates[i][j];
+            }
+            m_confusionMatrixWithRates[i][m_confusionMatrixWithRates.length-1] = m_confusionMatrixWithRates[i][i] / rowSum;
+        }
+        for (int i = 0; i < m_confusionMatrixWithRates.length-1; i++) {
+            double columnSum = 0;
+            for (int j = 0; j < m_confusionMatrixWithRates.length-1; j++) {
+                columnSum += m_confusionMatrixWithRates[j][i];
+            }
+            m_confusionMatrixWithRates[m_confusionMatrixWithRates.length-1][i] = m_confusionMatrixWithRates[i][i] / columnSum;
+        }
 
         // determining the target values
         HashSet<String> valuesAsStringSet = new HashSet<String>();
@@ -535,6 +556,10 @@ public class AccuracyScorerCalculator {
 
     public int[][] getConfusionMatrix() {
         return m_confusionMatrix;
+    }
+
+    public double[][] getConfusionMatrixWithRates() {
+        return m_confusionMatrixWithRates;
     }
 
     public List<String>[][] getKeyStore() {
