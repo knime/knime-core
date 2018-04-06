@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   03.10.2006 (Fabian Dill): created
  */
@@ -77,18 +77,18 @@ import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
  * Creates the scatter matrix elements as rectangles with a x and y coordinates,
- * passes these 
- * {@link org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixElement}s 
- * to the 
- * {@link 
+ * passes these
+ * {@link org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixElement}s
+ * to the
+ * {@link
  * org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixDrawingPane}.
- * The x and y axis of the plotter axes are nominal with the column names as 
+ * The x and y axis of the plotter axes are nominal with the column names as
  * values.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class ScatterMatrixPlotter extends ScatterPlotter {
-    
+
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            ScatterMatrixPlotter.class);
 
@@ -99,39 +99,40 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
     public static final int DOT_SIZE = 2;
 
     private static final int DEFAULT_NR_COLS = 3;
-    
+
     /** The space at left and right in %. */
     private static final double V_MARGIN_FACTOR = 0.08;
-    
+
     /** The space at top and bottom in %. */
     private static final double H_MARGIN_FACTOR = 0.13;
-    
+
 
     private Set<String> m_selectedColumns;
-    
+
     private List<Coordinate> m_coordinates;
-    
+
     private int m_matrixElementWidth;
-    
+
     private int m_hMargin;
-    
+
     private int m_vMargin;
-    
+
 
     /**
-     * 
-     * 
+     *
+     *
      */
     public ScatterMatrixPlotter() {
         super(new ScatterMatrixDrawingPane(), new ScatterMatrixProperties());
         /* ------------- listener ------------ */
         // colunm selection
-        final ColumnFilterPanel colFilter = 
+        final ColumnFilterPanel colFilter =
         ((ScatterMatrixProperties)getProperties()).getColumnFilter();
             colFilter.addChangeListener(new ChangeListener() {
                 /**
                  * {@inheritDoc}
                  */
+                @Override
                 public void stateChanged(final ChangeEvent e) {
                     m_selectedColumns = colFilter.getIncludedColumnSet();
                     updatePaintModel();
@@ -144,13 +145,14 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                         /**
                          * {@inheritDoc}
                          */
+                        @Override
                         public void stateChanged(final ChangeEvent e) {
                             setDotSize(
                                ((ScatterMatrixProperties)getProperties())
                                .getDotSize());
                             updatePaintModel();
                         }
-                        
+
                     });
             // jitter
             ((ScatterMatrixProperties)getProperties()).getJitterSlider()
@@ -164,7 +166,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                          */
                         @Override
                         public void mouseReleased(final MouseEvent e) {
-                            int jitter = 
+                            int jitter =
                                 ((ScatterMatrixProperties)getProperties())
                                     .getJitterSlider().getValue();
                             setJitterRate(jitter / 10);
@@ -176,10 +178,10 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
             addMouseListener(new TransformationMouseListener());
     }
 
-    
+
     /**
      * Resets the selected columns.
-     * 
+     *
      * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#reset()
      */
     @Override
@@ -189,23 +191,23 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
     }
 
     /**
-     * Creates the nominal coordinates with the selected column names, 
-     * calculates the surrounding rectangle for the scatter matrix elements, 
-     * then maps the points to the screen coordinates, associates the 
-     * {@link org.knime.base.node.viz.plotter.scatter.DotInfo}s with the 
+     * Creates the nominal coordinates with the selected column names,
+     * calculates the surrounding rectangle for the scatter matrix elements,
+     * then maps the points to the screen coordinates, associates the
+     * {@link org.knime.base.node.viz.plotter.scatter.DotInfo}s with the
      * referring
-     * {@link 
+     * {@link
      * org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixElement}
-     * and passes them to the 
-     * {@link 
+     * and passes them to the
+     * {@link
      * org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixDrawingPane}.
-     * The {@link 
+     * The {@link
      * org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixDrawingPane}
-     * then extracts the dots from the 
+     * then extracts the dots from the
      *{@link org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixElement}
-     * and stores them in a 
+     * and stores them in a
      * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}.
-     * 
+     *
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
      */
     @Override
@@ -220,12 +222,12 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                 || getDataProvider().getDataArray(getDataArrayIdx()) == null) {
             return;
         }
-        
+
         DataArray data = getDataProvider().getDataArray(getDataArrayIdx());
         // get the first columns
         if (m_selectedColumns == null) {
             m_selectedColumns = new LinkedHashSet<String>();
-            for (int i = 0; i < DEFAULT_NR_COLS 
+            for (int i = 0; i < DEFAULT_NR_COLS
                 && i < data.getDataTableSpec().getNumColumns(); i++) {
                 // add them to selected columns
                 String colName = data.getDataTableSpec().getColumnSpec(i)
@@ -265,7 +267,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                 selectedColumnCells);
         Collections.reverse(reverseList);
         createNominalYCoordinate(new LinkedHashSet<DataCell>(reverseList));
-        
+
         m_hMargin = (int)(getDrawingPaneDimension().height * H_MARGIN_FACTOR);
         m_vMargin = (int)(getDrawingPaneDimension().width * V_MARGIN_FACTOR);
         ((ScatterMatrixDrawingPane)getDrawingPane()).setHorizontalMargin(
@@ -278,13 +280,13 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
 
         int nrOfColumns = selectedColumnCells.size();
         // and update the properties
-        int width = (getDrawingPaneDimension().width 
+        int width = (getDrawingPaneDimension().width
                 - (nrOfColumns * GAP) - (2 * m_vMargin)) / nrOfColumns;
         m_matrixElementWidth = width;
-        int height = (getDrawingPaneDimension().height 
+        int height = (getDrawingPaneDimension().height
                 - (nrOfColumns * GAP) - (2 * m_hMargin)) / nrOfColumns;
         int rowNr = 0;
-        ScatterMatrixElement[][] matrixElements 
+        ScatterMatrixElement[][] matrixElements
             = new ScatterMatrixElement[nrOfColumns][nrOfColumns];
         for (DataRow row : data) {
             for (int i = 0; i < nrOfColumns; i++) {
@@ -300,7 +302,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                     ScatterMatrixElement matrixElement = matrixElements[i][j];
                     if (matrixElement == null) {
                         matrixElement = new ScatterMatrixElement(
-                                new Point(xOffset, yOffset), width, 
+                                new Point(xOffset, yOffset), width,
                                 height, xCoordinate, yCoordinate);
                         matrixElements[i][j] = matrixElement;
                     }
@@ -320,7 +322,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                     boolean hilite = delegateIsHiLit(row.getKey());
                     if (!hilite && isHideMode()) {
                         continue;
-                    } 
+                    }
                     if (isHideMode() && hilite) {
                         hilite = false;
                     }
@@ -344,21 +346,25 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                 matrixElements);
         getDrawingPane().repaint();
     }
-    
+
     private void jitter(final ScatterMatrixElement[][] matrixElements) {
         for (int i = 0; i < matrixElements.length; i++) {
             for (int j = 0; j < matrixElements[i].length; j++) {
                 ScatterMatrixElement element = matrixElements[i][j];
-            	// matrix element might be null (if no rows available) since 
+            	// matrix element might be null (if no rows available) since
             	// the array is initialized with column length
             	if (element == null) {
             		continue;
-            	}                
+            	}
+            	// xCoordinate or yCoordinate might be null if constant string column with missing values
+            	if (element.getXCoordinate() == null || element.getYCoordinate() == null) {
+            	    continue;
+            	}
                 Coordinate xCoordinate = element.getXCoordinate();
                 Coordinate yCoordinate = element.getYCoordinate();
                 if ((xCoordinate.isNominal() || yCoordinate.isNominal())) {
                     // for jittering only 90% of the available space are used
-                    // to avoid that the dots of different nominal values 
+                    // to avoid that the dots of different nominal values
                     // touches each other
                     int width = element.getWidth();
                     int height = element.getHeight();
@@ -386,22 +392,22 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
 //        super.updateSize();
         updatePaintModel();
     }
-    
+
     /**
      * Mouse listener for changing the column position.
-     * 
+     *
      * @author Fabian Dill, University of Konstanz
      */
     public class TransformationMouseListener extends PlotterMouseListener {
-        
+
         private String m_selectedColumn;
-        
+
         private boolean m_dragged = false;
-        
+
         private final Cursor m_hand = new Cursor(Cursor.HAND_CURSOR);
-        
+
         private final Cursor m_default = Cursor.getDefaultCursor();
-        
+
         /**
          * {@inheritDoc}
          */
@@ -459,7 +465,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
             m_dragged = false;
             getDrawingPane().setCursor(m_default);
         }
-        
+
     }
 
 
