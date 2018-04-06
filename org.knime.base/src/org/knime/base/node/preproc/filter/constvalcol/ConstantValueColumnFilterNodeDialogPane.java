@@ -70,7 +70,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
-import org.knime.core.node.defaultnodesettings.SettingsModelNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -82,20 +81,24 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsPane {
 
+    /**
+     * Additional {@link org.knime.core.node.defaultnodesettings.DialogComponent}s that, due to having an unconventional
+     * layout, have to be saved to the settings file manually via {@link #saveAdditionalSettingsTo(NodeSettingsWO)}.
+     */
     private final List<DialogComponent> m_additionalComponents;
 
     /**
-     * The title of the list of columns that is selected to be considered for filtering
+     * The title of the list of columns that is selected to be considered for filtering.
      */
     private static final String INCLUDE_LIST_TITLE = "Filter";
 
     /**
-     * The title of the list of columns that is selected to be passed through
+     * The title of the list of columns that is selected to be passed through.
      */
     private static final String EXCLUDE_LIST_TITLE = "Pass Through";
 
     /**
-     * The title of the list of columns that is selected to be passed through
+     * The tooltip of the column selection panel.
      */
     private static final String INEXCLUDE_LIST_TOOLTIP =
         "Select which columns to consider for filtering and which columns to pass through.";
@@ -129,8 +132,7 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
     public ConstantValueColumnFilterNodeDialogPane() {
         m_additionalComponents = new LinkedList<>();
 
-        SettingsModelColumnFilter2 settings =
-            new SettingsModelColumnFilter2(ConstantValueColumnFilterNodeModel.SELECTED_COLS);
+        SettingsModelColumnFilter2 settings = new SettingsModelColumnFilter2(ConstantValueColumnFilterNodeModel.SELECTED_COLS);
         DialogComponentColumnFilter2 dialog = new DialogComponentColumnFilter2(settings, 0);
         dialog.setIncludeTitle(INCLUDE_LIST_TITLE);
         dialog.setExcludeTitle(EXCLUDE_LIST_TITLE);
@@ -168,7 +170,7 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
         c.gridx = 1;
         c.gridy = 1;
         c.gridwidth = 1;
-        SettingsModelNumber settingsNumericValue =
+        SettingsModelDouble settingsNumericValue =
             new SettingsModelDouble(ConstantValueColumnFilterNodeModel.FILTER_NUMERIC_VALUE, 0);
         DialogComponentNumberEdit dialogNumericValue = new DialogComponentNumberEdit(settingsNumericValue, "");
         dialogNumericValue.setToolTipText(FILTER_OPTIONS_NUMERIC_TOOLTIP);

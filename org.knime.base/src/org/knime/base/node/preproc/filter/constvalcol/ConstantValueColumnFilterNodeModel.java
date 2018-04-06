@@ -50,9 +50,24 @@ package org.knime.base.node.preproc.filter.constvalcol;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.MissingCell;
+import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -61,6 +76,9 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
@@ -92,14 +110,25 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     public static final String FILTER_MISSING = "filter-missing";
 
     // the to-be-assembled configuration of a column filtering
-    private final DataColumnSpecFilterConfiguration m_conf;
+    private final DataColumnSpecFilterConfiguration m_conf = new DataColumnSpecFilterConfiguration(SELECTED_COLS);
+
+    private final SettingsModelBoolean m_filterAll = new SettingsModelBoolean(FILTER_ALL, false);
+
+    private final SettingsModelBoolean m_filterNumeric = new SettingsModelBoolean(FILTER_NUMERIC, false);
+
+    private final SettingsModelDouble m_filterNumericValue = new SettingsModelDouble(FILTER_NUMERIC_VALUE, 0);
+
+    private final SettingsModelBoolean m_filterString = new SettingsModelBoolean(FILTER_STRING, false);
+
+    private final SettingsModelString m_filterStringValue = new SettingsModelString(FILTER_STRING_VALUE, "");
+
+    private final SettingsModelBoolean m_filterMissing = new SettingsModelBoolean(FILTER_MISSING, false);
 
     /**
      * Creates a new constant value column filter model with one and input and one output.
      */
     public ConstantValueColumnFilterNodeModel() {
         super(1, 1);
-        m_conf = createDCSFilterConfiguration();
     }
 
     /**
@@ -126,6 +155,12 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_conf.saveConfiguration(settings);
+        m_filterAll.saveSettingsTo(settings);
+        m_filterNumeric.saveSettingsTo(settings);
+        m_filterNumericValue.saveSettingsTo(settings);
+        m_filterString.saveSettingsTo(settings);
+        m_filterStringValue.saveSettingsTo(settings);
+        m_filterMissing.saveSettingsTo(settings);
     }
 
     /**
@@ -133,8 +168,21 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
+        DataColumnSpecFilterConfiguration conf = new DataColumnSpecFilterConfiguration(SELECTED_COLS);
+        SettingsModelBoolean filterAll = new SettingsModelBoolean(FILTER_ALL, false);
+        SettingsModelBoolean filterNumeric = new SettingsModelBoolean(FILTER_NUMERIC, false);
+        SettingsModelDouble filterNumericValue = new SettingsModelDouble(FILTER_NUMERIC_VALUE, 0);
+        SettingsModelBoolean filterString = new SettingsModelBoolean(FILTER_STRING, false);
+        SettingsModelString filterStringValue = new SettingsModelString(FILTER_STRING_VALUE, "");
+        SettingsModelBoolean filterMissing = new SettingsModelBoolean(FILTER_MISSING, false);
+
         conf.loadConfigurationInModel(settings);
+        filterAll.loadSettingsFrom(settings);
+        filterNumeric.loadSettingsFrom(settings);
+        filterNumericValue.loadSettingsFrom(settings);
+        filterString.loadSettingsFrom(settings);
+        filterStringValue.loadSettingsFrom(settings);
+        filterMissing.loadSettingsFrom(settings);
     }
 
     /**
@@ -143,6 +191,12 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_conf.loadConfigurationInModel(settings);
+        m_filterAll.loadSettingsFrom(settings);
+        m_filterNumeric.loadSettingsFrom(settings);
+        m_filterNumericValue.loadSettingsFrom(settings);
+        m_filterString.loadSettingsFrom(settings);
+        m_filterStringValue.loadSettingsFrom(settings);
+        m_filterMissing.loadSettingsFrom(settings);
     }
 
     /**
@@ -173,7 +227,9 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
         DataTableSpec inputTableSpec = inputTable.getDataTableSpec();
         FilterResult filterResult = m_conf.applyTo(inputTableSpec);
         String[] toFilter = filterResult.getIncludes();
-        String[] toRemove = ConstantValueColumnFilter.determineConstantValueColumns(inputTable, toFilter);
+
+        String[] toRemove = determineConstantValueColumns(inputTable, toFilter);
+
         ColumnRearranger columnRearranger = new ColumnRearranger(inputTableSpec);
         columnRearranger.remove(toRemove);
         BufferedDataTable outputTable = exec.createColumnRearrangeTable(inputTable, columnRearranger, exec);
@@ -181,11 +237,81 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     }
 
     /**
-     * A method to generate a new configuration to store the settings.
+     * A method that, from a selection of columns, determines the columns that contain only the same (duplicate /
+     * constant) value over and over.
      *
-     * @return the new configuration
+     * @param inputTable the input table that is to be investigated for columns with constant values
+     * @param colNamesToFilter the names of columns that potentially contain constant values only
+     * @return the names of columns that provably contain constant values only
      */
-    public static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
-        return new DataColumnSpecFilterConfiguration(SELECTED_COLS);
+    private String[] determineConstantValueColumns(final BufferedDataTable inputTable,
+        final String[] colNamesToFilter) {
+        if (inputTable.size() < 1) {
+            return new String[0];
+        }
+
+        boolean all = m_filterAll.getBooleanValue();
+        // a HashSet should be appropriate here, since the hashCode() method is implemented for all of the DataCells utilized below
+        Set<DataCell> specifiedCells = new HashSet<>();
+        if (!all) {
+            if (m_filterNumeric.getBooleanValue()) {
+                double d = m_filterNumericValue.getDoubleValue();
+                specifiedCells.add(new DoubleCell(d));
+                if (d == (int)d) {
+                    specifiedCells.add(new IntCell((int)d));
+                }
+                if (d == (long)d) {
+                    specifiedCells.add(new LongCell((long)d));
+                }
+            }
+
+            if (m_filterString.getBooleanValue()) {
+                specifiedCells.add(new StringCell(m_filterStringValue.getStringValue()));
+            }
+
+            if (m_filterMissing.getBooleanValue()) {
+                specifiedCells.add(new MissingCell("missing cell to compare against"));
+            }
+        }
+
+        Set<String> colNamesToFilterSet = new HashSet<>(Arrays.asList(colNamesToFilter));
+        String[] colNames = inputTable.getDataTableSpec().getColumnNames();
+
+        // firstRow can't be null, since inputTable.size() >= 1
+
+        // a map that maps the indices of columns that potentially contain only duplicate values to their last observed value
+        Map<Integer, DataCell> indicesToCells = new HashMap<>();
+        for (int i = 0; i < colNames.length; i++) {
+            if (colNamesToFilterSet.contains(colNames[i])) {
+                indicesToCells.put(i, null);
+            }
+        }
+
+        /**
+         * across all columns, check if there are two (vertically) successive cells with different values (this method
+         * has a low memory footprint and operates in linear runtime)
+         */
+        RowIterator rowIt = inputTable.iterator();
+        while (rowIt.hasNext()) {
+            DataRow currentRow = rowIt.next();
+            for (Iterator<Entry<Integer, DataCell>> entryIt = indicesToCells.entrySet().iterator(); entryIt
+                .hasNext();) {
+                Entry<Integer, DataCell> e = entryIt.next();
+
+                // currentCell and lastCell can't be null
+                DataCell currentCell = currentRow.getCell(e.getKey());
+                DataCell lastCell = e.getValue();
+                // if successive cells with different values are found, this column is not constant and should be removed from the indicesToCells map
+                if ((!all && !specifiedCells.contains(currentCell)) || (lastCell != null && !currentCell.equals(lastCell))) {
+                    entryIt.remove();
+                }
+                e.setValue(currentCell);
+            }
+        }
+
+        // obtain the names of to-be-filtered columns from the indicesToCells map
+        String[] colNamesToRemove = indicesToCells.keySet().stream().map(i -> colNames[i]).toArray(String[]::new);
+
+        return colNamesToRemove;
     }
 }
