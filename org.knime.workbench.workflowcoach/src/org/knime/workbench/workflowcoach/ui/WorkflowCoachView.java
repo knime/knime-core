@@ -65,6 +65,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -133,6 +134,19 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         FrameworkUtil.getBundle(CommunityTripleProvider.class).getSymbolicName());
 
     private static final String NO_WORKFLOW_OPENED_MESSAGE = "No workflow opened.";
+
+    private static final String NO_RECOMMENDATIONS_AVAILABLE_MESSAGE = "No node recommendations available."
+        + (Platform.getOS().equals(Platform.OS_MACOSX) ? " " : "\n") + "Click here to configure ...";
+
+    private static final String NO_DATA_REPORTING_MESSAGE =
+        "Node recommendations only available with usage data reporting."
+            + (Platform.getOS().equals(Platform.OS_MACOSX) ? " " : "\n") + "Click here to configure ...";
+
+    private static final String NATIVE_NODE_ONLY_MESSAGE_PREFIX = "Workflow coach only supports native nodes, so far."
+        + (Platform.getOS().equals(Platform.OS_MACOSX) ? " " : "\n") + "But the selected one is of type '";
+
+    private static final String LOADING_MESSAGE = "Loading recommendations...";
+
     private static final int DEFAULT_FIRST_COLUMN_WIDTH = 200;
     private static final int DEFAULT_OTHER_COLUMNS_WIDTH = 100;
 
@@ -265,7 +279,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                     return Status.CANCEL_STATUS;
                 } else {
                     // check for update if necessary
-                    updateInput("Loading recommendations...");
+                    updateInput(LOADING_MESSAGE);
                     checkForStatisticUpdates();
                 }
                 m_loadState.set(LoadState.Initizalized);
@@ -354,7 +368,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 }
 
                 m_loadState.set(LoadState.LoadingNodes);
-                updateInput("Loading recommendations ...");
+                updateInput(LOADING_MESSAGE);
 
                 //try updating the triple provider that are enabled and require an update
                 updateTripleProviders(e -> {
@@ -399,8 +413,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             if (nodeSelected) {
                 NodeContainerUI uinc = ((NodeContainerEditPart)sel).getNodeContainer();
                 if (!Wrapper.wraps(uinc, NodeContainer.class)) {
-                    updateInput("Worklfow coach only supports native nodes, so far.\nBut the selected one is of type '"
-                        + uinc.getClass().getSimpleName() + "'.");
+                    updateInput(NATIVE_NODE_ONLY_MESSAGE_PREFIX + uinc.getClass().getSimpleName() + "'.");
                     return;
                 } else {
                     nc = Wrapper.unwrapNC(uinc);
@@ -656,10 +669,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         Display.getDefault().syncExec(() -> {
             if (KNIMECorePlugin.getDefault().getPreferenceStore()
                 .getBoolean(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS)) {
-                m_viewer.setInput("No node recommendations available.\nClick here to configure ...");
+                m_viewer.setInput(NO_RECOMMENDATIONS_AVAILABLE_MESSAGE);
             } else {
-                m_viewer.setInput(
-                    "Node recommendations only available with usage data reporting.\nClick here to configure ...");
+                m_viewer.setInput(NO_DATA_REPORTING_MESSAGE);
             }
         });
     }
