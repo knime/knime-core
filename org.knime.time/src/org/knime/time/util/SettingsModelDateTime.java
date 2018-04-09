@@ -275,7 +275,6 @@ public final class SettingsModelDateTime extends SettingsModel {
             sameValue = (m_time == null);
         } else {
             sameValue = localTime.equals(m_time);
-            m_useMillis = localTime.getNano() > 0;
         }
         m_time = localTime;
 
