@@ -97,31 +97,69 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     public static final String SELECTED_COLS = "filter-list";
 
+    /**
+     * The name of the settings tag for the option to filter all constant value columns.
+     */
     public static final String FILTER_ALL = "filter-all";
 
+    /**
+     * The name of the settings tag for the option to filter columns with a specific constant numeric value.
+     */
     public static final String FILTER_NUMERIC = "filter-numeric";
 
+    /**
+     * The name of the settings tag that holds the specific numeric value that is to be looked for in filtering.
+     */
     public static final String FILTER_NUMERIC_VALUE = "filter-numeric-value";
 
+    /**
+     * The name of the settings tag for the option to filter columns with a specific constant String value.
+     */
     public static final String FILTER_STRING = "filter-string";
 
+    /**
+     * The name of the settings tag that holds the specific String value that is to be looked for in filtering.
+     */
     public static final String FILTER_STRING_VALUE = "filter-string-value";
 
+    /**
+     * The name of the settings tag for the option to filter columns containing only missing values.
+     */
     public static final String FILTER_MISSING = "filter-missing";
 
-    // the to-be-assembled configuration of a column filtering
+    /**
+     * The configuration of the list of columns to include in / exclude from the filtering.
+     */
     private final DataColumnSpecFilterConfiguration m_conf = new DataColumnSpecFilterConfiguration(SELECTED_COLS);
 
+    /**
+     * The settings model for the option to filter all constant value columns.
+     */
     private final SettingsModelBoolean m_filterAll = new SettingsModelBoolean(FILTER_ALL, false);
 
+    /**
+     * The settings model for the option to filter columns with a specific constant numeric value.
+     */
     private final SettingsModelBoolean m_filterNumeric = new SettingsModelBoolean(FILTER_NUMERIC, false);
 
+    /**
+     * The settings model for the specific numeric value that is to be looked for in filtering.
+     */
     private final SettingsModelDouble m_filterNumericValue = new SettingsModelDouble(FILTER_NUMERIC_VALUE, 0);
 
+    /**
+     * The settings model for the option to filter columns with a specific constant String value.
+     */
     private final SettingsModelBoolean m_filterString = new SettingsModelBoolean(FILTER_STRING, false);
 
+    /**
+     * The settings model for the specific String value that is to be looked for in filtering.
+     */
     private final SettingsModelString m_filterStringValue = new SettingsModelString(FILTER_STRING_VALUE, "");
 
+    /**
+     * The settings model for the option to filter columns containing only missing values.
+     */
     private final SettingsModelBoolean m_filterMissing = new SettingsModelBoolean(FILTER_MISSING, false);
 
     /**
@@ -137,7 +175,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // no internal state to load
+        // No internal state to load.
     }
 
     /**
@@ -146,7 +184,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // no internal state to save
+        // No internal state to save.
     }
 
     /**
@@ -204,7 +242,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // no internal state to reset
+        // No internal state to reset.
     }
 
     /**
@@ -212,8 +250,8 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        // The columns containing only constant values cannot be determined without looking at the data contained within the table.
-        // Hence, the DataTableSpec cannot be determined before execution onset.
+        // The columns containing only constant values cannot be determined without looking at the data contained within
+        // the table. Hence, the DataTableSpec cannot be determined before execution onset.
         return null;
     }
 
@@ -246,12 +284,15 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     private String[] determineConstantValueColumns(final BufferedDataTable inputTable,
         final String[] colNamesToFilter) {
+        // If the table contains no data and, thus, columns contain no values, there are no constant value columns.
         if (inputTable.size() < 1) {
             return new String[0];
         }
 
+        // Read configuration and determine whether to filter all constant value columns or only columns with a specific
+        // constant value. To store such specific constant values for later use, a HashSet should be appropriate, since
+        // the hashCode() method is implemented for DataCells containing numeric, String, and missing values.
         boolean all = m_filterAll.getBooleanValue();
-        // a HashSet should be appropriate here, since the hashCode() method is implemented for all of the DataCells utilized below
         Set<DataCell> specifiedCells = new HashSet<>();
         if (!all) {
             if (m_filterNumeric.getBooleanValue()) {
@@ -274,43 +315,47 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
             }
         }
 
+        // Assemble a map of filter candidates that maps the indices of columns that potentially contain only duplicate
+        // values to their last observed value.
         Set<String> colNamesToFilterSet = new HashSet<>(Arrays.asList(colNamesToFilter));
-        String[] colNames = inputTable.getDataTableSpec().getColumnNames();
-
-        // firstRow can't be null, since inputTable.size() >= 1
-
-        // a map that maps the indices of columns that potentially contain only duplicate values to their last observed value
-        Map<Integer, DataCell> indicesToCells = new HashMap<>();
-        for (int i = 0; i < colNames.length; i++) {
-            if (colNamesToFilterSet.contains(colNames[i])) {
-                indicesToCells.put(i, null);
+        String[] allColNames = inputTable.getDataTableSpec().getColumnNames();
+        Map<Integer, DataCell> filterColsLastObsVals = new HashMap<>();
+        for (int i = 0; i < allColNames.length; i++) {
+            if (colNamesToFilterSet.contains(allColNames[i])) {
+                // We have not observed any values yet, so the last observed value is null.
+                filterColsLastObsVals.put(i, null);
             }
         }
 
-        /**
-         * across all columns, check if there are two (vertically) successive cells with different values (this method
-         * has a low memory footprint and operates in linear runtime)
-         */
-        RowIterator rowIt = inputTable.iterator();
-        while (rowIt.hasNext()) {
+        // Across all filter candidates, check if there are two (vertically) successive cells with different values.
+        // When found, this column is not constant and, thus, should be removed from the filter candidates. This method
+        // has a low memory footprint and operates in linear runtime. When the option to filter only constant columns
+        // with specific values is selected, columns should also be removed when they are found to contain a value
+        // other than any of the specified values.
+        for (RowIterator rowIt = inputTable.iterator(); rowIt.hasNext();) {
             DataRow currentRow = rowIt.next();
-            for (Iterator<Entry<Integer, DataCell>> entryIt = indicesToCells.entrySet().iterator(); entryIt
+            for (Iterator<Entry<Integer, DataCell>> entryIt = filterColsLastObsVals.entrySet().iterator(); entryIt
                 .hasNext();) {
-                Entry<Integer, DataCell> e = entryIt.next();
+                Entry<Integer, DataCell> filterColsLastObsVal = entryIt.next();
+                // currentCell can't be null; lastCell can be null (in the first row).
+                DataCell currentCell = currentRow.getCell(filterColsLastObsVal.getKey());
+                DataCell lastCell = filterColsLastObsVal.getValue();
 
-                // currentCell and lastCell can't be null
-                DataCell currentCell = currentRow.getCell(e.getKey());
-                DataCell lastCell = e.getValue();
-                // if successive cells with different values are found, this column is not constant and should be removed from the indicesToCells map
-                if ((!all && !specifiedCells.contains(currentCell)) || (lastCell != null && !currentCell.equals(lastCell))) {
+                // Columns are removed from the filter candidates, when
+                // (a) the currentCell has a value other than the specified / allowed values or
+                // (b) it differs from the last observed cell in this column (i.e., this column is not constant).
+                if ((!all && !specifiedCells.contains(currentCell))
+                    || (lastCell != null && !currentCell.equals(lastCell))) {
                     entryIt.remove();
                 }
-                e.setValue(currentCell);
+
+                filterColsLastObsVal.setValue(currentCell);
             }
         }
 
-        // obtain the names of to-be-filtered columns from the indicesToCells map
-        String[] colNamesToRemove = indicesToCells.keySet().stream().map(i -> colNames[i]).toArray(String[]::new);
+        // Obtain the names of to-be-filtered columns from the filter candidates map
+        String[] colNamesToRemove =
+            filterColsLastObsVals.keySet().stream().map(i -> allColNames[i]).toArray(String[]::new);
 
         return colNamesToRemove;
     }
