@@ -52,8 +52,6 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.lang.reflect.Field;
@@ -288,9 +286,7 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
         m_zoneComboBox.addActionListener(e -> {
             model.setZone(ZoneId.of((String)m_zoneComboBox.getSelectedItem()));
         });
-        model.addChangeListener(e -> {
-            updateComponent();
-        });
+        model.addChangeListener(e -> updateComponent());
         m_editor.getTextField().addFocusListener(new FocusAdapter() {
             /**
              * {@inheritDoc}
@@ -327,6 +323,14 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
      */
     private void updateSpinnerFormat() {
         final JFormattedTextField field = (JFormattedTextField)m_editor.getComponent(0);
+        if (field.getText().equals("")) {
+            if (m_useMillis) {
+                field.setText("00:00:00.000");
+            } else {
+                field.setText("00:00:00");
+            }
+            updateModel();
+        }
         try {
             DateTimeFormatter.ofPattern(TIME_FORMAT_WITH_MS).parse(field.getText());
             if (!m_useMillis) {
@@ -406,7 +410,6 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
         model.setUseDate(m_dateCheckbox.isSelected());
         model.setUseTime(m_timeCheckbox.isSelected());
         model.setUseZone(m_zoneCheckbox.isSelected());
-
     }
 
     /**
@@ -578,24 +581,14 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
         @Override
         protected Component createNextButton() {
             final JButton btnUp = (JButton)super.createNextButton();
-            btnUp.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent ae) {
-                    updateSpinnerFormat();
-                }
-            });
+            btnUp.addActionListener(e -> updateSpinnerFormat());
             return btnUp;
         }
 
         @Override
         protected Component createPreviousButton() {
             final JButton btnDown = (JButton)super.createPreviousButton();
-            btnDown.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent ae) {
-                    updateSpinnerFormat();
-                }
-            });
+            btnDown.addActionListener(e -> updateSpinnerFormat());
             return btnDown;
         }
     }
