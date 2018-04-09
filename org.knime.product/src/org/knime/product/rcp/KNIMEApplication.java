@@ -51,6 +51,7 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -329,8 +330,15 @@ public class KNIMEApplication implements IApplication {
         do {
             // don't use the parent shell to make the dialog a top-level
             // shell. See bug 84881.
-            new ChooseWorkspaceDialog(null, launchData, false, true)
-                    .prompt(force);
+            // workaround for AP-8607
+            final ChooseWorkspaceDialog chooseWS = new ChooseWorkspaceDialog(null, launchData, false, true) {
+                @Override
+                protected void configureShell(final Shell shell) {
+                    super.configureShell(shell);
+                    shell.setText("KNIME Analytics Platform Launcher");
+                }
+            };
+            chooseWS.prompt(force);
             String instancePath = launchData.getSelection();
             if (instancePath == null) {
                 return null;
