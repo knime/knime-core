@@ -51,8 +51,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.JTable;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.ListSelectionModel;
 
 /**
  * The swing action to delete the selected columns of the spreadsheet.
@@ -71,14 +70,9 @@ class DeleteColumnsAction extends AbstractAction {
     DeleteColumnsAction(final JTable table) {
         super("Delete Columns");
         m_table = table;
-        m_table.getColumnModel().getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-           @Override
-        public void valueChanged(final ListSelectionEvent e) {
-               setEnabled(!m_table.getColumnModel().getSelectionModel()
-                       .isSelectionEmpty());
-           }
-        });
+        setEnabled(false);
+        ListSelectionModel selectionModel = m_table.getColumnModel().getSelectionModel();
+        selectionModel.addListSelectionListener(e -> setEnabled(!selectionModel.isSelectionEmpty()));
     }
 
 

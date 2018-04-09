@@ -55,8 +55,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Stroke;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -64,7 +62,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -90,8 +87,8 @@ import org.knime.base.node.io.filereader.ColProperty;
 import org.knime.core.data.ConfigurableDataCellFactory;
 import org.knime.core.data.DataCellFactory;
 import org.knime.core.data.DataCellFactory.FromSimpleString;
-import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.util.ViewUtils;
 
@@ -482,26 +479,21 @@ class SpreadsheetTable extends JTable {
 
             JMenu changeType = new JMenu("Change Type");
 
-            Iterator<DataType> it = DataTypeRegistry.getInstance().availableDataTypes().stream()
+            DataTypeRegistry.getInstance().availableDataTypes().stream()
                     .filter(d -> {
                             DataCellFactory f = d.getCellFactory(null).orElse(null);
                             return (f instanceof FromSimpleString) && !(f instanceof ConfigurableDataCellFactory);
                     })
                     .sorted((a, b) -> a.getName().compareTo(b.getName()))
-                    .iterator();
-
-            while (it.hasNext()) {
-                DataType type = it.next();
-
-                JMenuItem item = new JMenuItem(type.getName());
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(final ActionEvent e) {
-                        changeSelectedColumnsType(type);
-                    }
+                    .forEach(type -> {
+                        JMenuItem item = new JMenuItem(type.getName());
+                        item.addActionListener(e -> changeSelectedColumnsType(type));
+                        changeType.add(item);
                 });
-                changeType.add(item);
-            }
+
+            changeType.setEnabled(false);
+            final ListSelectionModel selectionModel = m_table.getColumnModel().getSelectionModel();
+            selectionModel.addListSelectionListener(x -> changeType.setEnabled(!selectionModel.isSelectionEmpty()));
 
             m_popup = new JPopupMenu();
             m_popup.add(new PropertyColumnsAction(m_table));

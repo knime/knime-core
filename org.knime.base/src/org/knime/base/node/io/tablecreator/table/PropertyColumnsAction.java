@@ -58,8 +58,6 @@ import javax.swing.AbstractAction;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import org.knime.base.node.io.filereader.ColProperty;
 import org.knime.base.node.io.filereader.ColPropertyDialog;
@@ -84,19 +82,13 @@ class PropertyColumnsAction extends AbstractAction {
     PropertyColumnsAction(final JTable table) {
         super("Column Properties...");
         m_table = table;
-        m_table.getColumnModel().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-
-            @Override
-            public void valueChanged(final ListSelectionEvent e) {
-                ListSelectionModel sel =
-                    m_table.getColumnModel().getSelectionModel();
-                setEnabled(!sel.isSelectionEmpty()
-                        && sel.getMinSelectionIndex()
-                            == sel.getMaxSelectionIndex());
-            }
+        setEnabled(false);
+        ListSelectionModel selectionModel = m_table.getColumnModel().getSelectionModel();
+        selectionModel.addListSelectionListener(e -> {
+            ListSelectionModel sel = selectionModel;
+            setEnabled(!sel.isSelectionEmpty() && sel.getMinSelectionIndex() == sel.getMaxSelectionIndex());
         });
     }
-
 
 
     /**
