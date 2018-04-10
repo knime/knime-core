@@ -468,7 +468,7 @@ final class LogisticRegressionContent {
     public BufferedDataTable createCoeffStatisticsTablePortObject(
             final ExecutionContext exec) {
 
-        DataTableSpec tableOutSpec = LogRegCoordinator.createCoeffStatisticsTableSpec(m_covMat != null);
+        DataTableSpec tableOutSpec = LogRegCoordinator.createCoeffStatisticsTableSpec(m_calcCoefficientStatistics);
         BufferedDataContainer dc = exec.createDataContainer(tableOutSpec);
         List<DataCell> logits = this.getLogits();
         List<String> parameters = this.getParameters();
