@@ -388,8 +388,10 @@ public final class ProjectWorkflowMap {
             Wrapper.unwrapWFMOptional(manager).ifPresent(wm -> NodeContext.pushContext(wm));
             try {
                 PROJECTS.remove(p);
-                WF_LISTENER.workflowChanged(
-                    new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED, manager.getID(), Wrapper.unwrapWFM(manager), null));
+                if (Wrapper.wraps(manager, WorkflowManager.class)) {
+                    WF_LISTENER.workflowChanged(new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED, manager.getID(),
+                        Wrapper.unwrapWFM(manager), null));
+                }
                 manager.removeListener(WF_LISTENER);
                 manager.removeNodeStateChangeListener(NSC_LISTENER);
                 manager.removeNodeMessageListener(MSG_LISTENER);
@@ -400,26 +402,32 @@ public final class ProjectWorkflowMap {
                     // at least we have tried it
                     LOGGER.error("Could not cancel workflow manager for workflow " + p, t);
                 } finally {
-                    if (manager.getNodeContainerState().isExecutionInProgress()) {
-                        ThreadUtils.threadWithContext(() -> {
-                            final int timeout = 20;
-                            LOGGER.debugWithFormat("Workflow still in execution after canceling it - "
-                                + "waiting %d seconds max....", timeout);
-                            try {
-                                manager.waitWhileInExecution(timeout, TimeUnit.SECONDS);
-                            } catch (InterruptedException ie) {
-                                LOGGER.fatal("interrupting thread that no one has access to", ie);
-                            }
-                            if (manager.getNodeContainerState().isExecutionInProgress()) {
-                                LOGGER.errorWithFormat("Workflow did not react on cancel within %d seconds, giving up",
+                    // So far this only needs to be done for locally executed workflows,
+                    // i.e. those represented by an ordinary WorkflowManager.
+                    // For all other WorkflowManagerUI implementations this is not done.
+                    if (Wrapper.wraps(manager, WorkflowManager.class)) {
+                        if (manager.getNodeContainerState().isExecutionInProgress()) {
+                            ThreadUtils.threadWithContext(() -> {
+                                final int timeout = 20;
+                                LOGGER.debugWithFormat(
+                                    "Workflow still in execution after canceling it - " + "waiting %d seconds max....",
                                     timeout);
-                            } else {
-                                LOGGER.debug("Workflow now canceled - will remove from parent");
-                            }
+                                try {
+                                    manager.waitWhileInExecution(timeout, TimeUnit.SECONDS);
+                                } catch (InterruptedException ie) {
+                                    LOGGER.fatal("interrupting thread that no one has access to", ie);
+                                }
+                                if (manager.getNodeContainerState().isExecutionInProgress()) {
+                                    LOGGER.errorWithFormat(
+                                        "Workflow did not react on cancel within %d seconds, giving up", timeout);
+                                } else {
+                                    LOGGER.debug("Workflow now canceled - will remove from parent");
+                                }
+                                WorkflowManager.ROOT.removeProject(manager.getID());
+                            }, "Removal workflow - " + manager.getNameWithID()).start();
+                        } else {
                             WorkflowManager.ROOT.removeProject(manager.getID());
-                        }, "Removal workflow - " + manager.getNameWithID()).start();
-                    } else {
-                        WorkflowManager.ROOT.removeProject(manager.getID());
+                        }
                     }
                 }
             } finally {
