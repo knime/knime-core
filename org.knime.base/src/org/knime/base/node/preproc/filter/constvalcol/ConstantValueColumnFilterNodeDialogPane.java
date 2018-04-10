@@ -50,8 +50,6 @@ package org.knime.base.node.preproc.filter.constvalcol;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -59,10 +57,12 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
@@ -80,13 +80,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @since 3.6
  */
 public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsPane {
-
-    /**
-     * Additional {@link org.knime.core.node.defaultnodesettings.DialogComponent}s that, due to having an unconventional
-     * layout, have to be saved to the settings file manually via {@link #saveAdditionalSettingsTo(NodeSettingsWO)}.
-     */
-    private final List<DialogComponent> m_additionalComponents;
-
     /**
      * The title of the list of columns that is selected to be considered for filtering.
      */
@@ -157,11 +150,39 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
     private static final String FILTER_OPTIONS_MISSING_TOOLTIP = "Filter columns containing only missing values.";
 
     /**
+     * The dialog component for the option to filter all constant value columns.
+     */
+    private DialogComponentBoolean m_dialogAll;
+
+    /**
+     * The dialog component for the option to filter columns with a specific constant numeric value.
+     */
+    private DialogComponentBoolean m_dialogNumeric;
+
+    /**
+     * The dialog component for the specific numeric value that is to be looked for in filtering.
+     */
+    private DialogComponentNumberEdit m_dialogNumericValue;
+
+    /**
+     * The dialog component for the option to filter columns with a specific constant String value.
+     */
+    private DialogComponentBoolean m_dialogString;
+
+    /**
+     * The dialog component for the specific String value that is to be looked for in filtering.
+     */
+    private DialogComponentString m_dialogStringValue;
+
+    /**
+     * The dialog component for the option to filter columns containing only missing values.
+     */
+    private DialogComponentBoolean m_dialogMissing;
+
+    /**
      * Creates a new {@link DefaultNodeSettingsPane} for the column filter in order to set the desired columns.
      */
     public ConstantValueColumnFilterNodeDialogPane() {
-        m_additionalComponents = new LinkedList<>();
-
         addInExcludeListDialogComponent();
         addFilterOptionsDialogComponent();
     }
@@ -198,63 +219,55 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
         c.gridy = 0;
         c.gridwidth = 2;
         SettingsModelBoolean settingsAll =
-            new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_ALL, true);
-        DialogComponentBoolean dialogAll = new DialogComponentBoolean(settingsAll, FILTER_OPTIONS_ALL_LABEL);
-        dialogAll.setToolTipText(FILTER_OPTIONS_ALL_TOOLTIP);
-        innerPanel.add(dialogAll.getComponentPanel(), c);
-        m_additionalComponents.add(dialogAll);
+            new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_ALL, false);
+        m_dialogAll = new DialogComponentBoolean(settingsAll, FILTER_OPTIONS_ALL_LABEL);
+        m_dialogAll.setToolTipText(FILTER_OPTIONS_ALL_TOOLTIP);
+        innerPanel.add(m_dialogAll.getComponentPanel(), c);
 
         c.gridx = 0;
         c.gridy = 1;
         c.gridwidth = 1;
         SettingsModelBoolean settingsNumeric =
             new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_NUMERIC, false);
-        DialogComponentBoolean dialogNumeric =
-            new DialogComponentBoolean(settingsNumeric, FILTER_OPTIONS_NUMERIC_LABEL);
-        dialogNumeric.setToolTipText(FILTER_OPTIONS_NUMERIC_TOOLTIP);
-        innerPanel.add(dialogNumeric.getComponentPanel(), c);
-        m_additionalComponents.add(dialogNumeric);
+        m_dialogNumeric = new DialogComponentBoolean(settingsNumeric, FILTER_OPTIONS_NUMERIC_LABEL);
+        m_dialogNumeric.setToolTipText(FILTER_OPTIONS_NUMERIC_TOOLTIP);
+        innerPanel.add(m_dialogNumeric.getComponentPanel(), c);
 
         c.gridx = 1;
         c.gridy = 1;
         c.gridwidth = 1;
         SettingsModelDouble settingsNumericValue =
             new SettingsModelDouble(ConstantValueColumnFilterNodeModel.FILTER_NUMERIC_VALUE, 0);
-        DialogComponentNumberEdit dialogNumericValue = new DialogComponentNumberEdit(settingsNumericValue, "");
-        dialogNumericValue.setToolTipText(FILTER_OPTIONS_NUMERIC_TOOLTIP);
-        innerPanel.add(dialogNumericValue.getComponentPanel(), c);
-        m_additionalComponents.add(dialogNumericValue);
+        m_dialogNumericValue = new DialogComponentNumberEdit(settingsNumericValue, "");
+        m_dialogNumericValue.setToolTipText(FILTER_OPTIONS_NUMERIC_TOOLTIP);
+        innerPanel.add(m_dialogNumericValue.getComponentPanel(), c);
 
         c.gridx = 0;
         c.gridy = 2;
         c.gridwidth = 1;
         SettingsModelBoolean settingsString =
             new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_STRING, false);
-        DialogComponentBoolean dialogString = new DialogComponentBoolean(settingsString, FILTER_OPTIONS_STRING_LABEL);
-        dialogString.setToolTipText(FILTER_OPTIONS_STRING_TOOLTIP);
-        innerPanel.add(dialogString.getComponentPanel(), c);
-        m_additionalComponents.add(dialogString);
+        m_dialogString = new DialogComponentBoolean(settingsString, FILTER_OPTIONS_STRING_LABEL);
+        m_dialogString.setToolTipText(FILTER_OPTIONS_STRING_TOOLTIP);
+        innerPanel.add(m_dialogString.getComponentPanel(), c);
 
         c.gridx = 1;
         c.gridy = 2;
         c.gridwidth = 1;
         SettingsModelString settingsStringValue =
             new SettingsModelString(ConstantValueColumnFilterNodeModel.FILTER_STRING_VALUE, "");
-        DialogComponentString dialogStringValue = new DialogComponentString(settingsStringValue, "");
-        dialogStringValue.setToolTipText(FILTER_OPTIONS_STRING_TOOLTIP);
-        innerPanel.add(dialogStringValue.getComponentPanel(), c);
-        m_additionalComponents.add(dialogStringValue);
+        m_dialogStringValue = new DialogComponentString(settingsStringValue, "");
+        m_dialogStringValue.setToolTipText(FILTER_OPTIONS_STRING_TOOLTIP);
+        innerPanel.add(m_dialogStringValue.getComponentPanel(), c);
 
         c.gridx = 0;
         c.gridy = 3;
         c.gridwidth = 2;
         SettingsModelBoolean settingsMissing =
             new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_MISSING, false);
-        DialogComponentBoolean dialogMissing =
-            new DialogComponentBoolean(settingsMissing, FILTER_OPTIONS_MISSING_LABEL);
-        dialogMissing.setToolTipText(FILTER_OPTIONS_MISSING_TOOLTIP);
-        innerPanel.add(dialogMissing.getComponentPanel(), c);
-        m_additionalComponents.add(dialogMissing);
+        m_dialogMissing = new DialogComponentBoolean(settingsMissing, FILTER_OPTIONS_MISSING_LABEL);
+        m_dialogMissing.setToolTipText(FILTER_OPTIONS_MISSING_TOOLTIP);
+        innerPanel.add(m_dialogMissing.getComponentPanel(), c);
 
         // If all columns are to be filtered, specific column filtering is disabled.
         settingsAll.addChangeListener(new ChangeListener() {
@@ -266,6 +279,9 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
                     settingsString.setEnabled(false);
                     settingsStringValue.setEnabled(false);
                     settingsMissing.setEnabled(false);
+                    settingsNumeric.setBooleanValue(false);
+                    settingsString.setBooleanValue(false);
+                    settingsMissing.setBooleanValue(false);
                 } else {
                     settingsNumeric.setEnabled(true);
                     settingsNumericValue.setEnabled(true);
@@ -276,6 +292,8 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
 
             }
         });
+
+        settingsAll.setBooleanValue(true);
 
         // Weights in the outer panel assure that the inner panel does not request more space than required.
         JPanel outerPanel = new JPanel(new GridBagLayout());
@@ -299,11 +317,50 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
      */
     @Override
     public void saveAdditionalSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        for (DialogComponent comp : m_additionalComponents) {
-            comp.saveSettingsTo(settings);
-        }
+        // Additional (custom) components that have to be saved to the settings file manually.
+        m_dialogAll.saveSettingsTo(settings);
+        m_dialogNumeric.saveSettingsTo(settings);
+        m_dialogNumericValue.saveSettingsTo(settings);
+        m_dialogString.saveSettingsTo(settings);
+        m_dialogStringValue.saveSettingsTo(settings);
+        m_dialogMissing.saveSettingsTo(settings);
     }
 
-    // TODO: Open Question: do settings also have to be loaded even if they are never modified by the Node Model?
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        throws NotConfigurableException {
+        try {
+            m_dialogAll.getModel().loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            System.err
+                .println("Settings for option" + FILTER_OPTIONS_TITLE + " " + FILTER_OPTIONS_ALL_LABEL + "invalid");
+        }
+
+        try {
+            m_dialogNumeric.getModel().loadSettingsFrom(settings);
+            m_dialogNumericValue.getModel().loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            System.err
+                .println("Settings for option" + FILTER_OPTIONS_TITLE + " " + FILTER_OPTIONS_NUMERIC_LABEL + "invalid");
+        }
+
+        try {
+            m_dialogString.getModel().loadSettingsFrom(settings);
+            m_dialogStringValue.getModel().loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            System.err
+                .println("Settings for option" + FILTER_OPTIONS_TITLE + " " + FILTER_OPTIONS_STRING_LABEL + "invalid");
+        }
+
+        try {
+            m_dialogMissing.getModel().loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            System.err
+                .println("Settings for option" + FILTER_OPTIONS_TITLE + " " + FILTER_OPTIONS_MISSING_LABEL + "invalid");
+        }
+    }
 
 }

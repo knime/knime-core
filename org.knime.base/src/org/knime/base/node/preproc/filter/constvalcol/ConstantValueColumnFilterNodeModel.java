@@ -90,7 +90,6 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  * @since 3.6
  */
 public class ConstantValueColumnFilterNodeModel extends NodeModel {
-
     /**
      * The name of the settings tag which holds the names of the columns the user has selected in the dialog as
      * to-be-filtered
@@ -285,7 +284,11 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     private String[] determineConstantValueColumns(final BufferedDataTable inputTable,
         final String[] colNamesToFilter) {
         // If the table contains no data and, thus, columns contain no values, there are no constant value columns.
+        if (inputTable.size() == 1) {
+            setWarningMessage("Input table has only a single row. Hence, all columns have constant values.");
+        }
         if (inputTable.size() < 1) {
+            setWarningMessage("Empty input table. Columns have no values and therefore are not constant..");
             return new String[0];
         }
 
