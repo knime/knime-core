@@ -63,7 +63,7 @@ import javax.swing.table.AbstractTableModel;
  * @since 3.6
  */
 @SuppressWarnings("serial")
-class NameFilterTableModel<E> extends AbstractTableModel implements Iterable<E>{
+public class NameFilterTableModel<E> extends AbstractTableModel implements Iterable<E>{
 
     private ArrayList<E> m_delegate = new ArrayList<E>();
 
@@ -74,7 +74,7 @@ class NameFilterTableModel<E> extends AbstractTableModel implements Iterable<E>{
      *         <code>false</code> otherwise
      * @see ArrayList#isEmpty()
      */
-    boolean isEmpty () {
+    public boolean isEmpty () {
         return m_delegate.isEmpty();
     }
 
@@ -85,7 +85,7 @@ class NameFilterTableModel<E> extends AbstractTableModel implements Iterable<E>{
      * @return <code>true</code> if the specified object is the same as a component in this list
      * @see ArrayList#contains(Object)
      */
-    boolean contains(final Object obj) {
+    public boolean contains(final Object obj) {
         return m_delegate.contains(obj);
     }
 
@@ -96,7 +96,7 @@ class NameFilterTableModel<E> extends AbstractTableModel implements Iterable<E>{
      * @return <code>true</code> if the argument was a component of this list; <code>false</code> otherwise
      * @see ArrayList#remove(Object)
      */
-    boolean remove (final Object obj) {
+    public boolean remove (final Object obj) {
         boolean rv = m_delegate.remove(obj);
         fireTableDataChanged();
         return rv;
@@ -117,7 +117,7 @@ class NameFilterTableModel<E> extends AbstractTableModel implements Iterable<E>{
     /**
      * Removes all of the elements from this list.
      */
-    void clear() {
+    public void clear() {
         int size = getSize();
         m_delegate.clear();
         if (size > 0) {
@@ -142,7 +142,7 @@ class NameFilterTableModel<E> extends AbstractTableModel implements Iterable<E>{
      * @param element the component to be added
      * @see ArrayList#add(Object)
      */
-    void add (final E element){
+    public void add (final E element){
         int index = getSize();
         m_delegate.add(element);
         fireTableRowsInserted(index, index);
@@ -167,7 +167,7 @@ class NameFilterTableModel<E> extends AbstractTableModel implements Iterable<E>{
      * @return the number of components in this list
      * @see ArrayList#size()
      */
-    int getSize(){
+    public int getSize(){
         return getRowCount();
     }
 
@@ -177,7 +177,7 @@ class NameFilterTableModel<E> extends AbstractTableModel implements Iterable<E>{
      * @param index index of element to return
      * @return the element at the specified index
      */
-    Object getElementAt(final int index) {
+    public Object getElementAt(final int index) {
         return getValueAt(index, 0);
     }
 

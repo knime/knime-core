@@ -45,49 +45,69 @@
 package org.knime.core.node.util;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
 import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
+import javax.swing.table.TableStringConverter;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.util.ListModelFilterUtils;
+import org.knime.core.node.util.filter.NameFilterPanel;
+import org.knime.core.node.util.filter.NameFilterTableModel;
 
 
 /**
@@ -112,25 +132,38 @@ public class ColumnFilterPanel extends JPanel {
     public static final String EXCLUDED_COLUMNS = "excluded_columns";
 
     /** Include list. */
-    private final JList m_inclList;
+    private final JTable m_inclTable;
 
     /** Include model. */
-    private final DefaultListModel m_inclMdl;
+    @SuppressWarnings("rawtypes")
+    private final NameFilterTableModel m_inclMdl;
+
+    /** Include sorter. */
+    @SuppressWarnings("rawtypes")
+    private final TableRowSorter<NameFilterTableModel> m_inclSorter;
+
+    /** Include cards. */
+    private final JPanel m_inclCards;
+
+    /** Include table placeholder. */
+    private final TablePlaceholder m_inclTablePlaceholder;
 
     /** Exclude list. */
-    private final JList m_exclList;
+    private final JTable m_exclTable;
 
     /** Exclude model. */
-    private final DefaultListModel m_exclMdl;
+    @SuppressWarnings("rawtypes")
+    private final NameFilterTableModel m_exclMdl;
 
-    /** Highlight all search hits in the include model. */
-    private final JCheckBox m_markAllHitsIncl;
+    /** Exclude sorter. */
+    @SuppressWarnings("rawtypes")
+    private final TableRowSorter<NameFilterTableModel> m_exclSorter;
 
-    /** Highlight all search hits in the exclude model. */
-    private final JCheckBox m_markAllHitsExcl;
+    /** Include cards. */
+    private final JPanel m_exclCards;
 
-    /** Checkbox that enabled to keep all column in include list. */
-    private final JCheckBox m_keepAllBox;
+    /** Include table placeholder. */
+    private final TablePlaceholder m_exclTablePlaceholder;
 
     /** Remove all button. */
     private final JButton m_remAllButton;
@@ -145,26 +178,288 @@ public class ColumnFilterPanel extends JPanel {
     private final JButton m_addButton;
 
     /** Search Field in include list. */
-    private final JTextField m_searchFieldIncl;
-
-    /** Search Button for include list. */
-    private final JButton m_searchButtonIncl;
+    private final JTextField m_inclSearchField;
 
     /** Search Field in exclude list. */
-    private final JTextField m_searchFieldExcl;
-
-    /** Search Button for exclude list. */
-    private final JButton m_searchButtonExcl;
-
-    /** List of DataCellColumnSpecss to keep initial ordering of DataCells. */
-    private final LinkedHashSet<DataColumnSpec> m_order =
-        new LinkedHashSet<DataColumnSpec>();
+    private final JTextField m_exclSearchField;
 
     /** Border of the include panel, keep it so we can change the title. */
     private final TitledBorder m_includeBorder;
 
     /** Border of the include panel, keep it so we can change the title. */
     private final TitledBorder m_excludeBorder;
+
+    private List<ChangeListener> m_listeners;
+
+    /** Constants for updating different parts of the UI*/
+    private static final String ID_CARDLAYOUT_PLACEHOLDER = "PLACEHOLDER";
+    private static final String ID_CARDLAYOUT_LIST = "LIST";
+
+    /** Text to be displayed in the filter as a placeholder */
+    private static final String FILTER = "Filter";
+
+    /**
+     * Placeholder being displayed instead of table when search matches no items.
+     *
+     * @author Johannes Schweig
+     */
+    private class TablePlaceholder extends JLabel{
+        final String m_entryString;
+
+        TablePlaceholder(final String entryString){
+            setHorizontalAlignment(SwingConstants.CENTER);
+            setVerticalAlignment(SwingConstants.TOP);
+            setFont(getFont().deriveFont(Font.ITALIC));
+            setForeground(Color.GRAY);
+            m_entryString = entryString;
+        }
+
+        /**
+         * Updates the label's text if there are no entries to be displayed.
+         *
+         */
+        private void updateTextEmpty(){
+            setText("No " + m_entryString + " in this list");
+        }
+
+        /**
+         * Updates the label's text if no matching entries are found.
+         * @param searchString term that was searched for
+         * @param total total number of entries in the table
+         */
+        private void updateTextNothingFound(final String searchString, final int total){
+            // empty list/table
+            String str = searchString;
+            // shorten string if too long
+            int max = 15;
+            if (str.length() > max){
+                str = str.substring(0, max) + "...";
+            }
+            setText("<html>No " + m_entryString + " found matching<br>\""+str+"\" (total: " + total + ")</html>");
+        }
+
+    }
+
+    /**
+     * MouseAdapter handling double clicks of elements in the table.
+     *
+     * @author Johannes Schweig
+     */
+    private class DoubleClickMouseAdapter extends MouseAdapter {
+        private JTable m_table;
+
+        DoubleClickMouseAdapter(final JTable table){
+            m_table = table;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mouseClicked(final MouseEvent e) {
+            // if a double click occurs on one of the rows, these rows are moved to the other table
+            if (e.getClickCount() == 2) {
+                if (m_table.equals(m_inclTable)) {
+                    onRemIt(m_inclTable.getSelectedRows());
+                }else if (m_table.equals(m_exclTable)) {
+                    onAddIt(m_exclTable.getSelectedRows());
+                }
+            }
+            e.consume();
+        }
+    }
+
+    /**
+     * KeyAdapter of a table handling key strokes.
+     *
+     * @author Johannes Schweig
+     */
+    private class TableKeyAdapter extends KeyAdapter {
+        private JTable m_table;
+
+        TableKeyAdapter(final JTable table){
+            m_table = table;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyTyped(final KeyEvent e) {
+            // find first entry starting with typed character
+            String key = String.valueOf(e.getKeyChar());
+            int index = -1;
+            for (int i = 0; i < m_table.getRowCount(); i++) {
+                String s = ((DataColumnSpec) m_table.getValueAt(i, 0)).getName();
+                if (s.toLowerCase().startsWith(key)){
+                    index = i;
+                    break;
+                }
+            }
+            // if a entry is found, select it and scroll the view
+            if (index != -1) {
+                m_table.setRowSelectionInterval(index, index);
+                m_table.scrollRectToVisible(new Rectangle(m_table.getCellRect(index, 0, true)));
+            }
+        }
+    }
+
+    /**
+     * FocusAdapter that removes focus of a table if the other table is focused.
+     *
+     * @author Johannes Schweig
+     */
+    private class TableFocusAdapter extends FocusAdapter {
+        private JTable m_table;
+
+        /**
+         * Initiates a TableFocusAdapter.
+         * @param table the table which focus is removed
+         */
+        TableFocusAdapter (final JTable table) {
+            m_table = table;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void focusGained(final FocusEvent e) {
+            // clears selection of one table if the other gains focus
+            m_table.clearSelection();
+        }
+    }
+
+    /**
+     * KeyAdapter that updates the filter in the table if a new character is typed.
+     *
+     *  @author Johannes Schweig
+     */
+    private class SearchKeyAdapter extends KeyAdapter {
+        private JTable m_table;
+        private JPanel m_cardsPanel;
+        private TablePlaceholder m_tablePlaceholder;
+        @SuppressWarnings("rawtypes")
+        private TableRowSorter<NameFilterTableModel> m_tableRowSorter;
+        private JTextField m_searchField;
+
+        /**
+         * Constructs a SearchKeyListener for a given table.
+         * @param table JTable that the search is filtering
+         * @param cardsPanel JPanel with CardLayout holding the JTable and a TablePlaceholder
+         * @param tablePlaceholder TablePlaceholder being displayed instead of the table
+         * @param tableRowSorter
+         */
+        @SuppressWarnings("rawtypes")
+        SearchKeyAdapter (final JTable table, final JPanel cardsPanel, final TablePlaceholder tablePlaceholder, final TableRowSorter<NameFilterTableModel> tableRowSorter, final JTextField searchField) {
+            m_table = table;
+            m_cardsPanel = cardsPanel;
+            m_tablePlaceholder = tablePlaceholder;
+            m_tableRowSorter = tableRowSorter;
+            m_searchField = searchField;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyReleased(final KeyEvent e) {
+            updateRowFilter(m_searchField.getText(), m_tableRowSorter);
+            updateFilterView(m_table, m_cardsPanel, m_tablePlaceholder, m_searchField.getText());
+        }
+    }
+
+    /**
+     * FocusAdapter that updates the placeholder in the textfield on focus loss and gain.
+     *
+     * @author Johannes Schweig
+     */
+    private class SearchFocusAdapter extends FocusAdapter {
+        private JTextField m_searchField;
+
+        SearchFocusAdapter (final JTextField searchField) {
+            m_searchField = searchField;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void focusGained(final FocusEvent e) {
+            updateTextFieldPlaceholder(true);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void focusLost(final FocusEvent e) {
+            updateTextFieldPlaceholder(false);
+        }
+
+        /**
+         * Shows or hides the placeholder text in the textfield
+         * @param focus true if focusGained, false if focusLost
+         */
+        private void updateTextFieldPlaceholder (final boolean focus){
+            String query = m_searchField.getText();
+            if ((query.isEmpty() || query.equals(FILTER)) && focus) { //  no text or filter text and textfield gains focus -> hide placeholder
+                m_searchField.setText("");
+                m_searchField.setForeground(Color.BLACK);
+                m_searchField.setFont(getFont().deriveFont(Font.PLAIN, 14f));
+            } else if (query.isEmpty() && !focus){ // no text and textfield looses focus -> show placeholder
+                m_searchField.setText(FILTER);
+                m_searchField.setForeground(Color.GRAY);
+                m_searchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
+            }
+        }
+
+    }
+
+    /**
+     * ActionListener that triggers the moving of entries on button press.
+     *
+     * @author Johannes Schweig
+     */
+    private class MoveAllActionListener implements ActionListener {
+        private JTable m_table;
+
+        /**
+         * Constructs a MoveAllActionListener for a table.
+         * @param table the table from which elements are moved
+         * @param tableRowSorter the TableRowSorter filtering the elements in the table
+         */
+        MoveAllActionListener (final JTable table) {
+            m_table = table;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void actionPerformed(final ActionEvent e) {
+            // if table is not filtered
+            if (m_table.equals(m_inclTable)) {
+                if(m_inclSorter.getRowFilter()==null){
+                    onRemAll();
+                }else{ //if table is filtered
+                    int[] rows = IntStream.range(0, m_table.getRowCount()).toArray();
+                    onRemIt(rows);
+                }
+            } else if (m_table.equals(m_exclTable)) {
+                if(m_exclSorter.getRowFilter()==null){
+                    onAddAll(false);
+                }else{ //if table is filtered
+                    int[] rows = IntStream.range(0, m_table.getRowCount()).toArray();
+                    onAddIt(rows);
+              }
+            }
+        }
+    }
+    /** Checkbox that enabled to keep all column in include list. */
+    private final JCheckBox m_keepAllBox;
+
+    /** List of DataCellColumnSpecss to keep initial ordering of DataCells. */
+    private final LinkedHashSet<DataColumnSpec> m_order =
+        new LinkedHashSet<DataColumnSpec>();
 
     private boolean m_showInvalidInclCols = false;
 
@@ -185,6 +480,7 @@ public class ColumnFilterPanel extends JPanel {
          * @param filterValueClasses all classes that are compatible with
          *        the type allowed in {@link #includeColumn(DataColumnSpec)}
          */
+        @SuppressWarnings("unchecked")
         public ValueClassFilter(
                 final Class<? extends DataValue>... filterValueClasses) {
             if (filterValueClasses == null || filterValueClasses.length == 0) {
@@ -226,7 +522,6 @@ public class ColumnFilterPanel extends JPanel {
     private final HashSet<DataColumnSpec> m_hideColumns =
         new HashSet<DataColumnSpec>();
 
-    private List<ChangeListener>m_listeners;
 
     /**
      * Line border for include columns.
@@ -291,6 +586,7 @@ public class ColumnFilterPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      */
+    @SuppressWarnings("unchecked")
     public ColumnFilterPanel(final boolean showKeepAllBox,
             final Class<? extends DataValue>... filterValueClasses) {
         this(showKeepAllBox, new ValueClassFilter(filterValueClasses));
@@ -311,6 +607,7 @@ public class ColumnFilterPanel extends JPanel {
      * @deprecated Use the constructor
      * {@link #ColumnFilterPanel(boolean, Class...)} instead
      */
+    @SuppressWarnings("unchecked")
     @Deprecated
     public ColumnFilterPanel(
             final Class<? extends DataValue>... filterValueClasses) {
@@ -347,6 +644,7 @@ public class ColumnFilterPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      */
+    @SuppressWarnings("rawtypes")
     public ColumnFilterPanel(final boolean showKeepAllBox,
             final ColumnFilter filter) {
         m_filter = filter;
@@ -354,165 +652,103 @@ public class ColumnFilterPanel extends JPanel {
         final JPanel buttonPan = new JPanel();
         buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
-        buttonPan.add(Box.createVerticalStrut(20));
+        buttonPan.add(Box.createVerticalStrut(57));
 
-        m_addButton = new JButton("add >>");
-        m_addButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(m_addButton);
-        m_addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent ae) {
-                onAddIt();
-            }
-        });
-        buttonPan.add(Box.createVerticalStrut(25));
 
-        m_addAllButton = new JButton("add all >>");
-        m_addAllButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(m_addAllButton);
-        m_addAllButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent ae) {
-                onAddAll(true);
-            }
-        });
-        buttonPan.add(Box.createVerticalStrut(25));
-
-        m_remButton = new JButton("<< remove");
-        m_remButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(m_remButton);
-        m_remButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent ae) {
-                onRemIt();
-            }
-        });
-        buttonPan.add(Box.createVerticalStrut(25));
-
-        m_remAllButton = new JButton("<< remove all");
-        m_remAllButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(m_remAllButton);
-        m_remAllButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent ae) {
-                onRemAll();
-            }
-        });
-        buttonPan.add(Box.createVerticalStrut(20));
-        buttonPan.add(Box.createGlue());
-
+        // JTables
+        m_inclMdl = new NameFilterTableModel();
+        m_inclTable = new JTable(m_inclMdl);
+        m_exclMdl = new NameFilterTableModel();
+        m_exclTable = new JTable(m_exclMdl);
         // include list
-        m_inclMdl = new DefaultListModel();
-        m_inclList = new JList(m_inclMdl);
-        m_inclList.setSelectionMode(
-                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        m_inclList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(final MouseEvent me) {
-                if (me.getClickCount() == 2) {
-                    onRemIt();
-                    me.consume();
-                }
-            }
-        });
-        final JScrollPane jspIncl = new JScrollPane(m_inclList);
-        jspIncl.setMinimumSize(new Dimension(150, 155));
+        // TableStringConverter
+        TableStringConverter tableStringConverter = new TableStringConverter() {
 
-        m_searchFieldIncl = new JTextField(8);
-        m_searchButtonIncl = new JButton("Search");
-        final ActionListener actionListenerIncl = new ActionListener() {
             @Override
-            public void actionPerformed(final ActionEvent e) {
-                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl,
-                        m_searchFieldIncl.getText(),
-                        m_markAllHitsIncl.isSelected());
+            public String toString(final TableModel model, final int row, final int column) {
+                DataColumnSpec t = (DataColumnSpec)model.getValueAt(row, column);
+                return t.getName();
             }
         };
-        m_searchFieldIncl.addActionListener(actionListenerIncl);
-        m_searchButtonIncl.addActionListener(actionListenerIncl);
-        final JPanel inclSearchPanel = new JPanel(new BorderLayout());
-        inclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
-        inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        inclSearchPanel.add(m_searchFieldIncl, BorderLayout.CENTER);
-        inclSearchPanel.add(m_searchButtonIncl, BorderLayout.EAST);
-        m_markAllHitsIncl = new JCheckBox("Select all search hits");
-        final ActionListener actionListenerAllIncl = new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                m_inclList.clearSelection();
-                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl,
-                        m_searchFieldIncl.getText(),
-                        m_markAllHitsIncl.isSelected());
-            }
-        };
-        m_markAllHitsIncl.addActionListener(actionListenerAllIncl);
-        inclSearchPanel.add(m_markAllHitsIncl, BorderLayout.PAGE_END);
-        final JPanel includePanel = new JPanel(new BorderLayout());
-        m_includeBorder = BorderFactory.createTitledBorder(
-                INCLUDE_BORDER, " Include ");
+        // include list
+        m_inclTable.setShowGrid(false);
+        m_inclTable.setFillsViewportHeight(true);
+        m_inclTable.setTableHeader(null);
+        m_inclTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_inclTable.setDefaultRenderer(Object.class, getTableCellRenderer());
+        m_inclTable.addMouseListener(new DoubleClickMouseAdapter(m_inclTable));
+        m_inclTable.addKeyListener(new TableKeyAdapter(m_inclTable));
+        m_inclSorter = new TableRowSorter<NameFilterTableModel>(m_inclMdl);
+        m_inclSorter.setStringConverter(tableStringConverter);
+        m_inclTable.setRowSorter(m_inclSorter);
+        m_inclTable.addFocusListener(new TableFocusAdapter(m_exclTable));
+        final JScrollPane jspIncl = new JScrollPane(m_inclTable);
+        jspIncl.setPreferredSize(new Dimension(250, 100));
+        // setup cardlayout for display of placeholder on search returning no results
+        m_inclCards = new JPanel(new CardLayout());
+        m_inclCards.setBorder(new EmptyBorder(0, 8, 0, 8));
+        m_inclTablePlaceholder = new TablePlaceholder("columns");
+        m_inclCards.add(jspIncl, ID_CARDLAYOUT_LIST);
+        m_inclCards.add(m_inclTablePlaceholder, ID_CARDLAYOUT_PLACEHOLDER);
+
+        m_inclSearchField = new JTextField(FILTER, 8);
+        m_inclSearchField.setForeground(Color.GRAY);
+        m_inclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
+        m_inclSearchField.addKeyListener(new SearchKeyAdapter(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSorter, m_inclSearchField));
+        m_inclSearchField.addFocusListener(new SearchFocusAdapter(m_inclSearchField));
+        JPanel inclSearchPanel = new JPanel(new BorderLayout(8, 0));
+        inclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
+        inclSearchPanel.add(m_inclSearchField, BorderLayout.CENTER);
+        // filter icon
+        inclSearchPanel.add(new JLabel(new ImageIcon(getResourceUrl("filter.png"))), BorderLayout.WEST);
+
+        JPanel includePanel = new JPanel(new BorderLayout());
+        m_includeBorder = BorderFactory.createTitledBorder(INCLUDE_BORDER, " Include ");
         includePanel.setBorder(m_includeBorder);
         includePanel.add(inclSearchPanel, BorderLayout.NORTH);
-        includePanel.add(jspIncl, BorderLayout.CENTER);
+        includePanel.add(m_inclCards, BorderLayout.CENTER);
 
         // exclude list
-        m_exclMdl = new DefaultListModel();
-        m_exclList = new JList(m_exclMdl);
-        m_exclList.setSelectionMode(
-                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        m_exclList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(final MouseEvent me) {
-                if (me.getClickCount() == 2) {
-                    onAddIt();
-                    me.consume();
-                }
-            }
-        });
-        setListCellRenderer(new DataColumnSpecListCellRenderer());
-        final JScrollPane jspExcl = new JScrollPane(m_exclList);
-        jspExcl.setMinimumSize(new Dimension(150, 155));
+        m_exclTable.setShowGrid(false);
+        m_exclTable.setFillsViewportHeight(true);
+        m_exclTable.setTableHeader(null);
+        m_exclTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_exclTable.addMouseListener(new DoubleClickMouseAdapter(m_exclTable));
+        m_exclTable.addKeyListener(new TableKeyAdapter(m_exclTable));
+        // set renderer for items in the in- and exclude list
+        m_inclTable.setDefaultRenderer(Object.class, getTableCellRenderer());
+        m_exclTable.setDefaultRenderer(Object.class, getTableCellRenderer());
+        m_exclSorter = new TableRowSorter<NameFilterTableModel>(m_exclMdl);
+        m_exclSorter.setStringConverter(tableStringConverter);
+        m_exclTable.setRowSorter(m_exclSorter);
+        m_exclTable.addFocusListener(new TableFocusAdapter(m_inclTable));
+        final JScrollPane jspExcl = new JScrollPane(m_exclTable);
+        jspExcl.setPreferredSize(new Dimension(250, 100));
+        // setup cardlayout for display of placeholder on search returning no results
+        m_exclCards = new JPanel(new CardLayout());
+        m_exclCards.setBorder(new EmptyBorder(0, 8, 0, 8));
+        m_exclTablePlaceholder = new TablePlaceholder("columns");
+        m_exclCards.add(jspExcl, ID_CARDLAYOUT_LIST);
+        m_exclCards.add(m_exclTablePlaceholder, ID_CARDLAYOUT_PLACEHOLDER);
 
-        m_searchFieldExcl = new JTextField(8);
-        m_searchButtonExcl = new JButton("Search");
-        final ActionListener actionListenerExcl = new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl,
-                        m_searchFieldExcl.getText(),
-                        m_markAllHitsExcl.isSelected());
-            }
-        };
-        m_searchFieldExcl.addActionListener(actionListenerExcl);
-        m_searchButtonExcl.addActionListener(actionListenerExcl);
-        final JPanel exclSearchPanel = new JPanel(new BorderLayout());
-        exclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15,
-                15));
-        exclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
-        exclSearchPanel.add(m_searchFieldExcl, BorderLayout.CENTER);
-        exclSearchPanel.add(m_searchButtonExcl, BorderLayout.EAST);
-        m_markAllHitsExcl = new JCheckBox("Select all search hits");
-        final ActionListener actionListenerAllExcl = new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                m_exclList.clearSelection();
-                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl,
-                        m_searchFieldExcl.getText(),
-                        m_markAllHitsExcl.isSelected());
-            }
-        };
-        m_markAllHitsExcl.addActionListener(actionListenerAllExcl);
-        exclSearchPanel.add(m_markAllHitsExcl, BorderLayout.PAGE_END);
-        final JPanel excludePanel = new JPanel(new BorderLayout());
-        m_excludeBorder = BorderFactory.createTitledBorder(
-                EXCLUDE_BORDER, " Exclude ");
+        m_exclSearchField = new JTextField(FILTER, 8);
+        m_exclSearchField.setForeground(Color.GRAY);
+        m_exclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
+        m_exclSearchField.addKeyListener(new SearchKeyAdapter(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSorter, m_exclSearchField));
+        m_exclSearchField.addFocusListener(new SearchFocusAdapter(m_exclSearchField));
+
+
+        JPanel exclSearchPanel = new JPanel(new BorderLayout(8, 0));
+        exclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
+        exclSearchPanel.add(m_exclSearchField, BorderLayout.CENTER);
+        // filter icon
+        exclSearchPanel.add(new JLabel(new ImageIcon(getResourceUrl("filter.png"))), BorderLayout.WEST);
+
+        JPanel excludePanel = new JPanel(new BorderLayout());
+        m_excludeBorder = BorderFactory.createTitledBorder(EXCLUDE_BORDER, " Exclude ");
         excludePanel.setBorder(m_excludeBorder);
         excludePanel.add(exclSearchPanel, BorderLayout.NORTH);
-        excludePanel.add(jspExcl, BorderLayout.CENTER);
-
-        final JPanel buttonPan2 = new JPanel(new GridLayout());
-        final Border border = BorderFactory.createTitledBorder(" Select ");
-        buttonPan2.setBorder(border);
-        buttonPan2.add(buttonPan);
+        excludePanel.add(m_exclCards, BorderLayout.CENTER);
 
         // add 'keep all' checkbox
         if (showKeepAllBox) {
@@ -534,11 +770,41 @@ public class ColumnFilterPanel extends JPanel {
             m_keepAllBox = null;
         }
 
+        //buttons
+        m_addButton = new JButton(new ImageIcon(getResourceUrl("add.png")));
+        m_addButton.setMaximumSize(new Dimension(125, 25));
+        m_addButton.setToolTipText("Move the selected columns from the left to the right list.");
+        buttonPan.add(m_addButton);
+        m_addButton.addActionListener(e -> onAddIt(m_exclTable.getSelectedRows()));
+        buttonPan.add(Box.createVerticalStrut(25));
+
+        m_addAllButton = new JButton(new ImageIcon(getResourceUrl("add_all.png")));
+        m_addAllButton.setMaximumSize(new Dimension(125, 25));
+        m_addAllButton.setToolTipText("Moves all visible columns from the left to the right list.");
+        buttonPan.add(m_addAllButton);
+        m_addAllButton.addActionListener(new MoveAllActionListener(m_exclTable));
+        buttonPan.add(Box.createVerticalStrut(25));
+
+        m_remButton = new JButton(new ImageIcon(getResourceUrl("rem.png")));
+        m_remButton.setMaximumSize(new Dimension(125, 25));
+        m_remButton.setToolTipText("Move the selected columns from the right to the left list.");
+        buttonPan.add(m_remButton);
+        m_remButton.addActionListener(e -> onRemIt(m_inclTable.getSelectedRows()));
+        buttonPan.add(Box.createVerticalStrut(25));
+
+        m_remAllButton = new JButton(new ImageIcon(getResourceUrl("rem_all.png")));
+        m_remAllButton.setToolTipText("Moves all visible columns from the right to the left list.");
+        m_remAllButton.setMaximumSize(new Dimension(125, 25));
+        buttonPan.add(m_remAllButton);
+        m_remAllButton.addActionListener(new MoveAllActionListener(m_inclTable));
+        buttonPan.add(Box.createVerticalStrut(20));
+        buttonPan.add(Box.createGlue());
+
         // adds include, button, exclude component
         final JPanel center = new JPanel();
         center.setLayout(new BoxLayout(center, BoxLayout.X_AXIS));
         center.add(excludePanel);
-        center.add(buttonPan2);
+        center.add(buttonPan);
         center.add(includePanel);
         final JPanel all = new JPanel();
         all.setLayout(new BoxLayout(all, BoxLayout.Y_AXIS));
@@ -550,7 +816,7 @@ public class ColumnFilterPanel extends JPanel {
             all.add(keepAllPanel);
         }
         super.setLayout(new GridLayout(1, 1));
-        super.add(new JScrollPane(all));
+        super.add(all);
     }
 
     /**
@@ -568,18 +834,24 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     private void enabledComponents(final boolean newEnabled) {
-        m_searchFieldIncl.setEnabled(newEnabled);
-        m_searchButtonIncl.setEnabled(newEnabled);
-        m_searchFieldExcl.setEnabled(newEnabled);
-        m_searchButtonExcl.setEnabled(newEnabled);
-        m_inclList.setEnabled(newEnabled);
-        m_exclList.setEnabled(newEnabled);
-        m_markAllHitsIncl.setEnabled(newEnabled);
-        m_markAllHitsExcl.setEnabled(newEnabled);
+        m_inclSearchField.setEnabled(newEnabled);
+        m_exclSearchField.setEnabled(newEnabled);
+        m_inclTable.setEnabled(newEnabled);
+        m_exclTable.setEnabled(newEnabled);
         m_remAllButton.setEnabled(newEnabled);
         m_remButton.setEnabled(newEnabled);
         m_addAllButton.setEnabled(newEnabled);
         m_addButton.setEnabled(newEnabled);
+        // change font color of jtable to gray when disabled
+        if (newEnabled) {
+            m_inclTable.setForeground(Color.BLACK);
+            m_exclTable.setForeground(Color.BLACK);
+        } else {
+            m_inclTable.clearSelection();
+            m_exclTable.clearSelection();
+            m_inclTable.setForeground(Color.GRAY);
+            m_exclTable.setForeground(Color.GRAY);
+        }
     }
 
 
@@ -661,38 +933,44 @@ public class ColumnFilterPanel extends JPanel {
      * Called by the 'remove >>' button to exclude the selected elements from
      * the include list.
      */
-    private void onRemIt() {
+    @SuppressWarnings("unchecked")
+    private void onRemIt(final int[] rows) {
         // add all selected elements from the include to the exclude list
-        final Object[] o = m_inclList.getSelectedValues();
+        List<DataColumnSpec> o = new ArrayList<DataColumnSpec>();
+        for (int i : rows){
+            o.add((DataColumnSpec)m_inclTable.getValueAt(i, 0));
+        }
         final HashSet<Object> hash = new HashSet<Object>();
-        hash.addAll(Arrays.asList(o));
+        hash.addAll(o);
         List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
-        for (final Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
-            DataColumnSpec spec = (DataColumnSpec) e.nextElement();
+        for (Object obj : m_exclMdl) {
+            DataColumnSpec spec = (DataColumnSpec) obj;
             if (m_showInvalidInclCols && DataColumnSpecListCellRenderer.isInvalid(spec)) {
                 invalidSpecs.add(spec);
             }
             hash.add(spec);
         }
         boolean changed = false;
-        for (int i = 0; i < o.length; i++) {
-            changed |= m_inclMdl.removeElement(o[i]);
+        for (DataColumnSpec spec : o) {
+            changed |= m_inclMdl.remove(spec);
         }
-        m_exclMdl.removeAllElements();
+        m_exclMdl.clear();
         for (final DataColumnSpec c : m_order) {
             if (hash.contains(c)) {
-                m_exclMdl.addElement(c);
+                m_exclMdl.add(c);
             }
         }
         if (!invalidSpecs.isEmpty()) {
             //add all remaining invalid specs at the end of the list
             for (DataColumnSpec invalidSpec : invalidSpecs) {
-                m_exclMdl.addElement(invalidSpec);
+                m_exclMdl.add(invalidSpec);
             }
         }
         setKeepAllSelected(false);
         if (changed) {
             fireFilteringChangedEvent();
+            updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+            updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
         }
     }
 
@@ -702,71 +980,82 @@ public class ColumnFilterPanel extends JPanel {
      * Called by the 'remove >>' button to exclude all elements from the include
      * list.
      */
+    @SuppressWarnings("unchecked")
     private void onRemAll() {
-        if (m_inclMdl.elements().hasMoreElements()) {
-            //perform the operation only if the exclude model contains at least one column to add
-            final List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
-            if (m_showInvalidExclCols) {
-                for (final Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
-                    final DataColumnSpec spec = (DataColumnSpec)e.nextElement();
-                    if (DataColumnSpecListCellRenderer.isInvalid(spec)) {
-                        invalidSpecs.add(spec);
-                    }
+        boolean changed = !m_inclMdl.isEmpty();
+        //perform the operation only if the exclude model contains at least one column to add
+        final List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
+        if (m_showInvalidExclCols) {
+            for (Object obj : m_exclMdl) {
+                final DataColumnSpec spec = (DataColumnSpec) obj;
+                if (DataColumnSpecListCellRenderer.isInvalid(spec)) {
+                    invalidSpecs.add(spec);
                 }
             }
-            m_inclMdl.removeAllElements();
-            m_exclMdl.removeAllElements();
-            for (final DataColumnSpec c : m_order) {
-                if (!m_hideColumns.contains(c)) {
-                    m_exclMdl.addElement(c);
-                }
+        }
+        m_inclMdl.clear();
+        m_exclMdl.clear();
+        for (final DataColumnSpec c : m_order) {
+            if (!m_hideColumns.contains(c)) {
+                m_exclMdl.add(c);
             }
-            if (!invalidSpecs.isEmpty()) {
-                //add all invalid specs at the end of the list
-                for (DataColumnSpec invalidSpec : invalidSpecs) {
-                    m_exclMdl.addElement(invalidSpec);
-                }
+        }
+        if (!invalidSpecs.isEmpty()) {
+            //add all invalid specs at the end of the list
+            for (DataColumnSpec invalidSpec : invalidSpecs) {
+                m_exclMdl.add(invalidSpec);
             }
+        }
+        if (changed) {
             setKeepAllSelected(false);
             fireFilteringChangedEvent();
+            updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+            updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
         }
     }
 
     /**
      * Called by the '<< add' button to include the selected elements from the
      * exclude list.
+     * @param indices of rows to be added in table display order
      */
-    private void onAddIt() {
+    @SuppressWarnings("unchecked")
+    private void onAddIt(final int[] rows) {
         // add all selected elements from the exclude to the include list
-        final Object[] o = m_exclList.getSelectedValues();
+        List<DataColumnSpec> o = new ArrayList<DataColumnSpec>();
+        for (int i : rows) {
+            o.add((DataColumnSpec)m_exclTable.getValueAt(i, 0));
+        }
         final HashSet<Object> hash = new HashSet<Object>();
-        hash.addAll(Arrays.asList(o));
+        hash.addAll(o);
         List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
-        for (final Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
-            final DataColumnSpec spec = (DataColumnSpec)e.nextElement();
+        for (Object obj : m_inclMdl) {
+            final DataColumnSpec spec = (DataColumnSpec) obj;
             if (m_showInvalidInclCols && DataColumnSpecListCellRenderer.isInvalid(spec)) {
                 invalidSpecs.add(spec);
             }
             hash.add(spec);
         }
         boolean changed = false;
-        for (int i = 0; i < o.length; i++) {
-            changed |= m_exclMdl.removeElement(o[i]);
+        for (DataColumnSpec dcs : o) {
+            changed |= m_exclMdl.remove(dcs);
         }
-        m_inclMdl.removeAllElements();
+        m_inclMdl.clear();
         for (final DataColumnSpec c : m_order) {
             if (hash.contains(c)) {
-                m_inclMdl.addElement(c);
+                m_inclMdl.add(c);
             }
         }
         if (!invalidSpecs.isEmpty()) {
             //add all remaining invalid specs at the end of the list
             for (DataColumnSpec invalidSpec : invalidSpecs) {
-                m_inclMdl.addElement(invalidSpec);
+                m_inclMdl.add(invalidSpec);
             }
         }
         if (changed) {
             fireFilteringChangedEvent();
+            updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+            updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
         }
     }
 
@@ -775,32 +1064,36 @@ public class ColumnFilterPanel extends JPanel {
      * exclude list.
      * @param showInvalid <code>true</code> if the invalid columns should still be shown
      */
+    @SuppressWarnings("unchecked")
     private void onAddAll(final boolean showInvalid) {
-        if (m_exclMdl.elements().hasMoreElements() || !showInvalid) {
-            //perform the operation only if the exclude model contains at least one column to add
-            final List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
-            if (showInvalid && m_showInvalidInclCols) {
-                for (final Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
-                    final DataColumnSpec spec = (DataColumnSpec)e.nextElement();
-                    if (DataColumnSpecListCellRenderer.isInvalid(spec)) {
-                        invalidSpecs.add(spec);
-                    }
+        boolean changed = !m_exclMdl.isEmpty();
+        //perform the operation only if the exclude model contains at least one column to add
+        final List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
+        if (showInvalid && m_showInvalidInclCols) {
+            for (Object obj : m_inclMdl) {
+                final DataColumnSpec spec = (DataColumnSpec) obj;
+                if (DataColumnSpecListCellRenderer.isInvalid(spec)) {
+                    invalidSpecs.add(spec);
                 }
             }
-            m_inclMdl.removeAllElements();
-            m_exclMdl.removeAllElements();
-            for (final DataColumnSpec c : m_order) {
-                if (!m_hideColumns.contains(c)) {
-                    m_inclMdl.addElement(c);
-                }
+        }
+        m_inclMdl.clear();
+        m_exclMdl.clear();
+        for (final DataColumnSpec c : m_order) {
+            if (!m_hideColumns.contains(c)) {
+                m_inclMdl.add(c);
             }
-            if (!invalidSpecs.isEmpty()) {
-                //add all invalid specs at the end of the list
-                for (DataColumnSpec invalidSpec : invalidSpecs) {
-                    m_inclMdl.addElement(invalidSpec);
-                }
+        }
+        if (!invalidSpecs.isEmpty()) {
+            //add all invalid specs at the end of the list
+            for (DataColumnSpec invalidSpec : invalidSpecs) {
+                m_inclMdl.add(invalidSpec);
             }
+        }
+        if (changed) {
             fireFilteringChangedEvent();
+            updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+            updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
         }
     }
 
@@ -829,12 +1122,13 @@ public class ColumnFilterPanel extends JPanel {
      *            exclude otherwise include
      * @param list the list of columns to exclude or include
      */
+    @SuppressWarnings("unchecked")
     public void update(final DataTableSpec spec, final boolean exclude, final Collection<String> list) {
         assert (spec != null && list != null);
         m_spec = spec;
         m_order.clear();
-        m_inclMdl.removeAllElements();
-        m_exclMdl.removeAllElements();
+        m_inclMdl.clear();
+        m_exclMdl.clear();
         m_hideColumns.clear();
         for (int i = 0; i < spec.getNumColumns(); i++) {
             final DataColumnSpec cSpec = spec.getColumnSpec(i);
@@ -844,19 +1138,19 @@ public class ColumnFilterPanel extends JPanel {
             final String c = cSpec.getName();
             m_order.add(cSpec);
             if (isKeepAllSelected()) {
-                m_inclMdl.addElement(cSpec);
+                m_inclMdl.add(cSpec);
             } else {
                 if (exclude) {
                     if (list.contains(c)) {
-                        m_exclMdl.addElement(cSpec);
+                        m_exclMdl.add(cSpec);
                     } else {
-                        m_inclMdl.addElement(cSpec);
+                        m_inclMdl.add(cSpec);
                     }
                 } else {
                     if (list.contains(c)) {
-                        m_inclMdl.addElement(cSpec);
+                        m_inclMdl.add(cSpec);
                     } else {
-                        m_exclMdl.addElement(cSpec);
+                        m_exclMdl.add(cSpec);
                     }
                 }
             }
@@ -892,6 +1186,7 @@ public class ColumnFilterPanel extends JPanel {
      * exclude list
      * @since 2.9
      */
+    @SuppressWarnings("unchecked")
     public void update(final DataTableSpec spec, final Collection<String> inclList,
                        final Collection<String> exclList,
                        final boolean inclUnknown) {
@@ -900,8 +1195,8 @@ public class ColumnFilterPanel extends JPanel {
         m_order.clear();
         final Set<String> exclCols = new HashSet<String>(exclList);
         final Set<String> inclCols = new HashSet<String>(inclList);
-        m_inclMdl.removeAllElements();
-        m_exclMdl.removeAllElements();
+        m_inclMdl.clear();
+        m_exclMdl.clear();
         m_hideColumns.clear();
         for (int i = 0; i < spec.getNumColumns(); i++) {
             final DataColumnSpec cSpec = spec.getColumnSpec(i);
@@ -911,17 +1206,17 @@ public class ColumnFilterPanel extends JPanel {
             final String c = cSpec.getName();
             m_order.add(cSpec);
             if (isKeepAllSelected()) {
-                m_inclMdl.addElement(cSpec);
+                m_inclMdl.add(cSpec);
                 inclCols.remove(c);
             } else {
                 if (exclCols.remove(c)) {
-                    m_exclMdl.addElement(cSpec);
+                    m_exclMdl.add(cSpec);
                 } else if (inclCols.remove(c)) {
-                    m_inclMdl.addElement(cSpec);
+                    m_inclMdl.add(cSpec);
                 } else if (inclUnknown) {
-                    m_inclMdl.addElement(cSpec);
+                    m_inclMdl.add(cSpec);
                 } else {
-                    m_exclMdl.addElement(cSpec);
+                    m_exclMdl.add(cSpec);
                 }
             }
         }
@@ -930,12 +1225,13 @@ public class ColumnFilterPanel extends JPanel {
         repaint();
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static void addInvalidSpecs(final boolean showInvalidCols, final DataTableSpec spec,
-                                        final Set<String> colNames, final DefaultListModel model) {
+                                        final Set<String> colNames, final NameFilterTableModel model) {
         if (showInvalidCols && !colNames.isEmpty()) {
             for (String colName : colNames) {
                 final DataColumnSpec invalidSpec = DataColumnSpecListCellRenderer.createInvalidSpec(colName);
-                model.addElement(invalidSpec);
+                model.add(invalidSpec);
             }
         }
     }
@@ -957,7 +1253,7 @@ public class ColumnFilterPanel extends JPanel {
      * @return a set of all columns from the exclude list
      */
     public Set<String> getExcludedColumnSet() {
-        return ListModelFilterUtils.getColumnList(m_exclMdl);
+        return getColumnList(m_exclMdl, false);
     }
 
     /**
@@ -967,7 +1263,7 @@ public class ColumnFilterPanel extends JPanel {
      * @since 2.8
      */
     public Set<String> getInvalidExcludeColumnSet() {
-        return ListModelFilterUtils.getInvalidColumnList(m_exclMdl);
+        return getColumnList(m_exclMdl, true);
     }
 
     /**
@@ -987,7 +1283,7 @@ public class ColumnFilterPanel extends JPanel {
      * @return a list of all columns from the include list
      */
     public Set<String> getIncludedColumnSet() {
-        return ListModelFilterUtils.getColumnList(m_inclMdl);
+        return getColumnList(m_inclMdl, false);
     }
 
     /**
@@ -997,7 +1293,7 @@ public class ColumnFilterPanel extends JPanel {
      * @since 2.8
      */
     public Set<String> getInvalidIncludedColumnSet() {
-        return ListModelFilterUtils.getInvalidColumnList(m_inclMdl);
+        return getColumnList(m_inclMdl, true);
     }
 
     /**
@@ -1022,10 +1318,12 @@ public class ColumnFilterPanel extends JPanel {
      *
      * @param renderer the new renderer being used
      * @see JList#setCellRenderer(javax.swing.ListCellRenderer)
+     * @deprecated JLists were replaced by JTables.
      */
+    @SuppressWarnings("rawtypes")
+    @Deprecated
     protected final void setListCellRenderer(final ListCellRenderer renderer) {
-        m_inclList.setCellRenderer(renderer);
-        m_exclList.setCellRenderer(renderer);
+        //no-op
     }
 
     /**
@@ -1041,10 +1339,10 @@ public class ColumnFilterPanel extends JPanel {
         for (final DataColumnSpec column : columns) {
             if (m_inclMdl.contains(column)) {
                 m_hideColumns.add(column);
-                changed |= m_inclMdl.removeElement(column);
+                changed |= m_inclMdl.remove(column);
             } else if (m_exclMdl.contains(column)) {
                 m_hideColumns.add(column);
-                changed |= m_exclMdl.removeElement(column);
+                changed |= m_exclMdl.remove(column);
             }
         }
         if (changed) {
@@ -1055,6 +1353,7 @@ public class ColumnFilterPanel extends JPanel {
     /**
      * Re-adds all remove/hidden columns to the exclude list.
      */
+    @SuppressWarnings("unchecked")
     public final void resetHiding() {
         if (m_hideColumns.isEmpty()) {
             return;
@@ -1062,13 +1361,13 @@ public class ColumnFilterPanel extends JPanel {
         // add all selected elements from the include to the exclude list
         final HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(m_hideColumns);
-        for (final Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
-            hash.add(e.nextElement());
+        for (Object obj : m_exclMdl) {
+            hash.add(obj);
         }
-        m_exclMdl.removeAllElements();
+        m_exclMdl.clear();
         for (final DataColumnSpec c : m_order) {
             if (hash.contains(c)) {
-                m_exclMdl.addElement(c);
+                m_exclMdl.add(c);
             }
         }
         m_hideColumns.clear();
@@ -1143,5 +1442,109 @@ public class ColumnFilterPanel extends JPanel {
             return;
         }
         update(m_spec, true, getExcludedColumnSet());
+    }
+
+    /**
+     * Displays a JTable if there is something to display, otherwise displays a TablePlaceholder.
+     * @param table the JTable being displayed instead of the TablePlaceholder
+     * @param cardsPanel the JPanel holding the cards
+     * @param tablePlaceholder the TablePlaceholder being displayed instead of the table
+     * @param searchQuery the entered search query
+     */
+    private void updateFilterView(final JTable table, final JPanel cardsPanel, final TablePlaceholder tablePlaceholder, final String searchQuery){
+        CardLayout cl = (CardLayout) cardsPanel.getLayout();
+        // if there are no entries in the list
+        if (table.getModel().getRowCount() == 0) {
+            tablePlaceholder.updateTextEmpty();
+            cl.show(cardsPanel, ID_CARDLAYOUT_PLACEHOLDER);
+        } else {
+            // nothing found
+            if (table.getRowCount() == 0) {
+                tablePlaceholder.updateTextNothingFound(searchQuery, table.getModel().getRowCount());
+                cl.show(cardsPanel, ID_CARDLAYOUT_PLACEHOLDER);
+            } else {
+                cl.show(cardsPanel, ID_CARDLAYOUT_LIST);
+            }
+        }
+        // Resize table to fill the viewport or match the largest cell (if larger than viewport)
+        TableColumn tableColumn = table.getColumnModel().getColumn(0);
+        double maxCellWidth = 0;
+        for (int row = 0; row < table.getRowCount(); row++) {
+            Component c = getTableCellRenderer().getTableCellRendererComponent(table, table.getModel().getValueAt(row, 0), false, false, row, 0);
+            double width = c.getPreferredSize().getWidth() + 8;
+            // width of the largest cell
+            maxCellWidth = Math.max(width, maxCellWidth);
+        }
+        // set width to either fill the viewport or to largest cell
+        int scrollPaneWidth = table.getParent().getWidth();
+        // FIXME width is 0 when dialog is first shown
+        scrollPaneWidth = scrollPaneWidth == 0 ? 250 : scrollPaneWidth;
+
+        // There is enough space for the cells to be fully displayed, column should fit available space
+        if (scrollPaneWidth > maxCellWidth) {
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        } else { // cells are larger than the available space, set column width manually
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            tableColumn.setPreferredWidth(Math.max(scrollPaneWidth, (int)maxCellWidth));
+        }
+    }
+
+    /**
+     * @return a table cell renderer from items to be renderer in the filer
+     * @since 3.6
+     */
+    private TableCellRenderer getTableCellRenderer() {
+        return new DataColumnSpecTableCellRenderer();
+    }
+
+    /**
+     * Updates the rowfilter of the corresponding table with a new query. If the query is empty, the rowfilter will be set to null.
+     * @param table
+     */
+    @SuppressWarnings("rawtypes")
+    private void updateRowFilter(final String searchQuery, final TableRowSorter<NameFilterTableModel> tableRowSorter){
+        // RowFilter is set to null if search field is empty
+        RowFilter<NameFilterTableModel, Object> rf = null;
+        if(!searchQuery.isEmpty()){
+            try {
+                // by default perform case insensitive search
+                // escape all regex characters [\^$.|?*+()
+                rf = RowFilter.regexFilter("(?i)" + Pattern.quote(searchQuery));
+            } catch (java.util.regex.PatternSyntaxException p) {
+                return;
+            }
+        }
+        tableRowSorter.setRowFilter(rf);
+    }
+
+    /**
+     * Creates a resource URL for a file in the class's path
+     * @param file
+     * @return resource URL
+     */
+    private URL getResourceUrl(final String file){
+        Package pack = NameFilterPanel.class.getPackage();
+        String iconBase = pack.getName().replace(".", "/") + "/";
+        return this.getClass().getClassLoader().getResource(iconBase + file);
+    }
+
+    /**
+     * @param model The list from which to retrieve the elements
+     * @param invalid if set to <code>true</code> only the invalid columns are retrieved if set to <code>false</code>
+     *            only the valid columns are retrieved
+     * @return a list of valid columns
+     */
+    @SuppressWarnings("rawtypes")
+    private Set<String> getColumnList(final NameFilterTableModel model, final boolean invalid) {
+        final Set<String> list = new LinkedHashSet<String>();
+        for (int i = 0; i < model.getSize(); i++) {
+            Object o = model.getElementAt(i);
+            final DataColumnSpec spec = (DataColumnSpec)o;
+            if (invalid == DataColumnSpecListCellRenderer.isInvalid(spec)) {
+                String cell = spec.getName();
+                list.add(cell);
+            }
+        }
+        return list;
     }
 }
