@@ -83,12 +83,12 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
     /**
      * The title of the list of columns that is selected to be considered for filtering.
      */
-    private static final String INCLUDE_LIST_TITLE = "Include";
+    private static final String INCLUDE_LIST_TITLE = "Apply filter to these columns (include)";
 
     /**
      * The title of the list of columns that is selected to be passed through.
      */
-    private static final String EXCLUDE_LIST_TITLE = "Exclude";
+    private static final String EXCLUDE_LIST_TITLE = "Pass these columns through filter (exclude)";
 
     /**
      * The tooltip of the column selection panel.

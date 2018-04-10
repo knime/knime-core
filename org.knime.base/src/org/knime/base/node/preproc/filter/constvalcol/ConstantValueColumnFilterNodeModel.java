@@ -127,6 +127,17 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     public static final String FILTER_MISSING = "filter-missing";
 
     /**
+     * The warning message that is shown when this node is applied to a one-row table.
+     */
+    private static final String WARNING_ONEROW =
+        "Input table contains only one row. All of its columns are constant value columns.";
+
+    /**
+     * The warning message that is shown when this node is applied to an empty table.
+     */
+    private static final String WARNING_EMPTY = "Input table is empty. None of its columns are value columns.";
+
+    /**
      * The configuration of the list of columns to include in / exclude from the filtering.
      */
     private final DataColumnSpecFilterConfiguration m_conf = new DataColumnSpecFilterConfiguration(SELECTED_COLS);
@@ -285,10 +296,10 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
         final String[] colNamesToFilter) {
         // If the table contains no data and, thus, columns contain no values, there are no constant value columns.
         if (inputTable.size() == 1) {
-            setWarningMessage("Input table has only a single row. Hence, all columns have constant values.");
+            setWarningMessage(WARNING_ONEROW);
         }
         if (inputTable.size() < 1) {
-            setWarningMessage("Empty input table. Columns have no values and therefore are not constant..");
+            setWarningMessage(WARNING_EMPTY);
             return new String[0];
         }
 
