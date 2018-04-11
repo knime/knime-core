@@ -61,13 +61,11 @@ import java.util.Set;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -303,32 +301,6 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
             return new String[0];
         }
 
-        // Read configuration and determine whether to filter all constant value columns or only columns with a specific
-        // constant value. To store such specific constant values for later use, a HashSet should be appropriate, since
-        // the hashCode() method is implemented for DataCells containing numeric, String, and missing values.
-        boolean all = m_filterAll.getBooleanValue();
-        Set<DataCell> specifiedCells = new HashSet<>();
-        if (!all) {
-            if (m_filterNumeric.getBooleanValue()) {
-                double d = m_filterNumericValue.getDoubleValue();
-                specifiedCells.add(new DoubleCell(d));
-                if (d == (int)d) {
-                    specifiedCells.add(new IntCell((int)d));
-                }
-                if (d == (long)d) {
-                    specifiedCells.add(new LongCell((long)d));
-                }
-            }
-
-            if (m_filterString.getBooleanValue()) {
-                specifiedCells.add(new StringCell(m_filterStringValue.getStringValue()));
-            }
-
-            if (m_filterMissing.getBooleanValue()) {
-                specifiedCells.add(new MissingCell("missing cell to compare against"));
-            }
-        }
-
         // Assemble a map of filter candidates that maps the indices of columns that potentially contain only duplicate
         // values to their last observed value.
         Set<String> colNamesToFilterSet = new HashSet<>(Arrays.asList(colNamesToFilter));
@@ -354,16 +326,14 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
                 // currentCell can't be null; lastCell can be null (in the first row).
                 DataCell currentCell = currentRow.getCell(filterColsLastObsVal.getKey());
                 DataCell lastCell = filterColsLastObsVal.getValue();
+                filterColsLastObsVal.setValue(currentCell);
 
                 // Columns are removed from the filter candidates, when
                 // (a) the currentCell has a value other than the specified / allowed values or
                 // (b) it differs from the last observed cell in this column (i.e., this column is not constant).
-                if ((!all && !specifiedCells.contains(currentCell))
-                    || (lastCell != null && !currentCell.equals(lastCell))) {
+                if (!isValueSpecified(currentCell) || (lastCell != null && !currentCell.equals(lastCell))) {
                     entryIt.remove();
                 }
-
-                filterColsLastObsVal.setValue(currentCell);
             }
         }
 
@@ -372,5 +342,29 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
             filterColsLastObsVals.keySet().stream().map(i -> allColNames[i]).toArray(String[]::new);
 
         return colNamesToRemove;
+    }
+
+    /**
+     * A function that determines whether the value of a given DataCell has been specified in the dialog pane to be filtered.
+     *
+     * @param cell the cell whose value is to be checked
+     * @return <code>true</code>, if and only if the cell's value qualifies for being filtered
+     */
+    private boolean isValueSpecified(final DataCell cell) {
+        if (m_filterAll.getBooleanValue()) {
+            return true;
+        }
+        if (m_filterNumeric.getBooleanValue() && cell instanceof DoubleValue
+            && ((DoubleValue)cell).getDoubleValue() == m_filterNumericValue.getDoubleValue()) {
+            return true;
+        }
+        if (m_filterString.getBooleanValue() && cell instanceof StringValue
+            && ((StringValue)cell).getStringValue().equals(m_filterStringValue.getStringValue())) {
+            return true;
+        }
+        if (m_filterMissing.getBooleanValue() && cell instanceof MissingCell) {
+            return true;
+        }
+        return false;
     }
 }
