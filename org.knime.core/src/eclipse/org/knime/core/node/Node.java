@@ -306,8 +306,9 @@ public final class Node implements NodeModelWarningListener {
      * @param exec For progress information/cancelation
      * @param loadResult Where to report errors/warnings to
      * @throws CanceledExecutionException If canceled.
+     * @noreference This method is not intended to be referenced by clients.
      */
-    void load(final NodePersistor loader, final ExecutionMonitor exec,
+    public void load(final NodePersistor loader, final ExecutionMonitor exec,
             final LoadResult loadResult) throws CanceledExecutionException {
         m_fileStoreHandler = loader.getFileStoreHandler();
         loadDataAndInternals(loader, exec, loadResult);

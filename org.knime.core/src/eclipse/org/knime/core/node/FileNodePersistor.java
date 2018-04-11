@@ -959,8 +959,7 @@ public class FileNodePersistor implements NodePersistor {
         throws IOException, CanceledExecutionException {
         ExecutionMonitor loadExec = exec.createSilentSubProgress(0.6);
         ExecutionMonitor loadFileStoreExec = exec.createSilentSubProgress(0.2);
-        ExecutionMonitor loadIntTblsExec = exec.createSilentSubProgress(0.1);
-        ExecutionMonitor createExec = exec.createSilentSubProgress(0.1);
+        ExecutionMonitor loadIntTblsExec = exec.createSilentSubProgress(0.2);
         exec.setMessage("settings");
         m_portObjects = new PortObject[node.getNrOutPorts()];
         m_portObjectSpecs = new PortObjectSpec[node.getNrOutPorts()];
@@ -1042,27 +1041,7 @@ public class FileNodePersistor implements NodePersistor {
             setNeedsResetAfterLoad();
         }
         loadIntTblsExec.setProgress(1.0);
-        exec.setMessage("Loading settings into node instance");
-        node.load(this, createExec, loadResult);
-        String status;
-        switch (loadResult.getType()) {
-            case Ok:
-                status = " without errors";
-                break;
-            case DataLoadError:
-                status = " with data errors";
-                break;
-            case Error:
-                status = " with errors";
-                break;
-            case Warning:
-                status = " with warnings";
-                break;
-            default:
-                status = " with " + loadResult.getType();
-        }
-        String message = "Loaded node " + node + status;
-        exec.setProgress(1.0, message);
+
     }
 
     protected final ReferencedFile getNodeDirectory() {

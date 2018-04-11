@@ -113,6 +113,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
     private WorkflowPersistor m_parentPersistor;
 
+    private FileNodePersistor m_nodePersistor;
+
     private Node m_node;
 
     private NodeAndBundleInformation m_nodeAndBundleInformation;
@@ -216,8 +218,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         final NodeSettingsRO modelSettings,
         final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec, final LoadResult result)
                 throws InvalidSettingsException, CanceledExecutionException, IOException {
-        final FileNodePersistor nodePersistor = createNodePersistor(settingsForNode);
-        nodePersistor.preLoad(m_node, result);
+        m_nodePersistor = createNodePersistor(settingsForNode);
+        m_nodePersistor.preLoad(m_node, result);
         NodeSettingsRO washedModelSettings = modelSettings;
         try {
             if (modelSettings != null) { // null if the node never had settings - no reason to load them
@@ -243,7 +245,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                         + e.getMessage();
             }
             final LoadNodeModelSettingsFailPolicy pol = getModelSettingsFailPolicy(
-                getMetaPersistor().getState(), nodePersistor.isInactive());
+                getMetaPersistor().getState(), m_nodePersistor.isInactive());
             switch (pol) {
                 case IGNORE:
                     if (!(e instanceof InvalidSettingsException)) {
@@ -265,7 +267,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         try {
             HashMap<Integer, ContainerTable> globalTableRepository = getGlobalTableRepository();
             WorkflowFileStoreHandlerRepository fileStoreHandlerRepository = getFileStoreHandlerRepository();
-            nodePersistor.load(m_node, getParentPersistor(), exec, tblRep, globalTableRepository,
+            m_nodePersistor.load(m_node, getParentPersistor(), exec, tblRep, globalTableRepository,
                 fileStoreHandlerRepository, result);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
@@ -273,10 +275,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             needsResetAfterLoad();
             result.addError(error);
         }
-        if (nodePersistor.isDirtyAfterLoad()) {
+        if (m_nodePersistor.isDirtyAfterLoad()) {
             setDirtyAfterLoad();
         }
-        if (nodePersistor.needsResetAfterLoad()) {
+        if (m_nodePersistor.needsResetAfterLoad()) {
             setNeedsResetAfterLoad();
         }
         return washedModelSettings;
@@ -407,6 +409,13 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
      */
     WorkflowPersistor getParentPersistor() {
         return m_parentPersistor;
+    }
+
+    /**
+     * @return the nodePersistor
+     */
+    FileNodePersistor getNodePersistor() {
+        return m_nodePersistor;
     }
 
     /** {@inheritDoc} */

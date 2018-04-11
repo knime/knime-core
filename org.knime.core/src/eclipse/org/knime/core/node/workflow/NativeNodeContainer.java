@@ -812,15 +812,41 @@ public class NativeNodeContainer extends SingleNodeContainer {
         final Map<Integer, BufferedDataTable> tblRep, final FlowObjectStack inStack, final ExecutionMonitor exec,
         final LoadResult loadResult, final boolean preserveNodeMessage) throws CanceledExecutionException {
         boolean isExecuted = nodePersistor.getMetaPersistor().getState().equals(InternalNodeContainerState.EXECUTED);
+
+        if (nodePersistor instanceof FileNativeNodeContainerPersistor) {
+            FileNativeNodeContainerPersistor fileNativeNCPersitor = (FileNativeNodeContainerPersistor)nodePersistor;
+            exec.setMessage("Loading settings into node instance");
+            m_node.load(fileNativeNCPersitor.getNodePersistor(), exec, loadResult);
+            String status;
+            switch (loadResult.getType()) {
+                case Ok:
+                    status = " without errors";
+                    break;
+                case DataLoadError:
+                    status = " with data errors";
+                    break;
+                case Error:
+                    status = " with errors";
+                    break;
+                case Warning:
+                    status = " with warnings";
+                    break;
+                default:
+                    status = " with " + loadResult.getType();
+            }
+            String message = "Loaded node " + getNameWithID() + status;
+            exec.setProgress(1.0, message);
+
+            if (m_node.isModelCompatibleTo(CredentialsNode.class)) {
+                CredentialsNode credNode = (CredentialsNode)m_node.getNodeModel();
+                credNode.doAfterLoadFromDisc(fileNativeNCPersitor.getLoadHelper(),
+                    getCredentialsProvider(), isExecuted, isInactive());
+                saveNodeSettingsToDefault();
+            }
+        }
+
         if (isExecuted) {
             m_node.putOutputTablesIntoGlobalRepository(getParent().getGlobalTableRepository());
-        }
-        if (m_node.isModelCompatibleTo(CredentialsNode.class)
-                && nodePersistor instanceof FileSingleNodeContainerPersistor) {
-            CredentialsNode credNode = (CredentialsNode)m_node.getNodeModel();
-            credNode.doAfterLoadFromDisc(((FileSingleNodeContainerPersistor)nodePersistor).getLoadHelper(),
-                getCredentialsProvider(), isExecuted, isInactive());
-            saveNodeSettingsToDefault();
         }
         return null;
     }
