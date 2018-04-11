@@ -50,21 +50,8 @@ package org.knime.base.node.preproc.filter.constvalcol;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.MissingCell;
-import org.knime.core.data.RowIterator;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -274,7 +261,17 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
         FilterResult filterResult = m_conf.applyTo(inputTableSpec);
         String[] toFilter = filterResult.getIncludes();
 
-        String[] toRemove = determineConstantValueColumns(inputTable, toFilter);
+        if (inputTable.size() == 1) {
+            setWarningMessage(WARNING_ONEROW);
+        }
+        if (inputTable.size() < 1) {
+            setWarningMessage(WARNING_EMPTY);
+        }
+
+        ConstantValueColumnFilter filter = new ConstantValueColumnFilter(m_filterAll.getBooleanValue(),
+            m_filterNumeric.getBooleanValue(), m_filterNumericValue.getDoubleValue(), m_filterString.getBooleanValue(),
+            m_filterStringValue.getStringValue(), m_filterMissing.getBooleanValue());
+        String[] toRemove = filter.determineConstantValueColumns(inputTable, toFilter);
 
         ColumnRearranger columnRearranger = new ColumnRearranger(inputTableSpec);
         columnRearranger.remove(toRemove);
@@ -282,89 +279,4 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
         return new BufferedDataTable[]{outputTable};
     }
 
-    /**
-     * A method that, from a selection of columns, determines the columns that contain only the same (duplicate /
-     * constant) value over and over.
-     *
-     * @param inputTable the input table that is to be investigated for columns with constant values
-     * @param colNamesToFilter the names of columns that potentially contain constant values only
-     * @return the names of columns that provably contain constant values only
-     */
-    private String[] determineConstantValueColumns(final BufferedDataTable inputTable,
-        final String[] colNamesToFilter) {
-        // If the table contains no data and, thus, columns contain no values, there are no constant value columns.
-        if (inputTable.size() == 1) {
-            setWarningMessage(WARNING_ONEROW);
-        }
-        if (inputTable.size() < 1) {
-            setWarningMessage(WARNING_EMPTY);
-            return new String[0];
-        }
-
-        // Assemble a map of filter candidates that maps the indices of columns that potentially contain only duplicate
-        // values to their last observed value.
-        Set<String> colNamesToFilterSet = new HashSet<>(Arrays.asList(colNamesToFilter));
-        String[] allColNames = inputTable.getDataTableSpec().getColumnNames();
-        Map<Integer, DataCell> filterColsLastObsVals = new HashMap<>();
-        for (int i = 0; i < allColNames.length; i++) {
-            if (colNamesToFilterSet.contains(allColNames[i])) {
-                // We have not observed any values yet, so the last observed value is null.
-                filterColsLastObsVals.put(i, null);
-            }
-        }
-
-        // Across all filter candidates, check if there are two (vertically) successive cells with different values.
-        // When found, this column is not constant and, thus, should be removed from the filter candidates. This method
-        // has a low memory footprint and operates in linear runtime. When the option to filter only constant columns
-        // with specific values is selected, columns should also be removed when they are found to contain a value
-        // other than any of the specified values.
-        for (RowIterator rowIt = inputTable.iterator(); rowIt.hasNext();) {
-            DataRow currentRow = rowIt.next();
-            for (Iterator<Entry<Integer, DataCell>> entryIt = filterColsLastObsVals.entrySet().iterator(); entryIt
-                .hasNext();) {
-                Entry<Integer, DataCell> filterColsLastObsVal = entryIt.next();
-                // currentCell can't be null; lastCell can be null (in the first row).
-                DataCell currentCell = currentRow.getCell(filterColsLastObsVal.getKey());
-                DataCell lastCell = filterColsLastObsVal.getValue();
-                filterColsLastObsVal.setValue(currentCell);
-
-                // Columns are removed from the filter candidates, when
-                // (a) the currentCell has a value other than the specified / allowed values or
-                // (b) it differs from the last observed cell in this column (i.e., this column is not constant).
-                if (!isValueSpecified(currentCell) || (lastCell != null && !currentCell.equals(lastCell))) {
-                    entryIt.remove();
-                }
-            }
-        }
-
-        // Obtain the names of to-be-filtered columns from the filter candidates map
-        String[] colNamesToRemove =
-            filterColsLastObsVals.keySet().stream().map(i -> allColNames[i]).toArray(String[]::new);
-
-        return colNamesToRemove;
-    }
-
-    /**
-     * A function that determines whether the value of a given DataCell has been specified in the dialog pane to be filtered.
-     *
-     * @param cell the cell whose value is to be checked
-     * @return <code>true</code>, if and only if the cell's value qualifies for being filtered
-     */
-    private boolean isValueSpecified(final DataCell cell) {
-        if (m_filterAll.getBooleanValue()) {
-            return true;
-        }
-        if (m_filterNumeric.getBooleanValue() && cell instanceof DoubleValue
-            && ((DoubleValue)cell).getDoubleValue() == m_filterNumericValue.getDoubleValue()) {
-            return true;
-        }
-        if (m_filterString.getBooleanValue() && cell instanceof StringValue
-            && ((StringValue)cell).getStringValue().equals(m_filterStringValue.getStringValue())) {
-            return true;
-        }
-        if (m_filterMissing.getBooleanValue() && cell instanceof MissingCell) {
-            return true;
-        }
-        return false;
-    }
 }
