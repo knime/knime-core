@@ -105,6 +105,11 @@ public class ConstantValueColumnFilter {
     private final boolean m_filterMissing;
 
     /**
+     * The minimum number of rows a table must have to be considered for filtering.
+     */
+    private final long m_rowThreshold;
+
+    /**
      * Constructor for the Constant Value Column Filter class.
      *
      * @param filterAll the option to filter all constant value columns
@@ -113,16 +118,18 @@ public class ConstantValueColumnFilter {
      * @param filterString the option to filter columns with a specific constant String value
      * @param filterStringValue the specific String value that is to be looked for in filtering
      * @param filterMissing the option to filter columns containing only missing values
+     * @param rowThreshold the minimum number of rows a table must have to be considered for filtering
      */
     public ConstantValueColumnFilter(final boolean filterAll, final boolean filterNumeric,
         final double filterNumericValue, final boolean filterString, final String filterStringValue,
-        final boolean filterMissing) {
+        final boolean filterMissing, final long rowThreshold) {
         m_filterAll = filterAll;
         m_filterNumeric = filterNumeric;
         m_filterNumericValue = filterNumericValue;
         m_filterString = filterString;
         m_filterStringValue = filterStringValue;
         m_filterMissing = filterMissing;
+        m_rowThreshold = rowThreshold;
     }
 
     /**
@@ -137,7 +144,11 @@ public class ConstantValueColumnFilter {
      */
     public String[] determineConstantValueColumns(final BufferedDataTable inputTable, final String[] colNamesToFilter,
         final ExecutionContext exec) throws CanceledExecutionException {
-        // If the table contains no data and, thus, columns contain no values, there are no constant value columns.
+        // If the table is smaller than the specified threshold, none of the selected columns are removed
+        if (inputTable.size() < m_rowThreshold) {
+            return new String[0];
+        }
+        // If the table contains no data, all selected columns are considered constant and removed
         if (inputTable.size() < 1) {
             return new String[0];
         }

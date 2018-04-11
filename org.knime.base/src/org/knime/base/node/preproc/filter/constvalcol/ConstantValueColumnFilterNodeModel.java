@@ -66,6 +66,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelLong;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
@@ -88,12 +89,13 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
      * The warning message that is shown when this node is applied to a one-row table.
      */
     private static final String WARNING_ONEROW =
-        "Input table contains only one row. All of its columns are constant value columns.";
+        "Input table contains only one row. All of its columns are considered constant value columns.";
 
     /**
      * The warning message that is shown when this node is applied to an empty table.
      */
-    private static final String WARNING_EMPTY = "Input table is empty. None of its columns are constant value columns.";
+    private static final String WARNING_EMPTY =
+        "Input table is empty. All of its columns are considered constant value columns.";
 
     //TODO: this should be settings as well (saveSettingsTo
     /**
@@ -127,7 +129,12 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
     private final SettingsModelBoolean m_filterMissing = createFilterMissingModel();
 
     /**
-     * The settings model for the option to filter all constant value columns.
+     * The settings model for specifying the minimum number of rows a table must have to be considered for filtering.
+     */
+    private final SettingsModelLong m_rowThreshold = createRowThresholdModel();
+
+    /**
+     * Creates a new constant value column filter model with one and input and one output.
      */
     private final SettingsModelBoolean m_filterAll = createFilterAllModel(m_filterNumeric, m_filterNumericValue,
         m_filterString, m_filterStringValue, m_filterMissing);
@@ -212,6 +219,25 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
     }
 
     /**
+     * @return a new settings model for specifying the minimum number of rows a table must have to be considered for
+     *         filtering
+     */
+    static SettingsModelLong createRowThresholdModel() {
+        SettingsModelLong rowThreshold = new SettingsModelLong("row-threshold", 1);
+
+        rowThreshold.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent arg0) {
+                if (rowThreshold.getLongValue() < 0) {
+                    rowThreshold.setLongValue(0l);
+                }
+            }
+        });
+
+        return rowThreshold;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -241,6 +267,7 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         m_filterString.saveSettingsTo(settings);
         m_filterStringValue.saveSettingsTo(settings);
         m_filterMissing.saveSettingsTo(settings);
+        m_rowThreshold.saveSettingsTo(settings);
     }
 
     /**
@@ -250,6 +277,8 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         DataColumnSpecFilterConfiguration conf = new DataColumnSpecFilterConfiguration(SELECTED_COLS);
         SettingsModelBoolean value = m_filterAll.createCloneWithValidatedValue(settings);
+
+//        throw new InvalidSettingsException("test");
 
         // TODO: validate via  createCloneWithValidatedValue
         // TODO: validate "one option HAS to be selected" (evtl auch in saveSettingsTo)
@@ -282,6 +311,7 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         m_filterString.loadSettingsFrom(settings);
         m_filterStringValue.loadSettingsFrom(settings);
         m_filterMissing.loadSettingsFrom(settings);
+        m_rowThreshold.loadSettingsFrom(settings);
     }
 
     /**
@@ -313,16 +343,18 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         FilterResult filterResult = m_conf.applyTo(inputTableSpec);
         String[] toFilter = filterResult.getIncludes();
 
-        if (inputTable.size() == 1) {
-            setWarningMessage(WARNING_ONEROW);
-        }
-        if (inputTable.size() < 1) {
-            setWarningMessage(WARNING_EMPTY);
+        if (inputTable.size() >= m_rowThreshold.getLongValue()) {
+            if (inputTable.size() == 1) {
+                setWarningMessage(WARNING_ONEROW);
+            }
+            if (inputTable.size() < 1) {
+                setWarningMessage(WARNING_EMPTY);
+            }
         }
 
         ConstantValueColumnFilter filter = new ConstantValueColumnFilter(m_filterAll.getBooleanValue(),
             m_filterNumeric.getBooleanValue(), m_filterNumericValue.getDoubleValue(), m_filterString.getBooleanValue(),
-            m_filterStringValue.getStringValue(), m_filterMissing.getBooleanValue());
+            m_filterStringValue.getStringValue(), m_filterMissing.getBooleanValue(), m_rowThreshold.getLongValue());
         String[] toRemove = filter.determineConstantValueColumns(inputTable, toFilter, exec);
 
         ColumnRearranger columnRearranger = new ColumnRearranger(inputTableSpec);
