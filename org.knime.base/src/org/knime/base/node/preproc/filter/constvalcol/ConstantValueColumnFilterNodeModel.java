@@ -51,6 +51,9 @@ package org.knime.base.node.preproc.filter.constvalcol;
 import java.io.File;
 import java.io.IOException;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
@@ -74,42 +77,12 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  * @author Marc Bux, KNIME AG, Zurich, Switzerland
  * @since 3.6
  */
-public class ConstantValueColumnFilterNodeModel extends NodeModel {
+final class ConstantValueColumnFilterNodeModel extends NodeModel {
     /**
      * The name of the settings tag which holds the names of the columns the user has selected in the dialog as
      * to-be-filtered
      */
     public static final String SELECTED_COLS = "filter-list";
-
-    /**
-     * The name of the settings tag for the option to filter all constant value columns.
-     */
-    public static final String FILTER_ALL = "filter-all";
-
-    /**
-     * The name of the settings tag for the option to filter columns with a specific constant numeric value.
-     */
-    public static final String FILTER_NUMERIC = "filter-numeric";
-
-    /**
-     * The name of the settings tag that holds the specific numeric value that is to be looked for in filtering.
-     */
-    public static final String FILTER_NUMERIC_VALUE = "filter-numeric-value";
-
-    /**
-     * The name of the settings tag for the option to filter columns with a specific constant String value.
-     */
-    public static final String FILTER_STRING = "filter-string";
-
-    /**
-     * The name of the settings tag that holds the specific String value that is to be looked for in filtering.
-     */
-    public static final String FILTER_STRING_VALUE = "filter-string-value";
-
-    /**
-     * The name of the settings tag for the option to filter columns containing only missing values.
-     */
-    public static final String FILTER_MISSING = "filter-missing";
 
     /**
      * The warning message that is shown when this node is applied to a one-row table.
@@ -120,48 +93,122 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     /**
      * The warning message that is shown when this node is applied to an empty table.
      */
-    private static final String WARNING_EMPTY = "Input table is empty. None of its columns are value columns.";
+    private static final String WARNING_EMPTY = "Input table is empty. None of its columns are constant value columns.";
 
+    //TODO: this should be settings as well (saveSettingsTo
     /**
      * The configuration of the list of columns to include in / exclude from the filtering.
      */
     private final DataColumnSpecFilterConfiguration m_conf = new DataColumnSpecFilterConfiguration(SELECTED_COLS);
 
     /**
-     * The settings model for the option to filter all constant value columns.
-     */
-    private final SettingsModelBoolean m_filterAll = new SettingsModelBoolean(FILTER_ALL, false);
-
-    /**
      * The settings model for the option to filter columns with a specific constant numeric value.
      */
-    private final SettingsModelBoolean m_filterNumeric = new SettingsModelBoolean(FILTER_NUMERIC, false);
+    private final SettingsModelBoolean m_filterNumeric = createFilterNumericModel();
 
     /**
      * The settings model for the specific numeric value that is to be looked for in filtering.
      */
-    private final SettingsModelDouble m_filterNumericValue = new SettingsModelDouble(FILTER_NUMERIC_VALUE, 0);
+    private final SettingsModelDouble m_filterNumericValue = createFilterNumericValueModel();
 
     /**
      * The settings model for the option to filter columns with a specific constant String value.
      */
-    private final SettingsModelBoolean m_filterString = new SettingsModelBoolean(FILTER_STRING, false);
+    private final SettingsModelBoolean m_filterString = createFilterStringModel();
 
     /**
      * The settings model for the specific String value that is to be looked for in filtering.
      */
-    private final SettingsModelString m_filterStringValue = new SettingsModelString(FILTER_STRING_VALUE, "");
+    private final SettingsModelString m_filterStringValue = createFilterStringValueModel();
 
     /**
      * The settings model for the option to filter columns containing only missing values.
      */
-    private final SettingsModelBoolean m_filterMissing = new SettingsModelBoolean(FILTER_MISSING, false);
+    private final SettingsModelBoolean m_filterMissing = createFilterMissingModel();
+
+    /**
+     * The settings model for the option to filter all constant value columns.
+     */
+    private final SettingsModelBoolean m_filterAll = createFilterAllModel(m_filterNumeric, m_filterNumericValue,
+        m_filterString, m_filterStringValue, m_filterMissing);
 
     /**
      * Creates a new constant value column filter model with one and input and one output.
      */
     public ConstantValueColumnFilterNodeModel() {
         super(1, 1);
+    }
+
+    /**
+     * @return a new settings model for the option to filter columns with a specific constant numeric value
+     */
+    static SettingsModelBoolean createFilterNumericModel() {
+        return new SettingsModelBoolean("filter-numeric", false);
+    }
+
+    /**
+     * @return a new settings model that holds the specific numeric value that is to be looked for in filtering
+     */
+    static SettingsModelDouble createFilterNumericValueModel() {
+        return new SettingsModelDouble("filter-numeric-value", 0);
+    }
+
+    /**
+     * @return a new settings model for the option to filter columns with a specific constant String value
+     */
+    static SettingsModelBoolean createFilterStringModel() {
+        return new SettingsModelBoolean("filter-string", false);
+    }
+
+    /**
+     * @return a new settings model holds the specific String value that is to be looked for in filtering
+     */
+    static SettingsModelString createFilterStringValueModel() {
+        return new SettingsModelString("filter-string-value", "");
+    }
+
+    /**
+     * @return a new settings model for the option to filter columns containing only missing values
+     */
+    static SettingsModelBoolean createFilterMissingModel() {
+        return new SettingsModelBoolean("filter-missing", false);
+    }
+
+    /**
+     * @return a new settings model for the option to filter all constant value columns
+     */
+    static SettingsModelBoolean createFilterAllModel(final SettingsModelBoolean filterNumeric,
+        final SettingsModelDouble filterNumericValue, final SettingsModelBoolean filterString,
+        final SettingsModelString filterStringValue, final SettingsModelBoolean filterMissing) {
+        SettingsModelBoolean filterAll = new SettingsModelBoolean("filter-all", false);
+
+        // If all columns are to be filtered, specific column filtering is disabled.
+        filterAll.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                if (filterAll.getBooleanValue()) {
+                    filterNumeric.setEnabled(false);
+                    filterNumericValue.setEnabled(false);
+                    filterString.setEnabled(false);
+                    filterStringValue.setEnabled(false);
+                    filterMissing.setEnabled(false);
+                    filterNumeric.setBooleanValue(false);
+                    filterString.setBooleanValue(false);
+                    filterMissing.setBooleanValue(false);
+                } else {
+                    filterNumeric.setEnabled(true);
+                    filterNumericValue.setEnabled(true);
+                    filterString.setEnabled(true);
+                    filterStringValue.setEnabled(true);
+                    filterMissing.setEnabled(true);
+                }
+
+            }
+        });
+
+        filterAll.setBooleanValue(true);
+
+        return filterAll;
     }
 
     /**
@@ -202,20 +249,25 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         DataColumnSpecFilterConfiguration conf = new DataColumnSpecFilterConfiguration(SELECTED_COLS);
-        SettingsModelBoolean filterAll = new SettingsModelBoolean(FILTER_ALL, false);
-        SettingsModelBoolean filterNumeric = new SettingsModelBoolean(FILTER_NUMERIC, false);
-        SettingsModelDouble filterNumericValue = new SettingsModelDouble(FILTER_NUMERIC_VALUE, 0);
-        SettingsModelBoolean filterString = new SettingsModelBoolean(FILTER_STRING, false);
-        SettingsModelString filterStringValue = new SettingsModelString(FILTER_STRING_VALUE, "");
-        SettingsModelBoolean filterMissing = new SettingsModelBoolean(FILTER_MISSING, false);
+        SettingsModelBoolean value = m_filterAll.createCloneWithValidatedValue(settings);
 
-        conf.loadConfigurationInModel(settings);
-        filterAll.loadSettingsFrom(settings);
-        filterNumeric.loadSettingsFrom(settings);
-        filterNumericValue.loadSettingsFrom(settings);
-        filterString.loadSettingsFrom(settings);
-        filterStringValue.loadSettingsFrom(settings);
-        filterMissing.loadSettingsFrom(settings);
+        // TODO: validate via  createCloneWithValidatedValue
+        // TODO: validate "one option HAS to be selected" (evtl auch in saveSettingsTo)
+
+        //        SettingsModelBoolean filterAll = new SettingsModelBoolean(FILTER_ALL, false);
+        //        SettingsModelBoolean filterNumeric = new SettingsModelBoolean(FILTER_NUMERIC, false);
+        //        SettingsModelDouble filterNumericValue = new SettingsModelDouble(FILTER_NUMERIC_VALUE, 0);
+        //        SettingsModelBoolean filterString = new SettingsModelBoolean(FILTER_STRING, false);
+        //        SettingsModelString filterStringValue = new SettingsModelString(FILTER_STRING_VALUE, "");
+        //        SettingsModelBoolean filterMissing = new SettingsModelBoolean(FILTER_MISSING, false);
+        //
+        //        conf.loadConfigurationInModel(settings);
+        //        filterAll.loadSettingsFrom(settings);
+        //        filterNumeric.loadSettingsFrom(settings);
+        //        filterNumericValue.loadSettingsFrom(settings);
+        //        filterString.loadSettingsFrom(settings);
+        //        filterStringValue.loadSettingsFrom(settings);
+        //        filterMissing.loadSettingsFrom(settings);
     }
 
     /**
@@ -271,7 +323,7 @@ public class ConstantValueColumnFilterNodeModel extends NodeModel {
         ConstantValueColumnFilter filter = new ConstantValueColumnFilter(m_filterAll.getBooleanValue(),
             m_filterNumeric.getBooleanValue(), m_filterNumericValue.getDoubleValue(), m_filterString.getBooleanValue(),
             m_filterStringValue.getStringValue(), m_filterMissing.getBooleanValue());
-        String[] toRemove = filter.determineConstantValueColumns(inputTable, toFilter);
+        String[] toRemove = filter.determineConstantValueColumns(inputTable, toFilter, exec);
 
         ColumnRearranger columnRearranger = new ColumnRearranger(inputTableSpec);
         columnRearranger.remove(toRemove);

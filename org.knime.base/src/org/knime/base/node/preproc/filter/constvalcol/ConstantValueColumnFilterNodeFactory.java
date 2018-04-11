@@ -56,9 +56,11 @@ import org.knime.core.node.NodeView;
  * The factory for the constant value column filter node.
  *
  * @author Marc Bux, KNIME AG, Zurich, Switzerland
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  * @since 3.6
  */
-public class ConstantValueColumnFilterNodeFactory extends NodeFactory<ConstantValueColumnFilterNodeModel> {
+public final class ConstantValueColumnFilterNodeFactory extends NodeFactory<ConstantValueColumnFilterNodeModel> {
 
     /** {@inheritDoc} */
     @Override

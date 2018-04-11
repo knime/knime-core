@@ -54,8 +54,6 @@ import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -79,7 +77,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author Marc Bux, KNIME AG, Zurich, Switzerland
  * @since 3.6
  */
-public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsPane {
+final class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsPane {
+    // TODO: put everything into one Tab; try and use addialogComponents for everything
+    // TODO: remove these labels, using the default instead and put the context into a group title
     /**
      * The title of the list of columns that is selected to be considered for filtering.
      */
@@ -195,8 +195,8 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
         SettingsModelColumnFilter2 settings =
             new SettingsModelColumnFilter2(ConstantValueColumnFilterNodeModel.SELECTED_COLS);
         DialogComponentColumnFilter2 dialog = new DialogComponentColumnFilter2(settings, 0);
-        dialog.setIncludeTitle(INCLUDE_LIST_TITLE);
-        dialog.setExcludeTitle(EXCLUDE_LIST_TITLE);
+        //        dialog.setIncludeTitle(INCLUDE_LIST_TITLE);
+        //        dialog.setExcludeTitle(EXCLUDE_LIST_TITLE);
         dialog.setToolTipText(INEXCLUDE_LIST_TOOLTIP);
         addDialogComponent(dialog);
     }
@@ -215,85 +215,55 @@ public class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettings
         c.fill = GridBagConstraints.NONE;
         c.anchor = GridBagConstraints.NORTHWEST;
 
+        SettingsModelBoolean filterNumeric = ConstantValueColumnFilterNodeModel.createFilterNumericModel();
+        SettingsModelDouble filterNumericValue = ConstantValueColumnFilterNodeModel.createFilterNumericValueModel();
+        SettingsModelBoolean filterString = ConstantValueColumnFilterNodeModel.createFilterStringModel();
+        SettingsModelString filterStringValue = ConstantValueColumnFilterNodeModel.createFilterStringValueModel();
+        SettingsModelBoolean filterMissing = ConstantValueColumnFilterNodeModel.createFilterMissingModel();
+        SettingsModelBoolean filterAll = ConstantValueColumnFilterNodeModel.createFilterAllModel(filterNumeric,
+            filterNumericValue, filterString, filterStringValue, filterMissing);
+
         c.gridx = 0;
         c.gridy = 0;
         c.gridwidth = 2;
-        SettingsModelBoolean settingsAll =
-            new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_ALL, false);
-        m_dialogAll = new DialogComponentBoolean(settingsAll, FILTER_OPTIONS_ALL_LABEL);
+        m_dialogAll = new DialogComponentBoolean(filterAll, FILTER_OPTIONS_ALL_LABEL);
         m_dialogAll.setToolTipText(FILTER_OPTIONS_ALL_TOOLTIP);
         innerPanel.add(m_dialogAll.getComponentPanel(), c);
 
         c.gridx = 0;
         c.gridy = 1;
         c.gridwidth = 1;
-        SettingsModelBoolean settingsNumeric =
-            new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_NUMERIC, false);
-        m_dialogNumeric = new DialogComponentBoolean(settingsNumeric, FILTER_OPTIONS_NUMERIC_LABEL);
+        m_dialogNumeric = new DialogComponentBoolean(filterNumeric, FILTER_OPTIONS_NUMERIC_LABEL);
         m_dialogNumeric.setToolTipText(FILTER_OPTIONS_NUMERIC_TOOLTIP);
         innerPanel.add(m_dialogNumeric.getComponentPanel(), c);
 
         c.gridx = 1;
         c.gridy = 1;
         c.gridwidth = 1;
-        SettingsModelDouble settingsNumericValue =
-            new SettingsModelDouble(ConstantValueColumnFilterNodeModel.FILTER_NUMERIC_VALUE, 0);
-        m_dialogNumericValue = new DialogComponentNumberEdit(settingsNumericValue, "");
+        m_dialogNumericValue = new DialogComponentNumberEdit(filterNumericValue, "", 5);
         m_dialogNumericValue.setToolTipText(FILTER_OPTIONS_NUMERIC_TOOLTIP);
         innerPanel.add(m_dialogNumericValue.getComponentPanel(), c);
 
         c.gridx = 0;
         c.gridy = 2;
         c.gridwidth = 1;
-        SettingsModelBoolean settingsString =
-            new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_STRING, false);
-        m_dialogString = new DialogComponentBoolean(settingsString, FILTER_OPTIONS_STRING_LABEL);
+        m_dialogString = new DialogComponentBoolean(filterString, FILTER_OPTIONS_STRING_LABEL);
         m_dialogString.setToolTipText(FILTER_OPTIONS_STRING_TOOLTIP);
         innerPanel.add(m_dialogString.getComponentPanel(), c);
 
         c.gridx = 1;
         c.gridy = 2;
         c.gridwidth = 1;
-        SettingsModelString settingsStringValue =
-            new SettingsModelString(ConstantValueColumnFilterNodeModel.FILTER_STRING_VALUE, "");
-        m_dialogStringValue = new DialogComponentString(settingsStringValue, "");
+        m_dialogStringValue = new DialogComponentString(filterStringValue, "");
         m_dialogStringValue.setToolTipText(FILTER_OPTIONS_STRING_TOOLTIP);
         innerPanel.add(m_dialogStringValue.getComponentPanel(), c);
 
         c.gridx = 0;
         c.gridy = 3;
         c.gridwidth = 2;
-        SettingsModelBoolean settingsMissing =
-            new SettingsModelBoolean(ConstantValueColumnFilterNodeModel.FILTER_MISSING, false);
-        m_dialogMissing = new DialogComponentBoolean(settingsMissing, FILTER_OPTIONS_MISSING_LABEL);
+        m_dialogMissing = new DialogComponentBoolean(filterMissing, FILTER_OPTIONS_MISSING_LABEL);
         m_dialogMissing.setToolTipText(FILTER_OPTIONS_MISSING_TOOLTIP);
         innerPanel.add(m_dialogMissing.getComponentPanel(), c);
-
-        // If all columns are to be filtered, specific column filtering is disabled.
-        settingsAll.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (settingsAll.getBooleanValue()) {
-                    settingsNumeric.setEnabled(false);
-                    settingsNumericValue.setEnabled(false);
-                    settingsString.setEnabled(false);
-                    settingsStringValue.setEnabled(false);
-                    settingsMissing.setEnabled(false);
-                    settingsNumeric.setBooleanValue(false);
-                    settingsString.setBooleanValue(false);
-                    settingsMissing.setBooleanValue(false);
-                } else {
-                    settingsNumeric.setEnabled(true);
-                    settingsNumericValue.setEnabled(true);
-                    settingsString.setEnabled(true);
-                    settingsStringValue.setEnabled(true);
-                    settingsMissing.setEnabled(true);
-                }
-
-            }
-        });
-
-        settingsAll.setBooleanValue(true);
 
         // Weights in the outer panel assure that the inner panel does not request more space than required.
         JPanel outerPanel = new JPanel(new GridBagLayout());

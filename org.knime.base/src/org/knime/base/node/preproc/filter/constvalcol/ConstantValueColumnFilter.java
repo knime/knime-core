@@ -63,11 +63,14 @@ import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 
 /**
  * A class for determining columns that only contain only (duplicates of) the same value.
  *
  * @author Marc Bux, KNIME AG, Zurich, Switzerland
+ * @since 3.6
  */
 public class ConstantValueColumnFilter {
 
@@ -128,9 +131,12 @@ public class ConstantValueColumnFilter {
      *
      * @param inputTable the input table that is to be investigated for columns with constant values
      * @param colNamesToFilter the names of columns that potentially contain constant values only
+     * @param exec execution context for updating progress and cancelation checking
      * @return the names of columns that provably contain constant values only
+     * @throws CanceledExecutionException
      */
-    public String[] determineConstantValueColumns(final BufferedDataTable inputTable, final String[] colNamesToFilter) {
+    public String[] determineConstantValueColumns(final BufferedDataTable inputTable, final String[] colNamesToFilter,
+        final ExecutionContext exec) throws CanceledExecutionException {
         // If the table contains no data and, thus, columns contain no values, there are no constant value columns.
         if (inputTable.size() < 1) {
             return new String[0];
@@ -140,6 +146,8 @@ public class ConstantValueColumnFilter {
         // values to their last observed value.
         Set<String> colNamesToFilterSet = new HashSet<>(Arrays.asList(colNamesToFilter));
         String[] allColNames = inputTable.getDataTableSpec().getColumnNames();
+        // TODO: change to map int -> FilterObject, where the latter depends on the type of column
+        // TODO: change from last observed to first value
         Map<Integer, DataCell> filterColsLastObsVals = new HashMap<>();
         for (int i = 0; i < allColNames.length; i++) {
             if (colNamesToFilterSet.contains(allColNames[i])) {
@@ -155,6 +163,9 @@ public class ConstantValueColumnFilter {
         // other than any of the specified values.
         for (RowIterator rowIt = inputTable.iterator(); rowIt.hasNext();) {
             DataRow currentRow = rowIt.next();
+            exec.checkCanceled();
+            // TODO set progress mit supplier
+            //            exec.setProgress(0.2, "Checking row " + rowIndex);
             for (Iterator<Entry<Integer, DataCell>> entryIt = filterColsLastObsVals.entrySet().iterator(); entryIt
                 .hasNext();) {
                 Entry<Integer, DataCell> filterColsLastObsVal = entryIt.next();
