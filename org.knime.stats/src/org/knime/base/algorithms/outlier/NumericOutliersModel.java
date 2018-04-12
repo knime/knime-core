@@ -76,7 +76,7 @@ public final class NumericOutliersModel {
     private static final String MISSING_GROUP_EXECPTION_PREFIX = "Table does not contain group column ";
 
     /** Uknown outlier name expection. */
-    private static final String UNKNOWN_OUTLIER_EXCEPTION = "unknown outlier name";
+    private static final String UNKNOWN_OUTLIER_EXCEPTION = "Unknown outlier name";
 
     /** Config key of outlier column names. */
     private static final String CFG_OUTLIER_COL_NAMES = "outliers";

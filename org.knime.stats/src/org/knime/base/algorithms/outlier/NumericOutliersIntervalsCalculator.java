@@ -92,7 +92,7 @@ final class NumericOutliersIntervalsCalculator {
 
     /** Exception message if the MemoryGroupByTable execution fails due to heap-space problems. */
     private static final String MEMORY_EXCEPTION =
-        "More heap-space required. Please change to out of memory computation, or increase the provided heap-space";
+        "More heap-space required. Please disable <Process groups in memory>, or increase the provided heap-space";
 
     /** Treatment of missing cells. */
     private static final boolean INCL_MISSING_CELLS = false;

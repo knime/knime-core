@@ -26,13 +26,12 @@
 				typically, to the lower end of a boxplot's whisker and largest value
 				to its upper end.
 				<br />
-				Providing grouping information allows to further detect
-				outliers only within their respective groups. Columns for which
-				outliers have to be detected will be skipped when computing the groups.
+				Providing grouping information allows to detect outliers only
+				within their respective groups.
 			</p>
 			<p>
-				If an observation is flagged an outlier, one can either remove
-				the whole row from the data or replace it by some other value.
+				If an observation is flagged an outlier, one can either replace it by 
+				some other value or remove/retain the corresponding row.
 			</p>
 			<p>
 				Missing values contained in the data will be ignored, i.e., they
@@ -40,7 +39,7 @@
 				flagged as an outlier.
 			</p>
 		</intro>
-		<tab name="Outlier Selection (tab: Outlier Settings)">
+		<tab name="Outlier Selection">
 			<option name="Outlier selection">
 				Allows the selection of columns for which outliers have to be
 				detected
@@ -51,7 +50,7 @@
 
 		</tab>
 		
-		<tab name="General Settings (tab: Outlier Settings)">
+		<tab name="General Settings">
 			<option name="interquartile range multiplier (k)">
 				Allows scaling the interquartile range (IQR).
 				The default is k = 1.5. Larger values will cause less values to be considered outliers.
@@ -93,7 +92,7 @@
 
 		</tab>
 
-		<tab name="Outlier Treatment (tab: Outlier Settings)">
+		<tab name="Outlier Treatment">
 
 			<option name="Apply to">
 				Allows to apply the selected treatment strategy to
@@ -151,7 +150,7 @@
 
 		</tab>
 		
-		<tab name="Group Selection (tab: Group Settings)">
+		<tab name="Group Selection">
 			<option name="Compute outlier statistics on groups">
 				If selected, allows the selection of columns to identify groups. A group comprises all
 				rows of the input exhibiting the same values in every single column (similar to the GroupBy node).
@@ -165,7 +164,7 @@
 			</option>
 
 		</tab>
-		<tab name="Memory Policy (tab: Group Settings)">
+		<tab name="Memory Policy">
 			<option name="Process groups in memory">
 				Processes the groups in the memory. This option comes with higher
 				memory requirements, but is faster since the table does not 
@@ -178,12 +177,12 @@
 	<ports>
 		<inPort index="0" name="Input data">Numeric input data to evaluate + optional group information</inPort>
 		<outPort index="0" name="Treated table">Data table where outliers were either
-			replaced or rows containing (non-)outliers were removed
+			replaced or rows containing outliers/non-outliers were removed
 		</outPort>
 		<outPort index="1" name="Summary">Data table holding the number of members, i.e., non-missing values 
 		and outliers as well as the lower and upper	bound for each outlier groups
 		</outPort>
-		<outPort index="2" name="Model">Model holding the permitted interval bounds for each
+		<outPort index="2" name="Numeric outliers model">Model holding the permitted interval bounds for each
 			outlier group and the outlier treatment specifications
 		</outPort>
 	</ports>

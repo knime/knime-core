@@ -99,15 +99,15 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
     private static final int MAX_PRINT = 3;
 
     /** The missing groups exception prefix. */
-    private static final String MISSING_GROUPS_EXCEPTION_PREFIX = "Some group(s) is not present in the data: ";
+    private static final String MISSING_GROUPS_EXCEPTION_PREFIX = "Some group column(s) is not present in the data: ";
 
     /** The groups compatibility exception prefix. */
     private static final String GROUPS_COMPATIBILITY_EXCEPTION_PREFIX =
-        "Some group(s) is not compatible with the data: ";
+        "Some group column(s) is not compatible with the data: ";
 
     /** The missing outliers exception prefix. */
     private static final String MISSING_OUTLIERS_EXCEPTION_PREFIX =
-        "None of the outlier column(s) is compatible or exists in the data: ";
+        "None of the outlier column(s) is present in or compatible with the data: ";
 
     /** The missing outliers warning prefix. */
     private static final String MISSING_OUTLIERS_WARNING_PREFIX =

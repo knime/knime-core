@@ -95,7 +95,7 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
     private static final String INVALID_INPUT_EXCEPTION = "No double compatible columns in input";
 
     /** Missing outlier column exception text. */
-    private static final String MISSING_OUTLIER_COLUMN_EXCEPTION = "Please include at leaste one numerical column!";
+    private static final String MISSING_OUTLIER_COLUMN_EXCEPTION = "Please include at least one numerical column!";
 
     /** Scalar exception text. */
     private static final String SCALAR_EXCEPTION = "The IQR scalar has to be greater than or equal 0.";
@@ -132,6 +132,9 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
 
     /** Config key of the quartiles algorithm setting. */
     private static final String CFG_HEURISTIC = "use-heuristic";
+
+    /** Default estimation type used to calculate the quartiles. */
+    private static final EstimationType DEFAULT_ESTIMATION_TYPE = EstimationType.R_4;
 
     /** Default scalar to scale the interquartile range */
     private static final double DEFAULT_SCALAR = 1.5d;
@@ -282,8 +285,8 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
             m_outlierSettings.loadDefaults(inSpec);
             includes = m_outlierSettings.applyTo(inSpec).getIncludes();
             if (includes.length > 0) {
-                setWarningMessage(
-                    "Auto configuration: Outliers use all suitable columns (in total " + includes.length + ").");
+                setWarningMessage("Auto configuration: Outlier Selection uses all suitable columns (in total "
+                    + includes.length + ").");
             }
         }
         includes = m_outlierSettings.applyTo(inSpec).getIncludes();
@@ -509,7 +512,7 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
      * @return the estimation type settings model
      */
     public static SettingsModelString createEstimationModel() {
-        return new SettingsModelString(CFG_ESTIMATION_TYPE, EstimationType.values()[0].name());
+        return new SettingsModelString(CFG_ESTIMATION_TYPE, DEFAULT_ESTIMATION_TYPE.name());
     }
 
     /**

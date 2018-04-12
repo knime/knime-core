@@ -65,7 +65,7 @@
          point="org.knime.core.PortType">
       <portType
             color="#1eb9dc"
-            hidden="true"
+            hidden="false"
             name="Outlier"
             objectClass="org.knime.base.algorithms.outlier.NumericOutliersPortObject"
             objectSerializer="org.knime.base.algorithms.outlier.NumericOutliersPortObject$Serializer"

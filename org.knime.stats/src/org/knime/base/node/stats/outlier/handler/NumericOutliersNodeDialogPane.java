@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -99,7 +100,7 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
     private static final String COMPUTATION_BORDER_TITLE = "Quartile calculation";
 
     /** The estimation algorithm label. */
-    private static final String ESTIMATION_LABEL = "Full data estimate";
+    private static final String ESTIMATION_LABEL = "Full data estimate using";
 
     /** The heuristic algorithm label. */
     private static final String HEURISTIC_LABEL = "Use heuristic (memory friendly)";
@@ -127,9 +128,6 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
 
     /** The outlier tab name. */
     private static final String OUTLIER_TAB = "Outlier Settings";
-
-    /** The estimation type name. */
-    private static final String ESTIMATION_TYPE = "using";
 
     /** The IQR scalar label name. */
     private static final String QUARTILE_RANGE_MULT = "Interquartile range multiplier (k)";
@@ -428,11 +426,13 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
 
         ++gbc.gridx;
 
-        // add a component to select the percentile estimation type
-        List<String> eTypes =
-            Arrays.stream(EstimationType.values()).map(val -> val.toString()).collect(Collectors.toList());
-        m_estimationDialog = new DialogComponentStringSelection(NumericOutliersNodeModel.createEstimationModel(),
-            ESTIMATION_TYPE, eTypes);
+        // add a component to select the percentile estimation type (filter legacy option)
+        List<String> eTypes = Arrays.stream(EstimationType.values()).//
+            filter(t -> t != EstimationType.LEGACY)//
+            .map(t -> t.name())//
+            .collect(Collectors.toList());
+        m_estimationDialog =
+            new DialogComponentStringSelection(NumericOutliersNodeModel.createEstimationModel(), null, eTypes);
 
         panel.add(m_estimationDialog.getComponentPanel(), gbc);
 
@@ -485,7 +485,7 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
         gbc.anchor = GridBagConstraints.LINE_START;
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.weightx = 1;
+        gbc.weightx = 0;
         gbc.weighty = 0;
         gbc.fill = GridBagConstraints.NONE;
 
@@ -523,6 +523,13 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
         ++gbc.gridy;
 
         panel.add(m_outlierReplacementDialog.getComponentPanel(), gbc);
+
+        ++gbc.gridy;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+
+        gbc.fill = GridBagConstraints.BOTH;
+        panel.add(Box.createGlue(), gbc);
 
         return panel;
     }

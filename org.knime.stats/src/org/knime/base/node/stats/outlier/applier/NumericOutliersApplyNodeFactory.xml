@@ -14,7 +14,7 @@
         	of the model input (typically coming from the Numeric Outliers node). It
         	detects and treats the outliers of all columns in the input data that are
         	also contained in the model input. The detection of the outliers in the
-        	input data relies soley on the rules learned by the model.
+        	input data relies solely on the rules learned by the model.
         	</p>
         	<p>
         	Note that all observations belonging to groups not seen by the model
@@ -24,12 +24,12 @@
 		</intro>
 	</fullDescription>
 	<ports>
-		<inPort index="0" name="Model">Model holding the permitted interval bounds for each
+		<inPort index="0" name="Numeric outliers model">Model holding the permitted interval bounds for each
 			outlier group and outlier treatment specifications
 		</inPort>
 		<inPort index="1" name="Numeric input data">Numeric input data to evaluate</inPort>
 		<outPort index="0" name="Treated table">Data table where outliers were either
-			replaced or rows containing (non-)outliers were removed
+			replaced or rows containing outliers/non-outliers were removed
 		</outPort>
 		<outPort index="1" name="Summary">Data table holding the number of members, i.e., non-missing values 
 		and outliers as well as the lower and upper	bound for each outlier groups
