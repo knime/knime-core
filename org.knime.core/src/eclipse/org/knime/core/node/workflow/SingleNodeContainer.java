@@ -768,9 +768,12 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 sncSettings = new SingleNodeContainerSettings();
             }
             m_settings = sncSettings;
-            WorkflowCopyContent result = performLoadContent(
-                persistor, tblRep, inStack, exec, loadResult, preserveNodeMessage);
-            return result;
+            NodeContext.pushContext(this);
+            try {
+                return performLoadContent(persistor, tblRep, inStack, exec, loadResult, preserveNodeMessage);
+            } finally {
+                NodeContext.removeLastContext();
+            }
         }
     }
 
