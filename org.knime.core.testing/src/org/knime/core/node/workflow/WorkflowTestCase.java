@@ -170,31 +170,35 @@ public abstract class WorkflowTestCase {
     }
 
     protected void checkStateOfMany(final InternalNodeContainerState state, final NodeID... ids) throws Exception {
-        for (NodeID id : ids) {
-            checkState(id, state);
+        try (WorkflowLock lock = getManager().lock()) {
+            for (NodeID id : ids) {
+                checkState(id, state);
+            }
         }
     }
 
     protected void checkState(final NodeContainer nc,
             final InternalNodeContainerState... expected) throws Exception {
-        InternalNodeContainerState actual = nc.getInternalState();
-        boolean matches = false;
-        for (InternalNodeContainerState s : expected) {
-            if (actual.equals(s)) {
-                matches = true;
+        try (WorkflowLock lock = nc.getParent().lock()) {
+            InternalNodeContainerState actual = nc.getInternalState();
+            boolean matches = false;
+            for (InternalNodeContainerState s : expected) {
+                if (actual.equals(s)) {
+                    matches = true;
+                }
             }
-        }
-        if (!matches) {
-            String error = "node " + nc.getNameWithID() + " has wrong state; "
-            + "expected (any of) " + Arrays.toString(expected) + ", actual "
-            + actual + " (dump follows)";
-            m_logger.info("Test failed: " + error);
-            // don't use m_manager as corresponding project - some tests load 50+ workflows and
-            // don't use the field in this superclass
-            WorkflowManager project = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getParent();
-            project = project.getProjectWFM();
-            dumpWorkflowToLog(project);
-            org.junit.Assert.fail(error);
+            if (!matches) {
+                String error = "node " + nc.getNameWithID() + " has wrong state; "
+                + "expected (any of) " + Arrays.toString(expected) + ", actual "
+                + actual + " (dump follows)";
+                m_logger.info("Test failed: " + error);
+                // don't use m_manager as corresponding project - some tests load 50+ workflows and
+                // don't use the field in this superclass
+                WorkflowManager project = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getParent();
+                project = project.getProjectWFM();
+                dumpWorkflowToLog(project);
+                org.junit.Assert.fail(error);
+            }
         }
     }
 
@@ -267,8 +271,7 @@ public abstract class WorkflowTestCase {
         return (WorkflowManager)currentParent;
     }
 
-    protected NodeContainer findNodeContainer(final NodeID id)
-    throws Exception {
+    protected NodeContainer findNodeContainer(final NodeID id) {
         WorkflowManager parent = findParent(id);
         return parent.getNodeContainer(id);
     }
