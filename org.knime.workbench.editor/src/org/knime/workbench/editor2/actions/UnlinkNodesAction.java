@@ -182,16 +182,22 @@ public class UnlinkNodesAction extends AbstractNodeAction {
 
         final Collection<ConnectionContainer> removeableConnections = new HashSet<>();
         for (final NodeContainerEditPart node : nodes) {
-            final Set<ConnectionContainer> connections;
+            final NodeID nid = node.getNodeContainer().getID();
 
-            // We should only need check incoming *or* outgoing, since members of the set which connect to
-            //      other members of the set will each have references to themselves defined in both.
-            connections = wm.getIncomingConnectionsFor(node.getNodeContainer().getID());
-            connections.forEach((connection) -> {
-                if (nodeIdSet.contains(connection.getSource()) && nodeIdSet.contains(connection.getDest())) {
-                    removeableConnections.add(connection);
-                }
-            });
+            // We are not guaranteed that the WorkflowManager state still contains these nodes; check before we get
+            //      an exception thrown from getIncomingConnectionsFor(NodeID). I'm tempted to obtain the workflow
+            //      lock for this block but that seems like i would be making this race condition even more fraught.
+            if (wm.containsNodeContainer(nid)) {
+                // We should only need check incoming *or* outgoing, since members of the set which connect to
+                //      other members of the set will each have references to themselves defined in both.
+                final Set<ConnectionContainer> connections = wm.getIncomingConnectionsFor(nid);
+
+                connections.forEach((connection) -> {
+                    if (nodeIdSet.contains(connection.getSource()) && nodeIdSet.contains(connection.getDest())) {
+                        removeableConnections.add(connection);
+                    }
+                });
+            }
         }
 
         return removeableConnections;

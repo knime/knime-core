@@ -471,19 +471,24 @@ public class LinkNodesAction extends AbstractNodeAction {
     protected ScreenedSelectionSet screenNodeSelection(final NodeContainerEditPart[] nodes) {
         final ArrayList<NodeContainerUI> validLeft = new ArrayList<>();
         final ArrayList<NodeContainerUI> validRight = new ArrayList<>();
+        final WorkflowManager wm = getManager();
 
         for (int i = 0; i < nodes.length; i++) {
             final NodeContainerUI node = nodes[i].getNodeContainer();
-            final int portLowWaterMark = (node instanceof WorkflowManagerUI) ? 0 : 1;
-            final boolean canBeLeftMost = (node.getNrOutPorts() > portLowWaterMark);
-            final boolean canBeRightMost = (node.getNrInPorts() > portLowWaterMark);
 
-            if (canBeLeftMost) {
-                validLeft.add(node);
-            }
+            // We are not guaranteed that the WorkflowManager state still contains these nodes, so check.
+            if (wm.containsNodeContainer(node.getID())) {
+                final int portLowWaterMark = (node instanceof WorkflowManagerUI) ? 0 : 1;
+                final boolean canBeLeftMost = (node.getNrOutPorts() > portLowWaterMark);
+                final boolean canBeRightMost = (node.getNrInPorts() > portLowWaterMark);
 
-            if (canBeRightMost) {
-                validRight.add(node);
+                if (canBeLeftMost) {
+                    validLeft.add(node);
+                }
+
+                if (canBeRightMost) {
+                    validRight.add(node);
+                }
             }
         }
 

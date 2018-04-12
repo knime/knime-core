@@ -173,10 +173,14 @@ public abstract class AbstractNodeAction extends SelectionAction {
 
     }
 
-    /** Get selected edit parts.
+    /**
+     * Get selected edit parts. <b>NOTE:</b> The parts returned by this may no longer exist in the associated
+     * <code>WorkflowManager</code> instance.
+     *
      * @param editPartClass The class of interest
      * @param <T> The class to the argument
-     * @return The selected <code>EditParts</code> of the given part. */
+     * @return The selected <code>EditParts</code> of the given part.
+     */
     protected <T extends EditPart> T[] getSelectedParts(
             final Class<T> editPartClass) {
         return filterObjects(editPartClass, getSelectedObjects());
