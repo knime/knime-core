@@ -427,8 +427,8 @@ final class NumericOutliersNodeDialogPane extends NodeDialogPane {
         ++gbc.gridx;
 
         // add a component to select the percentile estimation type (filter legacy option)
-        List<String> eTypes = Arrays.stream(EstimationType.values()).//
-            filter(t -> t != EstimationType.LEGACY)//
+        List<String> eTypes = Arrays.stream(EstimationType.values())//
+            .filter(t -> t != EstimationType.LEGACY)//
             .map(t -> t.name())//
             .collect(Collectors.toList());
         m_estimationDialog =
