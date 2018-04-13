@@ -48,6 +48,20 @@
  */
 package org.knime.base.node.preproc.filter.constvalcol;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.border.TitledBorder;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -59,6 +73,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * The dialog for the constant value column filter. The user can specify which columns should be checked for containing
@@ -67,17 +82,27 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author Marc Bux, KNIME AG, Zurich, Switzerland
  * @since 3.6
  */
-final class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsPane {
+final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
     /**
-     * The title of the group of options that allow to limit the filtering to specific values.
+     * The title of the tab of the column selection panel.
      */
-    private static final String INEXCLUDE_LIST_TITLE = "Columns to be included in / excluded from the filter";
+    private static final String INEXCLUDE_LIST_TAB = "Include / Exclude Columns";
+
+    /**
+     * The title of the column selection panel.
+     */
+    private static final String INEXCLUDE_LIST_TITLE = "Select columns to be included in / excluded from the filter";
 
     /**
      * The tooltip of the column selection panel.
      */
     private static final String INEXCLUDE_LIST_TOOLTIP =
         "Select which columns to consider for filtering and which columns to pass through.";
+
+    /**
+     * The title of the tab in which filter options can be selected.
+     */
+    private static final String FILTER_OPTIONS_TAB = "Filter Settings";
 
     /**
      * The title of the group of options that allow to limit the filtering to specific values.
@@ -146,31 +171,41 @@ final class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsP
         "The minimum number of rows a table must have to be considered for filtering. If the table size is below the specified value, the table will not be filtered / altered.";
 
     /**
+     * {@link org.knime.core.node.defaultnodesettings.DialogComponent} objects that have to be saved to the settings
+     * file manually via {@link #saveAdditionalSettingsTo(NodeSettingsWO)}.
+     */
+    private final List<DialogComponent> m_components;
+
+    /**
      * Creates a new {@link DefaultNodeSettingsPane} for the column filter in order to set the desired columns.
      */
     public ConstantValueColumnFilterNodeDialogPane() {
-        addInExcludeListDialogComponent();
-        addFilterOptionsDialogComponent();
-        addMiscOptions();
+        m_components = new LinkedList<>();
+        addInExcludeListTab();
+        addFilterOptionsTab();
     }
 
     /**
      * Creates dialog components for selecting which columns to include in respectively exclude from the filtering
      * process.
      */
-    private void addInExcludeListDialogComponent() {
-        createNewGroup(INEXCLUDE_LIST_TITLE);
+    private void addInExcludeListTab() {
         SettingsModelColumnFilter2 columnFilter = ConstantValueColumnFilterNodeModel.createColumnFilterModel();
         DialogComponentColumnFilter2 dialog = new DialogComponentColumnFilter2(columnFilter, 0);
         dialog.setToolTipText(INEXCLUDE_LIST_TOOLTIP);
-        addDialogComponent(dialog);
-        closeCurrentGroup();
+        m_components.add(dialog);
+        dialog.getComponentPanel().setBorder(new TitledBorder(INEXCLUDE_LIST_TITLE));
+        addTab(INEXCLUDE_LIST_TAB, dialog.getComponentPanel());
     }
 
     /**
      * Creates dialog components for specifying which constant value columns to filter.
      */
-    private void addFilterOptionsDialogComponent() {
+    private void addFilterOptionsTab() {
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.NONE;
+        c.anchor = GridBagConstraints.NORTHWEST;
+
         SettingsModelBoolean filterNumeric = ConstantValueColumnFilterNodeModel.createFilterNumericModel();
         SettingsModelDouble filterNumericValue = ConstantValueColumnFilterNodeModel.createFilterNumericValueModel();
         SettingsModelBoolean filterString = ConstantValueColumnFilterNodeModel.createFilterStringModel();
@@ -179,48 +214,70 @@ final class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsP
         SettingsModelBoolean filterAll = ConstantValueColumnFilterNodeModel.createFilterAllModel(filterNumeric,
             filterNumericValue, filterString, filterStringValue, filterMissing);
 
-        createNewGroup(FILTER_OPTIONS_TITLE);
+        JPanel filterPanel = new JPanel(new GridBagLayout());
+        filterPanel.setBorder(new TitledBorder(FILTER_OPTIONS_TITLE));
+        addComponent(new DialogComponentBoolean(filterAll, FILTER_OPTIONS_ALL_LABEL), FILTER_OPTIONS_ALL_TOOLTIP,
+            filterPanel, c, 0, 0, 2, 0, 0);
+        addComponent(new DialogComponentBoolean(filterNumeric, FILTER_OPTIONS_NUMERIC_LABEL),
+            FILTER_OPTIONS_NUMERIC_TOOLTIP, filterPanel, c, 0, 1, 1, 0, 0);
+        addComponent(new DialogComponentNumberEdit(filterNumericValue, "", 5), FILTER_OPTIONS_NUMERIC_TOOLTIP,
+            filterPanel, c, 1, 1, 1, 0, 0);
+        addComponent(new DialogComponentBoolean(filterString, FILTER_OPTIONS_STRING_LABEL),
+            FILTER_OPTIONS_STRING_TOOLTIP, filterPanel, c, 0, 2, 1, 0, 0);
+        addComponent(new DialogComponentString(filterStringValue, ""), FILTER_OPTIONS_STRING_TOOLTIP, filterPanel, c, 1,
+            2, 1, 0, 0);
+        addComponent(new DialogComponentBoolean(filterMissing, FILTER_OPTIONS_MISSING_LABEL),
+            FILTER_OPTIONS_MISSING_TOOLTIP, filterPanel, c, 0, 3, 2, 0, 0);
 
-        registerNewDialogComponent(new DialogComponentBoolean(filterAll, FILTER_OPTIONS_ALL_LABEL),
-            FILTER_OPTIONS_ALL_TOOLTIP);
-
-        setHorizontalPlacement(true);
-
-        registerNewDialogComponent(new DialogComponentBoolean(filterNumeric, FILTER_OPTIONS_NUMERIC_LABEL),
-            FILTER_OPTIONS_NUMERIC_TOOLTIP);
-        registerNewDialogComponent(new DialogComponentNumberEdit(filterNumericValue, "", 5),
-            FILTER_OPTIONS_NUMERIC_TOOLTIP);
-
-        setHorizontalPlacement(false);
-        setHorizontalPlacement(true);
-
-        registerNewDialogComponent(new DialogComponentBoolean(filterString, FILTER_OPTIONS_STRING_LABEL),
-            FILTER_OPTIONS_STRING_TOOLTIP);
-        registerNewDialogComponent(new DialogComponentString(filterStringValue, ""), FILTER_OPTIONS_STRING_TOOLTIP);
-
-        setHorizontalPlacement(false);
-
-        registerNewDialogComponent(new DialogComponentBoolean(filterMissing, FILTER_OPTIONS_MISSING_LABEL),
-            FILTER_OPTIONS_MISSING_TOOLTIP);
-
-        closeCurrentGroup();
-    }
-
-    private void addMiscOptions() {
-        createNewGroup(MISC_OPTIONS_TITLE);
-
-        registerNewDialogComponent(
+        JPanel miscPanel = new JPanel(new GridBagLayout());
+        miscPanel.setBorder(new TitledBorder(MISC_OPTIONS_TITLE));
+        addComponent(
             new DialogComponentNumber(ConstantValueColumnFilterNodeModel.createRowThresholdModel(),
                 MISC_OPTIONS_ROW_THRESHOLD_LABEL, 1, 5),
-            MISC_OPTIONS_ROW_THRESHOLD_TOOLTIP);
+            MISC_OPTIONS_ROW_THRESHOLD_TOOLTIP, miscPanel, c, 0, 0, 1, 0, 0);
 
-        closeCurrentGroup();
+        JPanel outerPanel = new JPanel(new GridBagLayout());
+        outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
+        outerPanel.add(filterPanel);
+        outerPanel.add(miscPanel);
+
+        addTab(FILTER_OPTIONS_TAB, outerPanel);
     }
 
-    private void registerNewDialogComponent(final DialogComponent dc, final String tooltipText) {
+    private void addComponent(final DialogComponent dc, final String tooltipText, final JPanel panel,
+        final GridBagConstraints c, final int x, final int y, final int width, final int weightx, final int weighty) {
         dc.setToolTipText(tooltipText);
-        dc.getComponentPanel().setMaximumSize(dc.getComponentPanel().getPreferredSize());
-        addDialogComponent(dc);
+        m_components.add(dc);
+
+        c.gridx = x;
+        c.gridy = y;
+        c.gridwidth = width;
+        c.weightx = weightx;
+        c.weighty = weighty;
+
+        panel.add(dc.getComponentPanel(), c);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        for (DialogComponent comp : m_components) {
+            comp.saveSettingsTo(settings);
+        }
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+        throws NotConfigurableException {
+        for (DialogComponent comp : m_components) {
+            comp.loadSettingsFrom(settings, specs);
+        }
     }
 
 }
