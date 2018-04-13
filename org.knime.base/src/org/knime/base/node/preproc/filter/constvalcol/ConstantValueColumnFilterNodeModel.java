@@ -65,11 +65,11 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelLong;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
  * The model for the constant value column filter node. Contains the logic for filtering columns containing only
@@ -79,12 +79,6 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  * @since 3.6
  */
 final class ConstantValueColumnFilterNodeModel extends NodeModel {
-    /**
-     * The name of the settings tag which holds the names of the columns the user has selected in the dialog as
-     * to-be-filtered
-     */
-    public static final String SELECTED_COLS = "filter-list";
-
     /**
      * The warning message that is shown when this node is applied to a one-row table.
      */
@@ -97,11 +91,16 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
     private static final String WARNING_EMPTY =
         "Input table is empty. All of its columns are considered constant value columns.";
 
-    //TODO: this should be settings as well (saveSettingsTo
     /**
-     * The configuration of the list of columns to include in / exclude from the filtering.
+     * The warning message that is shown when no options are selected for filtering.
      */
-    private final DataColumnSpecFilterConfiguration m_conf = new DataColumnSpecFilterConfiguration(SELECTED_COLS);
+    private static final String WARNING_NO_OPTION =
+        "At least one filtering option has to be selected.";
+
+    /**
+     * The settings model for the list of columns to include in / exclude from the filtering.
+     */
+    private final SettingsModelColumnFilter2 m_columnFilter = createColumnFilterModel();
 
     /**
      * The settings model for the option to filter columns with a specific constant numeric value.
@@ -144,6 +143,13 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     public ConstantValueColumnFilterNodeModel() {
         super(1, 1);
+    }
+
+    /**
+     * @return a new settings model for the list of columns to include in / exclude from the filtering
+     */
+    static SettingsModelColumnFilter2 createColumnFilterModel() {
+        return new SettingsModelColumnFilter2("filter-list");
     }
 
     /**
@@ -260,7 +266,7 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_conf.saveConfiguration(settings);
+        m_columnFilter.saveSettingsTo(settings);
         m_filterAll.saveSettingsTo(settings);
         m_filterNumeric.saveSettingsTo(settings);
         m_filterNumericValue.saveSettingsTo(settings);
@@ -275,28 +281,19 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        DataColumnSpecFilterConfiguration conf = new DataColumnSpecFilterConfiguration(SELECTED_COLS);
-        SettingsModelBoolean value = m_filterAll.createCloneWithValidatedValue(settings);
+        m_columnFilter.validateSettings(settings);
+        m_filterNumericValue.validateSettings(settings);
+        m_filterStringValue.validateSettings(settings);
 
-//        throw new InvalidSettingsException("test");
+        SettingsModelBoolean filterAll = m_filterAll.createCloneWithValidatedValue(settings);
+        SettingsModelBoolean filterNumeric = m_filterNumeric.createCloneWithValidatedValue(settings);
+        SettingsModelBoolean filterString = m_filterString.createCloneWithValidatedValue(settings);
+        SettingsModelBoolean filterMissing = m_filterMissing.createCloneWithValidatedValue(settings);
 
-        // TODO: validate via  createCloneWithValidatedValue
-        // TODO: validate "one option HAS to be selected" (evtl auch in saveSettingsTo)
-
-        //        SettingsModelBoolean filterAll = new SettingsModelBoolean(FILTER_ALL, false);
-        //        SettingsModelBoolean filterNumeric = new SettingsModelBoolean(FILTER_NUMERIC, false);
-        //        SettingsModelDouble filterNumericValue = new SettingsModelDouble(FILTER_NUMERIC_VALUE, 0);
-        //        SettingsModelBoolean filterString = new SettingsModelBoolean(FILTER_STRING, false);
-        //        SettingsModelString filterStringValue = new SettingsModelString(FILTER_STRING_VALUE, "");
-        //        SettingsModelBoolean filterMissing = new SettingsModelBoolean(FILTER_MISSING, false);
-        //
-        //        conf.loadConfigurationInModel(settings);
-        //        filterAll.loadSettingsFrom(settings);
-        //        filterNumeric.loadSettingsFrom(settings);
-        //        filterNumericValue.loadSettingsFrom(settings);
-        //        filterString.loadSettingsFrom(settings);
-        //        filterStringValue.loadSettingsFrom(settings);
-        //        filterMissing.loadSettingsFrom(settings);
+        if (!(filterAll.getBooleanValue() || filterNumeric.getBooleanValue() || filterString.getBooleanValue()
+            || filterMissing.getBooleanValue())) {
+            throw new InvalidSettingsException(WARNING_NO_OPTION);
+        }
     }
 
     /**
@@ -304,7 +301,7 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_conf.loadConfigurationInModel(settings);
+        m_columnFilter.loadSettingsFrom(settings);
         m_filterAll.loadSettingsFrom(settings);
         m_filterNumeric.loadSettingsFrom(settings);
         m_filterNumericValue.loadSettingsFrom(settings);
@@ -340,7 +337,7 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         throws Exception {
         BufferedDataTable inputTable = inData[0];
         DataTableSpec inputTableSpec = inputTable.getDataTableSpec();
-        FilterResult filterResult = m_conf.applyTo(inputTableSpec);
+        FilterResult filterResult = m_columnFilter.applyTo(inputTableSpec);
         String[] toFilter = filterResult.getIncludes();
 
         if (inputTable.size() >= m_rowThreshold.getLongValue()) {

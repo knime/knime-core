@@ -160,9 +160,8 @@ final class ConstantValueColumnFilterNodeDialogPane extends DefaultNodeSettingsP
      */
     private void addInExcludeListDialogComponent() {
         createNewGroup(INEXCLUDE_LIST_TITLE);
-        SettingsModelColumnFilter2 settings =
-            new SettingsModelColumnFilter2(ConstantValueColumnFilterNodeModel.SELECTED_COLS);
-        DialogComponentColumnFilter2 dialog = new DialogComponentColumnFilter2(settings, 0);
+        SettingsModelColumnFilter2 columnFilter = ConstantValueColumnFilterNodeModel.createColumnFilterModel();
+        DialogComponentColumnFilter2 dialog = new DialogComponentColumnFilter2(columnFilter, 0);
         dialog.setToolTipText(INEXCLUDE_LIST_TOOLTIP);
         addDialogComponent(dialog);
         closeCurrentGroup();
