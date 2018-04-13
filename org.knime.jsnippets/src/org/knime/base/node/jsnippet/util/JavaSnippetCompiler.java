@@ -105,9 +105,9 @@ public class JavaSnippetCompiler {
      * @return an object representing the compilation process
      * @throws IOException if temporary jar files cannot be created
      */
-    public CompilationTask getTask(final Writer out,
-            final DiagnosticCollector<JavaFileObject> digsCollector)
-            throws IOException {
+    public CompilationTask getTask(final Writer out, final DiagnosticCollector<JavaFileObject> digsCollector)
+        throws IOException {
+
         if (m_compiler == null) {
             m_compileArgs = new ArrayList<>();
             final File[] classpaths = m_snippet.getCompiletimeClassPath();
@@ -126,15 +126,15 @@ public class JavaSnippetCompiler {
 
             m_compiler  = new EclipseCompiler();
         }
-        final StandardJavaFileManager stdFileMgr = m_compiler.getStandardFileManager(digsCollector, null, Charset.forName("UTF-8"));
 
-        final CompilationTask compileTask =
-            m_compiler.getTask(out, stdFileMgr, digsCollector, m_compileArgs, null, m_snippet.getCompilationUnits());
+        // Ensure that all .jar files that may have been opened are closed properly
+        try (final StandardJavaFileManager stdFileMgr =
+            m_compiler.getStandardFileManager(digsCollector, null, Charset.forName("UTF-8"))) {
 
-        // Release all .jar files that may have been opened
-        stdFileMgr.close();
-
-        return compileTask;
+            final CompilationTask compileTask = m_compiler.getTask(out, stdFileMgr, digsCollector, m_compileArgs, null,
+                m_snippet.getCompilationUnits());
+            return compileTask;
+        }
     }
 
     /**
@@ -146,8 +146,8 @@ public class JavaSnippetCompiler {
      */
     public ClassLoader createClassLoader(final ClassLoader parent)
         throws IOException {
-        File[] classpaths = m_snippet.getRuntimeClassPath();
-        URL[] urls = new URL[classpaths.length + 1];
+        final File[] classpaths = m_snippet.getRuntimeClassPath();
+        final URL[] urls = new URL[classpaths.length + 1];
         if (classpaths.length > 0) {
             for (int i = 0; i < classpaths.length; i++) {
                 try {

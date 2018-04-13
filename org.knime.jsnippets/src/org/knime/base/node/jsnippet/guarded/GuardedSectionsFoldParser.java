@@ -72,29 +72,22 @@ public class GuardedSectionsFoldParser implements FoldParser {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             GuardedSectionsFoldParser.class);
 
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public List getFolds(final RSyntaxTextArea textArea) {
-        List folds = new ArrayList();
-        GuardedDocument doc = (GuardedDocument)textArea.getDocument();
-        for (String name : doc.getGuardedSections()) {
-            GuardedSection guard = doc.getGuardedSection(name);
-            Fold fold;
+    public List<Fold> getFolds(final RSyntaxTextArea textArea) {
+        final List<Fold> folds = new ArrayList<>();
+
+        final GuardedDocument doc = (GuardedDocument)textArea.getDocument();
+        for (final String name : doc.getGuardedSections()) {
+            final GuardedSection guard = doc.getGuardedSection(name);
             try {
-                fold = new Fold(FoldType.FOLD_TYPE_USER_DEFINED_MIN,
-                        textArea, guard.getStart().getOffset());
+                final Fold fold = new Fold(FoldType.FOLD_TYPE_USER_DEFINED_MIN, textArea, guard.getStart().getOffset());
                 fold.setEndOffset(guard.getEnd().getOffset());
                 folds.add(fold);
             } catch (BadLocationException e) {
                 LOGGER.debug(e.getMessage());
             }
-
         }
         return folds;
     }
-
 
 }

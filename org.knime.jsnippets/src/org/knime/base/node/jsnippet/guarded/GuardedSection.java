@@ -196,10 +196,6 @@ public final class GuardedSection {
             && m_start.getOffset() <= offset + length;
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return "(" + m_start.getOffset() + ", " + m_end.getOffset() + ")";

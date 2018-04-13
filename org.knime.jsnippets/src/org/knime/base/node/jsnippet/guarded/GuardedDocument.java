@@ -72,9 +72,6 @@ public class GuardedDocument extends RSyntaxDocument {
     private Map<String, GuardedSection> m_guards;
     private boolean m_breakGuarded;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addDocumentListener(final DocumentListener listener) {
         Class<?> listenerClass = getFoldManagerListenerClass();
@@ -99,7 +96,6 @@ public class GuardedDocument extends RSyntaxDocument {
         }
         return listenerClass;
     }
-
 
     /**
      * Constructs a plain text document.  A default root element is created,
@@ -130,10 +126,6 @@ public class GuardedDocument extends RSyntaxDocument {
         this.m_breakGuarded = breakGuarded;
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void insertString(final int offset, final String str,
             final AttributeSet a)
@@ -142,7 +134,7 @@ public class GuardedDocument extends RSyntaxDocument {
             super.insertString(offset, str, a);
         } else {
             // Check if pos is within a guarded section
-            for (GuardedSection gs : m_guards.values()) {
+            for (final GuardedSection gs : m_guards.values()) {
                 if (gs.contains(offset)) {
                     throw new BadLocationException(
                             "Cannot insert text in guarded section.", offset);
@@ -152,10 +144,6 @@ public class GuardedDocument extends RSyntaxDocument {
         }
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void remove(final int offset, final int len)
         throws BadLocationException {
@@ -174,9 +162,6 @@ public class GuardedDocument extends RSyntaxDocument {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void replace(final int offset, final int length, final String text,
             final AttributeSet attrs) throws BadLocationException {
@@ -257,7 +242,6 @@ public class GuardedDocument extends RSyntaxDocument {
         }
     }
 
-
     /**
      * Add a named guarded section to the document. Note that text can always
      * be inserted after the guarded section. To prevent this use the method
@@ -321,7 +305,6 @@ public class GuardedDocument extends RSyntaxDocument {
                 this);
         m_guards.put(name, guard);
 
-
         return guard;
     }
 
@@ -337,7 +320,6 @@ public class GuardedDocument extends RSyntaxDocument {
         return m_guards.get(name);
     }
 
-
     /**
      * Get the list of guarded sections.
      *
@@ -345,8 +327,5 @@ public class GuardedDocument extends RSyntaxDocument {
      */
     public Set<String> getGuardedSections() {
         return m_guards.keySet();
-     }
-
-
-
+    }
 }

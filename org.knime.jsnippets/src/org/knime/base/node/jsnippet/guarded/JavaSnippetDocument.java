@@ -75,38 +75,29 @@ public class JavaSnippetDocument extends GuardedDocument {
 
     /**
      * Create a new instance.
-     * @param methodSignature e.g. public JavaRDD<Row> apply(JavaRDD<Row> rowRDD1) throws GenericKnimeSparkException
+     *
+     * @param methodSignature e.g. <code>public JavaRDD&ltRow> apply(JavaRDD&ltRow> rowRDD1) throws GenericKnimeSparkException</code>
      */
     public JavaSnippetDocument(final String methodSignature) {
         super(SyntaxConstants.SYNTAX_STYLE_NONE);
         try {
-            addGuardedSection(
-                    GUARDED_IMPORTS, getLength());
-            insertString(getLength(), " \n", null);
-            addGuardedSection(
-                    GUARDED_FIELDS, getLength());
-            insertString(getLength(), " \n", null);
-            GuardedSection bodyStart = addGuardedSection(
-                    GUARDED_BODY_START, getLength());
-            final String text = "// expression start\n    " + methodSignature + " {\n";
-            bodyStart.setText(text);
-//            bodyStart.setText("// expression start\n"
-//                    + "   {\n");
+            addGuardedSection(GUARDED_IMPORTS, getLength());
             insertString(getLength(), " \n", null);
 
-            GuardedSection bodyEnd = addGuardedFooterSection(
-                    GUARDED_BODY_END, getLength());
-            bodyEnd.setText("// expression end\n"
-                    + "    }\n"
-                    + "}");
+            addGuardedSection(GUARDED_FIELDS, getLength());
+            insertString(getLength(), " \n", null);
+
+            final GuardedSection bodyStart = addGuardedSection(GUARDED_BODY_START, getLength());
+            bodyStart.setText("// expression start\n    " + methodSignature + " {\n");
+            insertString(getLength(), " \n", null);
+
+            final GuardedSection bodyEnd = addGuardedFooterSection(GUARDED_BODY_END, getLength());
+            bodyEnd.setText("// expression end\n" + "    }\n" + "}");
         } catch (BadLocationException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void insertString(final int offset, final String str,
             final AttributeSet a)
@@ -114,20 +105,13 @@ public class JavaSnippetDocument extends GuardedDocument {
         if (getBreakGuarded()) {
             super.insertString(offset, str, a);
         } else {
-            // Hack when string is an import declaration as created by
-            // auto completion.
-            if (getGuardedSection(GUARDED_IMPORTS).contains(offset)
-                && str.startsWith("\nimport ")) {
-                // change offset so that the import is inserted in the
-                // user imports.
-                int min = getGuardedSection(
-                        GUARDED_IMPORTS).getEnd().getOffset() + 1;
-                int pos = getGuardedSection(
-                        GUARDED_FIELDS).getStart().getOffset() - 1;
+            // HACK when string is an import declaration as created by auto completion.
+            if (getGuardedSection(GUARDED_IMPORTS).contains(offset) && str.startsWith("\nimport ")) {
+                // change offset so that the import is inserted in the user imports.
+                int min = getGuardedSection(GUARDED_IMPORTS).getEnd().getOffset() + 1;
+                int pos = getGuardedSection(GUARDED_FIELDS).getStart().getOffset() - 1;
                 try {
-                    while (getText(pos, 1).equals("\n")
-                           && getText(pos - 1, 1).equals("\n")
-                           && pos > min) {
+                    while (getText(pos, 1).equals("\n") && getText(pos - 1, 1).equals("\n") && pos > min) {
                         pos--;
                     }
                     super.insertString(pos, str, a);
