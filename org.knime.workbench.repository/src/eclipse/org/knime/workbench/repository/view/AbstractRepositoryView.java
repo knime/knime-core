@@ -190,6 +190,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
             public void partActivated(final IWorkbenchPart part) {
                 if (part == AbstractRepositoryView.this) {
                     m_toolbarSearchText.getText().setFocus();
+                    m_toolbarSearchText.getText().selectAll();
                 }
             }
         });
