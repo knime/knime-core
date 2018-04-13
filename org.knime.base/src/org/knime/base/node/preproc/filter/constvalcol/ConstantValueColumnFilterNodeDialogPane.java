@@ -48,11 +48,10 @@
  */
 package org.knime.base.node.preproc.filter.constvalcol;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
@@ -202,10 +201,6 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
      * Creates dialog components for specifying which constant value columns to filter.
      */
     private void addFilterOptionsTab() {
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.NONE;
-        c.anchor = GridBagConstraints.NORTHWEST;
-
         SettingsModelBoolean filterNumeric = ConstantValueColumnFilterNodeModel.createFilterNumericModel();
         SettingsModelDouble filterNumericValue = ConstantValueColumnFilterNodeModel.createFilterNumericValueModel();
         SettingsModelBoolean filterString = ConstantValueColumnFilterNodeModel.createFilterStringModel();
@@ -214,48 +209,78 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
         SettingsModelBoolean filterAll = ConstantValueColumnFilterNodeModel.createFilterAllModel(filterNumeric,
             filterNumericValue, filterString, filterStringValue, filterMissing);
 
-        JPanel filterPanel = new JPanel(new GridBagLayout());
+        JPanel filterPanel = new JPanel();
+        filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.Y_AXIS));
         filterPanel.setBorder(new TitledBorder(FILTER_OPTIONS_TITLE));
-        addComponent(new DialogComponentBoolean(filterAll, FILTER_OPTIONS_ALL_LABEL), FILTER_OPTIONS_ALL_TOOLTIP,
-            filterPanel, c, 0, 0, 2, 0, 0);
+
+        addComponentWithGlue(new DialogComponentBoolean(filterAll, FILTER_OPTIONS_ALL_LABEL),
+            FILTER_OPTIONS_ALL_TOOLTIP, filterPanel);
+
+        JPanel numericPanel = new JPanel();
+        numericPanel.setLayout(new BoxLayout(numericPanel, BoxLayout.X_AXIS));
         addComponent(new DialogComponentBoolean(filterNumeric, FILTER_OPTIONS_NUMERIC_LABEL),
-            FILTER_OPTIONS_NUMERIC_TOOLTIP, filterPanel, c, 0, 1, 1, 0, 0);
+            FILTER_OPTIONS_NUMERIC_TOOLTIP, numericPanel);
         addComponent(new DialogComponentNumberEdit(filterNumericValue, "", 5), FILTER_OPTIONS_NUMERIC_TOOLTIP,
-            filterPanel, c, 1, 1, 1, 0, 0);
+            numericPanel);
+        numericPanel.add(Box.createHorizontalGlue());
+        filterPanel.add(numericPanel);
+
+        JPanel stringPanel = new JPanel();
+        stringPanel.setLayout(new BoxLayout(stringPanel, BoxLayout.X_AXIS));
         addComponent(new DialogComponentBoolean(filterString, FILTER_OPTIONS_STRING_LABEL),
-            FILTER_OPTIONS_STRING_TOOLTIP, filterPanel, c, 0, 2, 1, 0, 0);
-        addComponent(new DialogComponentString(filterStringValue, ""), FILTER_OPTIONS_STRING_TOOLTIP, filterPanel, c, 1,
-            2, 1, 0, 0);
-        addComponent(new DialogComponentBoolean(filterMissing, FILTER_OPTIONS_MISSING_LABEL),
-            FILTER_OPTIONS_MISSING_TOOLTIP, filterPanel, c, 0, 3, 2, 0, 0);
+            FILTER_OPTIONS_STRING_TOOLTIP, stringPanel);
+        addComponent(new DialogComponentString(filterStringValue, ""), FILTER_OPTIONS_STRING_TOOLTIP, stringPanel);
+        stringPanel.add(Box.createHorizontalGlue());
+        filterPanel.add(stringPanel);
 
-        JPanel miscPanel = new JPanel(new GridBagLayout());
+        addComponentWithGlue(new DialogComponentBoolean(filterMissing, FILTER_OPTIONS_MISSING_LABEL),
+            FILTER_OPTIONS_MISSING_TOOLTIP, filterPanel);
+
+        JPanel miscPanel = new JPanel();
+        miscPanel.setLayout(new BoxLayout(miscPanel, BoxLayout.Y_AXIS));
         miscPanel.setBorder(new TitledBorder(MISC_OPTIONS_TITLE));
-        addComponent(
-            new DialogComponentNumber(ConstantValueColumnFilterNodeModel.createRowThresholdModel(),
-                MISC_OPTIONS_ROW_THRESHOLD_LABEL, 1, 5),
-            MISC_OPTIONS_ROW_THRESHOLD_TOOLTIP, miscPanel, c, 0, 0, 1, 0, 0);
 
-        JPanel outerPanel = new JPanel(new GridBagLayout());
+        addComponentWithGlue(new DialogComponentNumber(ConstantValueColumnFilterNodeModel.createRowThresholdModel(),
+            MISC_OPTIONS_ROW_THRESHOLD_LABEL, 1, 5), MISC_OPTIONS_ROW_THRESHOLD_TOOLTIP, miscPanel);
+
+        JPanel outerPanel = new JPanel();
         outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
         outerPanel.add(filterPanel);
         outerPanel.add(miscPanel);
+        outerPanel.add(Box.createVerticalGlue());
 
-        addTab(FILTER_OPTIONS_TAB, outerPanel);
+        addTabAt(0, FILTER_OPTIONS_TAB, outerPanel);
+        getTab(FILTER_OPTIONS_TAB);
     }
 
-    private void addComponent(final DialogComponent dc, final String tooltipText, final JPanel panel,
-        final GridBagConstraints c, final int x, final int y, final int width, final int weightx, final int weighty) {
+    /**
+     * A function that registers a new {@link DialogComponent} and adds it to a {@link JPanel} by creating a new
+     * horizontal box with glue to the right.
+     *
+     * @param dc the new {@link DialogComponent} to register
+     * @param tooltipText the tooltip text of the {@link DialogComponent}
+     * @param panel the {@link JPanel} to which to add the {@link DialogComponent}
+     */
+    private void addComponentWithGlue(final DialogComponent dc, final String tooltipText, final JPanel panel) {
+        JPanel innerPanel = new JPanel();
+        innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.X_AXIS));
+        addComponent(dc, tooltipText, innerPanel);
+        innerPanel.add(Box.createHorizontalGlue());
+        panel.add(innerPanel);
+    }
+
+    /**
+     * A function that registers a new {@link DialogComponent} and adds it to a {@link JPanel}.
+     *
+     * @param dc the new {@link DialogComponent} to register
+     * @param tooltipText the tooltip text of the {@link DialogComponent}
+     * @param panel the {@link JPanel} to which to add the {@link DialogComponent}
+     */
+    private void addComponent(final DialogComponent dc, final String tooltipText, final JPanel panel) {
         dc.setToolTipText(tooltipText);
         m_components.add(dc);
-
-        c.gridx = x;
-        c.gridy = y;
-        c.gridwidth = width;
-        c.weightx = weightx;
-        c.weighty = weighty;
-
-        panel.add(dc.getComponentPanel(), c);
+        dc.getComponentPanel().setMaximumSize(dc.getComponentPanel().getPreferredSize());
+        panel.add(dc.getComponentPanel());
     }
 
     /**
