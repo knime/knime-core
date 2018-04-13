@@ -87,7 +87,7 @@ import org.knime.core.node.util.CheckUtils;
 public class AccuracyScorerCalculator {
     private String[] m_targetValues;                        //Names of classifications
     private int[][] m_confusionMatrix;
-    private double[][] m_confusionMatrixWithRates;           //confusion matrix with rates of correct predictions for each row and column
+    private double[][] m_confusionMatrixWithRates;           //confusion matrix with sums for each row and column
     private List<String>[][] m_keyStore;                    //Keys are stored as strings values
     private List<ValueStats> m_valueStats;
     private double m_accuracy;
@@ -108,12 +108,16 @@ public class AccuracyScorerCalculator {
         new DataColumnSpecCreator("FalsePositives", IntCell.TYPE).createSpec(),
         new DataColumnSpecCreator("TrueNegatives", IntCell.TYPE).createSpec(),
         new DataColumnSpecCreator("FalseNegatives", IntCell.TYPE).createSpec(),
+        new DataColumnSpecCreator("Accuracy", DoubleCell.TYPE).createSpec(),
+        new DataColumnSpecCreator("BalancedAccuracy", DoubleCell.TYPE).createSpec(),
+        new DataColumnSpecCreator("ErrorRate", DoubleCell.TYPE).createSpec(),
+        new DataColumnSpecCreator("FalseNegativeRate", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("Recall", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("Precision", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("Sensitivity", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("Specifity", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("F-measure", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("Accuracy", DoubleCell.TYPE).createSpec(),
+        new DataColumnSpecCreator("OverallAccuracy", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("Cohen's kappa", DoubleCell.TYPE).createSpec()
     };
 
@@ -224,14 +228,14 @@ public class AccuracyScorerCalculator {
             }
         }
         for (int i = 0; i < m_confusionMatrixWithRates.length-1; i++) {
-            double rowSum = 0;
+            int rowSum = 0;
             for (int j = 0; j < m_confusionMatrixWithRates[i].length-1; j++) {
                 rowSum += m_confusionMatrixWithRates[i][j];
             }
             m_confusionMatrixWithRates[i][m_confusionMatrixWithRates.length-1] = m_confusionMatrixWithRates[i][i] / rowSum;
         }
         for (int i = 0; i < m_confusionMatrixWithRates.length-1; i++) {
-            double columnSum = 0;
+            int columnSum = 0;
             for (int j = 0; j < m_confusionMatrixWithRates.length-1; j++) {
                 columnSum += m_confusionMatrixWithRates[j][i];
             }
@@ -325,6 +329,34 @@ public class AccuracyScorerCalculator {
             valueStats.setFP(fp);
             valueStats.setTN(tn);
             valueStats.setFN(fn);
+            DoubleCell accuracy = null; // (TP + TN) / (TP + FN + TN + FP)
+            if (tp + fn + tn + fp> 0) {
+                accuracy = new DoubleCell(1.0 * (tp + tn) / (tp + fn + tn + fp));
+                valueStats.setAccuracy(accuracy.getDoubleValue());
+            } else {
+                valueStats.setAccuracy(Double.NaN);
+            }
+            DoubleCell balancedAccuracy = null; // (TP / (TP + FN) + TN / (FP + TN)) /2
+            if ((tp + fn > 0) && (fp + tn >0))  {
+                balancedAccuracy = new DoubleCell( (1.0 * tp / (tp + fn) + 1.0 *tn / (fp + tn)) / 2 );
+                valueStats.setBalancedAccuracy(balancedAccuracy.getDoubleValue());
+            } else {
+                valueStats.setBalancedAccuracy(Double.NaN);
+            }
+            DoubleCell errorRate = null; // (FP + FN) / (TP + FN + TN + FP)
+            if (tp + fn + tn + fp> 0) {
+                errorRate = new DoubleCell(1.0 * (fp + fn) / (tp + fn + tn + fp));
+                valueStats.setErrorRate(errorRate.getDoubleValue());
+            } else {
+                valueStats.setErrorRate(Double.NaN);
+            }
+            DoubleCell falseNegativeRate = null; // FN / (TP + FN)
+            if (tp + fn > 0) {
+                falseNegativeRate = new DoubleCell(1.0 * fn / (tp + fn));
+                valueStats.setFalseNegativeRate(falseNegativeRate.getDoubleValue());
+            } else {
+                valueStats.setFalseNegativeRate(Double.NaN);
+            }
             final DataCell sensitivity; // TP / (TP + FN)
             DoubleCell recall = null; // TP / (TP + FN)
             if (tp + fn > 0) {
@@ -365,7 +397,7 @@ public class AccuracyScorerCalculator {
             // add complete row for class value to table
             DataRow row =
                 new DefaultRow(new RowKey(targetValues[r]), new DataCell[]{new IntCell(tp), new IntCell(fp),
-                    new IntCell(tn), new IntCell(fn), recall == null ? DataType.getMissingCell() : recall,
+                    new IntCell(tn), new IntCell(fn), accuracy, balancedAccuracy, errorRate, falseNegativeRate, recall == null ? DataType.getMissingCell() : recall,
                     prec == null ? DataType.getMissingCell() : prec, sensitivity, specificity, fmeasure,
                     DataType.getMissingCell(), DataType.getMissingCell()});
             accTable.addRowToTable(row);
@@ -380,6 +412,7 @@ public class AccuracyScorerCalculator {
         }
         // append additional row for overall accuracy
         accTable.addRowToTable(new DefaultRow(overallID, new DataCell[]{DataType.getMissingCell(),
+            DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(),
             DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(),
             DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(),
             new DoubleCell(viewData.getAccuracy()), new DoubleCell(viewData.getCohenKappa())}));
@@ -637,6 +670,10 @@ public class AccuracyScorerCalculator {
         private int m_TN;   // True Negative
         private int m_FP;   // False Positive
         private int m_FN;   // False Negative
+        private double m_accuracy;
+        private double m_balancedAccuracy;
+        private double m_errorRate;
+        private double m_falseNegativeRate;
         private double m_recall;
         private double m_precision;
         private double m_sensitivity;
@@ -684,6 +721,38 @@ public class AccuracyScorerCalculator {
 
         public void setFN(final int FN) {
             this.m_FN = FN;
+        }
+
+        public double getAccuracy() {
+            return m_accuracy;
+        }
+
+        public void setAccuracy(final double accuracy) {
+            this.m_accuracy = accuracy;
+        }
+
+        public double getBalancedAccuracy() {
+            return m_balancedAccuracy;
+        }
+
+        public void setBalancedAccuracy(final double balancedAccuracy) {
+            this.m_balancedAccuracy = balancedAccuracy;
+        }
+
+        public double getErrorRate() {
+            return m_errorRate;
+        }
+
+        public void setErrorRate(final double errorRate) {
+            this.m_errorRate = errorRate;
+        }
+
+        public double getFalseNegativeRate() {
+            return m_falseNegativeRate;
+        }
+
+        public void setFalseNegativeRate(final double falseNegativeRate) {
+            this.m_falseNegativeRate = falseNegativeRate;
         }
 
         public double getRecall() {
