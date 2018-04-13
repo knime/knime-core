@@ -66,8 +66,8 @@ import javax.swing.event.ChangeListener;
 @SuppressWarnings("serial")
 @Deprecated
 final class SelectableAccordion extends JTabbedPane {
-    private static final Icon NOT_SELECTED_ICON = SharedIcons.getImageIcon(SharedIcons.SMALL_ARROW_DOWN_ICON),
-            SELECTED_ICON = SharedIcons.getImageIcon(SharedIcons.SMALL_ARROW_RIGHT_ICON);
+    private static final Icon NOT_SELECTED_ICON = SharedIcons.SMALL_ARROW_DOWN.get();
+    private static final Icon SELECTED_ICON = SharedIcons.SMALL_ARROW_RIGHT.get();
 
 //    private String m_key;
 

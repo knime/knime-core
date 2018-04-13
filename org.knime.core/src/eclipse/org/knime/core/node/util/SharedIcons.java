@@ -48,81 +48,49 @@
  */
 package org.knime.core.node.util;
 
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 /**
- * A class providing commonly used icons for the use in node dialogs.
+ * An enum providing commonly used icons for the use in node dialogs.
+ *
  * @author Johannes Schweig
+ * @since 3.6
  */
-public class SharedIcons {
+public enum SharedIcons {
 
-    /**
-     * Constants for the icon name and path
-     */
-    public final static String FILTER_ICON = "FILTER";
-    private final static String FILTER_PATH = "icons/filter.png";
-    public final static String ADD_ALL_ICON = "ADD_ALL";
-    private final static String ADD_ALL_PATH = "icons/add_all.png";
-    public final static String ADD_ICON = "ADD";
-    private final static String ADD_PATH = "icons/add.png";
-    public final static String REM_ALL_ICON = "REM_ALL";
-    private final static String REM_ALL_PATH = "icons/rem_all.png";
-    public final static String REM_ICON = "REM";
-    private final static String REM_PATH = "icons/rem.png";
-    public final static String ARROW_DOWN_ICON = "ARROW_DOWN";
-    private final static String ARROW_DOWN_PATH = "icons/arrow_down.png";
-    public final static String ARROW_UP_ICON = "ARROW_UP";
-    private final static String ARROW_UP_PATH = "icons/arrow_up.png";
-    public final static String SMALL_ARROW_DOWN_ICON = "DOWN";
-    private final static String SMALL_ARROW_DOWN_PATH = "icons/down.png";
-    public final static String SMALL_ARROW_RIGHT_ICON = "RIGHT";
-    private final static String SMALL_ARROW_RIGHT_PATH = "icons/right.png";
-    public final static String TRASH_ICON = "TRASH";
-    private final static String TRASH_PATH ="icons/trash.png";
+    /** Funnel **/
+    FILTER("icons/filter.png"),
+    /** Double arrow right **/
+    ADD_ALL("icons/add_all.png"),
+    /** Arrow right **/
+    ADD("icons/add.png"),
+    /** Arrow left **/
+    REM("icons/rem.png"),
+    /** Double arrow left**/
+    REM_ALL("icons/rem_all.png"),
+    /** Arrow down **/
+    ARROW_DOWN("icons/arrow_down.png"),
+    /** Arrow up **/
+    ARROW_UP("icons/arrow_up.png"),
+    /** Small arrow down **/
+    SMALL_ARROW_DOWN("icons/down.png"),
+    /** Small arrow right **/
+    SMALL_ARROW_RIGHT("icons/right.png"),
+    /** trash can **/
+    TRASH("icons/trash.png");
 
-    // icon register to retrieve icons' paths
-    private static final Map<String, String> m_iconRegister;
-    static {
-        Map<String, String> map = new HashMap<String, String>();
-        map.put(FILTER_ICON, FILTER_PATH);
-        map.put(ADD_ALL_ICON, ADD_ALL_PATH);
-        map.put(ADD_ICON, ADD_PATH);
-        map.put(REM_ALL_ICON, REM_ALL_PATH);
-        map.put(REM_ICON, REM_PATH);
-        map.put(ARROW_DOWN_ICON, ARROW_DOWN_PATH);
-        map.put(ARROW_UP_ICON, ARROW_UP_PATH);
-        map.put(SMALL_ARROW_DOWN_ICON, SMALL_ARROW_DOWN_PATH);
-        map.put(SMALL_ARROW_RIGHT_ICON, SMALL_ARROW_RIGHT_PATH);
-        map.put(TRASH_ICON, TRASH_PATH);
-        m_iconRegister = map;
-    }
+    private final Icon m_icon;
 
-
-    /**
-     * Returns the ImageIcon to an icon
-     * @param icon the requested icon
-     * @return the ImageIcon
-     */
-    public static ImageIcon getImageIcon(final String icon){
-        String path = m_iconRegister.get(icon);
-        if (path != null) {
-            return new ImageIcon(getImageUrl(path));
-        } else {
-            return null;
-        }
-
+    private SharedIcons(final String path) {
+        m_icon = new ImageIcon(SharedIcons.class.getResource(path));
     }
 
     /**
-     * Returns the Image URL for the specified path
-     * @param path
-     * @return the Image URL
+     * @return the actual Icon, not null.
      */
-    private static URL getImageUrl(final String path){
-        return SharedIcons.class.getResource(path);
+    public Icon get() {
+        return m_icon;
     }
+
 }

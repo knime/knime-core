@@ -620,7 +620,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         inclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
         inclSearchPanel.add(m_inclSearchField, BorderLayout.CENTER);
         // filter icon
-        inclSearchPanel.add(new JLabel(SharedIcons.getImageIcon(SharedIcons.FILTER_ICON)), BorderLayout.WEST);
+        inclSearchPanel.add(new JLabel(SharedIcons.FILTER.get()), BorderLayout.WEST);
 
         JPanel includePanel = new JPanel(new BorderLayout());
         m_includeBorder = BorderFactory.createTitledBorder(INCLUDE_BORDER, " Include ");
@@ -661,7 +661,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         exclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
         exclSearchPanel.add(m_exclSearchField, BorderLayout.CENTER);
         // filter icon
-        exclSearchPanel.add(new JLabel(SharedIcons.getImageIcon(SharedIcons.FILTER_ICON)), BorderLayout.WEST);
+        exclSearchPanel.add(new JLabel(SharedIcons.FILTER.get()), BorderLayout.WEST);
         JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(EXCLUDE_BORDER, " Exclude ");
         excludePanel.setBorder(m_excludeBorder);
@@ -686,28 +686,28 @@ public abstract class NameFilterPanel<T> extends JPanel {
             m_enforceExclusion.doClick();
             excludePanel.add(m_enforceExclusion, BorderLayout.SOUTH);
         }
-        m_addButton = new JButton(SharedIcons.getImageIcon(SharedIcons.ADD_ICON));
+        m_addButton = new JButton(SharedIcons.ADD.get());
         m_addButton.setMaximumSize(new Dimension(125, 25));
         m_addButton.setToolTipText("Move the selected " + getEntryDescription() +" from the left to the right list.");
         buttonPan.add(m_addButton);
         m_addButton.addActionListener(e -> onAddIt(m_exclTable.getSelectedRows()));
         buttonPan.add(Box.createVerticalStrut(25));
 
-        m_addAllButton = new JButton(SharedIcons.getImageIcon(SharedIcons.ADD_ALL_ICON));
+        m_addAllButton = new JButton(SharedIcons.ADD_ALL.get());
         m_addAllButton.setMaximumSize(new Dimension(125, 25));
         m_addAllButton.setToolTipText("Moves all visible " + getEntryDescription() + " from the left to the right list.");
         buttonPan.add(m_addAllButton);
         m_addAllButton.addActionListener(new MoveAllActionListener(m_exclTable));
         buttonPan.add(Box.createVerticalStrut(25));
 
-        m_remButton = new JButton(SharedIcons.getImageIcon(SharedIcons.REM_ICON));
+        m_remButton = new JButton(SharedIcons.REM.get());
         m_remButton.setMaximumSize(new Dimension(125, 25));
         m_remButton.setToolTipText("Move the selected " + getEntryDescription() + " from the right to the left list.");
         buttonPan.add(m_remButton);
         m_remButton.addActionListener(e -> onRemIt(m_inclTable.getSelectedRows()));
         buttonPan.add(Box.createVerticalStrut(25));
 
-        m_remAllButton = new JButton(SharedIcons.getImageIcon(SharedIcons.REM_ALL_ICON));
+        m_remAllButton = new JButton(SharedIcons.REM_ALL.get());
         m_remAllButton.setMaximumSize(new Dimension(125, 25));
         m_remAllButton.setToolTipText("Moves all visible " + getEntryDescription() + " from the right to the left list.");
         buttonPan.add(m_remAllButton);
