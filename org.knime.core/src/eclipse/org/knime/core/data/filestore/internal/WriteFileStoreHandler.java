@@ -189,7 +189,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
             // notify them that a copy is taken place and that they need to flush their in memory content
             FileStoreUtil.invokeFlush(flushCallback);
             newStore = createFileStoreInternal(getNextIndex() + "_" + key.getName(), null, -1);
-            FileUtil.copy(fs.getFile(), newStore.getFile());
+            FileUtil.copyDir(fs.getFile(), newStore.getFile());
         } catch (IOException e) {
             throw new RuntimeException("Failed copying file stores to local handler", e);
         }
