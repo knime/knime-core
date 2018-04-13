@@ -1409,12 +1409,16 @@ public final class WorkflowManager extends NodeContainer
     /**
      * Returns the incoming connection of the node with the passed node id at the specified port.
      *
-     * @param id id of the node of interest
+     * @param id id of the node of interest, can be 'this' workflow's ID
      * @param portIdx port index
      * @return incoming connection at that port of the given node or null if it doesn't exist
+     * @throws IllegalArgumentException If node is not contained in workflow, nor is it the ID of this WFM
      */
     public ConnectionContainer getIncomingConnectionFor(final NodeID id, final int portIdx) {
         try (WorkflowLock lock = lock()) {
+            CheckUtils.checkArgument(id.equals(getID()) || containsNodeContainer(id),
+                "Node ID \"%s\" not contained in workflow, nor it's the workflow itself (ID of this workflow is \"%s\"",
+                id, getID());
             Set<ConnectionContainer> inConns = m_workflow.getConnectionsByDest(id);
             if (inConns != null) {
                 for (ConnectionContainer cont : inConns) {
@@ -6279,7 +6283,10 @@ public final class WorkflowManager extends NodeContainer
     /** {@inheritDoc} */
     @Override
     public Collection<NodeContainer> getNodeContainers() {
-        return m_workflow.getNodeValues();
+        try (WorkflowLock lock = lock()) {
+            // TODO should we copy the list as changes to the wkf later will change this list
+            return m_workflow.getNodeValues();
+        }
     }
 
     /**
@@ -6428,6 +6435,7 @@ public final class WorkflowManager extends NodeContainer
     /**
      * @param anchor The anchor
      * @return List of node containers
+     * @deprecated, use {@link #getNodesInScope(SingleNodeContainer)}
      * @since 2.8
      */
     public List<NodeContainer> getNodesInScopeOLD(final SingleNodeContainer anchor) {
@@ -6555,23 +6563,25 @@ public final class WorkflowManager extends NodeContainer
     public Map<NodeID, NodeContainerTemplate> fillLinkedTemplateNodesList(
         final Map<NodeID, NodeContainerTemplate> mapToFill, final boolean recurse,
         final boolean stopRecursionAtLinkedMetaNodes) {
-        for (NodeID id : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
-            NodeContainer nc = getNodeContainer(id);
-            if (!(nc instanceof NodeContainerTemplate)) {
-                continue;
-            }
-            NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
-            if (tnc.getTemplateInformation().getRole().equals(Role.Link)) {
-                mapToFill.put(tnc.getID(), tnc);
-                if (stopRecursionAtLinkedMetaNodes) {
+        try (WorkflowLock lock = lock()) {
+            for (NodeID id : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
+                NodeContainer nc = getNodeContainer(id);
+                if (!(nc instanceof NodeContainerTemplate)) {
                     continue;
                 }
+                NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
+                if (tnc.getTemplateInformation().getRole().equals(Role.Link)) {
+                    mapToFill.put(tnc.getID(), tnc);
+                    if (stopRecursionAtLinkedMetaNodes) {
+                        continue;
+                    }
+                }
+                if (recurse) {
+                    tnc.fillLinkedTemplateNodesList(mapToFill, true, stopRecursionAtLinkedMetaNodes);
+                }
             }
-            if (recurse) {
-                tnc.fillLinkedTemplateNodesList(mapToFill, true, stopRecursionAtLinkedMetaNodes);
-            }
+            return mapToFill;
         }
-        return mapToFill;
     }
 
     /**
@@ -6867,16 +6877,19 @@ public final class WorkflowManager extends NodeContainer
     public void updateMetaNodeLinkInternalRecursively(final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper,
         final Map<URI, NodeContainerTemplate> visitedTemplateMap, final NodeContainerTemplateLinkUpdateResult loadRes)
         throws Exception {
-        for (NodeID id : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
-            NodeContainer nc = getNodeContainer(id);
-            if (nc instanceof NodeContainerTemplate) {
-                NodeContainerTemplate t = (NodeContainerTemplate)nc;
-                if (t.getTemplateInformation().getRole().equals(Role.Link)) {
-                    final NodeContainerTemplateLinkUpdateResult childResult =
-                        new NodeContainerTemplateLinkUpdateResult("Update child link \"" + getNameWithID() + "\"");
-                    t = updateNodeTemplateLinkInternal(t.getID(), exec, loadHelper, visitedTemplateMap, childResult);
+        try (WorkflowLock lock = lock()) {
+            for (NodeID id : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
+                NodeContainer nc = getNodeContainer(id);
+                if (nc instanceof NodeContainerTemplate) {
+                    NodeContainerTemplate t = (NodeContainerTemplate)nc;
+                    if (t.getTemplateInformation().getRole().equals(Role.Link)) {
+                        final NodeContainerTemplateLinkUpdateResult childResult =
+                            new NodeContainerTemplateLinkUpdateResult("Update child link \"" + getNameWithID() + "\"");
+                        t = updateNodeTemplateLinkInternal(t.getID(), exec, loadHelper, visitedTemplateMap,
+                            childResult);
+                    }
+                    t.updateMetaNodeLinkInternalRecursively(exec, loadHelper, visitedTemplateMap, loadRes);
                 }
-                t.updateMetaNodeLinkInternalRecursively(exec, loadHelper, visitedTemplateMap, loadRes);
             }
         }
     }
