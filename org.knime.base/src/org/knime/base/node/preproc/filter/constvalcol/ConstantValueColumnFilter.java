@@ -169,11 +169,15 @@ public class ConstantValueColumnFilter {
         // has a low memory footprint and operates in linear runtime. When the option to filter only constant columns
         // with specific values is selected, columns should also be removed when they are found to contain a value
         // other than any of the specified values.
-        for (RowIterator rowIt = inputTable.iterator(); rowIt.hasNext();) {
-            DataRow currentRow = rowIt.next();
+        RowIterator rowIt = inputTable.iterator();
+        for (long i = 0; i < inputTable.size(); i++) {
+            final long finalI = i;
+            final long finalSize = inputTable.size();
+            final DataRow currentRow = rowIt.next();
             exec.checkCanceled();
-            // TODO set progress mit supplier
-            //            exec.setProgress(0.2, "Checking row " + rowIndex);
+            exec.setProgress(i / (double)inputTable.size(),
+                () -> String.format("Row %,d/%,d (%s)", finalI + 1, finalSize, currentRow.getKey()));
+
             for (Iterator<Entry<Integer, DataCell>> entryIt = filterColsLastObsVals.entrySet().iterator(); entryIt
                 .hasNext();) {
                 Entry<Integer, DataCell> filterColsLastObsVal = entryIt.next();
