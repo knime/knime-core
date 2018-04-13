@@ -88,14 +88,13 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
     /**
      * The warning message that is shown when this node is applied to an empty table.
      */
-    private static final String WARNING_EMPTY =
-        "Input table is empty. All of its columns are considered constant value columns.";
+    private static final String WARNING_SMALL_TABLE =
+        "Input table has fewer rows than the minimum specified in the filter settings. Constant value column filtering disabled.";
 
     /**
      * The warning message that is shown when no options are selected for filtering.
      */
-    private static final String WARNING_NO_OPTION =
-        "At least one filtering option has to be selected.";
+    private static final String WARNING_NO_OPTION = "At least one filtering option has to be selected.";
 
     /**
      * The settings model for the list of columns to include in / exclude from the filtering.
@@ -234,8 +233,8 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         rowThreshold.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent arg0) {
-                if (rowThreshold.getLongValue() < 0) {
-                    rowThreshold.setLongValue(0l);
+                if (rowThreshold.getLongValue() < 1) {
+                    rowThreshold.setLongValue(1l);
                 }
             }
         });
@@ -340,22 +339,23 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         FilterResult filterResult = m_columnFilter.applyTo(inputTableSpec);
         String[] toFilter = filterResult.getIncludes();
 
-        if (inputTable.size() >= m_rowThreshold.getLongValue()) {
-            if (inputTable.size() == 1) {
-                setWarningMessage(WARNING_ONEROW);
-            }
-            if (inputTable.size() < 1) {
-                setWarningMessage(WARNING_EMPTY);
-            }
+        if (inputTable.size() < m_rowThreshold.getLongValue()) {
+            setWarningMessage(WARNING_SMALL_TABLE);
+        } else if (inputTable.size() == 1) {
+            setWarningMessage(WARNING_ONEROW);
         }
 
-        ConstantValueColumnFilter filter = new ConstantValueColumnFilter(m_filterAll.getBooleanValue(),
-            m_filterNumeric.getBooleanValue(), m_filterNumericValue.getDoubleValue(), m_filterString.getBooleanValue(),
-            m_filterStringValue.getStringValue(), m_filterMissing.getBooleanValue(), m_rowThreshold.getLongValue());
+        ConstantValueColumnFilter filter = new ConstantValueColumnFilter.ConstantValueColumnFilterBuilder()
+            .filterAll(m_filterAll.getBooleanValue()).filterNumeric(m_filterNumeric.getBooleanValue())
+            .filterNumericValue(m_filterNumericValue.getDoubleValue()).filterString(m_filterString.getBooleanValue())
+            .filterStringValue(m_filterStringValue.getStringValue()).filterMissing(m_filterMissing.getBooleanValue())
+            .rowThreshold(m_rowThreshold.getLongValue()).createConstantValueColumnFilter();
+
         String[] toRemove = filter.determineConstantValueColumns(inputTable, toFilter, exec);
 
         ColumnRearranger columnRearranger = new ColumnRearranger(inputTableSpec);
         columnRearranger.remove(toRemove);
+
         BufferedDataTable outputTable = exec.createColumnRearrangeTable(inputTable, columnRearranger, exec);
         return new BufferedDataTable[]{outputTable};
     }

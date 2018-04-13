@@ -120,7 +120,7 @@ public class ConstantValueColumnFilter {
      * @param filterMissing the option to filter columns containing only missing values
      * @param rowThreshold the minimum number of rows a table must have to be considered for filtering
      */
-    public ConstantValueColumnFilter(final boolean filterAll, final boolean filterNumeric,
+    private ConstantValueColumnFilter(final boolean filterAll, final boolean filterNumeric,
         final double filterNumericValue, final boolean filterString, final String filterStringValue,
         final boolean filterMissing, final long rowThreshold) {
         m_filterAll = filterAll;
@@ -144,12 +144,9 @@ public class ConstantValueColumnFilter {
      */
     public String[] determineConstantValueColumns(final BufferedDataTable inputTable, final String[] colNamesToFilter,
         final ExecutionContext exec) throws CanceledExecutionException {
-        // If the table is smaller than the specified threshold, none of the selected columns are removed
-        if (inputTable.size() < m_rowThreshold) {
-            return new String[0];
-        }
-        // If the table contains no data, all selected columns are considered constant and removed
-        if (inputTable.size() < 1) {
+        // If the table is smaller than the specified threshold (which should never be smaller than 1), none of the
+        // selected columns are removed.
+        if (inputTable.size() < Math.max(m_rowThreshold, 1)) {
             return new String[0];
         }
 
@@ -224,6 +221,122 @@ public class ConstantValueColumnFilter {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Builder class used to build new {@link ConstantValueColumnFilter} objects.
+     *
+     * @author Marc Bux, KNIME AG, Zurich, Switzerland
+     */
+    public static class ConstantValueColumnFilterBuilder {
+        private boolean m_nestedFilterAll = true;
+
+        private boolean m_nestedFilterNumeric = false;
+
+        private double m_nestedFilterNumericValue = 0d;
+
+        private boolean m_nestedFilterString = false;
+
+        private String m_nestedFilterStringValue = "";
+
+        private boolean m_nestedFilterMissing = false;
+
+        private long m_nestedRowThreshold = 1l;
+
+        /**
+         * Method for setting the option to filter all constant value columns for the to-be-built
+         * {@link ConstantValueColumnFilter} object.
+         *
+         * @param filterAll the option to filter all constant value columns
+         * @return this {@link ConstantValueColumnFilterBuilder} object
+         */
+        public ConstantValueColumnFilterBuilder filterAll(final boolean filterAll) {
+            m_nestedFilterAll = filterAll;
+            return this;
+        }
+
+        /**
+         * Method for setting the option to filter columns with a specific constant numeric value for the to-be-built
+         * {@link ConstantValueColumnFilter} object.
+         *
+         * @param filterNumeric the option to filter columns with a specific constant numeric value
+         * @return this {@link ConstantValueColumnFilterBuilder} object
+         */
+        public ConstantValueColumnFilterBuilder filterNumeric(final boolean filterNumeric) {
+            m_nestedFilterNumeric = filterNumeric;
+            return this;
+        }
+
+        /**
+         * Method for setting the specific numeric value that is to be looked for in filtering for the to-be-built
+         * {@link ConstantValueColumnFilter} object.
+         *
+         * @param filterNumericValue the specific numeric value that is to be looked for in filtering
+         * @return this {@link ConstantValueColumnFilterBuilder} object
+         */
+        public ConstantValueColumnFilterBuilder filterNumericValue(final double filterNumericValue) {
+            m_nestedFilterNumericValue = filterNumericValue;
+            return this;
+        }
+
+        /**
+         * Method for setting the option to filter columns with a specific constant String value for the to-be-built
+         * {@link ConstantValueColumnFilter} object.
+         *
+         * @param filterString the option to filter columns with a specific constant String value
+         * @return this {@link ConstantValueColumnFilterBuilder} object
+         */
+        public ConstantValueColumnFilterBuilder filterString(final boolean filterString) {
+            m_nestedFilterString = filterString;
+            return this;
+        }
+
+        /**
+         * Method for setting the specific String value that is to be looked for in filtering for the to-be-built
+         * {@link ConstantValueColumnFilter} object.
+         *
+         * @param filterStringValue the specific String value that is to be looked for in filtering
+         * @return this {@link ConstantValueColumnFilterBuilder} object
+         */
+        public ConstantValueColumnFilterBuilder filterStringValue(final String filterStringValue) {
+            m_nestedFilterStringValue = filterStringValue;
+            return this;
+        }
+
+        /**
+         * Method for setting the option to filter columns containing only missing values for the to-be-built
+         * {@link ConstantValueColumnFilter} object.
+         *
+         * @param filterMissing the option to filter columns containing only missing values
+         * @return this {@link ConstantValueColumnFilterBuilder} object
+         */
+        public ConstantValueColumnFilterBuilder filterMissing(final boolean filterMissing) {
+            m_nestedFilterMissing = filterMissing;
+            return this;
+        }
+
+        /**
+         * Method for setting the minimum number of rows a table must have to be considered for filtering for the
+         * to-be-built {@link ConstantValueColumnFilter} object.
+         *
+         * @param rowThreshold the minimum number of rows a table must have to be considered for filtering
+         * @return this {@link ConstantValueColumnFilterBuilder} object
+         */
+        public ConstantValueColumnFilterBuilder rowThreshold(final long rowThreshold) {
+            m_nestedRowThreshold = rowThreshold;
+            return this;
+        }
+
+        /**
+         * Method for building new {@link ConstantValueColumnFilter} objects.
+         *
+         * @return a new {@link ConstantValueColumnFilter} object
+         */
+        public ConstantValueColumnFilter createConstantValueColumnFilter() {
+            return new ConstantValueColumnFilter(m_nestedFilterAll, m_nestedFilterNumeric, m_nestedFilterNumericValue,
+                m_nestedFilterString, m_nestedFilterStringValue, m_nestedFilterMissing, m_nestedRowThreshold);
+        }
+
     }
 
 }
