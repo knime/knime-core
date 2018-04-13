@@ -274,7 +274,7 @@ public final class NumericOutliersReviser {
      * @return the spec of the data table storing the summary
      */
     public static DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec, final String[] groupColNames) {
-        return NumiercOutliersSummaryTable.getSpec(inSpec, groupColNames);
+        return NumericOutliersSummaryTable.getSpec(inSpec, groupColNames);
     }
 
     /**
@@ -443,7 +443,7 @@ public final class NumericOutliersReviser {
 
         if (!inStreamingMode) {
             // set the summary table
-            m_summaryTable = NumiercOutliersSummaryTable.getTable(exec.createSubExecutionContext(1 - treatmentProgress),
+            m_summaryTable = NumericOutliersSummaryTable.getTable(exec.createSubExecutionContext(1 - treatmentProgress),
                 in.getDataTableSpec(), outlierModel, memberCounter, outlierRepCounter, missingGroupsCounter);
         }
         // cleare some memory
@@ -806,7 +806,7 @@ public final class NumericOutliersReviser {
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
-    private static final class NumiercOutliersSummaryTable {
+    private static final class NumericOutliersSummaryTable {
 
         /** The name of the outlier column. */
         private static final String OUTLIER_COL_NAME = "Outlier column";
@@ -1087,7 +1087,7 @@ public final class NumericOutliersReviser {
          */
         public void writeTable(final ExecutionContext exec, final RowOutput out)
             throws CanceledExecutionException, InterruptedException {
-            NumiercOutliersSummaryTable.writeTable(exec, m_numCols, out, m_outlierModel, m_memberCounter, m_outlierRepCounter,
+            NumericOutliersSummaryTable.writeTable(exec, m_numCols, out, m_outlierModel, m_memberCounter, m_outlierRepCounter,
                 m_missingGroupsCounter);
         }
 
