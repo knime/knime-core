@@ -149,7 +149,7 @@ class Workflow {
      * @param id of NC
      * @param nc NodeContainer itself
      */
-    synchronized void putNode(final NodeID id, final NodeContainer nc) {
+    void putNode(final NodeID id, final NodeContainer nc) {
         // create Sets of in and outgoing connections
         m_connectionsBySource.put(id, new LinkedHashSet<ConnectionContainer>());
         m_connectionsByDest.put(id, new LinkedHashSet<ConnectionContainer>());
@@ -163,7 +163,7 @@ class Workflow {
      * @param id of NodeContainer to be removed.
      * @return removed NodeContainer
      */
-    synchronized NodeContainer removeNode(final NodeID id) {
+    NodeContainer removeNode(final NodeID id) {
         // remove node
         NodeContainer node = m_nodes.remove(id);
         // and then clean up the connection lists  (avoid inconsistent node - connection setup)
@@ -177,7 +177,7 @@ class Workflow {
     /**
      * @return collection of all NodeContainers that are part of this workflow.
      */
-    synchronized Collection<NodeContainer> getNodeValues() {
+    Collection<NodeContainer> getNodeValues() {
         Collection<NodeContainer> cnc = m_nodes.values();
         return Collections.unmodifiableCollection(cnc);
     }
@@ -185,7 +185,7 @@ class Workflow {
     /**
      * @return unmodifiable collection of all NodeIDs that are part of this workflow.
      */
-    synchronized Set<NodeID> getNodeIDs() {
+    Set<NodeID> getNodeIDs() {
         Set<NodeID> sn = m_nodes.keySet();
         return Collections.unmodifiableSet(sn);
     }
@@ -193,7 +193,7 @@ class Workflow {
     /**
      * @return number of nodes
      */
-    synchronized int getNrNodes() {
+    int getNrNodes() {
         return m_nodes.size();
     }
 
@@ -201,7 +201,7 @@ class Workflow {
      * @param id of node.
      * @return true of a node with this key already exists.
      */
-    synchronized boolean containsNodeKey(final NodeID id) {
+    boolean containsNodeKey(final NodeID id) {
         return m_nodes.containsKey(id);
     }
 
@@ -210,7 +210,7 @@ class Workflow {
      * @param id of destination node
      * @return set as described above
      */
-    synchronized Set<ConnectionContainer> getConnectionsByDest(final NodeID id) {
+    Set<ConnectionContainer> getConnectionsByDest(final NodeID id) {
         Set<ConnectionContainer> scc = m_connectionsByDest.get(id);
         return scc == null ? null : Collections.unmodifiableSet(scc);
     }
@@ -220,7 +220,7 @@ class Workflow {
      * @param id of destination node
      * @return set as described above
      */
-    synchronized Set<ConnectionContainer> getConnectionsBySource(final NodeID id) {
+    Set<ConnectionContainer> getConnectionsBySource(final NodeID id) {
         Set<ConnectionContainer> scc = m_connectionsBySource.get(id);
         return scc == null ? null : Collections.unmodifiableSet(scc);
     }
@@ -229,7 +229,7 @@ class Workflow {
      * @return a collection of sets of ConnectionContainers, grouped by
      *   source node ID.
      */
-    synchronized Collection<Set<ConnectionContainer>> getConnectionsBySourceValues() {
+    Collection<Set<ConnectionContainer>> getConnectionsBySourceValues() {
         Collection<Set<ConnectionContainer>> cscc = m_connectionsBySource.values();
         return cscc == null ? null : Collections.unmodifiableCollection(cscc);
     }
@@ -239,7 +239,7 @@ class Workflow {
      * @param cc the connection to be removed.
      * @throws IllegalArgumentException if connection does not exist.
      */
-    synchronized void removeConnection(final ConnectionContainer cc) throws IllegalArgumentException {
+    void removeConnection(final ConnectionContainer cc) throws IllegalArgumentException {
         clearGraphAnnotationCache();
         // 1) try to delete it from set of outgoing connections
         if (!m_connectionsBySource.get(cc.getSource()).remove(cc)) {
@@ -256,7 +256,7 @@ class Workflow {
     * @param cc the connection to be added.
     * @throws IllegalArgumentException if connection cannot be added.
     */
-    synchronized void addConnection(final ConnectionContainer cc) throws IllegalArgumentException {
+    void addConnection(final ConnectionContainer cc) throws IllegalArgumentException {
         clearGraphAnnotationCache();
         // 1) try to insert it into set of outgoing connections
         if (!m_connectionsBySource.get(cc.getSource()).add(cc)) {
