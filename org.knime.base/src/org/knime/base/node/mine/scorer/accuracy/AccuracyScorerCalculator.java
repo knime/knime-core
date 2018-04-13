@@ -83,6 +83,7 @@ import org.knime.core.node.util.CheckUtils;
 /**
  *
  * @author Pascal Lee, KNIME GmbH, Berlin, Germany
+ * @since 3.6
  */
 public class AccuracyScorerCalculator {
     private String[] m_targetValues;                        //Names of classifications
