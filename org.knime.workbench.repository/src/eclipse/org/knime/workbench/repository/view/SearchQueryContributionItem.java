@@ -95,7 +95,7 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
      * Delay for a triggered (by a key event) tree viewer update process before the actually update is performed.
      * This avoids unnecessary updates while typing the search query.
      */
-    private static final long DELAY = 200;
+    private static final long DELAY = 150;
 
 
     private final TreeViewer m_viewer;
@@ -160,7 +160,7 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
                 public void focusGained(final FocusEvent fe) {
                     try {
                         PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-                                                                            .showView(DefaultRepositoryView.ID);
+                            .showView(DefaultRepositoryView.ID);
 
                         // You would think that this would be ripe for an infinite loop, but luckily SWT is doing the
                         //      correct thing and not notifying focusGained for an already focused item (and similarly
@@ -169,8 +169,7 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
                         Display.getDefault().asyncExec(() -> {
                             m_text.setFocus();
                         });
-                    }
-                    catch (PartInitException e) {
+                    } catch (PartInitException e) {
                         LOGGER.warn("Exception encountered attempting to give focus to node repository view.", e);
                     }
                 }
@@ -237,7 +236,7 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
                 m_text.setFocus();
             });
             m_text.selectAll();
-        } else if(e.character == SWT.ESC) {
+        } else if (e.character == SWT.ESC) {
             //give focus to the workflow editor
             PlatformUI.getWorkbench()
                     .getActiveWorkbenchWindow().getActivePage().getActiveEditor().setFocus();
@@ -262,8 +261,9 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
      */
     @Override
     public void keyReleased(final KeyEvent e) {
-        //don't update the tree if the enter or down/up keys are used
-        if (e.keyCode == KEY_DOWN || e.keyCode == KEY_UP || e.character == SWT.CR) {
+        //don't update the tree if the enter, or down/up, or modifier keys are used
+        final int intCasting = e.character;  // events that are modifier keys only will show up as 0
+        if (e.keyCode == KEY_DOWN || e.keyCode == KEY_UP || e.character == SWT.CR || intCasting == 0) {
             return;
         }
 
@@ -273,6 +273,15 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
             //if the thread to delay the actually
             //processing of the search query is not running, start a new one
             delayQueryProcessing();
+
+            try {
+                final DefaultRepositoryView repositoryView = (DefaultRepositoryView)PlatformUI.getWorkbench()
+                    .getActiveWorkbenchWindow().getActivePage().showView(DefaultRepositoryView.ID);
+
+                repositoryView.setObscuringDisplay(false, false, "Searching...");
+            } catch (PartInitException pie) {
+                LOGGER.error("Failed to get the default repository view due to: " + pie.getMessage(), pie);
+            }
         } else {
             //if delay thread is already running
             //and a new key event arrives,
@@ -339,8 +348,7 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
             try {
                 nodeFact = tmplt.createFactoryInstance();
             } catch (Exception e) {
-                NodeLogger.getLogger(SearchQueryContributionItem.class)
-                    .error("Unable to instantiate the selected node " + tmplt.getFactory().getName(), e);
+                LOGGER.error("Unable to instantiate the selected node " + tmplt.getFactory().getName(), e);
                 return;
             }
             boolean added = NodeProvider.INSTANCE.addNode(nodeFact);
@@ -373,14 +381,25 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
             searchString = m_text.getText();
         }
 
+        if (searchString.isEmpty()) {
+            try {
+                final DefaultRepositoryView repositoryView = (DefaultRepositoryView)PlatformUI.getWorkbench()
+                    .getActiveWorkbenchWindow().getActivePage().showView(DefaultRepositoryView.ID);
+
+                repositoryView.setObscuringDisplay(true, false, null);
+            } catch (PartInitException e) {
+                LOGGER.error("Failed to get the default repository view due to: " + e.getMessage(), e);
+            }
+        }
+
         //update the filter and inform the callback object
         m_filter.setQueryString(searchString);
         if (m_callback != null) {
             m_callback.run();
         }
 
+        update = update || searchString.isEmpty();
         //update the tree view itself
-        TreeViewerUpdater.collapseAndUpdate(m_viewer, update || searchString.isEmpty(), searchString.isEmpty(),
-            !searchString.isEmpty());
+        TreeViewerUpdater.collapseAndUpdate(m_viewer, update, searchString.isEmpty(), !searchString.isEmpty());
     }
 }
