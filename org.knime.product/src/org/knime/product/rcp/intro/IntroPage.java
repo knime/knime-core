@@ -105,7 +105,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.product.branding.IBrandingService;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.explorer.ExplorerActivator;
 import org.knime.workbench.explorer.ExplorerMountTable;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.view.AbstractContentProvider;
@@ -123,6 +122,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.prefs.BackingStoreException;
 import org.xml.sax.SAXException;
 
 /**
@@ -457,9 +457,14 @@ public class IntroPage implements LocationListener {
     }
 
     private void mountServer() {
-        String s = ExplorerActivator.getDefault().getPreferenceStore()
-            .getString(PreferenceConstants.P_EXPLORER_MOUNT_POINT_XML);
-        List<MountSettings> mountSettingsList = MountSettings.parseSettings(s, true);
+        // AP-8989 switching to IEclipsePreferences
+        List<MountSettings> mountSettingsList = new ArrayList<>();
+
+        try {
+            mountSettingsList = MountSettings.loadSortedMountSettingsFromPreferences();
+        } catch (BackingStoreException e) {
+            LOGGER.error(e.getMessage(),e);
+        }
 
         Set<String> idSet = new LinkedHashSet<>();
         for (MountSettings settings : mountSettingsList) {
@@ -486,9 +491,7 @@ public class IntroPage implements LocationListener {
             mountSettingsList.add(mountSettings);
 
             //store new mount point settings
-            String settingsString = MountSettings.getSettingsString(mountSettingsList);
-            ExplorerActivator.getDefault().getPreferenceStore().setValue(PreferenceConstants.P_EXPLORER_MOUNT_POINT_XML,
-                settingsString);
+            MountSettings.saveMountSettings(mountSettingsList);
         }
     }
 
