@@ -130,6 +130,39 @@
             deprecated="false"
             factory-class="org.knime.base.node.mine.treeensemble2.node.regressiontree.predictor.RegressionTreePMMLPredictorNodeFactory">
       </node>
+      <node
+            category-path="/analytics/mining/treeensemble/randomforest/classification"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble2.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory2">
+      </node>
+      <node
+            category-path="/analytics/mining/treeensemble/randomforest/classification"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble2.node.randomforest.learner.classification.RandomForestClassificationLearnerNodeFactory2">
+      </node>
+      <node
+            category-path="/analytics/mining/treeensemble/randomforest/classification"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble2.node.randomforest.predictor.classification.RandomForestClassificationPredictorNodeFactory2">
+      </node>
+      <node
+            after="org.knime.base.node.mine.treeensemble2.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory"
+            category-path="/analytics/mining/treeensemble/randomforest/classification"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble2.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory2">
+      </node>
+      <node
+            after="org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.classification.GradientBoostingClassificationLearnerNodeFactory"
+            category-path="/analytics/mining/treeensemble/gradientboosting/classification"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification.GradientBoostingClassificationPredictorNodeFactory2">
+      </node>
+      <node
+            after="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification.GradientBoostingClassificationPredictorNodeFactory"
+            category-path="/analytics/mining/treeensemble/gradientboosting/classification"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.pmml.GradientBoostingClassificationPMMLPredictorNodeFactory2">
+      </node>
 <!--      <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
             category-path="/analytics/mining/treeensemble"
