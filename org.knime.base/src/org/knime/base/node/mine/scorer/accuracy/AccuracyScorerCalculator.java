@@ -85,6 +85,7 @@ import org.knime.core.node.util.CheckUtils;
  * @author Pascal Lee, KNIME GmbH, Berlin, Germany
  * @since 3.6
  */
+@since 3.6.0
 public class AccuracyScorerCalculator {
     private String[] m_targetValues;                        //Names of classifications
     private int[][] m_confusionMatrix;
@@ -93,6 +94,7 @@ public class AccuracyScorerCalculator {
     private List<ValueStats> m_valueStats;
     private double m_accuracy;
     private double m_cohensKappa;
+    private double m_error;
     private BufferedDataTable m_confusionMatrixDatatable;   //Output to the former Java Scorer Node
     private BufferedDataTable m_accuracyDatatable;          //Output to the former Java Scorer Node
     private List<String> m_warnings;
@@ -308,6 +310,7 @@ public class AccuracyScorerCalculator {
                 secondColumnName, targetValues, keyStore);
         m_accuracy = viewData.getAccuracy();
         m_cohensKappa = viewData.getCohenKappa();
+        m_error = viewData.getError();
 
         // print info
         int missing = numberOfRows - correctCount - falseCount;
@@ -651,6 +654,10 @@ public class AccuracyScorerCalculator {
 
     public double getCohensKappa() {
         return m_cohensKappa;
+    }
+
+    public double getError() {
+        return m_error;
     }
 
     public Iterator<ValueStats> getIterator() {
