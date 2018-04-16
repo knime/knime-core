@@ -837,12 +837,7 @@ public final class FilesHistoryPanel extends JPanel {
                 }
             }
         }
-        DefaultComboBoxModel<String> comboModel =
-                (DefaultComboBoxModel<String>)m_textBox.getModel();
-        comboModel.removeAllElements();
-        for (String s : list) {
-            comboModel.addElement(s);
-        }
+        m_textBox.setModel(new DefaultComboBoxModel<String>(list.toArray(new String[list.size()])));
         // changing the model will also change the minimum size to be
         // quite big. We have tooltips, we don't need that
         Dimension newMin = new Dimension(0, getPreferredSize().height);
