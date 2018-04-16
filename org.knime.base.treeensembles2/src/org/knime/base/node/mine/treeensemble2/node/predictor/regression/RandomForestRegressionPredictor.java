@@ -75,7 +75,6 @@ public class RandomForestRegressionPredictor extends AbstractRandomForestPredict
             final int nrModels = m_model.getNrModels();
             for (int i = 0; i < nrModels; i++) {
                 if (hasOutOfBagFilter && isRowPartOfTrainingData(key, i)) {
-                    System.out.println("Row " + key + " ignored.");
                     // ignore, row was used to train the model
                 } else {
                     TreeModelRegression m = m_model.getTreeModelRegression(i);

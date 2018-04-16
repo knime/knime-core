@@ -70,16 +70,13 @@ public final class RandomForestClassificationPredictor
         RFClassificationPrediction(final PredictorRecord record, final RowKey key, final boolean hasOutOfBagFilter) {
             m_voting = m_votingFactory.createVoting();
             final int nrModels = m_model.getNrModels();
-            int nrValidModels = 0;
             for (int i = 0; i < nrModels; i++) {
                 if (hasOutOfBagFilter && isRowPartOfTrainingData(key, i)) {
-                    System.out.println("Row " + key + " ignored.");
                     // ignore, row was used to train the model
                 } else {
                     TreeModelClassification m = m_model.getTreeModelClassification(i);
                     TreeNodeClassification match = m.findMatchingNode(record);
                     m_voting.addVote(match);
-                    nrValidModels += 1;
                 }
             }
         }
