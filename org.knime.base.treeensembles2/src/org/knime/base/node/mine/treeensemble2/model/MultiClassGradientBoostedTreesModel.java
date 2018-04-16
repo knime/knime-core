@@ -173,6 +173,13 @@ public class MultiClassGradientBoostedTreesModel extends AbstractGradientBoostin
     }
 
     /**
+     * @return an array of the class labels
+     */
+    public String[] getClassLabels() {
+        return m_classLabels.clone();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
