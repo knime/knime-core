@@ -53,7 +53,6 @@ import java.io.IOException;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObjectSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -101,12 +100,8 @@ final class RegressionTreePredictorNodeModel extends NodeModel {
                 RegressionTreePredictorConfiguration.getPredictColumnName(targetColName));
         }
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-        final RegressionTreePredictor pred = new RegressionTreePredictor(null, modelSpec, dataSpec, m_configuration);
-        ColumnRearranger rearranger = pred.getPredictionRearranger();
-        // rearranger may be null if confidence values are appended but the
-        // model does not have a list of possible target values
-        DataTableSpec outSpec = rearranger != null ? rearranger.createSpec() : null;
-        return new DataTableSpec[]{outSpec};
+        final RegressionTreePredictionHandler pred = new RegressionTreePredictionHandler(null, modelSpec, dataSpec, m_configuration);
+        return pred.configure();
     }
 
     /** {@inheritDoc} */
@@ -116,10 +111,9 @@ final class RegressionTreePredictorNodeModel extends NodeModel {
         RegressionTreeModelPortObjectSpec modelSpec = model.getSpec();
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
-        final RegressionTreePredictor pred = new RegressionTreePredictor(
+        final RegressionTreePredictionHandler pred = new RegressionTreePredictionHandler(
             model.getModel(), modelSpec, dataSpec, m_configuration);
-        ColumnRearranger rearranger = pred.getPredictionRearranger();
-        BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
+        BufferedDataTable outTable = exec.createColumnRearrangeTable(data, pred.createExecutionRearranger(), exec);
         return new BufferedDataTable[]{outTable};
     }
 
@@ -137,11 +131,10 @@ final class RegressionTreePredictorNodeModel extends NodeModel {
                 RegressionTreeModelPortObject model =
                     (RegressionTreeModelPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-                final RegressionTreePredictor pred =
-                    new RegressionTreePredictor(model.getModel(), model.getSpec(),
+                final RegressionTreePredictionHandler pred =
+                    new RegressionTreePredictionHandler(model.getModel(), model.getSpec(),
                             dataSpec, m_configuration);
-                ColumnRearranger rearranger = pred.getPredictionRearranger();
-                StreamableFunction func = rearranger.createStreamableFunction(1, 0);
+                StreamableFunction func = pred.createExecutionRearranger().createStreamableFunction(1, 0);
                 func.runFinal(inputs, outputs, exec);
             }
         };

@@ -50,11 +50,14 @@ package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.c
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
-import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictor;
+import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.LKGradientBoostedTreesPredictor;
+import org.knime.base.node.mine.treeensemble2.node.predictor.PredictionRearrangerCreator;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -86,12 +89,16 @@ public class GradientBoostingClassificationPredictorNodeModel extends NodeModel 
 
     private TreeEnsemblePredictorConfiguration m_configuration;
 
+    private final boolean m_pre_3_6;
+
     /**
+     * @param pre_3_6 indicates if the node is created with a version prior to 3.6 when the column output was different
      *
      */
-    public GradientBoostingClassificationPredictorNodeModel() {
+    public GradientBoostingClassificationPredictorNodeModel(final boolean pre_3_6) {
         super(new PortType[]{GradientBoostingModelPortObject.TYPE, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE});
+        m_pre_3_6 = pre_3_6;
     }
 
     /** {@inheritDoc} */
@@ -107,11 +114,26 @@ public class GradientBoostingClassificationPredictorNodeModel extends NodeModel 
         }
         modelSpec.assertTargetTypeMatches(false);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-        GradientBoostingPredictor<MultiClassGradientBoostedTreesModel> predictor =
-                new GradientBoostingPredictor<>(null, modelSpec, dataSpec, m_configuration);
-        ColumnRearranger rearranger = predictor.getPredictionRearranger();
+        PredictionRearrangerCreator crc = createPredictionRearrangerCreator(dataSpec, modelSpec, null);
+        Optional<ColumnRearranger> rearranger = crc.createConfigurationRearranger();
+        return rearranger.isPresent() ? new PortObjectSpec[]{rearranger.get().createSpec()} : null;
+    }
 
-        return new PortObjectSpec[]{rearranger.createSpec()};
+    private PredictionRearrangerCreator createPredictionRearrangerCreator(final DataTableSpec testSpec,
+        final TreeEnsembleModelPortObjectSpec modelSpec, final MultiClassGradientBoostedTreesModel model)
+        throws InvalidSettingsException {
+        PredictionRearrangerCreator crc =
+            new PredictionRearrangerCreator(testSpec, new LKGradientBoostedTreesPredictor(model,
+                m_configuration.isAppendClassConfidences() || m_configuration.isAppendPredictionConfidence(),
+                TreeEnsemblePredictionUtility.createRowConverter(modelSpec, model, testSpec)));
+        TreeEnsemblePredictionUtility.setupRearrangerCreatorGBT(m_pre_3_6, crc, modelSpec, model, m_configuration);
+        return crc;
+    }
+
+    private ColumnRearranger createExecutionRearranger(final DataTableSpec testSpec,
+        final TreeEnsembleModelPortObjectSpec modelSpec, final MultiClassGradientBoostedTreesModel model)
+        throws InvalidSettingsException {
+        return createPredictionRearrangerCreator(testSpec, modelSpec, model).createExecutionRearranger();
     }
 
     /** {@inheritDoc} */
@@ -121,10 +143,8 @@ public class GradientBoostingClassificationPredictorNodeModel extends NodeModel 
         TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
-        GradientBoostingPredictor<MultiClassGradientBoostedTreesModel> predictor =
-                new GradientBoostingPredictor<>((MultiClassGradientBoostedTreesModel)model.getEnsembleModel(),
-                        modelSpec, dataSpec, m_configuration);
-        ColumnRearranger rearranger = predictor.getPredictionRearranger();
+        ColumnRearranger rearranger = createExecutionRearranger(dataSpec, modelSpec,
+            (MultiClassGradientBoostedTreesModel)model.getEnsembleModel());
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
         return new BufferedDataTable[]{outTable};
     }
@@ -144,10 +164,8 @@ public class GradientBoostingClassificationPredictorNodeModel extends NodeModel 
                     (GradientBoostingModelPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
                 DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-                final GradientBoostingPredictor<MultiClassGradientBoostedTreesModel> pred =
-                    new GradientBoostingPredictor<>((MultiClassGradientBoostedTreesModel)model.getEnsembleModel(),
-                            modelSpec, dataSpec, m_configuration);
-                ColumnRearranger rearranger = pred.getPredictionRearranger();
+                ColumnRearranger rearranger = createExecutionRearranger(dataSpec, modelSpec,
+                    (MultiClassGradientBoostedTreesModel)model.getEnsembleModel());
                 StreamableFunction func = rearranger.createStreamableFunction(1, 0);
                 func.runFinal(inputs, outputs, exec);
             }

@@ -126,10 +126,11 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
                 .setPredictionColumnName(TreeEnsemblePredictorConfiguration.getPredictColumnName(targetColName));
         }
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-        final RegressionTreePredictor pred =
-            new RegressionTreePredictor(null, modelSpec, dataSpec, m_configuration);
-        return new PortObjectSpec[]{pred.getPredictionRearranger().createSpec()};
+        final RegressionTreePredictionHandler pred =
+            new RegressionTreePredictionHandler(null, modelSpec, dataSpec, m_configuration);
+        return pred.configure();
     }
+
 
     /** {@inheritDoc} */
     @Override
@@ -143,10 +144,9 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
             m_configuration = RegressionTreePredictorConfiguration.createDefault(
                 translateSpec(pmmlPO.getSpec()).getTargetColumn().getName());
         }
-        final RegressionTreePredictor pred =
-            new RegressionTreePredictor(modelSpecPair.getFirst(), modelSpecPair.getSecond(), dataSpec, m_configuration);
-        ColumnRearranger rearranger = pred.getPredictionRearranger();
-        BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
+        final RegressionTreePredictionHandler pred =
+            new RegressionTreePredictionHandler(modelSpecPair.getFirst(), modelSpecPair.getSecond(), dataSpec, m_configuration);
+        BufferedDataTable outTable = exec.createColumnRearrangeTable(data, pred.createExecutionRearranger(), exec);
         return new BufferedDataTable[]{outTable};
     }
 
@@ -191,11 +191,10 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
                     (PMMLPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
                 Pair<RegressionTreeModel, RegressionTreeModelPortObjectSpec> treeSpecPair = importModel(model);
-                final RegressionTreePredictor pred =
-                    new RegressionTreePredictor(treeSpecPair.getFirst(), treeSpecPair.getSecond(),
+                final RegressionTreePredictionHandler pred =
+                    new RegressionTreePredictionHandler(treeSpecPair.getFirst(), treeSpecPair.getSecond(),
                             dataSpec, m_configuration);
-                ColumnRearranger rearranger = pred.getPredictionRearranger();
-                StreamableFunction func = rearranger.createStreamableFunction(1, 0);
+                StreamableFunction func = pred.createExecutionRearranger().createStreamableFunction(1, 0);
                 func.runFinal(inputs, outputs, exec);
             }
         };

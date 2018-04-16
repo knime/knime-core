@@ -51,6 +51,7 @@ package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.p
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
@@ -61,7 +62,10 @@ import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractGBTModelPMMLTra
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractTreeModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.model.pmml.ClassificationGBTModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.model.pmml.RegressionGBTModelPMMLTranslator;
-import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictor;
+import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GBTRegressionPredictor;
+import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.LKGradientBoostedTreesPredictor;
+import org.knime.base.node.mine.treeensemble2.node.predictor.PredictionRearrangerCreator;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -102,15 +106,18 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
 
     private TreeEnsemblePredictorConfiguration m_configuration;
     private final boolean m_isRegression;
+    private final boolean m_pre_3_6;
 
     /**
      * Default constructor
      * @param isRegression boolean indicating if the node model expects a regression model
+     * @param pre_3_6 whether the model was build prior to version 3.6.0
      */
-    public GradientBoostingPMMLPredictorNodeModel(final boolean isRegression) {
+    public GradientBoostingPMMLPredictorNodeModel(final boolean isRegression, final boolean pre_3_6) {
         super(new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE});
         m_isRegression = isRegression;
+        m_pre_3_6 = pre_3_6;
     }
 
     /** {@inheritDoc} */
@@ -138,9 +145,34 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
         }
         modelSpec.assertTargetTypeMatches(m_isRegression);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-        final GradientBoostingPredictor<GradientBoostedTreesModel> pred =
-            new GradientBoostingPredictor<>(null, modelSpec, dataSpec, m_configuration);
-        return new PortObjectSpec[]{pred.getPredictionRearranger().createSpec()};
+        PredictionRearrangerCreator prc = createRearrangerCreator(dataSpec, modelSpec, null);
+        Optional<ColumnRearranger> rearranger = prc.createConfigurationRearranger();
+        return rearranger.isPresent() ? new PortObjectSpec[]{rearranger.get().createSpec()} : null;
+    }
+
+    private PredictionRearrangerCreator createRearrangerCreator(final DataTableSpec predictSpec,
+        final TreeEnsembleModelPortObjectSpec modelSpec, final M model) throws InvalidSettingsException {
+        PredictionRearrangerCreator prc;
+        if (m_isRegression) {
+            prc = new PredictionRearrangerCreator(predictSpec,
+                new GBTRegressionPredictor((GradientBoostedTreesModel)model,
+                TreeEnsemblePredictionUtility.createRowConverter(modelSpec, model, predictSpec)));
+            prc.addRegressionPrediction(m_configuration.getPredictionColumnName());
+        } else {
+            MultiClassGradientBoostedTreesModel gbt = (MultiClassGradientBoostedTreesModel)model;
+            prc = new PredictionRearrangerCreator(predictSpec,
+                new LKGradientBoostedTreesPredictor(gbt,
+                    m_configuration.isAppendClassConfidences() || m_configuration.isAppendPredictionConfidence(),
+                TreeEnsemblePredictionUtility.createRowConverter(modelSpec, model, predictSpec)));
+            TreeEnsemblePredictionUtility.setupRearrangerCreatorGBT(m_pre_3_6, prc, modelSpec, gbt, m_configuration);
+        }
+        return prc;
+    }
+
+    private ColumnRearranger createExecutionRearranger(final DataTableSpec predictSpec,
+        final TreeEnsembleModelPortObjectSpec modelSpec, final M model) throws InvalidSettingsException {
+        PredictionRearrangerCreator prc = createRearrangerCreator(predictSpec, modelSpec, model);
+        return prc.createExecutionRearranger();
     }
 
     /** {@inheritDoc} */
@@ -155,9 +187,7 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
             m_configuration = TreeEnsemblePredictorConfiguration.createDefault(
                 m_isRegression, translateSpec(pmmlPO.getSpec()).getTargetColumn().getName());
         }
-        final GradientBoostingPredictor<?> pred =
-            new GradientBoostingPredictor<>(model.getEnsembleModel(), model.getSpec(), dataSpec, m_configuration);
-        ColumnRearranger rearranger = pred.getPredictionRearranger();
+        ColumnRearranger rearranger = createExecutionRearranger(dataSpec, model.getSpec(), (M)model.getEnsembleModel());
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
         return new BufferedDataTable[]{outTable};
     }
@@ -211,10 +241,8 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
                     (PMMLPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
                 GradientBoostingModelPortObject gbt = importModel(model);
-                final GradientBoostingPredictor<?> pred =
-                    new GradientBoostingPredictor<>(gbt.getEnsembleModel(), gbt.getSpec(),
-                            dataSpec, m_configuration);
-                ColumnRearranger rearranger = pred.getPredictionRearranger();
+                ColumnRearranger rearranger = createExecutionRearranger(dataSpec, gbt.getSpec(),
+                    (M)gbt.getEnsembleModel());
                 StreamableFunction func = rearranger.createStreamableFunction(1, 0);
                 func.runFinal(inputs, outputs, exec);
             }

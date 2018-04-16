@@ -65,7 +65,7 @@ extends NodeFactory<GradientBoostingClassificationPredictorNodeModel> {
      */
     @Override
     public GradientBoostingClassificationPredictorNodeModel createNodeModel() {
-        return new GradientBoostingClassificationPredictorNodeModel();
+        return new GradientBoostingClassificationPredictorNodeModel(true);
     }
 
     /**

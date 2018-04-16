@@ -48,6 +48,7 @@
 package org.knime.base.node.mine.treeensemble2.node.randomforest.learner.classification;
 
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerNodeView;
+import org.knime.base.node.mine.treeensemble2.node.learner.classification.TreeEnsembleClassificationLearnerNodeModel;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
@@ -57,12 +58,12 @@ import org.knime.core.node.NodeView;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class RandomForestClassificationLearnerNodeFactory extends
-    NodeFactory<RandomForestClassificationLearnerNodeModel> {
+    NodeFactory<TreeEnsembleClassificationLearnerNodeModel> {
 
     /** {@inheritDoc} */
     @Override
-    public RandomForestClassificationLearnerNodeModel createNodeModel() {
-        return new RandomForestClassificationLearnerNodeModel();
+    public TreeEnsembleClassificationLearnerNodeModel createNodeModel() {
+        return new TreeEnsembleClassificationLearnerNodeModel(true);
     }
 
     /** {@inheritDoc} */
@@ -73,9 +74,9 @@ public class RandomForestClassificationLearnerNodeFactory extends
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<RandomForestClassificationLearnerNodeModel> createNodeView(final int viewIndex,
-        final RandomForestClassificationLearnerNodeModel nodeModel) {
-        return new TreeEnsembleLearnerNodeView<RandomForestClassificationLearnerNodeModel>(nodeModel);
+    public NodeView<TreeEnsembleClassificationLearnerNodeModel> createNodeView(final int viewIndex,
+        final TreeEnsembleClassificationLearnerNodeModel nodeModel) {
+        return new TreeEnsembleLearnerNodeView<>(nodeModel);
     }
 
     /** {@inheritDoc} */

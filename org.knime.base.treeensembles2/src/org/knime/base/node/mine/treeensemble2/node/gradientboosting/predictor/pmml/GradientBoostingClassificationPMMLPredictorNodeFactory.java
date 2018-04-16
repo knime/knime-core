@@ -66,7 +66,7 @@ NodeFactory<GradientBoostingPMMLPredictorNodeModel<MultiClassGradientBoostedTree
      */
     @Override
     public GradientBoostingPMMLPredictorNodeModel<MultiClassGradientBoostedTreesModel> createNodeModel() {
-        return new GradientBoostingPMMLPredictorNodeModel<MultiClassGradientBoostedTreesModel>(false);
+        return new GradientBoostingPMMLPredictorNodeModel<MultiClassGradientBoostedTreesModel>(false, true);
     }
 
     /**

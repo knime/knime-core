@@ -52,7 +52,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class TreeEnsembleClassificationPredictorNodeFactory extends
@@ -61,7 +61,7 @@ public class TreeEnsembleClassificationPredictorNodeFactory extends
     /** {@inheritDoc} */
     @Override
     public final TreeEnsembleClassificationPredictorNodeModel createNodeModel() {
-        return new TreeEnsembleClassificationPredictorNodeModel();
+        return new TreeEnsembleClassificationPredictorNodeModel(true);
     }
 
     /** {@inheritDoc} */

@@ -74,7 +74,7 @@ public final class TreeEnsembleRegressionLearnerNodeFactory extends NodeFactory<
     @Override
     public NodeView<TreeEnsembleRegressionLearnerNodeModel> createNodeView(final int viewIndex,
         final TreeEnsembleRegressionLearnerNodeModel nodeModel) {
-        return new TreeEnsembleLearnerNodeView<TreeEnsembleRegressionLearnerNodeModel>(nodeModel);
+        return new TreeEnsembleLearnerNodeView<>(nodeModel);
     }
 
     /** {@inheritDoc} */

@@ -47,20 +47,21 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.randomforest.predictor.regression;
 
+import org.knime.base.node.mine.treeensemble2.node.predictor.regression.TreeEnsembleRegressionPredictorNodeModel;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
-public class RandomForestRegressionPredictorNodeFactory extends NodeFactory<RandomForestRegressionPredictorNodeModel> {
+public class RandomForestRegressionPredictorNodeFactory extends NodeFactory<TreeEnsembleRegressionPredictorNodeModel> {
 
     /** {@inheritDoc} */
     @Override
-    public final RandomForestRegressionPredictorNodeModel createNodeModel() {
-        return new RandomForestRegressionPredictorNodeModel();
+    public final TreeEnsembleRegressionPredictorNodeModel createNodeModel() {
+        return new TreeEnsembleRegressionPredictorNodeModel();
     }
 
     /** {@inheritDoc} */
@@ -71,8 +72,8 @@ public class RandomForestRegressionPredictorNodeFactory extends NodeFactory<Rand
 
     /** {@inheritDoc} */
     @Override
-    public final NodeView<RandomForestRegressionPredictorNodeModel> createNodeView(final int viewIndex,
-        final RandomForestRegressionPredictorNodeModel nodeModel) {
+    public final NodeView<TreeEnsembleRegressionPredictorNodeModel> createNodeView(final int viewIndex,
+        final TreeEnsembleRegressionPredictorNodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 

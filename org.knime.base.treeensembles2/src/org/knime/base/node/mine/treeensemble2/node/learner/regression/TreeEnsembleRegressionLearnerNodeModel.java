@@ -53,6 +53,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.zip.GZIPInputStream;
@@ -67,7 +68,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectS
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerNodeView.ViewContentProvider;
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictor;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -91,7 +92,7 @@ import org.knime.core.node.port.PortType;
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
-final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements PortObjectHolder, ViewContentProvider {
+public final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements PortObjectHolder, ViewContentProvider {
 
     /** The file name where to write the internals to. */
     private static final String INTERNAL_DATASAMPLE_FILE = "datasample.zip";
@@ -136,23 +137,15 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements 
         m_configuration.checkColumnSelection(inSpec);
         DataTableSpec learnSpec = learnRearranger.createSpec();
         TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
-        final TreeEnsemblePredictor outOfBagPredictor = createOutOfBagPredictor(ensembleSpec, null, inSpec);
-        ColumnRearranger outOfBagRearranger = outOfBagPredictor.getPredictionRearranger();
-        DataTableSpec outOfBagSpec = outOfBagRearranger == null ? null : outOfBagRearranger.createSpec();
+        Optional<DataTableSpec> outOfBagSpec = TreeEnsemblePredictionUtility.createPRCForRegressionRF(
+            inSpec, ensembleSpec, null, null, null, createOOBConfig()).createConfigurationRearranger()
+                .map(ColumnRearranger::createSpec);
         DataTableSpec colStatsSpec = TreeEnsembleLearner.getColumnStatisticTableSpec();
 
-        return new PortObjectSpec[]{outOfBagSpec, colStatsSpec, ensembleSpec};
+        return new PortObjectSpec[]{outOfBagSpec.orElse(null), colStatsSpec, ensembleSpec};
     }
 
-    /**
-     * @param ensembleSpec
-     * @param ensembleModel
-     * @param inSpec
-     * @return
-     * @throws InvalidSettingsException
-     */
-    private TreeEnsemblePredictor createOutOfBagPredictor(final TreeEnsembleModelPortObjectSpec ensembleSpec,
-        final TreeEnsembleModelPortObject ensembleModel, final DataTableSpec inSpec) throws InvalidSettingsException {
+    private TreeEnsemblePredictorConfiguration createOOBConfig() {
         String targetColumn = m_configuration.getTargetColumn();
         TreeEnsemblePredictorConfiguration ooBConfig = new TreeEnsemblePredictorConfiguration(true, targetColumn);
         String append = targetColumn + " (Out-of-bag)";
@@ -160,7 +153,7 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements 
         ooBConfig.setAppendPredictionConfidence(true);
         ooBConfig.setAppendClassConfidences(true);
         ooBConfig.setAppendModelCount(true);
-        return new TreeEnsemblePredictor(ensembleSpec, ensembleModel, inSpec, ooBConfig);
+        return ooBConfig;
     }
 
     /** {@inheritDoc} */
@@ -207,9 +200,9 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements 
             exec.createFileStore(UUID.randomUUID().toString() + ""));
         learnExec.setProgress(1.0);
         exec.setMessage("Out of bag prediction");
-        TreeEnsemblePredictor outOfBagPredictor = createOutOfBagPredictor(ensembleSpec, modelPortObject, spec);
-        outOfBagPredictor.setOutofBagFilter(learner.getRowSamples(), data.getTargetColumn());
-        ColumnRearranger outOfBagRearranger = outOfBagPredictor.getPredictionRearranger();
+        ColumnRearranger outOfBagRearranger = TreeEnsemblePredictionUtility.createPRCForRegressionRF(
+            spec, ensembleSpec, model, learner.getRowSamples(), data.getTargetColumn(), createOOBConfig())
+                .createExecutionRearranger();
         BufferedDataTable outOfBagTable = exec.createColumnRearrangeTable(t, outOfBagRearranger, outOfBagExec);
         BufferedDataTable colStatsTable = learner.createColumnStatisticTable(exec.createSubExecutionContext(0.0));
         m_ensembleModelPortObject = modelPortObject;

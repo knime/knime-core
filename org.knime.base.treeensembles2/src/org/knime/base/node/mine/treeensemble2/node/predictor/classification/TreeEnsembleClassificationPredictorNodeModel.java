@@ -49,10 +49,11 @@ package org.knime.base.node.mine.treeensemble2.node.predictor.classification;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictor;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -79,16 +80,21 @@ import org.knime.core.node.streamable.StreamableOperator;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
+public final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
 
     private TreeEnsemblePredictorConfiguration m_configuration;
 
+    private final boolean m_pre_3_6;
+
     /**
+     * @param pre_3_6 flag that indicates if node is from a version prior to 3.6
      *  */
-    TreeEnsembleClassificationPredictorNodeModel() {
+    public TreeEnsembleClassificationPredictorNodeModel(final boolean pre_3_6) {
         super(new PortType[]{TreeEnsembleModelPortObject.TYPE, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE});
+        m_pre_3_6 = pre_3_6;
     }
 
     /** {@inheritDoc} */
@@ -99,16 +105,17 @@ final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
         if (m_configuration == null) {
             m_configuration = TreeEnsemblePredictorConfiguration.createDefault(false, targetColName);
         } else if (!m_configuration.isChangePredictionColumnName()) {
-            m_configuration.setPredictionColumnName(TreeEnsemblePredictorConfiguration.getPredictColumnName(targetColName));
+            m_configuration.setPredictionColumnName(TreeEnsemblePredictorConfiguration
+                .getPredictColumnName(targetColName));
         }
         modelSpec.assertTargetTypeMatches(false);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-        final TreeEnsemblePredictor pred = new TreeEnsemblePredictor(modelSpec, null, dataSpec, m_configuration);
-        ColumnRearranger rearranger = pred.getPredictionRearranger();
         // rearranger may be null if confidence values are appended but the
         // model does not have a list of possible target values
-        DataTableSpec outSpec = rearranger != null ? rearranger.createSpec() : null;
-        return new DataTableSpec[]{outSpec};
+        Optional<DataTableSpec> outSpec = TreeEnsemblePredictionUtility.createPRCForClassificationRF(
+            dataSpec, modelSpec, null, null, null, m_configuration, m_pre_3_6)
+                .createConfigurationRearranger().map(ColumnRearranger::createSpec);
+        return new DataTableSpec[]{outSpec.isPresent() ? outSpec.get() : null};
     }
 
     /** {@inheritDoc} */
@@ -118,9 +125,10 @@ final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
         TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
-        m_configuration.checkSoftVotingSettingForModel(model).ifPresent(s -> setWarningMessage(s));
-        final TreeEnsemblePredictor pred = new TreeEnsemblePredictor(modelSpec, model, dataSpec, m_configuration);
-        ColumnRearranger rearranger = pred.getPredictionRearranger();
+        m_configuration.checkSoftVotingSettingForModel(model).ifPresent(this::setWarningMessage);
+        ColumnRearranger rearranger = TreeEnsemblePredictionUtility.createPRCForClassificationRF(
+            dataSpec, modelSpec, model.getEnsembleModel(), null, null, m_configuration, m_pre_3_6)
+                .createExecutionRearranger();
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
         return new BufferedDataTable[]{outTable};
     }
@@ -138,8 +146,9 @@ final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
                 TreeEnsembleModelPortObject model = (TreeEnsembleModelPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
                 DataTableSpec dataSpec = (DataTableSpec) inSpecs[1];
-                final TreeEnsemblePredictor pred = new TreeEnsemblePredictor(modelSpec, model, dataSpec, m_configuration);
-                ColumnRearranger rearranger = pred.getPredictionRearranger();
+                ColumnRearranger rearranger = TreeEnsemblePredictionUtility.createPRCForClassificationRF(
+                    dataSpec, modelSpec, model.getEnsembleModel(), null, null, m_configuration, m_pre_3_6)
+                        .createExecutionRearranger();
                 StreamableFunction func = rearranger.createStreamableFunction(1, 0);
                 func.runFinal(inputs, outputs, exec);
             }

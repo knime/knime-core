@@ -62,7 +62,7 @@ public class TreeEnsembleClassificationLearnerNodeFactory extends
     /** {@inheritDoc} */
     @Override
     public TreeEnsembleClassificationLearnerNodeModel createNodeModel() {
-        return new TreeEnsembleClassificationLearnerNodeModel();
+        return new TreeEnsembleClassificationLearnerNodeModel(true);
     }
 
     /** {@inheritDoc} */

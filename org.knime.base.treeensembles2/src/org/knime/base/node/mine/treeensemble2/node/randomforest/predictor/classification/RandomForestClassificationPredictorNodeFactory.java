@@ -47,21 +47,22 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.randomforest.predictor.classification;
 
+import org.knime.base.node.mine.treeensemble2.node.predictor.classification.TreeEnsembleClassificationPredictorNodeModel;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class RandomForestClassificationPredictorNodeFactory extends
-    NodeFactory<RandomForestClassificationPredictorNodeModel> {
+    NodeFactory<TreeEnsembleClassificationPredictorNodeModel> {
 
     /** {@inheritDoc} */
     @Override
-    public final RandomForestClassificationPredictorNodeModel createNodeModel() {
-        return new RandomForestClassificationPredictorNodeModel();
+    public final TreeEnsembleClassificationPredictorNodeModel createNodeModel() {
+        return new TreeEnsembleClassificationPredictorNodeModel(true);
     }
 
     /** {@inheritDoc} */
@@ -72,8 +73,8 @@ public class RandomForestClassificationPredictorNodeFactory extends
 
     /** {@inheritDoc} */
     @Override
-    public final NodeView<RandomForestClassificationPredictorNodeModel> createNodeView(final int viewIndex,
-        final RandomForestClassificationPredictorNodeModel nodeModel) {
+    public final NodeView<TreeEnsembleClassificationPredictorNodeModel> createNodeView(final int viewIndex,
+        final TreeEnsembleClassificationPredictorNodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 
