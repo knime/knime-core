@@ -61,7 +61,11 @@ interface Voting {
 
     public String getMajorityClass();
 
+    public int getMajorityClassIdx();
+
     public float getClassProbabilityForClass(String classValue);
+
+    public float getClassProbabilityForClass(int classIdx);
 
     public int getNrVotes();
 }

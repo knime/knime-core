@@ -73,7 +73,14 @@ final class SoftVoting extends AbstractVoting {
      */
     @Override
     public float getClassProbabilityForClass(final String classValue) {
-        int classIdx = getIndexForClass(classValue);
+        return getClassProbabilityForClass(getIndexForClass(classValue));
+    }
+
+    /* (non-Javadoc)
+     * @see org.knime.base.node.mine.treeensemble2.node.predictor.classification.Voting#getClassProbabilityForClass(int)
+     */
+    @Override
+    public float getClassProbabilityForClass(final int classIdx) {
         float prob = m_distribution[classIdx] / getNrVotes();
         return prob;
     }

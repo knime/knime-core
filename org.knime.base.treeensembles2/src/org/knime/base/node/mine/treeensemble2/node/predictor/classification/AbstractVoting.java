@@ -66,6 +66,8 @@ abstract class AbstractVoting implements Voting {
 
     private final Map<String, Integer> m_targetValueToIndexMap;
     private int m_nrVotes;
+    private int m_majorityClassIdx = -1;
+    private String m_majorityClass;
 
     /**
      * @param targetValueToIndexMap a map that assigns a unique index to each target value
@@ -103,9 +105,27 @@ abstract class AbstractVoting implements Voting {
      */
     @Override
     public final String getMajorityClass() {
+        if (m_majorityClass == null) {
+            findMajorityClass();
+        }
+        return m_majorityClass;
+    }
+
+    /* (non-Javadoc)
+     * @see org.knime.base.node.mine.treeensemble2.node.predictor.classification.Voting#getMajorityClassIdx()
+     */
+    @Override
+    public int getMajorityClassIdx() {
+        if (m_majorityClassIdx == -1) {
+            findMajorityClass();
+        }
+        return m_majorityClassIdx;
+    }
+
+    private void findMajorityClass() {
         String majorityClass = null;
         if (m_nrVotes == 0) {
-            return majorityClass;
+            m_majorityClass = null;
         }
         float highestProb = -1.0f;
         final Set<Entry<String, Integer>> entries = m_targetValueToIndexMap.entrySet();
@@ -118,9 +138,9 @@ abstract class AbstractVoting implements Voting {
             }
         }
         assert majorityClass != null : "It is not possible that no class has a probability >= 0.";
-        return majorityClass;
+        m_majorityClass = majorityClass;
+        m_majorityClassIdx = m_targetValueToIndexMap.get(majorityClass);
     }
-
     /**
      * {@inheritDoc}
      */

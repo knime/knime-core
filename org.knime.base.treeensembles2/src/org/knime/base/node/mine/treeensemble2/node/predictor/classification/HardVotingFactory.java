@@ -53,9 +53,9 @@ import java.util.Map;
 /**
  * Factory for HardVoting objects.
  *
- * @author Adrian Nembach, KNIME.com
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class HardVotingFactory implements VotingFactory {
+public final class HardVotingFactory implements VotingFactory {
 
     private final Map<String, Integer> m_targetValueToIndexMap;
 

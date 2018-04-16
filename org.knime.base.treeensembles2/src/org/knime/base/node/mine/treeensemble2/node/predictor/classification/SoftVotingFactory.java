@@ -55,7 +55,7 @@ import java.util.Map;
  *
  * @author Adrian Nembach, KNIME.com
  */
-final class SoftVotingFactory implements VotingFactory {
+public final class SoftVotingFactory implements VotingFactory {
 
     private final Map<String, Integer> m_targetValueToIndexMap;
 

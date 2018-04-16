@@ -1,12 +1,12 @@
 /**
  *
  */
-package org.knime.base.node.mine.treeensemble2.node.regressiontree.predictor;
+package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor;
 
 import java.util.function.Function;
 
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
-import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModel;
+import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.node.predictor.AbstractPredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.RegressionPrediction;
 import org.knime.core.data.DataRow;
@@ -14,11 +14,18 @@ import org.knime.core.data.DataRow;
 /**
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-class RegressionTreePredictor extends AbstractPredictor<RegressionPrediction> {
+public class GBTRegressionPredictor extends AbstractPredictor<RegressionPrediction> {
 
-    private final RegressionTreeModel m_model;
+    private final GradientBoostedTreesModel m_model;
 
-    RegressionTreePredictor(final RegressionTreeModel model, final Function<DataRow, PredictorRecord> rowConverter) {
+    /**
+     * Constructor for a {@link GBTRegressionPredictor}.
+     *
+     * @param model the gbt model
+     * @param rowConverter converts input {@link DataRow rows} into {@link PredictorRecord records}
+     */
+    public GBTRegressionPredictor(final GradientBoostedTreesModel model,
+        final Function<DataRow, PredictorRecord> rowConverter) {
         super(rowConverter);
         m_model = model;
     }
@@ -28,7 +35,7 @@ class RegressionTreePredictor extends AbstractPredictor<RegressionPrediction> {
      */
     @Override
     public RegressionPrediction predictRecord(final PredictorRecord record) {
-        double prediction = m_model.getTreeModel().findMatchingNode(record).getMean();
+        double prediction = m_model.predict(record);
         return () -> prediction;
     }
 
