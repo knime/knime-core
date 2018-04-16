@@ -1,11 +1,12 @@
 /**
  *
  */
-package org.knime.base.node.mine.treeensemble2.node.predictor;
+package org.knime.base.node.mine.treeensemble2.node.predictor.parser;
 
 import java.util.List;
 import java.util.function.Function;
 
+import org.knime.base.node.mine.treeensemble2.node.predictor.Prediction;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;

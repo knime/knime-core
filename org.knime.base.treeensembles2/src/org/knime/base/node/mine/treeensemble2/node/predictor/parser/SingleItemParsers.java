@@ -1,8 +1,12 @@
 /**
  *
  */
-package org.knime.base.node.mine.treeensemble2.node.predictor;
+package org.knime.base.node.mine.treeensemble2.node.predictor.parser;
 
+import org.knime.base.node.mine.treeensemble2.node.predictor.ClassificationPrediction;
+import org.knime.base.node.mine.treeensemble2.node.predictor.OutOfBagPrediction;
+import org.knime.base.node.mine.treeensemble2.node.predictor.RandomForestRegressionPrediction;
+import org.knime.base.node.mine.treeensemble2.node.predictor.RegressionPrediction;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;

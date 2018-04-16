@@ -1,12 +1,13 @@
 /**
  *
  */
-package org.knime.base.node.mine.treeensemble2.node.predictor;
+package org.knime.base.node.mine.treeensemble2.node.predictor.parser;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.base.node.mine.treeensemble2.node.predictor.ClassificationPrediction;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.def.DoubleCell;
