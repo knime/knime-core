@@ -49,6 +49,7 @@
 package org.knime.workbench.editor2.actions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -63,6 +64,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.NodeInPortUI;
@@ -163,11 +165,13 @@ public class LinkNodesAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final Collection<PlannedConnection> plan = generateConnections(nodeParts);
         final WorkflowManager wm = getManager();
-        final LinkNodesCommand command = new LinkNodesCommand(plan, wm);
+        try (WorkflowLock lock = wm.lock()) {
+            final Collection<PlannedConnection> plan = generateConnections(nodeParts);
+            final LinkNodesCommand command = new LinkNodesCommand(plan, wm);
 
-        execute(command);
+            execute(command);
+        }
     }
 
     /**
@@ -182,14 +186,27 @@ public class LinkNodesAction extends AbstractNodeAction {
     @Override
     protected boolean internalCalculateEnabled() {
         final NodeContainerEditPart[] selected = getSelectedParts(NodeContainerEditPart.class);
+        WorkflowManager manager = getManager();
 
         if (selected.length < 2) {
             return false;
         }
 
-        final ScreenedSelectionSet sss = screenNodeSelection(selected);
+        try (WorkflowLock lock = manager.lock()) {
+            // disable if there are nodes that are not (= no longer) contained in the workflow
+            // this is a very common case when nodes get deleted and actions in the toolbar are
+            // updated in response to that
+            if (!Arrays.stream(selected).map(NodeContainerEditPart::getNodeContainer) //
+                .map(NodeContainerUI::getID) //
+                .anyMatch(manager::containsNodeContainer)) {
+                return false;
+            }
 
-        return sss.setIsConnectable();
+            final ScreenedSelectionSet sss = screenNodeSelection(selected);
+
+            return sss.setIsConnectable();
+        }
+
     }
 
     /**

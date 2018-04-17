@@ -48,6 +48,7 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -57,7 +58,9 @@ import java.util.stream.Stream;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -140,10 +143,12 @@ public class UnlinkNodesAction extends AbstractNodeAction {
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         final WorkflowManager wm = getManager();
-        final Collection<ConnectionContainer> toRemove = findRemoveableConnections(nodeParts);
-        final UnlinkNodesCommand command = new UnlinkNodesCommand(toRemove, wm);
+        try (WorkflowLock lock = wm.lock()) {
+            final Collection<ConnectionContainer> toRemove = findRemoveableConnections(nodeParts);
+            final UnlinkNodesCommand command = new UnlinkNodesCommand(toRemove, wm);
 
-        execute(command);
+            execute(command);
+        }
     }
 
     /**
@@ -160,10 +165,22 @@ public class UnlinkNodesAction extends AbstractNodeAction {
         if (selected.length < 2) {
             return false;
         }
+        WorkflowManager manager = getManager();
+        try (WorkflowLock lock = manager.lock()) {
+            // disable if there are nodes that are not (= no longer) contained in the workflow
+            // this is a very common case when nodes get deleted and actions in the toolbar are
+            // updated in response to that
+            if (Arrays.stream(selected).map(NodeContainerEditPart::getNodeContainer) //
+                .map(NodeContainerUI::getID) //
+                .anyMatch(manager::containsNodeContainer)) {
+                return false;
+            }
+            final Collection<ConnectionContainer> toRemove = findRemoveableConnections(selected);
 
-        final Collection<ConnectionContainer> toRemove = findRemoveableConnections(selected);
+            return !toRemove.isEmpty();
+        }
 
-        return !toRemove.isEmpty();
+
     }
 
     /**
