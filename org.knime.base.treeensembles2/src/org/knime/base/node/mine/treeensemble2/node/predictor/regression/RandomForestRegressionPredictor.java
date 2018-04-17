@@ -113,6 +113,14 @@ public class RandomForestRegressionPredictor extends AbstractRandomForestPredict
             return m_variance;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasPrediction() {
+            return m_modelCount != 0;
+        }
+
     }
 
 }

@@ -112,5 +112,14 @@ public final class RandomForestClassificationPredictor
         public int getModelCount() {
             return m_voting.getNrVotes();
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasPrediction() {
+            return m_voting.getNrVotes() > 0;
+        }
+
     }
 }
