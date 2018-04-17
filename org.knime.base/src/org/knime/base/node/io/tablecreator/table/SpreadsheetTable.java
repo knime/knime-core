@@ -549,10 +549,10 @@ class SpreadsheetTable extends JTable {
             // One windows the popup is usually displayed on mouseReleased
             // event. To support this we would have to use platform specific
             // code.
-            boolean isPopupTrigger = e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e);
+            final boolean isPopupTrigger = e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e);
+            final int col = m_table.getTableHeader().columnAtPoint(e.getPoint());
 
             if (!isPopupTrigger) {
-                int col = m_table.getTableHeader().columnAtPoint(e.getPoint());
 
                 m_table.changeSelection(0, col, e.isControlDown(), e.isShiftDown());
                 // isSelEmpty==false may happen with e.isControlDown() on a
@@ -564,6 +564,10 @@ class SpreadsheetTable extends JTable {
                     m_table.getSelectionModel().clearSelection();
                 }
             } else {
+                // change selection if the user clicked on a unselected column
+                if (!m_table.getColumnModel().getSelectionModel().isSelectedIndex(col)) {
+                    m_table.changeSelection(0, col, e.isControlDown(), e.isShiftDown());
+                }
                 m_popup.show(m_table.getTableHeader(), e.getX(), e.getY());
             }
         }
