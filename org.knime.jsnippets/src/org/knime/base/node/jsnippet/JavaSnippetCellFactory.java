@@ -303,7 +303,8 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
                     out[i] = DataType.getMissingCell();
                 } else {
                     final String id = outField.getConverterFactoryId();
-                    Optional<JavaToDataCellConverterFactory<?>> factory = ConverterUtil.getJavaToDataCellConverterFactory(id);
+                    Optional<JavaToDataCellConverterFactory<?>> factory =
+                        ConverterUtil.getJavaToDataCellConverterFactory(id);
                     if (!factory.isPresent()) {
                         throw new RuntimeException("Missing converter factory with ID: " + id);
                     }
@@ -339,9 +340,9 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         m_snippet.close();
     }
 
-    /**
-     * @param row
-     * @return
+    /* Create a map from column name to table Cell proxy
+     * @param row Example row to create the map for.
+     * @return the map
      */
     private Map<String, Cell> createCellsMap(final DataRow row) {
         Map<String, Cell> cells = new LinkedHashMap<>(row.getNumCells());
@@ -352,9 +353,6 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         return cells;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataColumnSpec[] getColumnSpecs() {
         OutColList outFields = m_snippet.getSystemFields().getOutColFields();
@@ -366,21 +364,26 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         return cols;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress(curRowNr / (double)rowCount, () -> "Processed row " + curRowNr + " (\"" + lastKey + "\")");
     }
 
-    /** {@inheritDoc} */
     @Override
     public void setProgress(final long curRowNr, final long rowCount, final RowKey lastKey,
         final ExecutionMonitor exec) {
         exec.setProgress(curRowNr / (double)rowCount, () -> "Processed row " + curRowNr + " (\"" + lastKey + "\")");
     }
 
+    /*
+     * Class that wraps a DataRow for access from inside the Java Snippet.
+     *
+     * This allows cell access while keeping the DataCell API safe from having to provide
+     * workflow level backwards compatibility.
+     *
+     * DataCellProxy stores a reference to a row and a column index and can be updated to point to a new row.
+     * Accessing the value stored inside the cell happens on demand.
+     */
     private static class DataCellProxy implements Cell {
         private DataRow m_row;
 
@@ -398,18 +401,12 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
             this.m_index = i;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @SuppressWarnings("rawtypes")
         @Override
         public Object getValueAs(final Class t) throws TypeException {
             return getValueOfType(t);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @SuppressWarnings("rawtypes")
         @Override
         public Object getValueOfType(final Class c) throws TypeException {
@@ -421,7 +418,8 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
 
             final Optional<?> factory = ConverterUtil.getConverterFactory(type, c);
             if (!factory.isPresent()) {
-                throw new RuntimeException("Could not find a converter factory for: " + type.getName() + " -> " + c.getName());
+                throw new RuntimeException(
+                    "Could not find a converter factory for: " + type.getName() + " -> " + c.getName());
             }
             try {
                 return ((DataCellToJavaConverterFactory<DataCell, Object>)factory.get()).create().convert(cell);
@@ -430,9 +428,6 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
             }
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public boolean isMissing() {
             DataCell cell = m_row.getCell(m_index);

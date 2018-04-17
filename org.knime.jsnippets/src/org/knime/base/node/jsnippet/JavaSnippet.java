@@ -917,10 +917,10 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
                     final Version v = Version.parseVersion(split[1]);
 
                     final boolean versionsDiffer =
-                        installedVersion.getMajor() != v.getMajor() || installedVersion.getMinor() != v.getMinor();
+                        installedVersion.getMajor() != v.getMajor() || installedVersion.getMinor() < v.getMinor();
                     if (versionsDiffer) {
-                        warnings.add(String.format(
-                            "Versions of bundle \"%s\" required by this snippet differ:\nnode was saved with version %s but version % is currently installed.",
+                        errors.add(String.format(
+                            "Versions of bundle \"%s\" required by this snippet differ:\nnode was saved with version %s but version %s is currently installed.",
                             bundle.getSymbolicName(), v, installedVersion));
                     }
                 }
@@ -1040,9 +1040,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return c;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @SuppressWarnings("rawtypes")
     public JavaSnippetTemplate createTemplate(final Class metaCategory) {
@@ -1050,9 +1047,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return template;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public File getTempClassPath() {
         return m_tempClassPathDir;
@@ -1067,9 +1061,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         return m_fields;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setJavaSnippetFields(final JavaSnippetFields fields) {
         m_fields = fields;
@@ -1327,6 +1318,12 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         }
     }
 
+    /**
+     * Get the {@link Bundle} which contains the given class.
+     *
+     * @param javaType Class for which to get the bundle.
+     * @return the Bundle or <code>null</code>, if it is a built-in type.
+     */
     public synchronized static Bundle resolveBundleForJavaType(final Class<?> javaType) {
         if(javaType.getClassLoader() instanceof ModuleClassLoader) {
             final ModuleClassLoader moduleClassLoader = (ModuleClassLoader)javaType.getClassLoader();

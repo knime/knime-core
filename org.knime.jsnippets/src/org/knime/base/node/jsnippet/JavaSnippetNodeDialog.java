@@ -108,7 +108,6 @@ import org.knime.base.node.jsnippet.ui.JSnippetTextArea;
 import org.knime.base.node.jsnippet.ui.JarListPanel;
 import org.knime.base.node.jsnippet.ui.OutFieldsTable;
 import org.knime.base.node.jsnippet.ui.OutFieldsTableModel;
-import org.knime.base.node.jsnippet.util.JavaSnippetFields;
 import org.knime.base.node.jsnippet.util.JavaSnippetSettings;
 import org.knime.base.node.jsnippet.util.field.JavaColumnField;
 import org.knime.core.data.DataTableSpec;
@@ -167,7 +166,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
 
     private JLabel m_templateLocation;
 
-    private ErrorStrip es = null;
+    private ErrorStrip m_errorStrip = null;
 
     /**
      * Create a new Dialog.
@@ -256,6 +255,8 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
                 // so we don't update when fields are removed.
                 updateAutocompletion();
             }
+
+            updateCustomTypesBundles();
         };
         m_inFieldsTable.getTable().getModel().addTableModelListener(tableModelListener);
         m_outFieldsTable.getTable().getModel().addTableModelListener(tableModelListener);
@@ -346,7 +347,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
             // update error strip:
             // HACK: This forces refreshMarkers(), which is not triggered by reparsing of the document for some reason.
             // We are just re-setting the default again here.
-            es.setLevelThreshold(Level.WARNING);
+            m_errorStrip.setLevelThreshold(Level.WARNING);
         }
 
         @Override
@@ -423,7 +424,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
      */
     private JComponent createSnippetPanel() {
         m_snippetTextArea = new JSnippetTextArea(m_snippet);
-        es = new ErrorStrip(m_snippetTextArea);
+        m_errorStrip = new ErrorStrip(m_snippetTextArea);
 
         // reset style which causes a recreation of the folds
         // this code is also executed in "onOpen" but that is not called for the template viewer tab
@@ -436,7 +437,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         final JPanel snippet = new JPanel(new BorderLayout());
         snippet.add(snippetScroller, BorderLayout.CENTER);
 
-        snippet.add(es, BorderLayout.LINE_END);
+        snippet.add(m_errorStrip, BorderLayout.LINE_END);
 
         return snippet;
     }
@@ -636,14 +637,13 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
      */
     private void updateCustomTypesBundles() {
         final ArrayList<Bundle> bundles = new ArrayList<>();
-        final JavaSnippetFields fields = m_settings.getJavaSnippetFields();
-        for (JavaColumnField f : fields.getInColFields()) {
+        for (final JavaColumnField f : m_inFieldsTable.getInColFields()) {
             final Bundle b = JavaSnippet.resolveBundleForJavaType(f.getJavaType());
             if(b != null) {
                 bundles.add(b);
             }
         }
-        for (JavaColumnField f : fields.getOutColFields()) {
+        for (final JavaColumnField f : m_outFieldsTable.getOutColFields()) {
             final Bundle b = JavaSnippet.resolveBundleForJavaType(f.getJavaType());
             if(b != null) {
                 bundles.add(b);

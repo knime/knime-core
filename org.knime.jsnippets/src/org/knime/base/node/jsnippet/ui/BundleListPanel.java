@@ -54,10 +54,10 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -174,11 +174,16 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         }
     }
 
-    class BundleListEntryRenderer extends DefaultTreeCellRenderer {
+    /* Renderer for BundleListEntry and Bundle in the tree component */
+    private class BundleListEntryRenderer extends DefaultTreeCellRenderer {
         @Override
         public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean sel,
             final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
-            final Object userObject = ((DefaultMutableTreeNode)value).getUserObject();
+            Object userObject = ((DefaultMutableTreeNode)value).getUserObject();
+            if (userObject instanceof Bundle) {
+                final Bundle b = (Bundle)userObject;
+                userObject = String.format("%s %s", b.getSymbolicName(), b.getVersion());
+            }
             if (!(userObject instanceof BundleListEntry)) {
                 /* Bundle dependency */
                 final Component c =
@@ -314,15 +319,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
             final JScrollPane scrollPane = new JScrollPane(m_bundleList);
             availableBundlesPane.add(scrollPane, BorderLayout.CENTER);
 
-            m_tree.addKeyListener(new KeyListener() {
-
-                @Override
-                public void keyTyped(final KeyEvent e) {
-                }
-
-                @Override
-                public void keyReleased(final KeyEvent e) {
-                }
+            m_tree.addKeyListener(new KeyAdapter() {
 
                 @Override
                 public void keyPressed(final KeyEvent e) {
@@ -331,23 +328,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                     }
                 }
             });
-            m_tree.addMouseListener(new MouseListener() {
-
-                @Override
-                public void mouseReleased(final MouseEvent e) {
-                }
-
-                @Override
-                public void mousePressed(final MouseEvent e) {
-                }
-
-                @Override
-                public void mouseExited(final MouseEvent e) {
-                }
-
-                @Override
-                public void mouseEntered(final MouseEvent e) {
-                }
+            m_tree.addMouseListener(new MouseAdapter() {
 
                 @Override
                 public void mouseClicked(final MouseEvent e) {
@@ -356,23 +337,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                     }
                 }
             });
-            m_bundleList.addMouseListener(new MouseListener() {
-
-                @Override
-                public void mouseReleased(final MouseEvent e) {
-                }
-
-                @Override
-                public void mousePressed(final MouseEvent e) {
-                }
-
-                @Override
-                public void mouseExited(final MouseEvent e) {
-                }
-
-                @Override
-                public void mouseEntered(final MouseEvent e) {
-                }
+            m_bundleList.addMouseListener(new MouseAdapter() {
 
                 @Override
                 public void mouseClicked(final MouseEvent e) {
@@ -384,15 +349,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                     }
                 }
             });
-            m_bundleList.addKeyListener(new KeyListener() {
-
-                @Override
-                public void keyTyped(final KeyEvent e) {
-                }
-
-                @Override
-                public void keyReleased(final KeyEvent e) {
-                }
+            m_bundleList.addKeyListener(new KeyAdapter() {
 
                 @Override
                 public void keyPressed(final KeyEvent e) {
@@ -466,7 +423,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
      * @return All added bundles.
      */
     public String[] getBundles() {
-        return m_listModel.getAllElements().stream().map(BundleListEntry::getName).toArray(n -> new String[n]);
+        return m_listModel.getAllElements().stream().map(BundleListEntry::toString).toArray(n -> new String[n]);
     }
 
     /**
@@ -573,7 +530,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
                 // check whether the versions differ up to minor version.
                 final boolean versionsDiffer =
-                    installedVersion.getMajor() != v.getMajor() || installedVersion.getMinor() != v.getMinor();
+                    installedVersion.getMajor() != v.getMajor() || installedVersion.getMinor() < v.getMinor();
                 if (versionsDiffer) {
                     savedVersion = v;
                 }
@@ -592,6 +549,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         return m_listModel;
     }
 
+    /* Add direct bundle dependencies of bundle b to node. */
     private void addDependenciesForNode(final DefaultMutableTreeNode node, final Bundle b) {
         if (b == null) {
             return;
@@ -606,6 +564,9 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
     @Override
     public void treeWillExpand(final TreeExpansionEvent event) throws ExpandVetoException {
+        /* Add children of children of the expanded node, so that they will be rendered with the
+         * appropriate icon, correctly indicating whether they have children.
+         */
         final DefaultMutableTreeNode node = (DefaultMutableTreeNode)event.getPath().getLastPathComponent();
         Enumeration<DefaultMutableTreeNode> children = node.children();
         while (children.hasMoreElements()) {
@@ -620,11 +581,17 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
     public void treeWillCollapse(final TreeExpansionEvent event) throws ExpandVetoException {
         final Object node = event.getPath().getLastPathComponent();
         if (node == m_userBundlesRoot || node == m_customTypeRoot) {
+            /* Prevent collapsing "Active Bundles" and "Custom Type Bundles" */
             throw new ExpandVetoException(event);
         }
     }
 
-    /** @brief Bundles used for custom types. */
+    /**
+     * @brief Set bundles used for custom types.
+     * @param bundles Bundles available in the snippet via custom input or output type converters.
+     *
+     * Bundles set with this function will be displayed in the "Custom Types Bundles" section.
+     */
     public void setCustomTypeBundles(final Collection<Bundle> bundles) {
         removeAllChildren(m_tree, m_customTypeRoot);
         for (Bundle b : bundles) {

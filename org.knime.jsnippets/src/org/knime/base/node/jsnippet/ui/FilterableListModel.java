@@ -9,7 +9,11 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractListModel;
 
-/* List model which filters bundleNames according to a search string */
+/**
+ * List model which filters bundleNames according to a search string.
+ *
+ * @author Jonathan Hale, KNIME GmbH, Konstanz, Germany
+ */
 final class FilterableListModel extends AbstractListModel<String> {
 
     private static final long serialVersionUID = 1L;
