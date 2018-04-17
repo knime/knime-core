@@ -92,6 +92,13 @@ public class GradientBoostingClassificationPredictorNodeModel extends NodeModel 
     private final boolean m_pre_3_6;
 
     /**
+     * Default constructor that ensures that code written prior to 3.6.0 still compiles.
+     */
+    public GradientBoostingClassificationPredictorNodeModel() {
+        this(true);
+    }
+
+    /**
      * @param pre_3_6 indicates if the node is created with a version prior to 3.6 when the column output was different
      *
      */

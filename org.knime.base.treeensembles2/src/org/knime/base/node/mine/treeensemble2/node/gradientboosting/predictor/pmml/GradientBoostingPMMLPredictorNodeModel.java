@@ -109,6 +109,14 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
     private final boolean m_pre_3_6;
 
     /**
+     * This constructor ensures backwards compatibility.
+     * @param isRegression indicates whether the node expects a regression model
+     */
+    public GradientBoostingPMMLPredictorNodeModel(final boolean isRegression) {
+        this(isRegression, true);
+    }
+
+    /**
      * Default constructor
      * @param isRegression boolean indicating if the node model expects a regression model
      * @param pre_3_6 whether the model was build prior to version 3.6.0

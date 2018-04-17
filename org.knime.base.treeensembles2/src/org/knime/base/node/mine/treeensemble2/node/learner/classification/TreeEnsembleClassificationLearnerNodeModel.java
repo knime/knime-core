@@ -120,6 +120,14 @@ public final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
     private final boolean m_pre_3_6;
 
     /**
+     * This constructor ensures backwards compatibility with code that was written
+     * prior to version 3.6.0.
+     */
+    public TreeEnsembleClassificationLearnerNodeModel() {
+        this(true);
+    }
+
+    /**
      * @param pre_3_6 indicates whether node was created prior to version 3.6.0
      *  */
     public TreeEnsembleClassificationLearnerNodeModel(final boolean pre_3_6) {
