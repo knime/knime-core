@@ -53,7 +53,7 @@ import java.util.Optional;
 
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtil;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -86,15 +86,15 @@ public final class TreeEnsembleClassificationPredictorNodeModel extends NodeMode
 
     private TreeEnsemblePredictorConfiguration m_configuration;
 
-    private final boolean m_pre_3_6;
+    private final boolean m_pre36;
 
     /**
-     * @param pre_3_6 flag that indicates if node is from a version prior to 3.6
+     * @param pre36 flag that indicates if node is from a version prior to 3.6
      *  */
-    public TreeEnsembleClassificationPredictorNodeModel(final boolean pre_3_6) {
+    public TreeEnsembleClassificationPredictorNodeModel(final boolean pre36) {
         super(new PortType[]{TreeEnsembleModelPortObject.TYPE, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE});
-        m_pre_3_6 = pre_3_6;
+        m_pre36 = pre36;
     }
 
     /** {@inheritDoc} */
@@ -112,8 +112,8 @@ public final class TreeEnsembleClassificationPredictorNodeModel extends NodeMode
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
         // rearranger may be null if confidence values are appended but the
         // model does not have a list of possible target values
-        Optional<DataTableSpec> outSpec = TreeEnsemblePredictionUtility.createPRCForClassificationRF(
-            dataSpec, modelSpec, null, null, null, m_configuration, m_pre_3_6)
+        Optional<DataTableSpec> outSpec = TreeEnsemblePredictionUtil.createPRCForClassificationRF(
+            dataSpec, modelSpec, null, null, null, m_configuration, m_pre36)
                 .createConfigurationRearranger().map(ColumnRearranger::createSpec);
         return new DataTableSpec[]{outSpec.isPresent() ? outSpec.get() : null};
     }
@@ -126,8 +126,8 @@ public final class TreeEnsembleClassificationPredictorNodeModel extends NodeMode
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
         m_configuration.checkSoftVotingSettingForModel(model).ifPresent(this::setWarningMessage);
-        ColumnRearranger rearranger = TreeEnsemblePredictionUtility.createPRCForClassificationRF(
-            dataSpec, modelSpec, model.getEnsembleModel(), null, null, m_configuration, m_pre_3_6)
+        ColumnRearranger rearranger = TreeEnsemblePredictionUtil.createPRCForClassificationRF(
+            dataSpec, modelSpec, model.getEnsembleModel(), null, null, m_configuration, m_pre36)
                 .createExecutionRearranger();
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
         return new BufferedDataTable[]{outTable};
@@ -146,8 +146,8 @@ public final class TreeEnsembleClassificationPredictorNodeModel extends NodeMode
                 TreeEnsembleModelPortObject model = (TreeEnsembleModelPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
                 DataTableSpec dataSpec = (DataTableSpec) inSpecs[1];
-                ColumnRearranger rearranger = TreeEnsemblePredictionUtility.createPRCForClassificationRF(
-                    dataSpec, modelSpec, model.getEnsembleModel(), null, null, m_configuration, m_pre_3_6)
+                ColumnRearranger rearranger = TreeEnsemblePredictionUtil.createPRCForClassificationRF(
+                    dataSpec, modelSpec, model.getEnsembleModel(), null, null, m_configuration, m_pre36)
                         .createExecutionRearranger();
                 StreamableFunction func = rearranger.createStreamableFunction(1, 0);
                 func.runFinal(inputs, outputs, exec);

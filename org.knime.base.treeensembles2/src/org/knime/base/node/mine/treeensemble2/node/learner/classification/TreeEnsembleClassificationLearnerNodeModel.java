@@ -69,7 +69,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectS
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerNodeView.ViewContentProvider;
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtil;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
@@ -93,6 +93,7 @@ import org.knime.core.node.port.PortType;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
     implements PortObjectHolder, ViewContentProvider {
@@ -117,7 +118,7 @@ public final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
 
     private TreeEnsembleLearnerConfiguration m_configuration;
 
-    private final boolean m_pre_3_6;
+    private final boolean m_pre36;
 
     /**
      * This constructor ensures backwards compatibility with code that was written
@@ -128,12 +129,12 @@ public final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
     }
 
     /**
-     * @param pre_3_6 indicates whether node was created prior to version 3.6.0
+     * @param pre36 indicates whether node was created prior to version 3.6.0
      *  */
-    public TreeEnsembleClassificationLearnerNodeModel(final boolean pre_3_6) {
+    public TreeEnsembleClassificationLearnerNodeModel(final boolean pre36) {
         super(new PortType[]{BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE, TreeEnsembleModelPortObject.TYPE});
-        m_pre_3_6 = pre_3_6;
+        m_pre36 = pre36;
     }
 
     /** {@inheritDoc} */
@@ -159,8 +160,8 @@ public final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
         // for duplicates in the toString() representation
         ensembleSpec.getTargetColumnPossibleValueMap();
 
-        Optional<DataTableSpec> outOfBagSpec = TreeEnsemblePredictionUtility.createPRCForClassificationRF(
-            inSpec, ensembleSpec, null, null, null, createOOBConfig(), m_pre_3_6).createConfigurationRearranger()
+        Optional<DataTableSpec> outOfBagSpec = TreeEnsemblePredictionUtil.createPRCForClassificationRF(
+            inSpec, ensembleSpec, null, null, null, createOOBConfig(), m_pre36).createConfigurationRearranger()
                 .map(ColumnRearranger::createSpec);
         DataTableSpec colStatsSpec = TreeEnsembleLearner.getColumnStatisticTableSpec();
 
@@ -228,8 +229,8 @@ public final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
             exec.createFileStore(UUID.randomUUID().toString() + ""));
         learnExec.setProgress(1.0);
         exec.setMessage("Out of bag prediction");
-        ColumnRearranger outOfBagRearranger = TreeEnsemblePredictionUtility.createPRCForClassificationRF(
-            spec, ensembleSpec, model, learner.getRowSamples(), data.getTargetColumn(), createOOBConfig(), m_pre_3_6)
+        ColumnRearranger outOfBagRearranger = TreeEnsemblePredictionUtil.createPRCForClassificationRF(
+            spec, ensembleSpec, model, learner.getRowSamples(), data.getTargetColumn(), createOOBConfig(), m_pre36)
                 .createExecutionRearranger();
         BufferedDataTable outOfBagTable = exec.createColumnRearrangeTable(t, outOfBagRearranger, outOfBagExec);
         BufferedDataTable colStatsTable = learner.createColumnStatisticTable(exec.createSubExecutionContext(0.0));

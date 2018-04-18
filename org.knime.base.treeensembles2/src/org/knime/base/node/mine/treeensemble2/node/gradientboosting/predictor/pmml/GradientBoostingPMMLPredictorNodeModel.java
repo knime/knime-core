@@ -65,7 +65,7 @@ import org.knime.base.node.mine.treeensemble2.model.pmml.RegressionGBTModelPMMLT
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GBTRegressionPredictor;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.LKGradientBoostedTreesPredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.PredictionRearrangerCreator;
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtil;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -106,7 +106,7 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
 
     private TreeEnsemblePredictorConfiguration m_configuration;
     private final boolean m_isRegression;
-    private final boolean m_pre_3_6;
+    private final boolean m_pre36;
 
     /**
      * This constructor ensures backwards compatibility.
@@ -119,13 +119,13 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
     /**
      * Default constructor
      * @param isRegression boolean indicating if the node model expects a regression model
-     * @param pre_3_6 whether the model was build prior to version 3.6.0
+     * @param pre36 whether the model was build prior to version 3.6.0
      */
-    public GradientBoostingPMMLPredictorNodeModel(final boolean isRegression, final boolean pre_3_6) {
+    public GradientBoostingPMMLPredictorNodeModel(final boolean isRegression, final boolean pre36) {
         super(new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE});
         m_isRegression = isRegression;
-        m_pre_3_6 = pre_3_6;
+        m_pre36 = pre36;
     }
 
     /** {@inheritDoc} */
@@ -164,15 +164,15 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
         if (m_isRegression) {
             prc = new PredictionRearrangerCreator(predictSpec,
                 new GBTRegressionPredictor((GradientBoostedTreesModel)model,
-                TreeEnsemblePredictionUtility.createRowConverter(modelSpec, model, predictSpec)));
+                TreeEnsemblePredictionUtil.createRowConverter(modelSpec, model, predictSpec)));
             prc.addRegressionPrediction(m_configuration.getPredictionColumnName());
         } else {
             MultiClassGradientBoostedTreesModel gbt = (MultiClassGradientBoostedTreesModel)model;
             prc = new PredictionRearrangerCreator(predictSpec,
                 new LKGradientBoostedTreesPredictor(gbt,
                     m_configuration.isAppendClassConfidences() || m_configuration.isAppendPredictionConfidence(),
-                TreeEnsemblePredictionUtility.createRowConverter(modelSpec, model, predictSpec)));
-            TreeEnsemblePredictionUtility.setupRearrangerCreatorGBT(m_pre_3_6, prc, modelSpec, gbt, m_configuration);
+                TreeEnsemblePredictionUtil.createRowConverter(modelSpec, model, predictSpec)));
+            TreeEnsemblePredictionUtil.setupRearrangerCreatorGBT(m_pre36, prc, modelSpec, gbt, m_configuration);
         }
         return prc;
     }

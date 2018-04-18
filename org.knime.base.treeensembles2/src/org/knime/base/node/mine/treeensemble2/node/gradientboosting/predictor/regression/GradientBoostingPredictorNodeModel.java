@@ -57,7 +57,7 @@ import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObj
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GBTRegressionPredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.PredictionRearrangerCreator;
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtil;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -121,7 +121,7 @@ public class GradientBoostingPredictorNodeModel extends NodeModel {
         throws InvalidSettingsException {
         PredictionRearrangerCreator prc = new PredictionRearrangerCreator(predictSpec,
             new GBTRegressionPredictor(model,
-            TreeEnsemblePredictionUtility.createRowConverter(modelSpec, model, predictSpec)));
+            TreeEnsemblePredictionUtil.createRowConverter(modelSpec, model, predictSpec)));
         prc.addRegressionPrediction(m_configuration.getPredictionColumnName());
         return prc;
     }

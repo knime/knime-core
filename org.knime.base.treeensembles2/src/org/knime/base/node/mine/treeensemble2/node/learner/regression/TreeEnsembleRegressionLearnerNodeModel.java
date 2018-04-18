@@ -68,7 +68,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectS
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerNodeView.ViewContentProvider;
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtil;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -137,7 +137,7 @@ public final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel impl
         m_configuration.checkColumnSelection(inSpec);
         DataTableSpec learnSpec = learnRearranger.createSpec();
         TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
-        Optional<DataTableSpec> outOfBagSpec = TreeEnsemblePredictionUtility.createPRCForRegressionRF(
+        Optional<DataTableSpec> outOfBagSpec = TreeEnsemblePredictionUtil.createPRCForRegressionRF(
             inSpec, ensembleSpec, null, null, null, createOOBConfig()).createConfigurationRearranger()
                 .map(ColumnRearranger::createSpec);
         DataTableSpec colStatsSpec = TreeEnsembleLearner.getColumnStatisticTableSpec();
@@ -200,7 +200,7 @@ public final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel impl
             exec.createFileStore(UUID.randomUUID().toString() + ""));
         learnExec.setProgress(1.0);
         exec.setMessage("Out of bag prediction");
-        ColumnRearranger outOfBagRearranger = TreeEnsemblePredictionUtility.createPRCForRegressionRF(
+        ColumnRearranger outOfBagRearranger = TreeEnsemblePredictionUtil.createPRCForRegressionRF(
             spec, ensembleSpec, model, learner.getRowSamples(), data.getTargetColumn(), createOOBConfig())
                 .createExecutionRearranger();
         BufferedDataTable outOfBagTable = exec.createColumnRearrangeTable(t, outOfBagRearranger, outOfBagExec);

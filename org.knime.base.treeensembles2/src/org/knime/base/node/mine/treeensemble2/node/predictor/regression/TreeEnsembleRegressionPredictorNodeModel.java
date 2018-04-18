@@ -54,7 +54,7 @@ import java.util.Optional;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.predictor.PredictionRearrangerCreator;
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtil;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -106,7 +106,7 @@ public final class TreeEnsembleRegressionPredictorNodeModel extends NodeModel {
         }
         modelSpec.assertTargetTypeMatches(true);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-        PredictionRearrangerCreator prc = TreeEnsemblePredictionUtility.createPRCForRegressionRF(
+        PredictionRearrangerCreator prc = TreeEnsemblePredictionUtil.createPRCForRegressionRF(
             dataSpec, modelSpec, null, null, null, m_configuration);
         Optional<DataTableSpec> outSpec = prc.createConfigurationRearranger().map(ColumnRearranger::createSpec);
         return new DataTableSpec[]{outSpec.isPresent() ? outSpec.get() : null};
@@ -119,7 +119,7 @@ public final class TreeEnsembleRegressionPredictorNodeModel extends NodeModel {
         TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
-        ColumnRearranger rearranger = TreeEnsemblePredictionUtility.createPRCForRegressionRF(
+        ColumnRearranger rearranger = TreeEnsemblePredictionUtil.createPRCForRegressionRF(
             dataSpec, modelSpec, model.getEnsembleModel(), null, null, m_configuration).createExecutionRearranger();
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
         return new BufferedDataTable[]{outTable};
@@ -138,7 +138,7 @@ public final class TreeEnsembleRegressionPredictorNodeModel extends NodeModel {
                 TreeEnsembleModelPortObject model = (TreeEnsembleModelPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
                 DataTableSpec dataSpec = (DataTableSpec) inSpecs[1];
-                ColumnRearranger rearranger = TreeEnsemblePredictionUtility.createPRCForRegressionRF(
+                ColumnRearranger rearranger = TreeEnsemblePredictionUtil.createPRCForRegressionRF(
                     dataSpec, modelSpec, model.getEnsembleModel(), null, null, m_configuration).createExecutionRearranger();
                 StreamableFunction func = rearranger.createStreamableFunction(1, 0);
                 func.runFinal(inputs, outputs, exec);

@@ -30,11 +30,11 @@ import org.knime.core.node.InvalidSettingsException;
 /**
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-public final class TreeEnsemblePredictionUtility {
+public final class TreeEnsemblePredictionUtil {
 
     private static final String CONFIDENCE_SUFFIX = " (Confidence)";
 
-    private TreeEnsemblePredictionUtility() {
+    private TreeEnsemblePredictionUtil() {
         // utility class
     }
 
@@ -57,17 +57,17 @@ public final class TreeEnsemblePredictionUtility {
     /**
      * Setups the PredictionRearrangerCreator for classification gbts.
      *
-     * @param pre_3_6 indicates if the model was build prior to version 3.6.0
+     * @param pre36 indicates if the model was build prior to version 3.6.0
      * @param crc the creator
      * @param modelSpec the spec of the model
      * @param model the gbt
      * @param config the predictor configuration
      * @throws InvalidSettingsException if something goes wrong
      */
-    public static void setupRearrangerCreatorGBT(final boolean pre_3_6, final PredictionRearrangerCreator crc,
+    public static void setupRearrangerCreatorGBT(final boolean pre36, final PredictionRearrangerCreator crc,
         final TreeEnsembleModelPortObjectSpec modelSpec, final MultiClassGradientBoostedTreesModel model,
         final TreeEnsemblePredictorConfiguration config) throws InvalidSettingsException {
-        if (pre_3_6) {
+        if (pre36) {
             crc.addClassPrediction(config.getPredictionColumnName());
             if (config.isAppendPredictionConfidence()) {
                 crc.addPredictionConfidence("Confidence");
@@ -106,14 +106,14 @@ public final class TreeEnsemblePredictionUtility {
      * @param modelRowSamples row samples used to train the individual trees (may be null)
      * @param targetColumnData the target column (may be null)
      * @param config for the prediction
-     * @param pre_3_6 flag that indicates if the node was created prior to version 3.6.0
+     * @param pre36 flag that indicates if the node was created prior to version 3.6.0
      * @return a creator that allows to create a rearranger for prediction with a random forest
      * @throws InvalidSettingsException if <b>dataSpec</b> is missing some columns the model needs
      */
     public static PredictionRearrangerCreator createPRCForClassificationRF(final DataTableSpec dataSpec,
         final TreeEnsembleModelPortObjectSpec modelSpec, final TreeEnsembleModel model,
         final RowSample[] modelRowSamples, final TreeTargetColumnData targetColumnData,
-        final TreeEnsemblePredictorConfiguration config, final boolean pre_3_6) throws InvalidSettingsException {
+        final TreeEnsemblePredictorConfiguration config, final boolean pre36) throws InvalidSettingsException {
 
         Map<String, DataCell> targetValueMap = modelSpec.getTargetColumnPossibleValueMap();
         Map<String, Integer> targetVal2Idx = createTargetValueToIndexMap(targetValueMap);
@@ -125,7 +125,7 @@ public final class TreeEnsemblePredictionUtility {
                     votingFactory);
         PredictionRearrangerCreator prc = new PredictionRearrangerCreator(dataSpec, predictor);
 
-        if (pre_3_6) {
+        if (pre36) {
             prc.addClassPrediction(config.getPredictionColumnName());
             if (config.isAppendPredictionConfidence()) {
                 prc.addPredictionConfidence(config.getPredictionColumnName() + CONFIDENCE_SUFFIX);

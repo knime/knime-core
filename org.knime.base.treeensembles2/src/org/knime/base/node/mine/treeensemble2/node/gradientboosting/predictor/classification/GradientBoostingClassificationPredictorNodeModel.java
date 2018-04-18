@@ -57,7 +57,7 @@ import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTre
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.LKGradientBoostedTreesPredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.PredictionRearrangerCreator;
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtility;
+import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictionUtil;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -89,7 +89,7 @@ public class GradientBoostingClassificationPredictorNodeModel extends NodeModel 
 
     private TreeEnsemblePredictorConfiguration m_configuration;
 
-    private final boolean m_pre_3_6;
+    private final boolean m_pre36;
 
     /**
      * Default constructor that ensures that code written prior to 3.6.0 still compiles.
@@ -99,13 +99,13 @@ public class GradientBoostingClassificationPredictorNodeModel extends NodeModel 
     }
 
     /**
-     * @param pre_3_6 indicates if the node is created with a version prior to 3.6 when the column output was different
+     * @param pre36 indicates if the node is created with a version prior to 3.6 when the column output was different
      *
      */
-    public GradientBoostingClassificationPredictorNodeModel(final boolean pre_3_6) {
+    public GradientBoostingClassificationPredictorNodeModel(final boolean pre36) {
         super(new PortType[]{GradientBoostingModelPortObject.TYPE, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE});
-        m_pre_3_6 = pre_3_6;
+        m_pre36 = pre36;
     }
 
     /** {@inheritDoc} */
@@ -132,8 +132,8 @@ public class GradientBoostingClassificationPredictorNodeModel extends NodeModel 
         PredictionRearrangerCreator crc =
             new PredictionRearrangerCreator(testSpec, new LKGradientBoostedTreesPredictor(model,
                 m_configuration.isAppendClassConfidences() || m_configuration.isAppendPredictionConfidence(),
-                TreeEnsemblePredictionUtility.createRowConverter(modelSpec, model, testSpec)));
-        TreeEnsemblePredictionUtility.setupRearrangerCreatorGBT(m_pre_3_6, crc, modelSpec, model, m_configuration);
+                TreeEnsemblePredictionUtil.createRowConverter(modelSpec, model, testSpec)));
+        TreeEnsemblePredictionUtil.setupRearrangerCreatorGBT(m_pre36, crc, modelSpec, model, m_configuration);
         return crc;
     }
 
