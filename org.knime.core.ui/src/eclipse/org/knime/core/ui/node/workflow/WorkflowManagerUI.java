@@ -1465,10 +1465,13 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     }
 
     /**
-     * Refreshes the workflow (e.g. downloads the new state).
-     * Only called when {@link #isRefreshable()} returns <code>true</code>.
+     * Refreshes the workflow (e.g. downloads the new state). Only called when {@link #isRefreshable()} returns
+     * <code>true</code>.
+     *
+     * @param deepRefresh if <code>true</code> the workflow it self and all contained sub-workflows (i.e. metanodes)
+     *            will be refreshed, if <code>false</code> only this workflow will be refreshed
      */
-    default void refresh() {
+    default void refresh(final boolean deepRefresh) {
         //nothing to do, not refreshable
     }
 
