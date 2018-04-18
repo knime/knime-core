@@ -679,7 +679,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         if (m_fields.getInColFields().size() > 0) {
             out.append("  // Fields for input columns\n");
             for (InCol field : m_fields.getInColFields()) {
-                out.append("/** Input column: \"");
+                out.append("  /** Input column: \"");
                 out.append(field.getKnimeName());
                 out.append("\" */\n");
                 appendFields(out, field);
@@ -688,7 +688,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         if (m_fields.getInVarFields().size() > 0) {
             out.append("  // Fields for input flow variables\n");
             for (InVar field : m_fields.getInVarFields()) {
-                out.append("/** Input flow variable: \"");
+                out.append("  /** Input flow variable: \"");
                 out.append(field.getKnimeName());
                 out.append("\" */\n");
                 appendFields(out, field);
@@ -698,7 +698,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         if (m_fields.getOutColFields().size() > 0) {
             out.append("  // Fields for output columns\n");
             for (OutCol field : m_fields.getOutColFields()) {
-                out.append("/** Output column: \"");
+                out.append("  /** Output column: \"");
                 out.append(field.getKnimeName());
                 out.append("\" */\n");
                 appendFields(out, field);
@@ -707,7 +707,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         if (m_fields.getOutVarFields().size() > 0) {
             out.append("  // Fields for output flow variables\n");
             for (OutVar field : m_fields.getOutVarFields()) {
-                out.append("/** Output flow variable: \"");
+                out.append("  /** Output flow variable: \"");
                 out.append(field.getKnimeName());
                 out.append("\" */\n");
                 appendFields(out, field);
