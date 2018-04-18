@@ -44,14 +44,12 @@
  */
 package org.knime.base.node.flowcontrol.breakpoint;
 
-import java.util.Arrays;
 import java.util.Set;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
@@ -66,84 +64,99 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
 
     /** break on table with zero rows. */
     static final String EMTPYTABLE = "empty table";
+
     /** break on active branch. */
     static final String ACTIVEBRANCH = "active branch";
+
     /** break on inactive branch. */
     static final String INACTIVEBRANCH = "inactive branch";
+
     /** break on variable having given value. */
     static final String VARIABLEMATCH = "variable matches value";
 
-    private DialogComponentStringSelection m_variableName;
-    private DialogComponent m_choices;
-    private DialogComponent m_varvalue;
+    private final SettingsModelBoolean m_enableModel = createEnableModel();
+
+    private final SettingsModelString m_choicesModel = createChoiceModel();
+
+    private final SettingsModelString m_varNameModel = createVarNameModel();
+
+    private final SettingsModelString m_varValueModel = createVarValueModel();
+
+    private final DialogComponentStringSelection m_variableName;
+
+    private boolean m_varsAvailable;
+
+    private String m_varValueAtOpen;
 
     /**
-     *
+     * Creates the dialog of the Breakpoint node.
      */
     public BreakpointNodeDialog() {
-        final SettingsModelBoolean smb = createEnableModel();
-        DialogComponentBoolean enable = new DialogComponentBoolean(
-                               smb, "Breakpoint Enabled");
+        final DialogComponentBoolean enable = new DialogComponentBoolean(m_enableModel, "Breakpoint Enabled");
         addDialogComponent(enable);
-        final SettingsModelString sms = createChoiceModel();
-        m_choices = new DialogComponentButtonGroup(sms,
-                               false, "Breakpoint active for:", EMTPYTABLE,
-                               ACTIVEBRANCH, INACTIVEBRANCH, VARIABLEMATCH);
-        addDialogComponent(m_choices);
-        m_variableName = new DialogComponentStringSelection(
-                    createVarNameModel(),
-                    "Select Variable: ",
-                    new String[]{"no variables available"});
-        m_variableName.getModel().setEnabled(false);
-        m_varvalue = new DialogComponentString(createVarValueModel(),
-                    "Enter Variable Value: ");
+        final DialogComponentButtonGroup choices = new DialogComponentButtonGroup(m_choicesModel, false,
+            "Breakpoint active for:", EMTPYTABLE, ACTIVEBRANCH, INACTIVEBRANCH, VARIABLEMATCH);
+        addDialogComponent(choices);
+        m_variableName =
+            new DialogComponentStringSelection(m_varNameModel, "Select Variable: ", "no variables available");
+        m_varNameModel.setEnabled(false);
+        final DialogComponentString varvalue = new DialogComponentString(m_varValueModel, "Enter Variable Value: ");
         // the choice control enable-status of the variable entry fields.
-        sms.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                boolean useVar = VARIABLEMATCH.equals(sms.getStringValue());
-                m_variableName.getModel().setEnabled(useVar);
-                m_varvalue.getModel().setEnabled(useVar);
-            }
+        m_choicesModel.addChangeListener(e -> {
+            final boolean useVar = VARIABLEMATCH.equals(m_choicesModel.getStringValue());
+            m_varNameModel.setEnabled(useVar && m_varsAvailable);
+            m_varValueModel.setEnabled(useVar && m_varsAvailable);
         });
         // the enable button controls enable status of everything!
         // (but needs to keep in mind the variable choice settings)
-        smb.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (smb.getBooleanValue()) {
-                    m_choices.getModel().setEnabled(true);
-                    boolean useVar = VARIABLEMATCH.equals(sms.getStringValue());
-                    m_variableName.getModel().setEnabled(useVar);
-                    m_varvalue.getModel().setEnabled(useVar);
-                } else {
-                    m_choices.getModel().setEnabled(false);
-                    m_variableName.getModel().setEnabled(false);
-                    m_varvalue.getModel().setEnabled(false);
-                }
+        m_enableModel.addChangeListener(e -> {
+            if (m_enableModel.getBooleanValue()) {
+                m_choicesModel.setEnabled(true);
+                final boolean useVar = m_varsAvailable && VARIABLEMATCH.equals(m_choicesModel.getStringValue());
+                m_varNameModel.setEnabled(useVar);
+                m_varValueModel.setEnabled(useVar);
+            } else {
+                m_choicesModel.setEnabled(false);
+                m_varNameModel.setEnabled(false);
+                m_varValueModel.setEnabled(false);
             }
         });
-        m_varvalue.getModel().setEnabled(false);
         addDialogComponent(m_variableName);
-        addDialogComponent(m_varvalue);
+        addDialogComponent(varvalue);
     }
 
     /** {@inheritDoc} */
     @Override
     public void onOpen() {
-        Set<String> availableVars = this.getAvailableFlowVariables().keySet();
-        if (availableVars.size() < 1) {
-            m_variableName.replaceListItems(
-                    Arrays.asList(new String[]{"no variables available"}),
-                    null);
-            m_variableName.getModel().setEnabled(false);
+        final Set<String> availableVars = this.getAvailableFlowVariables().keySet();
+        if (availableVars.isEmpty()) {
+            m_varsAvailable = false;
+            m_varNameModel.setEnabled(false);
+            m_varValueModel.setEnabled(false);
         } else {
-            m_variableName.replaceListItems(availableVars, null);
-            m_choices.getModel().setEnabled(false);
-            m_variableName.getModel().setEnabled(false);
-            m_varvalue.getModel().setEnabled(false);
+            m_varsAvailable = true;
+            /**
+             * because we replace the list items we need to store the original value to be able to restore it later,
+             * this ensures the correct value is displayed if the selected flowvariable becomes available again.
+             */
+            m_varValueAtOpen = m_varNameModel.getStringValue();
+            m_variableName.replaceListItems(availableVars, m_varValueAtOpen);
+            m_choicesModel.setEnabled(m_enableModel.getBooleanValue());
+            final boolean varsEnabled =
+                m_enableModel.getBooleanValue() && VARIABLEMATCH.equals(m_choicesModel.getStringValue());
+            m_varNameModel.setEnabled(varsEnabled);
+            m_varValueModel.setEnabled(varsEnabled);
         }
         super.onOpen();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        throws NotConfigurableException {
+        m_varNameModel.setStringValue(m_varValueAtOpen);
     }
 
     /**
