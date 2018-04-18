@@ -110,6 +110,8 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
     private URI m_mountpointURI;
 
+    private boolean m_isTemporaryCopy;
+
     private Throwable m_throwable = null;
 
     /** Message, which is non-null if the user canceled to the load. */
@@ -122,13 +124,16 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
      * @param uri the URI from the explorer
      * @param workflowFile the workflow file from which the workflow should be loaded (or created = empty workflow file)
      * @param mountpointRoot the root directory of the mountpoint in which the workflow is contained
+     * @param isTemporaryCopy <code>true</code> if the workflow is a temporary copy of a workflow that lives somewhere
+     *            else, e.g. on a server, <code>false</code> if the workflow is in its original location
      */
     public LoadWorkflowRunnable(final WorkflowEditor editor, final URI uri, final File workflowFile,
-        final File mountpointRoot) {
+        final File mountpointRoot, final boolean isTemporaryCopy) {
         m_editor = editor;
         m_mountpointURI = uri;
         m_workflowFile = workflowFile;
         m_mountpointRoot = mountpointRoot;
+        m_isTemporaryCopy = isTemporaryCopy;
     }
 
     /**
@@ -163,7 +168,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             File workflowDirectory = m_workflowFile.getParentFile();
             Display d = Display.getDefault();
             GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(d, workflowDirectory.getName(),
-                m_mountpointURI, workflowDirectory, m_mountpointRoot);
+                m_mountpointURI, workflowDirectory, m_mountpointRoot, m_isTemporaryCopy);
             final WorkflowLoadResult result =
                 WorkflowManager.loadProject(workflowDirectory, new ExecutionMonitor(progressMonitor), loadHelper);
             final WorkflowManager wm = result.getWorkflowManager();

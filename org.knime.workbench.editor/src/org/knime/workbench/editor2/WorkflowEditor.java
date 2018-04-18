@@ -1232,8 +1232,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                     IWorkbench wb = PlatformUI.getWorkbench();
                     IProgressService ps = wb.getProgressService();
                     // this one sets the workflow manager in the editor
-                    LoadWorkflowRunnable loadWorkflowRunnable = new LoadWorkflowRunnable(this,
-                        m_origRemoteLocation != null ? m_origRemoteLocation : uri, wfFile, mountPointRoot);
+                    LoadWorkflowRunnable loadWorkflowRunnable =
+                        new LoadWorkflowRunnable(this, m_origRemoteLocation != null ? m_origRemoteLocation : uri,
+                            wfFile, mountPointRoot, m_origRemoteLocation != null);
                     ps.busyCursorWhile(loadWorkflowRunnable);
                     // check if the editor should be disposed
                     // non-null if set by workflow runnable above

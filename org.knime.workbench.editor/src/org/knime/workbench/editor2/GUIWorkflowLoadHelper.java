@@ -94,13 +94,14 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
 
 
     private static WorkflowContext createWorkflowContext(final URI uri, final File workflowDirectory,
-        final File mountpointRoot) {
+        final File mountpointRoot, final boolean isTemporaryCopy) {
         if (workflowDirectory == null) {
             return null;
         } else {
             return new WorkflowContext.Factory(workflowDirectory)
                 .setMountpointRoot(mountpointRoot)
                 .setMountpointURI(uri)
+                .setTemporaryCopy(isTemporaryCopy)
                 .createContext();
         }
     }
@@ -112,10 +113,12 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
      * @param workflowDirectory directory of the workflow that should be loaded; maybe <code>null</code> if not known
      * @param mountpointRoot root directory of the mount point in which the workflow to the loaded is contained; maybe
      *            <code>null</code> if not known
+     * @param isTemporaryCopy <code>true</code> if the workflow is a temporary copy of a workflow that lives somewhere
+     *            else, e.g. on a server, <code>false</code> if the workflow is in its original location
      */
     GUIWorkflowLoadHelper(final Display display, final String workflowName, final URI uri, final File workflowFile,
-        final File mountpointRoot) {
-        this(display, workflowName, uri, workflowFile, mountpointRoot, false);
+        final File mountpointRoot, final boolean isTemporaryCopy) {
+        this(display, workflowName, uri, workflowFile, mountpointRoot, isTemporaryCopy, false);
     }
 
     /**
@@ -125,11 +128,13 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
      * @param workflowDirectory directory of the workflow that should be loaded; maybe <code>null</code> if not known
      * @param mountpointRoot root directory of the mount point in which the workflow to the loaded is contained; maybe
      *            <code>null</code> if not known
+     * @param isTemporaryCopy <code>true</code> if the workflow is a temporary copy of a workflow that lives somewhere
+     *            else, e.g. on a server, <code>false</code> if the workflow is in its original location
      * @param isTemplate Whether the loaded workflow is a reference to a template (don't load data)
      */
     GUIWorkflowLoadHelper(final Display display, final String workflowName, final URI uri, final File workflowDirectory,
-        final File mountpointRoot, final boolean isTemplate) {
-        super(isTemplate, createWorkflowContext(uri, workflowDirectory, mountpointRoot));
+        final File mountpointRoot, final boolean isTemporaryCopy, final boolean isTemplate) {
+        super(isTemplate, createWorkflowContext(uri, workflowDirectory, mountpointRoot, isTemporaryCopy));
         m_display = display;
         m_workflowName = workflowName;
     }
