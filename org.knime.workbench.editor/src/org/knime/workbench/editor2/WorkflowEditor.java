@@ -62,6 +62,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -141,11 +143,13 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -302,6 +306,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private static final double[] ZOOM_LEVELS = { 0.25, 0.5, 1.0, 1.5, 2.0, 2.5};
 
+    /* A timer thread the workflow refresh timer tasks are submitted to. */
+    private static Timer REFRESH_TIMER = null;
+
     /** root model object (=editor input) that is handled by the editor. * */
     private WorkflowManagerUI m_manager;
 
@@ -356,6 +363,21 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private final Semaphore m_workflowCanBeDeleted = new Semaphore(1);
 
+    /** To get notified on events when the workflow editor is hidden or gets visible again */
+    private IPartListener2 m_partListener;
+
+    /** If non-null, a currently scheduled task that periodically refreshes the WorkflowManagerUI **/
+    private TimerTask m_refreshTimerTask = null;
+
+    /** Flag whether the auto-workflow-refresh (for refreshable workflows only) is enabled */
+    private boolean m_isAutoRefreshEnabled;
+
+    /** The auto-refresh interval */
+    private long m_autoRefreshInterval;
+
+    /** A flag indicating whether the workflow editor is visible to the user. */
+    private boolean m_isVisible;
+
     /**
      * No arg constructor, creates the edit domain for this editor.
      */
@@ -376,6 +398,62 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // initialize actions (can't be in init(), as setInput is called before)
         createActions();
+
+        // add part listener to be notified when the workflow editor is active
+        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window != null) {
+            final WorkflowEditor thisEditor = this;
+            m_partListener = new IPartListener2() {
+
+                @Override
+                public void partVisible(final IWorkbenchPartReference partRef) {
+                    // start refresh job for this workflow editor
+                    if (thisEditor == partRef.getPart(false)) {
+                        m_isVisible = true;
+                        tryStartingRefreshTimer();
+                    }
+                }
+
+                @Override
+                public void partOpened(final IWorkbenchPartReference partRef) {
+                }
+
+                @Override
+                public void partInputChanged(final IWorkbenchPartReference partRef) {
+                }
+
+                @Override
+                public void partHidden(final IWorkbenchPartReference partRef) {
+                    // pause refresh job for this workflow editor
+                    if(thisEditor == partRef.getPart(false)) {
+                       m_isVisible = false;
+                       if(m_refreshTimerTask != null) {
+                           m_refreshTimerTask.cancel();
+                           m_refreshTimerTask = null;
+                            LOGGER
+                                .debug("Workflow refresh timer canceled for workflow '" + partRef.getPartName() + "'");
+                        }
+                    }
+                }
+
+                @Override
+                public void partDeactivated(final IWorkbenchPartReference partRef) {
+                }
+
+                @Override
+                public void partClosed(final IWorkbenchPartReference partRef) {
+                }
+
+                @Override
+                public void partBroughtToTop(final IWorkbenchPartReference partRef) {
+                }
+
+                @Override
+                public void partActivated(final IWorkbenchPartReference partRef) {
+                }
+            };
+            window.getPartService().addPartListener(m_partListener);
+        }
     }
 
     /**
@@ -609,6 +687,17 @@ public class WorkflowEditor extends GraphicalEditor implements
             KNIMEUIPlugin.getDefault().getPreferenceStore();
 
         prefStore.removePropertyChangeListener(this);
+
+        //unregister part listener
+        IWorkbenchWindow window =
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        assert window != null;
+        window.getPartService().removePartListener(m_partListener);
+
+        if(m_refreshTimerTask != null) {
+            m_refreshTimerTask.cancel();
+        }
+
         super.dispose();
     }
 
@@ -960,7 +1049,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         LOGGER.debug("Setting input into editor...");
         super.setInput(input);
         m_origRemoteLocation = null;
-        if (input instanceof WorkflowManagerInput) { // metanode and subnode
+        if (input instanceof WorkflowManagerInput) { // metanode, subnode, remote workflows
+            setupAutoRefresh();
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else if (input instanceof IURIEditorInput) {
             File wfFile;
@@ -1229,6 +1319,56 @@ public class WorkflowEditor extends GraphicalEditor implements
         MessageDialog d = new MessageDialog(sh, "Detected auto-save copy", null,
                         m.toString(), MessageDialog.QUESTION, buttons, 0);
         return d.open();
+    }
+
+    private void setupAutoRefresh() {
+        IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        m_isAutoRefreshEnabled = prefStore.getBoolean(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW);
+        if (!m_isAutoRefreshEnabled && m_refreshTimerTask != null) {
+            m_refreshTimerTask.cancel();
+            m_refreshTimerTask = null;
+        }
+
+        long autoRefreshInterval = prefStore.getLong(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS);
+        if (m_autoRefreshInterval != autoRefreshInterval) {
+            m_autoRefreshInterval = autoRefreshInterval;
+            //restart the timer if its running
+            if (m_refreshTimerTask != null) {
+                m_refreshTimerTask.cancel();
+                m_refreshTimerTask = null;
+            }
+        }
+        if (m_isVisible) {
+            tryStartingRefreshTimer();
+        }
+    }
+
+    /**
+     * Tries to start the refresh timer if enabled, not already running etc.
+     */
+    private void tryStartingRefreshTimer() {
+        if (getWorkflowManagerUI() != null && getWorkflowManagerUI().isRefreshable() && m_refreshTimerTask == null
+            && m_isAutoRefreshEnabled) {
+            if (REFRESH_TIMER == null) {
+                REFRESH_TIMER = new Timer("Workflow Refresh Timer", true);
+            }
+            m_refreshTimerTask = new TimerTask() {
+
+                @Override
+                public void run() {
+                    try {
+                        getWorkflowManagerUI().refresh(false);
+                    } catch (Exception e) {
+                        //if something went wrong refreshing the workflow (e.g. timeout)
+                        //-> just log it, continue refreshing and hope for the best
+                        LOGGER.warn("Refreshing workflow failed.", e);
+                    }
+                }
+            };
+            REFRESH_TIMER.schedule(m_refreshTimerTask, 0, m_autoRefreshInterval);
+            LOGGER.debug("Workflow refresh timer scheduled for workflow '" + getTitle() + "' every "
+                + m_autoRefreshInterval + " ms");
+        }
     }
 
     private void updateJobManagerDisplay() {
@@ -3278,6 +3418,10 @@ public class WorkflowEditor extends GraphicalEditor implements
             case PreferenceConstants.P_AUTO_SAVE_ENABLE:
             case PreferenceConstants.P_AUTO_SAVE_INTERVAL:
                 setupAutoSaveSchedule();
+                break;
+            case PreferenceConstants.P_AUTO_REFRESH_WORKFLOW:
+            case PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS:
+                setupAutoRefresh();
                 break;
             default:
         }

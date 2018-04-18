@@ -167,4 +167,14 @@ public interface PreferenceConstants {
 
     /** Preference constant for omitting the missing browser warning during startup. */
     public static final String P_OMIT_MISSING_BROWSER_WARNING = "knime.ui.omit-missing-browser-warning";
+
+    /** Preference constant for enabling/disabling the auto-refresh for (most likely remote) workflows in the workflow
+     * editor */
+    public static final String P_AUTO_REFRESH_WORKFLOW = "knime.workflow.autorefresh.enable";
+    /** Preference constant for the auto-workflow-refresh interval in milliseconds */
+    public static final String P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS = "knime.workflow.autorefresh.interval";
+    /** Default whether auto-refresh is enabled */
+    public static final boolean P_DEFAULT_AUTO_REFRESH_WORKFLOW = true;
+    /** Default milliseconds the auto-refresh interval for workflows */
+    public static final long P_DEFAULT_AUTO_REFRESH_WORKFLOW_INTERVAL_MS = 1000;
 }

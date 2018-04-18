@@ -125,6 +125,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.P_ANNOTATION_BORDER_SIZE,
             PreferenceConstants.P_ANNOTATION_BORDER_SIZE_DEFAULT);
 
+        store.setDefault(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW,
+            PreferenceConstants.P_DEFAULT_AUTO_REFRESH_WORKFLOW);
+        store.setDefault(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS,
+            PreferenceConstants.P_DEFAULT_AUTO_REFRESH_WORKFLOW_INTERVAL_MS);
+
         // TODO retrieve the utility factories from the data type extension point once we have it
         // this loads all registered renderers and initializes the default value
         for (ExtensibleUtilityFactory fac : ExtensibleUtilityFactory.getAllFactories()) {
