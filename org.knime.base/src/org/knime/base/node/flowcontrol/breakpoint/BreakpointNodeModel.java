@@ -102,6 +102,12 @@ implements InactiveBranchConsumer {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (m_choice.getStringValue().equals(BreakpointNodeDialog.VARIABLEMATCH)) {
+            if (getAvailableFlowVariables().get(m_varname.getStringValue()) == null) {
+                throw new InvalidSettingsException(
+                    "Selected flow variable: '" + m_varname.getStringValue() + "' not available!");
+            }
+        }
         return inSpecs;
     }
 
