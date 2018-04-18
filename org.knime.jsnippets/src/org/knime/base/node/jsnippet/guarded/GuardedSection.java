@@ -138,24 +138,40 @@ public final class GuardedSection {
      * of the document
      */
     public void setText(final String t) throws BadLocationException {
-        int p1 = m_start.getOffset();
-        int p2 = m_end.getOffset();
+        final int sectionStart = m_start.getOffset();
+        int start = sectionStart;
+        int end = m_end.getOffset();
 
         boolean orig = m_document.getBreakGuarded();
         m_document.setBreakGuarded(true);
         // Empty text is not allowed, this would break the positioning
-        String text = null == t || t.isEmpty() ? " " : t;
-        text = text.endsWith("\n")
-                ? text.substring(0, text.length() - 1)
-                : text;
+        String text = (null == t || t.isEmpty()) ? " " : t;
+        if(text.endsWith("\n")) {
+            text = text.substring(0, text.length() - 1);
+        }
 
-        int docLen = m_document.getLength();
-        m_document.insertString(p1 + 1, text, null);
+        final int textLength = text.length();
+        final int firstLineBreak = text.indexOf('\n');
+        if(firstLineBreak != -1) {
+            final String firstLine = text.substring(0, firstLineBreak+1);
+            final String previousText = getText();
 
-        // compute length of inserted string
-        int len = m_document.getLength() - docLen;
-        m_document.remove(p1 + 1 + len, p2 - p1 - 1);
-        m_document.remove(p1, 1);
+            /* If first line is unchanged, skip changing it so that section does not unfold if folded.
+             * See AP-9123 */
+            if(previousText.startsWith(firstLine)) {
+                start += firstLine.length();
+                text = text.substring(firstLine.length());
+            }
+        }
+
+        /* We cannot replace from start, otherwise start will be moved to end */
+        m_document.replace(start + 1, end - start - 1, text, null);
+        m_document.remove(start, 1);
+
+        /* Fix end, it will become the same as start during the remove step of replace and then will not have moved with what was inserted after it */
+        m_end = m_document.createPosition(m_start.getOffset() + textLength);
+        assert m_end.getOffset() != m_start.getOffset();
+
         m_document.setBreakGuarded(orig);
     }
 
