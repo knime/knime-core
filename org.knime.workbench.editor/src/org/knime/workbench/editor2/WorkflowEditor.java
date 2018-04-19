@@ -425,11 +425,11 @@ public class WorkflowEditor extends GraphicalEditor implements
                 @Override
                 public void partHidden(final IWorkbenchPartReference partRef) {
                     // pause refresh job for this workflow editor
-                    if(thisEditor == partRef.getPart(false)) {
-                       m_isVisible = false;
-                       if(m_refreshTimerTask != null) {
-                           m_refreshTimerTask.cancel();
-                           m_refreshTimerTask = null;
+                    if (thisEditor == partRef.getPart(false)) {
+                        m_isVisible = false;
+                        if (m_refreshTimerTask != null) {
+                            m_refreshTimerTask.cancel();
+                            m_refreshTimerTask = null;
                             LOGGER
                                 .debug("Workflow refresh timer canceled for workflow '" + partRef.getPartName() + "'");
                         }
@@ -689,12 +689,11 @@ public class WorkflowEditor extends GraphicalEditor implements
         prefStore.removePropertyChangeListener(this);
 
         //unregister part listener
-        IWorkbenchWindow window =
-                PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         assert window != null;
         window.getPartService().removePartListener(m_partListener);
 
-        if(m_refreshTimerTask != null) {
+        if (m_refreshTimerTask != null) {
             m_refreshTimerTask.cancel();
         }
 
@@ -1349,11 +1348,12 @@ public class WorkflowEditor extends GraphicalEditor implements
     private void tryStartingRefreshTimer() {
         if (getWorkflowManagerUI() != null && getWorkflowManagerUI().isRefreshable() && m_refreshTimerTask == null
             && m_isAutoRefreshEnabled) {
-            if (REFRESH_TIMER == null) {
-                REFRESH_TIMER = new Timer("Workflow Refresh Timer", true);
+            synchronized (WorkflowEditor.class) {
+                if (REFRESH_TIMER == null) {
+                    REFRESH_TIMER = new Timer("Workflow Refresh Timer", true);
+                }
             }
             m_refreshTimerTask = new TimerTask() {
-
                 @Override
                 public void run() {
                     try {
@@ -1361,7 +1361,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     } catch (Exception e) {
                         //if something went wrong refreshing the workflow (e.g. timeout)
                         //-> just log it, continue refreshing and hope for the best
-                        LOGGER.warn("Refreshing workflow failed.", e);
+                        LOGGER.warn("Refreshing workflow failed: " + e.getMessage(), e);
                     }
                 }
             };
