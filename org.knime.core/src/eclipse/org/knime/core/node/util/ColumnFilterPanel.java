@@ -109,16 +109,14 @@ import org.knime.core.data.DataValue;
 import org.knime.core.node.util.filter.NameFilterPanel;
 import org.knime.core.node.util.filter.NameFilterTableModel;
 
-
 /**
  * Panel is used to select/filter a certain number of columns.
  *
  * <p>
- * You can add a property change listener to this class that is notified when
- * the include list changes.
+ * You can add a property change listener to this class that is notified when the include list changes.
  *
  * @deprecated A new column filter panel with more options is available in
- * {@link org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel}
+ *             {@link org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel}
  * @author Thomas Gabriel, University of Konstanz
  */
 @Deprecated
@@ -191,8 +189,9 @@ public class ColumnFilterPanel extends JPanel {
 
     private List<ChangeListener> m_listeners;
 
-    /** Constants for updating different parts of the UI*/
+    /** Constants for updating different parts of the UI */
     private static final String ID_CARDLAYOUT_PLACEHOLDER = "PLACEHOLDER";
+
     private static final String ID_CARDLAYOUT_LIST = "LIST";
 
     /** Text to be displayed in the filter as a placeholder */
@@ -203,10 +202,10 @@ public class ColumnFilterPanel extends JPanel {
      *
      * @author Johannes Schweig
      */
-    private class TablePlaceholder extends JLabel{
+    private class TablePlaceholder extends JLabel {
         final String m_entryString;
 
-        TablePlaceholder(final String entryString){
+        TablePlaceholder(final String entryString) {
             setHorizontalAlignment(SwingConstants.CENTER);
             setVerticalAlignment(SwingConstants.TOP);
             setFont(getFont().deriveFont(Font.ITALIC));
@@ -218,24 +217,25 @@ public class ColumnFilterPanel extends JPanel {
          * Updates the label's text if there are no entries to be displayed.
          *
          */
-        private void updateTextEmpty(){
+        private void updateTextEmpty() {
             setText("No " + m_entryString + " in this list");
         }
 
         /**
          * Updates the label's text if no matching entries are found.
+         *
          * @param searchString term that was searched for
          * @param total total number of entries in the table
          */
-        private void updateTextNothingFound(final String searchString, final int total){
+        private void updateTextNothingFound(final String searchString, final int total) {
             // empty list/table
             String str = searchString;
             // shorten string if too long
             int max = 15;
-            if (str.length() > max){
+            if (str.length() > max) {
                 str = str.substring(0, max) + "...";
             }
-            setText("<html>No " + m_entryString + " found matching<br>\""+str+"\" (total: " + total + ")</html>");
+            setText("<html>No " + m_entryString + " found matching<br>\"" + str + "\" (total: " + total + ")</html>");
         }
 
     }
@@ -248,7 +248,7 @@ public class ColumnFilterPanel extends JPanel {
     private class DoubleClickMouseAdapter extends MouseAdapter {
         private JTable m_table;
 
-        DoubleClickMouseAdapter(final JTable table){
+        DoubleClickMouseAdapter(final JTable table) {
             m_table = table;
         }
 
@@ -261,7 +261,7 @@ public class ColumnFilterPanel extends JPanel {
             if (e.getClickCount() == 2) {
                 if (m_table.equals(m_inclTable)) {
                     onRemIt(m_inclTable.getSelectedRows());
-                }else if (m_table.equals(m_exclTable)) {
+                } else if (m_table.equals(m_exclTable)) {
                     onAddIt(m_exclTable.getSelectedRows());
                 }
             }
@@ -277,7 +277,7 @@ public class ColumnFilterPanel extends JPanel {
     private class TableKeyAdapter extends KeyAdapter {
         private JTable m_table;
 
-        TableKeyAdapter(final JTable table){
+        TableKeyAdapter(final JTable table) {
             m_table = table;
         }
 
@@ -290,8 +290,8 @@ public class ColumnFilterPanel extends JPanel {
             String key = String.valueOf(e.getKeyChar());
             int index = -1;
             for (int i = 0; i < m_table.getRowCount(); i++) {
-                String s = ((DataColumnSpec) m_table.getValueAt(i, 0)).getName();
-                if (s.toLowerCase().startsWith(key)){
+                String s = ((DataColumnSpec)m_table.getValueAt(i, 0)).getName();
+                if (s.toLowerCase().startsWith(key)) {
                     index = i;
                     break;
                 }
@@ -314,11 +314,13 @@ public class ColumnFilterPanel extends JPanel {
 
         /**
          * Initiates a TableFocusAdapter.
+         *
          * @param table the table which focus is removed
          */
-        TableFocusAdapter (final JTable table) {
+        TableFocusAdapter(final JTable table) {
             m_table = table;
         }
+
         /**
          * {@inheritDoc}
          */
@@ -332,25 +334,31 @@ public class ColumnFilterPanel extends JPanel {
     /**
      * KeyAdapter that updates the filter in the table if a new character is typed.
      *
-     *  @author Johannes Schweig
+     * @author Johannes Schweig
      */
     private class SearchKeyAdapter extends KeyAdapter {
         private JTable m_table;
+
         private JPanel m_cardsPanel;
+
         private TablePlaceholder m_tablePlaceholder;
+
         @SuppressWarnings("rawtypes")
         private TableRowSorter<NameFilterTableModel> m_tableRowSorter;
+
         private JTextField m_searchField;
 
         /**
          * Constructs a SearchKeyListener for a given table.
+         *
          * @param table JTable that the search is filtering
          * @param cardsPanel JPanel with CardLayout holding the JTable and a TablePlaceholder
          * @param tablePlaceholder TablePlaceholder being displayed instead of the table
          * @param tableRowSorter
          */
         @SuppressWarnings("rawtypes")
-        SearchKeyAdapter (final JTable table, final JPanel cardsPanel, final TablePlaceholder tablePlaceholder, final TableRowSorter<NameFilterTableModel> tableRowSorter, final JTextField searchField) {
+        SearchKeyAdapter(final JTable table, final JPanel cardsPanel, final TablePlaceholder tablePlaceholder,
+            final TableRowSorter<NameFilterTableModel> tableRowSorter, final JTextField searchField) {
             m_table = table;
             m_cardsPanel = cardsPanel;
             m_tablePlaceholder = tablePlaceholder;
@@ -376,9 +384,10 @@ public class ColumnFilterPanel extends JPanel {
     private class SearchFocusAdapter extends FocusAdapter {
         private JTextField m_searchField;
 
-        SearchFocusAdapter (final JTextField searchField) {
+        SearchFocusAdapter(final JTextField searchField) {
             m_searchField = searchField;
         }
+
         /**
          * {@inheritDoc}
          */
@@ -397,15 +406,16 @@ public class ColumnFilterPanel extends JPanel {
 
         /**
          * Shows or hides the placeholder text in the textfield
+         *
          * @param focus true if focusGained, false if focusLost
          */
-        private void updateTextFieldPlaceholder (final boolean focus){
+        private void updateTextFieldPlaceholder(final boolean focus) {
             String query = m_searchField.getText();
             if ((query.isEmpty() || query.equals(FILTER)) && focus) { //  no text or filter text and textfield gains focus -> hide placeholder
                 m_searchField.setText("");
                 m_searchField.setForeground(Color.BLACK);
                 m_searchField.setFont(getFont().deriveFont(Font.PLAIN, 14f));
-            } else if (query.isEmpty() && !focus){ // no text and textfield looses focus -> show placeholder
+            } else if (query.isEmpty() && !focus) { // no text and textfield looses focus -> show placeholder
                 m_searchField.setText(FILTER);
                 m_searchField.setForeground(Color.GRAY);
                 m_searchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
@@ -424,10 +434,11 @@ public class ColumnFilterPanel extends JPanel {
 
         /**
          * Constructs a MoveAllActionListener for a table.
+         *
          * @param table the table from which elements are moved
          * @param tableRowSorter the TableRowSorter filtering the elements in the table
          */
-        MoveAllActionListener (final JTable table) {
+        MoveAllActionListener(final JTable table) {
             m_table = table;
         }
 
@@ -438,65 +449,64 @@ public class ColumnFilterPanel extends JPanel {
         public void actionPerformed(final ActionEvent e) {
             // if table is not filtered
             if (m_table.equals(m_inclTable)) {
-                if(m_inclSorter.getRowFilter()==null){
+                if (m_inclSorter.getRowFilter() == null) {
                     onRemAll();
-                }else{ //if table is filtered
+                } else { //if table is filtered
                     int[] rows = IntStream.range(0, m_table.getRowCount()).toArray();
                     onRemIt(rows);
                 }
             } else if (m_table.equals(m_exclTable)) {
-                if(m_exclSorter.getRowFilter()==null){
+                if (m_exclSorter.getRowFilter() == null) {
                     onAddAll(false);
-                }else{ //if table is filtered
+                } else { //if table is filtered
                     int[] rows = IntStream.range(0, m_table.getRowCount()).toArray();
                     onAddIt(rows);
-              }
+                }
             }
         }
     }
+
     /** Checkbox that enabled to keep all column in include list. */
     private final JCheckBox m_keepAllBox;
 
     /** List of DataCellColumnSpecss to keep initial ordering of DataCells. */
-    private final LinkedHashSet<DataColumnSpec> m_order =
-        new LinkedHashSet<DataColumnSpec>();
+    private final LinkedHashSet<DataColumnSpec> m_order = new LinkedHashSet<DataColumnSpec>();
 
     private boolean m_showInvalidInclCols = false;
 
     private boolean m_showInvalidExclCols = false;
 
     /**
-     * Class that filters all columns based on a given set of compatible
-     * <code>DataValue</code> classes.
+     * Class that filters all columns based on a given set of compatible <code>DataValue</code> classes.
      */
     public static class ValueClassFilter implements ColumnFilter {
         /**
-         * Show only columns of types that are compatible to one of theses
-         * classes.
+         * Show only columns of types that are compatible to one of theses classes.
          */
         private final Class<? extends DataValue>[] m_filterClasses;
+
         /**
          * Creates a new value class filter.
-         * @param filterValueClasses all classes that are compatible with
-         *        the type allowed in {@link #includeColumn(DataColumnSpec)}
+         *
+         * @param filterValueClasses all classes that are compatible with the type allowed in
+         *            {@link #includeColumn(DataColumnSpec)}
          */
         @SuppressWarnings("unchecked")
-        public ValueClassFilter(
-                final Class<? extends DataValue>... filterValueClasses) {
+        public ValueClassFilter(final Class<? extends DataValue>... filterValueClasses) {
             if (filterValueClasses == null || filterValueClasses.length == 0) {
                 throw new NullPointerException("Classes must not be null");
             }
-            final List<Class<? extends DataValue>> list = Arrays
-                    .asList(filterValueClasses);
+            final List<Class<? extends DataValue>> list = Arrays.asList(filterValueClasses);
             if (list.contains(null)) {
-                throw new NullPointerException("List of value classes must not "
-                        + "contain null elements.");
+                throw new NullPointerException("List of value classes must not contain null elements.");
             }
             m_filterClasses = filterValueClasses;
         }
+
         /**
-         * Checks if the given column type is included in the list of allowed
-         * types. If the list is empty, all types are valid.
+         * Checks if the given column type is included in the list of allowed types. If the list is empty, all types are
+         * valid.
+         *
          * @param cspec {@link ColumnFilterPanel} checked
          * @return true, if given column should be visible in column filter
          */
@@ -509,6 +519,7 @@ public class ColumnFilterPanel extends JPanel {
             }
             return false;
         }
+
         /** {@inheritDoc} */
         @Override
         public String allFilteredMsg() {
@@ -519,36 +530,28 @@ public class ColumnFilterPanel extends JPanel {
     /** The filter used to filter out/in valid column types. */
     private ColumnFilter m_filter;
 
-    private final HashSet<DataColumnSpec> m_hideColumns =
-        new HashSet<DataColumnSpec>();
-
+    private final HashSet<DataColumnSpec> m_hideColumns = new HashSet<DataColumnSpec>();
 
     /**
      * Line border for include columns.
      */
-    private static final Border INCLUDE_BORDER =
-        BorderFactory.createLineBorder(new Color(0, 221, 0), 2);
+    private static final Border INCLUDE_BORDER = BorderFactory.createLineBorder(new Color(0, 221, 0), 2);
 
     /**
      * Line border for exclude columns.
      */
-    private static final Border EXCLUDE_BORDER =
-        BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
+    private static final Border EXCLUDE_BORDER = BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
 
     private DataTableSpec m_spec;
 
-
     /**
-     * Creates a new filter column panel with three component which are the
-     * include list, button panel to shift elements between the two lists, and
-     * the exclude list. The include list then will contain all values to
-     * filter.
+     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
      *
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String[])
      *
-     * @deprecated Use the constructor {@link #ColumnFilterPanel(boolean)}
-     * instead
+     * @deprecated Use the constructor {@link #ColumnFilterPanel(boolean)} instead
      */
     @Deprecated
     @SuppressWarnings("unchecked")
@@ -557,13 +560,10 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Creates a new filter column panel with three component which are the
-     * include list, button panel to shift elements between the two lists, and
-     * the exclude list. The include list then will contain all values to
-     * filter.
+     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
      *
-     * @param showKeepAllBox <code>true</code>, if an check box to keep all
-     * columns is shown
+     * @param showKeepAllBox <code>true</code>, if an check box to keep all columns is shown
      *
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String[])
@@ -574,59 +574,49 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Creates a new filter column panel with three component which are the
-     * include list, button panel to shift elements between the two lists, and
-     * the exclude list. The include list then will contain all values to
-     * filter.
+     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
      *
-     * @param filterValueClasses an array of type {@link DataValue} classes only
-     *            allowed for selection. Will be check during update
+     * @param filterValueClasses an array of type {@link DataValue} classes only allowed for selection. Will be check
+     *            during update
      * @param showKeepAllBox true, if an check box to keep all columns is shown
      *
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      */
     @SuppressWarnings("unchecked")
-    public ColumnFilterPanel(final boolean showKeepAllBox,
-            final Class<? extends DataValue>... filterValueClasses) {
+    public ColumnFilterPanel(final boolean showKeepAllBox, final Class<? extends DataValue>... filterValueClasses) {
         this(showKeepAllBox, new ValueClassFilter(filterValueClasses));
     }
 
     /**
-     * Creates a new filter column panel with three component which are the
-     * include list, button panel to shift elements between the two lists, and
-     * the exclude list. The include list then will contain all values to
-     * filter.
+     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
      *
-     * @param filterValueClasses an array of type {@link DataValue} classes only
-     *            allowed for selection. Will be check during update
+     * @param filterValueClasses an array of type {@link DataValue} classes only allowed for selection. Will be check
+     *            during update
      *
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      *
-     * @deprecated Use the constructor
-     * {@link #ColumnFilterPanel(boolean, Class...)} instead
+     * @deprecated Use the constructor {@link #ColumnFilterPanel(boolean, Class...)} instead
      */
     @SuppressWarnings("unchecked")
     @Deprecated
-    public ColumnFilterPanel(
-            final Class<? extends DataValue>... filterValueClasses) {
+    public ColumnFilterPanel(final Class<? extends DataValue>... filterValueClasses) {
         this(new ValueClassFilter(filterValueClasses));
     }
 
     /**
-     * Creates a new filter column panel with three component which are the
-     * include list, button panel to shift elements between the two lists, and
-     * the exclude list. The include list then will contain all values to
-     * filter.
+     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
      *
      * @param filter specifies valid column values. Will be check during update
      *
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      *
-     * @deprecated Use the constructor
-     * {@link #ColumnFilterPanel(boolean, ColumnFilter)} instead
+     * @deprecated Use the constructor {@link #ColumnFilterPanel(boolean, ColumnFilter)} instead
      */
     @Deprecated
     public ColumnFilterPanel(final ColumnFilter filter) {
@@ -634,10 +624,9 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Creates a new filter column panel with three component which are the
-     * include list, button panel to shift elements between the two lists, and
-     * the exclude list. The include list then will contain all values to
-     * filter.
+     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
+     *
      * @param showKeepAllBox true, if an check box to keep all columns is shown
      * @param filter specifies valid column values. Will be check during update
      *
@@ -645,15 +634,13 @@ public class ColumnFilterPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, String...)
      */
     @SuppressWarnings("rawtypes")
-    public ColumnFilterPanel(final boolean showKeepAllBox,
-            final ColumnFilter filter) {
+    public ColumnFilterPanel(final boolean showKeepAllBox, final ColumnFilter filter) {
         m_filter = filter;
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
         final JPanel buttonPan = new JPanel();
         buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
         buttonPan.add(Box.createVerticalStrut(57));
-
 
         // JTables
         m_inclMdl = new NameFilterTableModel();
@@ -694,7 +681,8 @@ public class ColumnFilterPanel extends JPanel {
         m_inclSearchField = new JTextField(FILTER, 8);
         m_inclSearchField.setForeground(Color.GRAY);
         m_inclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
-        m_inclSearchField.addKeyListener(new SearchKeyAdapter(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSorter, m_inclSearchField));
+        m_inclSearchField.addKeyListener(
+            new SearchKeyAdapter(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSorter, m_inclSearchField));
         m_inclSearchField.addFocusListener(new SearchFocusAdapter(m_inclSearchField));
         JPanel inclSearchPanel = new JPanel(new BorderLayout(8, 0));
         inclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
@@ -734,9 +722,9 @@ public class ColumnFilterPanel extends JPanel {
         m_exclSearchField = new JTextField(FILTER, 8);
         m_exclSearchField.setForeground(Color.GRAY);
         m_exclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
-        m_exclSearchField.addKeyListener(new SearchKeyAdapter(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSorter, m_exclSearchField));
+        m_exclSearchField.addKeyListener(
+            new SearchKeyAdapter(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSorter, m_exclSearchField));
         m_exclSearchField.addFocusListener(new SearchFocusAdapter(m_exclSearchField));
-
 
         JPanel exclSearchPanel = new JPanel(new BorderLayout(8, 0));
         exclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
@@ -753,8 +741,7 @@ public class ColumnFilterPanel extends JPanel {
         // add 'keep all' checkbox
         if (showKeepAllBox) {
             m_keepAllBox = new JCheckBox("Always include all columns");
-            m_keepAllBox.setToolTipText("If the set of input columns changes, "
-                    + "all columns stay included.");
+            m_keepAllBox.setToolTipText("If the set of input columns changes, " + "all columns stay included.");
             m_keepAllBox.addItemListener(new ItemListener() {
                 /** {@inheritDoc} */
                 @Override
@@ -810,8 +797,7 @@ public class ColumnFilterPanel extends JPanel {
         all.setLayout(new BoxLayout(all, BoxLayout.Y_AXIS));
         all.add(center);
         if (m_keepAllBox != null) {
-            final JPanel keepAllPanel = new JPanel(
-                    new FlowLayout(FlowLayout.RIGHT, 0, 0));
+            final JPanel keepAllPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
             keepAllPanel.add(m_keepAllBox);
             all.add(keepAllPanel);
         }
@@ -820,8 +806,7 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Enables or disables all components on this panel.
-     * {@inheritDoc}
+     * Enables or disables all components on this panel. {@inheritDoc}
      */
     @Override
     public void setEnabled(final boolean enabled) {
@@ -854,7 +839,6 @@ public class ColumnFilterPanel extends JPanel {
         }
     }
 
-
     /**
      * @param show set to <code>true</code> to show invalid exclude columns
      * @since 2.8
@@ -872,8 +856,8 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Adds a listener which gets informed whenever the column filtering
-     * changes.
+     * Adds a listener which gets informed whenever the column filtering changes.
+     *
      * @param listener the listener
      */
     public void addChangeListener(final ChangeListener listener) {
@@ -885,6 +869,7 @@ public class ColumnFilterPanel extends JPanel {
 
     /**
      * Removes the given listener from this filter column panel.
+     *
      * @param listener the listener.
      */
     public void removeChangeListener(final ChangeListener listener) {
@@ -912,6 +897,7 @@ public class ColumnFilterPanel extends JPanel {
 
     /**
      * If the keep all box is visible and is selected.
+     *
      * @return true, if keep all columns check box is selected, otherwise false
      */
     public final boolean isKeepAllSelected() {
@@ -920,6 +906,7 @@ public class ColumnFilterPanel extends JPanel {
 
     /**
      * Sets a new selection for the keep all columns box.
+     *
      * @param select true, if the box should be selected
      */
     public final void setKeepAllSelected(final boolean select) {
@@ -930,21 +917,20 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Called by the 'remove >>' button to exclude the selected elements from
-     * the include list.
+     * Called by the 'remove >>' button to exclude the selected elements from the include list.
      */
     @SuppressWarnings("unchecked")
     private void onRemIt(final int[] rows) {
         // add all selected elements from the include to the exclude list
         List<DataColumnSpec> o = new ArrayList<DataColumnSpec>();
-        for (int i : rows){
+        for (int i : rows) {
             o.add((DataColumnSpec)m_inclTable.getValueAt(i, 0));
         }
         final HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(o);
         List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
         for (Object obj : m_exclMdl) {
-            DataColumnSpec spec = (DataColumnSpec) obj;
+            DataColumnSpec spec = (DataColumnSpec)obj;
             if (m_showInvalidInclCols && DataColumnSpecListCellRenderer.isInvalid(spec)) {
                 invalidSpecs.add(spec);
             }
@@ -974,11 +960,8 @@ public class ColumnFilterPanel extends JPanel {
         }
     }
 
-
-
     /**
-     * Called by the 'remove >>' button to exclude all elements from the include
-     * list.
+     * Called by the 'remove >>' button to exclude all elements from the include list.
      */
     @SuppressWarnings("unchecked")
     private void onRemAll() {
@@ -987,7 +970,7 @@ public class ColumnFilterPanel extends JPanel {
         final List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
         if (m_showInvalidExclCols) {
             for (Object obj : m_exclMdl) {
-                final DataColumnSpec spec = (DataColumnSpec) obj;
+                final DataColumnSpec spec = (DataColumnSpec)obj;
                 if (DataColumnSpecListCellRenderer.isInvalid(spec)) {
                     invalidSpecs.add(spec);
                 }
@@ -1015,8 +998,8 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Called by the '<< add' button to include the selected elements from the
-     * exclude list.
+     * Called by the '<< add' button to include the selected elements from the exclude list.
+     *
      * @param indices of rows to be added in table display order
      */
     @SuppressWarnings("unchecked")
@@ -1030,7 +1013,7 @@ public class ColumnFilterPanel extends JPanel {
         hash.addAll(o);
         List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
         for (Object obj : m_inclMdl) {
-            final DataColumnSpec spec = (DataColumnSpec) obj;
+            final DataColumnSpec spec = (DataColumnSpec)obj;
             if (m_showInvalidInclCols && DataColumnSpecListCellRenderer.isInvalid(spec)) {
                 invalidSpecs.add(spec);
             }
@@ -1060,8 +1043,8 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Called by the '<< add all' button to include all elements from the
-     * exclude list.
+     * Called by the '<< add all' button to include all elements from the exclude list.
+     *
      * @param showInvalid <code>true</code> if the invalid columns should still be shown
      */
     @SuppressWarnings("unchecked")
@@ -1071,7 +1054,7 @@ public class ColumnFilterPanel extends JPanel {
         final List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
         if (showInvalid && m_showInvalidInclCols) {
             for (Object obj : m_inclMdl) {
-                final DataColumnSpec spec = (DataColumnSpec) obj;
+                final DataColumnSpec spec = (DataColumnSpec)obj;
                 if (DataColumnSpecListCellRenderer.isInvalid(spec)) {
                     invalidSpecs.add(spec);
                 }
@@ -1098,28 +1081,23 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Updates this filter panel by removing all current selections from the
-     * include and exclude list. The include list will contain all column names
-     * from the spec afterwards.
+     * Updates this filter panel by removing all current selections from the include and exclude list. The include list
+     * will contain all column names from the spec afterwards.
      *
      * @param spec the spec to retrieve the column names from
-     * @param exclude the flag if <code>cells</code> contains the columns to
-     *            exclude (otherwise include).
+     * @param exclude the flag if <code>cells</code> contains the columns to exclude (otherwise include).
      * @param cells an array of data cells to either in- or exclude.
      */
-    public void update(final DataTableSpec spec, final boolean exclude,
-            final String... cells) {
+    public void update(final DataTableSpec spec, final boolean exclude, final String... cells) {
         this.update(spec, exclude, Arrays.asList(cells));
     }
 
     /**
-     * Updates this filter panel by removing all current selections from the
-     * include and exclude list. The include list will contains all column names
-     * from the spec afterwards.
+     * Updates this filter panel by removing all current selections from the include and exclude list. The include list
+     * will contains all column names from the spec afterwards.
      *
      * @param spec the spec to retrieve the column names from
-     * @param exclude the flag if <code>list</code> contains the columns to
-     *            exclude otherwise include
+     * @param exclude the flag if <code>list</code> contains the columns to exclude otherwise include
      * @param list the list of columns to exclude or include
      */
     @SuppressWarnings("unchecked")
@@ -1159,37 +1137,32 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Updates this filter panel by removing all current selections from the
-     * include and exclude list. The include list will contains all column names
-     * from the spec afterwards.
+     * Updates this filter panel by removing all current selections from the include and exclude list. The include list
+     * will contains all column names from the spec afterwards.
      *
      * @param spec the spec to retrieve the column names from
      * @param inclList the list of columns to include
      * @param exclList the list of columns to exclude
      * @since 2.8
      */
-    public void update(final DataTableSpec spec, final Collection<String> inclList,
-                       final Collection<String> exclList) {
+    public void update(final DataTableSpec spec, final Collection<String> inclList, final Collection<String> exclList) {
         update(spec, inclList, exclList, true);
     }
 
     /**
-     * Updates this filter panel by removing all current selections from the
-     * include and exclude list. The include list will contains all column names
-     * from the spec afterwards.
+     * Updates this filter panel by removing all current selections from the include and exclude list. The include list
+     * will contains all column names from the spec afterwards.
      *
      * @param spec the spec to retrieve the column names from
      * @param inclList the list of columns to include
      * @param exclList the list of columns to exclude
-     * @param inclUnknown <code>true</code> if unknown columns should be added
-     * to the include list of the component otherwise they are added to the
-     * exclude list
+     * @param inclUnknown <code>true</code> if unknown columns should be added to the include list of the component
+     *            otherwise they are added to the exclude list
      * @since 2.9
      */
     @SuppressWarnings("unchecked")
-    public void update(final DataTableSpec spec, final Collection<String> inclList,
-                       final Collection<String> exclList,
-                       final boolean inclUnknown) {
+    public void update(final DataTableSpec spec, final Collection<String> inclList, final Collection<String> exclList,
+        final boolean inclUnknown) {
         assert (spec != null && inclList != null && exclList != null);
         m_spec = spec;
         m_order.clear();
@@ -1227,7 +1200,7 @@ public class ColumnFilterPanel extends JPanel {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static void addInvalidSpecs(final boolean showInvalidCols, final DataTableSpec spec,
-                                        final Set<String> colNames, final NameFilterTableModel model) {
+        final Set<String> colNames, final NameFilterTableModel model) {
         if (showInvalidCols && !colNames.isEmpty()) {
             for (String colName : colNames) {
                 final DataColumnSpec invalidSpec = DataColumnSpecListCellRenderer.createInvalidSpec(colName);
@@ -1297,9 +1270,8 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Returns the data type for the given cell retrieving it from the initial
-     * {@link DataTableSpec}. If this name could not found, return
-     * <code>null</code>.
+     * Returns the data type for the given cell retrieving it from the initial {@link DataTableSpec}. If this name could
+     * not found, return <code>null</code>.
      *
      * @param name the column name to get the data type for
      * @return the data type or <code>null</code>
@@ -1327,10 +1299,8 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Removes the given columns form either include or exclude list and
-     * notifies all listeners. Does not throw an exception if the argument
-     * contains <code>null</code> elements or is not contained in any of the
-     * lists.
+     * Removes the given columns form either include or exclude list and notifies all listeners. Does not throw an
+     * exception if the argument contains <code>null</code> elements or is not contained in any of the lists.
      *
      * @param columns the columns to remove
      */
@@ -1428,9 +1398,8 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Sets the internal used {@link ColumnFilter} to the given one and calls
-     * the {@link #update(DataTableSpec, boolean, Collection)} method to
-     * update the column panel.
+     * Sets the internal used {@link ColumnFilter} to the given one and calls the
+     * {@link #update(DataTableSpec, boolean, Collection)} method to update the column panel.
      *
      * @param filter the new {@link ColumnFilter} to use
      */
@@ -1446,13 +1415,15 @@ public class ColumnFilterPanel extends JPanel {
 
     /**
      * Displays a JTable if there is something to display, otherwise displays a TablePlaceholder.
+     *
      * @param table the JTable being displayed instead of the TablePlaceholder
      * @param cardsPanel the JPanel holding the cards
      * @param tablePlaceholder the TablePlaceholder being displayed instead of the table
      * @param searchQuery the entered search query
      */
-    private void updateFilterView(final JTable table, final JPanel cardsPanel, final TablePlaceholder tablePlaceholder, final String searchQuery){
-        CardLayout cl = (CardLayout) cardsPanel.getLayout();
+    private void updateFilterView(final JTable table, final JPanel cardsPanel, final TablePlaceholder tablePlaceholder,
+        final String searchQuery) {
+        CardLayout cl = (CardLayout)cardsPanel.getLayout();
         // if there are no entries in the list
         if (table.getModel().getRowCount() == 0) {
             tablePlaceholder.updateTextEmpty();
@@ -1470,7 +1441,8 @@ public class ColumnFilterPanel extends JPanel {
         TableColumn tableColumn = table.getColumnModel().getColumn(0);
         double maxCellWidth = 0;
         for (int row = 0; row < table.getRowCount(); row++) {
-            Component c = getTableCellRenderer().getTableCellRendererComponent(table, table.getModel().getValueAt(row, 0), false, false, row, 0);
+            Component c = getTableCellRenderer().getTableCellRendererComponent(table,
+                table.getModel().getValueAt(row, 0), false, false, row, 0);
             double width = c.getPreferredSize().getWidth() + 8;
             // width of the largest cell
             maxCellWidth = Math.max(width, maxCellWidth);
@@ -1498,14 +1470,16 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Updates the rowfilter of the corresponding table with a new query. If the query is empty, the rowfilter will be set to null.
+     * Updates the rowfilter of the corresponding table with a new query. If the query is empty, the rowfilter will be
+     * set to null.
+     *
      * @param table
      */
     @SuppressWarnings("rawtypes")
-    private void updateRowFilter(final String searchQuery, final TableRowSorter<NameFilterTableModel> tableRowSorter){
+    private void updateRowFilter(final String searchQuery, final TableRowSorter<NameFilterTableModel> tableRowSorter) {
         // RowFilter is set to null if search field is empty
         RowFilter<NameFilterTableModel, Object> rf = null;
-        if(!searchQuery.isEmpty()){
+        if (!searchQuery.isEmpty()) {
             try {
                 // by default perform case insensitive search
                 // escape all regex characters [\^$.|?*+()
@@ -1519,10 +1493,11 @@ public class ColumnFilterPanel extends JPanel {
 
     /**
      * Creates a resource URL for a file in the class's path
+     *
      * @param file
      * @return resource URL
      */
-    private URL getResourceUrl(final String file){
+    private URL getResourceUrl(final String file) {
         Package pack = NameFilterPanel.class.getPackage();
         String iconBase = pack.getName().replace(".", "/") + "/";
         return this.getClass().getClassLoader().getResource(iconBase + file);
