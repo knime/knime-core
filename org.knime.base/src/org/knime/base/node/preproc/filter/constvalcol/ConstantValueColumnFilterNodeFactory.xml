@@ -13,8 +13,10 @@
 			window, the user can specify whether to filter only columns with a
 			specific constant numeric value or String, columns containing only
 			missing values, or all constant columns. In addition, the user can
-			choose which columns to consider for filtering. Columns excluded in
-			this dialog are passed even if they contain only identical values.
+			specify the minimum number of rows a table must have to be considered
+			for filtering. Individual columns can also be manually excluded from
+			the filter, i.e., passed to the output even if they contain only
+			identical values.
 		</intro>
 		<option name="Filter all constant value columns"> Select this option to filter all constant value
 			columns independent of the value they contain in duplicates.
@@ -27,6 +29,10 @@
 		</option>
 		<option name="Filter constant value columns with missing value"> Select this option to filter columns containing
 			only empty cells / missing values.
+		</option>
+		<option name="Minimum number of rows"> The minimum number of rows a table must have to
+			be considered for filtering. If the table size is below the specified
+			value, the table will not be filtered / altered.
 		</option>
 		<option name="Include"> This list contains the column names of the input
 			table that are to be considered for filtering.
@@ -48,11 +54,10 @@
 		</option>
 	</fullDescription>
 	<ports>
-		<inPort index="0" name="Table to be filtered"> Table from which
-			columns are to be filtered.
+		<inPort index="0" name="Table to be filtered"> Table from which columns are to be
+			filtered.
 		</inPort>
-		<outPort index="0" name="Filtered table"> Table excluding
-			filtered columns.
+		<outPort index="0" name="Filtered table"> Table excluding filtered columns.
 		</outPort>
 	</ports>
 </knimeNode>

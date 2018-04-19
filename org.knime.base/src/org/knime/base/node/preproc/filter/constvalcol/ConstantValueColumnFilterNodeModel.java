@@ -79,60 +79,60 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
  * @since 3.6
  */
 final class ConstantValueColumnFilterNodeModel extends NodeModel {
-    /**
+    /*
      * The warning message that is shown when this node is applied to a one-row table.
      */
     private static final String WARNING_ONEROW =
         "Input table contains only one row. All of its columns are considered constant value columns.";
 
-    /**
+    /*
      * The warning message that is shown when this node is applied to an empty table.
      */
     private static final String WARNING_SMALL_TABLE =
         "Input table has fewer rows than the minimum specified in the filter settings. Constant value column filtering disabled.";
 
-    /**
+    /*
      * The warning message that is shown when no options are selected for filtering.
      */
     private static final String WARNING_NO_OPTION = "At least one filtering option has to be selected.";
 
-    /**
+    /*
      * The settings model for the list of columns to include in / exclude from the filtering.
      */
     private final SettingsModelColumnFilter2 m_columnFilter = createColumnFilterModel();
 
-    /**
+    /*
      * The settings model for the option to filter columns with a specific constant numeric value.
      */
     private final SettingsModelBoolean m_filterNumeric = createFilterNumericModel();
 
-    /**
+    /*
      * The settings model for the specific numeric value that is to be looked for in filtering.
      */
     private final SettingsModelDouble m_filterNumericValue = createFilterNumericValueModel();
 
-    /**
+    /*
      * The settings model for the option to filter columns with a specific constant String value.
      */
     private final SettingsModelBoolean m_filterString = createFilterStringModel();
 
-    /**
+    /*
      * The settings model for the specific String value that is to be looked for in filtering.
      */
     private final SettingsModelString m_filterStringValue = createFilterStringValueModel();
 
-    /**
+    /*
      * The settings model for the option to filter columns containing only missing values.
      */
     private final SettingsModelBoolean m_filterMissing = createFilterMissingModel();
 
-    /**
+    /*
      * The settings model for specifying the minimum number of rows a table must have to be considered for filtering.
      */
     private final SettingsModelLong m_rowThreshold = createRowThresholdModel();
 
-    /**
-     * Creates a new constant value column filter model with one and input and one output.
+    /*
+     * The settings model for the option to filter all constant value columns.
      */
     private final SettingsModelBoolean m_filterAll = createFilterAllModel(m_filterNumeric, m_filterNumericValue,
         m_filterString, m_filterStringValue, m_filterMissing);
@@ -194,7 +194,9 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         final SettingsModelString filterStringValue, final SettingsModelBoolean filterMissing) {
         SettingsModelBoolean filterAll = new SettingsModelBoolean("filter-all", false);
 
-        // If all columns are to be filtered, specific column filtering is disabled.
+        /*
+         * If all columns are to be filtered, specific column filtering is disabled.
+         */
         filterAll.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -248,7 +250,9 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // No internal state to load.
+        /*
+         * No internal state to load.
+         */
     }
 
     /**
@@ -257,7 +261,9 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // No internal state to save.
+        /*
+         * No internal state to save.
+         */
     }
 
     /**
@@ -315,7 +321,9 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // No internal state to reset.
+        /*
+         * No internal state to reset.
+         */
     }
 
     /**
@@ -323,8 +331,10 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        // The columns containing only constant values cannot be determined without looking at the data contained within
-        // the table. Hence, the DataTableSpec cannot be determined before execution onset.
+        /*
+         * The columns containing only constant values cannot be determined without looking at the data contained within
+         * the table. Hence, the DataTableSpec cannot be determined before execution onset.
+         */
         return null;
     }
 
@@ -359,5 +369,4 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         BufferedDataTable outputTable = exec.createColumnRearrangeTable(inputTable, columnRearranger, exec);
         return new BufferedDataTable[]{outputTable};
     }
-
 }

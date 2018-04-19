@@ -58,8 +58,8 @@ import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataTable;
@@ -74,51 +74,43 @@ import org.knime.core.node.ExecutionContext;
  */
 public class ConstantValueColumnFilter {
 
-    /**
+    /*
      * The option to filter all constant value columns.
      */
     private final boolean m_filterAll;
 
-    /**
+    /*
      * The option to filter columns with a specific constant numeric value.
      */
     private final boolean m_filterNumeric;
 
-    /**
+    /*
      * The specific numeric value that is to be looked for in filtering.
      */
     private final double m_filterNumericValue;
 
-    /**
+    /*
      * The option to filter columns with a specific constant String value.
      */
     private final boolean m_filterString;
 
-    /**
+    /*
      * The specific String value that is to be looked for in filtering.
      */
     private final String m_filterStringValue;
 
-    /**
+    /*
      * The option to filter columns containing only missing values.
      */
     private final boolean m_filterMissing;
 
-    /**
+    /*
      * The minimum number of rows a table must have to be considered for filtering.
      */
     private final long m_rowThreshold;
 
-    /**
+    /*
      * Constructor for the Constant Value Column Filter class.
-     *
-     * @param filterAll the option to filter all constant value columns
-     * @param filterNumeric the option to filter columns with a specific constant numeric value
-     * @param filterNumericValue the specific numeric value that is to be looked for in filtering
-     * @param filterString the option to filter columns with a specific constant String value
-     * @param filterStringValue the specific String value that is to be looked for in filtering
-     * @param filterMissing the option to filter columns containing only missing values
-     * @param rowThreshold the minimum number of rows a table must have to be considered for filtering
      */
     private ConstantValueColumnFilter(final boolean filterAll, final boolean filterNumeric,
         final double filterNumericValue, final boolean filterString, final String filterStringValue,
@@ -144,33 +136,43 @@ public class ConstantValueColumnFilter {
      */
     public String[] determineConstantValueColumns(final BufferedDataTable inputTable, final String[] colNamesToFilter,
         final ExecutionContext exec) throws CanceledExecutionException {
-        // If the table is smaller than the specified threshold (which should never be smaller than 1), none of the
-        // selected columns are removed.
+        /*
+         * If the table is smaller than the specified threshold (which should never be smaller than 1), none of the
+         * selected columns are removed.
+         */
         if (inputTable.size() < Math.max(m_rowThreshold, 1)) {
             return new String[0];
         }
 
-        // Assemble a map of filter candidates that maps the indices of columns that potentially contain only duplicate
-        // values to their last observed value.
+        /*
+         * Assemble a map of filter candidates that maps the indices of columns that potentially contain only duplicate
+         * values to a column checker object that can be used to check whether further values in that column are
+         * specified in the dialog pane and constant (i.e., identical to the first observed value).
+         */
         Set<String> colNamesToFilterSet = new HashSet<>(Arrays.asList(colNamesToFilter));
         String[] allColNames = inputTable.getDataTableSpec().getColumnNames();
-        // TODO: change to map int -> FilterObject, where the latter depends on the type of column
-        // TODO: change from last observed to first value
-        Map<Integer, DataCell> filterColsLastObsVals = new HashMap<>();
+        RowIterator rowIt = inputTable.iterator();
+        DataRow firstRow = rowIt.next();
+        Map<Integer, ConstantChecker> columnCheckers = new HashMap<>();
         for (int i = 0; i < allColNames.length; i++) {
             if (colNamesToFilterSet.contains(allColNames[i])) {
-                // We have not observed any values yet, so the last observed value is null.
-                filterColsLastObsVals.put(i, null);
+                DataCell firstCell = firstRow.getCell(i);
+                DataType type = inputTable.getDataTableSpec().getColumnSpec(i).getType();
+                ConstantChecker checker = createConstantChecker(type, firstCell);
+                if (checker.isCellSpecified(firstCell)) {
+                    columnCheckers.put(i, checker);
+                }
             }
         }
 
-        // Across all filter candidates, check if there are two (vertically) successive cells with different values.
-        // When found, this column is not constant and, thus, should be removed from the filter candidates. This method
-        // has a low memory footprint and operates in linear runtime. When the option to filter only constant columns
-        // with specific values is selected, columns should also be removed when they are found to contain a value
-        // other than any of the specified values.
-        RowIterator rowIt = inputTable.iterator();
-        for (long i = 0; i < inputTable.size(); i++) {
+        /*
+         * Across all filter candidates, check if there is any cell whose value differs from the first cell's value.
+         * When found, this column is not constant and, thus, should be removed from the filter candidates. This method
+         * has a low memory footprint and operates in linear runtime. When the option to filter only constant columns
+         * with specific values is selected, columns should also be removed when they are found to contain a value other
+         * than any of the specified values.
+         */
+        for (long i = 1; i < inputTable.size(); i++) {
             final long finalI = i;
             final long finalSize = inputTable.size();
             final DataRow currentRow = rowIt.next();
@@ -178,53 +180,123 @@ public class ConstantValueColumnFilter {
             exec.setProgress(i / (double)inputTable.size(),
                 () -> String.format("Row %,d/%,d (%s)", finalI + 1, finalSize, currentRow.getKey()));
 
-            for (Iterator<Entry<Integer, DataCell>> entryIt = filterColsLastObsVals.entrySet().iterator(); entryIt
-                .hasNext();) {
-                Entry<Integer, DataCell> filterColsLastObsVal = entryIt.next();
-                // currentCell can't be null; lastCell can be null (in the first row).
-                DataCell currentCell = currentRow.getCell(filterColsLastObsVal.getKey());
-                DataCell lastCell = filterColsLastObsVal.getValue();
-                filterColsLastObsVal.setValue(currentCell);
+            for (Iterator<Entry<Integer, ConstantChecker>> it = columnCheckers.entrySet().iterator(); it.hasNext();) {
+                Entry<Integer, ConstantChecker> entry = it.next();
+                DataCell cell = currentRow.getCell(entry.getKey());
+                ConstantChecker checker = entry.getValue();
 
-                // Columns are removed from the filter candidates, when
-                // (a) the currentCell has a value other than the specified / allowed values or
-                // (b) it differs from the last observed cell in this column (i.e., this column is not constant).
-                if (!isValueSpecified(currentCell) || (lastCell != null && !currentCell.equals(lastCell))) {
-                    entryIt.remove();
+                /*
+                 * Columns are removed from the filter candidates, when (a) the current cell has a value other than the
+                 * specified / allowed values or (b) it differs from the first cell in this column (i.e., this column is
+                 * not constant).
+                 */
+                if (!(checker.isCellSpecified(cell) && checker.isCellConstant(cell))) {
+                    it.remove();
                 }
             }
         }
 
-        // Obtain the names of to-be-filtered columns from the filter candidates map
-        String[] colNamesToRemove =
-            filterColsLastObsVals.keySet().stream().map(i -> allColNames[i]).toArray(String[]::new);
+        /*
+         * Obtain the names of to-be-filtered columns from the filter candidates map.
+         */
+        String[] colNamesToRemove = columnCheckers.keySet().stream().map(i -> allColNames[i]).toArray(String[]::new);
 
         return colNamesToRemove;
     }
 
-    /**
-     * A function that determines whether the value of a given DataCell has been specified in the dialog pane to be
-     * filtered.
-     *
-     * @param cell the cell whose value is to be checked
-     * @return <code>true</code>, if and only if the cell's value qualifies for being filtered
+    /*
+     * A method that creates a new constant checker based on the data type and first cell of a column.
      */
-    private boolean isValueSpecified(final DataCell cell) {
-        if (m_filterAll) {
-            return true;
+    private ConstantChecker createConstantChecker(final DataType type, final DataCell firstCell) {
+        if (firstCell.isMissing()) {
+            return new ConstantMissingChecker();
+        } else {
+
+            if (type.isCompatible(DoubleValue.class)) {
+                return new ConstantDoubleValueChecker(firstCell);
+            } else if (type.isCompatible(StringValue.class)) {
+                return new ConstantStringValueChecker(firstCell);
+            }
+            return new ConstantCellChecker(firstCell);
+
         }
-        if (m_filterNumeric && cell instanceof DoubleValue
-            && ((DoubleValue)cell).getDoubleValue() == m_filterNumericValue) {
-            return true;
+    }
+
+    /*
+     * A little helper class that checks if a cell is both constant (i.e., similar to the first observed cell from the
+     * same column) and specified by the user.
+     */
+    abstract class ConstantChecker {
+        abstract boolean isCellConstant(final DataCell cell);
+
+        boolean isCellSpecified(final DataCell cell) {
+            return m_filterAll || (m_filterMissing && cell.isMissing());
         }
-        if (m_filterString && cell instanceof StringValue
-            && ((StringValue)cell).getStringValue().equals(m_filterStringValue)) {
-            return true;
+    }
+
+    final class ConstantMissingChecker extends ConstantChecker {
+        @Override
+        boolean isCellConstant(final DataCell cell) {
+            return cell.isMissing();
         }
-        if (m_filterMissing && cell instanceof MissingCell) {
-            return true;
+    }
+
+    final class ConstantCellChecker extends ConstantChecker {
+        private final DataCell m_firstCell;
+
+        ConstantCellChecker(final DataCell firstCell) {
+            m_firstCell = firstCell;
         }
-        return false;
+
+        @Override
+        protected boolean isCellConstant(final DataCell cell) {
+            /*
+             * This equality check is not quite ideal. Consider a table with a single column containing only integers of
+             * value 3 and another table with a single column containing only doubles of value 3. If these tables are
+             * concatenated, the resulting table's single column will not be considered constant due to how the equality
+             * check of data cells is implemented. Having said that, there currently does not seem to be a better
+             * alternative in KNIME's API.
+             */
+            return m_firstCell.equals(cell);
+        }
+    }
+
+    final class ConstantDoubleValueChecker extends ConstantChecker {
+        private final double m_firstCellValue;
+
+        ConstantDoubleValueChecker(final DataCell firstCell) {
+            m_firstCellValue = ((DoubleValue)firstCell).getDoubleValue();
+        }
+
+        @Override
+        boolean isCellConstant(final DataCell cell) {
+            return !cell.isMissing() && ((DoubleValue)cell).getDoubleValue() == m_firstCellValue;
+        }
+
+        @Override
+        boolean isCellSpecified(final DataCell cell) {
+            return (m_filterNumeric && !cell.isMissing()
+                && ((DoubleValue)cell).getDoubleValue() == m_filterNumericValue) || super.isCellSpecified(cell);
+        }
+    }
+
+    final class ConstantStringValueChecker extends ConstantChecker {
+        private final String m_firstCellValue;
+
+        ConstantStringValueChecker(final DataCell firstCell) {
+            m_firstCellValue = ((StringValue)firstCell).getStringValue();
+        }
+
+        @Override
+        boolean isCellConstant(final DataCell cell) {
+            return !cell.isMissing() && ((StringValue)cell).getStringValue().equals(m_firstCellValue);
+        }
+
+        @Override
+        boolean isCellSpecified(final DataCell cell) {
+            return (m_filterString && !cell.isMissing()
+                && ((StringValue)cell).getStringValue().equals(m_filterStringValue)) || super.isCellSpecified(cell);
+        }
     }
 
     /**
@@ -340,7 +412,5 @@ public class ConstantValueColumnFilter {
             return new ConstantValueColumnFilter(m_nestedFilterAll, m_nestedFilterNumeric, m_nestedFilterNumericValue,
                 m_nestedFilterString, m_nestedFilterStringValue, m_nestedFilterMissing, m_nestedRowThreshold);
         }
-
     }
-
 }

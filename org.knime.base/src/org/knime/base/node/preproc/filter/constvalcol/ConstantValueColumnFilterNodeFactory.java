@@ -61,7 +61,6 @@ import org.knime.core.node.NodeView;
  * @since 3.6
  */
 public final class ConstantValueColumnFilterNodeFactory extends NodeFactory<ConstantValueColumnFilterNodeModel> {
-
     /** {@inheritDoc} */
     @Override
     public ConstantValueColumnFilterNodeModel createNodeModel() {
@@ -92,5 +91,4 @@ public final class ConstantValueColumnFilterNodeFactory extends NodeFactory<Cons
     public NodeDialogPane createNodeDialogPane() {
         return new ConstantValueColumnFilterNodeDialogPane();
     }
-
 }

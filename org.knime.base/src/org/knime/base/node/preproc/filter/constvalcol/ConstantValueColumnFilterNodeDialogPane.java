@@ -82,96 +82,95 @@ import org.knime.core.node.port.PortObjectSpec;
  * @since 3.6
  */
 final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
-    /**
+    /*
      * The title of the tab of the column selection panel.
      */
     private static final String INEXCLUDE_LIST_TAB = "Include / Exclude Columns";
 
-    /**
+    /*
      * The title of the column selection panel.
      */
     private static final String INEXCLUDE_LIST_TITLE = "Select columns to be included in / excluded from the filter";
 
-    /**
+    /*
      * The tooltip of the column selection panel.
      */
     private static final String INEXCLUDE_LIST_TOOLTIP =
         "Select which columns to consider for filtering and which columns to pass through.";
 
-    /**
+    /*
      * The title of the tab in which filter options can be selected.
      */
     private static final String FILTER_OPTIONS_TAB = "Filter Settings";
 
-    /**
+    /*
      * The title of the group of options that allow to limit the filtering to specific values.
      */
     private static final String FILTER_OPTIONS_TITLE = "Filter constant value columns";
 
-    /**
+    /*
      * The label of the option to filter all constant value columns.
      */
     private static final String FILTER_OPTIONS_ALL_LABEL = "all";
 
-    /**
+    /*
      * The tooltip of the option to filter all constant value columns.
      */
     private static final String FILTER_OPTIONS_ALL_TOOLTIP =
         "Filter columns with any constant value, i.e., all columns containing only duplicates of the same value.";
 
-    /**
+    /*
      * The label of the option to filter columns with a specific constant numeric value.
      */
     private static final String FILTER_OPTIONS_NUMERIC_LABEL = "with numeric value";
 
-    /**
+    /*
      * The tooltip of the option to filter columns with a specific constant numeric value.
      */
     private static final String FILTER_OPTIONS_NUMERIC_TOOLTIP =
         "Filter columns containing only a specific numeric value.";
 
-    /**
+    /*
      * The label of the option to filter columns with a specific constant String value.
      */
     private static final String FILTER_OPTIONS_STRING_LABEL = "with String value";
 
-    /**
+    /*
      * The tooltip of the option to filter columns with a specific constant String value.
      */
     private static final String FILTER_OPTIONS_STRING_TOOLTIP =
         "Filter columns containing only a specific String value.";
 
-    /**
+    /*
      * The label of the option to filter columns containing only missing values.
      */
     private static final String FILTER_OPTIONS_MISSING_LABEL = "with missing value";
 
-    /**
+    /*
      * The tooltip of the option to filter columns containing only missing values.
      */
     private static final String FILTER_OPTIONS_MISSING_TOOLTIP = "Filter columns containing only missing values.";
 
-    /**
+    /*
      * The label of the option for specifying the minimum number of rows a table must have to be considered for
      * filtering.
      */
     private static final String MISC_OPTIONS_ROW_THRESHOLD_LABEL = "Minimum number of rows:";
 
-    /**
+    /*
      * The title of the group of options that allow to limit the filtering to specific values.
      */
     private static final String MISC_OPTIONS_TITLE = "Miscellaneous options";
 
-    /**
-     * the tooltip of the option for specifying the minimum number of rows a table must have to be considered for
+    /*
+     * The tooltip of the option for specifying the minimum number of rows a table must have to be considered for
      * filtering.
      */
     private static final String MISC_OPTIONS_ROW_THRESHOLD_TOOLTIP =
         "The minimum number of rows a table must have to be considered for filtering. If the table size is below the specified value, the table will not be filtered / altered.";
 
-    /**
-     * {@link org.knime.core.node.defaultnodesettings.DialogComponent} objects that have to be saved to the settings
-     * file manually via {@link #saveAdditionalSettingsTo(NodeSettingsWO)}.
+    /*
+     * Dialog components that have to be saved to the settings file manually.
      */
     private final List<DialogComponent> m_components;
 
@@ -184,7 +183,7 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
         addFilterOptionsTab();
     }
 
-    /**
+    /*
      * Creates dialog components for selecting which columns to include in respectively exclude from the filtering
      * process.
      */
@@ -197,7 +196,7 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
         addTab(INEXCLUDE_LIST_TAB, dialog.getComponentPanel());
     }
 
-    /**
+    /*
      * Creates dialog components for specifying which constant value columns to filter.
      */
     private void addFilterOptionsTab() {
@@ -250,16 +249,12 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
         outerPanel.add(Box.createVerticalGlue());
 
         addTabAt(0, FILTER_OPTIONS_TAB, outerPanel);
-        getTab(FILTER_OPTIONS_TAB);
+        setSelected(FILTER_OPTIONS_TAB);
     }
 
-    /**
+    /*
      * A function that registers a new {@link DialogComponent} and adds it to a {@link JPanel} by creating a new
      * horizontal box with glue to the right.
-     *
-     * @param dc the new {@link DialogComponent} to register
-     * @param tooltipText the tooltip text of the {@link DialogComponent}
-     * @param panel the {@link JPanel} to which to add the {@link DialogComponent}
      */
     private void addComponentWithGlue(final DialogComponent dc, final String tooltipText, final JPanel panel) {
         JPanel innerPanel = new JPanel();
@@ -269,12 +264,8 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
         panel.add(innerPanel);
     }
 
-    /**
+    /*
      * A function that registers a new {@link DialogComponent} and adds it to a {@link JPanel}.
-     *
-     * @param dc the new {@link DialogComponent} to register
-     * @param tooltipText the tooltip text of the {@link DialogComponent}
-     * @param panel the {@link JPanel} to which to add the {@link DialogComponent}
      */
     private void addComponent(final DialogComponent dc, final String tooltipText, final JPanel panel) {
         dc.setToolTipText(tooltipText);
@@ -304,5 +295,4 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
             comp.loadSettingsFrom(settings, specs);
         }
     }
-
 }
