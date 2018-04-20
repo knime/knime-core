@@ -187,10 +187,11 @@ class TreeViewerUpdater {
                     viewer.getTree().showItem(item);
 
                     if (repositoryView != null) {
-                        repositoryView.setObscuringDisplay(true, false, null);
+                        repositoryView.setObscuringDisplay(new AbstractRepositoryView.ObscuringState());
                     }
                 } else if (repositoryView != null) {
-                    repositoryView.setObscuringDisplay(false, true, "No matches found.");
+                    repositoryView
+                        .setObscuringDisplay(new AbstractRepositoryView.ObscuringState(true, "No matches found."));
                 }
             }
         } finally {

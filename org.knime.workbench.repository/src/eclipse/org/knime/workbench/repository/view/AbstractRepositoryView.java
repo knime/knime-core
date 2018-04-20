@@ -49,7 +49,10 @@ package org.knime.workbench.repository.view;
 
 import java.lang.reflect.Method;
 import java.util.ConcurrentModificationException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -68,8 +71,11 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
@@ -128,11 +134,18 @@ import org.osgi.framework.FrameworkUtil;
 public abstract class AbstractRepositoryView extends ViewPart implements RepositoryManager.Listener {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractRepositoryView.class);
 
+    private static final Boolean NON_INSTANT_SEARCH =
+        Boolean.getBoolean(KNIMEConstants.PROPERTY_REPOSITORY_NON_INSTANT_SEARCH);
+
+    private static final int[] OBSCURING_LAYER_RGB = { 255, 255, 255 };
+    private static final int OBSCURING_LAYER_PARTIAL_OPACITY = 188;
+
     /**
      * The key to store/access the additional information about the streaming-ability of a node, as stored optionally
      * with an {@link AbstractRepositoryObject}.
      */
-    final static String KEY_INFO_STREAMABLE = "info_streamable";
+    static final String KEY_INFO_STREAMABLE = "info_streamable";
+
 
     /**
      * The tree component for showing the repository contents. It will be initialized in
@@ -140,7 +153,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
      */
     protected TreeViewer m_viewer;
 
-    private final IPropertySourceProvider m_propertyProvider = new PropertyProvider();
+    private final IPropertySourceProvider m_propertyProvider;
 
     private SearchQueryContributionItem m_toolbarSearchText;
 
@@ -149,9 +162,6 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     private ShowAdditionalInfoAction m_showAddInfoButton;
 
     private FuzzySearchAction m_fuzzySearchButton;
-
-    private static final Boolean NON_INSTANT_SEARCH = Boolean
-        .getBoolean(KNIMEConstants.PROPERTY_REPOSITORY_NON_INSTANT_SEARCH);
 
     private int m_nodeCounter = 0;
 
@@ -170,11 +180,16 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     private Label m_obscureLayerLabel;
     private Color m_partiallyObscuredFill;
     private Color m_totallyObscuredFill;
+    private ObscuringState m_currentObscuringState;
+    private Thread m_delayedResizeReLayout;
+    private final AtomicBoolean m_canReLayoutAfterResize;
 
     /**
      * The constructor.
      */
     public AbstractRepositoryView() {
+        m_canReLayoutAfterResize = new AtomicBoolean(false);
+        m_propertyProvider = new PropertyProvider();
     }
 
     /**
@@ -222,6 +237,9 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     public void createPartControl(final Composite parent) {
         parent.setCursor(new Cursor(Display.getDefault(), SWT.CURSOR_WAIT));
 
+        final StackLayout layout = new StackLayout();
+        parent.setLayout(layout);
+
         m_viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
         m_viewer.getControl().setToolTipText("Loading node repository...");
         m_viewer.setContentProvider(new RepositoryContentProvider());
@@ -256,14 +274,59 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
         });
 
         m_obscureLayer.setVisible(false);
+        m_currentObscuringState = new ObscuringState();
 
         final Display display = Display.getDefault();
         final FontData[] fD = m_obscureLayerLabel.getFont().getFontData();
-        fD[0].setHeight(16);
+        fD[0].setHeight(14);
         m_obscureLayerLabel.setFont(new Font(display, fD[0]));
 
-        m_partiallyObscuredFill = new Color(display, 144, 152, 136, 188);
-        m_totallyObscuredFill = new Color(display, 144, 152, 136, 255);
+        m_partiallyObscuredFill = new Color(display, OBSCURING_LAYER_RGB[0], OBSCURING_LAYER_RGB[1],
+            OBSCURING_LAYER_RGB[2], OBSCURING_LAYER_PARTIAL_OPACITY);
+        m_totallyObscuredFill =
+            new Color(display, OBSCURING_LAYER_RGB[0], OBSCURING_LAYER_RGB[1], OBSCURING_LAYER_RGB[2], 255);
+
+        parent.addControlListener(new ControlAdapter() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void controlResized(final ControlEvent ce) {
+                if (m_currentObscuringState.shouldShowObscuringLayer()) {
+                    if (m_delayedResizeReLayout == null) {
+                        Runnable r = () -> {
+                            m_canReLayoutAfterResize.set(false);
+
+                            while (!m_canReLayoutAfterResize.getAndSet(true)) {
+                                try {
+                                    Thread.sleep(96);
+                                } catch (InterruptedException e) { } // NOPMD
+                            }
+
+                            Display.getDefault().asyncExec(() -> {
+                                final ObscuringState os = new ObscuringState(m_currentObscuringState);
+
+                                if (!StringUtils.isBlank(os.getStatusMessage())) {
+                                    // we don't want to requestLayout as it's asynchronous to this invocation
+                                    m_obscureLayer.layout();
+                                }
+
+                                setObscuringDisplay(os);
+                            });
+
+                            m_delayedResizeReLayout = null;
+                        };
+
+                        m_delayedResizeReLayout = new Thread(r);
+                        m_delayedResizeReLayout.start();
+                    } else {
+                        m_canReLayoutAfterResize.set(false);
+                    }
+                }
+            }
+        });
+
+        layout.topControl = m_viewer.getControl();
 
         final Job treeUpdater = new KNIMEJob("Node Repository Loader", FrameworkUtil.getBundle(getClass())) {
             @Override
@@ -279,54 +342,57 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     /**
      * This shows or hides the obscuring layer over the tree view display. This must be call on the SWT thread.
      *
-     * @param obscuringLayerHidden if <code>true</code> this hides the obscuring layer, otherwise displays it
-     * @param obscureTotally if <code>true</code>, the fill of the obscuring layer will not show the underlying tree
-     *            display; this value is ignored if <code>obscuringLayerHidden</code> is <code>true</code>
-     * @param statusMessage if non-null, this will be a status message displayed on top of the obscuring display; this
-     *            value is ignored if <code>obscuringLayerHidden</code> is <code>true</code>
+     * @param obscuringState an instance defining the how the obscuring layer should be rendered or not; this should be non-null
      */
-    public void setObscuringDisplay(final boolean obscuringLayerHidden, final boolean obscureTotally,
-        final String statusMessage) {
+    public void setObscuringDisplay(final ObscuringState obscuringState) {
+        if (obscuringState == null) {
+            return;
+        }
+
+        final Point parentSize = m_obscureLayer.getParent().getSize();
+
+        if (m_currentObscuringState.equals(obscuringState)
+            && m_currentObscuringState.lastParentSizeEquals(parentSize)) {
+            return;
+        }
+
         // Wrestling with the layout of the obscuring layer and the tree viewer's control is painful... oh SWT...
-        if (obscuringLayerHidden) {
-            m_obscureLayer.moveBelow(null);
-            m_obscureLayerLabel.moveBelow(m_obscureLayer);
-        } else {
-            final Color fillColor = obscureTotally ? m_totallyObscuredFill : m_partiallyObscuredFill;
+        if (obscuringState.shouldShowObscuringLayer()) {
+            final Color fillColor =
+                obscuringState.shouldMakeObscuringLayerOpaque() ? m_totallyObscuredFill : m_partiallyObscuredFill;
 
             m_obscureLayer.setVisible(true);
 
             m_obscureLayer.setBackground(fillColor);
             m_obscureLayer.moveAbove(null);
-            m_obscureLayerLabel.moveAbove(m_obscureLayer);
+        } else {
+            m_obscureLayer.moveBelow(null);
         }
-
-        final Point parentSize = m_obscureLayer.getParent().getSize();
 
         m_obscureLayer.setLocation(0, 0);
         m_obscureLayer.setSize(parentSize);
 
+        final String statusMessage = obscuringState.getStatusMessage();
         final String textToSet = (statusMessage == null) ? "" : statusMessage;
         m_obscureLayerLabel.setText(textToSet);
         m_obscureLayerLabel.pack();
 
-        final int labelWidth;
-        if (textToSet.length() > 0) {
+        if (obscuringState.shouldShowObscuringLayer() && (textToSet.length() > 0)) {
             final GC gc = new GC(m_obscureLayerLabel);
             final FontMetrics fm = gc.getFontMetrics();
+            final int labelWidth = textToSet.length() * fm.getAverageCharWidth();
 
-            labelWidth = textToSet.length() * fm.getAverageCharWidth();
+            m_obscureLayerLabel.setLocation((parentSize.x - labelWidth) / 2, parentSize.y / 3);
 
             gc.dispose();
-        } else {
-            labelWidth = 0;
         }
-
-        m_obscureLayerLabel.setLocation((parentSize.x - labelWidth) / 2, parentSize.y / 3);
 
         final Control treeControl = m_viewer.getControl();
         treeControl.setLocation(0, 0);
         treeControl.setSize(parentSize);
+
+        m_currentObscuringState = new ObscuringState(obscuringState);
+        m_currentObscuringState.setLastParentSize(parentSize);
     }
 
     /**
@@ -347,8 +413,6 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                 if (!m_viewer.getControl().isDisposed()) {
                     parent.setCursor(null);
                     m_viewer.getControl().setToolTipText(null);
-
-                    setObscuringDisplay(true, false, null);
                 }
             }
         });
@@ -793,8 +857,6 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                 if (!m_viewer.getControl().isDisposed()) {
                     final String message = "Loading node repository... " + m_nodeCounter + " nodes found";
 
-                    setObscuringDisplay(false, false, message);
-
                     m_viewer.getControl().setToolTipText(message);
                     if (m_viewer.getInput() != transformedRepository) {
                         m_viewer.setInput(transformedRepository);
@@ -821,5 +883,123 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
      */
     protected Root transformRepository(final Root originalRoot) {
         return originalRoot;
+    }
+
+
+    /**
+     * An object embodiment of the various attributes of the obscuring layer's configuration.
+     *
+     * @author loki der quaeler
+     */
+    static final class ObscuringState{
+        private final boolean m_showObscuringLayer;
+        private final boolean m_obscureLayerIsTotallyOpaque;
+        private final String m_statusMessage;
+        private Point m_lastParentSize;
+
+        /**
+         * Creates an ObscuringState instance in which <code>m_showObscuringLayer</code> is false; in other words, a
+         * default state that specifes that the obscuring layer should not be displayed.
+         */
+        ObscuringState() {
+            m_showObscuringLayer = false;
+            m_obscureLayerIsTotallyOpaque = false;
+            m_statusMessage = null;
+            m_lastParentSize = null;
+        }
+
+        /**
+         * Creates an ObscuringState instance in which <code>m_showObscuringLayer</code> is true; in other words, a
+         * state that specifies that the obscuring layer should be displayed, with the following optional configuration
+         * as defined by the parameters.
+         *
+         * @param obscureTotally whether there should be an translucency to the obscuring layer (which is defined by the
+         *            value stored in <code>OBSCURING_LAYER_PARTIAL_OPACITY</code> (a value in the range 0 to 255 (255
+         *            being completely opaque.))
+         * @param statusMessage if non-null, a text label which will be rendered over the obscuring layer
+         */
+        public ObscuringState(final boolean obscureTotally, final String statusMessage) {
+            m_showObscuringLayer = true;
+            m_obscureLayerIsTotallyOpaque = obscureTotally;
+            m_statusMessage = statusMessage;
+            m_lastParentSize = null;
+        }
+
+        private ObscuringState(final ObscuringState os) {
+            m_showObscuringLayer = os.m_showObscuringLayer;
+            m_obscureLayerIsTotallyOpaque = os.m_obscureLayerIsTotallyOpaque;
+            m_statusMessage = os.m_statusMessage;
+            m_lastParentSize = os.m_lastParentSize;
+        }
+
+        private void setLastParentSize(final Point size) {
+            m_lastParentSize = size;
+        }
+
+        private boolean lastParentSizeEquals(final Point size) {
+            if (m_lastParentSize == null) {
+                return size == null;
+            }
+
+            if (size != null) {
+                return (m_lastParentSize.x == size.x) && (m_lastParentSize.y == size.y);
+            }
+
+            return false;
+        }
+
+        private boolean shouldShowObscuringLayer() {
+            return m_showObscuringLayer;
+        }
+
+        private boolean shouldMakeObscuringLayerOpaque() {
+            return m_obscureLayerIsTotallyOpaque;
+        }
+
+        private String getStatusMessage() {
+            return m_statusMessage;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            HashCodeBuilder builder = new HashCodeBuilder();
+
+            builder.append(m_showObscuringLayer);
+            builder.append(m_obscureLayerIsTotallyOpaque);
+            if (m_statusMessage != null) {
+                builder.append(m_statusMessage);
+            }
+
+            return builder.toHashCode();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == this) {
+                return true;
+            }
+
+            if (!(obj instanceof ObscuringState)) {
+                return false;
+            }
+
+            ObscuringState that = (ObscuringState)obj;
+            return (m_showObscuringLayer == that.m_showObscuringLayer)
+                && (m_obscureLayerIsTotallyOpaque == that.m_obscureLayerIsTotallyOpaque)
+                && StringUtils.equals(m_statusMessage, that.m_statusMessage);
+        }
+
+        @Override
+        public String toString() {
+            return "Show obscuring layer: " + m_showObscuringLayer + "; opaque: " + m_obscureLayerIsTotallyOpaque + "; "
+                + ((m_statusMessage != null) ? ("Message :[" + m_statusMessage + "]; ") : "") + "parent size: "
+                + m_lastParentSize;
+        }
     }
 }

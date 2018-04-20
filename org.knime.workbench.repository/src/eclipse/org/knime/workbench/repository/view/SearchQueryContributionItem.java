@@ -273,15 +273,6 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
             //if the thread to delay the actually
             //processing of the search query is not running, start a new one
             delayQueryProcessing();
-
-            try {
-                final DefaultRepositoryView repositoryView = (DefaultRepositoryView)PlatformUI.getWorkbench()
-                    .getActiveWorkbenchWindow().getActivePage().showView(DefaultRepositoryView.ID);
-
-                repositoryView.setObscuringDisplay(false, false, "Searching...");
-            } catch (PartInitException pie) {
-                LOGGER.error("Failed to get the default repository view due to: " + pie.getMessage(), pie);
-            }
         } else {
             //if delay thread is already running
             //and a new key event arrives,
@@ -386,7 +377,7 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
                 final DefaultRepositoryView repositoryView = (DefaultRepositoryView)PlatformUI.getWorkbench()
                     .getActiveWorkbenchWindow().getActivePage().showView(DefaultRepositoryView.ID);
 
-                repositoryView.setObscuringDisplay(true, false, null);
+                repositoryView.setObscuringDisplay(new AbstractRepositoryView.ObscuringState());
             } catch (PartInitException e) {
                 LOGGER.error("Failed to get the default repository view due to: " + e.getMessage(), e);
             }
