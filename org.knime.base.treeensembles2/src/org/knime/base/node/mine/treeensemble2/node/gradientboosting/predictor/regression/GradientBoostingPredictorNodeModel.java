@@ -111,9 +111,10 @@ public class GradientBoostingPredictorNodeModel extends NodeModel {
         modelSpec.assertTargetTypeMatches(true);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
         PredictionRearrangerCreator prc = createRearrangerCreator(dataSpec, modelSpec, null);
-        Optional<ColumnRearranger> rearranger = prc.createConfigurationRearranger();
+        Optional<DataTableSpec> spec = prc.createSpec();
+        // in the case of regression it must always be possible to create the spec if there is an input spec
         return new PortObjectSpec[]{
-            rearranger.orElseThrow(() -> new IllegalStateException("Can't create column rearranger.")).createSpec()};
+            spec.orElseThrow(() -> new IllegalStateException("Can't create column rearranger."))};
     }
 
     private PredictionRearrangerCreator createRearrangerCreator(final DataTableSpec predictSpec,

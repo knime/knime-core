@@ -15,6 +15,7 @@ import org.knime.base.node.mine.treeensemble2.node.predictor.parser.ProbabilityI
 import org.knime.base.node.mine.treeensemble2.node.predictor.parser.SingleItemParsers;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ColumnRearranger;
 
 /**
@@ -34,7 +35,7 @@ public class PredictionRearrangerCreator {
      * Abstract constructor.
      *
      * @param predictSpec {@link DataTableSpec} of the table to predict
-     * @param predictor performs the actual prediction
+     * @param predictor performs the actual prediction (may be null during configure)
      */
     public PredictionRearrangerCreator(final DataTableSpec predictSpec,
         final Predictor<? extends Prediction> predictor) {
@@ -42,18 +43,22 @@ public class PredictionRearrangerCreator {
         m_predictor = predictor;
     }
 
+
     /**
-     * Tries to create the prediction rearranger which may not be possible if some information is missing during
-     * configuration time. In this case an empty {@link Optional} is returned. Use this method during node
-     * configuration.
+     * Creates the {@link DataTableSpec} that a {@link ColumnRearranger} with the current
+     * configuration would create.
      *
-     * @return an optional prediction rearranger
+     * @return the table spec
      */
-    public Optional<ColumnRearranger> createConfigurationRearranger() {
+    public Optional<DataTableSpec> createSpec() {
         if (hasErrors()) {
             return Optional.empty();
         }
-        return Optional.of(createRearranger());
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        PredictionParser parser = new DefaultPredictionParser(m_testSpec, m_itemParsers);
+        DataTableSpecCreator specCreator = new DataTableSpecCreator(m_testSpec);
+        specCreator.addColumns(parser.getAppendSpecs());
+        return Optional.of(specCreator.createSpec());
     }
 
     /**
@@ -75,7 +80,9 @@ public class PredictionRearrangerCreator {
 
     private ColumnRearranger createRearranger() {
         ColumnRearranger cr = new ColumnRearranger(m_testSpec);
+        @SuppressWarnings({"rawtypes", "unchecked"})
         PredictionParser parser = new DefaultPredictionParser(m_testSpec, m_itemParsers);
+        @SuppressWarnings({"rawtypes", "unchecked"})
         PredictionCellFactory pcf = new PredictionCellFactory<>(m_predictor, parser);
         cr.append(pcf);
         return cr;

@@ -97,8 +97,8 @@ public final class TreeEnsemblePredictionUtil {
     }
 
     /**
-     * Creates a {@link PredictionRearrangerCreator} for creation of a {@link ColumnRearranger}
-     * that can be used to predict with a classification random forest.
+     * Creates a {@link PredictionRearrangerCreator} for creation of a {@link ColumnRearranger} that can be used to
+     * predict with a classification random forest.
      *
      * @param dataSpec the spec of the table to predict
      * @param modelSpec the spec of the (classification) random forest
@@ -116,13 +116,18 @@ public final class TreeEnsemblePredictionUtil {
         final TreeEnsemblePredictorConfiguration config, final boolean pre36) throws InvalidSettingsException {
 
         Map<String, DataCell> targetValueMap = modelSpec.getTargetColumnPossibleValueMap();
-        Map<String, Integer> targetVal2Idx = createTargetValueToIndexMap(targetValueMap);
-        VotingFactory votingFactory =
-            config.isUseSoftVoting() ? new SoftVotingFactory(targetVal2Idx) : new HardVotingFactory(targetVal2Idx);
-        RandomForestClassificationPredictor predictor =
-            modelRowSamples == null ? new RandomForestClassificationPredictor(model, modelSpec, dataSpec, votingFactory)
+        RandomForestClassificationPredictor predictor = null;
+        String[] classLabels = null;
+        if (targetValueMap != null) {
+            Map<String, Integer> targetVal2Idx = createTargetValueToIndexMap(targetValueMap);
+            VotingFactory votingFactory =
+                config.isUseSoftVoting() ? new SoftVotingFactory(targetVal2Idx) : new HardVotingFactory(targetVal2Idx);
+            predictor = modelRowSamples == null
+                ? new RandomForestClassificationPredictor(model, modelSpec, dataSpec, votingFactory)
                 : new RandomForestClassificationPredictor(model, modelSpec, dataSpec, modelRowSamples, targetColumnData,
                     votingFactory);
+            classLabels = targetValueMap.keySet().stream().map(o -> o).toArray(i -> new String[i]);
+        }
         PredictionRearrangerCreator prc = new PredictionRearrangerCreator(dataSpec, predictor);
 
         if (pre36) {
@@ -131,15 +136,13 @@ public final class TreeEnsemblePredictionUtil {
                 prc.addPredictionConfidence(config.getPredictionColumnName() + CONFIDENCE_SUFFIX);
             }
             if (config.isAppendClassConfidences()) {
-                prc.addClassProbabilities(targetValueMap,
-                    targetValueMap.keySet().stream().map(o -> o).toArray(i -> new String[i]), "P(",
-                    config.getSuffixForClassProbabilities(), modelSpec.getTargetColumn().getName());
+                prc.addClassProbabilities(targetValueMap, classLabels, "P(", config.getSuffixForClassProbabilities(),
+                    modelSpec.getTargetColumn().getName());
             }
         } else {
             if (config.isAppendClassConfidences()) {
-                prc.addClassProbabilities(targetValueMap,
-                    targetValueMap.keySet().stream().map(o -> o).toArray(i -> new String[i]), "P (",
-                    config.getSuffixForClassProbabilities(), modelSpec.getTargetColumn().getName());
+                prc.addClassProbabilities(targetValueMap, classLabels, "P (", config.getSuffixForClassProbabilities(),
+                    modelSpec.getTargetColumn().getName());
             }
             prc.addClassPrediction(config.getPredictionColumnName());
             if (config.isAppendPredictionConfidence()) {
@@ -163,8 +166,8 @@ public final class TreeEnsemblePredictionUtil {
     }
 
     /**
-     * Creates a {@link PredictionRearrangerCreator} for creation of a {@link ColumnRearranger}
-     * that can be used to predict with a regression random forest.
+     * Creates a {@link PredictionRearrangerCreator} for creation of a {@link ColumnRearranger} that can be used to
+     * predict with a regression random forest.
      *
      * @param dataSpec the spec of the table to predict
      * @param modelSpec the spec of the (regression) random forest

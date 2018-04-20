@@ -113,8 +113,7 @@ public final class TreeEnsembleClassificationPredictorNodeModel extends NodeMode
         // rearranger may be null if confidence values are appended but the
         // model does not have a list of possible target values
         Optional<DataTableSpec> outSpec = TreeEnsemblePredictionUtil.createPRCForClassificationRF(
-            dataSpec, modelSpec, null, null, null, m_configuration, m_pre36)
-                .createConfigurationRearranger().map(ColumnRearranger::createSpec);
+            dataSpec, modelSpec, null, null, null, m_configuration, m_pre36).createSpec();
         return new DataTableSpec[]{outSpec.isPresent() ? outSpec.get() : null};
     }
 

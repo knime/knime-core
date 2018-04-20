@@ -161,8 +161,7 @@ public final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
         ensembleSpec.getTargetColumnPossibleValueMap();
 
         Optional<DataTableSpec> outOfBagSpec = TreeEnsemblePredictionUtil.createPRCForClassificationRF(
-            inSpec, ensembleSpec, null, null, null, createOOBConfig(), m_pre36).createConfigurationRearranger()
-                .map(ColumnRearranger::createSpec);
+            inSpec, ensembleSpec, null, null, null, createOOBConfig(), m_pre36).createSpec();
         DataTableSpec colStatsSpec = TreeEnsembleLearner.getColumnStatisticTableSpec();
 
         return new PortObjectSpec[]{outOfBagSpec.orElse(null), colStatsSpec, ensembleSpec};

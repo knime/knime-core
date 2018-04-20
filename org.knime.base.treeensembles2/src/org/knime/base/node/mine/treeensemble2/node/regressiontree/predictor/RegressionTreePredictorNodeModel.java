@@ -100,7 +100,8 @@ final class RegressionTreePredictorNodeModel extends NodeModel {
                 RegressionTreePredictorConfiguration.getPredictColumnName(targetColName));
         }
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-        final RegressionTreePredictionHandler pred = new RegressionTreePredictionHandler(null, modelSpec, dataSpec, m_configuration);
+        final RegressionTreePredictionHandler pred =
+                new RegressionTreePredictionHandler(null, modelSpec, dataSpec, m_configuration);
         return pred.configure();
     }
 

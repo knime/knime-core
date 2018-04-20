@@ -88,8 +88,9 @@ final class RegressionTreePredictionHandler {
     }
 
     PortObjectSpec[] configure() throws InvalidSettingsException {
-        Optional<ColumnRearranger> cr = createRearrangerCreator().createConfigurationRearranger();
-        return cr.isPresent() ? new PortObjectSpec[]{cr.get().createSpec()} : null;
+        Optional<DataTableSpec> spec = createRearrangerCreator().createSpec();
+        // in case of regression it must always be possible to create the spec (we just append another column)
+        return new PortObjectSpec[]{spec.orElseThrow(() -> new IllegalStateException("Can't create output spec."))};
     }
 
     ColumnRearranger createExecutionRearranger() throws InvalidSettingsException {

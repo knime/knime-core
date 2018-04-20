@@ -122,8 +122,8 @@ public class GradientBoostingClassificationPredictorNodeModel extends NodeModel 
         modelSpec.assertTargetTypeMatches(false);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
         PredictionRearrangerCreator crc = createPredictionRearrangerCreator(dataSpec, modelSpec, null);
-        Optional<ColumnRearranger> rearranger = crc.createConfigurationRearranger();
-        return rearranger.isPresent() ? new PortObjectSpec[]{rearranger.get().createSpec()} : null;
+        Optional<DataTableSpec> spec = crc.createSpec();
+        return spec.isPresent() ? new PortObjectSpec[]{spec.get()} : null;
     }
 
     private PredictionRearrangerCreator createPredictionRearrangerCreator(final DataTableSpec testSpec,

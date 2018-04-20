@@ -154,8 +154,8 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
         modelSpec.assertTargetTypeMatches(m_isRegression);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
         PredictionRearrangerCreator prc = createRearrangerCreator(dataSpec, modelSpec, null);
-        Optional<ColumnRearranger> rearranger = prc.createConfigurationRearranger();
-        return rearranger.isPresent() ? new PortObjectSpec[]{rearranger.get().createSpec()} : null;
+        Optional<DataTableSpec> spec = prc.createSpec();
+        return spec.isPresent() ? new PortObjectSpec[]{spec.get()} : null;
     }
 
     private PredictionRearrangerCreator createRearrangerCreator(final DataTableSpec predictSpec,

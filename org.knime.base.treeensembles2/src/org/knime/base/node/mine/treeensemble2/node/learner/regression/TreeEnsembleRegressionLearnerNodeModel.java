@@ -138,8 +138,7 @@ public final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel impl
         DataTableSpec learnSpec = learnRearranger.createSpec();
         TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
         Optional<DataTableSpec> outOfBagSpec = TreeEnsemblePredictionUtil.createPRCForRegressionRF(
-            inSpec, ensembleSpec, null, null, null, createOOBConfig()).createConfigurationRearranger()
-                .map(ColumnRearranger::createSpec);
+            inSpec, ensembleSpec, null, null, null, createOOBConfig()).createSpec();
         DataTableSpec colStatsSpec = TreeEnsembleLearner.getColumnStatisticTableSpec();
 
         return new PortObjectSpec[]{outOfBagSpec.orElse(null), colStatsSpec, ensembleSpec};

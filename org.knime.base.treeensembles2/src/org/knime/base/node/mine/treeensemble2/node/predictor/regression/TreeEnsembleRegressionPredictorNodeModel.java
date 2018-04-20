@@ -108,7 +108,7 @@ public final class TreeEnsembleRegressionPredictorNodeModel extends NodeModel {
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
         PredictionRearrangerCreator prc = TreeEnsemblePredictionUtil.createPRCForRegressionRF(
             dataSpec, modelSpec, null, null, null, m_configuration);
-        Optional<DataTableSpec> outSpec = prc.createConfigurationRearranger().map(ColumnRearranger::createSpec);
+        Optional<DataTableSpec> outSpec = prc.createSpec();
         return new DataTableSpec[]{outSpec.isPresent() ? outSpec.get() : null};
     }
 
