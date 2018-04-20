@@ -6,14 +6,19 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 
+import javax.swing.text.Document;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.base.node.jsnippet.expression.Abort;
 import org.knime.base.node.jsnippet.expression.AbstractJSnippet;
 import org.knime.base.node.jsnippet.type.ConverterUtil;
+import org.knime.base.node.jsnippet.util.JavaSnippetFields;
 import org.knime.base.node.jsnippet.util.JavaSnippetSettings;
+import org.knime.base.node.jsnippet.util.field.InCol;
 import org.knime.base.node.jsnippet.util.field.OutCol;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 
 /*
@@ -149,4 +154,66 @@ public class JavaSnippetTest {
         s.snippet();
     }
 
+    /**
+     * Test code generation
+     * @throws Exception
+     */
+    @Test
+    public void testCodeGeneration() throws Exception {
+        final JavaSnippetSettings settings = new JavaSnippetSettings("// code here");
+        settings.setScriptImports("import java.lang.String;");
+
+        final JavaSnippetFields fields = new JavaSnippetFields();
+
+        final InCol inCol = new InCol();
+        inCol.setJavaName("m_inCol");
+        inCol.setKnimeName("inCol");
+        inCol.setConverterFactory(IntCell.TYPE,
+            ConverterUtil.getConverterFactory(IntCell.TYPE, Integer.class).get());
+        fields.getInColFields().add(inCol);
+
+        final OutCol outCol = new OutCol();
+        outCol.setJavaName("m_outCol");
+        outCol.setKnimeName("outCol");
+        outCol.setConverterFactory(ConverterUtil.getConverterFactory(String.class, StringCell.TYPE).get());
+        fields.getOutColFields().add(outCol);
+
+        settings.setJavaSnippetFields(fields);
+        snippet.setSettings(settings);
+        snippet.getSettings(); // this updates the settings, i.e. the generated code
+
+        final Document doc = snippet.getDocument();
+        assertEquals(
+            "// system imports\n" +
+            "import org.knime.base.node.jsnippet.expression.AbstractJSnippet;\n" +
+            "import org.knime.base.node.jsnippet.expression.Abort;\n" +
+            "import org.knime.base.node.jsnippet.expression.Cell;\n" +
+            "import org.knime.base.node.jsnippet.expression.ColumnException;\n" +
+            "import org.knime.base.node.jsnippet.expression.TypeException;\n" +
+            "import static org.knime.base.node.jsnippet.expression.Type.*;\n" +
+            "import java.util.Date;\n" +
+            "import java.util.Calendar;\n" +
+            "import org.w3c.dom.Document;\n\n\n" +
+
+            "import java.lang.String;\n" +
+            "// system variables\n" +
+            "public class JSnippet extends AbstractJSnippet {\n" +
+
+            "  // Fields for input columns\n" +
+            "  /** Input column: \"inCol\" */\n" +
+            "  public Integer m_inCol;\n\n" +
+
+            "  // Fields for output columns\n" +
+            "  /** Output column: \"outCol\" */\n" +
+            "  public String m_outCol;\n\n" +
+
+            "// Your custom variables:\n\n" +
+            "// expression start\n" +
+            "    public void snippet() throws TypeException, ColumnException, Abort {\n" +
+            "// Enter your code here:\n\n" +
+            "\t\t// code here\n\n\n" +
+            "// expression end\n" +
+            "    }\n" +
+            "}\n", doc.getText(0, doc.getLength()));
+    }
 }
