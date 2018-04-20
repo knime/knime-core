@@ -76,8 +76,6 @@ import org.knime.core.node.workflow.FlowVariable;
 public class BreakpointNodeModel extends NodeModel
 implements InactiveBranchConsumer {
 
-//    private static final NodeLogger LOGGER = NodeLogger
-//            .getLogger(PMMLWriterNodeModel.class);
 
     private final SettingsModelString m_choice = BreakpointNodeDialog
             .createChoiceModel();
@@ -102,11 +100,11 @@ implements InactiveBranchConsumer {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_choice.getStringValue().equals(BreakpointNodeDialog.VARIABLEMATCH)) {
-            if (getAvailableFlowVariables().get(m_varname.getStringValue()) == null) {
-                throw new InvalidSettingsException(
-                    "Selected flow variable: '" + m_varname.getStringValue() + "' not available!");
-            }
+        if (m_choice.getStringValue().equals(BreakpointNodeDialog.VARIABLEMATCH)
+            && getAvailableFlowVariables().get(m_varname.getStringValue()) == null) {
+            throw new InvalidSettingsException(
+                "Selected flow variable: '" + m_varname.getStringValue() + "' not available!");
+
         }
         return inSpecs;
     }
@@ -120,38 +118,23 @@ implements InactiveBranchConsumer {
         if (!m_enabled.getBooleanValue()) {
             return inData;
         }
-        if (m_choice.getStringValue().equals(BreakpointNodeDialog.EMTPYTABLE)) {
-            if (inData[0] instanceof BufferedDataTable) {
-                if (((BufferedDataTable)inData[0]).size() == 0) {
-                    throw new Exception("Breakpoint halted "
-                            + "execution (table is empty)");
-                }
-            }
+        if (m_choice.getStringValue().equals(BreakpointNodeDialog.EMTPYTABLE) && inData[0] instanceof BufferedDataTable
+            && ((BufferedDataTable)inData[0]).size() == 0) {
+            throw new Exception("Breakpoint halted " + "execution (table is empty)");
         }
-        if (m_choice.getStringValue().equals(
-                              BreakpointNodeDialog.ACTIVEBRANCH)) {
-            if (!(inData[0] instanceof InactiveBranchPortObject)) {
-                throw new Exception("Breakpoint halted "
-                            + "execution (branch is active)");
-            }
+        if (m_choice.getStringValue().equals(BreakpointNodeDialog.ACTIVEBRANCH)
+            && !(inData[0] instanceof InactiveBranchPortObject)) {
+            throw new Exception("Breakpoint halted " + "execution (branch is active)");
         }
-        if (m_choice.getStringValue().equals(
-                              BreakpointNodeDialog.INACTIVEBRANCH)) {
-            if (inData[0] instanceof InactiveBranchPortObject) {
-                throw new Exception("Breakpoint halted "
-                            + "execution (branch is inactive)");
-            }
+        if (m_choice.getStringValue().equals(BreakpointNodeDialog.INACTIVEBRANCH)
+            && inData[0] instanceof InactiveBranchPortObject) {
+            throw new Exception("Breakpoint halted " + "execution (branch is inactive)");
         }
-        if (m_choice.getStringValue().equals(
-                              BreakpointNodeDialog.VARIABLEMATCH)) {
-            FlowVariable fv
-                 = getAvailableFlowVariables().get(m_varname.getStringValue());
-            if (fv != null) {
-                if (fv.getValueAsString().equals(m_varvalue.getStringValue())) {
-                    throw new Exception("Breakpoint halted execution "
-                             + "(" + m_varname.getStringValue()
-                             + "=" + m_varvalue.getStringValue() + ")");
-                }
+        if (m_choice.getStringValue().equals(BreakpointNodeDialog.VARIABLEMATCH)) {
+            FlowVariable fv = getAvailableFlowVariables().get(m_varname.getStringValue());
+            if (fv != null && fv.getValueAsString().equals(m_varvalue.getStringValue())) {
+                throw new Exception("Breakpoint halted execution " + "(" + m_varname.getStringValue() + "="
+                    + m_varvalue.getStringValue() + ")");
             }
         }
         // unrecognized option: assume disabled.
