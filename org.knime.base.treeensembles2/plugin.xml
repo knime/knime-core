@@ -146,7 +146,7 @@
             factory-class="org.knime.base.node.mine.treeensemble2.node.randomforest.predictor.classification.RandomForestClassificationPredictorNodeFactory2">
       </node>
       <node
-            after="org.knime.base.node.mine.treeensemble2.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory"
+            after="org.knime.base.node.mine.treeensemble2.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory2"
             category-path="/analytics/mining/treeensemble/randomforest/classification"
             deprecated="false"
             factory-class="org.knime.base.node.mine.treeensemble2.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory2">
@@ -158,7 +158,7 @@
             factory-class="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification.GradientBoostingClassificationPredictorNodeFactory2">
       </node>
       <node
-            after="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification.GradientBoostingClassificationPredictorNodeFactory"
+            after="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification.GradientBoostingClassificationPredictorNodeFactory2"
             category-path="/analytics/mining/treeensemble/gradientboosting/classification"
             deprecated="false"
             factory-class="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.pmml.GradientBoostingClassificationPMMLPredictorNodeFactory2">
