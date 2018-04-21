@@ -170,7 +170,7 @@ public class UnlinkNodesAction extends AbstractNodeAction {
             // disable if there are nodes that are not (= no longer) contained in the workflow
             // this is a very common case when nodes get deleted and actions in the toolbar are
             // updated in response to that
-            if (Arrays.stream(selected).map(NodeContainerEditPart::getNodeContainer) //
+            if (!Arrays.stream(selected).map(NodeContainerEditPart::getNodeContainer) //
                 .map(NodeContainerUI::getID) //
                 .anyMatch(manager::containsNodeContainer)) {
                 return false;
