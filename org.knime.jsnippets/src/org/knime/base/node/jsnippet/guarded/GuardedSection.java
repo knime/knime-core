@@ -149,6 +149,19 @@ public final class GuardedSection {
                 ? text.substring(0, text.length() - 1)
                 : text;
 
+        final int firstLineBreak = text.indexOf('\n');
+        if (firstLineBreak != -1) {
+            final String firstLine = text.substring(0, firstLineBreak + 1);
+            final String previousText = getText();
+
+            /* If first line is unchanged, skip changing it so that section does not unfold if folded.
+             * See AP-9123 */
+            if (previousText.startsWith(firstLine)) {
+                p1 += firstLine.length();
+                text = text.substring(firstLine.length());
+            }
+        }
+
         int docLen = m_document.getLength();
         m_document.insertString(p1 + 1, text, null);
 
