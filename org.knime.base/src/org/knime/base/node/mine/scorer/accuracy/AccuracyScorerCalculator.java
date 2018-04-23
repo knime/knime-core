@@ -78,6 +78,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -86,164 +87,42 @@ import org.knime.core.node.util.CheckUtils;
  * @since 3.6
  */
 public class AccuracyScorerCalculator {
-    private String[] m_targetValues;                        //Names of classifications
-    private int[][] m_confusionMatrix;
-    private double[][] m_confusionMatrixWithRates;           //confusion matrix with sums for each row and column
-    private List<String>[][] m_keyStore;                    //Keys are stored as strings values
-    private List<ValueStats> m_valueStats;
-    private double m_accuracy;
-    private double m_cohensKappa;
-    private BufferedDataTable m_confusionMatrixDatatable;   //Output to the former Java Scorer Node
-    private BufferedDataTable m_accuracyDatatable;          //Output to the former Java Scorer Node
-    private List<String> m_warnings;
-    private int m_rowsNumber;                               //Total number of rows in the input DataTable
+    private List<ValueStats> m_valueStats; // to delete later
 
+    private BufferedDataTable m_confusionMatrix;
 
-    private SortingStrategy m_sortingStrategy = SortingStrategy.InsertionOrder;
-    private boolean m_sortingReversed = false;
-    private boolean m_ignoreMissingValues = true;
-    private ScorerViewData m_viewData;
+    private BufferedDataTable m_classStats;
 
-    private static final DataColumnSpec[] QUALITY_MEASURES_SPECS = new DataColumnSpec[]{
-        new DataColumnSpecCreator("TruePositives", IntCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("FalsePositives", IntCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("TrueNegatives", IntCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("FalseNegatives", IntCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("Accuracy", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("BalancedAccuracy", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("ErrorRate", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("FalseNegativeRate", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("Recall", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("Precision", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("Sensitivity", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("Specifity", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("F-measure", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("OverallAccuracy", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("Cohen's kappa", DoubleCell.TYPE).createSpec()
-    };
+    private BufferedDataTable m_overallStats;
 
-    /**
-     * Creates a new default instance of the accuracy scorer calculator.
-     */
-    public AccuracyScorerCalculator() {
-        super();
-    }
+    private List<RowKey>[][] m_keyStore;
 
-    /**
-     * Calculates an accuracy scorer confusion matrix, overall statistics and statistics specific to each class
-     * @param data  the input data
-     * @param firstColumnName   the column selected containing the real classes
-     * @param secondColumnName  the column selected containing the predicted classes
-     * @param exec Execution context to report progress to
-     * @throws CanceledExecutionException when the user cancels the execution
-     */
-    public void calculate(final BufferedDataTable data, final String firstColumnName, final String secondColumnName, final ExecutionContext exec)
-            throws CanceledExecutionException {
-        // check input data
-        assert (data != null);
-        // blow away result from last execute (should have been reset anyway)
-        // first try to figure out what are the different class values
-        // in the two respective columns
-        BufferedDataTable in = data;
-        DataTableSpec inSpec = in.getDataTableSpec();
-        final int index1 = inSpec.findColumnIndex(firstColumnName);
-        final int index2 = inSpec.findColumnIndex(secondColumnName);
+    private final ScorerCalculatorConfiguration m_config;
 
-        // two elements, first is column names, second row names;
-        // these arrays are ordered already, i.e. if both columns have
-        // cells in common (e.g. both have Iris-Setosa), they get the same
-        // index in the array. thus, the high numbers should appear
-        // in the diagonal
-        DataCell[] values = determineColValues(in, index1, index2, exec.createSubProgress(0.5));
-        List<DataCell> valuesList = Arrays.asList(values);
+    private final List<String> m_warnings;
+
+    static DataTableSpec createConfusionMatrixSpec(final DataTableSpec inSpec, final String firstCol,
+        final String secondCol, final ScorerCalculatorConfiguration config) throws InvalidSettingsException {
+        CheckUtils.checkNotNull(inSpec);
+        if (inSpec.getNumColumns() < 2) {
+            throw new InvalidSettingsException("The input table must have at least two colums to compare");
+        }
+        if ((firstCol == null) || (secondCol == null)) {
+            throw new InvalidSettingsException("No columns selected yet.");
+        }
+        if (!inSpec.containsName(firstCol)) {
+            throw new InvalidSettingsException("Column " + firstCol + " not found.");
+        }
+        if (!inSpec.containsName(secondCol)) {
+            throw new InvalidSettingsException("Column " + secondCol + " not found.");
+        }
+
+        final int index1 = inSpec.findColumnIndex(firstCol);
+        final int index2 = inSpec.findColumnIndex(secondCol);
+        DataCell[] values = determineColValues(inSpec, index1, index2, config);
         Set<DataCell> valuesInCol2 = new HashSet<DataCell>();
 
-        // initializing warnings list
-        m_warnings =  new ArrayList<String>();
-
-        // the key store remembers the row key for later hiliting
-        List<RowKey>[][] keyStore = new List[values.length][values.length];
-        m_keyStore = new List[values.length][values.length];
-        // the scorerCount counts the confusions
-        int[][] scorerCount = new int[values.length][values.length];
-
-        // initializing the matrix
-        for (int i = 0; i < keyStore.length; i++) {
-            for (int j = 0; j < keyStore[i].length; j++) {
-                keyStore[i][j] = new ArrayList<RowKey>();
-                m_keyStore[i][j] = new ArrayList<String>();
-            }
-        }
-
-        // filling in the confusion matrix and the keystore
-        long rowCnt = in.size();
-        int numberOfRows = 0;
-        int correctCount = 0;
-        int falseCount = 0;
-        int missingCount = 0;
-        ExecutionMonitor subExec = exec.createSubProgress(0.5);
-        for (Iterator<DataRow> it = in.iterator(); it.hasNext(); numberOfRows++) {
-            DataRow row = it.next();
-            subExec.setProgress((1.0 + numberOfRows) / rowCnt, "Computing score, row " + numberOfRows + " (\"" + row.getKey()
-                + "\") of " + in.size());
-            try {
-                subExec.checkCanceled();
-            } catch (CanceledExecutionException cee) {
-                reset();
-                throw cee;
-            }
-            DataCell cell1 = row.getCell(index1);
-            DataCell cell2 = row.getCell(index2);
-            valuesInCol2.add(cell2);
-            if (cell1.isMissing() || cell2.isMissing()) {
-                ++missingCount;
-                CheckUtils.checkState(m_ignoreMissingValues, "Missing value in row: " + row.getKey());
-                if (m_ignoreMissingValues) {
-                    continue;
-                }
-            }
-            boolean areEqual = cell1.equals(cell2);
-
-            int i1 = valuesList.indexOf(cell1);
-            int i2 = areEqual ? i1 : valuesList.indexOf(cell2);
-            assert i1 >= 0 : "column spec lacks possible value " + cell1;
-            assert i2 >= 0 : "column spec lacks possible value " + cell2;
-            // i2 must be equal to i1 if cells are equal (implication)
-            assert (!areEqual || i1 == valuesList.indexOf(cell2));
-            keyStore[i1][i2].add(row.getKey());
-            m_keyStore[i1][i2].add(row.getKey().getString());
-            scorerCount[i1][i2]++;
-
-            if (areEqual) {
-                correctCount++;
-            } else {
-                falseCount++;
-            }
-        }
-        m_confusionMatrix = scorerCount;
-        m_rowsNumber = numberOfRows;
-        m_confusionMatrixWithRates = new double[values.length+1][values.length+1];
-        for (int i = 0; i < m_confusionMatrix.length; i++) {
-            for (int j = 0; j < m_confusionMatrix[i].length; j++) {
-                m_confusionMatrixWithRates[i][j] = m_confusionMatrix[i][j];
-            }
-        }
-        for (int i = 0; i < m_confusionMatrixWithRates.length-1; i++) {
-            int rowSum = 0;
-            for (int j = 0; j < m_confusionMatrixWithRates[i].length-1; j++) {
-                rowSum += m_confusionMatrixWithRates[i][j];
-            }
-            m_confusionMatrixWithRates[i][m_confusionMatrixWithRates.length-1] = m_confusionMatrixWithRates[i][i] / rowSum;
-        }
-        for (int i = 0; i < m_confusionMatrixWithRates.length-1; i++) {
-            int columnSum = 0;
-            for (int j = 0; j < m_confusionMatrixWithRates.length-1; j++) {
-                columnSum += m_confusionMatrixWithRates[j][i];
-            }
-            m_confusionMatrixWithRates[m_confusionMatrixWithRates.length-1][i] = m_confusionMatrixWithRates[i][i] / columnSum;
-        }
-
-        // determining the target values
+        // determining the target values which will become the final ones
         HashSet<String> valuesAsStringSet = new HashSet<String>();
         HashSet<String> duplicateValuesAsString = new HashSet<String>();
         for (DataCell c : values) {
@@ -264,9 +143,9 @@ public class AccuracyScorerCalculator {
                 boolean isInSecondColumn = valuesInCol2.contains(c);
                 int uniquifier = 1;
                 if (isInSecondColumn) {
-                    s = s.concat(" (" + secondColumnName + ")");
+                    s = s.concat(" (" + secondCol + ")");
                 } else {
-                    s = s.concat(" (" + firstColumnName + ")");
+                    s = s.concat(" (" + firstCol + ")");
                 }
                 String newName = s;
                 while (!valuesAsStringSet.add(newName)) {
@@ -275,9 +154,8 @@ public class AccuracyScorerCalculator {
                 targetValues[i] = newName;
                 if (!hasPrintedWarningOnAmbiguousValues) {
                     hasPrintedWarningOnAmbiguousValues = true;
-                    addWarning("Ambiguous value \"" + c.toString()
-                        + "\" encountered. Preserving individual instances;"
-                        + " consider to convert input columns to string");
+                    //                    addWarning("Ambiguous value \"" + c.toString() + "\" encountered. Preserving individual instances;"
+                    //                        + " consider to convert input columns to string");
                 }
             } else {
                 int uniquifier = 1;
@@ -288,140 +166,316 @@ public class AccuracyScorerCalculator {
                 targetValues[i] = newName;
             }
         }
-        m_targetValues = targetValues;
-
-        if (missingCount > 0) {
-            addWarning("There were missing values in the reference or in the prediction class columns.");
-        }
 
         DataType[] colTypes = new DataType[targetValues.length];
         Arrays.fill(colTypes, IntCell.TYPE);
-        BufferedDataContainer container = exec.createDataContainer(new DataTableSpec(targetValues, colTypes));
+        return new DataTableSpec(targetValues, colTypes);
+    }
+
+    static DataTableSpec createClassStatsSpec(final ClassStatisticsConfiguration config) {
+        List<DataColumnSpec> columnList = new ArrayList<DataColumnSpec>();
+        if (config.isTpCalculated()) {
+            columnList.add(new DataColumnSpecCreator("TruePositives", IntCell.TYPE).createSpec());
+        }
+        if (config.isFpCalculated()) {
+            columnList.add(new DataColumnSpecCreator("FalsePositives", IntCell.TYPE).createSpec());
+        }
+        if (config.isTnCalculated()) {
+            columnList.add(new DataColumnSpecCreator("TrueNegatives", IntCell.TYPE).createSpec());
+        }
+        if (config.isFnCalculated()) {
+            columnList.add(new DataColumnSpecCreator("FalseNegatives", IntCell.TYPE).createSpec());
+        }
+        if (config.isAccuracyCalculated()) {
+            columnList.add(new DataColumnSpecCreator("Accuracy", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isBalancedAccuracyCalculated()) {
+            columnList.add(new DataColumnSpecCreator("BalancedAccuracy", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isErrorRateCalculated()) {
+            columnList.add(new DataColumnSpecCreator("ErrorRate", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isFalseNegativeRateCalculated()) {
+            columnList.add(new DataColumnSpecCreator("FalseNegativeRate", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isRecallCalculated()) {
+            columnList.add(new DataColumnSpecCreator("Recall", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isPrecisionCalculated()) {
+            columnList.add(new DataColumnSpecCreator("Precision", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isSensitivityCalculated()) {
+            columnList.add(new DataColumnSpecCreator("Sensitivity", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isSpecifityCalculated()) {
+            columnList.add(new DataColumnSpecCreator("Specifity", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isFmeasureCalculated()) {
+            columnList.add(new DataColumnSpecCreator("F-measure", DoubleCell.TYPE).createSpec());
+        }
+        DataColumnSpec[] classStatsSpec = (DataColumnSpec[])columnList.toArray();
+        return new DataTableSpec(classStatsSpec);
+    }
+
+    public static DataTableSpec createOverallStatsSpec(final OverallStatisticsConfiguration config) {
+        List<DataColumnSpec> columnList = new ArrayList<DataColumnSpec>();
+        if (config.isOverallAccuracyCalculated()) {
+            columnList.add(new DataColumnSpecCreator("Overall Accuracy", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isCohensKappaCalculated()) {
+            columnList.add(new DataColumnSpecCreator("Cohen's kappa", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isOverallErrorCalculated()) {
+            columnList.add(new DataColumnSpecCreator("Overall Error", DoubleCell.TYPE).createSpec());
+        }
+        if (config.isCorrectClassifiedCalculated()) {
+            columnList.add(new DataColumnSpecCreator("Correct Classified", IntCell.TYPE).createSpec());
+        }
+        if (config.isWrongClassifiedCalculated()) {
+            columnList.add(new DataColumnSpecCreator("Wrong Classified", IntCell.TYPE).createSpec());
+        }
+        DataColumnSpec[] classStatsSpec = (DataColumnSpec[])columnList.toArray();
+        return new DataTableSpec(classStatsSpec);
+    }
+
+    /**
+     * @param inputTable
+     * @param firstColumnName
+     * @param secondColumnName
+     * @param config the Scorer calculator configuration
+     * @param exec
+     * @return an AccuracyScorerCalculator instance
+     * @throws CanceledExecutionException
+     * @throws InvalidSettingsException
+     */
+    public static AccuracyScorerCalculator createCalculator(final BufferedDataTable inputTable,
+        final String firstColumnName, final String secondColumnName, final ScorerCalculatorConfiguration config,
+        final ExecutionContext exec) throws CanceledExecutionException, InvalidSettingsException {
+        AccuracyScorerCalculator calc = new AccuracyScorerCalculator(config);
+        calc.calculate(inputTable, firstColumnName, secondColumnName, config, exec);
+        return calc;
+    }
+
+    private AccuracyScorerCalculator(final ScorerCalculatorConfiguration config) {
+        m_config = config;
+        m_warnings = new ArrayList<String>();
+    }
+
+    public BufferedDataTable getConfusionMatrixTable(final ExecutionContext exec) {
+        return m_confusionMatrix;
+    }
+
+    public BufferedDataTable getClassStatisticsTable(final ClassStatisticsConfiguration config,
+        final ExecutionContext exec) {
+        return m_classStats;
+    }
+
+    public BufferedDataTable getOverallStatisticsTable(final OverallStatisticsConfiguration config,
+        final ExecutionContext exec) {
+        return m_overallStats;
+    }
+
+    public List<RowKey>[][] getKeyStore() {
+        return m_keyStore;
+    }
+
+    public List<String> getWarnings() {
+        return m_warnings;
+    }
+
+    /**
+     * Calculates an accuracy scorer confusion matrix, overall statistics and statistics specific to each class
+     *
+     * @param data the input data
+     * @param firstColumnName the column selected containing the real classes
+     * @param secondColumnName the column selected containing the predicted classes
+     * @param exec Execution context to report progress to
+     * @throws CanceledExecutionException when the user cancels the execution
+     * @throws
+     */
+    private void calculate(final BufferedDataTable data, final String firstColumnName, final String secondColumnName, final ScorerCalculatorConfiguration config,
+        final ExecutionContext exec) throws InvalidSettingsException, CanceledExecutionException {
+        DataTableSpec inSpec = data.getDataTableSpec();
+        int index1 = inSpec.findColumnIndex(firstColumnName);
+        int index2 = inSpec.findColumnIndex(secondColumnName);
+        DataTableSpec confusionMatrixSpec = createConfusionMatrixSpec(data.getDataTableSpec(), firstColumnName, secondColumnName, config);
+        String[] targetValues = confusionMatrixSpec.getColumnNames();
+
+        DataCell[] values = determineColValues(inSpec, index1, index2, config);
+        List<DataCell> valuesList = Arrays.asList(values);
+        Set<DataCell> valuesInCol2 = new HashSet<DataCell>();
+
+        // the scorerCount counts the confusions
+        int[][] scorerCount = new int[targetValues.length][targetValues.length];
+
+        // the key store remembers the row key for later hiliting
+        List<RowKey>[][] keyStore = new List[targetValues.length][targetValues.length];
+        for (int i = 0; i < keyStore.length; i++) {
+            for (int j = 0; j < keyStore[i].length; j++) {
+                keyStore[i][j] = new ArrayList<RowKey>();
+            }
+        }
+
+        // filling in the confusion matrix and the keystore
+        long rowCnt = data.size();
+        int numberOfRows = 0;
+        int correctCount = 0;
+        int falseCount = 0;
+        int missingCount = 0;
+        ExecutionMonitor subExec = exec.createSubProgress(0.5);
+        for (Iterator<DataRow> it = data.iterator(); it.hasNext(); numberOfRows++) {
+            DataRow row = it.next();
+            subExec.setProgress((1.0 + numberOfRows) / rowCnt,
+                "Computing score, row " + numberOfRows + " (\"" + row.getKey() + "\") of " + data.size());
+            try {
+                subExec.checkCanceled();
+            } catch (CanceledExecutionException cee) {
+                reset();
+                throw cee;
+            }
+            DataCell cell1 = row.getCell(index1);
+            DataCell cell2 = row.getCell(index2);
+            valuesInCol2.add(cell2);
+            if (cell1.isMissing() || cell2.isMissing()) {
+                ++missingCount;
+                CheckUtils.checkState(m_config.isIgnoreMissingValues(), "Missing value in row: " + row.getKey());
+                if (m_config.isIgnoreMissingValues()) {
+                    continue;
+                }
+            }
+            boolean areEqual = cell1.equals(cell2);
+
+            int i1 = valuesList.indexOf(cell1);
+            int i2 = areEqual ? i1 : valuesList.indexOf(cell2);
+            assert i1 >= 0 : "column spec lacks possible value " + cell1;
+            assert i2 >= 0 : "column spec lacks possible value " + cell2;
+            // i2 must be equal to i1 if cells are equal (implication)
+            assert (!areEqual || i1 == valuesList.indexOf(cell2));
+            keyStore[i1][i2].add(row.getKey());
+            scorerCount[i1][i2]++;
+
+            if (areEqual) {
+                correctCount++;
+            } else {
+                falseCount++;
+            }
+        }
+
+        //Creating and filling the confusion matrix datatable
+        BufferedDataContainer container = exec.createDataContainer(confusionMatrixSpec);
         for (int i = 0; i < targetValues.length; i++) {
             // need to make a datacell for the row key
             container.addRowToTable(new DefaultRow(targetValues[i], scorerCount[i]));
         }
         container.close();
+        m_confusionMatrix = container.getTable();
 
-        ScorerViewData viewData =
-            new ScorerViewData(scorerCount, numberOfRows, falseCount, correctCount, firstColumnName,
-                secondColumnName, targetValues, keyStore);
-        m_accuracy = viewData.getAccuracy();
-        m_cohensKappa = viewData.getCohenKappa();
-
-        // print info
-        int missing = numberOfRows - correctCount - falseCount;
-//        LOGGER.info("error=" + viewData.getError() + ", #correct=" + viewData.getCorrectCount() + ", #false="
-//            + viewData.getFalseCount() + ", #rows=" + numberOfRows + ", #missing=" + missing);
-        // our view displays the table - we must keep a reference in the model.
-        m_confusionMatrixDatatable = container.getTable();
+//        ScorerViewData viewData = new ScorerViewData(scorerCount, numberOfRows, falseCount, correctCount,
+//            firstColumnName, secondColumnName, targetValues, m_keyStore);
 
         // start creating accuracy statistics
-        BufferedDataContainer accTable = exec.createDataContainer(new DataTableSpec(QUALITY_MEASURES_SPECS));
-        m_valueStats =  new ArrayList<ValueStats>();
-        for (int r = 0; r < targetValues.length; r++) {
-            ValueStats valueStats = new ValueStats();
-            valueStats.setValueName(targetValues[r]);
-            int tp = viewData.getTP(r); // true positives
-            int fp = viewData.getFP(r); // false positives
-            int tn = viewData.getTN(r); // true negatives
-            int fn = viewData.getFN(r); // false negatives
-            valueStats.setTP(tp);
-            valueStats.setFP(fp);
-            valueStats.setTN(tn);
-            valueStats.setFN(fn);
-            DoubleCell accuracy = null; // (TP + TN) / (TP + FN + TN + FP)
-            if (tp + fn + tn + fp> 0) {
-                accuracy = new DoubleCell(1.0 * (tp + tn) / (tp + fn + tn + fp));
-                valueStats.setAccuracy(accuracy.getDoubleValue());
-            } else {
-                valueStats.setAccuracy(Double.NaN);
-            }
-            DoubleCell balancedAccuracy = null; // (TP / (TP + FN) + TN / (FP + TN)) /2
-            if ((tp + fn > 0) && (fp + tn >0))  {
-                balancedAccuracy = new DoubleCell( (1.0 * tp / (tp + fn) + 1.0 *tn / (fp + tn)) / 2 );
-                valueStats.setBalancedAccuracy(balancedAccuracy.getDoubleValue());
-            } else {
-                valueStats.setBalancedAccuracy(Double.NaN);
-            }
-            DoubleCell errorRate = null; // (FP + FN) / (TP + FN + TN + FP)
-            if (tp + fn + tn + fp> 0) {
-                errorRate = new DoubleCell(1.0 * (fp + fn) / (tp + fn + tn + fp));
-                valueStats.setErrorRate(errorRate.getDoubleValue());
-            } else {
-                valueStats.setErrorRate(Double.NaN);
-            }
-            DoubleCell falseNegativeRate = null; // FN / (TP + FN)
-            if (tp + fn > 0) {
-                falseNegativeRate = new DoubleCell(1.0 * fn / (tp + fn));
-                valueStats.setFalseNegativeRate(falseNegativeRate.getDoubleValue());
-            } else {
-                valueStats.setFalseNegativeRate(Double.NaN);
-            }
-            final DataCell sensitivity; // TP / (TP + FN)
-            DoubleCell recall = null; // TP / (TP + FN)
-            if (tp + fn > 0) {
-                recall = new DoubleCell(1.0 * tp / (tp + fn));
-                valueStats.setRecall(recall.getDoubleValue());
-                sensitivity = new DoubleCell(1.0 * tp / (tp + fn));
-                valueStats.setSensitivity(((DoubleCell)sensitivity).getDoubleValue());
-            } else {
-                sensitivity = DataType.getMissingCell();
-                valueStats.setRecall(Double.NaN);
-                valueStats.setSensitivity(Double.NaN);
-            }
-            DoubleCell prec = null; // TP / (TP + FP)
-            if (tp + fp > 0) {
-                prec = new DoubleCell(1.0 * tp / (tp + fp));
-                valueStats.setPrecision(prec.getDoubleValue());
-            } else {
-                valueStats.setPrecision(Double.NaN);
-            }
-            final DataCell specificity; // TN / (TN + FP)
-            if (tn + fp > 0) {
-                specificity = new DoubleCell(1.0 * tn / (tn + fp));
-                valueStats.setSpecificity(((DoubleCell)specificity).getDoubleValue());
-            } else {
-                specificity = DataType.getMissingCell();
-                valueStats.setSpecificity(Double.NaN);
-            }
-            final DataCell fmeasure; // 2 * Prec. * Recall / (Prec. + Recall)
-            if (recall != null && prec != null) {
-                fmeasure =
-                    new DoubleCell(2.0 * prec.getDoubleValue() * recall.getDoubleValue()
-                        / (prec.getDoubleValue() + recall.getDoubleValue()));
-                valueStats.setFmeasure(((DoubleCell)fmeasure).getDoubleValue());
-            } else {
-                fmeasure = DataType.getMissingCell();
-                valueStats.setFmeasure(Double.NaN);
-            }
-            // add complete row for class value to table
-            DataRow row =
-                new DefaultRow(new RowKey(targetValues[r]), new DataCell[]{new IntCell(tp), new IntCell(fp),
-                    new IntCell(tn), new IntCell(fn), accuracy, balancedAccuracy, errorRate, falseNegativeRate, recall == null ? DataType.getMissingCell() : recall,
-                    prec == null ? DataType.getMissingCell() : prec, sensitivity, specificity, fmeasure,
-                    DataType.getMissingCell(), DataType.getMissingCell()});
-            accTable.addRowToTable(row);
-            // store accuracy statistics in list of AccuracyScorerValue for JS
-            m_valueStats.add(valueStats);
-        }
-        List<String> classIds = Arrays.asList(targetValues);
-        RowKey overallID = new RowKey("Overall");
-        int uniquifier = 1;
-        while (classIds.contains(overallID.getString())) {
-            overallID = new RowKey("Overall (#" + (uniquifier++) + ")");
-        }
-        // append additional row for overall accuracy
-        accTable.addRowToTable(new DefaultRow(overallID, new DataCell[]{DataType.getMissingCell(),
-            DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(),
-            DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(),
-            DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(),
-            new DoubleCell(viewData.getAccuracy()), new DoubleCell(viewData.getCohenKappa())}));
-        accTable.close();
+//        BufferedDataContainer accTable = exec.createDataContainer(new DataTableSpec(QUALITY_MEASURES_SPECS));
+//        m_valueStats = new ArrayList<ValueStats>();
+//        for (int r = 0; r < targetValues.length; r++) {
+//            ValueStats valueStats = new ValueStats();
+//            valueStats.setValueName(targetValues[r]);
+//            int tp = viewData.getTP(r); // true positives
+//            int fp = viewData.getFP(r); // false positives
+//            int tn = viewData.getTN(r); // true negatives
+//            int fn = viewData.getFN(r); // false negatives
+//            valueStats.setTP(tp);
+//            valueStats.setFP(fp);
+//            valueStats.setTN(tn);
+//            valueStats.setFN(fn);
+//            DoubleCell accuracy = null; // (TP + TN) / (TP + FN + TN + FP)
+//            if (tp + fn + tn + fp > 0) {
+//                accuracy = new DoubleCell(1.0 * (tp + tn) / (tp + fn + tn + fp));
+//                valueStats.setAccuracy(accuracy.getDoubleValue());
+//            } else {
+//                valueStats.setAccuracy(Double.NaN);
+//            }
+//            DoubleCell balancedAccuracy = null; // (TP / (TP + FN) + TN / (FP + TN)) /2
+//            if ((tp + fn > 0) && (fp + tn > 0)) {
+//                balancedAccuracy = new DoubleCell((1.0 * tp / (tp + fn) + 1.0 * tn / (fp + tn)) / 2);
+//                valueStats.setBalancedAccuracy(balancedAccuracy.getDoubleValue());
+//            } else {
+//                valueStats.setBalancedAccuracy(Double.NaN);
+//            }
+//            DoubleCell errorRate = null; // (FP + FN) / (TP + FN + TN + FP)
+//            if (tp + fn + tn + fp > 0) {
+//                errorRate = new DoubleCell(1.0 * (fp + fn) / (tp + fn + tn + fp));
+//                valueStats.setErrorRate(errorRate.getDoubleValue());
+//            } else {
+//                valueStats.setErrorRate(Double.NaN);
+//            }
+//            DoubleCell falseNegativeRate = null; // FN / (TP + FN)
+//            if (tp + fn > 0) {
+//                falseNegativeRate = new DoubleCell(1.0 * fn / (tp + fn));
+//                valueStats.setFalseNegativeRate(falseNegativeRate.getDoubleValue());
+//            } else {
+//                valueStats.setFalseNegativeRate(Double.NaN);
+//            }
+//            final DataCell sensitivity; // TP / (TP + FN)
+//            DoubleCell recall = null; // TP / (TP + FN)
+//            if (tp + fn > 0) {
+//                recall = new DoubleCell(1.0 * tp / (tp + fn));
+//                valueStats.setRecall(recall.getDoubleValue());
+//                sensitivity = new DoubleCell(1.0 * tp / (tp + fn));
+//                valueStats.setSensitivity(((DoubleCell)sensitivity).getDoubleValue());
+//            } else {
+//                sensitivity = DataType.getMissingCell();
+//                valueStats.setRecall(Double.NaN);
+//                valueStats.setSensitivity(Double.NaN);
+//            }
+//            DoubleCell prec = null; // TP / (TP + FP)
+//            if (tp + fp > 0) {
+//                prec = new DoubleCell(1.0 * tp / (tp + fp));
+//                valueStats.setPrecision(prec.getDoubleValue());
+//            } else {
+//                valueStats.setPrecision(Double.NaN);
+//            }
+//            final DataCell specificity; // TN / (TN + FP)
+//            if (tn + fp > 0) {
+//                specificity = new DoubleCell(1.0 * tn / (tn + fp));
+//                valueStats.setSpecificity(((DoubleCell)specificity).getDoubleValue());
+//            } else {
+//                specificity = DataType.getMissingCell();
+//                valueStats.setSpecificity(Double.NaN);
+//            }
+//            final DataCell fmeasure; // 2 * Prec. * Recall / (Prec. + Recall)
+//            if (recall != null && prec != null) {
+//                fmeasure = new DoubleCell(2.0 * prec.getDoubleValue() * recall.getDoubleValue()
+//                    / (prec.getDoubleValue() + recall.getDoubleValue()));
+//                valueStats.setFmeasure(((DoubleCell)fmeasure).getDoubleValue());
+//            } else {
+//                fmeasure = DataType.getMissingCell();
+//                valueStats.setFmeasure(Double.NaN);
+//            }
+//            // add complete row for class value to table
+//            DataRow row = new DefaultRow(new RowKey(targetValues[r]),
+//                new DataCell[]{new IntCell(tp), new IntCell(fp), new IntCell(tn), new IntCell(fn), accuracy,
+//                    balancedAccuracy, errorRate, falseNegativeRate, recall == null ? DataType.getMissingCell() : recall,
+//                    prec == null ? DataType.getMissingCell() : prec, sensitivity, specificity, fmeasure,
+//                    DataType.getMissingCell(), DataType.getMissingCell()});
+//            accTable.addRowToTable(row);
+//            // store accuracy statistics in list of AccuracyScorerValue for JS
+//            m_valueStats.add(valueStats);
+//        }
+//        List<String> classIds = Arrays.asList(targetValues);
+//        RowKey overallID = new RowKey("Overall");
+//        int uniquifier = 1;
+//        while (classIds.contains(overallID.getString())) {
+//            overallID = new RowKey("Overall (#" + (uniquifier++) + ")");
+//        }
+//        // append additional row for overall accuracy
+//        accTable.addRowToTable(new DefaultRow(overallID, new DataCell[]{DataType.getMissingCell(),
+//            DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(),
+//            DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(),
+//            DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(),
+//            new DoubleCell(viewData.getAccuracy()), new DoubleCell(viewData.getCohenKappa())}));
+//        accTable.close();
 
-        m_viewData = viewData;
-//        pushFlowVars(false);
-        m_accuracyDatatable = accTable.getTable();
+        //        pushFlowVars(false);
 
         return;
     }
@@ -429,37 +483,22 @@ public class AccuracyScorerCalculator {
     /**
      * Called to determine all possible values in the respective columns.
      *
-     * @param in the input table
+     * @param specification of the input table
      * @param index1 the first column to compare
      * @param index2 the second column to compare
-     * @param exec object to check with if user canceled
      * @return the order of rows and columns in the confusion matrix
-     * @throws CanceledExecutionException if user canceled operation
+     * @throws InvalidSettingsException
      */
-    private DataCell[] determineColValues(final BufferedDataTable in, final int index1, final int index2,
-        final ExecutionMonitor exec) throws CanceledExecutionException {
-        long rowCnt = in.size();
-        DataTableSpec inSpec = in.getDataTableSpec();
+    static DataCell[] determineColValues(final DataTableSpec inSpec, final int index1, final int index2,
+        final ScorerCalculatorConfiguration config) throws InvalidSettingsException {
         DataColumnSpec col1 = inSpec.getColumnSpec(index1);
         DataColumnSpec col2 = inSpec.getColumnSpec(index2);
         Set<DataCell> v1 = col1.getDomain().getValues();
         Set<DataCell> v2 = col2.getDomain().getValues();
         LinkedHashSet<DataCell> values1;
         LinkedHashSet<DataCell> values2;
-        if (v1 == null || v2 == null) { // values not available
-            values1 = new LinkedHashSet<DataCell>();
-            values2 = new LinkedHashSet<DataCell>();
-            int rowNr = 0;
-            for (Iterator<DataRow> it = in.iterator(); it.hasNext(); rowNr++) {
-                DataRow row = it.next();
-                exec.checkCanceled(); // throws exception if user canceled.
-                exec.setProgress((1.0 + rowNr) / rowCnt,
-                    "Reading possible values, row " + rowNr + " (\"" + row.getKey() + "\")");
-                DataCell cell1 = row.getCell(index1);
-                DataCell cell2 = row.getCell(index2);
-                values1.add(cell1);
-                values2.add(cell2);
-            }
+        if (v1 == null || v2 == null) {
+            throw new InvalidSettingsException("The columns selected don't contain any values.");
         } else {
             // clone them, will change the set later on
             values1 = new LinkedHashSet<DataCell>(v1);
@@ -492,14 +531,14 @@ public class AccuracyScorerCalculator {
         values2.removeAll(intersection);
         temp = values2.toArray(new DataCell[0]);
         System.arraycopy(temp, 0, order, order.length - temp.length, temp.length);
-        sort(order);
+        sort(order, config);
         return order;
     }
 
     /**
      * @param order The cells to sort.
      */
-    private void sort(final DataCell[] order) {
+    static void sort(final DataCell[] order, final ScorerCalculatorConfiguration config) {
         if (order.length == 0) {
             return;
         }
@@ -508,9 +547,9 @@ public class AccuracyScorerCalculator {
             type = DataType.getCommonSuperType(type, dataCell.getType());
         }
         final Comparator<DataCell> comparator;
-        switch (m_sortingStrategy) {
+        switch (config.getSortingStrategy()) {
             case InsertionOrder:
-                if (m_sortingReversed) {
+                if (config.isSortingReversed()) {
                     reverse(order);
                 }
                 return;
@@ -550,10 +589,10 @@ public class AccuracyScorerCalculator {
                 }
                 break;
             default:
-                throw new IllegalStateException("Unrecognized sorting strategy: " + m_sortingStrategy);
+                throw new IllegalStateException("Unrecognized sorting strategy: " + config.getSortingStrategy());
         }
         Arrays.sort(order, comparator);
-        if (m_sortingReversed) {
+        if (config.isSortingReversed()) {
             reverse(order);
         }
     }
@@ -563,7 +602,7 @@ public class AccuracyScorerCalculator {
      *
      * @param order Some cells.
      */
-    private void reverse(final DataCell[] order) {
+    static void reverse(final DataCell[] order) {
         DataCell tmp;
         for (int i = 0; i < order.length / 2; ++i) {
             int hi = order.length - 1 - i;
@@ -581,219 +620,600 @@ public class AccuracyScorerCalculator {
      * Resets all internal data.
      */
     public void reset() {
-        m_viewData = null;
+        //        m_viewData = null;
     }
 
-    public String[] getTargetValues() {
-        return m_targetValues;
-    }
-
-    public int[][] getConfusionMatrix() {
-        return m_confusionMatrix;
-    }
-
-    public double[][] getConfusionMatrixWithRates() {
-        return m_confusionMatrixWithRates;
-    }
-
-    public List<String>[][] getKeyStore() {
-        return m_keyStore;
-    }
-
-    public List<ValueStats> getValueStats() {
-        return m_valueStats;
-    }
-
-    public BufferedDataTable getConfusionMatrixDatatable() {
-        return m_confusionMatrixDatatable;
-    }
-
-    public BufferedDataTable getAccuracyDatatable() {
-        return m_accuracyDatatable;
-    }
-
-    public SortingStrategy getSortingStrategy() {
-        return m_sortingStrategy;
-
-    }
-
-    public void setSortingStrategy(final SortingStrategy sortingStrategy) {
-        m_sortingStrategy = sortingStrategy;
-    }
-
-    public boolean isSortingReversed() {
-        return m_sortingReversed;
-    }
-
-    public void setSortingReversed(final boolean sortingReversed) {
-        this.m_sortingReversed = sortingReversed;
-    }
-
-    public boolean isIgnoreMissingValues() {
-        return m_ignoreMissingValues;
-    }
-
-    public void setIgnoreMissingValues(final boolean ignoreMissingValues) {
-        this.m_ignoreMissingValues = ignoreMissingValues;
-    }
-
-    public ScorerViewData getViewData() {
-        return m_viewData;
-    }
-
-    public static DataColumnSpec[] getQualityMeasuresSpecs() {
-        return QUALITY_MEASURES_SPECS;
-    }
-
-    public double getAccuracy() {
-        return m_accuracy;
-    }
-
-    public double getCohensKappa() {
-        return m_cohensKappa;
-    }
-
-    public Iterator<ValueStats> getIterator() {
-        return m_valueStats.iterator();
-    }
-
-    public List<String> getWarnings() {
-        return m_warnings;
-    }
-
-    public int getRowsNumber() {
-        return m_rowsNumber;
-    }
-
+    /**
+     * Class encapsulating the calculated statistics for a given class
+     *
+     * @author Pascal Lee
+     */
     public class ValueStats {
         private String m_valueName;
-        private int m_TP;   // True Positive
-        private int m_TN;   // True Negative
-        private int m_FP;   // False Positive
-        private int m_FN;   // False Negative
+
+        private int m_TP; // True Positive
+
+        private int m_TN; // True Negative
+
+        private int m_FP; // False Positive
+
+        private int m_FN; // False Negative
+
         private double m_accuracy;
+
         private double m_balancedAccuracy;
+
         private double m_errorRate;
+
         private double m_falseNegativeRate;
+
         private double m_recall;
+
         private double m_precision;
+
         private double m_sensitivity;
+
         private double m_specificity;
+
         private double m_fmeasure;
 
+        /**
+         * ValuesStats constructor
+         */
         public ValueStats() {
         }
 
+        /**
+         * @return valueName
+         */
         public String getValueName() {
             return m_valueName;
         }
 
+        /**
+         * @param valueName
+         */
         public void setValueName(final String valueName) {
             this.m_valueName = valueName;
         }
 
+        /**
+         * @return TP
+         */
         public int getTP() {
             return m_TP;
         }
 
+        /**
+         * @param TP
+         */
         public void setTP(final int TP) {
             this.m_TP = TP;
         }
 
+        /**
+         * @return TN
+         */
         public int getTN() {
             return m_TN;
         }
 
+        /**
+         * @param TN
+         */
         public void setTN(final int TN) {
             this.m_TN = TN;
         }
 
+        /**
+         * @return FP
+         */
         public int getFP() {
             return m_FP;
         }
 
+        /**
+         * @param FP
+         */
         public void setFP(final int FP) {
             this.m_FP = FP;
         }
 
+        /**
+         * @return FN
+         */
         public int getFN() {
             return m_FN;
         }
 
+        /**
+         * @param FN
+         */
         public void setFN(final int FN) {
             this.m_FN = FN;
         }
 
+        /**
+         * @return accuracy
+         */
         public double getAccuracy() {
             return m_accuracy;
         }
 
+        /**
+         * @param accuracy
+         */
         public void setAccuracy(final double accuracy) {
             this.m_accuracy = accuracy;
         }
 
+        /**
+         * @return balanced accuracy
+         */
         public double getBalancedAccuracy() {
             return m_balancedAccuracy;
         }
 
+        /**
+         * @param balancedAccuracy
+         */
         public void setBalancedAccuracy(final double balancedAccuracy) {
             this.m_balancedAccuracy = balancedAccuracy;
         }
 
+        /**
+         * @return error rate
+         */
         public double getErrorRate() {
             return m_errorRate;
         }
 
+        /**
+         * @param errorRate
+         */
         public void setErrorRate(final double errorRate) {
             this.m_errorRate = errorRate;
         }
 
+        /**
+         * @return falseNegativeRate
+         */
         public double getFalseNegativeRate() {
             return m_falseNegativeRate;
         }
 
+        /**
+         * @param falseNegativeRate
+         */
         public void setFalseNegativeRate(final double falseNegativeRate) {
             this.m_falseNegativeRate = falseNegativeRate;
         }
 
+        /**
+         * @return recall
+         */
         public double getRecall() {
             return m_recall;
         }
 
+        /**
+         * @param recall
+         */
         public void setRecall(final double recall) {
             this.m_recall = recall;
         }
 
+        /**
+         * @return precision
+         */
         public double getPrecision() {
             return m_precision;
         }
 
+        /**
+         * @param precision
+         */
         public void setPrecision(final double precision) {
             this.m_precision = precision;
         }
 
+        /**
+         * @return sensitivity
+         */
         public double getSensitivity() {
             return m_sensitivity;
         }
 
+        /**
+         * @param sensitivity
+         */
         public void setSensitivity(final double sensitivity) {
             this.m_sensitivity = sensitivity;
         }
 
+        /**
+         * @return specificity
+         */
         public double getSpecificity() {
             return m_specificity;
         }
 
+        /**
+         * @param specificity
+         */
         public void setSpecificity(final double specificity) {
             this.m_specificity = specificity;
         }
 
+        /**
+         * @return Fmeasure
+         */
         public double getFmeasure() {
             return m_fmeasure;
         }
 
+        /**
+         * @param Fmeasure
+         */
         public void setFmeasure(final double fmeasure) {
             this.m_fmeasure = fmeasure;
+        }
+    }
+
+    /**
+     * Configuration of the Accuracy Scorer Calculator
+     *
+     * @author Pascal Lee
+     */
+    public static class ScorerCalculatorConfiguration {
+        private SortingStrategy m_sortingStrategy = SortingStrategy.Lexical;
+
+        private boolean m_sortingReversed = false;
+
+        private boolean m_ignoreMissingValues = true;
+
+        /**
+         * @return sortingStrategy
+         */
+        public SortingStrategy getSortingStrategy() {
+            return m_sortingStrategy;
+        }
+
+        /**
+         * @param sortingStrategy
+         */
+        public void setSortingStrategy(final SortingStrategy sortingStrategy) {
+            this.m_sortingStrategy = sortingStrategy;
+        }
+
+        /**
+         * @return sortingReversed
+         */
+        public boolean isSortingReversed() {
+            return m_sortingReversed;
+        }
+
+        /**
+         * @param sortingReversed
+         */
+        public void setSortingReversed(final boolean sortingReversed) {
+            this.m_sortingReversed = sortingReversed;
+        }
+
+        /**
+         * @return ignoreMissingValues
+         */
+        public boolean isIgnoreMissingValues() {
+            return m_ignoreMissingValues;
+        }
+
+        /**
+         * @param ignoreMissingValues
+         */
+        public void setIgnoreMissingValues(final boolean ignoreMissingValues) {
+            this.m_ignoreMissingValues = ignoreMissingValues;
+        }
+    }
+
+    /**
+     * Configuration of the class statistics datatable
+     *
+     * @author Pascal Lee
+     */
+    public static class ClassStatisticsConfiguration {
+        boolean tpCalculated;
+
+        boolean fpCalculated;
+
+        boolean tnCalculated;
+
+        boolean fnCalculated;
+
+        boolean accuracyCalculated;
+
+        boolean balancedAccuracyCalculated;
+
+        boolean errorRateCalculated;
+
+        boolean falseNegativeRateCalculated;
+
+        boolean recallCalculated;
+
+        boolean precisionCalculated;
+
+        boolean sensitivityCalculated;
+
+        boolean specifityCalculated;
+
+        boolean fmeasureCalculated;
+
+        /**
+         * @return the tpCalculated
+         */
+        public boolean isTpCalculated() {
+            return tpCalculated;
+        }
+
+        /**
+         * @param tpCalculated the tpCalculated to set
+         */
+        public void setTpCalculated(final boolean tpCalculated) {
+            this.tpCalculated = tpCalculated;
+        }
+
+        /**
+         * @return the fpCalculated
+         */
+        public boolean isFpCalculated() {
+            return fpCalculated;
+        }
+
+        /**
+         * @param fpCalculated the fpCalculated to set
+         */
+        public void setFpCalculated(final boolean fpCalculated) {
+            this.fpCalculated = fpCalculated;
+        }
+
+        /**
+         * @return the tnCalculated
+         */
+        public boolean isTnCalculated() {
+            return tnCalculated;
+        }
+
+        /**
+         * @param tnCalculated the tnCalculated to set
+         */
+        public void setTnCalculated(final boolean tnCalculated) {
+            this.tnCalculated = tnCalculated;
+        }
+
+        /**
+         * @return the fnCalculated
+         */
+        public boolean isFnCalculated() {
+            return fnCalculated;
+        }
+
+        /**
+         * @param fnCalculated the fnCalculated to set
+         */
+        public void setFnCalculated(final boolean fnCalculated) {
+            this.fnCalculated = fnCalculated;
+        }
+
+        /**
+         * @return the accuracyCalculated
+         */
+        public boolean isAccuracyCalculated() {
+            return accuracyCalculated;
+        }
+
+        /**
+         * @param accuracyCalculated the accuracyCalculated to set
+         */
+        public void setAccuracyCalculated(final boolean accuracyCalculated) {
+            this.accuracyCalculated = accuracyCalculated;
+        }
+
+        /**
+         * @return the balancedAccuracyCalculated
+         */
+        public boolean isBalancedAccuracyCalculated() {
+            return balancedAccuracyCalculated;
+        }
+
+        /**
+         * @param balancedAccuracyCalculated the balancedAccuracyCalculated to set
+         */
+        public void setBalancedAccuracyCalculated(final boolean balancedAccuracyCalculated) {
+            this.balancedAccuracyCalculated = balancedAccuracyCalculated;
+        }
+
+        /**
+         * @return the errorRateCalculated
+         */
+        public boolean isErrorRateCalculated() {
+            return errorRateCalculated;
+        }
+
+        /**
+         * @param errorRateCalculated the errorRateCalculated to set
+         */
+        public void setErrorRateCalculated(final boolean errorRateCalculated) {
+            this.errorRateCalculated = errorRateCalculated;
+        }
+
+        /**
+         * @return the falseNegativeRateCalculated
+         */
+        public boolean isFalseNegativeRateCalculated() {
+            return falseNegativeRateCalculated;
+        }
+
+        /**
+         * @param falseNegativeRateCalculated the falseNegativeRateCalculated to set
+         */
+        public void setFalseNegativeRateCalculated(final boolean falseNegativeRateCalculated) {
+            this.falseNegativeRateCalculated = falseNegativeRateCalculated;
+        }
+
+        /**
+         * @return the recallCalculated
+         */
+        public boolean isRecallCalculated() {
+            return recallCalculated;
+        }
+
+        /**
+         * @param recallCalculated the recallCalculated to set
+         */
+        public void setRecallCalculated(final boolean recallCalculated) {
+            this.recallCalculated = recallCalculated;
+        }
+
+        /**
+         * @return the precisionCalculated
+         */
+        public boolean isPrecisionCalculated() {
+            return precisionCalculated;
+        }
+
+        /**
+         * @param precisionCalculated the precisionCalculated to set
+         */
+        public void setPrecisionCalculated(final boolean precisionCalculated) {
+            this.precisionCalculated = precisionCalculated;
+        }
+
+        /**
+         * @return the sensitivityCalculated
+         */
+        public boolean isSensitivityCalculated() {
+            return sensitivityCalculated;
+        }
+
+        /**
+         * @param sensitivityCalculated the sensitivityCalculated to set
+         */
+        public void setSensitivityCalculated(final boolean sensitivityCalculated) {
+            this.sensitivityCalculated = sensitivityCalculated;
+        }
+
+        /**
+         * @return the specifityCalculated
+         */
+        public boolean isSpecifityCalculated() {
+            return specifityCalculated;
+        }
+
+        /**
+         * @param specifityCalculated the specifityCalculated to set
+         */
+        public void setSpecifityCalculated(final boolean specifityCalculated) {
+            this.specifityCalculated = specifityCalculated;
+        }
+
+        /**
+         * @return the fmeasureCalculated
+         */
+        public boolean isFmeasureCalculated() {
+            return fmeasureCalculated;
+        }
+
+        /**
+         * @param fmeasureCalculated the fmeasureCalculated to set
+         */
+        public void setFmeasureCalculated(final boolean fmeasureCalculated) {
+            this.fmeasureCalculated = fmeasureCalculated;
+        }
+    }
+
+    /**
+     * Configuration of the overall statistics datatable
+     *
+     * @author Pascal Lee
+     */
+    public static class OverallStatisticsConfiguration {
+        boolean overallAccuracyCalculated;
+
+        boolean cohensKappaCalculated;
+
+        boolean overallErrorCalculated;
+
+        boolean correctClassifiedCalculated;
+
+        boolean wrongClassifiedCalculated;
+
+        /**
+         * @return the overallAccuracyCalculated
+         */
+        public boolean isOverallAccuracyCalculated() {
+            return overallAccuracyCalculated;
+        }
+
+        /**
+         * @param overallAccuracyCalculated the overallAccuracyCalculated to set
+         */
+        public void setOverallAccuracyCalculated(final boolean overallAccuracyCalculated) {
+            this.overallAccuracyCalculated = overallAccuracyCalculated;
+        }
+
+        /**
+         * @return the cohensKappaCalculated
+         */
+        public boolean isCohensKappaCalculated() {
+            return cohensKappaCalculated;
+        }
+
+        /**
+         * @param cohensKappaCalculated the cohensKappaCalculated to set
+         */
+        public void setCohensKappaCalculated(final boolean cohensKappaCalculated) {
+            this.cohensKappaCalculated = cohensKappaCalculated;
+        }
+
+        /**
+         * @return the overallErrorCalculated
+         */
+        public boolean isOverallErrorCalculated() {
+            return overallErrorCalculated;
+        }
+
+        /**
+         * @param overallErrorCalculated the overallErrorCalculated to set
+         */
+        public void setOverallErrorCalculated(final boolean overallErrorCalculated) {
+            this.overallErrorCalculated = overallErrorCalculated;
+        }
+
+        /**
+         * @return the correctClassifiedCalculated
+         */
+        public boolean isCorrectClassifiedCalculated() {
+            return correctClassifiedCalculated;
+        }
+
+        /**
+         * @param correctClassifiedCalculated the correctClassifiedCalculated to set
+         */
+        public void setCorrectClassifiedCalculated(final boolean correctClassifiedCalculated) {
+            this.correctClassifiedCalculated = correctClassifiedCalculated;
+        }
+
+        /**
+         * @return the wrongClassifiedCalculated
+         */
+        public boolean isWrongClassifiedCalculated() {
+            return wrongClassifiedCalculated;
+        }
+
+        /**
+         * @param wrongClassifiedCalculated the wrongClassifiedCalculated to set
+         */
+        public void setWrongClassifiedCalculated(final boolean wrongClassifiedCalculated) {
+            this.wrongClassifiedCalculated = wrongClassifiedCalculated;
         }
     }
 }
