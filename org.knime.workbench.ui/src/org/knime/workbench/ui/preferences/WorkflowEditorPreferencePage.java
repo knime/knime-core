@@ -130,8 +130,8 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
 
         addField(new HorizontalLineField(parent));
         addField(new LabelField(parent,
-            "Auto-refreshing of remotely opened jobs (has no effect for local worklows)"));
-        addField(new BooleanFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW, "Auto-refresh remote jobs",
+            "Remote Job View auto-refresh settings"));
+        addField(new BooleanFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW, "Auto-refresh Remote Job View",
             parent));
         addField(new IntegerFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS,
             "Auto-refresh interval (in ms)", parent));
