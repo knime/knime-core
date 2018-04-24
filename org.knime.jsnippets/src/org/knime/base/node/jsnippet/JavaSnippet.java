@@ -113,6 +113,7 @@ import org.knime.base.node.jsnippet.guarded.GuardedSection;
 import org.knime.base.node.jsnippet.guarded.JavaSnippetDocument;
 import org.knime.base.node.jsnippet.template.JavaSnippetTemplate;
 import org.knime.base.node.jsnippet.type.ConverterUtil;
+import org.knime.base.node.jsnippet.ui.BundleListPanel;
 import org.knime.base.node.jsnippet.ui.JSnippetParser;
 import org.knime.base.node.jsnippet.util.FlowVariableRepository;
 import org.knime.base.node.jsnippet.util.JSnippet;
@@ -905,25 +906,35 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         }
 
         // Check additional bundles
-        for (final String bundleName : m_settings.getBundles()) {
-            final String[] split = bundleName.split(" ");
+        for (final String bundleString : m_settings.getBundles()) {
+            final String[] split = bundleString.split(" ");
+            final String bundleName = split[0];
+            if (split.length <= 1) {
+                errors.add(String.format("Missing version for bundle \"%s\" in settings", bundleName));
+                continue;
+            }
 
-            final Bundle bundle = Platform.getBundle(split[0]);
-            if (bundle == null) {
+            final Bundle[] bundles = Platform.getBundles(bundleName, null);
+            if (bundles == null) {
                 errors.add("Bundle \"" + bundleName + "\" required by this snippet was not found.");
-            } else {
-                if(split.length > 1) {
-                    final Version installedVersion = bundle.getVersion();
-                    final Version v = Version.parseVersion(split[1]);
+                continue;
+            }
 
-                    final boolean versionsDiffer =
-                        installedVersion.getMajor() != v.getMajor() || installedVersion.getMinor() < v.getMinor();
-                    if (versionsDiffer) {
-                        errors.add(String.format(
-                            "Versions of bundle \"%s\" required by this snippet differ:\nnode was saved with version %s but version %s is currently installed.",
-                            bundle.getSymbolicName(), v, installedVersion));
-                    }
+            boolean bundleFound = false;
+            final Version savedVersion = Version.parseVersion(split[1]);
+            for (final Bundle bundle : bundles) {
+                final Version installedVersion = bundle.getVersion();
+
+                if(BundleListPanel.versionMatches(installedVersion, savedVersion)) {
+                    bundleFound = true;
+                    break;
                 }
+            }
+
+            if(!bundleFound) {
+                errors.add(String.format(
+                    "No installed version of \"%s\" matched version range [%s, %d.0.0).",
+                    bundleName, savedVersion, savedVersion.getMajor()+1));
             }
         }
 

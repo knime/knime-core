@@ -51,7 +51,6 @@ package org.knime.base.node.jsnippet.ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.KeyAdapter;
@@ -110,6 +109,19 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Check whether a given source version sufficiently matches a certain target version.
+     *
+     * @param source Version that should match <code>target</code>
+     * @param target Version that should be matched by <code>source</code>
+     * @return true if source is not {@link Version#emptyVersion}, major versions are equal and the source minor version
+     *         is greater or equal to the required minor version.
+     */
+    public static boolean versionMatches(final Version source, final Version target) {
+        return !source.equals(Version.emptyVersion) && source.getMajor() == target.getMajor()
+            && source.getMinor() >= target.getMinor();
+    }
+
     /** Entry in the Bundle List */
     static class BundleListEntry {
         /** Name of the bundle */
@@ -136,9 +148,13 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         @Override
         public String toString() {
             if (installedVersion == null) {
-                return this.name + " (Not installed!)";
+                return String.format("%s %s (Not installed!)", name, savedVersion);
+            } else if (!versionsMatch()) {
+                return String.format("%s %s (No matching version found!)", name, savedVersion);
+            } else if (savedVersion.equals(installedVersion)) {
+                return String.format("%s %s", name, savedVersion);
             } else {
-                return this.name + " " + this.installedVersion.toString();
+                return String.format("%s %s -> using %s", name, savedVersion, installedVersion);
             }
         }
 
@@ -148,7 +164,13 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         public String getName() {
             return this.name;
         }
-
+        /**
+         * @brief Serialize for saving in settings
+         * @return "<bundle name> <saved version>"
+         */
+        public String serialize() {
+            return this.name + " " + this.savedVersion.toString();
+        }
         /**
          * Whether this bundle is installed in the current eclipse runtime
          *
@@ -156,6 +178,15 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
          */
         public boolean exists() {
             return installedVersion != null;
+        }
+
+
+        /**
+         * Whether the installed version sufficiently matches the saved version
+         * @return <code>true</code> if versions match, <code>false</code> otherwise.
+         */
+        public boolean versionsMatch() {
+            return BundleListPanel.versionMatches(installedVersion, savedVersion);
         }
 
         @Override
@@ -200,7 +231,15 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                 if (c instanceof JLabel) {
                     ((JLabel)c).setToolTipText("Bundle is not installed.");
                 }
-            } else if (e.savedVersion != null) {
+            } else if (!e.versionsMatch()) {
+                /* Bundle version changed significantly */
+                c.setForeground(Color.RED);
+                if (c instanceof JLabel) {
+                    ((JLabel)c).setToolTipText(
+                        String.format("No installed version of \"%s\" matched version range [%s, %d.0.0).", e.name,
+                            e.savedVersion, e.savedVersion.getMajor() + 1));
+                }
+            } else if (!e.savedVersion.equals(e.installedVersion)) {
                 /* Bundle version changed */
                 c.setForeground(Color.ORANGE);
                 if (c instanceof JLabel) {
@@ -248,22 +287,6 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         }
 
         Collections.sort(bundleNames);
-
-        /* Only keep latest versions of bundles of which multiple versions are installed */
-        String[] lastSplit = new String[]{null, null};
-        final ArrayList<String> toRemove = new ArrayList<>();
-        for (final String s : bundleNames) {
-            final String[] split = s.split(" ");
-            if(split[0].equals(lastSplit[0])) {
-                if(Version.parseVersion(split[1]).compareTo(Version.parseVersion(lastSplit[1])) < 0) {
-                    toRemove.add(s);
-                } else {
-                    toRemove.add(String.join(" ", lastSplit));
-                }
-            }
-            lastSplit = split;
-        }
-        bundleNames.removeAll(toRemove);
     }
 
     /**
@@ -284,8 +307,6 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         m_tree.expandPath(new TreePath(m_root));
 
         final JScrollPane scroll = new JScrollPane(m_tree);
-        scroll.setMinimumSize(new Dimension(300, 300));
-        scroll.setPreferredSize(new Dimension(300, 300));
         add(scroll);
 
         /* Remove button */
@@ -333,7 +354,21 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
                 @Override
                 public void mouseClicked(final MouseEvent e) {
                     if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
-                        removeSelectedBundles();
+                        if (!removeSelectedBundles()) {
+                            /* If we didn't remove a bundle, maybe the user clicked on a custom type bundle */
+                            final TreePath path = m_tree.getSelectionPath();
+                            if (path == null) {
+                                /* No selection */
+                                return;
+                            }
+
+                            final DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
+                            if (node.getParent() == m_customTypeRoot) {
+                                /* Explicitly add custom type bundle as active bundle */
+                                final Bundle bundle = (Bundle)node.getUserObject();
+                                addBundle(String.format("%s %s", bundle.getSymbolicName(), bundle.getVersion()));
+                            }
+                        }
                     }
                 }
             });
@@ -396,14 +431,19 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         m_bundleList.clearSelection();
     }
 
-    /* Remove all bundles currently selected in list */
-    void removeSelectedBundles() {
+    /*
+     * Remove all bundles currently selected in list
+     *
+     * @returns whether bundles were removed.
+     */
+    boolean removeSelectedBundles() {
         final TreePath[] paths = m_tree.getSelectionPaths();
         if (paths == null) {
             /* No selection */
-            return;
+            return false;
         }
 
+        boolean bundlesRemoved = false;
         for (final TreePath p : paths) {
             final DefaultMutableTreeNode node = (DefaultMutableTreeNode)p.getLastPathComponent();
             if (node.getParent() != m_userBundlesRoot) {
@@ -414,16 +454,19 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
             final Object o = node.getUserObject();
             m_listModel.remove(o);
+            bundlesRemoved = true;
         }
 
         updateFilterModel();
+
+        return bundlesRemoved;
     }
 
     /**
      * @return All added bundles.
      */
     public String[] getBundles() {
-        return m_listModel.getAllElements().stream().map(BundleListEntry::toString).toArray(n -> new String[n]);
+        return m_listModel.getAllElements().stream().map(BundleListEntry::serialize).toArray(n -> new String[n]);
     }
 
     /**
@@ -520,26 +563,29 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
         final String[] split = bundleName.split(" ");
         final String nameWithoutVersion = split[0];
-        final Bundle firstBundle = Platform.getBundle(nameWithoutVersion);
+        final Version savedVersion = Version.parseVersion(split[1]);
+        final Version installedVersion = findMatchingBundleVersion(nameWithoutVersion, savedVersion);
 
-        if (firstBundle != null) {
-            final Version installedVersion = firstBundle.getVersion();
-            Version savedVersion = null;
-            if (split.length > 1) {
-                final Version v = Version.parseVersion(split[1]);
+        return new BundleListEntry(nameWithoutVersion, installedVersion, savedVersion);
+    }
 
-                // check whether the versions differ up to minor version.
-                final boolean versionsDiffer =
-                    installedVersion.getMajor() != v.getMajor() || installedVersion.getMinor() < v.getMinor();
-                if (versionsDiffer) {
-                    savedVersion = v;
-                }
-            }
-
-            return new BundleListEntry(firstBundle.getSymbolicName(), installedVersion, savedVersion);
-        } else {
-            return new BundleListEntry(nameWithoutVersion, null, null);
+    private static Version findMatchingBundleVersion(final String bundleName, final Version version) {
+        final Bundle[] bundles = Platform.getBundles(bundleName, null);
+        if (bundles == null) {
+            return null;
         }
+
+        for (final Bundle bundle : bundles) {
+            final Version installedVersion = bundle.getVersion();
+
+            final boolean versionMatches = installedVersion.getMajor() == version.getMajor()
+                && installedVersion.getMinor() >= version.getMinor();
+            if(versionMatches) {
+                return bundle.getVersion();
+            }
+        }
+
+        return Version.emptyVersion;
     }
 
     /**

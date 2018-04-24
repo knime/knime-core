@@ -48,6 +48,7 @@
 package org.knime.base.node.jsnippet;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridLayout;
@@ -78,6 +79,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumnModel;
 import javax.swing.text.BadLocationException;
 
+import org.eclipse.core.runtime.Platform;
 import org.fife.rsta.ac.LanguageSupport;
 import org.fife.rsta.ac.LanguageSupportFactory;
 import org.fife.rsta.ac.java.JarManager;
@@ -121,6 +123,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
 
 /**
  * The dialog of the java snippet node.
@@ -130,7 +133,9 @@ import org.osgi.framework.Bundle;
 public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNodeDialog<JavaSnippetTemplate> {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(JavaSnippetNodeDialog.class);
 
-    private static final String SNIPPET_TAB = "Java Snippet";
+    private static final String SNIPPET_TAB_NAME = "Java Snippet";
+
+    private static final String ADDITIONAL_BUNDLES_TAB_NAME = "Additional Bundles";
 
     private JSnippetTextArea m_snippetTextArea;
 
@@ -168,6 +173,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
 
     private ErrorStrip m_errorStrip = null;
 
+
     /**
      * Create a new Dialog.
      *
@@ -195,7 +201,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         m_flowVarsList.install(m_snippetTextArea);
         m_flowVarsList.install(m_fieldsController);
 
-        addTab(SNIPPET_TAB, panel);
+        addTab(SNIPPET_TAB_NAME, panel);
         if (!isPreview) {
             panel.setPreferredSize(new Dimension(800, 600));
         }
@@ -204,7 +210,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
 
         m_bundleListPanel = new BundleListPanel();
         m_bundleListPanel.getListModel().addListDataListener(forceReparseListener);
-        addTab("Additional Bundles", m_bundleListPanel);
+        addTab(ADDITIONAL_BUNDLES_TAB_NAME, m_bundleListPanel);
 
         if (!isPreview) {
             // The preview does not have the templates tab
@@ -586,6 +592,13 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         m_templateLocation.setText(getTemplateLocation());
 
         updateAutocompletion();
+
+        try {
+            /* Update "Additional Bundles" tab title */
+            validateBundlesSetting();
+        } catch (InvalidSettingsException e) {
+            /* This is not a problem, we only want the "Additional Bundles" tab title to be updated appropriately */
+        }
     }
 
     /**
@@ -624,7 +637,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         // update template info panel
         m_templateLocation.setText(createTemplateLocationText(template));
 
-        setSelected(SNIPPET_TAB);
+        setSelected(SNIPPET_TAB_NAME);
         // set caret position to the start of the custom expression
         m_snippetTextArea.setCaretPosition(
             m_snippet.getDocument().getGuardedSection(JavaSnippetDocument.GUARDED_BODY_START).getEnd().getOffset() + 1);
@@ -711,11 +724,50 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         if (!outFieldsModel.validateValues()) {
             throw new IllegalArgumentException("The output fields table has errors.");
         }
+
         s.setBundles(m_bundleListPanel.getBundles());
+        validateBundlesSetting();
 
         // give subclasses the chance to modify settings
         preSaveSettings(s);
         s.saveSettings(settings);
+    }
+
+    private void validateBundlesSetting() throws InvalidSettingsException {
+        // Check additional bundles
+        for (final String bundleString : m_snippet.getSettings().getBundles()) {
+            final String[] split = bundleString.split(" ");
+            final String bundleName = split[0];
+            if (split.length <= 1) {
+                setAdditionalBundlesTabTitle(false);
+                throw new InvalidSettingsException(String.format("Missing version for bundle \"%s\" in settings", bundleName));
+            }
+
+            final Bundle[] bundles = Platform.getBundles(bundleName, null);
+            if (bundles == null) {
+                setAdditionalBundlesTabTitle(false);
+                throw new InvalidSettingsException("Bundle \"" + bundleName + "\" required by this snippet was not found.");
+            }
+
+            boolean bundleFound = false;
+            final Version savedVersion = Version.parseVersion(split[1]);
+            for (final Bundle bundle : bundles) {
+                final Version installedVersion = bundle.getVersion();
+
+                if(BundleListPanel.versionMatches(installedVersion, savedVersion)) {
+                    bundleFound = true;
+                    break;
+                }
+            }
+
+            if(!bundleFound) {
+                setAdditionalBundlesTabTitle(false);
+                throw new InvalidSettingsException(String.format(
+                    "No installed version of \"%s\" matched version range [%s, %d.0.0).",
+                    bundleName, savedVersion, savedVersion.getMajor()+1));
+            }
+        }
+        setAdditionalBundlesTabTitle(true);
     }
 
     /**
@@ -725,5 +777,21 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
      */
     protected void preSaveSettings(final JavaSnippetSettings s) {
         // just a place holder.
+    }
+
+    /*
+     * Set the title of "Additional Bundles" panel so that it contains " <!>" if settings are invalid.
+     */
+    private void setAdditionalBundlesTabTitle(final boolean bundleSettingsValid) {
+        /* Get the tab assuming it displays that bundle Settings are valid. If not, tab will be null. */
+        final Component tab = getTab(ADDITIONAL_BUNDLES_TAB_NAME);
+
+        /* tab != null is equivalent to it displaying that settings are valid */
+        if(bundleSettingsValid != (tab != null)) {
+            /* State changed, set the title accordingly */
+            final String oldName = ADDITIONAL_BUNDLES_TAB_NAME + (!bundleSettingsValid ? "" : " <!>");
+            final String newName = ADDITIONAL_BUNDLES_TAB_NAME + (bundleSettingsValid ? "" : " <!>");
+            renameTab(oldName, newName);
+        }
     }
 }
