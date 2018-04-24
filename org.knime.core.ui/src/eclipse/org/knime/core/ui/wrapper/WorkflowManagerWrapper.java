@@ -313,6 +313,14 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
         return unwrap().canCancelAll();
     }
 
+    /**
+     * @since 3.6
+     */
+    @Override
+    public void cancelExecution(final NodeContainerUI nc) {
+        unwrap().cancelExecution(Wrapper.unwrapNC(nc));
+    }
+
     @Override
     public boolean canSetJobManager(final NodeID nodeID) {
         return unwrap().canSetJobManager(nodeID);

@@ -558,13 +558,13 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
         * @since 3.1 */
     boolean canCancelAll();
 
-//    /**
-//     * Cancel execution of the given NodeContainer.
-//     *
-//     * @param nc node to be canceled
-//     */
-//    void cancelExecution(UINodeContainer nc);
-//
+    /**
+     * Cancel execution of the given NodeContainer.
+     *
+     * @param nc node to be canceled
+     */
+    void cancelExecution(NodeContainerUI nc);
+
 //    /**
 //     * Pause loop execution of the given NodeContainer (=loop end).
 //     *
