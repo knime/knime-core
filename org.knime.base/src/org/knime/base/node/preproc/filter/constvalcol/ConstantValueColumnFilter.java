@@ -172,9 +172,9 @@ public class ConstantValueColumnFilter {
          * with specific values is selected, columns should also be removed when they are found to contain a value other
          * than any of the specified values.
          */
-        for (long i = 1; i < inputTable.size(); i++) {
+        final long finalSize = inputTable.size();
+        for (long i = 1; i < finalSize; i++) {
             final long finalI = i;
-            final long finalSize = inputTable.size();
             final DataRow currentRow = rowIt.next();
             exec.checkCanceled();
             exec.setProgress(i / (double)inputTable.size(),
