@@ -50,8 +50,8 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -130,10 +130,7 @@ public class ExecuteAction extends AbstractNodeAction {
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
         // enable if we have at least one executable node in our selection
-        WorkflowManager wm = getEditor().getWorkflowManager().orElse(null);
-        if (wm == null) { // fixes NPE when shutting down
-            return false;
-        }
+        WorkflowManagerUI wm = getEditor().getWorkflowManagerUI();
         for (int i = 0; i < parts.length; i++) {
             NodeContainerUI nc = parts[i].getNodeContainer();
             if (wm.canExecuteNode(nc.getID())) {
@@ -160,7 +157,7 @@ public class ExecuteAction extends AbstractNodeAction {
         }
         LOGGER.debug("Creating execution job for " + nodeParts.length
                 + " node(s)...");
-        WorkflowManager manager = getManager();
+        WorkflowManagerUI manager = getManagerUI();
         NodeID[] ids = new NodeID[nodeParts.length];
         for (int i = 0; i < nodeParts.length; i++) {
             ids[i] = nodeParts[i].getNodeContainer().getID();
@@ -173,5 +170,13 @@ public class ExecuteAction extends AbstractNodeAction {
         } catch (Exception e) {
             // ignore
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean canHandleWorklfowManagerUI() {
+        return true;
     }
 }

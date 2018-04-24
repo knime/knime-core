@@ -53,6 +53,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -126,8 +128,10 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        WorkflowManager manager = getManager();
-        if (manager.getParent() == null) {
+        WorkflowManagerUI manager = getManagerUI();
+        if (Wrapper.wraps(manager, WorkflowManager.class) && manager.getParent() == null) {
+            //the default workflow manager implementation has a dedicate root workflow manager as parent
+            //otherwise it's the root itself
             return false;
         }
         return manager.canCancelAll();
@@ -148,8 +152,18 @@ public class CancelAllAction extends AbstractNodeAction {
             return;
         }
         LOGGER.debug("(Cancel all)  cancel all running jobs.");
-        WorkflowManager manager = getManager();
-        manager.getParent().cancelExecution(manager);
+        WorkflowManagerUI manager = getManagerUI();
+        if (manager.getParent() == null) {
+            //can't just cancel the parent -> try canceling every single node
+            manager.getNodeContainers().stream().forEach(nc -> {
+                if (nc.getNodeContainerState().isExecutionInProgress()) {
+                    manager.cancelExecution(nc);
+                }
+            });
+        } else {
+            //just cancel the parent
+            manager.getParent().cancelExecution(manager);
+        }
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.
@@ -157,5 +171,13 @@ public class CancelAllAction extends AbstractNodeAction {
         } catch (Exception e) {
             // ignore
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean canHandleWorklfowManagerUI() {
+        return true;
     }
 }

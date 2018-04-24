@@ -158,7 +158,7 @@ public class ResetAction extends AbstractNodeAction {
         try {
             for (int i = 0; i < nodeParts.length; i++) {
                 // skip locked nodes
-                getManager().resetAndConfigureNode(
+                getManagerUI().resetAndConfigureNode(
                         nodeParts[i].getNodeContainer().getID());
             }
 
@@ -186,11 +186,19 @@ public class ResetAction extends AbstractNodeAction {
         for (int i = 0; i < parts.length; i++) {
             NodeContainerEditPart part = parts[i];
             NodeContainerUI nc = part.getNodeContainer();
-            if (getManager().canResetNode(nc.getID())) {
+            if (getManagerUI().canResetNode(nc.getID())) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean canHandleWorklfowManagerUI() {
+        return true;
     }
 
 }

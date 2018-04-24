@@ -49,9 +49,8 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
-import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -132,7 +131,7 @@ public class CancelAction extends AbstractNodeAction {
 
         // enable if we have at least one executing or queued node in our
         // selection
-        WorkflowManager wm = getEditor().getWorkflowManager().get();
+        WorkflowManagerUI wm = getEditor().getWorkflowManagerUI();
         for (int i = 0; i < parts.length; i++) {
             // bugfix 1478
             NodeContainerUI nc = parts[i].getNodeContainer();
@@ -154,10 +153,10 @@ public class CancelAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Creating cancel job for " + nodeParts.length
                 + " node(s)...");
-        WorkflowManager manager = getManager();
+        WorkflowManagerUI manager = getManagerUI();
 
         for (NodeContainerEditPart p : nodeParts) {
-            manager.cancelExecution(Wrapper.unwrapNC(p.getNodeContainer()));
+            manager.cancelExecution(p.getNodeContainer());
         }
 
         try {
@@ -167,5 +166,13 @@ public class CancelAction extends AbstractNodeAction {
         } catch (Exception e) {
             // ignore
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean canHandleWorklfowManagerUI() {
+        return true;
     }
 }
