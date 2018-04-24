@@ -310,6 +310,13 @@ public final class KNIMEConstants {
     * @since 3.0 */
    public static final String PROPERTY_HIGH_DPI_SUPPORT = "knime.highdpi.support";
 
+    /**
+     * The minimum refresh interval in ms, e.g. to refresh the node progress or the state of the remote job view.
+     *
+     * @since 3.6
+     */
+    public static final int MIN_GUI_REFRESH_INTERVAL = 250;
+
     /** KNIME home directory. */
     private static File knimeHomeDir;
 

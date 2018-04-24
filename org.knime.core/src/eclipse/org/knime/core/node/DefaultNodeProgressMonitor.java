@@ -93,7 +93,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     private final CopyOnWriteArrayList<NodeProgressListener> m_listeners;
 
     /** Timer period looking for changed progress information. */
-    private static final int TIMER_PERIOD = 250;
+    private static final int TIMER_PERIOD = KNIMEConstants.MIN_GUI_REFRESH_INTERVAL;
 
     /**
      * Keeps a static list of these progress monitors if they are active. The timer task iterates over this list and

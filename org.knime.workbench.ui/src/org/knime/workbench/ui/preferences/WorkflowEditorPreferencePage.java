@@ -53,6 +53,7 @@ import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -133,8 +134,10 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
             "Remote Job View auto-refresh settings"));
         addField(new BooleanFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW, "Auto-refresh Remote Job View",
             parent));
-        addField(new IntegerFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS,
-            "Auto-refresh interval (in ms)", parent));
+        IntegerFieldEditor refreshInterval = new IntegerFieldEditor(
+            PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS, "Auto-refresh interval (in ms)", parent);
+        refreshInterval.setValidRange(KNIMEConstants.MIN_GUI_REFRESH_INTERVAL, Integer.MAX_VALUE);
+        addField(refreshInterval);
     }
 
     /** {@inheritDoc} */
