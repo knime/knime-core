@@ -55,8 +55,8 @@ import org.apache.commons.io.IOUtils;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.convert.DataValueAccessMethod;
+import org.knime.core.node.util.SharedIcons;
 
 /** Implemented by cell elements that are binary objects (BLOB).
  *
@@ -83,8 +83,7 @@ public interface BinaryObjectDataValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     final class BinaryObjectUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(StringValue.class, "/icon/binaryobjecticon.png");
+        private static final Icon ICON = SharedIcons.TYPE_BLOB.get();
 
         /**
          * Constructor.

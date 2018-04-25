@@ -54,6 +54,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.node.util.SharedIcons;
 
 /**
  * Special interface that is implemented by {@link DataCell}s that represent
@@ -79,8 +80,7 @@ public interface CollectionDataValue extends DataValue, CellCollection {
     /** Implementations of the meta information of this value class. */
     class CollectionUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(CollectionDataValue.class, "/collectionicon.png");
+        private static final Icon ICON = SharedIcons.TYPE_COLLECTION.get();
 
         /**
          * Only subclasses are allowed to instantiate this class.

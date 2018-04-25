@@ -54,7 +54,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.datatransfer.Transferable;
@@ -62,17 +61,13 @@ import java.awt.dnd.DropTargetAdapter;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TooManyListenersException;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -86,6 +81,7 @@ import javax.swing.border.LineBorder;
 import org.knime.base.node.preproc.datavalidator.dndpanel.DnDConfigurationPanel.DnDConfigurationSubPanel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.ViewUtils;
 
 /**
@@ -120,19 +116,8 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
     public static final Icon ADD_ICON_16;
 
     static {
-        Icon toSetBit;
-        Icon toSetSmall;
-        try {
-            BufferedImage bi = ImageIO.read(DnDConfigurationPanel.class.getResourceAsStream("add.png"));
-            toSetBit = new ImageIcon(bi.getScaledInstance(48, 48, Image.SCALE_DEFAULT));
-            toSetSmall = new ImageIcon(bi.getScaledInstance(15, 15, Image.SCALE_DEFAULT));
-        } catch (IOException e) {
-            toSetBit = null;
-            toSetSmall = null;
-            LOGGER.error("cannot load add icon", e);
-        }
-        ADD_ICON_48 = toSetBit;
-        ADD_ICON_16 = toSetSmall;
+        ADD_ICON_48 = SharedIcons.ADD_PLUS_FILLED_LARGE.get();
+        ADD_ICON_16 = SharedIcons.ADD_PLUS_FILLED.get();
     }
 
     private final InnerConfigurationPanel m_configPanel;

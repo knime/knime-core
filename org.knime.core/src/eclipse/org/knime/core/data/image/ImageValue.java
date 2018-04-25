@@ -49,6 +49,7 @@ import javax.swing.Icon;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.node.util.SharedIcons;
 
 /** Interface for all image cells.
  * @author Thomas Gabriel, KNIME AG, Zurich, Switzerland
@@ -67,7 +68,7 @@ public interface ImageValue extends DataValue {
      * @since 2.10
      */
     class ImageValueUtilityFactory extends ExtensibleUtilityFactory {
-        private static final Icon ICON = loadIcon(ImageValue.class, "/image-value.png");
+        private static final Icon ICON = SharedIcons.TYPE_IMAGE.get();
 
         ImageValueUtilityFactory() {
             super(ImageValue.class);

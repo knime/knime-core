@@ -49,6 +49,8 @@ package org.knime.core.data;
 
 import javax.swing.Icon;
 
+import org.knime.core.node.util.SharedIcons;
+
 /**
  * Interface supporting generic complex number values.
  *
@@ -73,8 +75,7 @@ public interface ComplexNumberValue extends DataValue {
     /** Meta information to the complex number value. */
     class ComplexNumberUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(ComplexNumberValue.class, "/icon/complexnumbericon.png");
+        private static final Icon ICON = SharedIcons.TYPE_COMPLEX.get();
 
         private static final ComplexNumberValueComparator COMPARATOR =
             new ComplexNumberValueComparator();

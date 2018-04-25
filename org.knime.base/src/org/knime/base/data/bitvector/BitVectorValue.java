@@ -58,6 +58,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
+import org.knime.core.node.util.SharedIcons;
 
 /**
  * Interface of a <code>BitVectorCell</code>, forces method to return
@@ -92,8 +93,7 @@ public interface BitVectorValue extends DataValue {
     /** Utility Factory for Bit Vector values. */
     static class BitVectorUtilityFactory extends UtilityFactory {
 
-        private static final Icon ICON =
-                loadIcon(BitVectorValue.class, "/bitvectoricon.png");
+        private static final Icon ICON = SharedIcons.TYPE_BITVECTOR.get();
 
         /** {@inheritDoc} */
         @Override

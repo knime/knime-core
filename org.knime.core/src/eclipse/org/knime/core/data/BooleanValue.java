@@ -48,6 +48,7 @@ package org.knime.core.data;
 import javax.swing.Icon;
 
 import org.knime.core.data.convert.DataValueAccessMethod;
+import org.knime.core.node.util.SharedIcons;
 
 
 /**
@@ -70,8 +71,7 @@ public interface BooleanValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     class BooleanUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = loadIcon(
-                BooleanValue.class, "/icon/booleanicon.png");
+        private static final Icon ICON = SharedIcons.TYPE_BOOLEAN.get();
 
         /** Only subclasses are allowed to instantiate this class. */
         protected BooleanUtilityFactory() {

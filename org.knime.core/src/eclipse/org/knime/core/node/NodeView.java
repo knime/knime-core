@@ -70,6 +70,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContext;
 
@@ -240,7 +241,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
     /** Icon in the status bar that shows the node's warning message.
      * @noreference Not to be used by clients, no API.
      * @since 2.10 */
-    public static final Icon WARNING_ICON = ViewUtils.loadIcon(NodeView.class, "/icon/warning.png");
+    public static final Icon WARNING_ICON = SharedIcons.WARNING.get();
 
     /** Method that is called by the framework when the view is saved as image
      * or vector graphics (action available through the file menu). The default

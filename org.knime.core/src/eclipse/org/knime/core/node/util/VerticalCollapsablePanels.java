@@ -65,8 +65,8 @@ import javax.swing.JPanel;
  */
 @SuppressWarnings("serial")
 public class VerticalCollapsablePanels extends JPanel {
-    private static final Icon OPEN = SharedIcons.SMALL_ARROW_DOWN.get();
-    private static final Icon COLLAPSED = SharedIcons.SMALL_ARROW_RIGHT.get();
+    private static final Icon OPEN = SharedIcons.SMALL_ARROW_DOWN_8.get();
+    private static final Icon COLLAPSED = SharedIcons.SMALL_ARROW_RIGHT_8.get();
 
     private static class WrappedPanel extends JPanel {
         private JPanel m_wrapped;

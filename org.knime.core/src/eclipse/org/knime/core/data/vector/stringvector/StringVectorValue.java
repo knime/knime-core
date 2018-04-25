@@ -53,6 +53,7 @@ import javax.swing.Icon;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.node.util.SharedIcons;
 
 /**
  * Interface for (dense or sparse) string vector.
@@ -81,8 +82,7 @@ public interface StringVectorValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     class StringVectorUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(StringVectorValue.class, "/stringvectoricon.png");
+        private static final Icon ICON = SharedIcons.TYPE_STRINGVECTOR.get();
 
         private static final StringVectorValueComparator STRING_VECTOR_COMPARATOR =
             new StringVectorValueComparator();

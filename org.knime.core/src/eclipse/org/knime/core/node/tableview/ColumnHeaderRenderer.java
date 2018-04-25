@@ -61,7 +61,7 @@ import javax.swing.table.TableModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.renderer.MultiLineBasicLabelUI;
 import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
-import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.util.SharedIcons;
 
 
 /**
@@ -81,21 +81,13 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
     private boolean m_showIcon = true;
     private boolean m_wrapHeader = false;
 
-    private static final Icon ICON_PRIM_DES = ViewUtils.loadIcon(
-            ColumnHeaderRenderer.class,
-            "icon/table_sort_descending_primary.png");
+    private static final Icon ICON_PRIM_DES = SharedIcons.SMALL_ARROW_DOWN_DARK.get();
 
-    private static final Icon ICON_PRIM_ASC = ViewUtils.loadIcon(
-            ColumnHeaderRenderer.class,
-            "icon/table_sort_ascending_primary.png");
+    private static final Icon ICON_PRIM_ASC = SharedIcons.SMALL_ARROW_UP_DARK.get();
 
-    private static final Icon ICON_SEC_DES = ViewUtils.loadIcon(
-            ColumnHeaderRenderer.class,
-            "icon/table_sort_descending_secondary.png");
+    private static final Icon ICON_SEC_DES = SharedIcons.SMALL_ARROW_DOWN_DARK_8.get();
 
-    private static final Icon ICON_SEC_ASC = ViewUtils.loadIcon(
-            ColumnHeaderRenderer.class,
-            "icon/table_sort_ascending_secondary.png");
+    private static final Icon ICON_SEC_ASC = SharedIcons.SMALL_ARROW_UP_DARK_8.get();
 
     /**
      * {@inheritDoc}

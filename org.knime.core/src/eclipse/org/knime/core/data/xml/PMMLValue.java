@@ -52,6 +52,7 @@ import javax.swing.Icon;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.node.util.SharedIcons;
 import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -78,8 +79,7 @@ public interface PMMLValue extends XMLValue<Document> {
      */
     class PMMLUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = loadIcon(PMMLValue.class,
-                "/icons/pmmlicon.png");
+        private static final Icon ICON = SharedIcons.TYPE_PMML.get();
 
         /** Only subclasses are allowed to instantiate this class. */
         protected PMMLUtilityFactory() {

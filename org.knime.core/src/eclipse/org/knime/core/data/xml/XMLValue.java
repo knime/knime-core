@@ -54,6 +54,7 @@ import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.data.convert.DataValueAccessMethod;
 import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.xml.util.XmlDomComparer;
+import org.knime.core.node.util.SharedIcons;
 import org.w3c.dom.Document;
 
 
@@ -126,8 +127,7 @@ public interface XMLValue<T extends Document> extends DataValue {
     /** Implementations of the meta information of this value class. */
     class XMLUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = loadIcon(XMLValue.class,
-                "/icons/xmlicon.png");
+        private static final Icon ICON = SharedIcons.TYPE_XML.get();
 
         /** Only subclasses are allowed to instantiate this class. */
         protected XMLUtilityFactory() {

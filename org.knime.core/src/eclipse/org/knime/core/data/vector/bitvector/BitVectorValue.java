@@ -54,6 +54,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.data.convert.DataValueAccessMethod;
+import org.knime.core.node.util.SharedIcons;
 
 /**
  * Implementing {@link DataCell}s store '0's and '1's at specific positions in
@@ -192,8 +193,7 @@ public interface BitVectorValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     class BitVectorUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-                loadIcon(BitVectorValue.class, "/bitvectoricon.png");
+        private static final Icon ICON = SharedIcons.TYPE_BITVECTOR.get();
 
         private static final DataValueComparator COMPARATOR =
                 new DataValueComparator() {

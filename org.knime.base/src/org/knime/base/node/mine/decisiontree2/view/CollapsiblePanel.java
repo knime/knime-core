@@ -54,19 +54,19 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.net.URL;
 
-import javax.swing.ImageIcon;
+import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
+
+import org.knime.core.node.util.SharedIcons;
 
 
 /**
@@ -127,8 +127,6 @@ public class CollapsiblePanel extends JPanel {
     }
 
     private static class CollapsibleBorder implements Border, MouseListener {
-        private static ImageIcon collapsedIcon;
-        private static ImageIcon expandedIcon;
 
         private CollapsiblePanel m_container;
         private boolean m_collapsed;
@@ -141,9 +139,9 @@ public class CollapsiblePanel extends JPanel {
         // The border color
         private Color m_color;
         // scaled version of collapsedIcon
-        private ImageIcon m_collapsedIcon;
+        private Icon m_collapsedIcon;
         // scaled version of expandedIcon
-        private ImageIcon m_expandedIcon;
+        private Icon m_expandedIcon;
 
 
         /**
@@ -157,30 +155,8 @@ public class CollapsiblePanel extends JPanel {
             m_collapsed = collapsed;
             m_offset = 3;
             m_container = container;
-            Package pack = CollapsiblePanel.class.getPackage();
-            String iconBase = pack.getName().replace(".", "/") + "/";
-            if (collapsedIcon == null) {
-                URL collapsedUrl =
-                    this.getClass().getClassLoader().getResource(iconBase
-                            + "collapsed.png");
-                if (collapsedUrl == null) {
-                    collapsedIcon = new ImageIcon();
-                } else {
-                    collapsedIcon = new ImageIcon(collapsedUrl);
-                }
-            }
-            m_collapsedIcon = scaled(collapsedIcon, scale);
-            if (expandedIcon == null) {
-                URL expandedUrl =
-                    this.getClass().getClassLoader().getResource(iconBase
-                            + "expanded.png");
-                if (expandedUrl == null) {
-                    expandedIcon = new ImageIcon();
-                } else {
-                    expandedIcon = new ImageIcon(expandedUrl);
-                }
-            }
-            m_expandedIcon = scaled(expandedIcon, scale);
+            m_collapsedIcon = SharedIcons.SMALL_ARROW_RIGHT.get();
+            m_expandedIcon = SharedIcons.SMALL_ARROW_DOWN.get();
 
             m_label = new JLabel(text, m_expandedIcon,
                     SwingConstants.LEFT);
@@ -189,16 +165,6 @@ public class CollapsiblePanel extends JPanel {
             m_color = Color.lightGray;
         }
 
-        /* Get a scaled version of the give icon */
-        private ImageIcon scaled(final ImageIcon icon, final float scale) {
-            Image img = icon.getImage();
-            int scaledWidth = Math.max(Math.round(icon.getIconWidth() * scale), 1);
-            int scaledHeight = Math.max(Math.round(icon.getIconHeight() * scale), 1);
-            Image newimg = img.getScaledInstance(
-                    scaledWidth, scaledHeight,
-                    java.awt.Image.SCALE_SMOOTH);
-            return new ImageIcon(newimg);
-        }
 
         /**
          * @param collapsed true when border should be collapsed

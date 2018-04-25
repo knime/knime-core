@@ -50,6 +50,7 @@ package org.knime.core.data;
 import javax.swing.Icon;
 
 import org.knime.core.data.convert.DataValueAccessMethod;
+import org.knime.core.node.util.SharedIcons;
 
 
 /**
@@ -73,8 +74,7 @@ public interface DoubleValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     class DoubleUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(DoubleValue.class, "/icon/doubleicon.png");
+        private static final Icon ICON = SharedIcons.TYPE_DOUBLE.get();
 
         private static final DoubleValueComparator COMPARATOR =
             new DoubleValueComparator();

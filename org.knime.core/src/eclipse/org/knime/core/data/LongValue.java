@@ -50,6 +50,7 @@ package org.knime.core.data;
 import javax.swing.Icon;
 
 import org.knime.core.data.convert.DataValueAccessMethod;
+import org.knime.core.node.util.SharedIcons;
 
 /**
  * Interface supporting generic long values.
@@ -71,8 +72,7 @@ public interface LongValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     class LongUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = loadIcon(
-                LongValue.class, "/icon/longicon.png");
+        private static final Icon ICON = SharedIcons.TYPE_LONG.get();
 
         private static final LongValueComparator COMPARATOR =
             new LongValueComparator();

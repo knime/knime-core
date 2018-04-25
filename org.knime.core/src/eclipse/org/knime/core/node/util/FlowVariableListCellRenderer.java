@@ -53,12 +53,9 @@ import java.awt.Component;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JList;
 
 import org.knime.core.data.DataValue;
-import org.knime.core.node.Node;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -86,35 +83,10 @@ public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
     public static final Icon FLOW_VAR_INVALID_ICON;
 
     static {
-        FLOW_VAR_DOUBLE_ICON = loadIcon(
-                Node.class, "/icon/flowvar_double.png");
-        FLOW_VAR_INT_ICON = loadIcon(
-                Node.class, "/icon/flowvar_integer.png");
-        FLOW_VAR_STRING_ICON = loadIcon(
-                Node.class, "/icon/flowvar_string.png");
-        FLOW_VAR_INVALID_ICON = loadIcon(
-                Node.class, "/icon/flowvar_default.png");
-    }
-
-    private static Icon loadIcon(
-            final Class<?> className, final String path) {
-        ImageIcon icon;
-        try {
-            ClassLoader loader = className.getClassLoader();
-            String packagePath =
-                className.getPackage().getName().replace('.', '/');
-            String correctedPath = path;
-            if (!path.startsWith("/")) {
-                correctedPath = "/" + path;
-            }
-            icon = new ImageIcon(
-                    loader.getResource(packagePath + correctedPath));
-        } catch (Exception e) {
-            NodeLogger.getLogger(FlowVariableListCellRenderer.class).debug(
-                    "Unable to load icon at path " + path, e);
-            icon = null;
-        }
-        return icon;
+        FLOW_VAR_DOUBLE_ICON = SharedIcons.FLOWVAR_DOUBLE.get();
+        FLOW_VAR_INT_ICON = SharedIcons.FLOWVAR_INTEGER.get();
+        FLOW_VAR_STRING_ICON = SharedIcons.FLOWVAR_STRING.get();
+        FLOW_VAR_INVALID_ICON = SharedIcons.FLOWVAR_DEFAULT.get();
     }
 
     /** {@inheritDoc} */

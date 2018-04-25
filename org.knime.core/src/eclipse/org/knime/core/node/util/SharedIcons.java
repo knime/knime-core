@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.util;
 
+import java.net.URL;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
@@ -59,8 +61,22 @@ import javax.swing.ImageIcon;
  */
 public enum SharedIcons {
 
+    /**
+     * Actions
+     */
     /** Funnel **/
     FILTER("icons/filter.png"),
+    /** Help question mark filled **/
+    HELP("icons/help.png"),
+    /** Warning sign filled **/
+    WARNING("icons/warning.png"),
+    /** Info sign filled**/
+    INFO("icons/info.png"),
+    /** Settings cog wheel **/
+    SETTINGS("icons/settings.png"),
+    /**
+     * Arrows/Dropdowns
+     */
     /** Double arrow right **/
     ADD_ALL("icons/add_all.png"),
     /** Arrow right **/
@@ -69,21 +85,137 @@ public enum SharedIcons {
     REM("icons/rem.png"),
     /** Double arrow left**/
     REM_ALL("icons/rem_all.png"),
-    /** Arrow down **/
-    ARROW_DOWN("icons/arrow_down.png"),
-    /** Arrow up **/
-    ARROW_UP("icons/arrow_up.png"),
     /** Small arrow down **/
-    SMALL_ARROW_DOWN("icons/down.png"),
+    SMALL_ARROW_DOWN("icons/small_arrow_drop_down.png"),
     /** Small arrow right **/
-    SMALL_ARROW_RIGHT("icons/right.png"),
-    /** trash can **/
-    TRASH("icons/trash.png");
+    SMALL_ARROW_RIGHT("icons/small_arrow_drop_right.png"),
+    /** Small arrow down small 8px **/
+    SMALL_ARROW_DOWN_8("icons/small_arrow_drop_down@0.5x.png"),
+    /** Small arrow right small 8 px**/
+    SMALL_ARROW_RIGHT_8("icons/small_arrow_drop_right@0.5x.png"),
+    /** Small arrow down dark **/
+    SMALL_ARROW_DOWN_DARK("icons/small_arrow_down_dark.png"),
+    /** Small arrow down small 8px **/
+    SMALL_ARROW_UP_DARK("icons/small_arrow_up_dark.png"),
+    /** Small arrow right small 8px**/
+    SMALL_ARROW_DOWN_DARK_8("icons/small_arrow_down_dark@0.5x.png"),
+    /** Small arrow right small 8 px**/
+    SMALL_ARROW_UP_DARK_8("icons/small_arrow_up_dark@0.5x.png"),
+    /** Move down arrow **/
+    MOVE_DOWN("icons/move_down.png"),
+    /** Move to bottom arrow with bar **/
+    MOVE_TO_BOTTOM("icons/move_to_bottom.png"),
+    /** Move to top arrow with bar **/
+    MOVE_TO_TOP("icons/move_to_top.png"),
+    /** Move top arrow **/
+    MOVE_UP("icons/move_up.png"),
+    /**
+     * Add, edit, remove, sort, reset
+     */
+    /** Plus **/
+    ADD_PLUS("icons/add_plus.png"),
+    /** Add plus filled **/
+    ADD_PLUS_FILLED("icons/add_plus_filled.png"),
+    /** Add plus filled large 48px**/
+    ADD_PLUS_FILLED_LARGE("icons/add_plus_filled@3x.png"),
+    /** Edit pencil **/
+    EDIT("icons/edit.png"),
+    /** Delete cross **/
+    DELETE_CROSS("icons/delete_cross.png"),
+    /** Delete dash **/
+    DELETE_DASH("icons/delete_dash.png"),
+    /** Delete trash can **/
+    DELETE_TRASH("icons/delete_trash.png"),
+    /** Reset round arrow **/
+    RESET("icons/reset.png"),
+    /** Search magnifier **/
+    SEARCH("icons/search.png"),
+    /** Sort a z with arrow **/
+    SORT_A_Z("icons/sort_a_z.png"),
+    /** Sort z a with arrow **/
+    SORT_Z_A("icons/sort_z_a.png"),
+    /**
+     * Types
+     */
+    /** Binary large object type icon **/
+    TYPE_BLOB("icons/binary_object.png"),
+    /** Boolean type icon **/
+    TYPE_BOOLEAN("icons/boolean.png"),
+    /** Bitvector type icon FIXME currently same icon as boolean**/
+    TYPE_BITVECTOR("icons/boolean.png"),
+    /** Bytevector type icon **/
+    TYPE_BYTEVECTOR("icons/bytevectoricon.png"),
+    /** Collection type icon **/
+    TYPE_COLLECTION("icons/collection.png"),
+    /** Complex number type icon **/
+    TYPE_COMPLEX("icons/complex_number.png"),
+    /** Default type icon **/
+    TYPE_DEFAULT("icons/default_type.png"),
+    /** Double type icon **/
+    TYPE_DOUBLE("icons/double.png"),
+    /** Double vector type icon **/
+    TYPE_DOUBLEVECTOR("icons/double_vector.png"),
+    /** Fuzzy type icon **/
+    TYPE_FUZZY("icons/fuzzy.png"),
+    /** Fuzzy interval type icon **/
+    TYPE_FUZZY_INTERVAL("icons/fuzzy_interval.png"),
+    /** Integer type icon **/
+    TYPE_INTEGER("icons/integer.png"),
+    /** Interval type icon **/
+    TYPE_INTERVAL("icons/interval.png"),
+    /** Image type icon **/
+    TYPE_IMAGE("icons/image.png"),
+    /** Long type icon **/
+    TYPE_LONG("icons/long.png"),
+    /** Port type icon **/
+    TYPE_PORT("icons/port.png"),
+    /** String type icon **/
+    TYPE_STRING("icons/string.png"),
+    /** String vector type icon **/
+    TYPE_STRINGVECTOR("icons/string_vector.png"),
+    /** Time type icon **/
+    TYPE_TIME("icons/time.png"),
+    /** Date&Time type icon **/
+    TYPE_DATE_TIME("icons/date_time.png"),
+    /** PMML type icon **/
+    TYPE_PMML("icons/pmml.png"),
+    /** XML type icon **/
+    TYPE_XML("icons/xml.png"),
+    /** PNG image type icon **/
+    TYPE_PNG("icons/png.png"),
+    /**
+     * Flow variables
+     */
+    /** Flow variable boolean **/
+    FLOWVAR_BOOLEAN("icons/flowvar_boolean.png"),
+    /** Flow variable default **/
+    FLOWVAR_DEFAULT("icons/flowvar_default.png"),
+    /** Flow variable double **/
+    FLOWVAR_DOUBLE("icons/flowvar_double.png"),
+    /** Flow variable integer **/
+    FLOWVAR_INTEGER("icons/flowvar_integer.png"),
+    /** Flow variable string **/
+    FLOWVAR_STRING("icons/flowvar_string.png"),
+    /** Flow variable active **/
+    FLOWVAR_ACTIVE("icons/flowvar_active.png"),
+    /** Flow variable inactive **/
+    FLOWVAR_INACTIVE("icons/flowvar_inactive.png"),
+    /** Variable dialog active **/
+    FLOWVAR_DIALOG_ACTIVE("icons/flowvar_dialog_active.png"),
+    /** Variable dialog inactive **/
+    FLOWVAR_DIALOG_INACTIVE("icons/flowvar_dialog_inactive.png");
 
     private final Icon m_icon;
 
     private SharedIcons(final String path) {
-        m_icon = new ImageIcon(SharedIcons.class.getResource(path));
+        URL url = SharedIcons.class.getResource(path);
+        // if file does not exist or path is wrong
+        if (url == null) {
+            System.out.println("Icon at path " + path + " could not be found.");
+            m_icon = new ImageIcon();
+        } else {
+            m_icon = new ImageIcon(url);
+        }
     }
 
     /**
@@ -92,5 +224,4 @@ public enum SharedIcons {
     public Icon get() {
         return m_icon;
     }
-
 }

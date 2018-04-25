@@ -50,6 +50,7 @@ package org.knime.core.data;
 import javax.swing.Icon;
 
 import org.knime.core.data.convert.DataValueAccessMethod;
+import org.knime.core.node.util.SharedIcons;
 
 
 /**
@@ -74,8 +75,7 @@ public interface StringValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     class StringUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(StringValue.class, "/icon/stringicon.png");
+        private static final Icon ICON = SharedIcons.TYPE_STRING.get();
 
         private static final StringValueComparator STRING_COMPARATOR =
             new StringValueComparator();

@@ -52,6 +52,7 @@ import javax.swing.Icon;
 import org.knime.core.data.DataValue.UtilityFactory;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.node.util.SharedIcons;
 
 /**
  * The {@link UtilityFactory} for the {@link DateAndTimeValue} providing access
@@ -63,8 +64,7 @@ import org.knime.core.data.ExtensibleUtilityFactory;
 @Deprecated
 public class DateAndTimeUtility extends ExtensibleUtilityFactory {
     /** Singleton icon to be used to display this cell type. */
-    private static final Icon ICON = loadIcon(
-            DateAndTimeUtility.class, "icons/date_time.png");
+    private static final Icon ICON = SharedIcons.TYPE_DATE_TIME.get();
 
     private static final DataValueComparator COMPARATOR
         = new DateAndTimeComparator();

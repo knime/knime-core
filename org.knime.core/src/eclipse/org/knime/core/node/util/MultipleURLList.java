@@ -94,11 +94,11 @@ public class MultipleURLList extends JScrollPane {
 
         private final FilesHistoryPanel m_filesPanel;
 
-        final JButton m_remove = new JButton(SharedIcons.TRASH.get());
+        final JButton m_remove = new JButton(SharedIcons.DELETE_TRASH.get());
 
-        final JButton m_up = new JButton(SharedIcons.ARROW_UP.get());
+        final JButton m_up = new JButton(SharedIcons.MOVE_UP.get());
 
-        final JButton m_down = new JButton(SharedIcons.ARROW_DOWN.get());
+        final JButton m_down = new JButton(SharedIcons.MOVE_DOWN.get());
 
         public MyFilePanel(final String historyId,
                 final boolean markIfNonexisting, final int mode, final String... suffixes) {

@@ -52,6 +52,7 @@ import javax.swing.Icon;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.node.util.SharedIcons;
 
 /**
  * Implementations are vectors of fixed length storing byte counts at specific
@@ -161,8 +162,7 @@ public interface ByteVectorValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     class ByteVectorUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-                loadIcon(ByteVectorValue.class, "bytevectoricon.png");
+        private static final Icon ICON = SharedIcons.TYPE_BYTEVECTOR.get();
 
         private static final DataValueComparator COMPARATOR =
                 new DataValueComparator() {

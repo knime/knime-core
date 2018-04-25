@@ -54,7 +54,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
@@ -67,6 +66,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.SharedIcons;
 
 /**
  *
@@ -132,7 +132,7 @@ public abstract class Pane {
         m_footer = new JPanel(new GridBagLayout());
         m_dialog = m_config.getData().get(m_position).getDialog();
 
-        m_removeButton = new JButton(new ImageIcon(getClass().getResource("../remove_icon.png")));
+        m_removeButton = new JButton(SharedIcons.DELETE_CROSS.get());
         m_removeButton.setMargin(new Insets(0, 0, 0, 0));
         m_removeButton.setBorderPainted(false);
         m_removeButton.setOpaque(true);
@@ -192,6 +192,9 @@ public abstract class Pane {
         m_sep.setVisible(visibility);
     }
 
+    /**
+     * @return body
+     */
     public JPanel getBody() {
         return m_body;
     }
@@ -251,7 +254,6 @@ public abstract class Pane {
      * @param sep
      */
     public void setSeparator(final JSeparator sep) {
-        // TODO Auto-generated method stub
         m_sep = sep;
     }
 

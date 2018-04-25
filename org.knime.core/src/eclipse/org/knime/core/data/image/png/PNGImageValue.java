@@ -53,6 +53,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.data.image.ImageValue;
+import org.knime.core.node.util.SharedIcons;
 
 /** DataValue Interface for plain PNG image.
  * @author Thomas Gabriel, KNIME.com AG, Zurich
@@ -85,8 +86,7 @@ public interface PNGImageValue extends ImageValue {
     /** Implementations of the meta information of this value class. */
     public static class ImageCellUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(PNGImageValue.class, "/imagepng.png");
+        private static final Icon ICON = SharedIcons.TYPE_PNG.get();
 
         private static final PNGImageValueComparator IMAGE_COMPARATOR =
             new PNGImageValueComparator();

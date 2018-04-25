@@ -59,6 +59,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -75,6 +76,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.workflow.FlowVariable;
 
 
@@ -123,15 +125,12 @@ implements ChangeListener, ActionListener {
         boolean enabled = m_model.isVariableReplacementEnabled();
         try {
             // try to load icon(s)
-            ImageIcon icon;
-            ClassLoader loader = FlowVariableModelButton.class.getClassLoader();
-            String packagePath =
-                    FlowVariableModelButton.class.getPackage().getName().replace('.', '/');
-            String correctedPath = "/icon/"
-                + (enabled ? "varbuttonON.png"
-                            : "varbuttonOFF.png");
-            icon = new ImageIcon(
-                    loader.getResource(packagePath + correctedPath));
+            Icon icon;
+            if (enabled) {
+                icon = SharedIcons.FLOWVAR_ACTIVE.get();
+            } else {
+                icon = SharedIcons.FLOWVAR_INACTIVE.get();
+            }
             this.setText("");
             this.setBorder(new LineBorder(Color.gray, 0));
             this.setIcon(icon);
@@ -192,13 +191,8 @@ implements ChangeListener, ActionListener {
             // set title and make dialog modal
             super(f, "Variable Settings", true);
             // set icon of dialog frame
-            ClassLoader loader = FlowVariableModelButton.class.getClassLoader();
-            String packagePath =
-                    FlowVariableModelButton.class.getPackage().getName().replace('.', '/');
-            String correctedPath = "/icon/variable_dialog_active.png";
-            ImageIcon icon = new ImageIcon(
-                    loader.getResource(packagePath + correctedPath));
-            this.setIconImage(icon.getImage());
+            Icon icon = SharedIcons.FLOWVAR_DIALOG_ACTIVE.get();
+            this.setIconImage(((ImageIcon)icon).getImage());
             // finalize setup
             this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             initComponents();
