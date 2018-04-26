@@ -56,6 +56,7 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Iris Adae, University of Konstanz, Germany
  */
+@Deprecated
 public class RecursiveLoopEnd2NodeModel extends RecursiveLoopEndNodeModel {
 
 

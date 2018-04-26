@@ -1,4 +1,4 @@
-package org.knime.base.node.meta.looper.recursive;
+package org.knime.base.node.meta.looper.recursive2;
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland

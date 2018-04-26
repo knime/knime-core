@@ -51,11 +51,12 @@ import org.knime.core.node.NodeView;
 
 /**
  * <code>NodeFactory</code> for the Recursive Loop Start Node.
- * 
+ *
  *
  * @author Iris Adae, University of Konstanz, Germany
  */
-public class RecursiveLoopStartNodeFactory 
+@Deprecated
+public class RecursiveLoopStartNodeFactory
         extends NodeFactory<RecursiveLoopStartNodeModel> {
 
     /**

@@ -59,6 +59,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Iris Adae
  */
+@Deprecated
 public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
 
     /**

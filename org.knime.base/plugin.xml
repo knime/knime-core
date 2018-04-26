@@ -1656,22 +1656,22 @@
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
-            factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopStartNodeFactory"
+            factory-class="org.knime.base.node.meta.looper.recursive2.RecursiveLoopStartNodeFactory"
             >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
-            factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopEndNodeFactory"
+            factory-class="org.knime.base.node.meta.looper.recursive2.RecursiveLoopEndNodeFactory"
             >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
-            factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopStart2NodeFactory"
+            factory-class="org.knime.base.node.meta.looper.recursive2.RecursiveLoopStart2NodeFactory"
             >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
-            factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory"
+            factory-class="org.knime.base.node.meta.looper.recursive2.RecursiveLoopEnd2NodeFactory"
             >
       </node>
       <node

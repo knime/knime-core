@@ -1,4 +1,3 @@
-package org.knime.base.node.meta.looper.recursive;
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
@@ -44,60 +43,82 @@ package org.knime.base.node.meta.looper.recursive;
  * ------------------------------------------------------------------------
  *
  */
+package org.knime.base.node.meta.looper.recursive2;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * <code>NodeFactory</code> for the Recursive Loop End Node (2 port).
+ * Dialog for the recursive loop end.
  *
- *
- * @author Iris Adae, University of Konstanz, Germany
+ * @author Iris Adae
  */
-public class RecursiveLoopEnd2NodeFactory extends NodeFactory<RecursiveLoopEnd2NodeModel> {
+public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
 
     /**
-     * {@inheritDoc}
+     * Create new dialog.
      */
-    @Override
-    public RecursiveLoopEnd2NodeModel createNodeModel() {
-        return new RecursiveLoopEnd2NodeModel(3, 1);
+    public RecursiveLoopEndNodeDialog() {
+        createNewGroup("End settings");
+
+        addDialogComponent(new DialogComponentNumber(createNumOfRowsModel(), "Minimal number of rows :", 1, 10));
+        addDialogComponent(new DialogComponentNumber(
+                                createIterationsModel(), "Maximal number of iterations :", 10, 10));
+        addDialogComponent(new DialogComponentStringSelection(createEndLoop(), "End loop :", "true", "false"));
+        closeCurrentGroup();
+
+
+        createNewGroup("Data settings");
+        addDialogComponent(new DialogComponentBoolean(createOnlyLastModel(), "Collect data from last iteration only"));
+        addDialogComponent(new DialogComponentBoolean(createAddIterationColumn(), "Add iteration column"));
+        closeCurrentGroup();
+    }
+
+
+    /**
+     * @return the SM for adding the iteration column
+     */
+    static SettingsModelBoolean createAddIterationColumn() {
+        return new SettingsModelBoolean("CFG_AddIterationColumn", false);
+    }
+
+
+    /**
+     * @return the SM for ending the loop
+     */
+    static SettingsModelString createEndLoop() {
+        return new SettingsModelString("CFG_End_Loop", "false");
+    }
+
+
+    /**
+     *
+     * @return the settings model for the maximal number of iterations.
+     */
+    static  SettingsModelIntegerBounded createIterationsModel() {
+        return new SettingsModelIntegerBounded("CFG_MaxNrIterations", 100, 1, Integer.MAX_VALUE);
     }
 
     /**
-     * {@inheritDoc}
+     *
+     * @return the settings model for the minimal number of rows.
      */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
+    static  SettingsModelInteger createNumOfRowsModel() {
+        return new SettingsModelInteger("CFG_MinNrOfRows", 1);
     }
 
     /**
-     * {@inheritDoc}
+     * @return the settings model that contains the only last result flag
      */
-    @Override
-    public NodeView<RecursiveLoopEnd2NodeModel> createNodeView(
-            final int viewIndex,
-            final RecursiveLoopEnd2NodeModel nodeModel) {
-        return null;
+    static SettingsModelBoolean createOnlyLastModel() {
+        return new SettingsModelBoolean("CFG_OnlyLastData", false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new RecursiveLoopEndNodeDialog();
-    }
 
 }
-

@@ -1,4 +1,4 @@
-package org.knime.base.node.meta.looper.recursive;
+package org.knime.base.node.meta.looper.recursive2;
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
@@ -50,19 +50,20 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * <code>NodeFactory</code> for the Recursive Loop Start Node (2 ports).
+ * <code>NodeFactory</code> for the Recursive Loop Start Node.
  *
  *
  * @author Iris Adae, University of Konstanz, Germany
  */
-public class RecursiveLoopStart2NodeFactory extends NodeFactory<RecursiveLoopStart2NodeModel> {
+public class RecursiveLoopStartNodeFactory
+        extends NodeFactory<RecursiveLoopStartNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public RecursiveLoopStart2NodeModel createNodeModel() {
-        return new RecursiveLoopStart2NodeModel();
+    public RecursiveLoopStartNodeModel createNodeModel() {
+        return new RecursiveLoopStartNodeModel();
     }
 
     /**
@@ -77,9 +78,9 @@ public class RecursiveLoopStart2NodeFactory extends NodeFactory<RecursiveLoopSta
      * {@inheritDoc}
      */
     @Override
-    public NodeView<RecursiveLoopStart2NodeModel> createNodeView(
+    public NodeView<RecursiveLoopStartNodeModel> createNodeView(
             final int viewIndex,
-            final RecursiveLoopStart2NodeModel nodeModel) {
+            final RecursiveLoopStartNodeModel nodeModel) {
         return null;
     }
 

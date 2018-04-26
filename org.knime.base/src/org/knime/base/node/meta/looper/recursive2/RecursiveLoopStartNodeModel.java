@@ -1,4 +1,4 @@
-package org.knime.base.node.meta.looper.recursive;
+package org.knime.base.node.meta.looper.recursive2;
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
@@ -60,20 +60,20 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopStartNode;
 
 /**
- * This is the model implementation of Recursive Loop Start node (2ports).
+ * This is the model implementation of Recursive Loop Start node.
  *
  *
  * @author Iris Adae, University of Konstanz, Germany
  */
-public class RecursiveLoopStart2NodeModel extends NodeModel implements LoopStartNode {
+public class RecursiveLoopStartNodeModel extends NodeModel implements LoopStartNode {
 
     private int m_currentiteration;
 
     /**
      * Constructor for the node model.
      */
-    protected RecursiveLoopStart2NodeModel() {
-        super(2, 2);
+    protected RecursiveLoopStartNodeModel() {
+        super(1, 1);
     }
 
     /**
@@ -83,24 +83,26 @@ public class RecursiveLoopStart2NodeModel extends NodeModel implements LoopStart
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
-        BufferedDataTable[] result;
+        BufferedDataTable result;
         if (m_currentiteration == 0) {
-            // just output the complete data.
-            result = inData;
+            // just output the complete data table.
+            result = inData[0];
         } else {
 
-            if (!(this.getLoopEndNode() instanceof RecursiveLoopEnd2NodeModel)) {
+            if (!(this.getLoopEndNode() instanceof RecursiveLoopEndNodeModel)
+                    || (this.getLoopEndNode() instanceof RecursiveLoopEnd2NodeModel)) {
                 throw new IllegalStateException("Loop Start is not connected"
-                        + " to matching/corresponding Recursive Loop End (2 ports) node.");
+                        + " to matching/corresponding Recursive Loop End (1 port) node.");
             }
+
             //otherwise we get the data from the loop end node
-            RecursiveLoopEnd2NodeModel end = (RecursiveLoopEnd2NodeModel)getLoopEndNode();
-            result = new BufferedDataTable[]{end.getInData(1), end.getInData(2)};
+            RecursiveLoopEndNodeModel end = (RecursiveLoopEndNodeModel)getLoopEndNode();
+            result = end.getInData();
         }
         pushFlowVariableInt("currentIteration", m_currentiteration);
 
         m_currentiteration++;
-        return result;
+        return new BufferedDataTable[]{result};
     }
 
     /**
@@ -120,7 +122,7 @@ public class RecursiveLoopStart2NodeModel extends NodeModel implements LoopStart
 
         pushFlowVariableInt("currentIteration", m_currentiteration);
 
-        return new DataTableSpec[]{inSpecs[0], inSpecs[1]};
+        return new DataTableSpec[]{inSpecs[0]};
     }
 
     /**
