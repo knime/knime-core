@@ -88,7 +88,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
     private SettingsModelIntegerBounded m_maxIterations = RecursiveLoopEndNodeDialog.createIterationsModel();
     private SettingsModelInteger m_minNumberOfRows = RecursiveLoopEndNodeDialog.createNumOfRowsModel();
     private SettingsModelBoolean m_onlyLastResult = RecursiveLoopEndNodeDialog.createOnlyLastModel();
-    private SettingsModelString m_endLoop = RecursiveLoopEndNodeDialog.createEndLoop();
+    private SettingsModelString m_endLoopVariableName = RecursiveLoopEndNodeDialog.createEndLoopVarModel();
     private SettingsModelBoolean m_addIterationNr = RecursiveLoopEndNodeDialog.createAddIterationColumn();
 
     /**
@@ -143,9 +143,19 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         loopData.close();
         m_inData  = loopData.getTable();
 
+        boolean endLoopFromVariable = false;
+        final String varName = m_endLoopVariableName.getStringValue();
+        if (!varName.equals("NONE")) {
+            final String value = peekFlowVariableString(varName);
+            if (value == null) {
+                throw new InvalidSettingsException("The selected flow variable is not assigned");
+            }
+            endLoopFromVariable = "true".equals(value);
+        }
+
         boolean endLoop = checkDataTableSize(m_minNumberOfRows.getIntValue())
                 || (m_iterationnr + 1) >= m_maxIterations.getIntValue()
-                || m_endLoop.getStringValue().equalsIgnoreCase("true");
+                || endLoopFromVariable;
 
         if (m_onlyLastResult.getBooleanValue()) {
             if (endLoop) {
@@ -243,7 +253,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         m_maxIterations.saveSettingsTo(settings);
         m_minNumberOfRows.saveSettingsTo(settings);
         m_onlyLastResult.saveSettingsTo(settings);
-        m_endLoop.saveSettingsTo(settings);
+        m_endLoopVariableName.saveSettingsTo(settings);
         m_addIterationNr.saveSettingsTo(settings);
     }
 
@@ -256,7 +266,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         m_maxIterations.loadSettingsFrom(settings);
         m_minNumberOfRows.loadSettingsFrom(settings);
         m_onlyLastResult.loadSettingsFrom(settings);
-        m_endLoop.loadSettingsFrom(settings);
+        m_endLoopVariableName.loadSettingsFrom(settings);
         m_addIterationNr.loadSettingsFrom(settings);
     }
 
@@ -269,7 +279,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         m_maxIterations.validateSettings(settings);
         m_minNumberOfRows.validateSettings(settings);
         m_onlyLastResult.validateSettings(settings);
-        m_endLoop.validateSettings(settings);
+        m_endLoopVariableName.validateSettings(settings);
         m_addIterationNr.validateSettings(settings);
     }
 
