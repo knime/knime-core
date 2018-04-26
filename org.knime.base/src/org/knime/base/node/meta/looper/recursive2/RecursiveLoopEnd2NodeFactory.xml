@@ -24,7 +24,7 @@
         <option name="Maximal number of iterations">The loop will stop after these number of iterations, to ensure no endless loop is created.</option>
         <option name="Minimal number of rows">The minimal number of rows passed back to the loop start. If the input contains less rows, the loop ends.</option>
         <option name="Collect data from last iteration only">If this option is checked only the last input to the collecting data port is passed through to the outport. Hence, the data of earlier iterations is discarded.</option>  
-        <option name="End loop">For this option, use a flow variable of type String with a value of "true" to stop the loop.</option>   
+        <option name="End loop">You can select a flow variable of type String, which will stop the loop if it has the value "true". If you select NONE flow variables are ignored.</option>   
         <option name="Add iteration column">Allows you to add a column containing the iteration number to the output table.</option>
     </fullDescription>
     
