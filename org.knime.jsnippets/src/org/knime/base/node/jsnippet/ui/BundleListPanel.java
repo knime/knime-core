@@ -74,6 +74,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.ListModel;
+import javax.swing.ToolTipManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeExpansionEvent;
@@ -305,6 +306,8 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         m_root.add(m_userBundlesRoot);
         m_root.add(m_customTypeRoot);
         m_tree.expandPath(new TreePath(m_root));
+
+        ToolTipManager.sharedInstance().registerComponent(m_tree);
 
         final JScrollPane scroll = new JScrollPane(m_tree);
         add(scroll);
