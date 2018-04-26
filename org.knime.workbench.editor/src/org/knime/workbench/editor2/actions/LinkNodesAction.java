@@ -241,7 +241,7 @@ public class LinkNodesAction extends AbstractNodeAction {
          * This doesn't embody the "on the same y-line" connection logic. (TODO)
          */
         final List<NodeContainerUI> orderedNodes = sss.getConnectableNodes();
-        final boolean[] hasDestination = new boolean[orderedNodes.size() - 1]; // indices are shifted by -1
+        final boolean[] hasIncomingPlanned = new boolean[orderedNodes.size() - 1]; // indices are shifted by -1
 
         for (int i = 0; i < (orderedNodes.size() - 1); i++) {
             final NodeContainerUI sourceNode = orderedNodes.get(i);
@@ -260,7 +260,7 @@ public class LinkNodesAction extends AbstractNodeAction {
                             createConnectionPlan(sourceNode, destinationNode, plannedConnections);
 
                         if (pc.isPresent()) {
-                            hasDestination[currentIndex - 1] = true;
+                            hasIncomingPlanned[currentIndex - 1] = true;
                             plannedConnections.add(pc.get());
                             break;
                         }
@@ -271,15 +271,18 @@ public class LinkNodesAction extends AbstractNodeAction {
             }
         }
 
-        /*
-         * Now, find any with inports that are not connected in the plan and that are not the first node;
-         *  connect to the first previous node which has an outport of the appropriate port type.
+        /**
+         * Now, find any with inports that are not already connected in the plan and that are not the first node or have
+         * the same X location as the first node and connect to the first previous node which has an outport of the
+         * appropriate port type.
          *
          * Such situations may arise due certain spatial configurations.
          */
+        final int zereothX = orderedNodes.get(0).getUIInformation().getBounds()[0];
         for (int i = 1; i < orderedNodes.size(); i++) {
-            if (!hasDestination[i - 1]) {
-                final NodeContainerUI destinationNode = orderedNodes.get(i);
+            final NodeContainerUI destinationNode = orderedNodes.get(i);
+
+            if (!hasIncomingPlanned[i - 1] && (destinationNode.getUIInformation().getBounds()[0] > zereothX)) {
                 final int destinationPortStart = (destinationNode instanceof WorkflowManagerUI) ? 0 : 1;
 
                 if (destinationNode.getNrInPorts() > destinationPortStart) {
@@ -294,7 +297,7 @@ public class LinkNodesAction extends AbstractNodeAction {
                             if (pc.isPresent()) {
                                 // there's no existing reason to set this to true (it's not used afterwards)
                                 //      but i'm a fan of consistent state
-                                hasDestination[i - 1] = true;
+                                hasIncomingPlanned[i - 1] = true;
                                 plannedConnections.add(pc.get());
                                 break;
                             }
