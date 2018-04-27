@@ -117,7 +117,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
     protected void validateLoopStart() {
         if (!(this.getLoopStartNode() instanceof RecursiveLoopStartNodeModel)) {
             throw new IllegalStateException(
-                "Loop End is not connected" + " to matching/corresponding Recursive Loop Start node.");
+                "Loop End is not connected to matching/corresponding Recursive Loop Start node.");
         }
     }
 
@@ -158,7 +158,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         } else {
             final String value = peekFlowVariableString(varName);
             if (value == null) {
-                throw new InvalidSettingsException("The selected flow variable is not assigned");
+                throw new InvalidSettingsException("The selected flow variable '" + varName + "' does not exist");
             }
             endLoopFromVariable = "true".equalsIgnoreCase(value);
         }
