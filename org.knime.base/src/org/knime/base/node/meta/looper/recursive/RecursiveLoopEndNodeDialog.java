@@ -45,14 +45,23 @@
  */
 package org.knime.base.node.meta.looper.recursive;
 
+import java.util.Map;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentFlowVariableNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * Dialog for the recursive loop end.
@@ -61,6 +70,13 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(RecursiveLoopEndNodeDialog.class);
+
+    private final SettingsModelString m_endLoopVar = createEndLoopVarModel();
+    private final SettingsModelString m_endLoopDeprecated = createEndLoop();
+
+    private final DialogComponentFlowVariableNameSelection m_flowVarSelection;
+
     /**
      * Create new dialog.
      */
@@ -68,18 +84,18 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
         createNewGroup("End settings");
 
         addDialogComponent(new DialogComponentNumber(createNumOfRowsModel(), "Minimal number of rows :", 1, 10));
-        addDialogComponent(new DialogComponentNumber(
-                                createIterationsModel(), "Maximal number of iterations :", 10, 10));
-        addDialogComponent(new DialogComponentStringSelection(createEndLoop(), "End loop :", "true", "false"));
+        addDialogComponent(
+            new DialogComponentNumber(createIterationsModel(), "Maximal number of iterations :", 10, 10));
+        m_flowVarSelection = new DialogComponentFlowVariableNameSelection(m_endLoopVar, "End loop with variable: ",
+            getAvailableFlowVariables().values(), true, FlowVariable.Type.STRING);
+        addDialogComponent(m_flowVarSelection);
         closeCurrentGroup();
-
 
         createNewGroup("Data settings");
         addDialogComponent(new DialogComponentBoolean(createOnlyLastModel(), "Collect data from last iteration only"));
         addDialogComponent(new DialogComponentBoolean(createAddIterationColumn(), "Add iteration column"));
         closeCurrentGroup();
     }
-
 
     /**
      * @return the SM for adding the iteration column
@@ -88,20 +104,26 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
         return new SettingsModelBoolean("CFG_AddIterationColumn", false);
     }
 
-
     /**
      * @return the SM for ending the loop
      */
+    @Deprecated
     static SettingsModelString createEndLoop() {
         return new SettingsModelString("CFG_End_Loop", "false");
     }
 
+    /**
+     * @return the SM for the name of the variable that can ending loop
+     */
+    static SettingsModelString createEndLoopVarModel() {
+        return new SettingsModelString("End Loop Variable Name", "NONE");
+    }
 
     /**
      *
      * @return the settings model for the maximal number of iterations.
      */
-    static  SettingsModelIntegerBounded createIterationsModel() {
+    static SettingsModelIntegerBounded createIterationsModel() {
         return new SettingsModelIntegerBounded("CFG_MaxNrIterations", 100, 1, Integer.MAX_VALUE);
     }
 
@@ -109,7 +131,7 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
      *
      * @return the settings model for the minimal number of rows.
      */
-    static  SettingsModelInteger createNumOfRowsModel() {
+    static SettingsModelInteger createNumOfRowsModel() {
         return new SettingsModelInteger("CFG_MinNrOfRows", 1);
     }
 
@@ -120,5 +142,42 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
         return new SettingsModelBoolean("CFG_OnlyLastData", false);
     }
 
+    /**
+     * List of available string flow variables must be updated since it could have changed.
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+        throws NotConfigurableException {
+        super.loadAdditionalSettingsFrom(settings, specs);
+        final Map<String, FlowVariable> flowVars = getAvailableFlowVariables();
+
+        // check for selected value
+        String flowVar = "";
+        try {
+            flowVar = ((SettingsModelString)m_endLoopVar.createCloneWithValidatedValue(settings)).getStringValue();
+        } catch (final InvalidSettingsException e) {
+            LOGGER.debug("Settings model could not be cloned with given settings!", e);
+        } finally {
+            m_flowVarSelection.replaceListItems(flowVars.values(), flowVar);
+        }
+
+        try {
+            m_endLoopDeprecated.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException exc) {
+            LOGGER.debug("Exception during loadAdditionalSettings:", exc);
+            throw new NotConfigurableException(exc.getMessage());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveAdditionalSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        super.saveAdditionalSettingsTo(settings);
+        m_endLoopDeprecated.saveSettingsTo(settings);
+    }
 
 }

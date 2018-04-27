@@ -81,18 +81,25 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
 
     private BufferedDataContainer m_outcontainer;
 
-
     private BufferedDataTable m_inData;
+
     private int m_iterationnr = 0;
 
     private SettingsModelIntegerBounded m_maxIterations = RecursiveLoopEndNodeDialog.createIterationsModel();
+
     private SettingsModelInteger m_minNumberOfRows = RecursiveLoopEndNodeDialog.createNumOfRowsModel();
+
     private SettingsModelBoolean m_onlyLastResult = RecursiveLoopEndNodeDialog.createOnlyLastModel();
-    private SettingsModelString m_endLoop = RecursiveLoopEndNodeDialog.createEndLoop();
+
+    private SettingsModelString m_endLoopDeprecated = RecursiveLoopEndNodeDialog.createEndLoop();
+
+    private SettingsModelString m_endLoopVariableName = RecursiveLoopEndNodeDialog.createEndLoopVarModel();
+
     private SettingsModelBoolean m_addIterationNr = RecursiveLoopEndNodeDialog.createAddIterationColumn();
 
     /**
      * Constructor for the node model.
+     *
      * @param inPorts the number of inports
      * @param outPorts the number of outports
      */
@@ -100,8 +107,8 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         super(inPorts, outPorts);
     }
 
-
     private static int collectingIn = 0;
+
     private static int resultingIn = 1;
 
     /**
@@ -109,8 +116,8 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
      */
     protected void validateLoopStart() {
         if (!(this.getLoopStartNode() instanceof RecursiveLoopStartNodeModel)) {
-            throw new IllegalStateException("Loop End is not connected"
-                    + " to matching/corresponding Recursive Loop Start node.");
+            throw new IllegalStateException(
+                "Loop End is not connected" + " to matching/corresponding Recursive Loop Start node.");
         }
     }
 
@@ -128,8 +135,8 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
+        throws Exception {
         validateLoopStart();
 
         // in port 0: collects the data provided at the output port
@@ -141,11 +148,23 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
             loopData.addRowToTable(createNewRow(row, row.getKey()));
         }
         loopData.close();
-        m_inData  = loopData.getTable();
+        m_inData = loopData.getTable();
+
+        boolean endLoopFromVariable = false;
+        final String varName = m_endLoopVariableName.getStringValue();
+        if (varName.equals("NONE")) {
+            // check if old setting is set
+            endLoopFromVariable = "true".equalsIgnoreCase(m_endLoopDeprecated.getStringValue());
+        } else {
+            final String value = peekFlowVariableString(varName);
+            if (value == null) {
+                throw new InvalidSettingsException("The selected flow variable is not assigned");
+            }
+            endLoopFromVariable = "true".equalsIgnoreCase(value);
+        }
 
         boolean endLoop = checkDataTableSize(m_minNumberOfRows.getIntValue())
-                || (m_iterationnr + 1) >= m_maxIterations.getIntValue()
-                || m_endLoop.getStringValue().equalsIgnoreCase("true");
+            || (m_iterationnr + 1) >= m_maxIterations.getIntValue() || endLoopFromVariable;
 
         if (m_onlyLastResult.getBooleanValue()) {
             if (endLoop) {
@@ -187,7 +206,8 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         return new BufferedDataTable[1];
     }
 
-    /**Creates a new row, with the cells as in row and the rowkey newkey.
+    /**
+     * Creates a new row, with the cells as in row and the rowkey newkey.
      *
      * @param row previous data cells
      * @param newKey the new rowkey
@@ -214,8 +234,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         if (m_onlyLastResult.getBooleanValue()) {
             // the output may change over the loops
             return new DataTableSpec[]{null};
@@ -223,17 +242,15 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         return new DataTableSpec[]{createSpec(inSpecs[collectingIn])};
     }
 
-
     private DataTableSpec createSpec(final DataTableSpec inSpec) {
         if (m_addIterationNr.getBooleanValue()) {
             DataColumnSpecCreator crea =
-                    new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(inSpec, "Iteration"), IntCell.TYPE);
+                new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(inSpec, "Iteration"), IntCell.TYPE);
             return new DataTableSpec(inSpec, new DataTableSpec(crea.createSpec()));
         } else {
             return inSpec;
         }
     }
-
 
     /**
      * {@inheritDoc}
@@ -243,7 +260,8 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         m_maxIterations.saveSettingsTo(settings);
         m_minNumberOfRows.saveSettingsTo(settings);
         m_onlyLastResult.saveSettingsTo(settings);
-        m_endLoop.saveSettingsTo(settings);
+        m_endLoopDeprecated.saveSettingsTo(settings);
+        m_endLoopVariableName.saveSettingsTo(settings);
         m_addIterationNr.saveSettingsTo(settings);
     }
 
@@ -251,35 +269,40 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_maxIterations.loadSettingsFrom(settings);
         m_minNumberOfRows.loadSettingsFrom(settings);
         m_onlyLastResult.loadSettingsFrom(settings);
-        m_endLoop.loadSettingsFrom(settings);
+        m_endLoopDeprecated.loadSettingsFrom(settings);
         m_addIterationNr.loadSettingsFrom(settings);
+        // since 3.6.0
+        if (settings.containsKey(m_endLoopVariableName.getKey())) {
+            m_endLoopVariableName.loadSettingsFrom(settings);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_maxIterations.validateSettings(settings);
         m_minNumberOfRows.validateSettings(settings);
         m_onlyLastResult.validateSettings(settings);
-        m_endLoop.validateSettings(settings);
         m_addIterationNr.validateSettings(settings);
+        m_endLoopDeprecated.validateSettings(settings);
+        // since 3.6.0
+        if (settings.containsKey(m_endLoopVariableName.getKey())) {
+            m_endLoopVariableName.validateSettings(settings);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File internDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File internDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         // nothing to load
     }
 
@@ -287,13 +310,13 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File internDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File internDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         // nothing to save
     }
 
-    /**Call to get the in data table of the last iteration.
+    /**
+     * Call to get the in data table of the last iteration.
      *
      * @return the indata table of the last iteration.
      */
