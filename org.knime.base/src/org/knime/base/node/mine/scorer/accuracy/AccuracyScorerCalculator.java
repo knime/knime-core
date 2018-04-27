@@ -79,6 +79,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -88,6 +89,10 @@ import org.knime.core.node.util.CheckUtils;
  * @since 3.6
  */
 public class AccuracyScorerCalculator {
+
+    /** The node logger for this class. */
+    protected static final NodeLogger LOGGER = NodeLogger.getLogger(AccuracyScorerCalculator.class);
+
     private final ScorerCalculatorConfiguration m_config;
 
     private DataTableSpec m_confusionMatrixSpec;
@@ -97,6 +102,8 @@ public class AccuracyScorerCalculator {
     private int[][] m_scorerCount;
 
     private List<RowKey>[][] m_keyStore;
+
+    private int m_rowsNumber;
 
     private int m_falseCount;
 
@@ -165,8 +172,8 @@ public class AccuracyScorerCalculator {
                 targetValues[i] = newName;
                 if (!hasPrintedWarningOnAmbiguousValues) {
                     hasPrintedWarningOnAmbiguousValues = true;
-                    //                    addWarning("Ambiguous value \"" + c.toString() + "\" encountered. Preserving individual instances;"
-                    //                        + " consider to convert input columns to string");
+                     LOGGER.warn("Ambiguous value \"" + c.toString() + "\" encountered. Preserving individual instances;"
+                             + " consider to convert input columns to string");
                 }
             } else {
                 int uniquifier = 1;
@@ -301,6 +308,7 @@ public class AccuracyScorerCalculator {
             }
         }
         if (container == null) {
+         // This will never be called, it's just for removing the compiler warning.
             throw new NullPointerException();
         }
         return container.getTable();
@@ -441,6 +449,7 @@ public class AccuracyScorerCalculator {
             }
         }
         if (container == null) {
+         // This will never be called, it's just for removing the compiler warning.
             throw new NullPointerException();
         }
         return container.getTable();
@@ -494,9 +503,19 @@ public class AccuracyScorerCalculator {
             }
         }
         if (container == null) {
+            // This will never be called, it's just for removing the compiler warning.
             throw new NullPointerException();
         }
         return container.getTable();
+    }
+
+    /**
+     * This is a getter method for the definitive classes (Target Values).
+     *
+     * @return the classes as a String array
+     */
+    public String[] getClasses() {
+        return m_targetValues;
     }
 
     /**
@@ -509,6 +528,18 @@ public class AccuracyScorerCalculator {
         return m_keyStore;
     }
 
+    /**
+     * @return the rows number
+     */
+    public int getRowsNumber() {
+        return m_rowsNumber;
+    }
+
+    /**
+     * This is a getter for the warnings.
+     *
+     * @return warnings as a String List
+     */
     public List<String> getWarnings() {
         return m_warnings;
     }
@@ -548,15 +579,15 @@ public class AccuracyScorerCalculator {
 
         // filling in the confusion matrix and the keystore
         long rowCnt = data.size();
-        int numberOfRows = 0;
+        m_rowsNumber = 0;
         m_correctCount = 0;
         m_falseCount = 0;
         int missingCount = 0;
         ExecutionMonitor subExec = exec.createSubProgress(0.5);
-        for (Iterator<DataRow> it = data.iterator(); it.hasNext(); numberOfRows++) {
+        for (Iterator<DataRow> it = data.iterator(); it.hasNext(); m_rowsNumber++) {
             DataRow row = it.next();
-            subExec.setProgress((1.0 + numberOfRows) / rowCnt,
-                "Computing score, row " + numberOfRows + " (\"" + row.getKey() + "\") of " + data.size());
+            subExec.setProgress((1.0 + m_rowsNumber) / rowCnt,
+                "Computing score, row " + m_rowsNumber + " (\"" + row.getKey() + "\") of " + data.size());
             try {
                 subExec.checkCanceled();
             } catch (CanceledExecutionException cee) {
@@ -590,7 +621,13 @@ public class AccuracyScorerCalculator {
                 m_falseCount++;
             }
         }
-        //        pushFlowVars(false);
+        if (missingCount > 0) {
+            addWarning("There were missing values in the reference or in the prediction class columns.");
+        }
+        // print info
+        int missing = m_rowsNumber - m_correctCount - m_falseCount;
+        LOGGER.info("overall error=" + getOverallError() + ", #correct=" + m_correctCount + ", #false="
+            + m_falseCount + ", #rows=" + m_rowsNumber + ", #missing=" + missing);
         return;
     }
 
@@ -734,7 +771,11 @@ public class AccuracyScorerCalculator {
      * Resets all internal data.
      */
     public void reset() {
-        //        m_viewData = null;
+        m_targetValues = null;
+        m_scorerCount =  null;
+        m_keyStore = null;
+        m_correctCount = 0;
+        m_falseCount = 0;
     }
 
     /**
@@ -954,6 +995,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param tpCalculated the tpCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withTpCalculated(final boolean tpCalculated) {
             this.tpCalculated = tpCalculated;
@@ -969,6 +1011,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param fpCalculated the fpCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withFpCalculated(final boolean fpCalculated) {
             this.fpCalculated = fpCalculated;
@@ -984,6 +1027,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param tnCalculated the tnCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withTnCalculated(final boolean tnCalculated) {
             this.tnCalculated = tnCalculated;
@@ -999,6 +1043,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param fnCalculated the fnCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withFnCalculated(final boolean fnCalculated) {
             this.fnCalculated = fnCalculated;
@@ -1014,6 +1059,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param accuracyCalculated the accuracyCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withAccuracyCalculated(final boolean accuracyCalculated) {
             this.accuracyCalculated = accuracyCalculated;
@@ -1029,6 +1075,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param balancedAccuracyCalculated the balancedAccuracyCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withBalancedAccuracyCalculated(final boolean balancedAccuracyCalculated) {
             this.balancedAccuracyCalculated = balancedAccuracyCalculated;
@@ -1044,6 +1091,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param errorRateCalculated the errorRateCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withErrorRateCalculated(final boolean errorRateCalculated) {
             this.errorRateCalculated = errorRateCalculated;
@@ -1059,6 +1107,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param falseNegativeRateCalculated the falseNegativeRateCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withFalseNegativeRateCalculated(final boolean falseNegativeRateCalculated) {
             this.falseNegativeRateCalculated = falseNegativeRateCalculated;
@@ -1074,6 +1123,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param recallCalculated the recallCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withRecallCalculated(final boolean recallCalculated) {
             this.recallCalculated = recallCalculated;
@@ -1089,6 +1139,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param precisionCalculated the precisionCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withPrecisionCalculated(final boolean precisionCalculated) {
             this.precisionCalculated = precisionCalculated;
@@ -1104,6 +1155,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param sensitivityCalculated the sensitivityCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withSensitivityCalculated(final boolean sensitivityCalculated) {
             this.sensitivityCalculated = sensitivityCalculated;
@@ -1119,6 +1171,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param specifityCalculated the specifityCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withSpecifityCalculated(final boolean specifityCalculated) {
             this.specifityCalculated = specifityCalculated;
@@ -1134,6 +1187,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param fmeasureCalculated the fmeasureCalculated to set
+         * @return ClassStatisticsConfiguration
          */
         public ClassStatisticsConfiguration withFmeasureCalculated(final boolean fmeasureCalculated) {
             this.fmeasureCalculated = fmeasureCalculated;
@@ -1166,6 +1220,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param overallAccuracyCalculated the overallAccuracyCalculated to set
+         * @return OverallStatisticsConfiguration
          */
         public OverallStatisticsConfiguration withOverallAccuracyCalculated(final boolean overallAccuracyCalculated) {
             this.overallAccuracyCalculated = overallAccuracyCalculated;
@@ -1181,6 +1236,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param cohensKappaCalculated the cohensKappaCalculated to set
+         * @return OverallStatisticsConfiguration
          */
         public OverallStatisticsConfiguration withCohensKappaCalculated(final boolean cohensKappaCalculated) {
             this.cohensKappaCalculated = cohensKappaCalculated;
@@ -1196,6 +1252,7 @@ public class AccuracyScorerCalculator {
 
         /**
          * @param overallErrorCalculated the overallErrorCalculated to set
+         * @return OverallStatisticsConfiguration
          */
         public OverallStatisticsConfiguration withOverallErrorCalculated(final boolean overallErrorCalculated) {
             this.overallErrorCalculated = overallErrorCalculated;
