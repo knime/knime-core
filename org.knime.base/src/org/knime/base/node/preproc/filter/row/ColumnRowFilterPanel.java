@@ -181,10 +181,12 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
 
         panel.add(new JLabel("Column to test:   "), c);
         c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
         panel.add(m_colCombo, c);
         c.gridx = 0;
         c.gridy++;
 
+        c.fill = GridBagConstraints.NONE;
         c.gridwidth = 2;
         panel.add(m_deepFiltering, c);
 
