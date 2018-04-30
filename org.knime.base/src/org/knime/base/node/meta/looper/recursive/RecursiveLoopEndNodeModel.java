@@ -48,12 +48,12 @@ package org.knime.base.node.meta.looper.recursive;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -85,19 +85,19 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
 
     private int m_iterationnr = 0;
 
-    private SettingsModelIntegerBounded m_maxIterations = RecursiveLoopEndNodeDialog.createIterationsModel();
+    private final SettingsModelIntegerBounded m_maxIterations = RecursiveLoopEndNodeDialog.createIterationsModel();
 
-    private SettingsModelInteger m_minNumberOfRows = RecursiveLoopEndNodeDialog.createNumOfRowsModel();
+    private final SettingsModelInteger m_minNumberOfRows = RecursiveLoopEndNodeDialog.createNumOfRowsModel();
 
-    private SettingsModelBoolean m_onlyLastResult = RecursiveLoopEndNodeDialog.createOnlyLastModel();
+    private final SettingsModelBoolean m_onlyLastResult = RecursiveLoopEndNodeDialog.createOnlyLastModel();
 
-    private SettingsModelString m_endLoopDeprecated = RecursiveLoopEndNodeDialog.createEndLoop();
+    private final SettingsModelString m_endLoopDeprecated = RecursiveLoopEndNodeDialog.createEndLoop();
 
-    private SettingsModelString m_endLoopVariableName = RecursiveLoopEndNodeDialog.createEndLoopVarModel();
+    private final SettingsModelString m_endLoopVariableName = RecursiveLoopEndNodeDialog.createEndLoopVarModel();
 
-    private SettingsModelBoolean m_useVariable = RecursiveLoopEndNodeDialog.createUseVariable();
+    private final SettingsModelBoolean m_useVariable = RecursiveLoopEndNodeDialog.createUseVariable();
 
-    private SettingsModelBoolean m_addIterationNr = RecursiveLoopEndNodeDialog.createAddIterationColumn();
+    private final SettingsModelBoolean m_addIterationNr = RecursiveLoopEndNodeDialog.createAddIterationColumn();
 
     /**
      * Constructor for the node model.
@@ -130,7 +130,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
      * @return true when the data table size is smaller than the number of rows.
      */
     protected boolean checkDataTableSize(final int minNrRows) {
-        return m_inData.getRowCount() < minNrRows;
+        return m_inData.size() < minNrRows;
     }
 
     /**
@@ -143,8 +143,8 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
 
         // in port 0: collects the data provided at the output port
         // in port 1: is fed back to loop start node
-        BufferedDataContainer loopData = exec.createDataContainer(inData[resultingIn].getDataTableSpec());
-        for (DataRow row : inData[resultingIn]) {
+        final BufferedDataContainer loopData = exec.createDataContainer(inData[resultingIn].getDataTableSpec());
+        for (final DataRow row : inData[resultingIn]) {
             exec.checkCanceled();
             exec.setMessage("Copy input table 1");
             loopData.addRowToTable(createNewRow(row, row.getKey()));
@@ -165,8 +165,8 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
             endLoopFromVariable = "true".equalsIgnoreCase(m_endLoopDeprecated.getStringValue());
         }
 
-        boolean endLoop = checkDataTableSize(m_minNumberOfRows.getIntValue())
-            || (m_iterationnr + 1) >= m_maxIterations.getIntValue() || endLoopFromVariable;
+        final boolean endLoop = checkDataTableSize(m_minNumberOfRows.getIntValue())
+            || ((m_iterationnr + 1) >= m_maxIterations.getIntValue()) || endLoopFromVariable;
 
         if (m_onlyLastResult.getBooleanValue()) {
             if (endLoop) {
@@ -174,23 +174,23 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
             }
         } else {
             if (m_outcontainer == null) {
-                DataTableSpec dts = createSpec(inData[collectingIn].getDataTableSpec());
+                final DataTableSpec dts = createSpec(inData[collectingIn].getDataTableSpec());
                 m_outcontainer = exec.createDataContainer(dts);
             }
             if (m_addIterationNr.getBooleanValue()) {
-                IntCell currIterCell = new IntCell(m_iterationnr);
-                for (DataRow row : inData[collectingIn]) {
+                final IntCell currIterCell = new IntCell(m_iterationnr);
+                for (final DataRow row : inData[collectingIn]) {
                     exec.checkCanceled();
                     exec.setMessage("Collect data for output");
-                    RowKey newKey = new RowKey(row.getKey() + "#" + m_iterationnr);
-                    AppendedColumnRow newRow = new AppendedColumnRow(createNewRow(row, newKey), currIterCell);
+                    final RowKey newKey = new RowKey(row.getKey() + "#" + m_iterationnr);
+                    final AppendedColumnRow newRow = new AppendedColumnRow(createNewRow(row, newKey), currIterCell);
                     m_outcontainer.addRowToTable(newRow);
                 }
             } else {
-                for (DataRow row : inData[collectingIn]) {
+                for (final DataRow row : inData[collectingIn]) {
                     exec.checkCanceled();
                     exec.setMessage("Collect data for output");
-                    RowKey newKey = new RowKey(row.getKey() + "#" + m_iterationnr);
+                    final RowKey newKey = new RowKey(row.getKey() + "#" + m_iterationnr);
                     m_outcontainer.addRowToTable(createNewRow(row, newKey));
                 }
             }
@@ -216,7 +216,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
      * @return a new row with the given key.
      */
     protected DataRow createNewRow(final DataRow row, final RowKey newKey) {
-        DataCell[] cells = new DataCell[row.getNumCells()];
+        final DataCell[] cells = new DataCell[row.getNumCells()];
         for (int i = 0; i < row.getNumCells(); i++) {
             cells[i] = row.getCell(i);
         }
@@ -246,7 +246,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
 
     private DataTableSpec createSpec(final DataTableSpec inSpec) {
         if (m_addIterationNr.getBooleanValue()) {
-            DataColumnSpecCreator crea =
+            final DataColumnSpecCreator crea =
                 new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(inSpec, "Iteration"), IntCell.TYPE);
             return new DataTableSpec(inSpec, new DataTableSpec(crea.createSpec()));
         } else {
