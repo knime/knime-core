@@ -95,6 +95,8 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
 
     private SettingsModelString m_endLoopVariableName = RecursiveLoopEndNodeDialog.createEndLoopVarModel();
 
+    private SettingsModelBoolean m_useVariable = RecursiveLoopEndNodeDialog.createUseVariable();
+
     private SettingsModelBoolean m_addIterationNr = RecursiveLoopEndNodeDialog.createAddIterationColumn();
 
     /**
@@ -150,17 +152,17 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         loopData.close();
         m_inData = loopData.getTable();
 
-        boolean endLoopFromVariable = false;
-        final String varName = m_endLoopVariableName.getStringValue();
-        if (varName.equals("NONE")) {
-            // check if old setting is set
-            endLoopFromVariable = "true".equalsIgnoreCase(m_endLoopDeprecated.getStringValue());
-        } else {
-            final String value = peekFlowVariableString(varName);
+        final boolean endLoopFromVariable;
+        if (m_useVariable.getBooleanValue()) {
+            final String value = peekFlowVariableString(m_endLoopVariableName.getStringValue());
             if (value == null) {
-                throw new InvalidSettingsException("The selected flow variable '" + varName + "' does not exist");
+                throw new InvalidSettingsException(
+                    "The selected flow variable '" + m_endLoopVariableName.getStringValue() + "' does not exist");
             }
             endLoopFromVariable = "true".equalsIgnoreCase(value);
+        } else {
+            // check if legacy setting is set
+            endLoopFromVariable = "true".equalsIgnoreCase(m_endLoopDeprecated.getStringValue());
         }
 
         boolean endLoop = checkDataTableSize(m_minNumberOfRows.getIntValue())
@@ -262,6 +264,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         m_onlyLastResult.saveSettingsTo(settings);
         m_endLoopDeprecated.saveSettingsTo(settings);
         m_endLoopVariableName.saveSettingsTo(settings);
+        m_useVariable.saveSettingsTo(settings);
         m_addIterationNr.saveSettingsTo(settings);
     }
 
@@ -279,6 +282,9 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         if (settings.containsKey(m_endLoopVariableName.getKey())) {
             m_endLoopVariableName.loadSettingsFrom(settings);
         }
+        if (settings.containsKey(m_useVariable.getConfigName())) {
+            m_useVariable.loadSettingsFrom(settings);
+        }
     }
 
     /**
@@ -294,6 +300,9 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
         // since 3.6.0
         if (settings.containsKey(m_endLoopVariableName.getKey())) {
             m_endLoopVariableName.validateSettings(settings);
+        }
+        if (settings.containsKey(m_useVariable.getConfigName())) {
+            m_useVariable.validateSettings(settings);
         }
     }
 

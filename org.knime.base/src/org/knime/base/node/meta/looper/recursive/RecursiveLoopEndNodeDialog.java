@@ -73,7 +73,10 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RecursiveLoopEndNodeDialog.class);
 
     private final SettingsModelString m_endLoopVar = createEndLoopVarModel();
+
     private final SettingsModelString m_endLoopDeprecated = createEndLoop();
+
+    private final SettingsModelBoolean m_useVariable = createUseVariable();
 
     private final DialogComponentFlowVariableNameSelection m_flowVarSelection;
 
@@ -86,15 +89,39 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentNumber(createNumOfRowsModel(), "Minimal number of rows :", 1, 10));
         addDialogComponent(
             new DialogComponentNumber(createIterationsModel(), "Maximal number of iterations :", 10, 10));
-        m_flowVarSelection = new DialogComponentFlowVariableNameSelection(m_endLoopVar, "End loop with variable: ",
-            getAvailableFlowVariables().values(), true, FlowVariable.Type.STRING);
+
+        m_flowVarSelection = new DialogComponentFlowVariableNameSelection(m_endLoopVar, "",
+            getAvailableFlowVariables().values(), false, FlowVariable.Type.STRING);
+
+        setHorizontalPlacement(true);
+        addDialogComponent(new DialogComponentBoolean(m_useVariable, "End Loop with Variable:"));
         addDialogComponent(m_flowVarSelection);
+        setHorizontalPlacement(false);
         closeCurrentGroup();
 
         createNewGroup("Data settings");
         addDialogComponent(new DialogComponentBoolean(createOnlyLastModel(), "Collect data from last iteration only"));
         addDialogComponent(new DialogComponentBoolean(createAddIterationColumn(), "Add iteration column"));
         closeCurrentGroup();
+
+       // listener setup
+        m_useVariable.addChangeListener(e -> m_endLoopVar.setEnabled(m_useVariable.getBooleanValue()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onOpen() {
+        super.onOpen();
+        m_endLoopVar.setEnabled(m_useVariable.getBooleanValue());
+    }
+
+    /**
+     * @return
+     */
+    static SettingsModelBoolean createUseVariable() {
+        return new SettingsModelBoolean("Use Flow Variable", false);
     }
 
     /**
