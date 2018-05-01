@@ -255,6 +255,7 @@ public class TestflowRunnerApplication implements IApplication {
                 syserr.println("Tests aborted");
                 break;
             }
+            Thread.currentThread().setName("Testflow executor (" + testFlow.getName() + ")");
             sysout.printf("[%1$tH:%1$tM:%1$tS.%1$tL] => Running %2$-" + maxNameLength + "s...", new Date(),
                 testFlow.getName());
             long startTime = System.currentTimeMillis();
