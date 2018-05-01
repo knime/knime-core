@@ -56,10 +56,13 @@ import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.testing.core.TestrunConfiguration;
 
 import junit.framework.TestListener;
@@ -242,6 +245,7 @@ public class WorkflowTestSuite extends WorkflowTest {
                     break;
                 }
             }
+            waitForUIEvents();
         } catch (Throwable ex) {
             result.addError(this, ex);
         } finally {
@@ -251,6 +255,13 @@ public class WorkflowTestSuite extends WorkflowTest {
             logMemoryStatus();
             m_logger.info("================= Finished testflow " + getName() + " =================");
         }
+    }
+
+    private void waitForUIEvents() throws InterruptedException {
+        m_logger.info("----------------- Waiting for UI events to finish -----------------");
+        CountDownLatch wait = new CountDownLatch(1);
+        ViewUtils.invokeLaterInEDT(() -> wait.countDown());
+        wait.await(2, TimeUnit.MINUTES);
     }
 
     /**
