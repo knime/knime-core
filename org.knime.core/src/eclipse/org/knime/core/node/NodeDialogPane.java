@@ -807,6 +807,11 @@ public abstract class NodeDialogPane {
             } catch (ParseException e) {
                 // ignore
             }
+        } else if (c instanceof JComboBox) {
+            JComboBox<?> comboBox = (JComboBox<?>)c;
+            if (comboBox.isEditable()) {
+                comboBox.setSelectedItem(comboBox.getEditor().getItem());
+            }
         } else if (c instanceof Container) {
             Component[] cs = ((Container)c).getComponents();
             for (int i = 0; i < cs.length; i++) {

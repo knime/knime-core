@@ -288,7 +288,9 @@ public class DialogComponentFileChooser extends DialogComponent {
     @Override
     protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
             throws NotConfigurableException {
-        // we're always good - independent of the incoming spec
+        // this 'should' be done during #loadSettingsFrom (which is final) -- this method is called from there
+        m_filesPanel.updateHistory();
+        // otherwise we are good - independent of the incoming spec
     }
 
     /**

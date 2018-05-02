@@ -156,11 +156,9 @@ public class ReadTableNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_fileName.getStringValue() != null) {
             m_fileName.saveSettingsTo(settings);
             m_limitCheckerModel.saveSettingsTo(settings);
             m_limitSpinnerModel.saveSettingsTo(settings);
-        }
     }
 
     /**
