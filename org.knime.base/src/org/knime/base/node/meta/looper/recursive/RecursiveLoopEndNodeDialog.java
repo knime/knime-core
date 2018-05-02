@@ -115,6 +115,15 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
     public void onOpen() {
         super.onOpen();
         m_endLoopVar.setEnabled(m_useVariable.getBooleanValue());
+
+        // update the available flow variables
+        final Map<String, FlowVariable> flowVars = getAvailableFlowVariables();
+        if (!flowVars.isEmpty()) {
+            // check for selected value
+            String flowVar = "";
+            flowVar = m_endLoopVar.getStringValue();
+            m_flowVarSelection.replaceListItems(flowVars.values(), flowVar);
+        }
     }
 
     /**
@@ -143,7 +152,7 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
      * @return the SM for the name of the variable that can ending loop
      */
     static SettingsModelString createEndLoopVarModel() {
-        return new SettingsModelString("End Loop Variable Name", "NONE");
+        return new SettingsModelString("End Loop Variable Name", "");
     }
 
     /**
@@ -176,23 +185,11 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
      */
     @Override
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-        throws NotConfigurableException {
+            throws NotConfigurableException {
         super.loadAdditionalSettingsFrom(settings, specs);
-        final Map<String, FlowVariable> flowVars = getAvailableFlowVariables();
-
-        // check for selected value
-        String flowVar = "";
-        try {
-            flowVar = ((SettingsModelString)m_endLoopVar.createCloneWithValidatedValue(settings)).getStringValue();
-        } catch (final InvalidSettingsException e) {
-            LOGGER.debug("Settings model could not be cloned with given settings!", e);
-        } finally {
-            m_flowVarSelection.replaceListItems(flowVars.values(), flowVar);
-        }
-
         try {
             m_endLoopDeprecated.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException exc) {
+        } catch (final InvalidSettingsException exc) {
             LOGGER.debug("Exception during loadAdditionalSettings:", exc);
             throw new NotConfigurableException(exc.getMessage());
         }
