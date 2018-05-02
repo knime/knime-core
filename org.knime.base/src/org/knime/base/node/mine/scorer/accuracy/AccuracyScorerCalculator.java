@@ -103,8 +103,6 @@ public class AccuracyScorerCalculator {
 
     private List<RowKey>[][] m_keyStore;
 
-    private int m_rowsNumber;
-
     private int m_falseCount;
 
     private int m_correctCount;
@@ -197,28 +195,28 @@ public class AccuracyScorerCalculator {
     public static DataTableSpec createClassStatsSpec(final ClassStatisticsConfiguration config) {
         List<DataColumnSpec> columnList = new ArrayList<DataColumnSpec>();
         if (config.isTpCalculated()) {
-            columnList.add(new DataColumnSpecCreator("TruePositives", IntCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("True Positives", IntCell.TYPE).createSpec());
         }
         if (config.isFpCalculated()) {
-            columnList.add(new DataColumnSpecCreator("FalsePositives", IntCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("False Positives", IntCell.TYPE).createSpec());
         }
         if (config.isTnCalculated()) {
-            columnList.add(new DataColumnSpecCreator("TrueNegatives", IntCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("True Negatives", IntCell.TYPE).createSpec());
         }
         if (config.isFnCalculated()) {
-            columnList.add(new DataColumnSpecCreator("FalseNegatives", IntCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("False Negatives", IntCell.TYPE).createSpec());
         }
         if (config.isAccuracyCalculated()) {
             columnList.add(new DataColumnSpecCreator("Accuracy", DoubleCell.TYPE).createSpec());
         }
         if (config.isBalancedAccuracyCalculated()) {
-            columnList.add(new DataColumnSpecCreator("BalancedAccuracy", DoubleCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("Balanced Accuracy", DoubleCell.TYPE).createSpec());
         }
         if (config.isErrorRateCalculated()) {
-            columnList.add(new DataColumnSpecCreator("ErrorRate", DoubleCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("Error Rate", DoubleCell.TYPE).createSpec());
         }
         if (config.isFalseNegativeRateCalculated()) {
-            columnList.add(new DataColumnSpecCreator("FalseNegativeRate", DoubleCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("False Negative Rate", DoubleCell.TYPE).createSpec());
         }
         if (config.isRecallCalculated()) {
             columnList.add(new DataColumnSpecCreator("Recall", DoubleCell.TYPE).createSpec());
@@ -510,29 +508,13 @@ public class AccuracyScorerCalculator {
     }
 
     /**
-     * This is a getter method for the definitive classes (Target Values).
-     *
-     * @return the classes as a String array
-     */
-    public String[] getClasses() {
-        return m_targetValues;
-    }
-
-    /**
      * This is a getter method for the keystore of RowKey associated to the confusion matrix.
-     * It will be used in the JS view for slecting the rows related to a given cell of the confusion matrix.
+     * It will be used in the JS view for selecting the rows related to a given cell of the confusion matrix.
      *
      * @return the keystore as a matrix of RowKey lists
      */
     public List<RowKey>[][] getKeyStore() {
         return m_keyStore;
-    }
-
-    /**
-     * @return the rows number
-     */
-    public int getRowsNumber() {
-        return m_rowsNumber;
     }
 
     /**
@@ -579,15 +561,15 @@ public class AccuracyScorerCalculator {
 
         // filling in the confusion matrix and the keystore
         long rowCnt = data.size();
-        m_rowsNumber = 0;
+        int rowsNumber = 0;
         m_correctCount = 0;
         m_falseCount = 0;
         int missingCount = 0;
         ExecutionMonitor subExec = exec.createSubProgress(0.5);
-        for (Iterator<DataRow> it = data.iterator(); it.hasNext(); m_rowsNumber++) {
+        for (Iterator<DataRow> it = data.iterator(); it.hasNext(); rowsNumber++) {
             DataRow row = it.next();
-            subExec.setProgress((1.0 + m_rowsNumber) / rowCnt,
-                "Computing score, row " + m_rowsNumber + " (\"" + row.getKey() + "\") of " + data.size());
+            subExec.setProgress((1.0 + rowsNumber) / rowCnt,
+                "Computing score, row " + rowsNumber + " (\"" + row.getKey() + "\") of " + data.size());
             try {
                 subExec.checkCanceled();
             } catch (CanceledExecutionException cee) {
@@ -625,9 +607,9 @@ public class AccuracyScorerCalculator {
             addWarning("There were missing values in the reference or in the prediction class columns.");
         }
         // print info
-        int missing = m_rowsNumber - m_correctCount - m_falseCount;
+        int missing = rowsNumber - m_correctCount - m_falseCount;
         LOGGER.info("overall error=" + getOverallError() + ", #correct=" + m_correctCount + ", #false="
-            + m_falseCount + ", #rows=" + m_rowsNumber + ", #missing=" + missing);
+            + m_falseCount + ", #rows=" + rowsNumber + ", #missing=" + missing);
         return;
     }
 
