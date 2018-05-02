@@ -48,10 +48,13 @@
 package org.knime.testing.core.ng;
 
 import java.io.File;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.core.TestrunConfiguration;
 
@@ -104,6 +107,7 @@ class WorkflowLoadSaveLoadTest extends WorkflowTest {
             m_context.setWorkflowManager(manager);
             WorkflowLoadTest.checkLoadVersion(this, result);
 
+            waitForUIEvents();
             LOGGER.info("Saving workflow '" + m_workflowName + "'");
             manager.save(m_workflowDir, new ExecutionMonitor(), true);
             manager.shutdown();
@@ -119,6 +123,15 @@ class WorkflowLoadSaveLoadTest extends WorkflowTest {
             result.endTest(this);
         }
     }
+
+    // This is mainly for working around AP-9306
+    private void waitForUIEvents() throws InterruptedException {
+        LOGGER.info("Waiting for UI events to finish after load");
+        CountDownLatch wait = new CountDownLatch(1);
+        ViewUtils.invokeLaterInEDT(() -> wait.countDown());
+        wait.await(2, TimeUnit.MINUTES);
+    }
+
 
     /**
      * {@inheritDoc}
