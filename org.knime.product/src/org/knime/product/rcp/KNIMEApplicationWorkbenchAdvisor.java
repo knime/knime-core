@@ -139,9 +139,8 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         node.putBoolean(org.eclipse.equinox.internal.p2.ui.sdk.scheduler.PreferenceConstants.PREF_AUTO_UPDATE_ENABLED,
             true);
         node.put(org.eclipse.equinox.internal.p2.ui.sdk.scheduler.PreferenceConstants.PREF_AUTO_UPDATE_SCHEDULE,
-            org.eclipse.equinox.internal.p2.ui.sdk.scheduler.PreferenceConstants.PREF_UPDATE_ON_SCHEDULE);
-        node.put(AutomaticUpdateScheduler.P_DAY, AutomaticUpdateMessages.SchedulerStartup_day);
-        node.put(AutomaticUpdateScheduler.P_HOUR, AutomaticUpdateMessages.SchedulerStartup_11AM);
+            org.eclipse.equinox.internal.p2.ui.sdk.scheduler.PreferenceConstants.PREF_UPDATE_ON_FUZZY_SCHEDULE);
+        node.put(AutomaticUpdateScheduler.P_FUZZY_RECURRENCE, AutomaticUpdateMessages.SchedulerStartup_OnceADay);
     }
 
     /**
