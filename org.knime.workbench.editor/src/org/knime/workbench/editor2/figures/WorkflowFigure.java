@@ -129,7 +129,7 @@ public class WorkflowFigure extends FreeformLayeredPane {
      * @param msg the message to display or <code>null</code>
      */
     public void setWarningMessage(final String msg) {
-        setMessage(msg, 1, SharedImages.Warning);
+        setMessage(msg, 0, SharedImages.Warning);
     }
 
     /**
@@ -138,41 +138,39 @@ public class WorkflowFigure extends FreeformLayeredPane {
      * @param msg the message to display or <code>null</code>
      */
     public void setErrorMessage(final String msg) {
-        setMessage(msg, 0, SharedImages.Error);
+        setMessage(msg, 1, SharedImages.Error);
     }
 
     private void setMessage(final String msg, final int index, final SharedImages icon) {
-        if (msg == null) {
-            if (m_messages[index] != null) {
-                remove(m_messages[index]);
-                remove(m_messageRects[index]);
-                m_messages[index] = null;
-                m_messageRects[index] = null;
-            }
-        } else {
-            if (m_messages[index] == null) {
-                m_messageRects[index] = new RectangleFigure();
-                m_messageRects[index].setOpaque(true);
-                m_messageRects[index].setBackgroundColor(MSG_BG);
-                m_messageRects[index].setForegroundColor(MSG_BG);
-                add(m_messageRects[index]);
+        if ((msg == null && m_messages[index] == null)
+            || (msg != null && m_messages[index] != null && msg.equals(m_messages[index].getText()))) {
+            //nothing has changed
+            return;
+        }
 
-                m_messages[index] = new Label(msg);
-                m_messages[index].setOpaque(true);
-                m_messages[index].setBackgroundColor(MSG_BG);
-                m_messages[index].setIcon(ImageRepository.getUnscaledIconImage(icon));
-                Rectangle msgBounds = new Rectangle(m_messages[index].getBounds());
-                msgBounds.x += 10;
-                msgBounds.y += 10;
-                m_messages[index].setBounds(msgBounds);
-                add(m_messages[index], new Rectangle(msgBounds.x, msgBounds.y, getBounds().width - 20, 120));
-            } else {
-                if (msg.equals(m_messages[index].getText())) {
-                    //nothing has changed
-                    return;
-                }
-                m_messages[index].setText(msg);
-            }
+        if (m_messages[index] != null) {
+            remove(m_messages[index]);
+            remove(m_messageRects[index]);
+            m_messages[index] = null;
+            m_messageRects[index] = null;
+        }
+
+        if (msg != null) {
+            m_messageRects[index] = new RectangleFigure();
+            m_messageRects[index].setOpaque(true);
+            m_messageRects[index].setBackgroundColor(MSG_BG);
+            m_messageRects[index].setForegroundColor(MSG_BG);
+            add(m_messageRects[index]);
+
+            m_messages[index] = new Label(msg);
+            m_messages[index].setOpaque(true);
+            m_messages[index].setBackgroundColor(MSG_BG);
+            m_messages[index].setIcon(ImageRepository.getUnscaledIconImage(icon));
+            Rectangle msgBounds = new Rectangle(m_messages[index].getBounds());
+            msgBounds.x += 10;
+            msgBounds.y += 10;
+            m_messages[index].setBounds(msgBounds);
+            add(m_messages[index], new Rectangle(msgBounds.x, msgBounds.y, getBounds().width - 20, 120));
         }
         repaint();
     }
