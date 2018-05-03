@@ -134,10 +134,9 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
                 + "toolbar button."));
 
         addField(new HorizontalLineField(parent));
-        addField(new LabelField(parent,
-            "Remote Job View auto-refresh settings"));
-        m_autoRefresh = new BooleanFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW, "Auto-refresh Remote Job View",
-            parent) {
+        addField(new LabelField(parent, "Remote Job View auto-refresh settings"));
+        m_autoRefresh = new BooleanFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW,
+            "Auto-refresh Remote Job View", parent) {
             @Override
             protected void valueChanged(final boolean oldValue, final boolean newValue) {
                 super.valueChanged(oldValue, newValue);
@@ -149,6 +148,9 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
             PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS, "Auto-refresh interval (in ms)", parent);
         m_refreshInterval.setValidRange(KNIMEConstants.MIN_GUI_REFRESH_INTERVAL, Integer.MAX_VALUE);
         addField(m_refreshInterval);
+        addField(new LabelField(parent,
+            "If the refresh interval is larger than " + KNIMEConstants.WORKFLOW_EDITOR_CONNECTION_TIMEOUT
+                + "\nno edit operations one the job's workflow will be allowed."));
     }
 
     /** {@inheritDoc} */

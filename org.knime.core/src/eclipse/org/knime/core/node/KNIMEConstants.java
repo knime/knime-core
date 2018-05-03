@@ -317,6 +317,28 @@ public final class KNIMEConstants {
      */
     public static final int MIN_GUI_REFRESH_INTERVAL = 250;
 
+    /**
+     * Connection timeout in ms when the workflow manager is connected to a server in order to retrieve the workflow
+     * information.
+     *
+     * @since 3.6
+     */
+    public static final int WORKFLOW_EDITOR_CONNECTION_TIMEOUT = getWorkflowEditorConnectionTimeout();
+
+    /* Try reading the timeout from the system properties, otherwise return default value. */
+    private static int getWorkflowEditorConnectionTimeout() {
+        String prop = System.getProperty("org.knime.ui.workflow_editor.timeout");
+        if (prop != null) {
+            try {
+                return Integer.parseInt(prop);
+            } catch (NumberFormatException e) {
+                NodeLogger.getLogger(KNIMEConstants.class)
+                    .warn("Couldn't parse value for system property 'org.knime.ui.workflow_editor.timeout'");
+            }
+        }
+        return 1000;
+    }
+
     /** KNIME home directory. */
     private static File knimeHomeDir;
 
