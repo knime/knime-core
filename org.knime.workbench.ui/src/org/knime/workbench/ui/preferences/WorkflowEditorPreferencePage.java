@@ -68,6 +68,10 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
 
     private BooleanFieldEditor m_emptyNodeLabel;
 
+    private IntegerFieldEditor m_refreshInterval;
+
+    private BooleanFieldEditor m_autoRefresh;
+
     /**
      * Constructor.
      */
@@ -132,12 +136,19 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
         addField(new HorizontalLineField(parent));
         addField(new LabelField(parent,
             "Remote Job View auto-refresh settings"));
-        addField(new BooleanFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW, "Auto-refresh Remote Job View",
-            parent));
-        IntegerFieldEditor refreshInterval = new IntegerFieldEditor(
+        m_autoRefresh = new BooleanFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW, "Auto-refresh Remote Job View",
+            parent) {
+            @Override
+            protected void valueChanged(final boolean oldValue, final boolean newValue) {
+                super.valueChanged(oldValue, newValue);
+                m_refreshInterval.setEnabled(newValue, parent);
+            }
+        };
+        addField(m_autoRefresh);
+        m_refreshInterval = new IntegerFieldEditor(
             PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS, "Auto-refresh interval (in ms)", parent);
-        refreshInterval.setValidRange(KNIMEConstants.MIN_GUI_REFRESH_INTERVAL, Integer.MAX_VALUE);
-        addField(refreshInterval);
+        m_refreshInterval.setValidRange(KNIMEConstants.MIN_GUI_REFRESH_INTERVAL, Integer.MAX_VALUE);
+        addField(m_refreshInterval);
     }
 
     /** {@inheritDoc} */
@@ -152,5 +163,6 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
     protected void initialize() {
         super.initialize();
         m_nodeLabelPrefix.setEnabled(m_emptyNodeLabel.getBooleanValue(), getFieldEditorParent());
+        m_refreshInterval.setEnabled(m_autoRefresh.getBooleanValue(), getFieldEditorParent());
     }
 }
