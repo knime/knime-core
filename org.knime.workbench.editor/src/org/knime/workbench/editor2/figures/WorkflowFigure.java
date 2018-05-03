@@ -50,6 +50,7 @@ package org.knime.workbench.editor2.figures;
 import org.eclipse.draw2d.FreeformLayeredPane;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.RectangleFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
@@ -71,7 +72,11 @@ public class WorkflowFigure extends FreeformLayeredPane {
 
     private Image m_jobManagerFigure;
 
-    private Label m_message;
+    /* Error (index 0) and warning (index 1) messages. */
+    private Label[] m_messages = new Label[2];
+
+    /* Rectangle underneath the message figure */
+    private RectangleFigure[] m_messageRects = new RectangleFigure[2];
 
     /**
      * New workflow root figure.
@@ -103,35 +108,70 @@ public class WorkflowFigure extends FreeformLayeredPane {
             graphics.drawImage(m_jobManagerFigure, 0, 0, imgBox.width,
                                imgBox.height, bounds2.width - imgBox.width, 5, imgBox.width, imgBox.height + 5);
         }
-        if (m_message != null) {
-            graphics.setForegroundColor(MSG_BG);
-            graphics.setBackgroundColor(MSG_BG);
-            graphics.fillRectangle(0, 0, getBounds().width, m_message.getBounds().height + 20);
+        int y_offset = 0;
+        int y_0 = 10;
+        for (int i = 0; i < m_messages.length; i++) {
+            if (m_messages[i] != null) {
+                Rectangle b = m_messages[i].getBounds();
+                b.setY(y_0 + y_offset);
+                Rectangle r = new Rectangle(0, y_offset, getBounds().width, m_messages[i].getBounds().height + 20);
+                //setConstraint(m_messageRects[i], r);
+                m_messageRects[i].getBounds().setBounds(r);//setting the bounds without repainting it
+                y_offset += b.y + b.height + 10;
+            }
         }
     }
 
     /**
-     * @param msg message to display at the top of the editor
+     * Sets a warning message displayed at the top of the editor (underneath an error message if there is any).
+     *
+     *
+     * @param msg the message to display or <code>null</code>
      */
-    public void setMessage(final String msg) {
+    public void setWarningMessage(final String msg) {
+        setMessage(msg, 1, SharedImages.Warning);
+    }
+
+    /**
+     * Sets an error message displayed at the top of the editor.
+     *
+     * @param msg the message to display or <code>null</code>
+     */
+    public void setErrorMessage(final String msg) {
+        setMessage(msg, 0, SharedImages.Error);
+    }
+
+    private void setMessage(final String msg, final int index, final SharedImages icon) {
         if (msg == null) {
-            if (m_message != null) {
-                remove(m_message);
-                m_message = null;
+            if (m_messages[index] != null) {
+                remove(m_messages[index]);
+                remove(m_messageRects[index]);
+                m_messages[index] = null;
+                m_messageRects[index] = null;
             }
         } else {
-            if (m_message == null) {
-                m_message = new Label(msg);
-                m_message.setOpaque(true);
-                m_message.setBackgroundColor(MSG_BG);
-                m_message.setIcon(ImageRepository.getUnscaledIconImage(SharedImages.Warning));
-                Rectangle msgBounds = new Rectangle(m_message.getBounds());
+            if (m_messages[index] == null) {
+                m_messageRects[index] = new RectangleFigure();
+                m_messageRects[index].setOpaque(true);
+                m_messageRects[index].setBackgroundColor(MSG_BG);
+                m_messageRects[index].setForegroundColor(MSG_BG);
+                add(m_messageRects[index]);
+
+                m_messages[index] = new Label(msg);
+                m_messages[index].setOpaque(true);
+                m_messages[index].setBackgroundColor(MSG_BG);
+                m_messages[index].setIcon(ImageRepository.getUnscaledIconImage(icon));
+                Rectangle msgBounds = new Rectangle(m_messages[index].getBounds());
                 msgBounds.x += 10;
                 msgBounds.y += 10;
-                m_message.setBounds(msgBounds);
-                add(m_message, new Rectangle(msgBounds.x, msgBounds.y, getBounds().width - 20, 120));
+                m_messages[index].setBounds(msgBounds);
+                add(m_messages[index], new Rectangle(msgBounds.x, msgBounds.y, getBounds().width - 20, 120));
             } else {
-                m_message.setText(msg);
+                if (msg.equals(m_messages[index].getText())) {
+                    //nothing has changed
+                    return;
+                }
+                m_messages[index].setText(msg);
             }
         }
         repaint();
