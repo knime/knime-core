@@ -228,6 +228,11 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private static final String FILTER = "Filter";
 
     /**
+     * Size for the Panel
+     */
+    private static final Dimension PANEL_SIZE = new Dimension(700, 250);
+
+    /**
      * additional checkbox for the middle button panel
      * @since 3.4
      */
@@ -603,7 +608,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_inclTable.setRowSorter(m_inclSorter);
         m_inclTable.addFocusListener(new TableFocusAdapter(m_exclTable));
         final JScrollPane jspIncl = new JScrollPane(m_inclTable);
-        jspIncl.setPreferredSize(new Dimension(250, 100));
         // setup cardlayout for display of placeholder on search returning no results
         m_inclCards = new JPanel(new CardLayout());
         m_inclCards.setBorder(new EmptyBorder(0, 8, 0, 8));
@@ -643,7 +647,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_exclTable.setRowSorter(m_exclSorter);
         m_exclTable.addFocusListener(new TableFocusAdapter(m_inclTable));
         final JScrollPane jspExcl = new JScrollPane(m_exclTable);
-        jspExcl.setPreferredSize(new Dimension(250, 100));
         // setup cardlayout for display of placeholder on search returning no results
         m_exclCards = new JPanel(new CardLayout());
         m_exclCards.setBorder(new EmptyBorder(0, 8, 0, 8));
@@ -1616,6 +1619,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         gbc.weightx = 1;
         gbc.weighty = 1;
         panel.add(m_filterPanel, gbc);
+        panel.setPreferredSize(PANEL_SIZE);
         this.add(panel);
         updateTypePanel();
         updateFilterPanel();
