@@ -225,7 +225,10 @@ class WorkflowEditorRefresher {
                    }
                 }
             };
-            REFRESH_TIMER.schedule(m_refreshTimerTask, 0, m_autoRefreshInterval);
+            //delay timer start by 500 ms in order to give the editor time to load the workflow visuals before
+            //the change-events (e.g. progress or state) arrive
+            //(which otherwise leads, e.g., to a strange position of the node annotations, sometimes)
+            REFRESH_TIMER.schedule(m_refreshTimerTask, 500, m_autoRefreshInterval);
             LOGGER.debug("Workflow refresh timer scheduled for workflow '" + m_editor.getTitle() + "' every "
                 + m_autoRefreshInterval + " ms");
 
@@ -250,8 +253,8 @@ class WorkflowEditorRefresher {
                         }
                     }
                 };
-                //start this timer slightly later then the refresh timer
-                DISCONNECTED_TIMER.schedule(m_disconnectedTimerTask, 0,
+                //delay timer start by 500 ms (see above)
+                DISCONNECTED_TIMER.schedule(m_disconnectedTimerTask, 500,
                     KNIMEConstants.WORKFLOW_EDITOR_CONNECTION_TIMEOUT);
             } else {
                 setConnected(false, false);
