@@ -155,11 +155,8 @@ public class CancelAllAction extends AbstractNodeAction {
         WorkflowManagerUI manager = getManagerUI();
         if (manager.getParent() == null) {
             //can't just cancel the parent -> try canceling every single node
-            manager.getNodeContainers().stream().forEach(nc -> {
-                if (nc.getNodeContainerState().isExecutionInProgress()) {
-                    manager.cancelExecution(nc);
-                }
-            });
+            manager.getNodeContainers().stream().filter(nc -> nc.getNodeContainerState().isExecutionInProgress())
+                .forEach(nc -> manager.cancelExecution(nc));
         } else {
             //just cancel the parent
             manager.getParent().cancelExecution(manager);
