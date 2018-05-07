@@ -58,15 +58,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
+import java.util.Optional;
 
 import javax.swing.ImageIcon;
 
 import org.apache.commons.codec.binary.Hex;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.eclipseUtil.OSGIHelper;
+import org.knime.core.internal.ConfigurationAreaChecker;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 import org.osgi.framework.Bundle;
@@ -454,6 +454,7 @@ public final class KNIMEConstants {
                     + ex.getMessage());
             }
         }
+        ConfigurationAreaChecker.scheduleIntegrityCheck();
     }
 
     /**
@@ -569,44 +570,35 @@ public final class KNIMEConstants {
     }
 
     private static void assignUniqueID() {
-        Location configLocation = Platform.getConfigurationLocation();
-        if (configLocation != null) {
-            URL configURL = configLocation.getURL();
-            if (configURL != null) {
-                String path = configURL.getPath();
-                if (Platform.OS_WIN32.equals(Platform.getOS()) && path.matches("^/[a-zA-Z]:/.*")) {
-                    // Windows path with drive letter => remove first slash
-                    path = path.substring(1);
+        Optional<Path> configLocationPath = ConfigurationAreaChecker.getConfigurationLocationPath();
+        if (configLocationPath.isPresent()) {
+            Path uniqueId = configLocationPath.get().resolve("org.knime.core").resolve("knime-id");
+
+            if (!Files.exists(uniqueId)) {
+                try {
+                    Files.createDirectories(uniqueId.getParent());
+
+                    knimeID = "01-" + createUniqeID();
+                    try (OutputStream os = Files.newOutputStream(uniqueId)) {
+                        os.write(knimeID.toString().getBytes("UTF-8"));
+                    } catch (IOException ex) {
+                        NodeLogger.getLogger(KNIMEConstants.class).error(
+                            "Could not write KNIME id to '" + uniqueId.toAbsolutePath() + "': " + ex.getMessage(),
+                            ex);
+                    }
+                } catch (IOException ex) {
+                    NodeLogger.getLogger(KNIMEConstants.class).error(
+                        "Could not create configuration directory '" + uniqueId.getParent().toAbsolutePath()
+                        + "': " + ex.getMessage(), ex);
                 }
-
-                Path uniqueId = Paths.get(path, "org.knime.core", "knime-id");
-
-                if (!Files.exists(uniqueId)) {
-                    try {
-                        Files.createDirectories(uniqueId.getParent());
-
-                        knimeID = "01-" + createUniqeID();
-                        try (OutputStream os = Files.newOutputStream(uniqueId)) {
-                            os.write(knimeID.toString().getBytes("UTF-8"));
-                        } catch (IOException ex) {
-                            NodeLogger.getLogger(KNIMEConstants.class).error(
-                                "Could not write KNIME id to '" + uniqueId.toAbsolutePath() + "': " + ex.getMessage(),
-                                ex);
-                        }
-                    } catch (IOException ex) {
-                        NodeLogger.getLogger(KNIMEConstants.class).error(
-                            "Could not create configuration directory '" + uniqueId.getParent().toAbsolutePath()
-                                + "': " + ex.getMessage(), ex);
-                    }
-                } else if (Files.isReadable(uniqueId)) {
-                    try (InputStream is = Files.newInputStream(uniqueId)) {
-                        byte[] buf = new byte[256];
-                        int read = is.read(buf);
-                        knimeID = new String(buf, 0, read, Charset.forName("UTF-8"));
-                    } catch (IOException ex) {
-                        NodeLogger.getLogger(KNIMEConstants.class).error(
-                            "Could not read KNIME id from '" + uniqueId.toAbsolutePath() + "': " + ex.getMessage(), ex);
-                    }
+            } else if (Files.isReadable(uniqueId)) {
+                try (InputStream is = Files.newInputStream(uniqueId)) {
+                    byte[] buf = new byte[256];
+                    int read = is.read(buf);
+                    knimeID = new String(buf, 0, read, Charset.forName("UTF-8"));
+                } catch (IOException ex) {
+                    NodeLogger.getLogger(KNIMEConstants.class).error(
+                        "Could not read KNIME id from '" + uniqueId.toAbsolutePath() + "': " + ex.getMessage(), ex);
                 }
             }
         }
