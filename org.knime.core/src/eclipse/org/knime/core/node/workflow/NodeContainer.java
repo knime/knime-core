@@ -659,9 +659,12 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     /* ----------- progress ----------*/
 
     /**
-     * @return the progressMonitor
+     * Provides access to the node's progress monitor.
+     *
+     * @return the progress monitor
+     * @since 3.6
      */
-    NodeProgressMonitor getProgressMonitor() {
+    public NodeProgressMonitor getProgressMonitor() {
         return m_progressMonitor;
     }
 
