@@ -123,19 +123,19 @@ public class WorkflowFigure extends FreeformLayeredPane {
     }
 
     /**
-     * Sets a warning message displayed at the top of the editor (underneath an error message if there is any).
+     * Sets a warning message displayed at the top of the editor (above an error message if there is any).
      *
      *
-     * @param msg the message to display or <code>null</code>
+     * @param msg the message to display or <code>null</code> to remove it
      */
     public void setWarningMessage(final String msg) {
         setMessage(msg, 0, SharedImages.Warning);
     }
 
     /**
-     * Sets an error message displayed at the top of the editor.
+     * Sets an error message displayed at the top of the editor (underneath a warning message if there is any).
      *
-     * @param msg the message to display or <code>null</code>
+     * @param msg the message to display or <code>null</code> to remove it
      */
     public void setErrorMessage(final String msg) {
         setMessage(msg, 1, SharedImages.Error);

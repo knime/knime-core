@@ -71,14 +71,17 @@ class WorkflowEditorRefresher {
     /** A timer thread the workflow refresh timer tasks are submitted to. */
     private static Timer REFRESH_TIMER = null;
 
-    /** A timer thread the disconnected timer tasks are submitted to. */
-    private static Timer DISCONNECTED_TIMER = null;
+    /** A timer thread the connected timer tasks are submitted to. */
+    private static Timer CONNECTED_TIMER = null;
 
     /** If non-null, a currently scheduled task that periodically refreshes the WorkflowManagerUI **/
     private TimerTask m_refreshTimerTask = null;
 
-    /** If non-null, it periodically checks whether the workflow has been refreshed within a specified time interval. */
-    private TimerTask m_disconnectedTimerTask = null;
+    /**
+     * If non-null, it periodically checks whether the workflow has been refreshed within a specified time interval.
+     * Otherwise the workflow (and workflow editor) is considered as disconnected.
+     */
+    private TimerTask m_connectedTimerTask = null;
 
     /** Flag whether the auto-workflow-refresh (for refreshable workflows only) is enabled */
     private boolean m_isAutoRefreshEnabled;
@@ -105,6 +108,9 @@ class WorkflowEditorRefresher {
 
     /**
      * Creates a new refresher.
+     *
+     * @param editor the workflow editor this refresh is associated with
+     * @param connectedCallback callback called when connected-status is changed (i.e. server cannot be reached anymore)
      */
     WorkflowEditorRefresher(final WorkflowEditor editor, final Runnable connectedCallback) {
         m_editor = editor;
@@ -232,13 +238,15 @@ class WorkflowEditorRefresher {
             LOGGER.debug("Workflow refresh timer scheduled for workflow '" + m_editor.getTitle() + "' every "
                 + m_autoRefreshInterval + " ms");
 
+            //start timer that checks whether the workflow has been refreshed within a certain time interval
+            //otherwise the workflow and workflow editor is regarded as disconnected
             if (isRefreshRateHighEnoughForEditing()) {
                 synchronized (WorkflowEditor.class) {
-                    if (DISCONNECTED_TIMER == null) {
-                        DISCONNECTED_TIMER = new Timer("Workflow Connection-Test Timer", true);
+                    if (CONNECTED_TIMER == null) {
+                        CONNECTED_TIMER = new Timer("Workflow Connection-Test Timer", true);
                     }
                 }
-                m_disconnectedTimerTask = new TimerTask() {
+                m_connectedTimerTask = new TimerTask() {
                     @Override
                     public void run() {
                         if (m_hasBeenRefreshed.getAndSet(false)) {
@@ -254,7 +262,7 @@ class WorkflowEditorRefresher {
                     }
                 };
                 //delay timer start by 500 ms (see above)
-                DISCONNECTED_TIMER.schedule(m_disconnectedTimerTask, 500,
+                CONNECTED_TIMER.schedule(m_connectedTimerTask, 500,
                     KNIMEConstants.WORKFLOW_EDITOR_CONNECTION_TIMEOUT);
             } else {
                 setConnected(false, false);
@@ -327,9 +335,9 @@ class WorkflowEditorRefresher {
         if (m_refreshTimerTask != null) {
             m_refreshTimerTask.cancel();
             m_refreshTimerTask = null;
-            if (m_disconnectedTimerTask != null) {
-                m_disconnectedTimerTask.cancel();
-                m_disconnectedTimerTask = null;
+            if (m_connectedTimerTask != null) {
+                m_connectedTimerTask.cancel();
+                m_connectedTimerTask = null;
                 m_hasBeenRefreshed.set(true);
             }
             return true;
