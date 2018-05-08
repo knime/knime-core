@@ -603,11 +603,11 @@ public class AccuracyScorerCalculator {
                 m_falseCount++;
             }
         }
+        int missing = rowsNumber - m_correctCount - m_falseCount;
         if (missingCount > 0) {
-            addWarning("There were missing values in the reference or in the prediction class columns.");
+            addWarning("There were " + missing + " missing values in the reference or in the prediction class columns.");
         }
         // print info
-        int missing = rowsNumber - m_correctCount - m_falseCount;
         LOGGER.info("overall error=" + getOverallError() + ", #correct=" + m_correctCount + ", #false="
             + m_falseCount + ", #rows=" + rowsNumber + ", #missing=" + missing);
         return;
