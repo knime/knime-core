@@ -1475,4 +1475,14 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
         //nothing to do, not refreshable
     }
 
+    /**
+     * Sets the disconnected-status of the workflow manager. I.e. in case the workflow manager implementation is just a
+     * client and has lost the connection to the server.
+     *
+     * @param disconnected <code>true</code> if disconnected, otherwise <code>false</code>
+     */
+    default void setDisconnected(final boolean disconnected) {
+        //nothing to do, to be overridden by implementations
+    }
+
 }

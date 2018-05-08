@@ -317,6 +317,7 @@ class WorkflowEditorRefresher {
             LOGGER.warn("Job view '" + m_editor.getTitle() + "' disconnected from server.");
         }
         m_isConnected = isConnected;
+        m_editor.getWorkflowManagerUI().setDisconnected(!isConnected);
         if (callback) {
             m_connectedCallback.run();
         }
