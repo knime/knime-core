@@ -150,7 +150,7 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
         addField(m_refreshInterval);
         addField(new LabelField(parent,
             "If the refresh interval is larger than " + KNIMEConstants.WORKFLOW_EDITOR_CONNECTION_TIMEOUT
-                + "\nno edit operations one the job's workflow will be allowed."));
+                + "\nno edit operations on the job's workflow will be allowed."));
     }
 
     /** {@inheritDoc} */

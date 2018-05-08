@@ -2268,7 +2268,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             StringBuilder sb = new StringBuilder("This is a remotely opened job workflow.");
             if (!m_refresher.isAutoRefreshEnabled()) {
                 sb.append("\nIt just represents a static snapshot of the job workflow and won't get"
-                    + " updated automatically. Use context menu to refresh or activate the auto-refresh in the preferences.");
+                    + " updated automatically. Use context menu to refresh or the preferences to activate the auto-refresh.");
                 sb.append(" Edit operations are only allowed if the auto-refresh is enabled.");
             } else {
                 sb.append("\nIt will get refreshed every " + m_refresher.getAutoRefreshInterval()
