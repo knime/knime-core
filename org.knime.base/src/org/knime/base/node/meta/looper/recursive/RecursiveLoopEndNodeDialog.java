@@ -45,7 +45,8 @@
  */
 package org.knime.base.node.meta.looper.recursive;
 
-import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
@@ -62,6 +63,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Scope;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * Dialog for the recursive loop end.
@@ -104,26 +107,9 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentBoolean(createAddIterationColumn(), "Add iteration column"));
         closeCurrentGroup();
 
-       // listener setup
-        m_useVariable.addChangeListener(e -> m_endLoopVar.setEnabled(m_useVariable.getBooleanValue()));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onOpen() {
-        super.onOpen();
-        m_endLoopVar.setEnabled(m_useVariable.getBooleanValue());
-
-        // update the available flow variables
-        final Map<String, FlowVariable> flowVars = getAvailableFlowVariables();
-        if (!flowVars.isEmpty()) {
-            // check for selected value
-            String flowVar = "";
-            flowVar = m_endLoopVar.getStringValue();
-            m_flowVarSelection.replaceListItems(flowVars.values(), flowVar);
-        }
+        // listener setup
+        m_useVariable.addChangeListener(
+            e -> m_endLoopVar.setEnabled(m_useVariable.isEnabled() && m_useVariable.getBooleanValue()));
     }
 
     /**
@@ -193,6 +179,25 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
             LOGGER.debug("Exception during loadAdditionalSettings:", exc);
             throw new NotConfigurableException(exc.getMessage());
         }
+
+        // get all string flow vars
+        final List<FlowVariable> vars = getAvailableFlowVariables().values().stream()
+                .filter(v -> (v.getScope() == Scope.Flow) && (v.getType() == Type.STRING)).collect(Collectors.toList());
+
+        if (vars.isEmpty()) {
+            // disable flow variable selection when no valid vars are available
+            m_endLoopVar.setEnabled(false);
+            m_useVariable.setEnabled(false);
+        } else {
+            try {
+                final String flowVar =
+                        ((SettingsModelString)m_endLoopVar.createCloneWithValidatedValue(settings)).getStringValue();
+                m_flowVarSelection.replaceListItems(vars, flowVar);
+            } catch (final InvalidSettingsException e) {
+                LOGGER.warn("Could not clone settings object correctly!", e);
+            }
+        }
+        m_endLoopVar.setEnabled(m_useVariable.getBooleanValue());
     }
 
     /**
