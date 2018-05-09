@@ -47,6 +47,8 @@ package org.knime.base.node.flowcontrol.breakpoint;
 import java.util.Set;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -61,6 +63,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author M. Berthold, University of Konstanz
  */
 public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(BreakpointNodeDialog.class);
 
     /** break on table with zero rows. */
     static final String EMTPYTABLE = "empty table";
@@ -85,8 +89,6 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
     private final DialogComponentStringSelection m_variableName;
 
     private boolean m_varsAvailable;
-
-    private String m_varValueAtOpen;
 
     /**
      * Creates the dialog of the Breakpoint node.
@@ -125,9 +127,13 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(varvalue);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void onOpen() {
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        throws NotConfigurableException {
+
         final Set<String> availableVars = this.getAvailableFlowVariables().keySet();
         if (availableVars.isEmpty()) {
             m_varsAvailable = false;
@@ -135,28 +141,19 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
             m_varValueModel.setEnabled(false);
         } else {
             m_varsAvailable = true;
-            /**
-             * because we replace the list items we need to store the original value to be able to restore it later,
-             * this ensures the correct value is displayed if the selected flowvariable becomes available again.
-             */
-            m_varValueAtOpen = m_varNameModel.getStringValue();
-            m_variableName.replaceListItems(availableVars, m_varValueAtOpen);
+            try {
+                String var =
+                    ((SettingsModelString)m_varNameModel.createCloneWithValidatedValue(settings)).getStringValue();
+                m_variableName.replaceListItems(availableVars, var);
+            } catch (InvalidSettingsException e) {
+                LOGGER.warn("Could not clone settings!", e);
+            }
             m_choicesModel.setEnabled(m_enableModel.getBooleanValue());
             final boolean varsEnabled =
                 m_enableModel.getBooleanValue() && VARIABLEMATCH.equals(m_choicesModel.getStringValue());
             m_varNameModel.setEnabled(varsEnabled);
             m_varValueModel.setEnabled(varsEnabled);
         }
-        super.onOpen();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
-        throws NotConfigurableException {
-        m_varNameModel.setStringValue(m_varValueAtOpen);
     }
 
     /**
