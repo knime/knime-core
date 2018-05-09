@@ -142,6 +142,7 @@ public class FeatureSelectionLoopEndNodeDialogPane extends NodeDialogPane {
             throw new NotConfigurableException("There is no compatible Flow Variable (Double) at the inport.");
         }
         m_scoreVariableComboBox.setSelectedItem(selected);
+        m_isMinimizeCheckBox.setSelected(cfg.isMinimize());
     }
 
 }
