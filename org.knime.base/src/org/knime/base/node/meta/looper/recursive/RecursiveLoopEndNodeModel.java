@@ -241,6 +241,12 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
             // the output may change over the loops
             return new DataTableSpec[]{null};
         }
+        if (m_useVariable.getBooleanValue()
+            && getAvailableFlowVariables().get(m_endLoopVariableName.getStringValue()) == null) {
+            throw new InvalidSettingsException(
+                "Selected flow variable: '" + m_endLoopVariableName.getStringValue() + "' not available!");
+        }
+
         return new DataTableSpec[]{createSpec(inSpecs[collectingIn])};
     }
 
