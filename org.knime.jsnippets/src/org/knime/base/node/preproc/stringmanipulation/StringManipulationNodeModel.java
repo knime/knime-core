@@ -122,7 +122,7 @@ public class StringManipulationNodeModel extends AbstractConditionalStreamingNod
         boolean isReplace = m_settings.isReplace();
         String colName = m_settings.getColName();
         JavaScriptingSettings settings =
-            m_settings.createJavaScriptingSettings();
+            m_settings.getJavaScriptingSettings();
         try {
             settings.setInputAndCompile(spec);
             ColumnCalculator cc = new ColumnCalculator(settings, this);
@@ -148,7 +148,6 @@ public class StringManipulationNodeModel extends AbstractConditionalStreamingNod
         m_rowCount = rowCount;
         return createColumnRearranger(spec);
     }
-
 
     /**
      * {@inheritDoc}
@@ -263,6 +262,12 @@ public class StringManipulationNodeModel extends AbstractConditionalStreamingNod
         // no internals
     }
 
-
+    @Override
+    protected void onDispose() {
+        if (m_settings != null) {
+            m_settings.discard();
+        }
+        super.onDispose();
+    }
 
 }

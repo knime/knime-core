@@ -59,6 +59,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Map;
 
@@ -572,10 +573,11 @@ public class JavaScriptingPanel extends JPanel {
         boolean isTestCompilation = m_compileOnCloseChecker.isSelected();
         s.setTestCompilationOnDialogClose(isTestCompilation);
         if (isTestCompilation && m_currentSpec != null) {
-            try {
-                Expression.compile(s, m_currentSpec);
+            try (Expression tempExp = Expression.compile(s, m_currentSpec)) {
             } catch (CompilationFailedException cfe) {
                 throw new InvalidSettingsException(cfe.getMessage(), cfe);
+            } catch (IOException e) {
+                NodeLogger.getLogger(getClass()).error("Unable to clean-up Expression instance: " + e.getMessage(), e);
             }
         }
         s.setInsertMissingAsNull(m_insertMissingAsNullChecker.isSelected());

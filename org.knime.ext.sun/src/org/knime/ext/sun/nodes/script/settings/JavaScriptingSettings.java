@@ -48,6 +48,7 @@
 package org.knime.ext.sun.nodes.script.settings;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 
@@ -56,6 +57,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
@@ -424,11 +426,25 @@ public final class JavaScriptingSettings {
      */
     public void setInputAndCompile(final DataTableSpec spec)
         throws CompilationFailedException, InvalidSettingsException {
-        if ((m_compiledExpression == null)
-                || (!spec.equalStructure(m_inputSpec))) {
+        if ((m_compiledExpression == null) || (!spec.equalStructure(m_inputSpec))) {
+            discard();
             // if the spec changes, we need to re-compile the expression
             m_compiledExpression = Expression.compile(this, spec);
             m_inputSpec = spec;
+        }
+    }
+
+    /** Cleans up the old {@link Expression} object that is kept as member. Called when node is discarded or a new
+     * expression is to be compiled.
+     * @since 3.6 */
+    public void discard() {
+        if (m_compiledExpression != null) {
+            try {
+                m_compiledExpression.close();
+            } catch (IOException ioe) {
+                NodeLogger.getLogger(getClass()).warn("Unable to clean up old Expression object", ioe);
+            }
+            m_compiledExpression = null;
         }
     }
 
@@ -494,7 +510,6 @@ public final class JavaScriptingSettings {
                     + returnType);
         }
     }
-
 
 
 

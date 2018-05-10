@@ -194,6 +194,13 @@ public class JavaRowSplitterNodeModel extends NodeModel
         m_rowCount = -1;
     }
 
+    @Override
+    protected void onDispose() {
+        if (m_settings != null) {
+            m_settings.discard();
+        }
+        super.onDispose();
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -296,6 +303,9 @@ public class JavaRowSplitterNodeModel extends NodeModel
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        if (m_settings != null) {
+            m_settings.discard();
+        }
         JavaScriptingSettings jsSettings = m_customizer.createSettings();
         jsSettings.loadSettingsInModel(settings);
         m_settings = jsSettings;

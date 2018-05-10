@@ -124,7 +124,7 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
         if (m_settings == null || m_settings.getExpression() == null) {
             throw new InvalidSettingsException("No expression has been set.");
         }
-        JavaScriptingSettings settings = m_settings.createJavaScriptingSettings();
+        JavaScriptingSettings settings = m_settings.getJavaScriptingSettings();
         settings.setInputAndCompile(new DataTableSpec());
 
         // calculate the result
@@ -218,6 +218,14 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
     @Override
     protected void reset() {
         // no internals
+    }
+
+    @Override
+    protected void onDispose() {
+        if (m_settings != null) {
+            m_settings.discard();
+        }
+        super.onDispose();
     }
 
     /**

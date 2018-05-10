@@ -113,6 +113,9 @@ public class JavaScriptingNodeModel
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        if (m_settings != null) {
+            m_settings.discard();
+        }
         JavaScriptingSettings temp = m_customizer.createSettings();
         temp.loadSettingsInModel(settings);
         m_settings = temp;
@@ -142,6 +145,13 @@ public class JavaScriptingNodeModel
     @Override
     protected void reset() {
         m_rowCount = -1;
+    }
+
+    @Override
+    protected void onDispose() {
+        if (m_settings != null) {
+            m_settings.discard();
+        }
     }
 
     /**

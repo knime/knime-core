@@ -118,6 +118,7 @@ public class StringManipulationSettings {
      * in a "missing" result. */
     private boolean m_insertMissingAsNull = false;
 
+    private JavaScriptingSettings m_javaScriptingSettings;
 
     /** Saves current parameters to settings object.
      * @param settings To save to.
@@ -154,6 +155,8 @@ public class StringManipulationSettings {
         // added in v2.3
         m_insertMissingAsNull  =
             settings.getBoolean(CFG_INSERT_MISSING_AS_NULL, false);
+        // only discards previous JavaScriptSettings
+        discard();
     }
 
     /** Loads parameters in Dialog.
@@ -178,6 +181,8 @@ public class StringManipulationSettings {
         // added in v2.3
         m_insertMissingAsNull  =
             settings.getBoolean(CFG_INSERT_MISSING_AS_NULL, false);
+        // only discards previous JavaScriptingSettings
+        discard();
     }
 
     /**
@@ -372,70 +377,83 @@ public class StringManipulationSettings {
         + "category to specify the return type.";
     }
 
+    /** Discards the compiled expressions (e.g. temporary .java files, closing URL class loaders).
+     * @since 3.6
+     */
+    public void discard() {
+        if (m_javaScriptingSettings != null) {
+            m_javaScriptingSettings.discard();
+            m_javaScriptingSettings = null;
+        }
+    }
+
     /**
      * Create settings to be used by {@link ColumnCalculator} in order
      * to execute the expression.
      *
      * @return settings java scripting settings
      * @throws InvalidSettingsException when settings are not correct
-     * @since 3.3
+     * @since 3.6
      */
-    public JavaScriptingSettings createJavaScriptingSettings()
+    public JavaScriptingSettings getJavaScriptingSettings()
         throws InvalidSettingsException {
-        // determine return type
-        m_returnType = null == m_returnType
-            ? determineReturnType(StringUtils.strip(m_expression))
-            : m_returnType;
+        if (m_javaScriptingSettings == null) {
+            // determine return type
+            m_returnType = null == m_returnType
+                ? determineReturnType(StringUtils.strip(m_expression))
+                : m_returnType;
 
-        JavaScriptingSettings s = new JavaScriptingSettings(null);
-        s.setArrayReturn(false);
-        s.setColName(this.getColName());
-        s.setExpression("return " + this.getExpression() + ";");
-        s.setExpressionVersion(Expression.VERSION_2X);
-        s.setHeader("");
-        s.setInsertMissingAsNull(this.isInsertMissingAsNull());
-        Bundle bundle = FrameworkUtil.getBundle(this.getClass());
-        try {
-            List<String> includes = new ArrayList<String>();
-            URL snippetIncURL = FileLocator.find(bundle,
-                    new Path("/lib/snippet_inc"), null);
-            File includeDir = new File(
-                    FileLocator.toFileURL(snippetIncURL).getPath());
-            for (File includeJar : includeDir.listFiles()) {
-                if (includeJar.isFile()
-                        && includeJar.getName().endsWith(".jar")) {
-                    includes.add(includeJar.getPath());
-                    LOGGER.debug("Include jar file: "
-                            + includeJar.getPath());
+            JavaScriptingSettings s = new JavaScriptingSettings(null);
+            s.setArrayReturn(false);
+            s.setColName(this.getColName());
+            s.setExpression("return " + this.getExpression() + ";");
+            s.setExpressionVersion(Expression.VERSION_2X);
+            s.setHeader("");
+            s.setInsertMissingAsNull(this.isInsertMissingAsNull());
+            Bundle bundle = FrameworkUtil.getBundle(this.getClass());
+            try {
+                List<String> includes = new ArrayList<String>();
+                URL snippetIncURL = FileLocator.find(bundle,
+                        new Path("/lib/snippet_inc"), null);
+                File includeDir = new File(
+                        FileLocator.toFileURL(snippetIncURL).getPath());
+                for (File includeJar : includeDir.listFiles()) {
+                    if (includeJar.isFile()
+                            && includeJar.getName().endsWith(".jar")) {
+                        includes.add(includeJar.getPath());
+                        LOGGER.debug("Include jar file: "
+                                + includeJar.getPath());
+                    }
                 }
+                StringManipulatorProvider provider =
+                    StringManipulatorProvider.getDefault();
+                includes.add(provider.getJarFile().getAbsolutePath());
+                includes.add(FileLocator.getBundleFile(FrameworkUtil.getBundle(StringUtils.class)).getAbsolutePath());
+                s.setJarFiles(includes.toArray(new String[includes.size()]));
+            } catch (IOException e) {
+                throw new IllegalStateException("Cannot locate necessary libraries due to I/O problem: " + e.getMessage(),
+                    e);
             }
+            s.setReplace(this.isReplace());
+            s.setReturnType(m_returnType.getName());
+            s.setTestCompilationOnDialogClose(
+                    this.isTestCompilationOnDialogClose());
+            List<String> imports = new ArrayList<String>();
+            // Use defaults imports
+            imports.addAll(Arrays.asList(Expression.getDefaultImports()));
             StringManipulatorProvider provider =
                 StringManipulatorProvider.getDefault();
-            includes.add(provider.getJarFile().getAbsolutePath());
-            includes.add(FileLocator.getBundleFile(FrameworkUtil.getBundle(StringUtils.class)).getAbsolutePath());
-            s.setJarFiles(includes.toArray(new String[includes.size()]));
-        } catch (IOException e) {
-            throw new IllegalStateException("Cannot locate necessary libraries due to I/O problem: " + e.getMessage(),
-                e);
+            // Add StringManipulators to the imports
+            Collection<Manipulator> manipulators =
+                provider.getManipulators(ManipulatorProvider.ALL_CATEGORY);
+            for (Manipulator manipulator : manipulators) {
+                String toImport = manipulator.getClass().getName();
+                imports.add("static " + toImport + ".*");
+            }
+            s.setImports(imports.toArray(new String[imports.size()]));
+            m_javaScriptingSettings = s;
         }
-        s.setReplace(this.isReplace());
-        s.setReturnType(m_returnType.getName());
-        s.setTestCompilationOnDialogClose(
-                this.isTestCompilationOnDialogClose());
-        List<String> imports = new ArrayList<String>();
-        // Use defaults imports
-        imports.addAll(Arrays.asList(Expression.getDefaultImports()));
-        StringManipulatorProvider provider =
-            StringManipulatorProvider.getDefault();
-        // Add StringManipulators to the imports
-        Collection<Manipulator> manipulators =
-            provider.getManipulators(ManipulatorProvider.ALL_CATEGORY);
-        for (Manipulator manipulator : manipulators) {
-            String toImport = manipulator.getClass().getName();
-            imports.add("static " + toImport + ".*");
-        }
-        s.setImports(imports.toArray(new String[imports.size()]));
-        return s;
+        return m_javaScriptingSettings;
     }
 
 }

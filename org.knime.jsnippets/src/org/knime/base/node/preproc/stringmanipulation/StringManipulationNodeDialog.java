@@ -56,6 +56,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -411,13 +412,15 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
         boolean isTestCompilation = m_compileOnCloseChecker.isSelected();
         s.setTestCompilationOnDialogClose(isTestCompilation);
         if (isTestCompilation && m_currentSpec != null) {
-            try {
-                Expression.compile(s.createJavaScriptingSettings(), m_currentSpec);
+            try (Expression tempExp = Expression.compile(s.getJavaScriptingSettings(), m_currentSpec);) {
             } catch (CompilationFailedException cfe) {
                 throw new InvalidSettingsException(cfe.getMessage(), cfe);
+            } catch (IOException e) {
+                NodeLogger.getLogger(getClass()).warn("Unable to clean up Expression object: " + e.getMessage(), e);
             }
         }
         s.setInsertMissingAsNull(m_insertMissingAsNullChecker.isSelected());
         s.saveSettingsTo(settings);
+        s.discard();
     }
 }

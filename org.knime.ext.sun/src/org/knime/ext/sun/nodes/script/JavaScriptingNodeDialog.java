@@ -96,6 +96,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         s.loadSettingsInDialog(settings, specs[0]);
         m_mainPanel.loadSettingsFrom(s, specs[0]);
         m_jarPanel.loadSettingsFrom(s);
+        s.discard();
     }
 
     /**
@@ -110,5 +111,6 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         m_jarPanel.saveSettingsTo(s);
         m_mainPanel.saveSettingsTo(s);
         s.saveSettingsTo(settings);
+        s.discard();
     }
 }
