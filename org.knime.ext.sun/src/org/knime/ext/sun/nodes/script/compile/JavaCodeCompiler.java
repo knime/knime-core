@@ -47,21 +47,20 @@
  */
 package org.knime.ext.sun.nodes.script.compile;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Collections;
 import java.util.Locale;
-import java.util.Map;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
@@ -69,13 +68,17 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 
 /** Utilizes {@link JavaCompiler} (by default the eclipse compiler)
- * to compile in memory java file objects.
+ * to compile java file objects.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
@@ -98,6 +101,8 @@ public final class JavaCodeCompiler {
         NodeLogger.getLogger(JavaCodeCompiler.class);
     private final JavaVersion m_javaVersion;
 
+    private final File m_outputFileLocation;
+
     /**
      *
      */
@@ -106,18 +111,35 @@ public final class JavaCodeCompiler {
     }
 
     /**
-     * @param javaVersion
+     * @param javaVersion The non-null java version to use for compilation.
      * @since 3.0
      */
     public JavaCodeCompiler(final JavaVersion javaVersion) {
         m_javaVersion = javaVersion;
+        File outputFileLocation;
+        try {
+            outputFileLocation = FileUtil.createTempDir(getClass().getSimpleName().toLowerCase());
+        } catch (IOException e) {
+            outputFileLocation = FileUtil.getWorkflowTempDir(); // only a fallback
+        }
+        m_outputFileLocation = outputFileLocation;
+    }
+
+    /**
+     * @param javaVersion The non-null java version to use for compilation.
+     * @param outputFileLocation The location where the .class files will be generated in.
+     * @since 3.6
+     */
+    public JavaCodeCompiler(final JavaVersion javaVersion, final File outputFileLocation) {
+        m_javaVersion = CheckUtils.checkArgumentNotNull(javaVersion);
+        CheckUtils.checkArgument(outputFileLocation.isDirectory() && outputFileLocation.canWrite(),
+            "File location does not denote an existing writable directory: " + outputFileLocation);
+        m_outputFileLocation = CheckUtils.checkArgumentNotNull(outputFileLocation);
     }
 
     private File[] m_classpaths;
     private String[] m_additionalCompileArgs;
     private JavaFileObject[] m_sources;
-
-    private InMemoryJavaFileManager m_fileMgr;
 
     private File m_sourceCodeDebugDir;
 
@@ -193,6 +215,8 @@ public final class JavaCodeCompiler {
         compileArgs.add(javaVersion);
         compileArgs.add("-target");
         compileArgs.add(javaVersion);
+        compileArgs.add("-encoding");
+        compileArgs.add("UTF-8");
 
         compileArgs.add("-nowarn");
         if (m_additionalCompileArgs != null) {
@@ -232,14 +256,19 @@ public final class JavaCodeCompiler {
                         + "\": " + e.getMessage(), e);
             }
         }
-        DiagnosticCollector<JavaFileObject> digsCollector =
-            new DiagnosticCollector<JavaFileObject>();
-        StandardJavaFileManager stdFileMgr = compiler.getStandardFileManager(
-                digsCollector, null, null);
-        m_fileMgr = new InMemoryJavaFileManager(stdFileMgr);
-        CompilationTask compileTask = compiler.getTask(logString, m_fileMgr,
+        DiagnosticCollector<JavaFileObject> digsCollector = new DiagnosticCollector<JavaFileObject>();
+        boolean compileCallSuccess;
+        try (StandardJavaFileManager stdFileMgr = compiler.getStandardFileManager(
+            digsCollector, null, StandardCharsets.UTF_8)) {
+            stdFileMgr.setLocation(StandardLocation.CLASS_OUTPUT, Collections.singleton(m_outputFileLocation));
+            CompilationTask compileTask = compiler.getTask(logString, stdFileMgr,
                 digsCollector, compileArgs, null, Arrays.asList(m_sources));
-        if (!compileTask.call()) {
+            compileCallSuccess = compileTask.call();
+        } catch (IOException ioe) {
+            LOGGER.error(ioe);
+            compileCallSuccess = false;
+        }
+        if (!compileCallSuccess) {
             boolean hasDiagnostic = false;
             StringBuilder b = new StringBuilder("Unable to compile expression");
             for (Diagnostic<? extends JavaFileObject> d
@@ -249,21 +278,10 @@ public final class JavaCodeCompiler {
                     String[] sourceLines = new String[0];
                     if (d.getSource() != null) {
                         JavaFileObject srcJavaFileObject = d.getSource();
-                        String src;
-                        if (srcJavaFileObject
-                                instanceof InMemorySourceJavaFileObject) {
-                            src = ((InMemorySourceJavaFileObject)
-                                    srcJavaFileObject).getSource();
-                        } else {
-                            try {
-                                src = srcJavaFileObject.getCharContent(
-                                        false).toString();
-                            } catch (IOException ioe) {
-                                src = null;
-                            }
-                        }
-                        if (src != null) {
-                            sourceLines = getSourceLines(src);
+                        try (InputStream input = srcJavaFileObject.openInputStream()) {
+                            sourceLines = IOUtils.readLines(input, StandardCharsets.UTF_8).toArray(new String[0]);
+                        } catch (IOException ioe) {
+                            LOGGER.error(ioe);
                         }
                         if (LOGGER.isDebugEnabled()) {
                             LOGGER.debug("<<<< Expression Start >>>>");
@@ -337,70 +355,23 @@ public final class JavaCodeCompiler {
      * @return a class loader that can load the compiled classes.
      * @throws CompilationFailedException when the compilation of the given source code failed.
      */
-    public ClassLoader createClassLoader(final ClassLoader parent)
+    public URLClassLoader createClassLoader(final ClassLoader parent)
         throws CompilationFailedException {
-        if (m_fileMgr == null) {
-            throw new IllegalStateException(
-                    "Did not call compile() or compilation failed");
-        }
-        ClassLoader trueParent = parent;
 
-        if (m_classpaths != null && m_classpaths.length > 0) {
-            URL[] urls = new URL[m_classpaths.length];
-            for (int i = 0; i < m_classpaths.length; i++) {
-                try {
-                    urls[i] = m_classpaths[i].toURI().toURL();
-                } catch (MalformedURLException e) {
-                    throw new CompilationFailedException("Unable to retrieve "
-                            + "URL from jar file \""
-                            + m_classpaths[i].getAbsolutePath() + "\"", e);
-                }
-            }
-            trueParent = URLClassLoader.newInstance(urls, parent);
-        }
-        return new ClassLoader(trueParent) {
-            /** {@inheritDoc} */
-            @Override
-            protected Class<?> findClass(final String name)
-                    throws ClassNotFoundException {
-                byte[] byteCode = m_fileMgr.getClassByteCode(name.replace('.', '/'));
-                return defineClass(name, byteCode, 0, byteCode.length);
-            }
-        };
-    }
+        File[] classpathFiles = ArrayUtils.add(m_classpaths, m_outputFileLocation);
 
-    /**
-     * Returns the bytecode for each compiled class.
-     * @return a map of all bytecodes
-     * @throws ClassNotFoundException when a class cannot be found
-     * @since 2.12
-     */
-    public Map<String, byte[]> getClassByteCode() throws ClassNotFoundException {
-        HashMap<String, byte[]> classes = new  HashMap<String, byte[]>();
-        for (String key : m_fileMgr.getClassNames()) {
-            classes.put(key, m_fileMgr.getClassByteCode(key));
-        }
-        return classes;
-    }
+        final URL[] urls = new URL[classpathFiles.length];
 
-    /** Get the source code in an array, each array element representing the
-     * corresponding row in the source code.
-     * @param source The source code
-     * @return The source code, split by line breaks.
-     */
-    private static String[] getSourceLines(final String source) {
-        BufferedReader reader = new BufferedReader(new StringReader(source));
-        List<String> result = new ArrayList<String>();
-        String token;
-        try {
-            while ((token = reader.readLine()) != null) {
-                result.add(token);
+        for (int i = 0; i < classpathFiles.length; i++) {
+            try {
+                urls[i] = classpathFiles[i].toURI().toURL();
+            } catch (MalformedURLException e) {
+                throw new CompilationFailedException(
+                    "Unable to retrieve URL from class path entry \"" + m_classpaths[i].getAbsolutePath() + "\"", e);
             }
-            reader.close();
-        } catch (IOException e) {
-            LOGGER.fatal("Unexpected IOException while reading String", e);
         }
-        return result.toArray(new String[result.size()]);
+
+        return URLClassLoader.newInstance(urls, parent);
     }
 
 }

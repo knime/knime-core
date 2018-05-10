@@ -57,7 +57,7 @@ import org.knime.ext.sun.nodes.script.expression.Expression.InputField;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class ExpressionInstance {
+public final class ExpressionInstance {
     private final Map<InputField, ExpressionField> m_fieldMap;
 
     private final AbstractSnippetExpression m_abstractExpression;
@@ -69,9 +69,8 @@ public class ExpressionInstance {
      * @param abstracExpression the object being wrapped.
      * @param fieldMap map of field name to field class
      */
-    protected ExpressionInstance(
-            final AbstractSnippetExpression abstracExpression,
-            final Map<InputField, ExpressionField> fieldMap) {
+    ExpressionInstance(final AbstractSnippetExpression abstracExpression,
+        final Map<InputField, ExpressionField> fieldMap) {
         m_abstractExpression = abstracExpression;
         m_fieldMap = fieldMap;
     }

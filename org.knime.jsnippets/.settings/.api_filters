@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.jsnippets" version="2">
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.ext.sun.nodes.script.compile.InMemorySourceJavaFileObject">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.ext.sun.nodes.script.compile.InMemorySourceJavaFileObject"/>
+                <message_argument value="org.knime.jsnippets_3.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/jsnippet/util/field/InCol.java" type="org.knime.base.node.jsnippet.util.field.InCol">
         <filter id="338792546">
             <message_arguments>
@@ -45,6 +53,21 @@
             <message_arguments>
                 <message_argument value="org.knime.base.node.jsnippet.util.field.OutVar"/>
                 <message_argument value="loadSettingsForDialog(Config)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationSettings.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationSettings">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulationSettings"/>
+                <message_argument value="createJavaScriptingSettings()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="3.6"/>
+                <message_argument value="getJavaScriptingSettings()"/>
             </message_arguments>
         </filter>
     </resource>

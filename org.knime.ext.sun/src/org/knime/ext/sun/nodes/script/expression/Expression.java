@@ -52,10 +52,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.tools.JavaFileObject.Kind;
+
+import org.eclipse.jdt.internal.compiler.tool.EclipseFileObject;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
@@ -63,8 +70,8 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.ext.sun.nodes.script.compile.CompilationFailedException;
-import org.knime.ext.sun.nodes.script.compile.InMemorySourceJavaFileObject;
 import org.knime.ext.sun.nodes.script.compile.JavaCodeCompiler;
+import org.knime.ext.sun.nodes.script.compile.JavaCodeCompiler.JavaVersion;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 import org.knime.ext.sun.nodes.script.settings.JavaSnippetType;
 
@@ -75,7 +82,7 @@ import org.knime.ext.sun.nodes.script.settings.JavaSnippetType;
  * using the {@link #getInstance()} method on which calculations can be carried
  * out.
  */
-public final class Expression {
+public final class Expression implements AutoCloseable {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(Expression.class);
 
@@ -132,9 +139,14 @@ public final class Expression {
      */
     private final Map<InputField, ExpressionField> m_fieldMap;
 
+    /** The folder containing the generated .class files --- the class loader is pointed at it. */
+    private final File m_instanceTempFolder;
+
     /** The compiled class for the instance of the expression. */
-    private final Class<? extends AbstractSnippetExpression>
-        m_abstractExpression;
+    private final Class<? extends AbstractSnippetExpression> m_abstractExpression;
+
+    /** The class loader of the auto-generated {@link AbstractSnippetExpression}. Needs to be {@link #close() closed} */
+    private final URLClassLoader m_abstractExpressionClassLoader;
 
     /**
      * Constructor for an expression with fields.
@@ -148,28 +160,9 @@ public final class Expression {
      * @throws IllegalArgumentException if the map contains <code>null</code>
      *             elements
      */
-    private Expression(final String body,
-            final Map<InputField, ExpressionField> fieldMap,
-            final JavaScriptingSettings settings)
-            throws CompilationFailedException {
+    private Expression(final String body, final Map<InputField, ExpressionField> fieldMap,
+        final JavaScriptingSettings settings) throws CompilationFailedException {
         m_fieldMap = fieldMap;
-        m_abstractExpression = createClass(body, settings);
-    }
-
-
-    /**
-     * Get collection of default imports.
-     * @return the list of default imports.
-     */
-    public static String[] getDefaultImports() {
-        return DEFAULT_IMPORTS;
-    }
-
-    /* Called from the constructor. */
-    @SuppressWarnings("unchecked")
-    private Class<? extends AbstractSnippetExpression> createClass(
-            final String body, final JavaScriptingSettings settings)
-            throws CompilationFailedException {
         Class<?> rType = settings.getReturnType();
         int version = settings.getExpressionVersion();
         boolean isArrayReturn = settings.isArrayReturn();
@@ -193,10 +186,10 @@ public final class Expression {
                     "Unknown snippet version number: " + version);
         }
         try {
-            ensureTempClassPathExists();
+            ensureStaticTempClassPathExists();
+            m_instanceTempFolder = FileUtil.createTempDir(name.toLowerCase());
         } catch (IOException e1) {
-            throw new CompilationFailedException(
-                    "Unable to copy required class path files", e1);
+            throw new CompilationFailedException("Unable to copy required class path files", e1);
         }
         File[] additionalJarFiles;
         try {
@@ -209,21 +202,36 @@ public final class Expression {
         System.arraycopy(additionalJarFiles, 0,
                 classPathFiles, 1, additionalJarFiles.length);
 
-        JavaCodeCompiler compiler = new JavaCodeCompiler();
-        compiler.setSources(new InMemorySourceJavaFileObject(name, source));
+        File instanceTempFile = new File(m_instanceTempFolder, name.concat(".java"));
+        try {
+            Files.write(instanceTempFile.toPath(), Collections.singleton(source));
+        } catch (IOException e) {
+            throw new CompilationFailedException(
+                "Unable to write expression source to temp file \"" + instanceTempFile.getAbsolutePath() + "\"", e);
+        }
+        JavaCodeCompiler compiler = new JavaCodeCompiler(JavaVersion.JAVA_8, m_instanceTempFolder);
+        EclipseFileObject snippetFile =
+            new EclipseFileObject(name, instanceTempFile.toURI(), Kind.SOURCE, StandardCharsets.UTF_8);
+        compiler.setSources(snippetFile);
         compiler.setClasspaths(classPathFiles);
         compiler.compile();
-        ClassLoader loader = compiler.createClassLoader(
-                compiler.getClass().getClassLoader());
+        m_abstractExpressionClassLoader = compiler.createClassLoader(compiler.getClass().getClassLoader());
         try {
-            return (Class<? extends AbstractSnippetExpression>)
-                loader.loadClass(name);
+            m_abstractExpression =
+                    (Class<? extends AbstractSnippetExpression>)m_abstractExpressionClassLoader.loadClass(name);
         } catch (ClassNotFoundException e) {
-            throw new CompilationFailedException(
-                    "Could not load generated class", e);
+            throw new CompilationFailedException("Could not load generated class", e);
         }
     }
 
+
+    /**
+     * Get collection of default imports.
+     * @return the list of default imports.
+     */
+    public static String[] getDefaultImports() {
+        return DEFAULT_IMPORTS;
+    }
 
     /**
      * Generates a new instance of the compiled class.
@@ -234,8 +242,7 @@ public final class Expression {
      */
     public ExpressionInstance getInstance() throws InstantiationException {
         try {
-            return new ExpressionInstance(
-                    m_abstractExpression.newInstance(), m_fieldMap);
+            return new ExpressionInstance(m_abstractExpression.newInstance(), m_fieldMap);
         } catch (IllegalAccessException iae) {
             LOGGER.error("Unexpected IllegalAccessException occurred", iae);
             throw new InternalError();
@@ -387,7 +394,7 @@ public final class Expression {
     /**
      * @throws IOException
      */
-    private static synchronized void ensureTempClassPathExists()
+    private static synchronized void ensureStaticTempClassPathExists()
         throws IOException {
         // the temp directory may get deleted under Linux if it has not been
         // accessed for some time, see bug #3319
@@ -408,12 +415,10 @@ public final class Expression {
                 className = className.concat(".class");
                 File classFile = new File(childDir, className);
                 ClassLoader loader = cl.getClassLoader();
-                InputStream inStream = loader.getResourceAsStream(
-                        cl.getName().replace('.', '/') + ".class");
-                OutputStream outStream = new FileOutputStream(classFile);
-                FileUtil.copy(inStream, outStream);
-                inStream.close();
-                outStream.close();
+                try (InputStream inStream = loader.getResourceAsStream(cl.getName().replace('.', '/') + ".class");
+                        OutputStream outStream = new FileOutputStream(classFile)) {
+                    FileUtil.copy(inStream, outStream);
+                }
             }
             tempClassPath = tempClassPathDir;
         }
@@ -629,6 +634,12 @@ public final class Expression {
      */
     public boolean usesRowIndex() {
         return m_fieldMap.keySet().stream().anyMatch(f -> ROWINDEX.equals(f.getColOrVarName()));
+    }
+
+    @Override
+    public void close() throws IOException {
+        m_abstractExpressionClassLoader.close();
+        FileUtil.deleteRecursively(m_instanceTempFolder);
     }
 
     /** Object that pairs the name of the field used in the temporarily created
