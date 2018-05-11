@@ -54,17 +54,19 @@ import java.time.Period;
 import org.knime.expressions.core.AbstractExpression;
 
 /**
+ * Creates a {@link Period} of weeks.
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-public class PeriodOfWeeks extends AbstractExpression implements DateTimeExpression {
+class PeriodOfWeeks extends AbstractExpression implements DateTimeExpression {
 
     private final static String NAME = "periodOfWeeks";
 
     private final static String DESCRIPTION =
         "Creates an object of type Period that is a date-based amount of time from the provided number of weeks.";
 
-    private final static String SCRIPT = "Period " + NAME + "(Integer weeks) {\n return Period.ofWeeks(weeks);}";
+    private final static String SCRIPT = "function " + NAME + "(weeks) {\n "
+        + "return Java.type(\"java.time.Period\").ofWeeks(weeks);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

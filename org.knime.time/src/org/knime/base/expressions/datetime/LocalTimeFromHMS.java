@@ -50,25 +50,20 @@ package org.knime.base.expressions.datetime;
 
 import java.time.LocalTime;
 
-import org.knime.expressions.core.AbstractExpression;
-
 /**
+ * Creates a {@link LocalTime} from hours, minutes and seconds.
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-public class LocalTimeFromHMS extends AbstractExpression implements DateTimeExpression {
-
-    private final static String NAME = "time";
+class LocalTimeFromHMS extends AbstractLocalTime {
 
     private final static String DESCRIPTION = "Creates an object of type LocalTime from the provided hours minutes and seconds.";
-
-    private final static String SCRIPT = "LocalTime " + NAME + "(Integer h, Integer m, Integer s) {\n return LocalTime.of(h, m, s);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;
      */
     LocalTimeFromHMS() {
-        super(NAME, DESCRIPTION, SCRIPT);
+        super(DESCRIPTION);
     }
 
     /**
@@ -85,13 +80,5 @@ public class LocalTimeFromHMS extends AbstractExpression implements DateTimeExpr
     @Override
     public String getDisplayName() {
         return NAME + "(hh, mm, ss)";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<?> getReturnType() {
-        return LocalTime.class;
     }
 }

@@ -54,17 +54,19 @@ import java.time.Period;
 import org.knime.expressions.core.AbstractExpression;
 
 /**
+ * Creates a {@link Period} of months.
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-public class PeriodOfMonths extends AbstractExpression implements DateTimeExpression {
+class PeriodOfMonths extends AbstractExpression implements DateTimeExpression {
 
     private final static String NAME = "periodOfMonths";
 
     private final static String DESCRIPTION =
         "Creates an object of type Period that is a date-based amount of time from the provided number of months.";
 
-    private final static String SCRIPT = "Period " + NAME + "(Integer months) {\n return Period.ofWeeks(months);}";
+    private final static String SCRIPT = "function " + NAME + "(months) {\n "
+        + "return Java.type(\"java.time.Period\").ofWeeks(months);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

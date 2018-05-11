@@ -54,17 +54,19 @@ import java.time.LocalTime;
 import org.knime.expressions.core.AbstractExpression;
 
 /**
+ * Creates a {@link Duration} from the provided minutes.
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-public class DurationOfMinutes extends AbstractExpression implements DateTimeExpression {
+class DurationOfMinutes extends AbstractExpression implements DateTimeExpression {
 
     private final static String NAME = "durationOfMinutes";
 
     private final static String DESCRIPTION =
         "Creates an object of type Duration that is a time-based amount of time from the provided number of minutes.";
 
-    private final static String SCRIPT = "Duration " + NAME + "(Integer amount) {\n return Duration.ofMinutes(amount);}";
+    private final static String SCRIPT = "function " + NAME + "(amount) {\n "
+        + "return Java.type(\"java.time.Duration\").ofMinutes(amount);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

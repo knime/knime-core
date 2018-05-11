@@ -50,14 +50,16 @@ package org.knime.base.expressions.datetime;
 
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAmount;
 
 import org.knime.expressions.core.AbstractExpression;
 
 /**
+ * Adds a {@link TemporalAmount} to a {@link Temporal}.
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-public class PlusTemporal extends AbstractExpression implements DateTimeExpression {
+class PlusTemporal extends AbstractExpression implements DateTimeExpression {
 
     private final static String NAME = "plusTemporal";
 
@@ -68,7 +70,8 @@ public class PlusTemporal extends AbstractExpression implements DateTimeExpressi
         + "<li>Type Time only allows Duration as a valid temporal amount.</li>"
         + "</ul>";
 
-    private final static String SCRIPT = "Temporal " + NAME + "(Temporal t, TemporalAmount a) {\n return t.plus(a);}";
+    private final static String SCRIPT = "function " + NAME + "(t, a) {\n "
+        + "return t.plus(a);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

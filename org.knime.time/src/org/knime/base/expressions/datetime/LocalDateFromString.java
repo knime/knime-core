@@ -49,29 +49,22 @@
 package org.knime.base.expressions.datetime;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
-
-import org.knime.expressions.core.AbstractExpression;
 
 /**
+ * Creates a {@link LocalDate} from the provided String.
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-public class LocalDateFromString extends AbstractExpression implements DateTimeExpression {
-
-    private final static String NAME = "date";
+class LocalDateFromString extends AbstractLocalDate {
 
     private final static String DESCRIPTION = "Creates an object of type LocalDate from the a string. <br />"
-            + " This string has to comply ISO-8601. <br />"
-            + "Example: \"2018-01-01\"";
-
-    private final static String SCRIPT = "LocalDate " + NAME + "(String date) {\n return LocalDate.parse(date);}";
+        + " This string has to comply ISO-8601. <br />" + "Example: \"2018-01-01\"";
 
     /**
-     * Creates an expression that creates a {@link LocalTime} from String;
+     *
      */
     LocalDateFromString() {
-        super(NAME, DESCRIPTION, SCRIPT);
+        super(DESCRIPTION);
     }
 
     /**
@@ -88,13 +81,5 @@ public class LocalDateFromString extends AbstractExpression implements DateTimeE
     @Override
     public String getDisplayName() {
         return NAME + "(date)";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<?> getReturnType() {
-        return LocalDate.class;
     }
 }

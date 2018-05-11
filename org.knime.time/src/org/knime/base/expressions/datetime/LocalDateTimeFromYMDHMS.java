@@ -51,27 +51,21 @@ package org.knime.base.expressions.datetime;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import org.knime.expressions.core.AbstractExpression;
-
 /**
+ * Creates a {@link LocalDateTime} from the year, month, day, hour, minute and second.
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-public class LocalDateTimeFromYMDHMS extends AbstractExpression implements DateTimeExpression {
-
-    private final static String NAME = "dateTime";
+class LocalDateTimeFromYMDHMS extends AbstractLocalDateTime {
 
     private final static String DESCRIPTION =
         "Creates an object of type LocalDateTime from the provided year, month, day, hours, minutes, and seconds.";
-
-    private final static String SCRIPT =
-        "LocalDateTime " + NAME + "(Integer y, Integer mm, Integer d, Integer h, Integer m, Integer s) {\n return LocalDateTime.of(y, mm, d, h, m, s);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;
      */
     LocalDateTimeFromYMDHMS() {
-        super(NAME, DESCRIPTION, SCRIPT);
+        super(DESCRIPTION);
     }
 
     /**
@@ -88,13 +82,5 @@ public class LocalDateTimeFromYMDHMS extends AbstractExpression implements DateT
     @Override
     public String getDisplayName() {
         return NAME + "(year, month, day, hour, min, sec)";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<?> getReturnType() {
-        return LocalDateTime.class;
     }
 }

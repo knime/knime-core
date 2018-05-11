@@ -54,17 +54,19 @@ import java.time.Period;
 import org.knime.expressions.core.AbstractExpression;
 
 /**
+ * Creates a {@link Period} of years.
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-public class PeriodOfYears extends AbstractExpression implements DateTimeExpression {
+class PeriodOfYears extends AbstractExpression implements DateTimeExpression {
 
     private final static String NAME = "periodOfYears";
 
     private final static String DESCRIPTION =
         "Creates an object of type Period that is a date-based amount of time from the provided number of years.";
 
-    private final static String SCRIPT = "Period " + NAME + "(Integer years) {\n return Period.ofYears(years);}";
+    private final static String SCRIPT = "function " + NAME + "(years) {\n "
+        + "return Java.type(\"java.time.Period\").ofYears(years);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

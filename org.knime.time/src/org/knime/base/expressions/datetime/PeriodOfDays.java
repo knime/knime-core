@@ -54,17 +54,19 @@ import java.time.Period;
 import org.knime.expressions.core.AbstractExpression;
 
 /**
+ * Creates a {@link Period} of days.
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-public class PeriodOfDays extends AbstractExpression implements DateTimeExpression {
+class PeriodOfDays extends AbstractExpression implements DateTimeExpression {
 
     private final static String NAME = "periodOfDays";
 
     private final static String DESCRIPTION =
         "Creates an object of type Period that is a date-based amount of time from the provided number of days.";
 
-    private final static String SCRIPT = "Period " + NAME + "(Integer days) {\n return Period.ofDays(days);}";
+    private final static String SCRIPT = "function " + NAME + "(days) {\n "
+        + "return Java.type(\"java.time.Period\").ofDays(days);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

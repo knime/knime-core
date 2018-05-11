@@ -48,39 +48,38 @@
  */
 package org.knime.base.expressions.datetime;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.LocalDate;
+
+import org.knime.expressions.core.AbstractExpression;
 
 /**
- * Creates {@link LocalDateTime} from a String.
+ * Abstract class for {@link LocalDate} creation.
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-class LocalDateTimeFromString extends AbstractLocalDateTime {
+abstract class AbstractLocalDate extends AbstractExpression implements DateTimeExpression {
 
-    private final static String DESCRIPTION = "Creates an object of type LocalDateTime from the a string. <br />"
-            + " This string has to comply ISO-8601. <br />"
-            + "Example: \"2018-01-01T10:30:15\"";
+    protected final static String NAME = "date";
+
+    private final static String SCRIPT = "function " + NAME + "() {\n "
+        + "if(arguments.length == 1)\n"
+        + " return Java.type(\"java.time.LocalDate\").parse(arguments[0]);\n"
+        + "return Java.type(\"java.time.LocalDate\").of(arguments[0],arguments[1],arguments[2]);}";
+
     /**
-     * Creates an expression that creates a {@link LocalTime} from String;
+     * Creates an expression that creates a {@link LocalDate}.
+     *
+     * @param description Description that shall be shown.
      */
-    LocalDateTimeFromString() {
-        super(DESCRIPTION);
+    AbstractLocalDate(final String description) {
+        super(NAME, description, SCRIPT);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrArgs() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDisplayName() {
-        return NAME + "(dateTime)";
+    public Class<?> getReturnType() {
+        return LocalDate.class;
     }
 }
