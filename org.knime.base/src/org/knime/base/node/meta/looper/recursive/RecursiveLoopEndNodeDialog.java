@@ -83,6 +83,8 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
 
     private final DialogComponentFlowVariableNameSelection m_flowVarSelection;
 
+    private boolean m_varsAvailable = false;
+
     /**
      * Create new dialog.
      */
@@ -108,8 +110,8 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
         closeCurrentGroup();
 
         // listener setup
-        m_useVariable.addChangeListener(
-            e -> m_endLoopVar.setEnabled(m_useVariable.isEnabled() && m_useVariable.getBooleanValue()));
+        m_useVariable
+            .addChangeListener(e -> m_endLoopVar.setEnabled(m_varsAvailable && m_useVariable.getBooleanValue()));
     }
 
     /**
@@ -171,7 +173,7 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
      */
     @Override
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-            throws NotConfigurableException {
+        throws NotConfigurableException {
         super.loadAdditionalSettingsFrom(settings, specs);
         try {
             m_endLoopDeprecated.loadSettingsFrom(settings);
@@ -182,22 +184,22 @@ public class RecursiveLoopEndNodeDialog extends DefaultNodeSettingsPane {
 
         // get all string flow vars
         final List<FlowVariable> vars = getAvailableFlowVariables().values().stream()
-                .filter(v -> (v.getScope() == Scope.Flow) && (v.getType() == Type.STRING)).collect(Collectors.toList());
+            .filter(v -> (v.getScope() == Scope.Flow) && (v.getType() == Type.STRING)).collect(Collectors.toList());
 
         if (vars.isEmpty()) {
-            // disable flow variable selection when no valid vars are available
-            m_endLoopVar.setEnabled(false);
-            m_useVariable.setEnabled(false);
+            m_varsAvailable = false;
         } else {
             try {
                 final String flowVar =
-                        ((SettingsModelString)m_endLoopVar.createCloneWithValidatedValue(settings)).getStringValue();
+                    ((SettingsModelString)m_endLoopVar.createCloneWithValidatedValue(settings)).getStringValue();
                 m_flowVarSelection.replaceListItems(vars, flowVar);
+                m_varsAvailable = true;
             } catch (final InvalidSettingsException e) {
                 LOGGER.warn("Could not clone settings object correctly!", e);
             }
         }
-        m_endLoopVar.setEnabled(m_useVariable.getBooleanValue());
+        // disable flow variable selection when no valid vars are available
+        m_endLoopVar.setEnabled(m_varsAvailable && m_useVariable.getBooleanValue());
     }
 
     /**
