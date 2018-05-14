@@ -48,6 +48,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
@@ -55,7 +56,7 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 /**
  *
  * @author Fabian Dill, KNIME.com AG
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -82,8 +83,7 @@ public class ConfigureWorkflowAction extends AbstractWorkflowAction {
             public void run() {
                 try {
                     WrappedNodeDialog dialog = new WrappedNodeDialog(
-                            Display.getDefault().getActiveShell(),
-                            getWorkflow());
+                        Display.getDefault().getActiveShell(), WorkflowManagerWrapper.wrap(getWorkflow()));
                     dialog.setBlockOnOpen(true);
                     dialog.open();
                 } catch (final NotConfigurableException nce) {

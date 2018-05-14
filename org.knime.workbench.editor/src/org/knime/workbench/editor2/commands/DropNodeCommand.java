@@ -58,6 +58,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.NodeContainerWrapper;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
@@ -139,7 +140,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
                             WrappedNodeDialog dlg =
                                 new WrappedNodeDialog(
                                         Display.getCurrent().getActiveShell(),
-                                        m_container);
+                                        NodeContainerWrapper.wrap(m_container));
                             dlg.open();
                         } catch (Exception e) {
                             // they need to open it manually then

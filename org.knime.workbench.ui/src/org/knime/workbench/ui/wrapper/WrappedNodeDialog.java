@@ -47,6 +47,9 @@
  */
 package org.knime.workbench.ui.wrapper;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapNCOptional;
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import java.awt.Dimension;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
@@ -91,7 +94,8 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.ui.wrapper.NodeContainerWrapper;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -106,7 +110,7 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
 public class WrappedNodeDialog extends AbstractWrappedDialog {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WrappedNodeDialog.class);
 
-    private final NodeContainer m_nodeContainer;
+    private final NodeContainerUI m_nodeContainer;
 
     private final NodeDialogPane m_dialogPane;
 
@@ -124,7 +128,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
      *             fulfilled, e.g. no predecessor node, no nominal column in
      *             input table, etc.
      */
-    public WrappedNodeDialog(final Shell parentShell, final NodeContainer nodeContainer) throws NotConfigurableException {
+    public WrappedNodeDialog(final Shell parentShell, final NodeContainerUI nodeContainer) throws NotConfigurableException {
         super(parentShell);
 
         m_nodeContainer = nodeContainer;
@@ -152,19 +156,23 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
                 public void run() {
-                    NodeContext.pushContext(m_nodeContainer);
+                    unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
                 }
             });
-            NodeContext.pushContext(m_nodeContainer);
+            unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
             try {
                 m_dialogPane.onOpen();
                 return super.open();
             } finally {
-                NodeContext.removeLastContext();
+                if (wraps(m_nodeContainer, NodeContainer.class)) {
+                    NodeContext.removeLastContext();
+                }
                 ViewUtils.invokeAndWaitInEDT(new Runnable() {
                     @Override
                     public void run() {
-                        NodeContext.removeLastContext();
+                        if (wraps(m_nodeContainer, NodeContainer.class)) {
+                            NodeContext.removeLastContext();
+                        }
                     }
                 });
             }
@@ -200,7 +208,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
             public void widgetSelected(final SelectionEvent e) {
                 String file = openDialog.open();
                 if (file != null) {
-                    NodeContext.pushContext(m_nodeContainer);
+                    unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
                     try {
                         m_dialogPane
                                 .loadSettingsFrom(new FileInputStream(file));
@@ -209,7 +217,9 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                     } catch (NotConfigurableException ex) {
                         showErrorMessage(ex.getMessage());
                     } finally {
-                        NodeContext.removeLastContext();
+                        if (wraps(m_nodeContainer, NodeContainer.class)) {
+                            NodeContext.removeLastContext();
+                        }
                     }
                 }
             }
@@ -222,7 +232,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
             public void widgetSelected(final SelectionEvent e) {
                 String file = saveDialog.open();
                 if (file != null) {
-                    NodeContext.pushContext(m_nodeContainer);
+                    unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
                     try {
                         m_dialogPane.saveSettingsTo(new FileOutputStream(file));
                     } catch (IOException ioe) {
@@ -237,7 +247,9 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                         // repaint after dialog disappears
                         m_dialogPane.getPanel().repaint();
                     } finally {
-                        NodeContext.removeLastContext();
+                        if (wraps(m_nodeContainer, NodeContainer.class)) {
+                            NodeContext.removeLastContext();
+                        }
                     }
                 }
             }
@@ -339,7 +351,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                     doCancel();
                 }
                 // this locks the WFM so avoid calling it each time.
-                Predicate<NodeContainer> canExecutePredicate = n -> n.getParent().canExecuteNode(n.getID());
+                Predicate<NodeContainerUI> canExecutePredicate = n -> n.getParent().canExecuteNode(n.getID());
                 if (ke.keyCode == SWT.MOD1 && canExecutePredicate.test(m_nodeContainer)) {
                     // change OK button label, when CTRL/COMMAND is pressed
                     btnOK.setText("OK - Execute");
@@ -383,7 +395,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                 }
 
                 // this locks the WFM so avoid calling it each time.
-                final Predicate<NodeContainer> canExecutePredicate = n -> n.getParent().canExecuteNode(n.getID());
+                final Predicate<NodeContainerUI> canExecutePredicate = n -> n.getParent().canExecuteNode(n.getID());
                 int menuAccelerator = (Platform.OS_MACOSX.equals(Platform.getOS())) ? java.awt.event.KeyEvent.VK_META
                                                                                     : java.awt.event.KeyEvent.VK_CONTROL;
                 if ((ke.getKeyCode() == menuAccelerator) && canExecutePredicate.test(m_nodeContainer)) {
@@ -481,17 +493,19 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                         - (HelpWindow.instance.getShell().getBounds().height - bounds.height)
                         / 2;
         HelpWindow.instance.getShell().setLocation(x, y);
-        HelpWindow.instance.showDescriptionForNode(NodeContainerWrapper.wrap(m_nodeContainer));
+        HelpWindow.instance.showDescriptionForNode(m_nodeContainer);
     }
 
     private void doCancel() {
         // delegate cancel&close event to underlying dialog pane
-        NodeContext.pushContext(m_nodeContainer);
+        unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
         try {
             m_dialogPane.callOnCancel();
             m_dialogPane.callOnClose();
         } finally {
-            NodeContext.removeLastContext();
+            if (wraps(m_nodeContainer, NodeContainer.class)) {
+                NodeContext.removeLastContext();
+            }
         }
         buttonPressed(IDialogConstants.CANCEL_ID);
     }
@@ -507,7 +521,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
 
     private void runOK(final boolean execute, final boolean openView) {
         // send close action to underlying dialog pane
-        NodeContext.pushContext(m_nodeContainer);
+        unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
         try {
             m_dialogPane.callOnClose();
             buttonPressed(IDialogConstants.OK_ID);
@@ -532,16 +546,20 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                             pIndex = 0;
                         }
                         if (m_nodeContainer.getNrOutPorts() > pIndex) {
-                            NodeOutPort port = m_nodeContainer.getOutPort(pIndex);
-                            java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y,
-                                knimeWindowBounds.width, knimeWindowBounds.height);
-                            port.openPortView(port.getPortName(), bounds);
+                            NodeOutPortUI port = m_nodeContainer.getOutPort(pIndex);
+                            if (wraps(port, NodeOutPort.class)) {
+                                java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x,
+                                    knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
+                                ((NodeOutPort)port).openPortView(port.getPortName(), bounds);
+                            }
                         }
                     }
                 });
             }
         } finally {
-            NodeContext.removeLastContext();
+            if (wraps(m_nodeContainer, NodeContainer.class)) {
+                NodeContext.removeLastContext();
+            }
         }
     }
 

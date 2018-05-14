@@ -835,10 +835,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             // This is embedded in a special JFace wrapper dialog
             //
             try {
-                if (Wrapper.wraps(container, NodeContainer.class)) {
-                    WrappedNodeDialog dlg = new WrappedNodeDialog(shell, Wrapper.unwrapNC(container));
-                    dlg.open();
-                }
+                WrappedNodeDialog dlg = new WrappedNodeDialog(shell, container);
+                dlg.open();
             } catch (NotConfigurableException ex) {
                 MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
                 mb.setText("Dialog cannot be opened");
