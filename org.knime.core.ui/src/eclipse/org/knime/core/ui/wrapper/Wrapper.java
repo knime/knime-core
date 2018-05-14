@@ -111,6 +111,17 @@ public interface Wrapper<W> {
     }
 
     /**
+     * Shortcut for <code>unwrapOptional(wrapper, NodeContainer.class)</code>.
+     *
+     * @param wrapper
+     * @return the unwrapped node container or an empty optional
+     * @since 3.6
+     */
+    public static Optional<NodeContainer> unwrapNCOptional(final UI wrapper) {
+        return unwrapOptional(wrapper, NodeContainer.class);
+    }
+
+    /**
      * Shortcut for <code>unwrap(wrapper, ConnectionContainer.class)</code>.
      *
      * @param wrapper
