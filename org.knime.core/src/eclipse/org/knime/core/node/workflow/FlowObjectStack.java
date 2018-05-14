@@ -564,6 +564,17 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         return (T)toClone.cloneAndUnsetOwner();
     }
 
+    /**
+     * @since 3.6
+     */
+    public static FlowObjectStack createFromFlowVariableList(final List<FlowVariable> flowVariables, final NodeID id) {
+        FlowObjectStack stack = new FlowObjectStack(id);
+        for (FlowVariable fv : flowVariables) {
+            stack.push(fv);
+        }
+        return stack;
+    }
+
     private static final Pair<String, Type> getVariableDefinition(
             final String propKey) {
         String varName;
