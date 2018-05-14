@@ -129,4 +129,12 @@ public class OpenDialogAction extends AbstractNodeAction {
             nodeContainerEditPart.openNodeDialog();
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean canHandleWorklfowManagerUI() {
+        return true;
+    }
 }
