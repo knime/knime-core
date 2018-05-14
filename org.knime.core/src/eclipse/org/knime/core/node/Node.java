@@ -63,7 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
@@ -79,8 +78,6 @@ import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.dialog.ValueControlledDialogPane;
-import org.knime.core.node.dialog.ValueControlledNode;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
 import org.knime.core.node.interactive.InteractiveView;
@@ -104,7 +101,6 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
-import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardNodeFactoryExtension;
 import org.knime.core.node.workflow.CredentialsProvider;
@@ -116,7 +112,6 @@ import org.knime.core.node.workflow.FlowTryCatchContext;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
-import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
@@ -126,7 +121,6 @@ import org.knime.core.node.workflow.ScopeEndNode;
 import org.knime.core.node.workflow.ScopeStartNode;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
-import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
 import org.knime.core.util.FileUtil;
 import org.w3c.dom.Element;
 
@@ -1992,59 +1986,14 @@ public final class Node implements NodeModelWarningListener {
      * @see #hasDialog()
      * @since 2.6
      */
-    public NodeDialogPane getDialogPaneWithSettings(
-            final PortObjectSpec[] inSpecs, final PortObject[] inData,
-            final NodeSettingsRO settings, final boolean isWriteProtected)
-        throws NotConfigurableException {
-        NodeDialogPane dialogPane = getDialogPane();
-        PortObjectSpec[] corrInSpecs = new PortObjectSpec[inSpecs.length - 1];
-        PortObject[] corrInData = new PortObject[inData.length - 1];
-        for (int i = 1; i < inSpecs.length; i++) {
-            if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
-                if (!isInactiveBranchConsumer()) {
-                    throw new NotConfigurableException("Cannot configure nodes in inactive branches.");
-                }
-            }
-            PortType t = getInputType(i);
-            if (!t.acceptsPortObjectSpec(inSpecs[i]) && !(inSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
-                // wrong type and not a consumer of inactive branches either
-                // (which is the only exception for a type mismatch)
-                // general port type compatibility is already checked when creating the connection so this error
-                // can only occur if the input is too general for this node (like a database connection to a database
-                // table(!) connection)
-                throw new NotConfigurableException("Invalid incoming port object spec \""
-                    + inSpecs[i].getClass().getSimpleName() + "\", expected \""
-                    + t.getPortObjectSpecClass().getSimpleName() + "\"");
-            } else if (inSpecs[i] == null && BufferedDataTable.TYPE.equals(t) && !t.isOptional()) {
-                corrInSpecs[i - 1] = new DataTableSpec();
-            } else {
-                corrInSpecs[i - 1] = inSpecs[i];
-                corrInData[i - 1] = inData[i];
-            }
+    public NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs, final PortObject[] inData,
+        final NodeSettingsRO settings, final boolean isWriteProtected) throws NotConfigurableException {
+        PortType[] inPortTypes = new PortType[m_inputs.length];
+        for (int i = 0; i < inPortTypes.length; i++) {
+            inPortTypes[i] = m_inputs[i].getType();
         }
-        // the sub node virtual input node shows in its dialog all flow variables that are available to the rest
-        // of the subnode. It's the only case where the flow variables shown in the dialog are not the ones available
-        // to the node model class ...
-        final FlowObjectStack flowObjectStack = m_model instanceof VirtualSubNodeInputNodeModel
-                ? ((VirtualSubNodeInputNodeModel)m_model).getSubNodeContainerFlowObjectStack() : getFlowObjectStack();
-        dialogPane.internalLoadSettingsFrom(settings, corrInSpecs, corrInData, flowObjectStack,
-            getCredentialsProvider(), isWriteProtected);
-        if (m_model instanceof ValueControlledNode && dialogPane instanceof ValueControlledDialogPane) {
-            NodeSettings currentValue = new NodeSettings("currentValue");
-            try {
-                ((ValueControlledNode)m_model).saveCurrentValue(currentValue);
-                ((ValueControlledDialogPane)dialogPane).loadCurrentValue(currentValue);
-            } catch (Exception ise) {
-                final String msg = "Could not load current value into dialog: " + ise.getMessage();
-                if (ise instanceof InvalidSettingsException) {
-                    LOGGER.warn(msg, ise);
-                } else {
-                    LOGGER.coding(msg, ise);
-                }
-            }
-
-        }
-        return dialogPane;
+        return NodeDialogPane.initDialogPaneWithSettings(getDialogPane(), inSpecs, inPortTypes, inData, settings,
+            isWriteProtected, m_model, getFlowObjectStack(), getCredentialsProvider());
     }
 
     /**
@@ -2060,43 +2009,7 @@ public final class Node implements NodeModelWarningListener {
     public NodeDialogPane getDialogPane() {
         if (m_dialogPane == null) {
             if (hasDialog()) {
-                if (m_factory.hasDialog()) {
-                    final AtomicReference<Throwable> exRef =
-                        new AtomicReference<Throwable>();
-                    Runnable r = new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                m_dialogPane = m_factory.createNodeDialogPane();
-                            } catch (Throwable ex) {
-                                exRef.set(ex);
-                            }
-                        }
-                    };
-
-                    ViewUtils.invokeAndWaitInEDT(r);
-                    if (exRef.get() instanceof Error) {
-                        throw (Error)exRef.get();
-                    } else if (exRef.get() instanceof RuntimeException) {
-                        NodeLogger.getLogger(Node.class).error("Error while creating node dialog for '"
-                                                                       + m_factory.getNodeName() + "': "
-                                                                       + exRef.get().getMessage(), exRef.get());
-                        throw (RuntimeException) exRef.get();
-                    } else {
-                        // not possible since createNodeDialogPane does not throw Exceptions
-                    }
-                } else {
-                    m_dialogPane = new EmptyNodeDialogPane();
-                }
-                if (getNrOutPorts() > 0) {
-                    m_dialogPane.addMiscTab();
-                }
-                if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
-                    // TODO: set the splittype depending on the nodemodel
-                    SplitType splitType = SplitType.USER;
-                    m_dialogPane.addJobMgrTab(splitType);
-                }
-
+                m_dialogPane = NodeDialogPane.createDialogPane(getFactory(), getNrOutPorts(), true);
             } else {
                 throw new IllegalStateException("Can't return dialog pane, node has no dialog!");
             }
