@@ -52,8 +52,10 @@ import java.net.URL;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialog;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
@@ -215,14 +217,13 @@ public interface NodeContainerUI extends NodeProgressListener, NodeContainerStat
      */
     boolean hasDataAwareDialogPane();
 
-    //TODO can probably be removed entirely
-//    /** Return a NodeDialogPane for a node which can be embedded into
-//     * a JFrame oder another GUI element.
-//     *
-//     * @return A dialog pane for the corresponding node.
-//     * @throws NotConfigurableException if node cannot be configured
-//     */
-//    NodeDialogPane getDialogPaneWithSettings() throws NotConfigurableException;
+    /** Return a NodeDialogPane for a node which can be embedded into
+     * a JFrame oder another GUI element.
+     *
+     * @return A dialog pane for the corresponding node.
+     * @throws NotConfigurableException if node cannot be configured
+     */
+    NodeDialogPane getDialogPaneWithSettings() throws NotConfigurableException;
 
     /** Called for nodes having {@linkplain org.knime.core.node.DataAwareNodeDialogPane data aware dialogs} in order
      * to check whether to prompt for execution or not.

@@ -51,7 +51,9 @@ package org.knime.core.ui.wrapper;
 import java.net.URL;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
@@ -94,7 +96,7 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
     }
 
     /**
-    * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
+    * Wraps the object.
     * It also checks for sub-types of the node container and uses the more specific wrappers.
     *
     * @param nc the object to be wrapped
@@ -110,6 +112,15 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
         } else {
             throw new UnsupportedOperationException();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.6
+     */
+    @Override
+    public NodeDialogPane getDialogPaneWithSettings() throws NotConfigurableException {
+        return unwrap().getDialogPaneWithSettings();
     }
 
     @Override
