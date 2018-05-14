@@ -119,7 +119,7 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
                 exec.createSubProgress(1.0 / m_ids.length);
             String progMsg = "Node Link \"" + tnc.getNameWithID() + "\"";
             exec.setMessage(progMsg);
-            GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(d, progMsg, null, null, null, true);
+            GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(d, progMsg, null, null, null, false, true);
             NodeContainerTemplateLinkUpdateResult updateMetaNodeLinkResult;
             try {
                 updateMetaNodeLinkResult =
