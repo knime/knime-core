@@ -126,18 +126,20 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
         m_valueHandlerPanels = new HashMap<>();
         m_comboBox = new JComboBox<MissingCellHandlerFactory>();
         for (MissingCellHandlerFactory fac : factoryManager.getFactoriesSorted(dt)) {
-            m_comboBox.addItem(fac);
-            if (fac.hasSettingsPanel()) {
-                MissingValueHandlerPanel panel = fac.getSettingsPanel();
-                try {
-                    panel.loadSettingsFrom(s.getSettings(), specs);
-                    m_argumentsPanel.add(panel, fac.getID());
-                    m_valueHandlerPanels.put(fac.getID(), panel);
-                } catch (Exception e) {
-                    m_argumentsPanel.add(new LoadingErrorMissingValueHandlerPanel(e.getMessage()), fac.getID());
+            if (!fac.isDeprecated() || s.getFactory().equals(fac)) {
+                m_comboBox.addItem(fac);
+                if (fac.hasSettingsPanel()) {
+                    MissingValueHandlerPanel panel = fac.getSettingsPanel();
+                    try {
+                        panel.loadSettingsFrom(s.getSettings(), specs);
+                        m_argumentsPanel.add(panel, fac.getID());
+                        m_valueHandlerPanels.put(fac.getID(), panel);
+                    } catch (Exception e) {
+                        m_argumentsPanel.add(new LoadingErrorMissingValueHandlerPanel(e.getMessage()), fac.getID());
+                    }
+                } else {
+                    m_argumentsPanel.add(new EmptyMissingValueHandlerPanel(), fac.getID());
                 }
-            } else {
-                m_argumentsPanel.add(new EmptyMissingValueHandlerPanel(), fac.getID());
             }
         }
         // Add listener to respond to a changing selection so the settings panel cards can be updated

@@ -128,4 +128,13 @@ public abstract class MissingCellHandlerFactory {
     public MissingCellHandlerDescription getDescription() {
         return MissingCellHandlerDescriptionFactory.getDescription(this);
     }
+
+    /**
+     * @return <code>true</code> if this handler is deprecated, should only added to the dialog if already selected and
+     *         removed from dialog otherwise.
+     * @since 3.6.0
+     */
+    public boolean isDeprecated() {
+        return false;
+    }
 }

@@ -141,20 +141,22 @@ public final class MissingCellHandlerDescriptionFactory {
                 + "Handlers that do not produce valid PMML 4.2 are marked with an asterisk (*).");
 
         for (MissingCellHandlerFactory reg : factoriesOfType) {
-            MissingCellHandlerDescription description = reg.getDescription();
-            String shortDescription = StringEscapeUtils.escapeXml(description.getShortDescription());
-            String name = description.getName();
-            if (!reg.producesPMML4_2()) {
-                name += MissingCellHandlerFactory.NO_PMML_INDICATOR;
-            }
-            String subDescription = SHORT_DESCRIPTION_TEMPLATE.replace("[NAME]", name).replace("[SHORT_DESCRIPTION]",
-                shortDescription);
-            try {
-                // try to parse the xml snippet and ignore it if that fails
-                loadXmlFromString(subDescription);
-                builder.append(subDescription);
-            } catch (ParserConfigurationException | SAXException | IOException e2) {
-                LOGGER.coding("Fail on adding description for missing cell handler: " + reg.getID(), e2);
+            if (!reg.isDeprecated()) {
+                MissingCellHandlerDescription description = reg.getDescription();
+                String shortDescription = StringEscapeUtils.escapeXml(description.getShortDescription());
+                String name = description.getName();
+                if (!reg.producesPMML4_2()) {
+                    name += MissingCellHandlerFactory.NO_PMML_INDICATOR;
+                }
+                String subDescription = SHORT_DESCRIPTION_TEMPLATE.replace("[NAME]", name).replace("[SHORT_DESCRIPTION]",
+                    shortDescription);
+                try {
+                    // try to parse the xml snippet and ignore it if that fails
+                    loadXmlFromString(subDescription);
+                    builder.append(subDescription);
+                } catch (ParserConfigurationException | SAXException | IOException e2) {
+                    LOGGER.coding("Fail on adding description for missing cell handler: " + reg.getID(), e2);
+                }
             }
         }
         builder.append("</option>");
