@@ -196,13 +196,15 @@ public class ParallelizedChunkContentMaster implements NodeStateChangeListener {
                 }
             }
             if ((m_manager != null) && m_manager.getParent().containsNodeContainer(m_manager.getID())) {
-                NodeContainer nc = m_manager.getParent().getNodeContainer(m_manager.getID());
+                WorkflowManager parent = m_manager.getParent();
+                NodeContainer nc = parent.getNodeContainer(m_manager.getID());
                 if (m_manager == nc) {
                     // need to make sure that this is not just another node
                     // with the same ID (in rare cases this can happen if
                     // the metanode was cleared but the StartNode did not
                     // get notified and calls this function again.)
-                    m_manager.getParent().removeNode(m_manager.getID());
+                    parent.resetAndConfigureNode(m_manager.getID()); // see AP-6886
+                    parent.removeNode(m_manager.getID());
                 }
             }
         }
