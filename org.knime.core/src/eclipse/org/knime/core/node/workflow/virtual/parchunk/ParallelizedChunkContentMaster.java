@@ -203,7 +203,6 @@ public class ParallelizedChunkContentMaster implements NodeStateChangeListener {
                     // with the same ID (in rare cases this can happen if
                     // the metanode was cleared but the StartNode did not
                     // get notified and calls this function again.)
-                    parent.resetAndConfigureNode(m_manager.getID()); // see AP-6886
                     parent.removeNode(m_manager.getID());
                 }
             }
