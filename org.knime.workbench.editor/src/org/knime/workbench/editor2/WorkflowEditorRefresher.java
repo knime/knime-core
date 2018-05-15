@@ -320,7 +320,7 @@ class WorkflowEditorRefresher {
     }
 
     private void setConnected(final boolean isConnected, final boolean callback) {
-        if (m_isConnected && !isConnected && isRefreshRateHighEnoughForEditing()) {
+        if (m_isConnected && !isConnected && isRefreshRateHighEnoughForEditing() && callback) {
             //if the server is disconnected after it was connected, issue a log-warning
             LOGGER.warn("Job view '" + m_editor.getTitle() + "' disconnected from server.");
         }
