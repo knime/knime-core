@@ -134,7 +134,7 @@ final class JavaIfSwitchNodeModel extends NodeModel
      *
      */
     private int calculate() throws InvalidSettingsException {
-        if (m_settings == null || m_settings.getExpression() == null) {
+        if (m_settings.getExpression() == null) {
             throw new InvalidSettingsException("No expression has been set.");
         }
         try {
@@ -168,9 +168,7 @@ final class JavaIfSwitchNodeModel extends NodeModel
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_settings != null) {
-            m_settings.saveSettingsTo(settings);
-        }
+        m_settings.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
@@ -184,9 +182,7 @@ final class JavaIfSwitchNodeModel extends NodeModel
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        if (m_settings != null) {
-            m_settings.discard();
-        }
+        m_settings.discard();
         JavaScriptingSettings jsSettings = m_customizer.createSettings();
         jsSettings.loadSettingsInModel(settings);
         m_settings = jsSettings;
@@ -215,9 +211,7 @@ final class JavaIfSwitchNodeModel extends NodeModel
 
     @Override
     protected void onDispose() {
-        if (m_settings != null) {
-            m_settings.discard();
-        }
+        m_settings.discard();
         super.onDispose();
     }
 
@@ -252,5 +246,4 @@ final class JavaIfSwitchNodeModel extends NodeModel
         Arrays.fill(result, type);
         return result;
     }
-
 }

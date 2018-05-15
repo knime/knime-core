@@ -74,7 +74,7 @@ import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 public class StringManipulationNodeModel extends AbstractConditionalStreamingNodeModel
     implements FlowVariableProvider {
 
-    private StringManipulationSettings m_settings;
+    private final StringManipulationSettings m_settings;
 
     /** The current row count or -1 if not in execute(). */
     private long m_rowCount = -1L;
@@ -116,7 +116,7 @@ public class StringManipulationNodeModel extends AbstractConditionalStreamingNod
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
             throws InvalidSettingsException {
-        if (m_settings == null || m_settings.getExpression() == null) {
+        if (m_settings.getExpression() == null) {
             throw new InvalidSettingsException("No expression has been set.");
         }
         boolean isReplace = m_settings.isReplace();
@@ -156,7 +156,7 @@ public class StringManipulationNodeModel extends AbstractConditionalStreamingNod
      */
     @Override
     protected boolean usesRowCount() {
-        boolean uses = m_settings != null && m_settings.getExpression().contains(Expression.ROWCOUNT);
+        boolean uses = m_settings.getExpression().contains(Expression.ROWCOUNT);
         if (uses) {
             getLogger()
                 .warn("The ROWCOUNT field is used in the expression. Manipulations cannot be done in streamed manner!");
@@ -171,7 +171,7 @@ public class StringManipulationNodeModel extends AbstractConditionalStreamingNod
      */
     @Override
     protected boolean usesRowIndex() {
-        boolean uses = m_settings != null && m_settings.getExpression().contains(Expression.ROWINDEX);
+        boolean uses = m_settings.getExpression().contains(Expression.ROWINDEX);
         if (uses) {
             getLogger()
                 .warn("The ROWINDEX field is used in the expression. Manipulations cannot be done in distributed manner!");
@@ -264,10 +264,7 @@ public class StringManipulationNodeModel extends AbstractConditionalStreamingNod
 
     @Override
     protected void onDispose() {
-        if (m_settings != null) {
-            m_settings.discard();
-        }
+        m_settings.discard();
         super.onDispose();
     }
-
 }

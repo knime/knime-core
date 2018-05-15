@@ -103,7 +103,7 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        if (m_settings == null || m_settings.getExpression() == null) {
+        if (m_settings.getExpression() == null) {
             throw new InvalidSettingsException("No expression has been set.");
         }
         try {
@@ -121,7 +121,7 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
      * @throws Exception
      */
     private void calculate() throws InvalidSettingsException, CompilationFailedException, InstantiationException {
-        if (m_settings == null || m_settings.getExpression() == null) {
+        if (m_settings.getExpression() == null) {
             throw new InvalidSettingsException("No expression has been set.");
         }
         JavaScriptingSettings settings = m_settings.getJavaScriptingSettings();
@@ -222,9 +222,7 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
 
     @Override
     protected void onDispose() {
-        if (m_settings != null) {
-            m_settings.discard();
-        }
+        m_settings.discard();
         super.onDispose();
     }
 
@@ -254,5 +252,4 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
     public int getRowCount() {
         return 0;
     }
-
 }
