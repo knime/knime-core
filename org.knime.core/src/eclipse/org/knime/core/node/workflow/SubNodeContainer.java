@@ -2135,7 +2135,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /** {@inheritDoc} */
     @Override
     public boolean canResetContainedNodes() {
-        return getParent().canResetSuccessors(getID());
+        // see AP-6886 -- if executed then there must be no downstream node in execution
+        return !getInternalState().isExecuted() || getParent().canResetSuccessors(getID());
     }
 
     /** {@inheritDoc} */
