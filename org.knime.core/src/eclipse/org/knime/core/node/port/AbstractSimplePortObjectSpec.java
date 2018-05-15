@@ -112,43 +112,23 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
                         + entry.getName());
             }
             ModelContentRO model = ModelContent.loadFromXML(
-                    new NonClosableInputStream.Zip(in));
+                new NonClosableInputStream.Zip(in));
+
             String className;
             try {
                 className = model.getString("class_name");
-            } catch (InvalidSettingsException e1) {
-                throw new IOException("Unable to load settings", e1);
-            }
-            Class<?> cl;
-            try {
-                cl = Class.forName(className);
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(
-                        "Unable to load class " + className, e);
-            }
-            if (!AbstractSimplePortObjectSpec.class.isAssignableFrom(cl)) {
-                throw new RuntimeException(
-                        "Class \"" + className + "\" is not of type "
-                        + AbstractSimplePortObjectSpec.class.getSimpleName());
-            }
-            Class<? extends AbstractSimplePortObjectSpec> acl =
-                cl.asSubclass(AbstractSimplePortObjectSpec.class);
-            AbstractSimplePortObjectSpec result;
-            try {
-                result = acl.newInstance();
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to instantiate class \""
-                        + acl.getSimpleName()
-                        + "\" (failed to invoke no-arg constructor): "
-                        + e.getMessage(), e);
+            } catch (InvalidSettingsException ex1) {
+                throw new IOException("Unable to load settings", ex1);
             }
             try {
-                ModelContentRO subModel = model.getModelContent("model");
-                result.load(subModel);
-                return (T)result;
-            } catch (InvalidSettingsException e) {
-                throw new IOException("Unable to load model content into \""
-                        + acl.getSimpleName() + "\": " + e.getMessage(), e);
+                return loadPortObjectSpecFromModelSettings(model);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException("Unable to load class " + className, ex);
+            } catch (ClassCastException ex) {
+                throw new RuntimeException(ex.getMessage());
+            } catch (InstantiationException | IllegalAccessException ex) {
+                throw new RuntimeException("Failed to instantiate class \"" + className
+                    + "\" (failed to invoke no-arg constructor): " + ex.getMessage(), ex);
             }
         }
 
@@ -157,12 +137,71 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
         public void savePortObjectSpec(final T portObject, final PortObjectSpecZipOutputStream out) throws IOException {
             // this is going to throw a runtime exception in case...
             ModelContent model = new ModelContent("model.xml");
-            model.addInt("version", 1);
-            model.addString("class_name", portObject.getClass().getName());
-            ModelContentWO subModel = model.addModelContent("model");
-            portObject.save(subModel);
+            saveToModelSettings(portObject, model);
             out.putNextEntry(new ZipEntry("content.xml"));
             model.saveToXML(out);
+        }
+
+        /**
+         * Utility method to create a new spec instance from a {@link ModelContent} object if of type
+         * {@link AbstractSimplePortObjectSpec}.
+         *
+         * @param model the model content to create the spec instance from
+         * @return the instantiated and loaded spec
+         * @throws IOException if the spec class name is not available or the model content couldn't be loaded
+         * @throws ClassNotFoundException if the spec class represented by the model cannot be loaded
+         * @throws IllegalAccessException if instantiation failed due to illegal access
+         * @throws InstantiationException if the instantiation failed due to other reasons
+         * @throws ClassCastException if the model spec is not of type {@link AbstractSimplePortObjectSpec}
+         * @since 3.6
+         */
+        @SuppressWarnings("unchecked")
+        public static <T extends AbstractSimplePortObjectSpec> T
+            loadPortObjectSpecFromModelSettings(final ModelContentRO model)
+                throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+            String className;
+            try {
+                className = model.getString("class_name");
+            } catch (InvalidSettingsException e1) {
+                throw new IOException("Unable to load settings", e1);
+            }
+            Class<?> cl;
+            cl = Class.forName(className);
+            if (!AbstractSimplePortObjectSpec.class.isAssignableFrom(cl)) {
+                throw new ClassCastException(
+                    "Class \"" + className + "\" is not of type " + AbstractSimplePortObjectSpec.class.getSimpleName());
+            }
+            Class<? extends AbstractSimplePortObjectSpec> acl = cl.asSubclass(AbstractSimplePortObjectSpec.class);
+            AbstractSimplePortObjectSpec result;
+            result = acl.newInstance();
+            try {
+                ModelContentRO subModel = model.getModelContent("model");
+                result.load(subModel);
+                return (T)result;
+            } catch (InvalidSettingsException e) {
+                throw new IOException(
+                    "Unable to load model content into \"" + acl.getSimpleName() + "\": " + e.getMessage(), e);
+            }
+        }
+
+        /**
+         * Utility method to save the port object spec to model settings.
+         *
+         * @param spec the spec to be saved
+         * @param model the model to store the content to
+         * @since 3.6
+         */
+        public static <T extends AbstractSimplePortObjectSpec> void savePortObjectSpecToModelSettings(final T spec,
+            final ModelContentWO model) {
+            saveToModelSettings(spec, model);
+        }
+
+        private static <T extends AbstractSimplePortObjectSpec> void saveToModelSettings(final T spec,
+            final ModelContentWO model) {
+            model.addInt("version", 1);
+            model.addString("class_name", spec.getClass().getName());
+            ModelContentWO subModel = model.addModelContent("model");
+            spec.save(subModel);
         }
     }
 
