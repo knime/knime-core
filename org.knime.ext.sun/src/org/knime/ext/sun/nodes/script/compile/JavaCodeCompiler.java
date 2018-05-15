@@ -115,11 +115,12 @@ public final class JavaCodeCompiler {
      * @since 3.0
      */
     public JavaCodeCompiler(final JavaVersion javaVersion) {
-        m_javaVersion = javaVersion;
+        m_javaVersion = CheckUtils.checkArgumentNotNull(javaVersion);
         File outputFileLocation;
         try {
             outputFileLocation = FileUtil.createTempDir(getClass().getSimpleName().toLowerCase());
         } catch (IOException e) {
+            LOGGER.error("Could not create temp directory, using workflow temp dir as fallback: " + e.getMessage(), e);
             outputFileLocation = FileUtil.getWorkflowTempDir(); // only a fallback
         }
         m_outputFileLocation = outputFileLocation;
