@@ -377,4 +377,28 @@ public class DataCellToJavaConversionTest {
             IntValue.class, factories.stream().findFirst().get().getSourceType());
     }
 
+    /**
+     * Test that the converter framework always returns preferred converters first.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testPreferredJavaType() throws Exception {
+        Optional<Class<?>> cell = DataCellToJavaConverterRegistry.getInstance().getPreferredJavaTypeForCell(IntCell.TYPE);
+        assertTrue(cell.isPresent());
+        assertEquals(Integer.class, cell.get());
+
+        cell = DataCellToJavaConverterRegistry.getInstance().getPreferredJavaTypeForCell(LongCell.TYPE);
+        assertTrue(cell.isPresent());
+        assertEquals(Long.class, cell.get());
+
+        cell = DataCellToJavaConverterRegistry.getInstance().getPreferredJavaTypeForCell(StringCell.TYPE);
+        assertTrue(cell.isPresent());
+        assertEquals(String.class, cell.get());
+
+        cell = DataCellToJavaConverterRegistry.getInstance().getPreferredJavaTypeForCell(BinaryObjectDataCell.TYPE);
+        assertTrue(cell.isPresent());
+        assertEquals(InputStream.class, cell.get());
+    }
+
 }

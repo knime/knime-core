@@ -377,8 +377,8 @@ public final class DataCellToJavaConverterRegistry {
     }
 
     /**
-     * Get {@link CollectionConverterFactory CollectionConverterFactories} for converters from collection <code>sourceType</code>
-     * into array <code>destType</code>.
+     * Get {@link CollectionConverterFactory CollectionConverterFactories} for converters from collection
+     * <code>sourceType</code> into array <code>destType</code>.
      *
      * @param destType Type the created converters convert from
      * @param sourceType Type the created converters convert to
@@ -396,8 +396,7 @@ public final class DataCellToJavaConverterRegistry {
         // try creating a dynamic CollectionConverterFactory
         for (final DataCellToJavaConverterFactory<? extends DataValue, ?> factory : getConverterFactories(
             sourceType.getCollectionElementType(), destType.getComponentType())) {
-            allFactories
-                .add(new CollectionConverterFactory<>(factory));
+            allFactories.add(new CollectionConverterFactory<>(factory));
         }
 
         return allFactories;
@@ -417,6 +416,28 @@ public final class DataCellToJavaConverterRegistry {
     public <DE, D> DataCellToJavaConverterFactory<CollectionDataValue, D>
         getCollectionConverterFactory(final DataCellToJavaConverterFactory<? extends DataValue, DE> elementFactory) {
         return new CollectionConverterFactory<>(elementFactory);
+    }
+
+    /**
+     * Get a preferred java type a given {@link DataType} can be converted to.
+     *
+     * Note that if more than one java type can be converted from the {@link DataType#getPreferredValueClass()}, this
+     * method will not return the same type every time.
+     *
+     * @param type Data type to get a preferred Java type for
+     * @return A class that is a preferred type to convert the given DataType to.
+     * @since 3.6
+     */
+    public Optional<Class<?>> getPreferredJavaTypeForCell(final DataType type) {
+        final Class<? extends DataValue> preferredValueClass = type.getPreferredValueClass();
+        final Set<DataCellToJavaConverterFactory<?, ?>> factories = m_bySourceType.get(preferredValueClass);
+
+        final Optional<DataCellToJavaConverterFactory<?, ?>> firstFactory = factories.stream().findFirst();
+        if (firstFactory.isPresent()) {
+            return Optional.of(firstFactory.get().getDestinationType());
+        }
+
+        return Optional.empty();
     }
 
     /**
@@ -488,8 +509,9 @@ public final class DataCellToJavaConverterRegistry {
 
                     // Check name of factory
                     if (!validateFactoryName(factory)) {
-                        LOGGER.coding("Factory name \"" + factory.getName() + "\" of factory with id \"" + factory.getIdentifier()
-                            + "\" does not follow naming convention (see DataValueAccessMethod#name()).");
+                        LOGGER.coding(
+                            "Factory name \"" + factory.getName() + "\" of factory with id \"" + factory.getIdentifier()
+                                + "\" does not follow naming convention (see DataValueAccessMethod#name()).");
                         LOGGER.coding("Factory will not be registered.");
                         continue;
                     }
@@ -554,8 +576,9 @@ public final class DataCellToJavaConverterRegistry {
 
             // Check name of factory
             if (!validateFactoryName(factory)) {
-                LOGGER.coding("DataCellToJavaFactory name \"" + name + "\" of factory with id \"" + factory.getIdentifier()
-                    + "\" does not follow naming convention (see DataValueAccessMethod#name()).");
+                LOGGER.coding(
+                    "DataCellToJavaFactory name \"" + name + "\" of factory with id \"" + factory.getIdentifier()
+                        + "\" does not follow naming convention (see DataValueAccessMethod#name()).");
                 LOGGER.coding("Factory will not be registered.");
                 return;
             }

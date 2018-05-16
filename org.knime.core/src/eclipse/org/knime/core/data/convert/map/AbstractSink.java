@@ -9,12 +9,12 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.convert.java.DataCellToJavaConverter;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
 import org.knime.core.data.convert.map.MappingFramework.CellValueConsumer;
 import org.knime.core.data.convert.map.MappingFramework.ProducerConsumerRegistry;
+import org.knime.core.data.convert.map.MappingFramework.UnmappableTypeException;
 import org.knime.core.data.convert.map.Sink.ConsumerParameters;
 import org.knime.core.data.convert.map.Source.ProducerParameters;
 
@@ -36,27 +36,6 @@ public abstract class AbstractSink<SinkType extends Sink<SinkType>, Params exten
     final ArrayList<Params> parameters = new ArrayList<>();
 
     /**
-     * Exception thrown when either a {@link CellValueConsumer} or converter was missing for a type which needed to be
-     * converted.
-     *
-     * @author Jonathan Hale
-     */
-    public static class UnmappableTypeException extends Exception {
-
-        /* Generated serial version UID */
-        private static final long serialVersionUID = 6498668986346262079L;
-
-        /**
-         * Constructor
-         *
-         * @param type Type that could not be mapped.
-         */
-        public UnmappableTypeException(final DataType type) {
-            super("Could not map type " + type.getName() + ".");
-        }
-    }
-
-    /**
      * Constructor
      *
      * Note to implementors: should initialize underlying data structures for given table specification. Per column
@@ -68,25 +47,31 @@ public abstract class AbstractSink<SinkType extends Sink<SinkType>, Params exten
      *             table spec.
      */
     public AbstractSink(final Class<SinkType> sinkType, final DataTableSpec spec) throws UnmappableTypeException {
+        int i = 0;
         for (final DataColumnSpec c : spec) {
             final Optional<DataCellToJavaConverterFactory<?, ?>> maybeFactory = DataCellToJavaConverterRegistry
                 .getInstance().getFactoriesForSourceType(c.getType()).stream().findFirst();
             if (!maybeFactory.isPresent()) {
-                throw new UnmappableTypeException(c.getType());
+                throw new UnmappableTypeException(
+                    "Could not find converter for column at index " + i + " with type " + c.getType().getName(),
+                    c.getType());
             }
 
             final DataCellToJavaConverterFactory<?, ?> factory = maybeFactory.get();
 
             final Class<?> javaType = factory.getDestinationType();
-            final CellValueConsumer<SinkType, ?, Params> consumer = ProducerConsumerRegistry.forSinkType(sinkType).get(javaType);
+            final CellValueConsumer<SinkType, ?, Params> consumer =
+                ProducerConsumerRegistry.forSinkType(sinkType).get(javaType);
 
             if (consumer == null) {
-                // TODO info about converters?
-                throw new UnmappableTypeException(c.getType());
+                throw new UnmappableTypeException("Could not find a consumer for column at index " + i
+                    + " with converter " + factory.getName() + " to java type " + factory.getDestinationType(),
+                    c.getType(), factory.getDestinationType());
             }
 
             converters.add(factory.create());
             consumers.add(consumer);
+            ++i;
         }
         parameters.addAll(createSinkParameters(spec));
     }
