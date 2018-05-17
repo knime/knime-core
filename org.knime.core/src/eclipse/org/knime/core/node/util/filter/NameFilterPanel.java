@@ -195,6 +195,11 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private JPanel m_nameFilterPanel;
 
     /**
+     * Size for the Panel
+     */
+    private static final Dimension PANEL_SIZE = new Dimension(700, 250);
+
+    /**
      * additional checkbox for the middle button panel
      * @since 3.4
      */
@@ -347,7 +352,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
             }
         });
         final JScrollPane jspIncl = new JScrollPane(m_inclList);
-        jspIncl.setMinimumSize(new Dimension(150, 155));
 
         m_searchFieldIncl = new JTextField(8);
         m_searchButtonIncl = new JButton("Search");
@@ -401,7 +405,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_exclList.setCellRenderer(getListCellRenderer());
 
         final JScrollPane jspExcl = new JScrollPane(m_exclList);
-        jspExcl.setMinimumSize(new Dimension(150, 155));
 
         m_searchFieldExcl = new JTextField(8);
         m_searchButtonExcl = new JButton("Search");
@@ -1237,7 +1240,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
         gbc.weightx = 1;
         gbc.weighty = 1;
         panel.add(m_filterPanel, gbc);
-        this.add(new JScrollPane(panel));
+        panel.setPreferredSize(PANEL_SIZE);
+        this.add(panel);
         updateTypePanel();
         updateFilterPanel();
     }
