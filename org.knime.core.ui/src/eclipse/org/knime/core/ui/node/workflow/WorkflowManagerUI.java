@@ -652,6 +652,13 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     @Override
     boolean hasDialog();
 
+    /**
+     * Indicates whether the workflow has credentials stored.
+     *
+     * @return <code>true</code> if credentials are stored with the workflow
+     */
+    boolean hasCredentials();
+
     /** {@inheritDoc} */
     @Override
     boolean areDialogAndNodeSettingsEqual();

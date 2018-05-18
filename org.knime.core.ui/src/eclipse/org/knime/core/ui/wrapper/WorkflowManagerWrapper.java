@@ -617,4 +617,9 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
         unwrap().notifyTemplateConnectionChangedListener();
     }
 
+    @Override
+    public boolean hasCredentials() {
+        return unwrap().getCredentialsStore().listNames().size() > 0;
+    }
+
 }
