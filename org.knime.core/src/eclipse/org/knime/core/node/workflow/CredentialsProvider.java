@@ -76,7 +76,7 @@ import org.knime.core.node.workflow.FlowVariable.Type;
 public final class CredentialsProvider {
 
     /**
-     * An empty credentials provider that doesn't provider any credentials.
+     * An empty credentials provider that doesn't provide any credentials.
      *
      * @noreference This field is not intended to be referenced by clients. Will be removed in the future.
      * @since 3.6

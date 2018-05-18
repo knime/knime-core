@@ -112,6 +112,12 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
 
     private final NodeContainerUI m_nodeContainer;
 
+    /**
+     * Method calls on a node dialog pane require a NodeContext only to check whether the underlying node is write
+     * protected. However, NodeContext for now only works with NodeContainer (and not NodeContainerUI). Thus, for
+     * NodeContainerUI, no NodeContext can be provided and the node dialog is write protected as consequence. (TODO:
+     * needs a solution as soon as the remote job view allows node settings to be stored)
+     */
     private final NodeDialogPane m_dialogPane;
 
     /**
@@ -156,20 +162,24 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
                 public void run() {
+                    /* see comment on m_dialogPane field */
                     unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
                 }
             });
+            /* see comment on m_dialogPane field */
             unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
             try {
                 m_dialogPane.onOpen();
                 return super.open();
             } finally {
+                /* see comment on m_dialogPane field */
                 if (wraps(m_nodeContainer, NodeContainer.class)) {
                     NodeContext.removeLastContext();
                 }
                 ViewUtils.invokeAndWaitInEDT(new Runnable() {
                     @Override
                     public void run() {
+                        /* see comment on m_dialogPane field */
                         if (wraps(m_nodeContainer, NodeContainer.class)) {
                             NodeContext.removeLastContext();
                         }
@@ -208,6 +218,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
             public void widgetSelected(final SelectionEvent e) {
                 String file = openDialog.open();
                 if (file != null) {
+                    /* see comment on m_dialogPane field */
                     unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
                     try {
                         m_dialogPane
@@ -217,6 +228,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                     } catch (NotConfigurableException ex) {
                         showErrorMessage(ex.getMessage());
                     } finally {
+                        /* see comment on m_dialogPane field */
                         if (wraps(m_nodeContainer, NodeContainer.class)) {
                             NodeContext.removeLastContext();
                         }
@@ -232,6 +244,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
             public void widgetSelected(final SelectionEvent e) {
                 String file = saveDialog.open();
                 if (file != null) {
+                    /* see comment on m_dialogPane field */
                     unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
                     try {
                         m_dialogPane.saveSettingsTo(new FileOutputStream(file));
@@ -247,6 +260,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                         // repaint after dialog disappears
                         m_dialogPane.getPanel().repaint();
                     } finally {
+                        /* see comment on m_dialogPane field */
                         if (wraps(m_nodeContainer, NodeContainer.class)) {
                             NodeContext.removeLastContext();
                         }
@@ -498,11 +512,13 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
 
     private void doCancel() {
         // delegate cancel&close event to underlying dialog pane
+        /* see comment on m_dialogPane field */
         unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
         try {
             m_dialogPane.callOnCancel();
             m_dialogPane.callOnClose();
         } finally {
+            /* see comment on m_dialogPane field */
             if (wraps(m_nodeContainer, NodeContainer.class)) {
                 NodeContext.removeLastContext();
             }
@@ -521,6 +537,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
 
     private void runOK(final boolean execute, final boolean openView) {
         // send close action to underlying dialog pane
+        /* see comment on m_dialogPane field */
         unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
         try {
             m_dialogPane.callOnClose();
@@ -557,6 +574,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                 });
             }
         } finally {
+            /* see comment on m_dialogPane field */
             if (wraps(m_nodeContainer, NodeContainer.class)) {
                 NodeContext.removeLastContext();
             }

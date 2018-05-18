@@ -56,7 +56,7 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 /**
  *
  * @author Fabian Dill, KNIME.com AG
- *
+ * 
  * @deprecated since AP 3.0
  */
 @Deprecated
