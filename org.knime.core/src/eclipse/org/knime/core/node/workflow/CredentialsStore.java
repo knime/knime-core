@@ -308,6 +308,9 @@ public final class CredentialsStore implements Observer {
      */
     public static void update(final CredentialsProvider p, final String credIdentifier,
         final String userName, final String password) {
+        if (p == CredentialsProvider.EMPTY_CREDENTIALS_PROVIDER) {
+            return;
+        }
         CredentialsStore store = p.getStore();
         synchronized (store) {
             Credentials credentials = store.m_credentials.get(CheckUtils.checkArgumentNotNull(credIdentifier));

@@ -51,6 +51,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -74,6 +75,14 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  */
 public final class CredentialsProvider {
 
+    /**
+     * An empty credentials provider that doesn't provider any credentials.
+     *
+     * @noreference This field is not intended to be referenced by clients. Will be removed in the future.
+     * @since 3.6
+     */
+    public static final CredentialsProvider EMPTY_CREDENTIALS_PROVIDER = new CredentialsProvider();
+
     private final NodeContainer m_client;
     private final CredentialsStore m_store;
 
@@ -89,12 +98,25 @@ public final class CredentialsProvider {
         m_client = CheckUtils.checkArgumentNotNull(client);
     }
 
+    /**
+     * Initializes an empty credentials provider in case credentials are not available (e.g. in a remotely opened
+     * workflow).
+     *
+     */
+    private CredentialsProvider() {
+       m_store = null;
+       m_client = null;
+    }
+
     /** Read a credentials variable from the store.
      * @param name The identifier of the credentials parameter of interest.
      * @return The credentials for the identifier.
      * @throws IllegalArgumentException If the name is invalid (no such credentials)
      */
     public ICredentials get(final String name) {
+        if(m_store == null) {
+            throw new IllegalArgumentException("No crendentials available.");
+        }
         // what this does (related to AP-5974):
         //   - check if a workflow credential is available and has a password set; if so, return it
         //   - check if a flow variable credential is available; if so, return it
@@ -125,6 +147,9 @@ public final class CredentialsProvider {
      * @return the collection of valid credentials identifiers.
      */
     public Collection<String> listNames() {
+        if(m_store == null) {
+            return Collections.EMPTY_LIST;
+        }
         LinkedHashSet<String> names = new LinkedHashSet<>(m_store.listNames());
         FlowObjectStack flowObjectStack = m_client.getFlowObjectStack();
         names.addAll(flowObjectStack.getAvailableFlowVariables(Type.CREDENTIALS).keySet());
@@ -143,12 +168,17 @@ public final class CredentialsProvider {
 
     /** Remove history of get invocations associated with this client. */
     void clearClientHistory() {
-        m_store.clearClient(m_client);
+        if (m_store != null) {
+            m_store.clearClient(m_client);
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
+        if(m_store == null) {
+            return "Empty Credentials provider";
+        }
         return "Credentials provider for \"" + m_client.getNameWithID() + "\" ("
             + listNames().size() + " credentials)";
     }
@@ -156,6 +186,10 @@ public final class CredentialsProvider {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
+        if(m_store == null) {
+            assert m_client == null;
+            return 0;
+        }
         return m_client.hashCode() + m_store.hashCode();
     }
 
@@ -167,8 +201,8 @@ public final class CredentialsProvider {
         }
         if (obj instanceof CredentialsProvider) {
             CredentialsProvider prov = (CredentialsProvider)obj;
-            return prov.m_client.equals(m_client)
-                && prov.m_store.equals(m_store);
+            return Objects.equals(prov.m_client, m_client)
+                && Objects.equals(prov.m_store, m_store);
         }
         return false;
     }

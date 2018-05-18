@@ -1386,8 +1386,7 @@ public abstract class NodeDialogPane {
      * @param model the node model instance. Can be <code>null</code> if not of type @{@link InactiveBranchConsumer},
      *            {@link ValueControlledNode} or {@link VirtualSubNodeInputNodeModel}
      * @param flowObjectStack stack holding all available flow variables required for the configuration
-     * @param credentialsProvider in case (workflow) credentials are required to configre the dialog, can be
-     *            <code>null</code> otherwise
+     * @param credentialsProvider in case (workflow) credentials are required to configure the dialog
      * @return The dialog pane which holds all the settings' components. In addition this method loads the settings from
      *         the model into the dialog pane.
      * @throws NotConfigurableException if the dialog cannot be opened because of real invalid settings or if any
