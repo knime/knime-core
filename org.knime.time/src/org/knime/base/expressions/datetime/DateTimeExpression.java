@@ -72,4 +72,14 @@ public interface DateTimeExpression extends Expression {
     default String getImports() {
         return "import java.time.*;";
     }
+
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default boolean usesVarArgs() {
+        return false;
+    }
 }
