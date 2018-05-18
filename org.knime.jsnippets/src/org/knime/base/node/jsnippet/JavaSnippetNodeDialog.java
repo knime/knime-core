@@ -754,17 +754,17 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
             for (final Bundle bundle : bundles) {
                 final Version installedVersion = bundle.getVersion();
 
-                if(BundleListPanel.versionMatches(installedVersion, savedVersion)) {
+                if (JavaSnippet.versionMatches(installedVersion, savedVersion)) {
                     bundleFound = true;
                     break;
                 }
             }
 
-            if(!bundleFound) {
+            if (!bundleFound) {
                 setAdditionalBundlesTabTitle(false);
-                throw new InvalidSettingsException(String.format(
-                    "No installed version of \"%s\" matched version range [%s, %d.0.0).",
-                    bundleName, savedVersion, savedVersion.getMajor()+1));
+                throw new InvalidSettingsException(
+                    String.format("No installed version of \"%s\" matched version range [%s, %d.0.0).", bundleName,
+                        savedVersion, savedVersion.getMajor() + 1));
             }
         }
         setAdditionalBundlesTabTitle(true);

@@ -52,7 +52,9 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -65,6 +67,7 @@ import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -88,6 +91,8 @@ import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 
 import org.eclipse.core.runtime.Platform;
+import org.knime.base.node.jsnippet.JavaSnippet;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.util.filter.ArrayListModel;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -109,19 +114,6 @@ import org.osgi.framework.wiring.BundleWiring;
 public class BundleListPanel extends JPanel implements TreeWillExpandListener {
 
     private static final long serialVersionUID = 1L;
-
-    /**
-     * Check whether a given source version sufficiently matches a certain target version.
-     *
-     * @param source Version that should match <code>target</code>
-     * @param target Version that should be matched by <code>source</code>
-     * @return true if source is not {@link Version#emptyVersion}, major versions are equal and the source minor version
-     *         is greater or equal to the required minor version.
-     */
-    public static boolean versionMatches(final Version source, final Version target) {
-        return !source.equals(Version.emptyVersion) && source.getMajor() == target.getMajor()
-            && source.getMinor() >= target.getMinor();
-    }
 
     /** Entry in the Bundle List */
     static class BundleListEntry {
@@ -187,7 +179,7 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
          * @return <code>true</code> if versions match, <code>false</code> otherwise.
          */
         public boolean versionsMatch() {
-            return BundleListPanel.versionMatches(installedVersion, savedVersion);
+            return JavaSnippet.versionMatches(installedVersion, savedVersion);
         }
 
         @Override
@@ -310,122 +302,135 @@ public class BundleListPanel extends JPanel implements TreeWillExpandListener {
         ToolTipManager.sharedInstance().registerComponent(m_tree);
 
         final JScrollPane scroll = new JScrollPane(m_tree);
-        add(scroll);
+
+        JPanel topPane = new JPanel();
+        topPane.setLayout(new BoxLayout(topPane, BoxLayout.PAGE_AXIS));
+        topPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        add(topPane);
+
+        JPanel bottomPane = new JPanel();
+        bottomPane.setLayout(new BoxLayout(bottomPane, BoxLayout.PAGE_AXIS));
+        bottomPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        add(bottomPane);
+
+        topPane.add(scroll);
 
         /* Remove button */
         final JButton removeBundleButton = new JButton("Remove Selected Bundles");
         removeBundleButton.addActionListener(e -> removeSelectedBundles());
 
-        final JPanel southPane = new JPanel(new FlowLayout());
-        southPane.add(removeBundleButton);
-        add(southPane);
+        topPane.add(ViewUtils.getInFlowLayout(FlowLayout.RIGHT, removeBundleButton));
 
         /* Label for list of available bundles */
         final JPanel labelPane = new JPanel(new FlowLayout());
         labelPane.add(new JLabel("Add bundles from the current eclipse environment as dependencies."));
-        add(labelPane);
+        bottomPane.add(labelPane);
 
         final JPanel availableBundlesPane = new JPanel(new BorderLayout());
-        {
-            final JPanel northPane = new JPanel(new GridLayout(2, 1));
-            {
-                /* Add bundles button */
-                final JButton addBundlesButton = new JButton("Add Selected Bundles");
-                addBundlesButton.addActionListener(e -> addSelectedBundles());
-                northPane.add(addBundlesButton);
+        final JPanel northPane = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-                m_filterField.requestFocusInWindow();
-                northPane.add(m_filterField);
-            }
-            availableBundlesPane.add(northPane, BorderLayout.NORTH);
+        gbc.weightx = 1.0;
 
-            m_bundleList = new JList<>(m_bundleModel);
-            final JScrollPane scrollPane = new JScrollPane(m_bundleList);
-            availableBundlesPane.add(scrollPane, BorderLayout.CENTER);
+        m_filterField.requestFocusInWindow();
+        northPane.add(m_filterField, gbc);
 
-            m_tree.addKeyListener(new KeyAdapter() {
+        /* Add bundles button */
+        final JButton addBundlesButton = new JButton("Add Selected Bundles");
+        addBundlesButton.addActionListener(e -> addSelectedBundles());
+        gbc.weightx = 0.0;
+        northPane.add(addBundlesButton, gbc);
 
-                @Override
-                public void keyPressed(final KeyEvent e) {
-                    if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-                        removeSelectedBundles();
-                    }
+        availableBundlesPane.add(northPane, BorderLayout.NORTH);
+
+        m_bundleList = new JList<>(m_bundleModel);
+        final JScrollPane scrollPane = new JScrollPane(m_bundleList);
+        availableBundlesPane.add(scrollPane, BorderLayout.CENTER);
+
+        m_tree.addKeyListener(new KeyAdapter() {
+
+            @Override
+            public void keyPressed(final KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    removeSelectedBundles();
                 }
-            });
-            m_tree.addMouseListener(new MouseAdapter() {
+            }
+        });
+        m_tree.addMouseListener(new MouseAdapter() {
 
-                @Override
-                public void mouseClicked(final MouseEvent e) {
-                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
-                        if (!removeSelectedBundles()) {
-                            /* If we didn't remove a bundle, maybe the user clicked on a custom type bundle */
-                            final TreePath path = m_tree.getSelectionPath();
-                            if (path == null) {
-                                /* No selection */
-                                return;
-                            }
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
+                    if (!removeSelectedBundles()) {
+                        /* If we didn't remove a bundle, maybe the user clicked on a custom type bundle */
+                        final TreePath path = m_tree.getSelectionPath();
+                        if (path == null) {
+                            /* No selection */
+                            return;
+                        }
 
-                            final DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
-                            if (node.getParent() == m_customTypeRoot) {
-                                /* Explicitly add custom type bundle as active bundle */
-                                final Bundle bundle = (Bundle)node.getUserObject();
-                                addBundle(String.format("%s %s", bundle.getSymbolicName(), bundle.getVersion()));
-                            }
+                        final DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
+                        if (node.getParent() == m_customTypeRoot) {
+                            /* Explicitly add custom type bundle as active bundle */
+                            final Bundle bundle = (Bundle)node.getUserObject();
+                            addBundle(String.format("%s %s", bundle.getSymbolicName(), bundle.getVersion()));
                         }
                     }
                 }
-            });
-            m_bundleList.addMouseListener(new MouseAdapter() {
+            }
+        });
+        m_bundleList.addMouseListener(new MouseAdapter() {
 
-                @Override
-                public void mouseClicked(final MouseEvent e) {
-                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
-                        final String bundleName = m_bundleList.getSelectedValue();
-                        addBundle(bundleName);
-                        updateFilterModel();
-                        m_bundleList.clearSelection();
-                    }
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
+                    final String bundleName = m_bundleList.getSelectedValue();
+                    addBundle(bundleName);
+                    updateFilterModel();
+                    m_bundleList.clearSelection();
                 }
-            });
-            m_bundleList.addKeyListener(new KeyAdapter() {
+            }
+        });
+        m_bundleList.addKeyListener(new KeyAdapter() {
 
-                @Override
-                public void keyPressed(final KeyEvent e) {
-                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        addSelectedBundles();
-                    }
+            @Override
+            public void keyPressed(final KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    addSelectedBundles();
                 }
-            });
+            }
+        });
 
-            m_filterField.getDocument().addDocumentListener(new DocumentListener() {
+        m_filterField.getDocument().addDocumentListener(new DocumentListener() {
 
-                @Override
-                public void removeUpdate(final DocumentEvent e) {
-                    update(e);
+            @Override
+            public void removeUpdate(final DocumentEvent e) {
+                update(e);
+            }
+
+            @Override
+            public void insertUpdate(final DocumentEvent e) {
+                update(e);
+            }
+
+            @Override
+            public void changedUpdate(final DocumentEvent e) {
+                update(e);
+            }
+
+            void update(final DocumentEvent e) {
+                try {
+                    final Document doc = e.getDocument();
+                    m_bundleModel.setFilter(doc.getText(0, doc.getLength()));
+                } catch (BadLocationException e1) {
+                    // Will never happen
                 }
+            }
+        });
 
-                @Override
-                public void insertUpdate(final DocumentEvent e) {
-                    update(e);
-                }
-
-                @Override
-                public void changedUpdate(final DocumentEvent e) {
-                    update(e);
-                }
-
-                void update(final DocumentEvent e) {
-                    try {
-                        final Document doc = e.getDocument();
-                        m_bundleModel.setFilter(doc.getText(0, doc.getLength()));
-                    } catch (BadLocationException e1) {
-                        // Will never happen
-                    }
-                }
-            });
-        }
-
-        add(availableBundlesPane);
+        bottomPane.add(availableBundlesPane);
     }
 
     private void addSelectedBundles() {

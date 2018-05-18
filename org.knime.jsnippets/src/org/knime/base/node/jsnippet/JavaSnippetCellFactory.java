@@ -340,7 +340,7 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         m_snippet.close();
     }
 
-    /* Create a map from column name to table Cell proxy
+    /** Create a map from column name to table Cell proxy
      * @param row Example row to create the map for.
      * @return the map
      */
@@ -375,7 +375,7 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         exec.setProgress(curRowNr / (double)rowCount, () -> "Processed row " + curRowNr + " (\"" + lastKey + "\")");
     }
 
-    /*
+    /**
      * Class that wraps a DataRow for access from inside the Java Snippet.
      *
      * This allows cell access while keeping the DataCell API safe from having to provide

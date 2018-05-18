@@ -113,7 +113,6 @@ import org.knime.base.node.jsnippet.guarded.GuardedSection;
 import org.knime.base.node.jsnippet.guarded.JavaSnippetDocument;
 import org.knime.base.node.jsnippet.template.JavaSnippetTemplate;
 import org.knime.base.node.jsnippet.type.ConverterUtil;
-import org.knime.base.node.jsnippet.ui.BundleListPanel;
 import org.knime.base.node.jsnippet.ui.JSnippetParser;
 import org.knime.base.node.jsnippet.util.FlowVariableRepository;
 import org.knime.base.node.jsnippet.util.JSnippet;
@@ -169,6 +168,20 @@ import org.osgi.framework.wiring.BundleWiring;
  */
 @SuppressWarnings("restriction")
 public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeable {
+
+    /**
+     * Check whether a given source version sufficiently matches a certain target version.
+     *
+     * @param source Version that should match <code>target</code>
+     * @param target Version that should be matched by <code>source</code>
+     * @return true if source is not {@link Version#emptyVersion}, major versions are equal and the source minor/micro
+     *         version is greater or equal to the required minor/minor version.
+     */
+    public static boolean versionMatches(final Version source, final Version target) {
+        return !source.equals(Version.emptyVersion) && source.getMajor() == target.getMajor()
+            && source.compareTo(target) >= 0;
+    }
+
     private static class SnippetCache {
         private String m_snippetCode;
 
@@ -925,16 +938,15 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             for (final Bundle bundle : bundles) {
                 final Version installedVersion = bundle.getVersion();
 
-                if(BundleListPanel.versionMatches(installedVersion, savedVersion)) {
+                if (versionMatches(installedVersion, savedVersion)) {
                     bundleFound = true;
                     break;
                 }
             }
 
-            if(!bundleFound) {
-                errors.add(String.format(
-                    "No installed version of \"%s\" matched version range [%s, %d.0.0).",
-                    bundleName, savedVersion, savedVersion.getMajor()+1));
+            if (!bundleFound) {
+                errors.add(String.format("No installed version of \"%s\" matched version range [%s, %d.0.0).",
+                    bundleName, savedVersion, savedVersion.getMajor() + 1));
             }
         }
 
@@ -1336,7 +1348,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
      * @return the Bundle or <code>null</code>, if it is a built-in type.
      */
     public synchronized static Bundle resolveBundleForJavaType(final Class<?> javaType) {
-        if(javaType.getClassLoader() instanceof ModuleClassLoader) {
+        if (javaType.getClassLoader() instanceof ModuleClassLoader) {
             final ModuleClassLoader moduleClassLoader = (ModuleClassLoader)javaType.getClassLoader();
             return moduleClassLoader.getBundle();
         } else {
