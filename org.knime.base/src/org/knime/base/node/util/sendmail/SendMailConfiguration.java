@@ -69,6 +69,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -666,6 +667,8 @@ final class SendMailConfiguration {
                     throw new IOException("Unable to file attachment \"" + url + "\"");
                 }
                 filePart.attachFile(file);
+                String encodedFileName = MimeUtility.encodeText(file.getName());
+                filePart.setFileName(encodedFileName);
                 // java 7u7 is missing mimemtypes.default file:
                 // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=7096063
                 // find mime type in this bundle (META-INF folder contains mime.types) and set it
