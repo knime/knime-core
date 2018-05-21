@@ -84,7 +84,8 @@ import org.knime.core.node.util.CheckUtils;
 
 /**
  * Class calculating the confusion matrix, class statistics and overall statistics.
- * The JavaScript Scorer node uses it.
+ * E.g. the JavaScript Scorer node uses it.
+ *
  * @author Pascal Lee, KNIME GmbH, Berlin, Germany
  * @since 3.6
  */
@@ -110,10 +111,10 @@ public class AccuracyScorerCalculator {
     private final List<String> m_warnings;
 
     /**
-     * @param inSpec        input data table specification
-     * @param firstCol      name of the column containing actual classes
-     * @param secondCol     name of the column containing predicted classes
-     * @param config     ScorerCalculator configuration
+     * @param inSpec input data table specification
+     * @param firstCol name of the column containing actual classes
+     * @param secondCol name of the column containing predicted classes
+     * @param config ScorerCalculator configuration
      * @return the specification of the confusion matrix data table
      * @throws InvalidSettingsException
      */
@@ -170,8 +171,8 @@ public class AccuracyScorerCalculator {
                 targetValues[i] = newName;
                 if (!hasPrintedWarningOnAmbiguousValues) {
                     hasPrintedWarningOnAmbiguousValues = true;
-                     LOGGER.warn("Ambiguous value \"" + c.toString() + "\" encountered. Preserving individual instances;"
-                             + " consider to convert input columns to string");
+                    LOGGER.warn("Ambiguous value \"" + c.toString() + "\" encountered. Preserving individual instances;"
+                        + " consider to convert input columns to string");
                 }
             } else {
                 int uniquifier = 1;
@@ -189,7 +190,7 @@ public class AccuracyScorerCalculator {
     }
 
     /**
-     * @param config    configuration of the class statistics table
+     * @param config configuration of the class statistics table
      * @return the specification of the class statistics data table
      */
     public static DataTableSpec createClassStatsSpec(final ClassStatisticsConfiguration config) {
@@ -290,11 +291,11 @@ public class AccuracyScorerCalculator {
     /**
      * This is a getter method which creates a buffered data table and fills it with the confusion matrix.
      *
-     * @param exec                  the execution context
-     * @return BufferedDataTable    contains the confusion matrix
+     * @param exec the execution context
+     * @return BufferedDataTable contains the confusion matrix
      */
     public BufferedDataTable getConfusionMatrixTable(final ExecutionContext exec) {
-        BufferedDataContainer container =  null;
+        BufferedDataContainer container = null;
         try {
             container = exec.createDataContainer(m_confusionMatrixSpec);
             for (int i = 0; i < m_targetValues.length; i++) {
@@ -306,7 +307,7 @@ public class AccuracyScorerCalculator {
             }
         }
         if (container == null) {
-         // This will never be called, it's just for removing the compiler warning.
+            // This will never be called, it's just for removing the compiler warning.
             throw new NullPointerException();
         }
         return container.getTable();
@@ -315,27 +316,16 @@ public class AccuracyScorerCalculator {
     /**
      * This is a getter method which creates a buffered data table and fills it with the class statistics.
      *
-     * the following values can be calculated for each class:
-     * True Positives
-     * False Positives
-     * True Negatives
-     * False Negatives
-     * Accuracy
-     * Balanced Accuracy
-     * Error Rate
-     * False Negative Rate
-     * Recall
-     * Precision
-     * Sensitivity
-     * Specificity
+     * the following values can be calculated for each class: True Positives False Positives True Negatives False
+     * Negatives Accuracy Balanced Accuracy Error Rate False Negative Rate Recall Precision Sensitivity Specificity
      * F-measure
      *
-     * The values which will be effectively present in the data table are the one chosen in the node configuration,
-     * in the Class Statistics Options tab.
+     * The values which will be effectively present in the data table are the one chosen in the node configuration, in
+     * the Class Statistics Options tab.
      *
-     * @param config                the class statistics table configuration
-     * @param exec                  the execution context
-     * @return BufferedDataTable    contains the chosen class statistics
+     * @param config the class statistics table configuration
+     * @param exec the execution context
+     * @return BufferedDataTable contains the chosen class statistics
      */
     public BufferedDataTable getClassStatisticsTable(final ClassStatisticsConfiguration config,
         final ExecutionContext exec) {
@@ -447,7 +437,7 @@ public class AccuracyScorerCalculator {
             }
         }
         if (container == null) {
-         // This will never be called, it's just for removing the compiler warning.
+            // This will never be called, it's just for removing the compiler warning.
             throw new NullPointerException();
         }
         return container.getTable();
@@ -456,19 +446,15 @@ public class AccuracyScorerCalculator {
     /**
      * This is a getter method which creates a buffered data table and fills it with the overall statistics.
      *
-     * the following values can be calculated:
-     * Overall Accuracy
-     * Overall Error
-     * Cohen's kappa
-     * Correct Classsified
-     * Wrong Classified
+     * the following values can be calculated: Overall Accuracy Overall Error Cohen's kappa Correct Classsified Wrong
+     * Classified
      *
-     * The values which will be effectively present in the data table are the one chosen in the node configuration,
-     * in the Overall Statistics Options tab.
+     * The values which will be effectively present in the data table are the one chosen in the node configuration, in
+     * the Overall Statistics Options tab.
      *
-     * @param config                the overall statistics table configuration
-     * @param exec                  the execution context
-     * @return BufferedDataTable    contains the chosen overall statistics
+     * @param config the overall statistics table configuration
+     * @param exec the execution context
+     * @return BufferedDataTable contains the chosen overall statistics
      */
     public BufferedDataTable getOverallStatisticsTable(final OverallStatisticsConfiguration config,
         final ExecutionContext exec) {
@@ -508,8 +494,8 @@ public class AccuracyScorerCalculator {
     }
 
     /**
-     * This is a getter method for the keystore of RowKey associated to the confusion matrix.
-     * It will be used in the JS view for selecting the rows related to a given cell of the confusion matrix.
+     * This is a getter method for the keystore of RowKey associated to the confusion matrix. It will be used in the JS
+     * view for selecting the rows related to a given cell of the confusion matrix.
      *
      * @return the keystore as a matrix of RowKey lists
      */
@@ -529,19 +515,18 @@ public class AccuracyScorerCalculator {
     /**
      * Calculates an accuracy scorer confusion matrix, overall statistics and statistics specific to each class
      *
-     * @param data the input data
-     * @param firstColumnName the column selected containing the real classes
-     * @param secondColumnName the column selected containing the predicted classes
-     * @param exec Execution context to report progress to
-     * @throws CanceledExecutionException when the user cancels the execution
-     * @throws
+     * @param data the input data @param firstColumnName the column selected containing the real classes @param
+     *            secondColumnName the column selected containing the predicted classes @param exec Execution context to
+     *            report progress to @throws CanceledExecutionException when the user cancels the execution @throws
      */
-    private void calculate(final BufferedDataTable data, final String firstColumnName, final String secondColumnName, final ScorerCalculatorConfiguration config,
-        final ExecutionContext exec) throws InvalidSettingsException, CanceledExecutionException {
+    private void calculate(final BufferedDataTable data, final String firstColumnName, final String secondColumnName,
+        final ScorerCalculatorConfiguration config, final ExecutionContext exec)
+        throws InvalidSettingsException, CanceledExecutionException {
         DataTableSpec inSpec = data.getDataTableSpec();
         int index1 = inSpec.findColumnIndex(firstColumnName);
         int index2 = inSpec.findColumnIndex(secondColumnName);
-        m_confusionMatrixSpec = createConfusionMatrixSpec(data.getDataTableSpec(), firstColumnName, secondColumnName, config);
+        m_confusionMatrixSpec =
+            createConfusionMatrixSpec(data.getDataTableSpec(), firstColumnName, secondColumnName, config);
         m_targetValues = m_confusionMatrixSpec.getColumnNames();
 
         DataCell[] values = determineColValues(inSpec, index1, index2, config);
@@ -605,11 +590,12 @@ public class AccuracyScorerCalculator {
         }
         int missing = rowsNumber - m_correctCount - m_falseCount;
         if (missingCount > 0) {
-            addWarning("There were " + missing + " missing values in the reference or in the prediction class columns.");
+            addWarning(
+                "There were " + missing + " missing values in the reference or in the prediction class columns.");
         }
         // print info
-        LOGGER.info("overall error=" + getOverallError() + ", #correct=" + m_correctCount + ", #false="
-            + m_falseCount + ", #rows=" + rowsNumber + ", #missing=" + missing);
+        LOGGER.info("overall error=" + getOverallError() + ", #correct=" + m_correctCount + ", #false=" + m_falseCount
+            + ", #rows=" + rowsNumber + ", #missing=" + missing);
         return;
     }
 
@@ -754,7 +740,7 @@ public class AccuracyScorerCalculator {
      */
     public void reset() {
         m_targetValues = null;
-        m_scorerCount =  null;
+        m_scorerCount = null;
         m_keyStore = null;
         m_correctCount = 0;
         m_falseCount = 0;
@@ -944,7 +930,7 @@ public class AccuracyScorerCalculator {
     public static class ClassStatisticsConfiguration {
         boolean tpCalculated = true;
 
-        boolean fpCalculated  = true;
+        boolean fpCalculated = true;
 
         boolean tnCalculated = true;
 
@@ -1251,7 +1237,8 @@ public class AccuracyScorerCalculator {
         /**
          * @param correctClassifiedCalculated the correctClassifiedCalculated to set
          */
-        public OverallStatisticsConfiguration withCorrectClassifiedCalculated(final boolean correctClassifiedCalculated) {
+        public OverallStatisticsConfiguration
+            withCorrectClassifiedCalculated(final boolean correctClassifiedCalculated) {
             this.correctClassifiedCalculated = correctClassifiedCalculated;
             return this;
         }
