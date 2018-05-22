@@ -329,12 +329,6 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         FilterResult filterResult = m_columnFilter.applyTo(inputTableSpec);
         String[] toFilter = filterResult.getIncludes();
 
-        boolean filterAll =
-            m_filterAll.getStringValue().equals(ConstantValueColumnFilterNodeDialogPane.FILTER_OPTIONS_ALL_LABEL);
-        boolean filterNumeric = m_filterNumeric.getBooleanValue();
-        boolean filterString = m_filterString.getBooleanValue();
-        boolean filterMissing = m_filterMissing.getBooleanValue();
-
         if (inputTable.size() < m_rowThreshold.getLongValue()) {
             setWarningMessage(WARNING_SMALL_TABLE);
         } else if (inputTable.size() == 1) {
@@ -342,9 +336,12 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         }
 
         ConstantValueColumnFilter filter = new ConstantValueColumnFilter.ConstantValueColumnFilterBuilder()
-            .filterAll(filterAll).filterNumeric(filterNumeric).filterNumericValue(m_filterNumericValue.getDoubleValue())
-            .filterString(filterString).filterStringValue(m_filterStringValue.getStringValue())
-            .filterMissing(filterMissing).rowThreshold(m_rowThreshold.getLongValue()).createConstantValueColumnFilter();
+            .filterAll(
+                m_filterAll.getStringValue().equals(ConstantValueColumnFilterNodeDialogPane.FILTER_OPTIONS_ALL_LABEL))
+            .filterNumeric(m_filterNumeric.getBooleanValue()).filterNumericValue(m_filterNumericValue.getDoubleValue())
+            .filterString(m_filterString.getBooleanValue()).filterStringValue(m_filterStringValue.getStringValue())
+            .filterMissing(m_filterMissing.getBooleanValue()).rowThreshold(m_rowThreshold.getLongValue())
+            .createConstantValueColumnFilter();
 
         String[] toRemove = filter.determineConstantValueColumns(inputTable, toFilter, exec);
 
