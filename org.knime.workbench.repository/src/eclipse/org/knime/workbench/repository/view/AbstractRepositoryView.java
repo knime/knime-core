@@ -56,6 +56,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuListener;
@@ -356,6 +357,17 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
             return;
         }
 
+        final boolean treeVisibility = !(obscuringState.shouldShowObscuringLayer()
+                && obscuringState.shouldMakeObscuringLayerOpaque());
+
+        final Control treeControl = m_viewer.getControl();
+        treeControl.setVisible(treeVisibility);
+
+        // Due to AP-9286
+        if ((! treeVisibility) && Platform.OS_WIN32.equals(Platform.getOS())) {
+            m_obscureLayer.getParent().layout();
+        }
+
         // Wrestling with the layout of the obscuring layer and the tree viewer's control is painful... oh SWT...
         if (obscuringState.shouldShowObscuringLayer()) {
             final Color fillColor =
@@ -377,6 +389,9 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
         m_obscureLayerLabel.setText(textToSet);
         m_obscureLayerLabel.pack();
 
+        treeControl.setLocation(0, 0);
+        treeControl.setSize(parentSize);
+
         if (obscuringState.shouldShowObscuringLayer() && (textToSet.length() > 0)) {
             final GC gc = new GC(m_obscureLayerLabel);
             final FontMetrics fm = gc.getFontMetrics();
@@ -386,10 +401,6 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
 
             gc.dispose();
         }
-
-        final Control treeControl = m_viewer.getControl();
-        treeControl.setLocation(0, 0);
-        treeControl.setSize(parentSize);
 
         m_currentObscuringState = new ObscuringState(obscuringState);
         m_currentObscuringState.setLastParentSize(parentSize);
