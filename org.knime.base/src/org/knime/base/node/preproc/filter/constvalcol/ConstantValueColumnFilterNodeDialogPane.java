@@ -48,19 +48,27 @@
  */
 package org.knime.base.node.preproc.filter.constvalcol;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
@@ -87,33 +95,33 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
     /*
      * The title of the tab of the column selection panel.
      */
-    static final String INEXCLUDE_LIST_TAB = "Column Options";
+    private static final String INEXCLUDE_LIST_TAB = "Column Options";
 
     /*
      * The tooltip of the column selection panel.
      */
-    static final String INEXCLUDE_LIST_TOOLTIP =
+    private static final String INEXCLUDE_LIST_TOOLTIP =
         "Select which columns to apply the filter to and which columns to retain.";
 
     /*
      * The title of the list of columns for which to apply the filter.
      */
-    static final String INEXCLUDE_LIST_INCLUDE_TITLE = "Apply filter";
+    private static final String INEXCLUDE_LIST_INCLUDE_TITLE = "Apply filter";
 
     /*
      * The title of the list of columns which to retain (i.e., which to be passed through the filter).
      */
-    static final String INEXCLUDE_LIST_EXCLUDE_TITLE = "Do not apply filter (retain column)";
+    private static final String INEXCLUDE_LIST_EXCLUDE_TITLE = "Do not apply filter (retain column)";
 
     /*
      * The title of the tab in which filter options can be selected.
      */
-    static final String FILTER_OPTIONS_TAB = "Filter Options";
+    private static final String FILTER_OPTIONS_TAB = "Filter Options";
 
     /*
      * The title of the group of options that allow to limit the filtering to specific values.
      */
-    static final String FILTER_OPTIONS_TITLE = "Remove constant value columns";
+    private static final String FILTER_OPTIONS_TITLE = "Remove constant value columns";
 
     /*
      * The label of the option to filter all constant value columns.
@@ -128,61 +136,64 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
     /*
      * The tooltip of the option to filter all or only specific constant value columns.
      */
-    static final String FILTER_OPTIONS_SPECIFICITY_TOOLTIP =
+    private static final String FILTER_OPTIONS_SPECIFICITY_TOOLTIP =
         "Filter all columns with any constant value or only filter columns with specific constant values.";
 
     /*
      * The label of the option to filter columns with a specific constant numeric value.
      */
-    static final String FILTER_OPTIONS_NUMERIC_LABEL = "containing only numeric values of";
+    private static final String FILTER_OPTIONS_NUMERIC_LABEL = "containing only numeric values of";
 
     /*
      * The tooltip of the option to filter columns with a specific constant numeric value.
      */
-    static final String FILTER_OPTIONS_NUMERIC_TOOLTIP = "Filter columns containing only a specific numeric value.";
+    private static final String FILTER_OPTIONS_NUMERIC_TOOLTIP =
+        "Filter columns containing only a specific numeric value.";
 
     /*
      * The label of the option to filter columns with a specific constant String value.
      */
-    static final String FILTER_OPTIONS_STRING_LABEL = "containing only String values of";
+    private static final String FILTER_OPTIONS_STRING_LABEL = "containing only String values of";
 
     /*
      * The tooltip of the option to filter columns with a specific constant String value.
      */
-    static final String FILTER_OPTIONS_STRING_TOOLTIP = "Filter columns containing only a specific String value.";
+    private static final String FILTER_OPTIONS_STRING_TOOLTIP =
+        "Filter columns containing only a specific String value.";
 
     /*
      * The label of the option to filter columns containing only missing values.
      */
-    static final String FILTER_OPTIONS_MISSING_LABEL = "containing only missing values";
+    private static final String FILTER_OPTIONS_MISSING_LABEL = "containing only missing values";
 
     /*
      * The tooltip of the option to filter columns containing only missing values.
      */
-    static final String FILTER_OPTIONS_MISSING_TOOLTIP = "Filter columns containing only missing values.";
+    private static final String FILTER_OPTIONS_MISSING_TOOLTIP = "Filter columns containing only missing values.";
 
     /*
-     * The warning message to be displayed when partial filtering is selected, yet no type of column (numeric, String,
-     * missing) is specified.
+     * The warning message to be displayed (in the dialog pane) when partial filtering is selected, yet no type of
+     * column (numeric, String, missing) is specified.
      */
-    static final String FILTER_OPTIONS_UNSELECTED_WARNING = "At least one option has to be checked.";
+    private static final String FILTER_OPTIONS_UNSELETCTED_WARNING =
+        "At least one partial filtering option should be selected.";
 
     /*
      * The label of the option for specifying the minimum number of rows a table must have to be considered for
      * filtering.
      */
-    static final String MISC_OPTIONS_ROW_THRESHOLD_LABEL = "Minimum number of rows:";
+    private static final String MISC_OPTIONS_ROW_THRESHOLD_LABEL = "Minimum number of rows:";
 
     /*
      * The title of the group of options that allow to limit the filtering to specific values.
      */
-    static final String MISC_OPTIONS_TITLE = "Miscellaneous options";
+    private static final String MISC_OPTIONS_TITLE = "Miscellaneous options";
 
     /*
      * The tooltip of the option for specifying the minimum number of rows a table must have to be considered for
      * filtering.
      */
-    static final String MISC_OPTIONS_ROW_THRESHOLD_TOOLTIP =
+    private static final String MISC_OPTIONS_ROW_THRESHOLD_TOOLTIP =
         "The minimum number of rows a table must have to be considered for filtering. If the table size is below the specified value, the table will not be filtered / altered.";
 
     /*
@@ -223,52 +234,41 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
         SettingsModelBoolean filterString = ConstantValueColumnFilterNodeModel.createFilterStringModel();
         SettingsModelString filterStringValue = ConstantValueColumnFilterNodeModel.createFilterStringValueModel();
         SettingsModelBoolean filterMissing = ConstantValueColumnFilterNodeModel.createFilterMissingModel();
-        SettingsModelString filterAll = ConstantValueColumnFilterNodeModel.createFilterAllModel(filterNumeric,
-            filterNumericValue, filterString, filterStringValue, filterMissing);
+        SettingsModelString filterAll = ConstantValueColumnFilterNodeModel.createFilterAllModel();
 
         JPanel filterPanel = new JPanel();
         filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.Y_AXIS));
         filterPanel.setBorder(new TitledBorder(FILTER_OPTIONS_TITLE));
+        addDialogComponentsWithGlue(false, filterPanel, FILTER_OPTIONS_SPECIFICITY_TOOLTIP,
+            new DialogComponentButtonGroup(filterAll, true, null, FILTER_OPTIONS_ALL_LABEL,
+                FILTER_OPTIONS_PARTIAL_LABEL));
+        addDialogComponentsWithGlue(true, filterPanel, FILTER_OPTIONS_NUMERIC_TOOLTIP,
+            new DialogComponentBoolean(filterNumeric, FILTER_OPTIONS_NUMERIC_LABEL),
+            new DialogComponentNumberEdit(filterNumericValue, "", 5));
+        addDialogComponentsWithGlue(true, filterPanel, FILTER_OPTIONS_STRING_TOOLTIP,
+            new DialogComponentBoolean(filterString, FILTER_OPTIONS_STRING_LABEL),
+            new DialogComponentString(filterStringValue, ""));
+        addDialogComponentsWithGlue(true, filterPanel, FILTER_OPTIONS_MISSING_TOOLTIP,
+            new DialogComponentBoolean(filterMissing, FILTER_OPTIONS_MISSING_LABEL));
 
-        addDialogComponentWithGlue(new DialogComponentButtonGroup(filterAll, true, null, FILTER_OPTIONS_ALL_LABEL,
-            FILTER_OPTIONS_PARTIAL_LABEL), FILTER_OPTIONS_SPECIFICITY_TOOLTIP, filterPanel);
-
-        JPanel numericPanel = new JPanel();
-        numericPanel.setLayout(new BoxLayout(numericPanel, BoxLayout.X_AXIS));
-        addComponent(Box.createHorizontalStrut(20), numericPanel);
-        addDialogComponent(new DialogComponentBoolean(filterNumeric, FILTER_OPTIONS_NUMERIC_LABEL),
-            FILTER_OPTIONS_NUMERIC_TOOLTIP, numericPanel);
-        addDialogComponent(new DialogComponentNumberEdit(filterNumericValue, "", 5), FILTER_OPTIONS_NUMERIC_TOOLTIP,
-            numericPanel);
-        numericPanel.add(Box.createHorizontalGlue());
-        filterPanel.add(numericPanel);
-
-        JPanel stringPanel = new JPanel();
-        stringPanel.setLayout(new BoxLayout(stringPanel, BoxLayout.X_AXIS));
-        addComponent(Box.createHorizontalStrut(20), stringPanel);
-        addDialogComponent(new DialogComponentBoolean(filterString, FILTER_OPTIONS_STRING_LABEL),
-            FILTER_OPTIONS_STRING_TOOLTIP, stringPanel);
-        addDialogComponent(new DialogComponentString(filterStringValue, ""), FILTER_OPTIONS_STRING_TOOLTIP,
-            stringPanel);
-        stringPanel.add(Box.createHorizontalGlue());
-        filterPanel.add(stringPanel);
-
-        JPanel missingPanel = new JPanel();
-        missingPanel.setLayout(new BoxLayout(missingPanel, BoxLayout.X_AXIS));
-        addComponent(Box.createHorizontalStrut(20), missingPanel);
-        addDialogComponent(new DialogComponentBoolean(filterMissing, FILTER_OPTIONS_MISSING_LABEL),
-            FILTER_OPTIONS_MISSING_TOOLTIP, missingPanel);
-        missingPanel.add(Box.createHorizontalGlue());
-        filterPanel.add(missingPanel);
+        JLabel warningLabel =
+            new JLabel(FILTER_OPTIONS_UNSELETCTED_WARNING, NodeView.WARNING_ICON, SwingConstants.LEFT);
+        warningLabel.setVisible(false);
+        warningLabel.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
+        warningLabel.setBackground(Color.WHITE);
+        warningLabel.setOpaque(true);
+        JPanel warningPanel = new JPanel();
+        warningPanel.setLayout(new BoxLayout(warningPanel, BoxLayout.X_AXIS));
+        warningPanel.add(Box.createHorizontalGlue());
+        fixWidthAndAddComponent(warningLabel, warningPanel);
+        warningPanel.add(Box.createHorizontalGlue());
+        filterPanel.add(warningPanel);
 
         JPanel miscPanel = new JPanel();
         miscPanel.setLayout(new BoxLayout(miscPanel, BoxLayout.Y_AXIS));
         miscPanel.setBorder(new TitledBorder(MISC_OPTIONS_TITLE));
-
-        addDialogComponentWithGlue(
-            new DialogComponentNumber(ConstantValueColumnFilterNodeModel.createRowThresholdModel(),
-                MISC_OPTIONS_ROW_THRESHOLD_LABEL, 1, 5),
-            MISC_OPTIONS_ROW_THRESHOLD_TOOLTIP, miscPanel);
+        addDialogComponentsWithGlue(false, miscPanel, MISC_OPTIONS_ROW_THRESHOLD_TOOLTIP, new DialogComponentNumber(
+            ConstantValueColumnFilterNodeModel.createRowThresholdModel(), MISC_OPTIONS_ROW_THRESHOLD_LABEL, 1, 5));
 
         JPanel outerPanel = new JPanel();
         outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
@@ -278,31 +278,63 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
 
         addTabAt(0, FILTER_OPTIONS_TAB, outerPanel);
         setSelected(FILTER_OPTIONS_TAB);
+
+        ChangeListener cl = new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                if (filterAll.getStringValue()
+                    .equals(ConstantValueColumnFilterNodeDialogPane.FILTER_OPTIONS_ALL_LABEL)) {
+                    filterNumeric.setEnabled(false);
+                    filterNumericValue.setEnabled(false);
+                    filterString.setEnabled(false);
+                    filterStringValue.setEnabled(false);
+                    filterMissing.setEnabled(false);
+                    warningLabel.setVisible(false);
+                } else {
+                    filterNumeric.setEnabled(true);
+                    filterNumericValue.setEnabled(true);
+                    filterString.setEnabled(true);
+                    filterStringValue.setEnabled(true);
+                    filterMissing.setEnabled(true);
+                    if (!filterNumeric.getBooleanValue() && !filterString.getBooleanValue()
+                        && !filterMissing.getBooleanValue()) {
+                        warningLabel.setVisible(true);
+                    } else {
+                        warningLabel.setVisible(false);
+                    }
+                }
+            }
+        };
+
+        filterNumeric.addChangeListener(cl);
+        filterString.addChangeListener(cl);
+        filterMissing.addChangeListener(cl);
+        filterAll.addChangeListener(cl);
     }
 
     /*
-     * A function that registers a new {@link DialogComponent} and adds it to a {@link JPanel} by creating a new
-     * horizontal box with glue to the right.
+     * A function that registers new {@link DialogComponent}, which it then adds to a newly created (horizontal) {@link JPanel}.
      */
-    private void addDialogComponentWithGlue(final DialogComponent dc, final String tooltipText, final JPanel panel) {
+    private void addDialogComponentsWithGlue(final boolean createStrut, final JPanel outerPanel,
+        final String tooltipText, final DialogComponent... dcs) {
         JPanel innerPanel = new JPanel();
         innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.X_AXIS));
-        addDialogComponent(dc, tooltipText, innerPanel);
+        if (createStrut) {
+            fixWidthAndAddComponent(Box.createHorizontalStrut(20), innerPanel);
+        }
+        for (DialogComponent dc : dcs) {
+            dc.setToolTipText(tooltipText);
+            m_components.add(dc);
+            fixWidthAndAddComponent(dc.getComponentPanel(), innerPanel);
+        }
         innerPanel.add(Box.createHorizontalGlue());
-        panel.add(innerPanel);
+        outerPanel.add(innerPanel);
     }
 
     /*
-     * A function that registers a new {@link DialogComponent} and adds it to a {@link JPanel}.
+     * A function that fixes the width of a {@link Component} and adds it to a {@link JPanel}.
      */
-    private void addDialogComponent(final DialogComponent dc, final String tooltipText, final JPanel panel) {
-        dc.setToolTipText(tooltipText);
-        m_components.add(dc);
-        addComponent(dc.getComponentPanel(), panel);
-        panel.add(dc.getComponentPanel());
-    }
-
-    private void addComponent(final Component c, final JPanel panel) {
+    private static void fixWidthAndAddComponent(final Component c, final JPanel panel) {
         c.setMaximumSize(c.getPreferredSize());
         panel.add(c);
     }

@@ -92,9 +92,11 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         "Input table has fewer rows than the minimum specified in the filter settings. Constant value column filtering disabled.";
 
     /*
-     * The warning message that is shown when no options are selected for filtering.
+     * The warning message to be displayed (in the workflow explorer) when partial filtering is selected, yet no type of
+     * column (numeric, String, missing) is specified.
      */
-    private static final String WARNING_NO_OPTION = "At least one filtering option has to be selected.";
+    private static final String WARNING_NO_FILTER_SELECTED =
+        "Filter configured to only remove columns with specific constant values but no such values are specified. Constant value column filtering disabled.";
 
     /*
      * The settings model for the list of columns to include in / exclude from the filtering.
@@ -134,8 +136,7 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
     /*
      * The settings model for the option to filter all constant value columns.
      */
-    private final SettingsModelString m_filterAll = createFilterAllModel(m_filterNumeric, m_filterNumericValue,
-        m_filterString, m_filterStringValue, m_filterMissing);
+    private final SettingsModelString m_filterAll = createFilterAllModel();
 
     /**
      * Creates a new constant value column filter model with one and input and one output.
@@ -173,9 +174,9 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
      * @return a new settings model for the option to filter columns with a specific constant String value
      */
     static SettingsModelBoolean createFilterStringModel() {
-        SettingsModelBoolean filterStringModel = new SettingsModelBoolean("filter-string", false);
-        filterStringModel.setEnabled(false);
-        return filterStringModel;
+        SettingsModelBoolean filterString = new SettingsModelBoolean("filter-string", false);
+        filterString.setEnabled(false);
+        return filterString;
     }
 
     /**
@@ -199,36 +200,8 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
     /**
      * @return a new settings model for the option to filter all constant value columns
      */
-    static SettingsModelString createFilterAllModel(final SettingsModelBoolean filterNumeric,
-        final SettingsModelDouble filterNumericValue, final SettingsModelBoolean filterString,
-        final SettingsModelString filterStringValue, final SettingsModelBoolean filterMissing) {
-        SettingsModelString filterAll =
-            new SettingsModelString("filter-all", ConstantValueColumnFilterNodeDialogPane.FILTER_OPTIONS_ALL_LABEL);
-
-        /*
-         * If all columns are to be filtered, specific column filtering is disabled.
-         */
-        filterAll.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (filterAll.getStringValue()
-                    .equals(ConstantValueColumnFilterNodeDialogPane.FILTER_OPTIONS_ALL_LABEL)) {
-                    filterNumeric.setEnabled(false);
-                    filterNumericValue.setEnabled(false);
-                    filterString.setEnabled(false);
-                    filterStringValue.setEnabled(false);
-                    filterMissing.setEnabled(false);
-                } else {
-                    filterNumeric.setEnabled(true);
-                    filterNumericValue.setEnabled(true);
-                    filterString.setEnabled(true);
-                    filterStringValue.setEnabled(true);
-                    filterMissing.setEnabled(true);
-                }
-            }
-        });
-
-        return filterAll;
+    static SettingsModelString createFilterAllModel() {
+        return new SettingsModelString("filter-all", ConstantValueColumnFilterNodeDialogPane.FILTER_OPTIONS_ALL_LABEL);
     }
 
     /**
@@ -295,16 +268,11 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         m_columnFilter.validateSettings(settings);
         m_filterNumericValue.validateSettings(settings);
         m_filterStringValue.validateSettings(settings);
-
-        SettingsModelBoolean filterAll = m_filterAll.createCloneWithValidatedValue(settings);
-        SettingsModelBoolean filterNumeric = m_filterNumeric.createCloneWithValidatedValue(settings);
-        SettingsModelBoolean filterString = m_filterString.createCloneWithValidatedValue(settings);
-        SettingsModelBoolean filterMissing = m_filterMissing.createCloneWithValidatedValue(settings);
-
-        if (!(filterAll.getBooleanValue() || filterNumeric.getBooleanValue() || filterString.getBooleanValue()
-            || filterMissing.getBooleanValue())) {
-            throw new InvalidSettingsException(WARNING_NO_OPTION);
-        }
+        m_filterAll.validateSettings(settings);
+        m_filterNumeric.validateSettings(settings);
+        m_filterString.validateSettings(settings);
+        m_filterMissing.validateSettings(settings);
+        m_rowThreshold.validateSettings(settings);
     }
 
     /**
@@ -337,6 +305,12 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        if (!m_filterAll.getStringValue().equals(ConstantValueColumnFilterNodeDialogPane.FILTER_OPTIONS_ALL_LABEL)
+            && !m_filterNumeric.getBooleanValue() && !m_filterString.getBooleanValue()
+            && !m_filterMissing.getBooleanValue()) {
+            setWarningMessage(WARNING_NO_FILTER_SELECTED);
+        }
+
         /*
          * The columns containing only constant values cannot be determined without looking at the data contained within
          * the table. Hence, the DataTableSpec cannot be determined before execution onset.
@@ -355,6 +329,12 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         FilterResult filterResult = m_columnFilter.applyTo(inputTableSpec);
         String[] toFilter = filterResult.getIncludes();
 
+        boolean filterAll =
+            m_filterAll.getStringValue().equals(ConstantValueColumnFilterNodeDialogPane.FILTER_OPTIONS_ALL_LABEL);
+        boolean filterNumeric = m_filterNumeric.getBooleanValue();
+        boolean filterString = m_filterString.getBooleanValue();
+        boolean filterMissing = m_filterMissing.getBooleanValue();
+
         if (inputTable.size() < m_rowThreshold.getLongValue()) {
             setWarningMessage(WARNING_SMALL_TABLE);
         } else if (inputTable.size() == 1) {
@@ -362,12 +342,9 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
         }
 
         ConstantValueColumnFilter filter = new ConstantValueColumnFilter.ConstantValueColumnFilterBuilder()
-            .filterAll(
-                m_filterAll.getStringValue().equals(ConstantValueColumnFilterNodeDialogPane.FILTER_OPTIONS_ALL_LABEL))
-            .filterNumeric(m_filterNumeric.getBooleanValue()).filterNumericValue(m_filterNumericValue.getDoubleValue())
-            .filterString(m_filterString.getBooleanValue()).filterStringValue(m_filterStringValue.getStringValue())
-            .filterMissing(m_filterMissing.getBooleanValue()).rowThreshold(m_rowThreshold.getLongValue())
-            .createConstantValueColumnFilter();
+            .filterAll(filterAll).filterNumeric(filterNumeric).filterNumericValue(m_filterNumericValue.getDoubleValue())
+            .filterString(filterString).filterStringValue(m_filterStringValue.getStringValue())
+            .filterMissing(filterMissing).rowThreshold(m_rowThreshold.getLongValue()).createConstantValueColumnFilter();
 
         String[] toRemove = filter.determineConstantValueColumns(inputTable, toFilter, exec);
 
