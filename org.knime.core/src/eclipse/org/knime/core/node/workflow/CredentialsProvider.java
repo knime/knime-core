@@ -114,7 +114,7 @@ public final class CredentialsProvider {
      * @throws IllegalArgumentException If the name is invalid (no such credentials)
      */
     public ICredentials get(final String name) {
-        if(m_store == null) {
+        if (m_store == null) {
             throw new IllegalArgumentException("No crendentials available.");
         }
         // what this does (related to AP-5974):
@@ -147,8 +147,8 @@ public final class CredentialsProvider {
      * @return the collection of valid credentials identifiers.
      */
     public Collection<String> listNames() {
-        if(m_store == null) {
-            return Collections.EMPTY_LIST;
+        if (m_store == null) {
+            return Collections.emptyList();
         }
         LinkedHashSet<String> names = new LinkedHashSet<>(m_store.listNames());
         FlowObjectStack flowObjectStack = m_client.getFlowObjectStack();

@@ -619,7 +619,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
 
     @Override
     public boolean hasCredentials() {
-        return unwrap().getCredentialsStore().listNames().size() > 0;
+        return !unwrap().getCredentialsStore().listNames().isEmpty();
     }
 
 }
