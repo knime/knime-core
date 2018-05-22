@@ -48,6 +48,7 @@ package org.knime.core.data;
 import javax.swing.Icon;
 
 import org.knime.core.data.renderer.DataValueRendererFamily;
+import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.ViewUtils;
 
 /**
@@ -92,8 +93,7 @@ public interface DataValue {
          * Icon which is used as "fallback" representative when no specialized
          * icon is found in derivates of this class.
          */
-        private static final Icon ICON = loadIcon(
-                DataCell.class, "/icon/defaulticon.png");
+        private static final Icon ICON = SharedIcons.TYPE_DEFAULT.get();
 
         /**
          * Only subclasses are allowed to instantiate this class. This
