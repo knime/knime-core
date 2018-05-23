@@ -112,6 +112,8 @@ public final class PortTypeRegistry {
         m_objectClassMap.put(PortObject.class.getName(), PortObject.class);
         m_specClassMap.put(PortObjectSpec.class.getName(), PortObjectSpec.class);
 
+        m_objectClassMap.put(BufferedDataTable.class.getName(), BufferedDataTable.class);
+
         m_specClassMap.put(DataTableSpec.class.getName(), DataTableSpec.class);
         m_specSerializers.put(DataTableSpec.class, new DataTableSpec.Serializer());
 
