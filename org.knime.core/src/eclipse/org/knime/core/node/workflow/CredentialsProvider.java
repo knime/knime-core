@@ -156,12 +156,12 @@ public final class CredentialsProvider {
         return names;
     }
 
-    /** @return the client */
+    /** @return the client, can be <code>null</code> */
     NodeContainer getClient() {
         return m_client;
     }
 
-    /** @return the store */
+    /** @return the store, can be <code>null</code> */
     CredentialsStore getStore() {
         return m_store;
     }
