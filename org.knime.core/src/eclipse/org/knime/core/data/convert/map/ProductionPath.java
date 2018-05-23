@@ -4,6 +4,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.map.MappingFramework.CellValueProducer;
+import org.knime.core.data.convert.map.MappingFramework.CellValueProducerFactory;
 
 /**
  * A selection of {@link CellValueProducer} to {@link JavaToDataCellConverter} to write a certain value from
@@ -12,34 +13,42 @@ import org.knime.core.data.convert.map.MappingFramework.CellValueProducer;
  * @author Jonathan Hale
  */
 public class ProductionPath {
-    final JavaToDataCellConverterFactory<?> m_factory;
 
-    final CellValueProducer<?, ?, ?> m_producer;
+    /**
+     * Producer factory
+     */
+    public final CellValueProducerFactory<?, ?, ?> m_producerFactory;
+
+    /**
+     * Converter factory
+     */
+    public final JavaToDataCellConverterFactory<?> m_converterFactory;
 
     /**
      * Constructor.
      *
-     * @param f Factory of the converter used to extract a Java value out a DataCell.
-     * @param c CellValueConsumer which accepts the Java value extracted by the converter and writes it to some
-     *            {@link Sink}.
+     * @param producerFactory Factory to create the producer which gets a value from an external source
+     * @param f Factory to create a converter used to wrap the value from the producer into a data cell
      */
-    public ProductionPath(final JavaToDataCellConverterFactory<?> f, final CellValueProducer<?, ?, ?> c) {
-        this.m_factory = f;
-        this.m_producer = c;
+    public ProductionPath(final CellValueProducerFactory<?, ?, ?> producerFactory,
+        final JavaToDataCellConverterFactory<?> f) {
+        this.m_producerFactory = producerFactory;
+        this.m_converterFactory = f;
     }
 
     @Override
     public String toString() {
-        return String.format("%s --(\"%s\")-> %s ---> %s Consumer", m_factory.getSourceType().getSimpleName(),
-            m_factory.getName(), m_factory.getDestinationType().getName(), m_producer.getClass().getSimpleName());
+        return String.format("%s ---> %s --(\"%s\")-> %s", m_producerFactory.getSourceType(),
+            m_converterFactory.getSourceType().getSimpleName(), m_converterFactory.getName(),
+            m_converterFactory.getDestinationType().getName());
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((m_producer == null) ? 0 : m_producer.hashCode());
-        result = prime * result + ((m_factory == null) ? 0 : m_factory.hashCode());
+        result = prime * result + ((m_producerFactory == null) ? 0 : m_producerFactory.hashCode());
+        result = prime * result + ((m_converterFactory == null) ? 0 : m_converterFactory.hashCode());
         return result;
     }
 
@@ -55,18 +64,18 @@ public class ProductionPath {
             return false;
         }
         ProductionPath other = (ProductionPath)obj;
-        if (m_producer == null) {
-            if (other.m_producer != null) {
+        if (m_producerFactory == null) {
+            if (other.m_producerFactory != null) {
                 return false;
             }
-        } else if (!m_producer.equals(other.m_producer)) {
+        } else if (!m_producerFactory.equals(other.m_producerFactory)) {
             return false;
         }
-        if (m_factory == null) {
-            if (other.m_factory != null) {
+        if (m_converterFactory == null) {
+            if (other.m_converterFactory != null) {
                 return false;
             }
-        } else if (!m_factory.equals(other.m_factory)) {
+        } else if (!m_converterFactory.equals(other.m_converterFactory)) {
             return false;
         }
         return true;

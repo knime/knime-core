@@ -28,6 +28,86 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/convert/ConversionKey.java" type="org.knime.core.data.convert.ConversionKey">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.ConversionKey"/>
+                <message_argument value="getSourceType()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/convert/datacell/JavaToDataCellConverterFactory.java" type="org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory">
+        <filter comment="The method is still there, but moved into a super interface." id="403984517">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory"/>
+                <message_argument value="org.knime.core.data.convert.ConverterFactory"/>
+                <message_argument value="getDestinationType()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory"/>
+                <message_argument value="getDestinationType()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory"/>
+                <message_argument value="getSourceType()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/convert/datacell/JavaToDataCellConverterRegistry.java" type="org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry">
+        <filter comment="Method is source-compatible since only the return type changed." id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry"/>
+                <message_argument value="register(JavaToDataCellConverterFactory&lt;?&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/convert/java/DataCellToJavaConverterFactory.java" type="org.knime.core.data.convert.java.DataCellToJavaConverterFactory">
+        <filter comment="The method is still there, but moved into a super interface." id="403984517">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.java.DataCellToJavaConverterFactory"/>
+                <message_argument value="org.knime.core.data.convert.ConverterFactory"/>
+                <message_argument value="getDestinationType()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.java.DataCellToJavaConverterFactory"/>
+                <message_argument value="getDestinationType()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="The method is still there, but moved into a super interface." id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.java.DataCellToJavaConverterFactory"/>
+                <message_argument value="getSourceType()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/convert/java/DataCellToJavaConverterRegistry.java" type="org.knime.core.data.convert.java.DataCellToJavaConverterRegistry">
+        <filter comment="The method is binary and source compatible with this change." id="422776937">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.java.DataCellToJavaConverterRegistry.getFactoriesForDestinationType(Class&lt;T&gt;)"/>
+                <message_argument value="T"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/convert/util/SerializeUtil.java" type="org.knime.core.data.convert.util.SerializeUtil">
+        <filter comment="The method storeConverterFactory is actually compatible." id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.util.SerializeUtil"/>
+                <message_argument value="storeConverterFactory(DataCellToJavaConverterFactory&lt;?,?&gt;, ConfigBaseWO, String)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Replaced by more generic storeConverterFactory" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.util.SerializeUtil"/>
+                <message_argument value="storeConverterFactory(JavaToDataCellConverterFactory&lt;?&gt;, ConfigBaseWO, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
         <filter id="338792546">
             <message_arguments>

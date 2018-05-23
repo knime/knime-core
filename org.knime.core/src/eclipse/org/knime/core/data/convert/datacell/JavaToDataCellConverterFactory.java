@@ -50,7 +50,7 @@ package org.knime.core.data.convert.datacell;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.CellFactory;
-import org.knime.core.data.convert.java.DataCellToJavaConverter;
+import org.knime.core.data.convert.ConverterFactory;
 import org.knime.core.node.ExecutionContext;
 
 /**
@@ -68,7 +68,7 @@ import org.knime.core.node.ExecutionContext;
  * @see JavaToDataCellConverter
  * @see JavaToDataCellConverterRegistry
  */
-public interface JavaToDataCellConverterFactory<S> {
+public interface JavaToDataCellConverterFactory<S> extends ConverterFactory<Class<?>, DataType, JavaToDataCellConverter<S>> {
     /**
      * Create an instance of a {@link JavaToDataCellConverter} which is able to convert instances of <code>S</code> into
      * {@link DataCell DataCells} with the {@link DataType} returned by {@link #getDestinationType()}.
@@ -79,48 +79,16 @@ public interface JavaToDataCellConverterFactory<S> {
     public JavaToDataCellConverter<S> create(final ExecutionContext context);
 
     /**
-     * Get the {@link DataType} (the type of {@link DataCell data cells}) which converters created by this factory are
-     * able to convert into
+     * {@inheritDoc}
      *
-     * @return DataType of the {@link DataCell} created by the {@link JavaToDataCellConverter}s produced by this
-     *         factory.
-     */
-    public DataType getDestinationType();
-
-    /**
-     * Get the {@link Class} of the type which converters created by this factory are able to convert
-     *
-     * @return type which the created {@link DataCellToJavaConverter}s can convert
-     */
-    public Class<S> getSourceType();
-
-    /**
-     * A human readable name for this converter factory to be displayed in user interfaces for example. Should contain
-     * at least the simple type name of the java type from which the data cell is created.
+     * Should contain at least the simple type name of the java type from which the data cell is created.
      * <p>
      * <b> Examples: </b> "InputStream", "Integer", "XML String", "SDF String"
      * </p>
      * s
-     *
-     * @return the name of this converter factory
      */
+    @Override
     default String getName() {
         return "";
     }
-
-    /**
-     * Get the identifier for this factory. The identifier is a unique string used to unambiguously reference this
-     * converter factory. Since this identifier is used for persistence, it is required that the identifier is the same
-     * every runtime. If the identifier is not unique, the factory may not be loaded from the extension point.
-     *
-     * <p>
-     * <b>Examples:</b>
-     * </p>
-     * <p>
-     * "org.mypackage.MyConverterFactory&lt;MyType>"
-     * </p>
-     *
-     * @return a unique identifier for this factory
-     */
-    public String getIdentifier();
 }

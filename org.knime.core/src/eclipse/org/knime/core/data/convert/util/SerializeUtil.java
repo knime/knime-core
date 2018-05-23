@@ -50,11 +50,22 @@ package org.knime.core.data.convert.util;
 
 import java.util.Optional;
 
+import org.knime.core.data.DataType;
+import org.knime.core.data.convert.ConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
+import org.knime.core.data.convert.map.ConsumptionPath;
+import org.knime.core.data.convert.map.Destination;
+import org.knime.core.data.convert.map.MappingFramework.CellValueConsumerFactory;
+import org.knime.core.data.convert.map.MappingFramework.CellValueProducerFactory;
+import org.knime.core.data.convert.map.MappingFramework.ConsumerRegistry;
+import org.knime.core.data.convert.map.MappingFramework.ProducerRegistry;
+import org.knime.core.data.convert.map.ProductionPath;
+import org.knime.core.data.convert.map.Source;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.ConfigBaseWO;
 
@@ -175,40 +186,38 @@ public final class SerializeUtil {
      * @param factory factory to store
      * @param config config to store to
      * @param key setting key
+     * @throws InvalidSettingsException
+     * @since 3.6
      */
-    public static void storeConverterFactory(final DataCellToJavaConverterFactory<?, ?> factory,
-        final ConfigBaseWO config, final String key) {
+    public static void storeConverterFactory(final ConverterFactory<?, ?, ?> factory, final ConfigBaseWO config,
+        final String key) throws InvalidSettingsException {
         config.addString(key, factory.getIdentifier());
 
         // store information to be able to display something in UI if factories go missing.
-        config.addString(key + "_src", factory.getSourceType().getName());
-        config.addString(key + "_dst", factory.getDestinationType().getName());
+        config.addString(key + "_src", typeToString(factory.getSourceType()));
+        config.addString(key + "_dst", typeToString(factory.getDestinationType()));
         config.addString(key + "_name", factory.getName());
+        final ConfigBase factoryConfig = config.addConfigBase(key + "_config");
+        factory.storeAdditionalConfig(factoryConfig);
+    }
+
+    /* Helper to get name of class/data type in a backward compatible manor */
+    private static String typeToString(final Object type) {
+        if (type instanceof DataType) {
+            return ((DataType)type).getName();
+        } else if (type instanceof Class) {
+            return ((Class<?>)type).getName();
+        }
+
+        return type.toString();
     }
 
     /**
-     * Store a converter factory in the given config.
-     *
-     * @param factory factory to store
-     * @param config config to store to
-     * @param key setting key
-     */
-    public static void storeConverterFactory(final JavaToDataCellConverterFactory<?> factory, final ConfigBaseWO config,
-        final String key) {
-        config.addString(key, factory.getIdentifier());
-
-        // store information to be able to display something in UI if factories go missing.
-        config.addString(key + "_src", factory.getSourceType().getName());
-        config.addString(key + "_dst", factory.getDestinationType().getName());
-        config.addString(key + "_name", factory.getName());
-    }
-
-    /**
-     * Load a {@link DataCellToJavaConverterFactorz} from given config.
+     * Load a {@link DataCellToJavaConverterFactory} from given config.
      *
      * @param config config to load from
      * @param key setting key
-     * @return an optional {@link DataCellToJavaConverterFactorz}, present if the identifier was found in the
+     * @return an optional {@link DataCellToJavaConverterFactory}, present if the identifier was found in the
      *         {@link DataCellToJavaConverterRegistry}.
      * @throws InvalidSettingsException
      */
@@ -216,7 +225,12 @@ public final class SerializeUtil {
         final ConfigBaseRO config, final String key) throws InvalidSettingsException {
         final String id = config.getString(key);
 
-        return DataCellToJavaConverterRegistry.getInstance().getConverterFactory(id);
+        final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
+            DataCellToJavaConverterRegistry.getInstance().getFactory(id);
+        if (factory.isPresent()) {
+            factory.get().loadAdditionalConfig(config.getConfigBase(key + "_config"));
+        }
+        return factory;
     }
 
     /**
@@ -232,7 +246,7 @@ public final class SerializeUtil {
         final ConfigBaseRO config, final String key) throws InvalidSettingsException {
         final String id = config.getString(key);
 
-        return JavaToDataCellConverterRegistry.getInstance().getConverterFactory(id);
+        return JavaToDataCellConverterRegistry.getInstance().getFactory(id);
     }
 
     /**
@@ -249,5 +263,96 @@ public final class SerializeUtil {
         throws InvalidSettingsException {
         return new FactoryPlaceholder(config.getString(key + "_src"), config.getString(key + "_dst"),
             config.getString(key + "_name"), config.getString(key));
+    }
+
+    /**
+     * Store a {@link ConsumptionPath} to node settings.
+     * @param path Path to store
+     * @param config Config to store to
+     * @param key Key to store at in the config
+     * @throws InvalidSettingsException
+     * @since 3.6
+     */
+    public static <DestinationType extends Destination> void storeConsumptionPath(final ConsumptionPath path,
+        final ConfigBaseWO config, final String key)
+        throws InvalidSettingsException {
+        storeConverterFactory(path.m_converterFactory, config, key + "_converter");
+        storeConverterFactory(path.m_consumerFactory, config, key + "_consumer");
+    }
+
+    /**
+     * Load a {@link ConsumptionPath} from given config.
+     *
+     * @param config Config to load from
+     * @param registry Registry to load consumer with
+     * @param key setting key
+     * @return an optional {@link ConsumptionPath}, present if the converter factory identifier was found in the
+     *         {@link DataCellToJavaConverterFactory} and consumer factory identifier was found in the registry.
+     * @throws InvalidSettingsException
+     * @since 3.6
+     */
+    public static <DestType extends Destination> Optional<ConsumptionPath>
+        loadConsumptionPath(final ConfigBaseRO config, final ConsumerRegistry<DestType> registry, final String key)
+            throws InvalidSettingsException {
+        final Optional<DataCellToJavaConverterFactory<?, ?>> converter =
+            loadDataCellToJavaConverterFactory(config, key + "_converter");
+
+        if (!converter.isPresent()) {
+            return Optional.empty();
+        }
+
+        final String consumerId = config.getString(key + "_consumer");
+        final Optional<CellValueConsumerFactory<DestType, ?, ?>> consumer = registry.getFactory(consumerId);
+
+        if (!consumer.isPresent()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new ConsumptionPath(converter.get(), consumer.get()));
+    }
+
+    /**
+     * Store a {@link ProductionPath} to node settings.
+     *
+     * @param path Path to store
+     * @param config Config to store to
+     * @param key Key to store at in the config
+     * @throws InvalidSettingsException
+     * @since 3.6
+     */
+    public static <SourceType extends Source> void storeProductionPath(final ProductionPath path,
+        final ConfigBaseWO config, final String key) throws InvalidSettingsException {
+        storeConverterFactory(path.m_converterFactory, config, key + "_converter");
+        storeConverterFactory(path.m_producerFactory, config, key + "_producer");
+    }
+
+    /**
+     * Load a {@link ProductionPath} from given config.
+     *
+     * @param config Config to load from
+     * @param registry Registry to load producer with
+     * @param key setting key
+     * @return an optional {@link ProductionPath}, present if the converter factory identifier was found in the
+     *         {@link JavaToDataCellConverterRegistry} and producer factory identifier was found in the registry.
+     * @throws InvalidSettingsException
+     * @since 3.6
+     */
+    public static <SourceType extends Source> Optional<ProductionPath> loadProductionPath(final ConfigBaseRO config,
+        final ProducerRegistry<SourceType> registry, final String key) throws InvalidSettingsException {
+        final Optional<JavaToDataCellConverterFactory<?>> converter =
+            loadJavaToDataCellConverterFactory(config, key + "_converter");
+
+        if (!converter.isPresent()) {
+            return Optional.empty();
+        }
+
+        final String producerId = config.getString(key + "_producer");
+        final Optional<CellValueProducerFactory<SourceType, ?, ?>> producer = registry.getFactory(producerId);
+
+        if (!producer.isPresent()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new ProductionPath(producer.get(), converter.get()));
     }
 }

@@ -4,43 +4,51 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.convert.java.DataCellToJavaConverter;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.map.MappingFramework.CellValueConsumer;
+import org.knime.core.data.convert.map.MappingFramework.CellValueConsumerFactory;
 
 /**
  * A selection of {@link DataCellToJavaConverter} to {@link CellValueConsumer} to write a certain {@link DataValue} to a
- * {@link Sink}.
+ * {@link Destination}.
  *
- * @author Jonathan Hale
+ * @author Jonathan Hale, KNIME, Konstanz, Germany
  */
 public class ConsumptionPath {
-    final DataCellToJavaConverterFactory<?, ?> m_factory;
+    /**
+     * Converter factory
+     */
+    public final DataCellToJavaConverterFactory<?, ?> m_converterFactory;
 
-    final CellValueConsumer<?, ?, ?> m_consumer;
+    /**
+     * Consumer factory
+     */
+    public final CellValueConsumerFactory<?, ?, ?> m_consumerFactory;
 
     /**
      * Constructor.
      *
      * @param factory Factory of the converter used to extract a Java value out a DataCell.
      * @param consumer CellValueConsumer which accepts the Java value extracted by the converter and writes it to some
-     *            {@link Sink}.
+     *            {@link Destination}.
      */
     public ConsumptionPath(final DataCellToJavaConverterFactory<?, ?> factory,
-        final CellValueConsumer<?, ?, ?> consumer) {
-        this.m_factory = factory;
-        this.m_consumer = consumer;
+        final CellValueConsumerFactory<?, ?, ?> consumer) {
+        this.m_converterFactory = factory;
+        this.m_consumerFactory = consumer;
     }
 
     @Override
     public String toString() {
-        return String.format("%s --(\"%s\")-> %s ---> %s Consumer", m_factory.getSourceType().getSimpleName(),
-            m_factory.getName(), m_factory.getDestinationType().getSimpleName(), m_consumer.getClass().getSimpleName());
+        return String.format("%s --(\"%s\")-> %s ---> %s", m_converterFactory.getSourceType().getSimpleName(),
+            m_converterFactory.getName(), m_converterFactory.getDestinationType().getSimpleName(),
+            m_consumerFactory.getDestinationType());
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((m_consumer == null) ? 0 : m_consumer.hashCode());
-        result = prime * result + ((m_factory == null) ? 0 : m_factory.hashCode());
+        result = prime * result + ((m_consumerFactory == null) ? 0 : m_consumerFactory.hashCode());
+        result = prime * result + ((m_converterFactory == null) ? 0 : m_converterFactory.hashCode());
         return result;
     }
 
@@ -56,20 +64,21 @@ public class ConsumptionPath {
             return false;
         }
         ConsumptionPath other = (ConsumptionPath)obj;
-        if (m_consumer == null) {
-            if (other.m_consumer != null) {
+        if (m_consumerFactory == null) {
+            if (other.m_consumerFactory != null) {
                 return false;
             }
-        } else if (!m_consumer.equals(other.m_consumer)) {
+        } else if (!m_consumerFactory.equals(other.m_consumerFactory)) {
             return false;
         }
-        if (m_factory == null) {
-            if (other.m_factory != null) {
+        if (m_converterFactory == null) {
+            if (other.m_converterFactory != null) {
                 return false;
             }
-        } else if (!m_factory.equals(other.m_factory)) {
+        } else if (!m_converterFactory.equals(other.m_converterFactory)) {
             return false;
         }
         return true;
     }
+
 }

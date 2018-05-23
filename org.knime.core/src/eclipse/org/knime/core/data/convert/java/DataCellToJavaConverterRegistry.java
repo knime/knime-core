@@ -59,7 +59,6 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
@@ -70,7 +69,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.MissingValue;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.ListCell;
-import org.knime.core.data.convert.ConversionKey;
+import org.knime.core.data.convert.AbstractConverterFactoryRegistry;
 import org.knime.core.data.convert.DataValueAccessMethod;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
 import org.knime.core.data.convert.util.ClassUtil;
@@ -140,53 +139,11 @@ import org.knime.core.util.Pair;
  * @see org.knime.core.data.convert
  * @see JavaToDataCellConverterRegistry
  */
-public final class DataCellToJavaConverterRegistry {
-
-    /* converter factories stored by SourceType/DestType/FactoryName triple */
-    private final HashMap<ConversionKey, ArrayList<DataCellToJavaConverterFactory<?, ?>>> m_converterFactories =
-        new HashMap<>();
-
-    /* converter factories stored by destination type */
-    private final HashMap<Class<?>, Set<DataCellToJavaConverterFactory<?, ?>>> m_byDestinationType = new HashMap<>();
-
-    /* converter factories stored by source type */
-    private final HashMap<Class<?>, Set<DataCellToJavaConverterFactory<?, ?>>> m_bySourceType = new HashMap<>();
-
-    /* converter factories stored by source type */
-    private final HashMap<String, DataCellToJavaConverterFactory<?, ?>> m_byIdentifier = new HashMap<>();
+public final class DataCellToJavaConverterRegistry extends
+    AbstractConverterFactoryRegistry<Class<? extends DataValue>, Class<?>, DataCellToJavaConverterFactory<?, ?>, DataCellToJavaConverterRegistry> {
 
     /* data types stored by their preferred value type */
     private final HashMap<Class<? extends DataValue>, DataType> m_prefferedTypes = new HashMap<>();
-
-    /**
-     * Query which {@link DataValue} {@link Class Classes} can be converted.
-     *
-     * @return a {@link Collection} of all possible source types
-     */
-    public Collection<Class<?>> getAllSourceTypes() {
-        return m_converterFactories.values().stream().flatMap(c -> c.stream()).map((factory) -> factory.getSourceType())
-            .collect(Collectors.toSet());
-    }
-
-    /**
-     * Query into which {@link Class Classes} can be converted.
-     *
-     * @return a {@link Collection} of all possible source types
-     */
-    public Collection<Class<?>> getAllDestinationTypes() {
-        return m_converterFactories.values().stream().flatMap(c -> c.stream())
-            .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
-    }
-
-    /**
-     * Get all registered converter factories.
-     *
-     * @return Collection of registered converter factories.
-     * @since 3.3
-     */
-    public Collection<DataCellToJavaConverterFactory<?, ?>> getAllConverterFactories() {
-        return m_converterFactories.values().stream().flatMap(c -> c.stream()).collect(Collectors.toSet());
-    }
 
     /**
      * Get all {@link DataCellToJavaConverterFactory converter factories} which create Converters which convert into a
@@ -196,15 +153,12 @@ public final class DataCellToJavaConverterRegistry {
      * @return a {@link Collection} of all possible source types which can be converted into the given
      *         <code>destType</code>. The first is always the preferred type.
      */
-    public <T> Collection<DataCellToJavaConverterFactory<?, ?>>
-        getFactoriesForDestinationType(final Class<T> destType) {
+    @Override
+    public Collection<DataCellToJavaConverterFactory<?, ?>> getFactoriesForDestinationType(final Class<?> destType) {
         final LinkedHashSet<DataCellToJavaConverterFactory<?, ?>> set = new LinkedHashSet<>();
 
         ClassUtil.recursiveMapToClassHierarchy(destType, (type) -> {
-            final Set<DataCellToJavaConverterFactory<?, ?>> factories = m_byDestinationType.get(type);
-            if (factories != null) {
-                set.addAll(factories);
-            }
+            set.addAll(super.getFactoriesForDestinationType(type));
         });
 
         if (destType.isArray()) {
@@ -252,10 +206,7 @@ public final class DataCellToJavaConverterRegistry {
         final LinkedHashSet<DataCellToJavaConverterFactory<?, ?>> set = new LinkedHashSet<>();
 
         ClassUtil.recursiveMapToDataTypeClasses(sourceType, (type) -> {
-            final Set<DataCellToJavaConverterFactory<?, ?>> types = m_bySourceType.get(type);
-            if (types != null) {
-                set.addAll(types);
-            }
+            set.addAll(super.getFactoriesForSourceType((Class<? extends DataValue>)type));
         });
 
         if (sourceType.isCollectionType()) {
@@ -281,7 +232,8 @@ public final class DataCellToJavaConverterRegistry {
      * @param id unique identifier for the factory
      * @return an optional of a converter factory or empty if no converter factory with given id could be found
      */
-    public Optional<DataCellToJavaConverterFactory<?, ?>> getConverterFactory(final String id) {
+    @Override
+    public Optional<DataCellToJavaConverterFactory<?, ?>> getFactory(final String id) {
         if (id == null) {
             return Optional.empty();
         }
@@ -289,20 +241,22 @@ public final class DataCellToJavaConverterRegistry {
             // get the element converter factory id:
             final String elemConvFactoryId =
                 id.substring(CollectionConverterFactory.class.getName().length() + 1, id.length() - 1);
-            Optional<DataCellToJavaConverterFactory<?, ?>> factory = getConverterFactory(elemConvFactoryId);
+            Optional<DataCellToJavaConverterFactory<?, ?>> factory = getFactory(elemConvFactoryId);
             if (factory.isPresent()) {
                 return Optional.of(new CollectionConverterFactory<>(factory.get()));
             } else {
                 return Optional.empty();
             }
         }
-        final DataCellToJavaConverterFactory<?, ?> factory = m_byIdentifier.get(id);
 
-        if (factory == null) {
-            return Optional.empty();
-        }
+        return super.getFactory(id);
+    }
 
-        return Optional.of(factory);
+    /** @deprecated Method has been renamed to {@link #getFactory(String)} */
+    @SuppressWarnings("javadoc")
+    @Deprecated
+    public Optional<DataCellToJavaConverterFactory<?, ?>> getConverterFactory(final String id) {
+        return getFactory(id);
     }
 
     /**
@@ -330,18 +284,12 @@ public final class DataCellToJavaConverterRegistry {
                 continue;
             }
 
-            final ArrayList<DataCellToJavaConverterFactory<?, ?>> factories =
-                m_converterFactories.get(new ConversionKey(curClass, destType));
-            if (factories != null) {
-                allFactories.addAll((Collection<? extends DataCellToJavaConverterFactory<DataCell, D>>)factories);
-            }
+            allFactories.addAll(
+                (Collection<? extends DataCellToJavaConverterFactory<? extends DataValue, D>>)getFactories(curClass,
+                    destType));
         }
 
-        final ArrayList<DataCellToJavaConverterFactory<?, ?>> factories =
-            m_converterFactories.get(new ConversionKey(DataValue.class, destType));
-        if (factories != null) {
-            allFactories.addAll((Collection<? extends DataCellToJavaConverterFactory<DataCell, D>>)factories);
-        }
+        allFactories.addAll((Collection<? extends DataCellToJavaConverterFactory<DataCell, D>>)getFactories(DataValue.class, destType));
 
         if (sourceType.isCollectionType() && destType.isArray()) {
             allFactories.addAll(getCollectionConverterFactories(sourceType, destType));
@@ -438,46 +386,6 @@ public final class DataCellToJavaConverterRegistry {
         }
 
         return Optional.empty();
-    }
-
-    /**
-     * Register a DataCellToJavaConverterFactory.
-     *
-     * @param factory the factory to register
-     */
-    public void register(final DataCellToJavaConverterFactory<?, ?> factory) {
-        if (factory == null) {
-            throw new IllegalArgumentException("factory must not be null");
-        }
-
-        final ConversionKey key = new ConversionKey(factory);
-        ArrayList<DataCellToJavaConverterFactory<?, ?>> list = m_converterFactories.get(key);
-        if (list == null) {
-            list = new ArrayList<>();
-            m_converterFactories.put(key, list);
-        }
-        list.add(factory);
-
-        final Class<?> destType = factory.getDestinationType();
-        Set<DataCellToJavaConverterFactory<?, ?>> byDestType = m_byDestinationType.get(destType);
-        if (byDestType == null) {
-            byDestType = new LinkedHashSet<>();
-            m_byDestinationType.put(destType, byDestType);
-        }
-        byDestType.add(factory);
-
-        final Class<?> sourceType = factory.getSourceType();
-        Set<DataCellToJavaConverterFactory<?, ?>> bySourceType = m_bySourceType.get(sourceType);
-        if (bySourceType == null) {
-            bySourceType = new LinkedHashSet<>();
-            m_bySourceType.put(sourceType, bySourceType);
-        }
-        bySourceType.add(factory);
-
-        final DataCellToJavaConverterFactory<?, ?> previous = m_byIdentifier.put(factory.getIdentifier(), factory);
-        if (previous != null) {
-            LOGGER.coding("DataCellToJavaConverterFactory identifier is not unique (" + factory.getIdentifier() + ")");
-        }
     }
 
     /* -- Singleton methods -- */

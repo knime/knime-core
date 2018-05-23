@@ -67,7 +67,7 @@ public final class ConversionKey {
 
     private final int m_hashCode;
 
-    private final Class<?> m_sourceType;
+    private final Object m_sourceType;
 
     private final Object m_destType;
 
@@ -77,7 +77,7 @@ public final class ConversionKey {
      * @param sourceType Source type the referenced factory should be able to handle; must not be <code>null</code>
      * @param destType Destination type the referenced factory should be able to handle; must not be <code>null</code>
      */
-    public ConversionKey(final Class<?> sourceType, final Object destType) {
+    public ConversionKey(final Object sourceType, final Object destType) {
         m_sourceType = sourceType;
         m_destType = destType;
 
@@ -91,16 +91,7 @@ public final class ConversionKey {
      *
      * @param factory The existing factory which should be referenced by this key
      */
-    public ConversionKey(final DataCellToJavaConverterFactory<?, ?> factory) {
-        this(factory.getSourceType(), factory.getDestinationType());
-    }
-
-    /**
-     * Create from an existing factory.
-     *
-     * @param factory The existing factory which should be referenced by this key
-     */
-    public ConversionKey(final JavaToDataCellConverterFactory<?> factory) {
+    public ConversionKey(final ConverterFactory<?, ?, ?> factory) {
         this(factory.getSourceType(), factory.getDestinationType());
     }
 
@@ -114,8 +105,8 @@ public final class ConversionKey {
      *
      * @return the source type of the factory
      */
-    public Class<?> getSourceType() {
-        return m_sourceType;
+    public <T> T getSourceType() {
+        return (T)m_sourceType;
     }
 
     /**
@@ -123,8 +114,8 @@ public final class ConversionKey {
      *
      * @return the destination type of the factory
      */
-    public Object getDestType() {
-        return m_destType;
+    public <T> T getDestType() {
+        return (T)m_destType;
     }
 
     @Override
@@ -138,8 +129,8 @@ public final class ConversionKey {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        ConversionKey other = (ConversionKey)obj;
+        final ConversionKey other = (ConversionKey)obj;
         return Objects.equals(this.m_destType, other.m_destType)
-                && Objects.equals(this.m_sourceType, other.m_sourceType);
+            && Objects.equals(this.m_sourceType, other.m_sourceType);
     }
 }

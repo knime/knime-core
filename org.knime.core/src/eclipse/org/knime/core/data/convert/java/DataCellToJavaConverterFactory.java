@@ -48,6 +48,7 @@
 package org.knime.core.data.convert.java;
 
 import org.knime.core.data.DataValue;
+import org.knime.core.data.convert.ConverterFactory;
 
 /**
  * Interface for all factory classes which create {@link DataCellToJavaConverter DataCellToJavaConverters}.
@@ -65,7 +66,7 @@ import org.knime.core.data.DataValue;
  * @see DataCellToJavaConverter
  * @see DataCellToJavaConverterRegistry
  */
-public interface DataCellToJavaConverterFactory<S extends DataValue, D> {
+public interface DataCellToJavaConverterFactory<S extends DataValue, D> extends ConverterFactory<Class<? extends DataValue>, Class<?>, DataCellToJavaConverter<S, D>> {
 
     /**
      * Create an instance of a {@link DataCellToJavaConverter} which is able to convert <code>S</code> into
@@ -77,21 +78,6 @@ public interface DataCellToJavaConverterFactory<S extends DataValue, D> {
     public DataCellToJavaConverter<S, D> create();
 
     /**
-     * Get the {@link Class} of the type (a subclass of {@link DataValue}, see type parameter {@code <S>}) which
-     * converters created by this factory are able to convert.
-     *
-     * @return type which the created {@link DataCellToJavaConverter}s can convert
-     */
-    public Class<S> getSourceType();
-
-    /**
-     * Get the {@link Class} of the type which converters created by this factory are able to convert into.
-     *
-     * @return type which the created {@link DataCellToJavaConverter}s convert to
-     */
-    public Class<D> getDestinationType();
-
-    /**
      * A human readable name for this converter factory to be displayed in user interfaces for example. Should contain
      * at least the simple name of the java type which is retrieved from the data value using this method.
      * <p>
@@ -100,23 +86,8 @@ public interface DataCellToJavaConverterFactory<S extends DataValue, D> {
      *
      * @return the name of this converter factory
      */
+    @Override
     default String getName() {
         return getDestinationType().getSimpleName();
     }
-
-    /**
-     * Get the identifier for this factory. The identifier is a unique string used to unambiguously reference this
-     * converter factory. Since this identifier is used for persistence, it is required that the identifier is the same
-     * every runtime. If the identifier is not unique, the factory may not be loaded from the extension point.
-     *
-     * <p>
-     * <b>Examples:</b>
-     * </p>
-     * <p>
-     * "org.mypackage.MyConverterFactory&lt;MySourceDataValue,MyType>"
-     * </p>
-     *
-     * @return a unique identifier for this factory
-     */
-    public String getIdentifier();
 }
