@@ -48,28 +48,21 @@
  */
 package org.knime.core.internal;
 
-import java.io.IOException;
 import java.net.URL;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.UserPrincipal;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.Set;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.datalocation.Location;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * Utility class to check integrity of Eclipse Configuration area. For details see AP-9165; the configuration area
@@ -108,11 +101,14 @@ public final class ConfigurationAreaChecker {
     }
 
     /**
-     * Queues a scan of the config area of KNIME/Eclipse and checks if files are owned by the current user and writable,
-     * or not owned by the current user and not writable. If there is anything suspicious it will print an error to the
-     * logger.
+     * Queues a scan of the config area of KNIME/Eclipse and checks if files can be locked by the current user, logging
+     * an error if that's not possible.
      */
     public static void scheduleIntegrityCheck() {
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_DISABLE_VM_FILE_LOCK)) {
+            getLogger().infoWithFormat("Disabled configuration area file locking due to system property \"%s\"",
+                KNIMEConstants.PROPERTY_DISABLE_VM_FILE_LOCK);
+        }
         Thread thread = new Thread(() -> {
             Path configLocationPath = getConfigurationLocationPath().orElse(null);
             try {
@@ -124,100 +120,63 @@ public final class ConfigurationAreaChecker {
                         "Path to configuration area could not be determined (location URL is \"%s\")",
                         Platform.getConfigurationLocation().getURL());
                 } else {
-                    getLogger().infoWithFormat("Configuration area is under %s", configLocationPath);
+                    getLogger().debugWithFormat("Configuration area is at %s", configLocationPath);
 
-                    final UserPrincipal configLocationOwner = Files.getOwner(configLocationPath);
-                    if (!Objects.equals(currentUser, configLocationOwner.getName())) {
+                    Path knimeCoreConfigPath = configLocationPath.resolve("org.knime.core");
+                    Files.createDirectories(knimeCoreConfigPath); // ignored when directory exists
+
+                    Path userLockPath = knimeCoreConfigPath.resolve(currentUser + ".lock");
+
+                    @SuppressWarnings("resource")
+                    FileChannel userLockChannel = FileChannel.open(userLockPath, StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+
+                    String fileContent = "File created on " + LocalDateTime.now().withNano(0).toString();
+                    userLockChannel.write(StandardCharsets.UTF_8.encode(fileContent));
+                    userLockChannel.force(true);
+
+                    // lock the file and leave lock open until VM terminates
+                    if (userLockChannel.tryLock() == null) {
                         getLogger().errorWithFormat(
-                            "Configuration area (\"%s\") is not owned by current user \"%s\" (owned by \"%s\"). %s",
-                            configLocationPath, currentUser, configLocationOwner.getName(), ERROR_APPENDIX);
+                            "File in configuration area (\"%s\") cannot be locked by current user %s; either the "
+                                + "file is already locked by a different KNIME instance or the file system does not "
+                                + "support locking. %s",
+                            userLockPath, currentUser, ERROR_APPENDIX);
                     } else {
-                        List<Path> suspiciousFiles = findFilesNotOwnedByUser(configLocationPath);
-                        if (!suspiciousFiles.isEmpty()) {
-                            getLogger().errorWithFormat(
-                                "Configuration area (\"%s\") contains files not owned by current user \"%s\". %s",
-                                configLocationPath, currentUser, ERROR_APPENDIX);
+                        getLogger().debugWithFormat("Locked file in configuration area \"%s\"", userLockPath);
+                    }
 
-                            getLogger().errorWithFormat("Suspicious files: %s",
-                                ConvenienceMethods.getShortStringFrom(suspiciousFiles.stream()
-                                    .map(ConfigurationAreaChecker::formatFileAndOwner).iterator(),
-                                    suspiciousFiles.size(), 3));
+                    // find other ".lock" files in the same directory and try to lock+release
+                    Path[] otherLockPaths = Files.walk(knimeCoreConfigPath, 1)//
+                            .filter(p -> p.getFileName().toString().endsWith(".lock"))//
+                            .filter(p -> !p.equals(userLockPath))//
+                            .toArray(Path[]::new);
+                    for (Path p : otherLockPaths) {
+                        try (FileChannel channel = FileChannel.open(p, StandardOpenOption.WRITE)) {
+                            if (channel.tryLock() == null) {
+                                getLogger().errorWithFormat(
+                                    "Configuration area (\"%s\") seems to be used by a different process, "
+                                        + "found file lock on \"%s\" (used by user %s). %s",
+                                    configLocationPath, configLocationPath.relativize(p),
+                                    StringUtils.removeEnd(p.getFileName().toString(), ".lock"), ERROR_APPENDIX);
+                                break;
+                            }
                         }
                     }
+
                 }
 
                 long end = System.currentTimeMillis();
                 getLogger().debugWithFormat("Configuration area check completed in %.1fs", (end - start) / 1000.0);
             } catch (InterruptedException ie) {
                 // ignore
-            } catch (IOException ioe) {
+            } catch (Exception ioe) {
                 getLogger().error(String.format("Can't check integrity of configuration area (\"%s\"): %s",
                     configLocationPath, ioe.getMessage()), ioe);
-            } catch (UnsupportedOperationException uoe) {
-                getLogger().debugWithFormat(
-                    "File ownerships in configuration area (\"%s\") can't be checked -- file system does not support "
-                        + "file ownerships: %s",
-                    configLocationPath, ExceptionUtils.getRootCauseMessage(uoe));
             }
         }, "KNIME-ConfigurationArea-Checker");
         thread.setDaemon(true);
         thread.start();
-    }
-
-    /**
-     * Utility function to string-format a file system path with the file owner.
-     *
-     * @param file A {@link Path} that points to a file.
-     * @return the file's path and the file owner in a formatted string.
-     */
-    private static String formatFileAndOwner(final Path file) {
-        try {
-            return String.format("%s (owned by %s)", file, Files.getOwner(file));
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Find a list of files in configuration area not owned by current user.
-     */
-    private static List<Path> findFilesNotOwnedByUser(final Path configLocationPath) throws IOException {
-        final UserPrincipal configLocationOwner = Files.getOwner(configLocationPath);
-        Set<Path> suspiciousFiles = new LinkedHashSet<>();
-
-        // visits all files + dirs in the config location, skips problematic folders to avoid superfluous warnings
-        FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
-                checkPath(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult preVisitDirectory(final Path dir, final BasicFileAttributes attrs)
-                throws IOException {
-                if (checkPath(dir)) {
-                    // all files in the subfolder will be problematic, too. Skip extra warnings.
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
-                return FileVisitResult.CONTINUE;
-            }
-
-            /**
-             * Checks file ownership. If not owned by current user, adds it to suspectFiles variable and returns true.
-             */
-            private boolean checkPath(final Path file) throws IOException {
-                UserPrincipal owner = Files.getOwner(file);
-                // writable property changes in sub directory or file ownership changes in directory
-                if (!Objects.equals(configLocationOwner, owner)) {
-                    suspiciousFiles.add(file);
-                    return true;
-                }
-                return false;
-            }
-        };
-        Files.walkFileTree(configLocationPath, fileVisitor);
-        return new ArrayList<>(suspiciousFiles);
     }
 
     /**
