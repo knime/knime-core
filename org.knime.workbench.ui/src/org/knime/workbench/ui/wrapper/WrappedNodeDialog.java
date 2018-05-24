@@ -112,13 +112,13 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
 
     private final NodeContainerUI m_nodeContainer;
 
-    /**
-     * Method calls on a node dialog pane require a NodeContext only to check whether the underlying node is write
-     * protected. However, NodeContext for now only works with NodeContainer (and not NodeContainerUI). Thus, for
-     * NodeContainerUI, no NodeContext can be provided and the node dialog is write protected as consequence. (TODO:
-     * needs a solution as soon as the remote job view allows node settings to be stored)
-     */
     private final NodeDialogPane m_dialogPane;
+
+    private final Runnable m_writeProtectionChangedListener;
+
+    private Button m_btnOK;
+
+    private Button m_btnApply;
 
     /**
      * Creates the (application modal) dialog for a given node.
@@ -136,9 +136,16 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
      */
     public WrappedNodeDialog(final Shell parentShell, final NodeContainerUI nodeContainer) throws NotConfigurableException {
         super(parentShell);
-
         m_nodeContainer = nodeContainer;
         m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
+
+        if (m_nodeContainer.getParent() != null) {
+            m_writeProtectionChangedListener = () -> updateWriteProtectedState();
+            m_nodeContainer.getParent().addWriteProtectionChangedListener(m_writeProtectionChangedListener);
+            //TODO node state changed listener could be added, too, in order to update the write protected state
+        } else {
+            m_writeProtectionChangedListener = null;
+        }
     }
 
     /**
@@ -162,33 +169,37 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
                 public void run() {
-                    /* see comment on m_dialogPane field */
-                    unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
+                    pushNodeContext();
                 }
             });
-            /* see comment on m_dialogPane field */
-            unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
+            pushNodeContext();
             try {
                 m_dialogPane.onOpen();
                 return super.open();
             } finally {
-                /* see comment on m_dialogPane field */
-                if (wraps(m_nodeContainer, NodeContainer.class)) {
-                    NodeContext.removeLastContext();
-                }
+                removeNodeContext();
                 ViewUtils.invokeAndWaitInEDT(new Runnable() {
                     @Override
                     public void run() {
-                        /* see comment on m_dialogPane field */
-                        if (wraps(m_nodeContainer, NodeContainer.class)) {
-                            NodeContext.removeLastContext();
-                        }
+                        removeNodeContext();
                     }
                 });
             }
         } finally {
             getParentShell().setEnabled(true);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean close() {
+        boolean res = super.close();
+        if (m_writeProtectionChangedListener != null) {
+            m_nodeContainer.getParent().removeWriteProtectionChangedListener(m_writeProtectionChangedListener);
+        }
+        return res;
     }
 
     /**
@@ -218,8 +229,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
             public void widgetSelected(final SelectionEvent e) {
                 String file = openDialog.open();
                 if (file != null) {
-                    /* see comment on m_dialogPane field */
-                    unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
+                    pushNodeContext();
                     try {
                         m_dialogPane
                                 .loadSettingsFrom(new FileInputStream(file));
@@ -228,10 +238,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                     } catch (NotConfigurableException ex) {
                         showErrorMessage(ex.getMessage());
                     } finally {
-                        /* see comment on m_dialogPane field */
-                        if (wraps(m_nodeContainer, NodeContainer.class)) {
-                            NodeContext.removeLastContext();
-                        }
+                        removeNodeContext();
                     }
                 }
             }
@@ -244,8 +251,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
             public void widgetSelected(final SelectionEvent e) {
                 String file = saveDialog.open();
                 if (file != null) {
-                    /* see comment on m_dialogPane field */
-                    unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
+                    pushNodeContext();
                     try {
                         m_dialogPane.saveSettingsTo(new FileOutputStream(file));
                     } catch (IOException ioe) {
@@ -260,10 +266,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                         // repaint after dialog disappears
                         m_dialogPane.getPanel().repaint();
                     } finally {
-                        /* see comment on m_dialogPane field */
-                        if (wraps(m_nodeContainer, NodeContainer.class)) {
-                            NodeContext.removeLastContext();
-                        }
+                        removeNodeContext();
                     }
                 }
             }
@@ -330,10 +333,10 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
     protected void createButtonsForButtonBar(final Composite parent) {
         // WORKAROUND: can't use IDialogConstants.OK_ID here, as this always
         // closes the dialog, regardless if the settings couldn't be applied.
-        final Button btnOK =
+        m_btnOK =
                 createButton(parent, IDialogConstants.NEXT_ID,
                         IDialogConstants.OK_LABEL, false);
-        final Button btnApply =
+        m_btnApply =
                 createButton(parent, IDialogConstants.FINISH_ID, "Apply", false);
         final Button btnCancel =
                 createButton(parent, IDialogConstants.CANCEL_ID,
@@ -344,16 +347,14 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
         Image img = ImageRepository.getIconImage(SharedImages.Help);
         btnHelp.setImage(img);
 
-        boolean writeProtected = m_dialogPane.isWriteProtected();
-        btnOK.setEnabled(!writeProtected);
-        btnApply.setEnabled(!writeProtected);
+        updateWriteProtectedState();
 
         this.swtKeyListener = new KeyListener() {
             /** {@inheritDoc} */
             @Override
             public void keyReleased(final KeyEvent ke) {
                 if (ke.keyCode == SWT.MOD1) {
-                    btnOK.setText("OK");
+                    m_btnOK.setText("OK");
                 }
             }
 
@@ -368,11 +369,11 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                 Predicate<NodeContainerUI> canExecutePredicate = n -> n.getParent().canExecuteNode(n.getID());
                 if (ke.keyCode == SWT.MOD1 && canExecutePredicate.test(m_nodeContainer)) {
                     // change OK button label, when CTRL/COMMAND is pressed
-                    btnOK.setText("OK - Execute");
+                    m_btnOK.setText("OK - Execute");
                 }
                 if ((ke.keyCode == SWT.CR) && ((ke.stateMask & SWT.MOD1) != 0)) {
                     // Bug 3942: transfer focus to OK button to have all component to auto-commit their changes
-                    btnOK.forceFocus();
+                    m_btnOK.forceFocus();
                     // force OK - Execute when CTRL/COMMAND and ENTER is pressed
                     // open first out-port view if SHIFT is pressed
                     ke.doit = doApply();
@@ -381,7 +382,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                     }
                     // reset ok button state/label
                     if (!ke.doit) {
-                        btnOK.setText("OK");
+                        m_btnOK.setText("OK");
                     }
                 }
             }
@@ -394,7 +395,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
 
                 if (ke.getKeyCode() == menuAccelerator) {
                     getShell().getDisplay().asyncExec(() -> {
-                        btnOK.setText("OK");
+                        m_btnOK.setText("OK");
                     });
                 }
             }
@@ -415,7 +416,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                 if ((ke.getKeyCode() == menuAccelerator) && canExecutePredicate.test(m_nodeContainer)) {
                     // change OK button label, when CTRL/COMMAND is pressed
                     getShell().getDisplay().asyncExec(() -> {
-                        btnOK.setText("OK - Execute");
+                        m_btnOK.setText("OK - Execute");
                     });
                 }
                 int modifierKey = (Platform.OS_MACOSX.equals(Platform.getOS())) ? InputEvent.META_DOWN_MASK
@@ -424,7 +425,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                                     && ((ke.getModifiersEx() & modifierKey) != 0)) {
                     getShell().getDisplay().asyncExec(() -> {
                         // Bug 3942: transfer focus to OK button to have all component to auto-commit their changes
-                        btnOK.forceFocus();
+                        m_btnOK.forceFocus();
 
                         // force OK - Execute when CTRL/COMMAND and ENTER is pressed
                         // open first out-port view if SHIFT is pressed
@@ -434,7 +435,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                         }
                         else {
                             // reset ok button state/label
-                            btnOK.setText("OK");
+                            m_btnOK.setText("OK");
                         }
                     });
                 }
@@ -442,15 +443,15 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
         };
 
         if (!Platform.OS_MACOSX.equals(Platform.getOS())) {
-            btnOK.addKeyListener(this.swtKeyListener);
-            btnApply.addKeyListener(this.swtKeyListener);
+            m_btnOK.addKeyListener(this.swtKeyListener);
+            m_btnApply.addKeyListener(this.swtKeyListener);
             btnCancel.addKeyListener(this.swtKeyListener);
             m_wrapper.addKeyListener(this.swtKeyListener);
         }
 
         // Register listeners that notify the content object, which
         // in turn notify the dialog about the particular event.
-        btnOK.addSelectionListener(new SelectionAdapter() {
+        m_btnOK.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent se) {
                 if ((se.stateMask & SWT.SHIFT) != 0 && (se.stateMask & SWT.MOD1) != 0) {
@@ -465,17 +466,17 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                 }
                 if (!se.doit) {
                     // reset ok button state/label
-                    btnOK.setText("OK");
+                    m_btnOK.setText("OK");
                 }
             }
         });
 
-        btnApply.addSelectionListener(new SelectionAdapter() {
+        m_btnApply.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent se) {
                 se.doit = doApply();
                 // reset ok button state/label
-                btnOK.setText("OK");
+                m_btnOK.setText("OK");
             }
         });
 
@@ -512,16 +513,12 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
 
     private void doCancel() {
         // delegate cancel&close event to underlying dialog pane
-        /* see comment on m_dialogPane field */
-        unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
+        pushNodeContext();
         try {
             m_dialogPane.callOnCancel();
             m_dialogPane.callOnClose();
         } finally {
-            /* see comment on m_dialogPane field */
-            if (wraps(m_nodeContainer, NodeContainer.class)) {
-                NodeContext.removeLastContext();
-            }
+            removeNodeContext();
         }
         buttonPressed(IDialogConstants.CANCEL_ID);
     }
@@ -537,8 +534,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
 
     private void runOK(final boolean execute, final boolean openView) {
         // send close action to underlying dialog pane
-        /* see comment on m_dialogPane field */
-        unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
+        pushNodeContext();
         try {
             m_dialogPane.callOnClose();
             buttonPressed(IDialogConstants.OK_ID);
@@ -574,15 +570,12 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                 });
             }
         } finally {
-            /* see comment on m_dialogPane field */
-            if (wraps(m_nodeContainer, NodeContainer.class)) {
-                NodeContext.removeLastContext();
-            }
+            removeNodeContext();
         }
     }
 
     private boolean doApply() {
-        if (m_dialogPane.isWriteProtected()) {
+        if (isWriteProtected()) {
             return false;
         }
         // event.doit = false cancels the SWT selection event, so that the
@@ -744,5 +737,44 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
         Point size = new Point(width, height);
         m_wrapper.setSize(size);
         return size;
+    }
+
+    private void pushNodeContext() {
+        /* see comment on m_dialogPane field */
+        unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
+    }
+
+    private void removeNodeContext() {
+        /* see comment on m_dialogPane field */
+        if (wraps(m_nodeContainer, NodeContainer.class)) {
+            NodeContext.removeLastContext();
+        }
+    }
+
+    private void updateWriteProtectedState() {
+        boolean writeProtected = isWriteProtected();
+        Display.getDefault().asyncExec(() -> {
+            m_btnOK.setEnabled(!writeProtected);
+            m_btnApply.setEnabled(!writeProtected);
+        });
+    }
+
+    private boolean isWriteProtected() {
+        //first two if's check whether the underlying node  has a reset lock ({@link NodeContainer#getNodeLocks()}) and
+        //is executed at the same time, or it has a configure lock ({@link NodeContainer#getNodeLocks()}).
+        if (m_nodeContainer.getNodeLocks().hasResetLock() && (m_nodeContainer.getNodeContainerState().isExecuted()
+            || m_nodeContainer.getNodeContainerState().isExecutionInProgress())) {
+            return true;
+        } else if (m_nodeContainer.getNodeLocks().hasConfigureLock()) {
+            return true;
+        } else {
+            if (wraps(m_nodeContainer, NodeContainer.class)) {
+                return m_dialogPane.isWriteProtected();
+            } else {
+                //get the write protected state directly from the underlying node/workflow manager, because it can change
+                //e.g. when the workflow is disconnected
+                return m_nodeContainer.getParent().isWriteProtected();
+            }
+        }
     }
 }
