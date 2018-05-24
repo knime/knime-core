@@ -1461,6 +1461,9 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      */
     void notifyTemplateConnectionChangedListener();
 
+
+    /* -------- new methods that are not part of WorkflowManager -------- */
+
     /**
      * Determines whether a workflow is refreshable. If refreshable, the {@link #refresh()} method will be called for
      * refreshing.
@@ -1490,6 +1493,21 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      */
     default void setDisconnected(final boolean disconnected) {
         //nothing to do, to be overridden by implementations
+    }
+
+    /**
+     * @param listener listener that gets informed when the write protection status has changed. The actual status can
+     *            be accessed via {@link #isWriteProtected()}.
+     */
+    default void addWriteProtectionChangedListener(final Runnable listener) {
+        //nothing to do by default
+    }
+
+    /**
+     * @param listener the listener to be removed and to not be modified anymore
+     */
+    default void removeWriteProtectionChangedListener(final Runnable listener) {
+        //nothing to do by default
     }
 
 }
