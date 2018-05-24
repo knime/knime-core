@@ -8,6 +8,7 @@ Bundle-ClassPath: knime-testing.jar,
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.testing,
  org.knime.testing.core,
+ org.knime.testing.core.ng,
  org.knime.testing.data.blob,
  org.knime.testing.guiTests,
  org.knime.testing.node.blocking,
