@@ -96,6 +96,12 @@ public class NodeSupplantDragListener implements KeyListener, MouseListener, Mou
      * @param editor The editor containing the graphical viewer from which we'll track mouse events.
      */
     public NodeSupplantDragListener(final WorkflowEditor editor) {
+        if (!editor.getWorkflowManager().isPresent()) {
+            //doesn't work with other than the ordinary workflow manager, yet
+            m_dragPositionProcessor = null;
+            m_workflowEditor = null;
+            return;
+        }
         final GraphicalViewer viewer = editor.getGraphicalViewer();
 
         m_workflowEditor = editor;
@@ -117,11 +123,13 @@ public class NodeSupplantDragListener implements KeyListener, MouseListener, Mou
      * This should be called as part of the parent disposal cycle.
      */
     public void dispose() {
-        final FigureCanvas fc = (FigureCanvas)m_workflowEditor.getGraphicalViewer().getControl();
+        if (m_workflowEditor != null) {
+            final FigureCanvas fc = (FigureCanvas)m_workflowEditor.getGraphicalViewer().getControl();
 
-        if (fc != null) {
-            fc.removeMouseListener(this);
-            fc.removeMouseMoveListener(this);
+            if (fc != null) {
+                fc.removeMouseListener(this);
+                fc.removeMouseMoveListener(this);
+            }
         }
     }
 
