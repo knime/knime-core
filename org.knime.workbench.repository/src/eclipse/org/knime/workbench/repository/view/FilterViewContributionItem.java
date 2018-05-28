@@ -174,8 +174,8 @@ public class FilterViewContributionItem extends ControlContribution implements K
         if (m_callback != null) {
             m_callback.run();
         }
-        TreeViewerUpdater.collapseAndUpdate(m_viewer, update || str.length() == 0, str.length() == 0,
-            str.length() != 0);
+        TreeViewerUpdater.collapseAndUpdate(m_viewer, null, (update || str.length() == 0), (str.length() == 0),
+            (str.length() != 0));
     }
 
     /**

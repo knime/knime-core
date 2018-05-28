@@ -125,9 +125,19 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
     private final AtomicBoolean m_continueDelay = new AtomicBoolean(true);
 
     /**
+     * The listener to appropriately update the node repository view in reaction to search results.
+     */
+    private final TreeUpdateListener m_treeUpdateListener = new TreeUpdateListener();
+
+    /**
      * The last key that was entered by the user.
      */
     private char m_lastKey;
+
+    /**
+     * This is the repository view; it should always be accessed via the getter which will assure caching.
+     */
+    private DefaultRepositoryView m_repositoryView;
 
     /**
      * Creates the contribution item.
@@ -232,6 +242,7 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
             //enter was pressed, insert the selected node, if there is one selected
             //and select the whole search string (such that the user can just further type text in
             createNode(((IStructuredSelection)m_viewer.getSelection()).getFirstElement());
+
             Display.getDefault().asyncExec(() -> {
                 m_text.setFocus();
             });
@@ -328,11 +339,27 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
     }
 
     /**
+     * This should be called on the SWT thread.
+     */
+    private synchronized DefaultRepositoryView getRepositoryView() {
+        if (m_repositoryView == null) {
+            try {
+                m_repositoryView = (DefaultRepositoryView)PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                    .getActivePage().showView(DefaultRepositoryView.ID);
+            } catch (PartInitException e) {
+                LOGGER.error("Failed to get the default repository view due to: " + e.getMessage(), e);
+            }
+        }
+
+        return m_repositoryView;
+    }
+
+    /**
      * Helper to insert a node into the workflow editor.
      *
-     * @param event
+     * @param o should be an instance of <code>AbstractNodeTemplate</code> for this method to do anything
      */
-    private void createNode(final Object o) {
+    static private void createNode(final Object o) {
         if (o instanceof NodeTemplate) {
             NodeTemplate tmplt = (NodeTemplate)o;
             NodeFactory<? extends NodeModel> nodeFact;
@@ -373,13 +400,10 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
         }
 
         if (searchString.isEmpty()) {
-            try {
-                final DefaultRepositoryView repositoryView = (DefaultRepositoryView)PlatformUI.getWorkbench()
-                    .getActiveWorkbenchWindow().getActivePage().showView(DefaultRepositoryView.ID);
+            final DefaultRepositoryView repositoryView = getRepositoryView();
 
+            if (repositoryView != null) {
                 repositoryView.setObscuringDisplay(new AbstractRepositoryView.ObscuringState());
-            } catch (PartInitException e) {
-                LOGGER.error("Failed to get the default repository view due to: " + e.getMessage(), e);
             }
         }
 
@@ -391,6 +415,30 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
 
         update = update || searchString.isEmpty();
         //update the tree view itself
-        TreeViewerUpdater.collapseAndUpdate(m_viewer, update, searchString.isEmpty(), !searchString.isEmpty());
+        TreeViewerUpdater.collapseAndUpdate(m_viewer, m_treeUpdateListener, update, searchString.isEmpty(),
+            !searchString.isEmpty());
+    }
+
+
+    private class TreeUpdateListener implements TreeViewerUpdater.UpdateListener {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void treeDidUpdate(final int treeItemCount) {
+            final DefaultRepositoryView repositoryView = getRepositoryView();
+
+            if (repositoryView != null) {
+                if (treeItemCount > 0) {
+                    repositoryView.setObscuringDisplay(new AbstractRepositoryView.ObscuringState());
+                }
+                else {
+                    repositoryView
+                        .setObscuringDisplay(new AbstractRepositoryView.ObscuringState(true, "No matches found."));
+                }
+            }
+        }
+
     }
 }

@@ -54,9 +54,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
-import org.knime.core.node.NodeLogger;
 
 /**
  * Little helper class to allow different classes to trigger an update of the TreeViewer in the node repository.
@@ -67,7 +64,20 @@ import org.knime.core.node.NodeLogger;
  */
 class TreeViewerUpdater {
     private static final boolean IS_OS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(TreeViewerUpdater.class);
+
+    /**
+     * Consumers of the <code>collapseAndUpdate(TreeViewer, UpdateListener, boolean, boolean, boolean)</code> method may
+     * choose to implement this and pass an instance of the implementor to that method in order to be notified when the
+     * tree visually updates.
+     */
+    public interface UpdateListener {
+        /**
+         * This notification will be delivered on the SWT thread.
+         *
+         * @param treeItemCount the count of items in the tree being visually updated.
+         */
+        void treeDidUpdate (final int treeItemCount);
+    }
 
 
     private TreeViewerUpdater() {
@@ -145,7 +155,8 @@ class TreeViewerUpdater {
      * @param update whether the tree should be updated (live update)
      * @param collapse whether the tree should be collapsed completely before updating it
      */
-    static void collapseAndUpdate(final TreeViewer viewer,final boolean update, final boolean collapse, final boolean shouldExpand) {
+    static void collapseAndUpdate(final TreeViewer viewer, final TreeViewerUpdater.UpdateListener updateListener,
+        final boolean update, final boolean collapse, final boolean shouldExpand) {
 
         Point backup = null;
 
@@ -171,27 +182,16 @@ class TreeViewerUpdater {
                     viewer.expandAll();
                 }
 
-
-                DefaultRepositoryView repositoryView = null;
-                try {
-                    repositoryView = (DefaultRepositoryView)PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-                        .getActivePage().showView(DefaultRepositoryView.ID);
-                } catch (PartInitException e) {
-                    LOGGER.error("Failed to get the default repository view due to: " + e.getMessage(), e);
-                }
-
-                if (viewer.getTree().getItemCount() > 0) {
+                final int itemCount = viewer.getTree().getItemCount();
+                if (itemCount > 0) {
                     TreeItem item = viewer.getTree().getItem(0);
 
                     //scroll to root
                     viewer.getTree().showItem(item);
+                }
 
-                    if (repositoryView != null) {
-                        repositoryView.setObscuringDisplay(new AbstractRepositoryView.ObscuringState());
-                    }
-                } else if (repositoryView != null) {
-                    repositoryView
-                        .setObscuringDisplay(new AbstractRepositoryView.ObscuringState(true, "No matches found."));
+                if (updateListener != null) {
+                    updateListener.treeDidUpdate(itemCount);
                 }
             }
         } finally {
