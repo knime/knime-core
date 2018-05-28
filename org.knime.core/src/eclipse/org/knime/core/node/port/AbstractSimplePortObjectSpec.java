@@ -165,8 +165,10 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
             } catch (InvalidSettingsException e1) {
                 throw new IOException("Unable to load settings", e1);
             }
-            Class<?> cl;
-            cl = Class.forName(className);
+
+            Optional<Class<? extends PortObjectSpec>> clOptional =
+                    PortTypeRegistry.getInstance().getSpecClass(className);
+            Class<?> cl = clOptional.isPresent() ? clOptional.get() : Class.forName(className);
             if (!AbstractSimplePortObjectSpec.class.isAssignableFrom(cl)) {
                 throw new ClassCastException(
                     "Class \"" + className + "\" is not of type " + AbstractSimplePortObjectSpec.class.getSimpleName());
