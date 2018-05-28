@@ -191,8 +191,11 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
 
             for (int i = 0; i < types.length; i++) {
                 // if one column only contains missingCells than set column type to StringCell
-                if (types[i].equals(DataType.getMissingCell().getType())) {
+                if (types[i] == null || types[i].equals(DataType.getMissingCell().getType())) {
                     types[i] = StringCell.TYPE;
+                    m_reasons[i][2] = "";
+                    m_reasons[i][1] = types[i].toString();
+                    m_reasons[i][0] = incls[i];
                 }
             }
 
