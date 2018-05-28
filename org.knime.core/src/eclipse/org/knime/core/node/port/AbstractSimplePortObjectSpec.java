@@ -48,6 +48,7 @@
 package org.knime.core.node.port;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
@@ -125,7 +126,7 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
             } catch (ClassNotFoundException ex) {
                 throw new RuntimeException("Unable to load class " + className, ex);
             } catch (ClassCastException ex) {
-                throw new RuntimeException(ex.getMessage());
+                throw new RuntimeException(ex.getMessage(), ex);
             } catch (InstantiationException | IllegalAccessException ex) {
                 throw new RuntimeException("Failed to instantiate class \"" + className
                     + "\" (failed to invoke no-arg constructor): " + ex.getMessage(), ex);
@@ -153,6 +154,7 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
          * @throws IllegalAccessException if instantiation failed due to illegal access
          * @throws InstantiationException if the instantiation failed due to other reasons
          * @throws ClassCastException if the model spec is not of type {@link AbstractSimplePortObjectSpec}
+         * @noreference This method is not intended to be referenced by clients.
          * @since 3.6
          */
         @SuppressWarnings("unchecked")
@@ -191,6 +193,7 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
          *
          * @param spec the spec to be saved
          * @param model the model to store the content to
+         * @noreference This method is not intended to be referenced by clients.
          * @since 3.6
          */
         public static <T extends AbstractSimplePortObjectSpec> void savePortObjectSpecToModelSettings(final T spec,

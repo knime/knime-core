@@ -114,9 +114,7 @@ public final class CredentialsProvider {
      * @throws IllegalArgumentException If the name is invalid (no such credentials)
      */
     public ICredentials get(final String name) {
-        if (m_store == null) {
-            throw new IllegalArgumentException("No crendentials available.");
-        }
+        CheckUtils.checkArgumentNotNull(m_store, "No credentials available.");
         // what this does (related to AP-5974):
         //   - check if a workflow credential is available and has a password set; if so, return it
         //   - check if a flow variable credential is available; if so, return it
@@ -176,17 +174,16 @@ public final class CredentialsProvider {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        if(m_store == null) {
+        if (m_store == null) {
             return "Empty Credentials provider";
         }
-        return "Credentials provider for \"" + m_client.getNameWithID() + "\" ("
-            + listNames().size() + " credentials)";
+        return "Credentials provider for \"" + m_client.getNameWithID() + "\" (" + listNames().size() + " credentials)";
     }
 
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        if(m_store == null) {
+        if (m_store == null) {
             assert m_client == null;
             return 0;
         }

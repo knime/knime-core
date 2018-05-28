@@ -570,6 +570,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @param flowVariables the flow variables to push to the stack
      * @param id id of the node this flow object stack is associated with
      * @return a newly created {@link FlowObjectStack} with the list of flow variables pushed to id
+     * @noreference This method is not intended to be referenced by clients.
      * @since 3.6
      */
     public static FlowObjectStack createFromFlowVariableList(final List<FlowVariable> flowVariables, final NodeID id) {
