@@ -173,8 +173,12 @@ public interface PreferenceConstants {
     public static final String P_AUTO_REFRESH_WORKFLOW = "knime.workflow.autorefresh.enable";
     /** Preference constant for the auto-workflow-refresh interval in milliseconds */
     public static final String P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS = "knime.workflow.autorefresh.interval";
+    /** Preference constant for the enabling/disabling workflow job edits. */
+    public static final String P_WORKFLOW_JOB_EDITS_ENABLED = "knime.workflow.job.edits.allowed";
     /** Default whether auto-refresh is enabled */
     public static final boolean P_DEFAULT_AUTO_REFRESH_WORKFLOW = true;
     /** Default milliseconds the auto-refresh interval for workflows */
     public static final long P_DEFAULT_AUTO_REFRESH_WORKFLOW_INTERVAL_MS = 1000;
+    /** Default whether job edits are enabled */
+    public static final boolean P_DEFAULT_WORKFLOW_JOB_EDITS_ENABLED = true;
 }

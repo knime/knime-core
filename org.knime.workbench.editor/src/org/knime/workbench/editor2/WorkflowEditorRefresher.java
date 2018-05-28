@@ -89,6 +89,9 @@ class WorkflowEditorRefresher {
     /** The auto-refresh interval */
     private long m_autoRefreshInterval;
 
+    /** Flag whether edit operations are enabled */
+    private boolean m_isEditEnabled;
+
     /** Whether the workflow has been refreshed recently. */
     private AtomicBoolean m_hasBeenRefreshed = new AtomicBoolean(true);
 
@@ -172,7 +175,8 @@ class WorkflowEditorRefresher {
                 switch (e.getProperty()) {
                     case PreferenceConstants.P_AUTO_REFRESH_WORKFLOW:
                     case PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS:
-                        setupAutoRefresh();
+                    case PreferenceConstants.P_WORKFLOW_JOB_EDITS_ENABLED:
+                        setup();
                         break;
                     default:
                 }
@@ -181,9 +185,10 @@ class WorkflowEditorRefresher {
     }
 
     /**
-     * Sets up the auto refresher. Depending on the preference settings also might cancel or start a new refresh timer.
+     * (Re-)Loads the preferences and sets up the workflow editor refresher. Depending on the preference settings also
+     * might cancel or start a new refresh timer.
      */
-    void setupAutoRefresh() {
+    void setup() {
         IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
         m_isAutoRefreshEnabled = prefStore.getBoolean(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW);
         if (!m_isAutoRefreshEnabled && m_refreshTimerTask != null) {
@@ -196,6 +201,13 @@ class WorkflowEditorRefresher {
             //restart the timer if its running
             cancelTimers();
         }
+
+        boolean isEditEnabled = prefStore.getBoolean(PreferenceConstants.P_WORKFLOW_JOB_EDITS_ENABLED);
+        if (m_isEditEnabled != isEditEnabled) {
+            m_isEditEnabled = isEditEnabled;
+            cancelTimers();
+        }
+
         if (m_isVisible) {
             tryStartingRefreshTimer();
         }
@@ -240,7 +252,7 @@ class WorkflowEditorRefresher {
 
             //start timer that checks whether the workflow has been refreshed within a certain time interval
             //otherwise the workflow and workflow editor is regarded as disconnected
-            if (isRefreshRateHighEnoughForEditing()) {
+            if (isWorkflowEditEnabled()) {
                 synchronized (WorkflowEditor.class) {
                     if (CONNECTED_TIMER == null) {
                         CONNECTED_TIMER = new Timer("Workflow Connection-Test Timer", true);
@@ -289,13 +301,14 @@ class WorkflowEditorRefresher {
     }
 
     /**
-     * Workflow edit operations should only be allowed if the refresh rate is high enough. Indicates whether editing is
-     * allowed.
+     * Workflow edit operations are only enabled if the auto-refresh is enabled, the refresh rate is high enough and the
+     * job-edit option in the preferences is enabled. Indicates whether editing is allowed.
      *
-     * @return <code>true</code> if refresh rate is high enough for editing
+     * @return <code>true</code> if job edits are enabled
      */
-    boolean isRefreshRateHighEnoughForEditing() {
-        return m_autoRefreshInterval <= KNIMEConstants.WORKFLOW_EDITOR_CONNECTION_TIMEOUT;
+    boolean isWorkflowEditEnabled() {
+        return isAutoRefreshEnabled() && m_autoRefreshInterval <= KNIMEConstants.WORKFLOW_EDITOR_CONNECTION_TIMEOUT
+            && m_isEditEnabled;
     }
 
     /**
@@ -320,7 +333,7 @@ class WorkflowEditorRefresher {
     }
 
     private void setConnected(final boolean isConnected, final boolean callback) {
-        if (m_isConnected && !isConnected && isRefreshRateHighEnoughForEditing() && callback) {
+        if (m_isConnected && !isConnected && isWorkflowEditEnabled() && callback) {
             //if the server is disconnected after it was connected, issue a log-warning
             LOGGER.warn("Job view '" + m_editor.getTitle() + "' disconnected from server.");
         }

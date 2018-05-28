@@ -129,6 +129,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
             PreferenceConstants.P_DEFAULT_AUTO_REFRESH_WORKFLOW);
         store.setDefault(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS,
             PreferenceConstants.P_DEFAULT_AUTO_REFRESH_WORKFLOW_INTERVAL_MS);
+        store.setDefault(PreferenceConstants.P_WORKFLOW_JOB_EDITS_ENABLED,
+            PreferenceConstants.P_DEFAULT_WORKFLOW_JOB_EDITS_ENABLED);
 
         // TODO retrieve the utility factories from the data type extension point once we have it
         // this loads all registered renderers and initializes the default value

@@ -386,6 +386,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             Display.getDefault().syncExec(() -> {
                 updateWorkflowMessages();
                 updateEditorBackgroundColor();
+                updateActions();
             });
         });
     }
@@ -981,7 +982,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         super.setInput(input);
         m_origRemoteLocation = null;
         if (input instanceof WorkflowManagerInput) { // metanode, subnode, remote workflows
-            m_refresher.setupAutoRefresh();
+            m_refresher.setup();
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else if (input instanceof IURIEditorInput) {
             File wfFile;
@@ -1478,8 +1479,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 color = BG_COLOR_DEFAULT;
             }
         } else {
-            if (m_manager.isWriteProtected() || !m_refresher.isConnected() || !m_refresher.isAutoRefreshEnabled()
-                || !m_refresher.isRefreshRateHighEnoughForEditing()) {
+            if (m_manager.isWriteProtected() || !m_refresher.isConnected() || !m_refresher.isWorkflowEditEnabled()) {
                 color = BG_COLOR_WRITE_LOCK;
             } else {
                 color = BG_COLOR_DEFAULT;
@@ -2273,24 +2273,23 @@ public class WorkflowEditor extends GraphicalEditor implements
                 + "store it in a different location.");
         } else if (!getWorkflowManager().isPresent()) {
             // if the underlying workflow manager is a WorkflowManagerUI instance
-            StringBuilder sb = new StringBuilder("This is a remotely opened job workflow.");
+            StringBuilder sb = new StringBuilder(
+                "This is a workflow job remote view, running on KNIME Server (" + m_fileResource.getAuthority() + ").");
             if (!m_refresher.isAutoRefreshEnabled()) {
                 sb.append("\nIt just represents a static snapshot of the job workflow and won't get"
-                    + " updated automatically. Use context menu to refresh or the preferences to activate the auto-refresh.");
-                sb.append(" Edit operations are only allowed if the auto-refresh is enabled.");
+                    + " updated automatically. Use context menu to refresh or the preferences to activate the auto-refresh and edit operations.");
             } else {
-                sb.append("\nIt will get refreshed every " + m_refresher.getAutoRefreshInterval()
-                    + " ms (can be changed in the preferences).");
-                if (!m_refresher.isRefreshRateHighEnoughForEditing()) {
-                    sb.append("\nHowever, edit operations are not enabled since refresh interval is set too high.");
+                sb.append(" It refreshes every " + m_refresher.getAutoRefreshInterval() + " ms.");
+                if (!m_refresher.isWorkflowEditEnabled()) {
+                    sb.append("\nWorkflow job locked for edits. Enable edit operations in the preferences.");
                 }
             }
             workflowFigure.setWarningMessage(sb.toString());
 
-            if (!m_refresher.isConnected() && m_refresher.isRefreshRateHighEnoughForEditing()
-                && m_refresher.isAutoRefreshEnabled()) {
+            if (!m_refresher.isConnected() && m_refresher.isWorkflowEditEnabled()) {
                 sb.setLength(0);
-                sb.append("Job view is disconnected from the server. No edit operations possible.");
+                sb.append(
+                    "Connection to server lost. Workflow job will not refresh, and no changes can be made until connection is restored.");
                 workflowFigure.setErrorMessage(sb.toString());
             } else {
                 workflowFigure.setErrorMessage(null);
@@ -3332,6 +3331,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 break;
             case PreferenceConstants.P_AUTO_REFRESH_WORKFLOW:
             case PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS:
+            case PreferenceConstants.P_WORKFLOW_JOB_EDITS_ENABLED:
                 updateWorkflowMessages();
                 updateEditorBackgroundColor();
                 break;
