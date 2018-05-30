@@ -125,11 +125,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.P_ANNOTATION_BORDER_SIZE,
             PreferenceConstants.P_ANNOTATION_BORDER_SIZE_DEFAULT);
 
-        store.setDefault(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW,
-            PreferenceConstants.P_DEFAULT_AUTO_REFRESH_WORKFLOW);
-        store.setDefault(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS,
-            PreferenceConstants.P_DEFAULT_AUTO_REFRESH_WORKFLOW_INTERVAL_MS);
-        store.setDefault(PreferenceConstants.P_WORKFLOW_JOB_EDITS_ENABLED,
+        store.setDefault(PreferenceConstants.P_AUTO_REFRESH_JOB,
+            PreferenceConstants.P_DEFAULT_AUTO_REFRESH_JOB);
+        store.setDefault(PreferenceConstants.P_AUTO_REFRESH_JOB_INTERVAL_MS,
+            PreferenceConstants.P_DEFAULT_AUTO_REFRESH_JOB_INTERVAL_MS);
+        store.setDefault(PreferenceConstants.P_JOB_EDITS_ENABLED,
             PreferenceConstants.P_DEFAULT_WORKFLOW_JOB_EDITS_ENABLED);
 
         // TODO retrieve the utility factories from the data type extension point once we have it

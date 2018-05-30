@@ -137,7 +137,7 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
 
         addField(new HorizontalLineField(parent));
         addField(new LabelField(parent, "Remote Job View auto-refresh and edit settings"));
-        m_autoRefresh = new BooleanFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW,
+        m_autoRefresh = new BooleanFieldEditor(PreferenceConstants.P_AUTO_REFRESH_JOB,
             "Auto-refresh Remote Job View", parent) {
             @Override
             protected void valueChanged(final boolean oldValue, final boolean newValue) {
@@ -147,7 +147,7 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
             }
         };
         addField(m_autoRefresh);
-        m_refreshInterval = new IntegerFieldEditor(PreferenceConstants.P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS,
+        m_refreshInterval = new IntegerFieldEditor(PreferenceConstants.P_AUTO_REFRESH_JOB_INTERVAL_MS,
             "Auto-refresh interval (in ms)", parent) {
             @Override
             public void setValidRange(final int min, final int max) {
@@ -162,7 +162,7 @@ public class WorkflowEditorPreferencePage extends FieldEditorPreferencePage impl
 
         final WorkflowEditorPreferencePage thisRef = this;
         m_enableJobEdits =
-            new BooleanFieldEditor(PreferenceConstants.P_WORKFLOW_JOB_EDITS_ENABLED, "Enable job edits", parent) {
+            new BooleanFieldEditor(PreferenceConstants.P_JOB_EDITS_ENABLED, "Enable job edits", parent) {
                 @Override
                 protected void valueChanged(final boolean oldValue, final boolean newValue) {
                     super.valueChanged(oldValue, newValue);

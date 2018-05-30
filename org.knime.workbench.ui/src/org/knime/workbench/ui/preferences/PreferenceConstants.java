@@ -168,17 +168,17 @@ public interface PreferenceConstants {
     /** Preference constant for omitting the missing browser warning during startup. */
     public static final String P_OMIT_MISSING_BROWSER_WARNING = "knime.ui.omit-missing-browser-warning";
 
-    /** Preference constant for enabling/disabling the auto-refresh for (most likely remote) workflows in the workflow
+    /** Preference constant for enabling/disabling the auto-refresh for (most likely remote) jobs in the workflow
      * editor */
-    public static final String P_AUTO_REFRESH_WORKFLOW = "knime.workflow.autorefresh.enable";
+    public static final String P_AUTO_REFRESH_JOB = "knime.job.autorefresh.enable";
     /** Preference constant for the auto-workflow-refresh interval in milliseconds */
-    public static final String P_AUTO_REFRESH_WORKFLOW_INTERVAL_MS = "knime.workflow.autorefresh.interval";
+    public static final String P_AUTO_REFRESH_JOB_INTERVAL_MS = "knime.job.autorefresh.interval";
     /** Preference constant for the enabling/disabling workflow job edits. */
-    public static final String P_WORKFLOW_JOB_EDITS_ENABLED = "knime.workflow.job.edits.allowed";
+    public static final String P_JOB_EDITS_ENABLED = "knime.job.edits.allowed";
     /** Default whether auto-refresh is enabled */
-    public static final boolean P_DEFAULT_AUTO_REFRESH_WORKFLOW = true;
+    public static final boolean P_DEFAULT_AUTO_REFRESH_JOB = true;
     /** Default milliseconds the auto-refresh interval for workflows */
-    public static final long P_DEFAULT_AUTO_REFRESH_WORKFLOW_INTERVAL_MS = 1000;
+    public static final long P_DEFAULT_AUTO_REFRESH_JOB_INTERVAL_MS = 1000;
     /** Default whether job edits are enabled */
     public static final boolean P_DEFAULT_WORKFLOW_JOB_EDITS_ENABLED = true;
 }
