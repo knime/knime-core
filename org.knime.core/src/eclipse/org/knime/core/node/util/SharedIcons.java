@@ -205,6 +205,11 @@ public enum SharedIcons {
     /** Variable dialog inactive **/
     FLOWVAR_DIALOG_INACTIVE("icons/flowvar_dialog_inactive.png");
 
+    /**
+     * Default size for icons obtained from this class
+     */
+    public static final int DEFAULT_ICON_SIZE = 16;
+
     private final Icon m_icon;
 
     private SharedIcons(final String path) {

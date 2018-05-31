@@ -597,6 +597,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
             }
         };
         // include list
+        m_inclTable.setRowHeight(SharedIcons.DEFAULT_ICON_SIZE + 1);
         m_inclTable.setShowGrid(false);
         m_inclTable.setFillsViewportHeight(true);
         m_inclTable.setTableHeader(null);
@@ -633,6 +634,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         includePanel.add(m_inclCards, BorderLayout.CENTER);
 
         // exclude list
+        m_exclTable.setRowHeight(SharedIcons.DEFAULT_ICON_SIZE + 1);
         m_exclTable.setShowGrid(false);
         m_exclTable.setFillsViewportHeight(true);
         m_exclTable.setTableHeader(null);
