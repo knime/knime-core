@@ -858,6 +858,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         }
     }
 
+    /**
+     * Opens the config dialog asynchronously. Used for "remote workflow" that need to retrieve the settings from the
+     * remote side first.
+     */
     private static WrappedNodeDialog initDialogWithoutBlockingUI(final Shell shell, final NodeContainerUI container)
         throws Throwable {
         AtomicReference<Throwable> throwable = new AtomicReference<>();
