@@ -48,11 +48,18 @@
 package org.knime.core.data.container.storage;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.CellClassInfo;
+import org.knime.core.data.container.DefaultTableStoreFormat;
+import org.knime.core.data.container.KNIMEStreamConstants;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
@@ -62,12 +69,21 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * The abstract writer for writing specialized table formats.
+ *
  * @author wiswedel
  * @since 3.6
  * @noextend This class is not intended to be subclassed by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-public abstract class AbstractTableStoreWriter implements AutoCloseable {
+public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMEStreamConstants {
+
+    /**
+     * Map for all DataCells' type, which have been added to this buffer, they will be separately written to to the
+     * meta.xml in a zip file.
+     */
+    private HashMap<CellClassInfo, Byte> m_typeShortCuts;
+
+    private CellClassInfo[] m_shortCutsLookup;
 
     /** {@link #getFileStoreHandler()}. */
     private IWriteFileStoreHandler m_fileStoreHandler;
@@ -76,7 +92,12 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable {
 
     private final DataTableSpec m_spec;
 
-
+    /**
+     * Constructs an abstract table store writer.
+     *
+     * @param spec the specification of the KNIME table to write to disk
+     * @param writeRowKey a flag that determines whether to store the row keys in the Parquet file
+     */
     protected AbstractTableStoreWriter(final DataTableSpec spec, final boolean writeRowKey) {
         m_spec = spec;
         m_writeRowKey = writeRowKey;
@@ -92,8 +113,8 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable {
     }
 
     /**
-     * @return <code>true</code> if the implementation should also persist the {@link RowKey} in the row. This will
-     * be false for column-appending tables.
+     * @return <code>true</code> if the implementation should also persist the {@link RowKey} in the row. This will be
+     *         false for column-appending tables.
      */
     protected final boolean isWriteRowKey() {
         return m_writeRowKey;
@@ -106,7 +127,71 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable {
 
     public abstract void writeRow(final DataRow row) throws IOException;
 
-    public abstract void writeMetaInfoAfterWrite(final NodeSettingsWO settings);
+    /**
+     * Writes meta information, such as the classes of serialized {@link DataCell} instances.
+     *
+     * @param settings The settings (to be read by
+     *            {@link AbstractTableStoreReader#readMetaFromFile(org.knime.core.node.NodeSettingsRO, int)})
+     */
+    public void writeMetaInfoAfterWrite(final NodeSettingsWO settings) {
+        // unreported bug fix: NPE when the table only contains missing values.
+        if (m_typeShortCuts == null) {
+            m_typeShortCuts = new HashMap<CellClassInfo, Byte>();
+        }
+        CellClassInfo[] shortCutsLookup = new CellClassInfo[m_typeShortCuts.size()];
+        for (Map.Entry<CellClassInfo, Byte> e : m_typeShortCuts.entrySet()) {
+            byte shortCut = e.getValue();
+            CellClassInfo type = e.getKey();
+            shortCutsLookup[shortCut - BYTE_TYPE_START] = type;
+        }
+        m_shortCutsLookup = shortCutsLookup;
+        NodeSettingsWO typeSubSettings = settings.addNodeSettings(DefaultTableStoreFormat.CFG_CELL_CLASSES);
+        for (int i = 0; i < shortCutsLookup.length; i++) {
+            CellClassInfo info = shortCutsLookup[i];
+            NodeSettingsWO single = typeSubSettings.addNodeSettings("element_" + i);
+            single.addString(DefaultTableStoreFormat.CFG_CELL_SINGLE_CLASS, info.getCellClass().getName());
+            DataType elementType = info.getCollectionElementType();
+            if (elementType != null) {
+                NodeSettingsWO subTypeConfig =
+                    single.addNodeSettings(DefaultTableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE);
+                elementType.save(subTypeConfig);
+            }
+        }
+    }
+
+    /**
+     * @param type the type for which the shortcut is to be retrieved
+     * @return the identifier / shortcut of the passed type
+     */
+    public Byte getTypeShortCut(final CellClassInfo cellClass) {
+        return m_typeShortCuts.get(cellClass);
+    }
+
+    /**
+     * Get the serializer object to be used for writing the argument cell or <code>null</code> if it needs to be
+     * java-serialized.
+     *
+     * @param cellClass The cell's class to write out.
+     * @return The serializer to use or <code>null</code>.
+     * @throws IOException If there are too many different cell implementations (currently 253 are theoretically
+     *             supported)
+     */
+    public DataCellSerializer<DataCell> getSerializerForDataCell(final CellClassInfo cellClass) throws IOException {
+        if (m_typeShortCuts == null) {
+            m_typeShortCuts = new HashMap<CellClassInfo, Byte>();
+        }
+        @SuppressWarnings("unchecked")
+        DataCellSerializer<DataCell> serializer = (DataCellSerializer<DataCell>)cellClass.getSerializer();
+        if (!m_typeShortCuts.containsKey(cellClass)) {
+            int size = m_typeShortCuts.size();
+            if (size + BYTE_TYPE_START > Byte.MAX_VALUE) {
+                throw new IOException("Too many different cell implementations");
+            }
+            Byte identifier = (byte)(size + BYTE_TYPE_START);
+            m_typeShortCuts.put(cellClass, identifier);
+        }
+        return serializer;
+    }
 
     /** {@inheritDoc} */
     @Override

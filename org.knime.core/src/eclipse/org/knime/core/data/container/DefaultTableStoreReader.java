@@ -49,48 +49,52 @@ package org.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.container.Buffer.CompressionFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
+import org.knime.core.data.container.storage.AbstractTableStoreWriter;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 
 /**
  *
  * @author wiswedel
  */
-final class DefaultTableStoreReader extends AbstractTableStoreReader implements KNIMEStreamConstants {
+final class DefaultTableStoreReader extends AbstractTableStoreReader {
 
     private CompressionFormat m_compressionFormat;
-    private CellClassInfo[] m_shortCutsLookup;
+
     private final File m_binFile;
+
     private final DataTableSpec m_spec;
+
     private int m_version;
+
     private final boolean m_isReadRowKey;
+
     private Buffer m_buffer;
 
     /**
-     * @param binFile
-     * @param settings
-     * @throws IOException
-     * @throws InvalidSettingsException
+     * Constructs a reader for materializing serialized KNIME tables.
+     *
+     * @param binFile the local file from which to read
+     * @param spec the specification of the data table
+     * @param settings The settings (written by
+     *            {@link AbstractTableStoreWriter#writeMetaInfoAfterWrite(org.knime.core.node.NodeSettingsWO)})
+     * @param version The version as defined in the {@link Buffer} class
+     * @param isReadRowKey whether or not row keys are to be read (or generated anew)
+     * @throws IOException any type of I/O problem
+     * @throws InvalidSettingsException thrown in case something goes wrong during de-serialization, e.g. a new version
+     *             of a writer has been used which hasn't been installed on the current system.
      */
     DefaultTableStoreReader(final File binFile, final DataTableSpec spec, final NodeSettingsRO settings,
-        final Map<Integer, ContainerTable> tblRep, final int version,
-        final boolean isReadRowKey)
-                throws IOException, InvalidSettingsException {
+        final int version, final boolean isReadRowKey) throws IOException, InvalidSettingsException {
+        super(binFile, settings, version);
         m_binFile = binFile;
         m_spec = spec;
         m_version = version;
         m_isReadRowKey = isReadRowKey;
-        readMetaFromFile(settings, binFile, version);
     }
 
     void setBufferAfterConstruction(final Buffer buffer) {
@@ -148,34 +152,17 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader implements 
     }
 
     /**
-     * Perform lookup for the DataCell class info given the argument byte.
-     *
-     * @param identifier The byte as read from the stream.
-     * @return the associated cell class info
-     * @throws IOException If the byte is invalid.
+     * {@inheritDoc}
      */
-    CellClassInfo getTypeForChar(final byte identifier) throws IOException {
-        int shortCutIndex = (byte)(identifier - BYTE_TYPE_START);
-        if (shortCutIndex < 0 || shortCutIndex >= m_shortCutsLookup.length) {
-            throw new IOException("Unknown shortcut byte '" + identifier + "'");
-        }
-        return m_shortCutsLookup[shortCutIndex];
-    }
-    /**
-     * Reads meta information, that is row count, version, byte assignments.
-     *
-     * @param metaIn To read from.
-     * @throws IOException If reading fails.
-     * @throws ClassNotFoundException If any of the classes can't be loaded.
-     * @throws InvalidSettingsException If the internal structure is broken.
-     */
-    private void readMetaFromFile(final NodeSettingsRO settings, final File fileStoreDir, final int version) throws IOException, InvalidSettingsException {
+    @Override
+    protected void readMetaFromFile(final NodeSettingsRO settings, final int version)
+        throws IOException, InvalidSettingsException {
         final CompressionFormat cF;
         if (version < 3) { // stream was not zipped in KNIME 1.1.x
             cF = CompressionFormat.None;
         } else if (version >= 8) { // added sometime between format 8 and 9 - no increment of version number
-            String compFormat = settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION,
-                CompressionFormat.Gzip.name());
+            String compFormat =
+                settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, CompressionFormat.Gzip.name());
             try {
                 cF = CompressionFormat.valueOf(compFormat);
             } catch (Exception e) {
@@ -186,65 +173,8 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader implements 
             cF = CompressionFormat.Gzip;
         }
         m_compressionFormat = cF;
-        if (version <= 6) {
-            m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion1x(settings);
-        } else {
-            m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion2(settings);
-        }
+        super.readMetaFromFile(settings, version);
     }
-
-    @SuppressWarnings("unchecked")
-    private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion1x(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        String[] cellClasses = settings.getStringArray(DefaultTableStoreFormat.CFG_CELL_CLASSES);
-        CellClassInfo[] shortCutsLookup = new CellClassInfo[cellClasses.length];
-
-
-        for (int i = 0; i < cellClasses.length; i++) {
-            String cellClassName = cellClasses[i];
-
-            Class<?> cl = DataTypeRegistry.getInstance().getCellClass(cellClassName)
-                .orElseThrow(() -> new InvalidSettingsException("Data cell class \"" + cellClassName + "\" is unknown."));
-            try {
-                shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, null);
-            } catch (IllegalArgumentException e) {
-                throw new InvalidSettingsException("Unable to instantiate CellClassInfo for class \"" + cellClasses[i]
-                        + "\"", e);
-            }
-        }
-        return shortCutsLookup;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion2(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        NodeSettingsRO typeSubSettings = settings.getNodeSettings(DefaultTableStoreFormat.CFG_CELL_CLASSES);
-        Set<String> keys = typeSubSettings.keySet();
-        CellClassInfo[] shortCutsLookup = new CellClassInfo[keys.size()];
-        int i = 0;
-        for (String s : keys) {
-            NodeSettingsRO single = typeSubSettings.getNodeSettings(s);
-            String className = single.getString(DefaultTableStoreFormat.CFG_CELL_SINGLE_CLASS);
-
-            Class<?> cl = DataTypeRegistry.getInstance().getCellClass(className)
-                .orElseThrow(() -> new InvalidSettingsException("Can't load data cell class '" +className + "'"));
-
-            DataType elementType = null;
-            if (single.containsKey(DefaultTableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE)) {
-                NodeSettingsRO subTypeConfig = single.getNodeSettings(DefaultTableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE);
-                elementType = DataType.load(subTypeConfig);
-            }
-            try {
-                shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, elementType);
-            } catch (IllegalArgumentException iae) {
-                throw new InvalidSettingsException("Unable to instantiate CellClassInfo for class \"" + className
-                        + "\", element type: " + elementType);
-            }
-            i++;
-        }
-        return shortCutsLookup;
-    }
-
 
     /** Super class of all file iterators. */
     abstract static class FromFileIterator extends TableStoreCloseableRowIterator implements KNIMEStreamConstants {

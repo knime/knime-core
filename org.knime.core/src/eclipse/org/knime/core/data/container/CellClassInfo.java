@@ -53,11 +53,15 @@ import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.util.ConvenienceMethods;
 
-/** Pair of cell class and possibly a DataType that represents the
- * collection element type (only if cell class is a collection).
+/**
+ * Pair of cell class and possibly a DataType that represents the collection element type (only if cell class is a
+ * collection).
+ *
  * @author Bernd Wiswedel, University of Konstanz
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-final class CellClassInfo {
+public final class CellClassInfo {
 
     /** Map of Class objects (DataCell classes) and the CellClassInfo. Used
      * to reduce the overhead of creating new CellClassInfo objects. There
@@ -78,7 +82,7 @@ final class CellClassInfo {
      * @param cell The argument cell
      * @return The representing cell class info.
      */
-    static CellClassInfo get(final DataCell cell) {
+    public static CellClassInfo get(final DataCell cell) {
         return get(cell.getClass(), (cell instanceof CollectionDataValue
                 ? ((CollectionDataValue)cell).getElementType() : null));
     }
@@ -89,7 +93,7 @@ final class CellClassInfo {
      *        class is an instance of {@link CollectionDataValue}.
      * @return The representing CellClassInfo
      */
-    static CellClassInfo get(final Class<? extends DataCell> cellClass,
+    public static CellClassInfo get(final Class<? extends DataCell> cellClass,
             final DataType collectionElementType) {
         CellClassInfo result = MAP.get(cellClass);
         if (result != null) {
@@ -139,26 +143,26 @@ final class CellClassInfo {
 
     /** @return the collectionElementType or null if this represent not
      * a collection cell. */
-    DataType getCollectionElementType() {
+    public DataType getCollectionElementType() {
         return m_collectionElementType;
     }
 
     /** @return the cellClass */
-    Class<? extends DataCell> getCellClass() {
+    public Class<? extends DataCell> getCellClass() {
         return m_cellClass;
     }
 
     /** Get the DataType of the underlying cell.
      * @return The associated DataType.
      */
-    DataType getDataType() {
+    public DataType getDataType() {
         return DataType.getType(m_cellClass, m_collectionElementType);
     }
 
     /** @return the serializer associated with the type (or null if to
      * use java serialization).
      */
-    DataCellSerializer<? extends DataCell> getSerializer() {
+    public DataCellSerializer<? extends DataCell> getSerializer() {
         return m_serializer;
     }
 
@@ -197,6 +201,5 @@ final class CellClassInfo {
         }
         return b.toString();
     }
-
 
 }

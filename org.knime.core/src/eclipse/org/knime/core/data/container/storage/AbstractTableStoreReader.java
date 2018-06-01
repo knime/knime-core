@@ -47,24 +47,54 @@
  */
 package org.knime.core.data.container.storage;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.container.Buffer;
+import org.knime.core.data.container.CellClassInfo;
 import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.container.DefaultTableStoreFormat;
+import org.knime.core.data.container.KNIMEStreamConstants;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
 
 /**
  * The abstract reader for reading specialized table formats.
+ *
  * @author wiswedel
  * @since 3.6
  * @noextend This class is not intended to be subclassed by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-public abstract class AbstractTableStoreReader {
-
+public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
     private FileStoreHandlerRepository m_fileStoreHandlerRepository;
 
-    /** @return the fileStoreHandlerRepository */
+    private CellClassInfo[] m_shortCutsLookup;
+
+    /**
+     * Constructs an abstract table store reader.
+     *
+     * @param binFile the local file from which to read
+     * @param settings The settings (written by
+     *            {@link AbstractTableStoreWriter#writeMetaInfoAfterWrite(org.knime.core.node.NodeSettingsWO)})
+     * @param version The version as defined in the {@link Buffer} class
+     * @throws IOException any type of I/O problem
+     * @throws InvalidSettingsException thrown in case something goes wrong during de-serialization, e.g. a new version
+     *             of a writer has been used which hasn't been installed on the current system.
+     */
+    protected AbstractTableStoreReader(final File binFile, final NodeSettingsRO settings, final int version)
+        throws IOException, InvalidSettingsException {
+        readMetaFromFile(settings, version);
+    }
+
+    /**
+     * @return the fileStoreHandlerRepository
+     */
     public final FileStoreHandlerRepository getFileStoreHandlerRepository() {
         return m_fileStoreHandlerRepository;
     }
@@ -78,8 +108,93 @@ public abstract class AbstractTableStoreReader {
 
     public abstract TableStoreCloseableRowIterator iterator() throws IOException;
 
-    public static abstract class TableStoreCloseableRowIterator extends CloseableRowIterator {
+    /**
+     * Reads meta information, such as the classes of serialized {@link DataCell} instances.
+     *
+     * @param settings The settings (written by
+     *            {@link AbstractTableStoreWriter#writeMetaInfoAfterWrite(org.knime.core.node.NodeSettingsWO)})
+     * @param version The version as defined in the {@link Buffer} class
+     * @throws IOException Any type of I/O problem.
+     * @throws InvalidSettingsException thrown in case something goes wrong during de-serialization, e.g. a new version
+     *             of a writer has been used which hasn't been installed on the current system.
+     */
+    protected void readMetaFromFile(final NodeSettingsRO settings, final int version)
+        throws IOException, InvalidSettingsException {
+        if (version <= 6) {
+            m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion1x(settings);
+        } else {
+            m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion2(settings);
+        }
+    }
 
+    @SuppressWarnings("unchecked")
+    private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion1x(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+        String[] cellClasses = settings.getStringArray(DefaultTableStoreFormat.CFG_CELL_CLASSES);
+        CellClassInfo[] shortCutsLookup = new CellClassInfo[cellClasses.length];
+
+        for (int i = 0; i < cellClasses.length; i++) {
+            String cellClassName = cellClasses[i];
+
+            Class<?> cl = DataTypeRegistry.getInstance().getCellClass(cellClassName).orElseThrow(
+                () -> new InvalidSettingsException("Data cell class \"" + cellClassName + "\" is unknown."));
+            try {
+                shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, null);
+            } catch (IllegalArgumentException e) {
+                throw new InvalidSettingsException(
+                    "Unable to instantiate CellClassInfo for class \"" + cellClasses[i] + "\"", e);
+            }
+        }
+        return shortCutsLookup;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion2(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+        NodeSettingsRO typeSubSettings = settings.getNodeSettings(DefaultTableStoreFormat.CFG_CELL_CLASSES);
+        Set<String> keys = typeSubSettings.keySet();
+        CellClassInfo[] shortCutsLookup = new CellClassInfo[keys.size()];
+        int i = 0;
+        for (String s : keys) {
+            NodeSettingsRO single = typeSubSettings.getNodeSettings(s);
+            String className = single.getString(DefaultTableStoreFormat.CFG_CELL_SINGLE_CLASS);
+
+            Class<?> cl = DataTypeRegistry.getInstance().getCellClass(className)
+                .orElseThrow(() -> new InvalidSettingsException("Can't load data cell class '" + className + "'"));
+
+            DataType elementType = null;
+            if (single.containsKey(DefaultTableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE)) {
+                NodeSettingsRO subTypeConfig =
+                    single.getNodeSettings(DefaultTableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE);
+                elementType = DataType.load(subTypeConfig);
+            }
+            try {
+                shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, elementType);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException("Unable to instantiate CellClassInfo for class \"" + className
+                    + "\", element type: " + elementType);
+            }
+            i++;
+        }
+        return shortCutsLookup;
+    }
+
+    /**
+     * Perform lookup for the DataCell class info given the argument byte.
+     *
+     * @param identifier The byte as read from the stream.
+     * @return the associated cell class info
+     * @throws IOException If the byte is invalid.
+     */
+    public CellClassInfo getTypeForChar(final byte identifier) throws IOException {
+        int shortCutIndex = (byte)(identifier - BYTE_TYPE_START);
+        if (shortCutIndex < 0 || shortCutIndex >= m_shortCutsLookup.length) {
+            throw new IOException("Unknown shortcut byte '" + identifier + "'");
+        }
+        return m_shortCutsLookup[shortCutIndex];
+    }
+
+    public static abstract class TableStoreCloseableRowIterator extends CloseableRowIterator {
         private Buffer m_buffer;
 
         /**

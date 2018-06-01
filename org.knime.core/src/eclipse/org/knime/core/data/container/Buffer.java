@@ -897,8 +897,7 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     private void writeBlobDataCell(final BlobDataCell cell, final BlobAddress a) throws IOException {
-        DataCellSerializer<DataCell> ser = ((DefaultTableStoreWriter)m_outputWriter)
-                .getSerializerForDataCell(CellClassInfo.get(cell));
+        DataCellSerializer<DataCell> ser = m_outputWriter.getSerializerForDataCell(CellClassInfo.get(cell));
         // addRow will make sure that m_indicesOfBlobInColumns is initialized
         // when this method is called. If this method is called from a different
         // buffer object, it means that this buffer has been closed!

@@ -48,11 +48,8 @@
 package org.knime.core.data.container;
 
 import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.core.data.DataCell;
@@ -72,12 +69,6 @@ import org.knime.core.node.NodeSettingsWO;
  */
 final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements KNIMEStreamConstants {
 
-    /**
-     * Map for all DataCells' type, which have been added to this buffer, they will be separately written to to the
-     * meta.xml in a zip file.
-     */
-    private HashMap<CellClassInfo, Byte> m_typeShortCuts;
-
     private final CompressionFormat m_compressionFormat;
 
     /**
@@ -86,15 +77,16 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
      */
     private final DCObjectOutputVersion2 m_outStream;
 
-
     /**
-     * @param spec TODO
-     * @param writeRowKey
-     * @throws IOException
-     * @throws FileNotFoundException
+     * Constructs a writer for writing KNIME tables to disk.
+     *
+     * @param spec the specification of the KNIME table to write to disk
+     * @param outputStream
+     * @param writeRowKey a flag that determines whether to store the row keys in the Parquet file
+     * @throws IOException any type of I/O problem
      */
-    public DefaultTableStoreWriter(final DataTableSpec spec, final OutputStream outputStream,
-        final boolean writeRowKey) throws IOException {
+    public DefaultTableStoreWriter(final DataTableSpec spec, final OutputStream outputStream, final boolean writeRowKey)
+        throws IOException {
         super(spec, writeRowKey);
         m_compressionFormat = DefaultTableStoreFormat.IS_USE_GZIP ? CompressionFormat.Gzip : CompressionFormat.None;
         m_outStream = initOutFile(new BufferedOutputStream(outputStream));
@@ -110,7 +102,8 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
         RowKey id = row.getKey();
         writeRowKey(id, m_outStream);
         for (int i = 0; i < row.getNumCells(); i++) {
-            DataCell cell = row instanceof BlobSupportDataRow ? ((BlobSupportDataRow)row).getRawCell(i) : row.getCell(i);
+            DataCell cell =
+                row instanceof BlobSupportDataRow ? ((BlobSupportDataRow)row).getRawCell(i) : row.getCell(i);
             writeDataCell(cell, m_outStream);
             m_outStream.endBlock();
         }
@@ -149,7 +142,7 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
         boolean isBlob = cell instanceof BlobWrapperDataCell;
         CellClassInfo cellClass = isBlob ? ((BlobWrapperDataCell)cell).getBlobClassInfo() : CellClassInfo.get(cell);
         DataCellSerializer<DataCell> ser = getSerializerForDataCell(cellClass);
-        Byte identifier = m_typeShortCuts.get(cellClass);
+        Byte identifier = getTypeShortCut(cellClass);
         FileStoreKey fileStoreKey = super.getFileStoreKeyAndFlush(cell);
         final boolean isJavaSerializationOrBlob = ser == null && !isBlob;
         if (isJavaSerializationOrBlob) {
@@ -195,60 +188,11 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
         return new DCObjectOutputVersion2(wrap, this);
     }
 
-    /**
-     * Get the serializer object to be used for writing the argument cell or <code>null</code> if it needs to be
-     * java-serialized.
-     *
-     * @param cellClass The cell's class to write out.
-     * @return The serializer to use or <code>null</code>.
-     * @throws IOException If there are too many different cell implementations (currently 253 are theoretically
-     *             supported)
-     */
-    DataCellSerializer<DataCell> getSerializerForDataCell(final CellClassInfo cellClass) throws IOException {
-        if (m_typeShortCuts == null) {
-            m_typeShortCuts = new HashMap<CellClassInfo, Byte>();
-        }
-        @SuppressWarnings("unchecked")
-        DataCellSerializer<DataCell> serializer = (DataCellSerializer<DataCell>)cellClass.getSerializer();
-        if (!m_typeShortCuts.containsKey(cellClass)) {
-            int size = m_typeShortCuts.size();
-            if (size + BYTE_TYPE_START > Byte.MAX_VALUE) {
-                throw new IOException("Too many different cell implementations");
-            }
-            Byte identifier = (byte)(size + BYTE_TYPE_START);
-            m_typeShortCuts.put(cellClass, identifier);
-        }
-        return serializer;
-    }
-
-    CellClassInfo[] m_shortCutsLookup;
-
     /** {@inheritDoc} */
     @Override
     public void writeMetaInfoAfterWrite(final NodeSettingsWO settings) {
         settings.addString(DefaultTableStoreFormat.CFG_COMPRESSION, m_compressionFormat.name());
-        // unreported bug fix: NPE when the table only contains missing values.
-        if (m_typeShortCuts == null) {
-            m_typeShortCuts = new HashMap<CellClassInfo, Byte>();
-        }
-        CellClassInfo[] shortCutsLookup = new CellClassInfo[m_typeShortCuts.size()];
-        for (Map.Entry<CellClassInfo, Byte> e : m_typeShortCuts.entrySet()) {
-            byte shortCut = e.getValue();
-            CellClassInfo type = e.getKey();
-            shortCutsLookup[shortCut - BYTE_TYPE_START] = type;
-        }
-        m_shortCutsLookup = shortCutsLookup;
-        NodeSettingsWO typeSubSettings = settings.addNodeSettings(DefaultTableStoreFormat.CFG_CELL_CLASSES);
-        for (int i = 0; i < shortCutsLookup.length; i++) {
-            CellClassInfo info = shortCutsLookup[i];
-            NodeSettingsWO single = typeSubSettings.addNodeSettings("element_" + i);
-            single.addString(DefaultTableStoreFormat.CFG_CELL_SINGLE_CLASS, info.getCellClass().getName());
-            DataType elementType = info.getCollectionElementType();
-            if (elementType != null) {
-                NodeSettingsWO subTypeConfig = single.addNodeSettings(DefaultTableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE);
-                elementType.save(subTypeConfig);
-            }
-        }
+        super.writeMetaInfoAfterWrite(settings);
     }
 
     /** {@inheritDoc} */
