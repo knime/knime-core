@@ -89,10 +89,6 @@ import org.knime.workbench.repository.util.ContextAwareNodeFactoryMapper;
  */
 public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory> extends
     AbstractTransferDropTargetListener {
-    /**
-     *
-     */
-
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowEditorDropTargetListener.class);
 
     /**
@@ -105,6 +101,39 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
      * Standard distance between two nodes.
      */
     private static final int MINIMUM_NODE_DISTANCE = MINIMUM_NODE_DISTANCE_BEFORE_INSERTION / 2;
+
+    /**
+     * The x coordinate is recomputed if snap to gird is enabled.
+     *
+     * @param dropLocationX x coordinate of the drop event
+     * @param sourceX x coordinate of the source node
+     * @return source node x coordinate plus the {@link WorkflowEditorDropTargetListener#MINIMUM_NODE_DISTANCE}
+     */
+    private static int getXLocation(final int dropLocationX, final int sourceX, final double zoom) {
+        if (sourceX < dropLocationX && sourceX + MINIMUM_NODE_DISTANCE * zoom > dropLocationX) {
+            return (int)(sourceX + MINIMUM_NODE_DISTANCE * zoom);
+        } else {
+            return dropLocationX;
+        }
+    }
+
+    /**
+     * If the y coordinate of source and target difference is less than 20 pixel the source y coordinate is returned.
+     * Also the y coordinate is recomputed if snap to grid is enabled.
+     *
+     * @param dropLocationY y coordinate of the drop event
+     * @param sourceY y coordinate of the source node
+     * @param targetY y coordinate of the target node
+     * @return y location for the new node
+     */
+    private static int getYLocation(final int dropLocationY, final int sourceY, final int targetY, final double zoom) {
+        if (Math.abs(sourceY - targetY) < 20 * zoom) {
+            return sourceY;
+        } else {
+            return dropLocationY;
+
+        }
+    }
 
 
     private final T m_factory;
@@ -297,39 +326,6 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
     }
 
     /**
-     * If the y coordinate of source and target difference is less than 20 pixel the source y coordinate is returned.
-     * Also the y coordinate is recomputed if snap to grid is enabled.
-     *
-     * @param dropLocationY y coordinate of the drop event
-     * @param sourceY y coordinate of the source node
-     * @param targetY y coordinate of the target node
-     * @return y location for the new node
-     */
-    private int getYLocation(final int dropLocationY, final int sourceY, final int targetY, final double zoom) {
-        if (Math.abs(sourceY - targetY) < 20 * zoom) {
-            return sourceY;
-        } else {
-            return dropLocationY;
-
-        }
-    }
-
-    /**
-     * The x coordinate is recomputed if snap to gird is enabled.
-     *
-     * @param dropLocationX x coordinate of the drop event
-     * @param sourceX x coordinate of the source node
-     * @return source node x coordinate plus the {@link WorkflowEditorDropTargetListener#MINIMUM_NODE_DISTANCE}
-     */
-    private int getXLocation(final int dropLocationX, final int sourceX, final double zoom) {
-        if (sourceX < dropLocationX && sourceX + MINIMUM_NODE_DISTANCE * zoom > dropLocationX) {
-            return (int)(sourceX + MINIMUM_NODE_DISTANCE * zoom);
-        } else {
-            return dropLocationX;
-        }
-    }
-
-    /**
      * Selects all nodes after this node which are around the same y coordinate and closer than
      * {@link WorkflowEditorDropTargetListener#m_distanceToMoveTarget} +
      * {@link WorkflowEditorDropTargetListener#MINIMUM_NODE_DISTANCE}
@@ -422,6 +418,13 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
     @Override
     public boolean isEnabled(final DropTargetEvent event) {
         return getDragResources(event) != null;
+    }
+
+    @Override
+    protected void eraseTargetFeedback() {
+        super.eraseTargetFeedback();
+
+        m_dragPositionProcessor.unmarkSelection();
     }
 
     /**
