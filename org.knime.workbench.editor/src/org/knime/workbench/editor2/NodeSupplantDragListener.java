@@ -54,6 +54,9 @@ import java.util.Set;
 import org.eclipse.draw2d.FigureCanvas;
 import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.commands.CommandStack;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
@@ -76,7 +79,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  *
  * @author loki der quaeler
  */
-public class NodeSupplantDragListener implements MouseListener, MouseMoveListener {
+public class NodeSupplantDragListener implements KeyListener, MouseListener, MouseMoveListener {
     // These will only be consulted from the SWT thread
     private NodeContainerEditPart m_nodeInDrag;
     private int[] m_mouseDownNodeBounds;
@@ -105,6 +108,7 @@ public class NodeSupplantDragListener implements MouseListener, MouseMoveListene
         m_dragPositionProcessor.addVetoer(new UnsupportedNodeSurplantationVetoer());
 
         final FigureCanvas fc = (FigureCanvas)viewer.getControl();
+        fc.addKeyListener(this);
         fc.addMouseListener(this);
         fc.addMouseMoveListener(this);
     }
@@ -132,6 +136,34 @@ public class NodeSupplantDragListener implements MouseListener, MouseMoveListene
 
             m_nodeInDragInportManifest = new ConnectionManifest(node, wm, true);
             m_nodeInDragOutportManifest = new ConnectionManifest(node, wm, false);
+        }
+    }
+
+    private void endDragTracking() {
+        m_nodeInDrag = null;
+        m_mouseDownNodeBounds = null;
+        m_nodeInDragConnectionIds = null;
+        m_nodeInDragDegreeOneNodes = null;
+        m_nodeInDragInportManifest = null;
+        m_nodeInDragOutportManifest = null;
+
+        m_dragPositionProcessor.unmarkSelection();
+        m_dragPositionProcessor.clearMarkingAvoidance();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void keyPressed(final KeyEvent ke) { }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void keyReleased(final KeyEvent ke) {
+        if ((m_nodeInDrag != null) && (ke.keyCode == SWT.ESC)) {
+            endDragTracking();
         }
     }
 
@@ -224,15 +256,7 @@ public class NodeSupplantDragListener implements MouseListener, MouseMoveListene
                 }
             }
         } finally {
-            m_nodeInDrag = null;
-            m_mouseDownNodeBounds = null;
-            m_nodeInDragConnectionIds = null;
-            m_nodeInDragDegreeOneNodes = null;
-            m_nodeInDragInportManifest = null;
-            m_nodeInDragOutportManifest = null;
-
-            m_dragPositionProcessor.unmarkSelection();
-            m_dragPositionProcessor.clearMarkingAvoidance();
+            endDragTracking();
         }
     }
 
