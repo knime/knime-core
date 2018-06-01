@@ -740,12 +740,11 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
     }
 
     private void pushNodeContext() {
-        /* see comment on m_dialogPane field */
+        // so far node context is only supported for the non-UI NodeContainer
         unwrapNCOptional(m_nodeContainer).ifPresent(nc -> NodeContext.pushContext(nc));
     }
 
     private void removeNodeContext() {
-        /* see comment on m_dialogPane field */
         if (wraps(m_nodeContainer, NodeContainer.class)) {
             NodeContext.removeLastContext();
         }
