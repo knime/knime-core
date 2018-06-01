@@ -2273,8 +2273,14 @@ public class WorkflowEditor extends GraphicalEditor implements
                 + "store it in a different location.");
         } else if (!getWorkflowManager().isPresent()) {
             // if the underlying workflow manager is a WorkflowManagerUI instance
-            StringBuilder sb = new StringBuilder(
-                "This is a view on the remote job running on KNIME Server (" + m_fileResource.getAuthority() + ").");
+            StringBuilder sb = new StringBuilder();
+            if(m_fileResource != null && m_parentEditor == null) {
+                //root workflow
+                sb.append("This is a view on the remote job running on KNIME Server (" + m_fileResource.getAuthority() + ").");
+            } else {
+                //metanode editor
+                sb.append("This is a view on a metanode of a remote job running on KNIME Server.");
+            }
             if (!m_refresher.isAutoRefreshEnabled()) {
                 sb.append("\nIt just represents a static snapshot of the job and won't get updated automatically. Use "
                     + "context menu to refresh or the preferences to activate the auto-refresh and edit operations.");
