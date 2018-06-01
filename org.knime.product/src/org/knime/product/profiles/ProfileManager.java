@@ -49,7 +49,6 @@
 package org.knime.product.profiles;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.InetSocketAddress;
@@ -74,8 +73,9 @@ import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipInputStream;
 
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -332,14 +332,20 @@ public class ProfileManager {
                             throw new IOException("Server did not return a ZIP file containing the selected profiles");
                         }
 
+                        Path tempFile = PathUtils.createTempFile("profile-download", ".zip");
+                        try (OutputStream os = Files.newOutputStream(tempFile)) {
+                            IOUtils.copyLarge(response.getEntity().getContent(), os);
+                        }
+
                         Path tempDir = PathUtils.createTempDir("profile-download", stateDir);
-                        try (InputStream is = response.getEntity().getContent()) {
-                            PathUtils.unzip(new ZipInputStream(is), tempDir);
+                        try (ZipFile zf = new ZipFile(tempFile.toFile())) {
+                            PathUtils.unzip(zf, tempDir);
                         }
 
                         // replace profiles only if new data has been downloaded successfully
                         PathUtils.deleteDirectoryIfExists(profileDir);
                         Files.move(tempDir, profileDir, StandardCopyOption.ATOMIC_MOVE);
+                        Files.delete(tempFile);
                     } else if (code != 304) { // 304 = Not Modified
                         HttpEntity body = response.getEntity();
                         String msg;
