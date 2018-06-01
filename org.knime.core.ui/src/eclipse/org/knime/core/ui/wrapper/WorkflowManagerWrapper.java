@@ -48,15 +48,11 @@
  */
 package org.knime.core.ui.wrapper;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -108,21 +104,6 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     }
 
     @Override
-    public ReentrantLock getReentrantLockInstance() {
-        return unwrap().getReentrantLockInstance();
-    }
-
-    @Override
-    public boolean isLockedByCurrentThread() {
-        return unwrap().isLockedByCurrentThread();
-    }
-
-    @Override
-    public WorkflowManagerUI getProjectWFM() {
-        return WorkflowManagerWrapper.wrap(unwrap().getProjectWFM());
-    }
-
-    @Override
     public void removeProject(final NodeID id) {
         unwrap().removeProject(id);
     }
@@ -138,11 +119,6 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     }
 
     @Override
-    public ConnectionContainerUI addConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
-        return ConnectionContainerWrapper.wrap(unwrap().addConnection(source, sourcePort, dest, destPort));
-    }
-
-    @Override
     public boolean canAddConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
         return unwrap().canAddConnection(source, sourcePort, dest, destPort);
     }
@@ -150,16 +126,6 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     @Override
     public boolean canAddNewConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
         return unwrap().canAddNewConnection(source, sourcePort, dest, destPort);
-    }
-
-    @Override
-    public boolean canRemoveConnection(final ConnectionContainerUI cc) {
-        return unwrap().canRemoveConnection(Wrapper.unwrapCC(cc));
-    }
-
-    @Override
-    public void removeConnection(final ConnectionContainerUI cc) {
-        unwrap().removeConnection(Wrapper.unwrapCC(cc));
     }
 
     @Override
@@ -198,42 +164,6 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     }
 
     @Override
-    public MetaPortInfo[] getSubnodeInputPortInfo(final NodeID subNodeID) {
-        return unwrap().getSubnodeInputPortInfo(subNodeID);
-    }
-
-    @Override
-    public MetaPortInfo[] getSubnodeOutputPortInfo(final NodeID subNodeID) {
-        return unwrap().getSubnodeOutputPortInfo(subNodeID);
-    }
-
-    @Override
-    public void changeMetaNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        unwrap().changeMetaNodeInputPorts(subFlowID, newPorts);
-    }
-
-    @Override
-    public void changeMetaNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        unwrap().changeMetaNodeOutputPorts(subFlowID, newPorts);
-    }
-
-    @Override
-    public void changeSubNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        unwrap().changeSubNodeInputPorts(subFlowID, newPorts);
-    }
-
-    @Override
-    public void changeSubNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        unwrap().changeSubNodeOutputPorts(subFlowID, newPorts);
-    }
-
-    @Deprecated
-    @Override
-    public void resetAll() {
-        unwrap().resetAll();
-    }
-
-    @Override
     public void resetAndConfigureAll() {
         unwrap().resetAndConfigureAll();
     }
@@ -259,43 +189,13 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     }
 
     @Override
-    public String canExpandSubNode(final NodeID subNodeID) {
-        return unwrap().canExpandSubNode(subNodeID);
-    }
-
-    @Override
-    public String canExpandMetaNode(final NodeID wfmID) {
-        return unwrap().canExpandMetaNode(wfmID);
-    }
-
-    @Override
-    public String canCollapseNodesIntoMetaNode(final NodeID[] orgIDs) {
-        return unwrap().canCollapseNodesIntoMetaNode(orgIDs);
-    }
-
-    @Override
     public boolean canResetNode(final NodeID nodeID) {
         return unwrap().canResetNode(nodeID);
     }
 
     @Override
-    public boolean canResetContainedNodes() {
-        return unwrap().canResetContainedNodes();
-    }
-
-    @Override
     public void resetAndConfigureNode(final NodeID id) {
         unwrap().resetAndConfigureNode(id);
-    }
-
-    @Override
-    public boolean canConfigureNodes() {
-        return unwrap().canConfigureNodes();
-    }
-
-    @Override
-    public boolean canExecuteNodeDirectly(final NodeID nodeID) {
-        return unwrap().canExecuteNodeDirectly(nodeID);
     }
 
     @Override
@@ -319,11 +219,6 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     @Override
     public void cancelExecution(final NodeContainerUI nc) {
         unwrap().cancelExecution(Wrapper.unwrapNC(nc));
-    }
-
-    @Override
-    public boolean canSetJobManager(final NodeID nodeID) {
-        return unwrap().canSetJobManager(nodeID);
     }
 
     @Override
@@ -381,16 +276,6 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
         return unwrap().getNodeContainer(id, subclass, failOnError);
     }
 
-    @Override
-    public boolean containsNodeContainer(final NodeID id) {
-        return unwrap().containsNodeContainer(id);
-    }
-
-    @Override
-    public boolean containsExecutedNode() {
-        return unwrap().containsExecutedNode();
-    }
-
     @Deprecated
     @Override
     public List<NodeMessage> getNodeErrorMessages() {
@@ -423,11 +308,6 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     }
 
     @Override
-    public void setWorkflowPassword(final String password, final String hint) throws NoSuchAlgorithmException {
-        unwrap().setWorkflowPassword(password, hint);
-    }
-
-    @Override
     public boolean isUnlocked() {
         return unwrap().isUnlocked();
     }
@@ -440,16 +320,6 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     @Override
     public boolean isEncrypted() {
         return unwrap().isEncrypted();
-    }
-
-    @Override
-    public OutputStream cipherOutput(final OutputStream out) throws IOException {
-        return unwrap().cipherOutput(out);
-    }
-
-    @Override
-    public String getCipherFileName(final String fileName) {
-        return unwrap().getCipherFileName(fileName);
     }
 
     @Override

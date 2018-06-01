@@ -48,6 +48,7 @@
 package org.knime.workbench.editor2.actions;
 
 import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
 
 import java.security.NoSuchAlgorithmException;
 
@@ -57,6 +58,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -132,6 +134,10 @@ public class LockMetaNodeAction extends AbstractNodeAction {
             return false;
         }
         Object model = nodes[0].getModel();
+        if (!wraps(model, WorkflowManager.class)) {
+            // action not yet supported by general UI workflow manager
+            return false;
+        }
         if (model instanceof WorkflowManagerUI) {
             WorkflowManagerUI metaNode = (WorkflowManagerUI)model;
             if (metaNode.isWriteProtected()) {
@@ -166,7 +172,7 @@ public class LockMetaNodeAction extends AbstractNodeAction {
         String password = lockDialog.getPassword();
         String hint = lockDialog.getPasswordHint();
         try {
-            metaNodeWFM.setWorkflowPassword(password, hint);
+            unwrapWFM(metaNodeWFM).setWorkflowPassword(password, hint);
         } catch (NoSuchAlgorithmException e) {
             String msg = "Unable to encrypt metanode: " + e.getMessage();
             LOGGER.error(msg, e);

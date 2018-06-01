@@ -48,16 +48,12 @@
  */
 package org.knime.core.ui.node.workflow;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
@@ -70,14 +66,12 @@ import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
-import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowListener;
@@ -123,22 +117,22 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //     */
 //    WorkflowLock assertLock();
 
-    /** {@inheritDoc}
-     * @since 3.1 */
-    ReentrantLock getReentrantLockInstance();
-
-    /** {@inheritDoc}
-     * @since 3.1 */
-    boolean isLockedByCurrentThread();
+//    /** {@inheritDoc}
+//     * @since 3.1 */
+//    ReentrantLock getReentrantLockInstance();
+//
+//    /** {@inheritDoc}
+//     * @since 3.1 */
+//    boolean isLockedByCurrentThread();
 
 //    /** {@inheritDoc} */
 //    NodeContainerParent getDirectNCParent();
 
-    /**
-     * {@inheritDoc}
-     * @since 2.10
-     */
-    WorkflowManagerUI getProjectWFM();
+//    /**
+//     * {@inheritDoc}
+//     * @since 2.10
+//     */
+//    WorkflowManagerUI getProjectWFM();
 
 //    /** Create new project - which is the same as creating a new subworkflow
 //     * at this level with no in- or outports.
@@ -212,17 +206,17 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * @since 2.6 */
     boolean isProject();
 
-    /** Add new connection - throw Exception if the same connection
-     * already exists.
-     *
-     * @param source node id
-     * @param sourcePort port index at source node
-     * @param dest destination node id
-     * @param destPort port index at destination node
-     * @return newly created Connection object
-     * @throws IllegalArgumentException if connection already exists
-     */
-    ConnectionContainerUI addConnection(NodeID source, int sourcePort, NodeID dest, int destPort);
+//    /** Add new connection - throw Exception if the same connection
+//     * already exists.
+//     *
+//     * @param source node id
+//     * @param sourcePort port index at source node
+//     * @param dest destination node id
+//     * @param destPort port index at destination node
+//     * @return newly created Connection object
+//     * @throws IllegalArgumentException if connection already exists
+//     */
+//    ConnectionContainerUI addConnection(NodeID source, int sourcePort, NodeID dest, int destPort);
 
     /** Check if a new connection can be added.
      *
@@ -244,18 +238,18 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      */
     boolean canAddNewConnection(NodeID source, int sourcePort, NodeID dest, int destPort);
 
-    /** Check if a connection can safely be removed.
-     *
-     * @param cc connection
-     * @return true if connection cc is removable.
-     */
-    boolean canRemoveConnection(ConnectionContainerUI cc);
-
-    /** Remove connection.
-     *
-     * @param cc connection
-     */
-    void removeConnection(ConnectionContainerUI cc);
+//    /** Check if a connection can safely be removed.
+//     *
+//     * @param cc connection
+//     * @return true if connection cc is removable.
+//     */
+//    boolean canRemoveConnection(ConnectionContainerUI cc);
+//
+//    /** Remove connection.
+//     *
+//     * @param cc connection
+//     */
+//    void removeConnection(ConnectionContainerUI cc);
 
     /**
      * Returns the set of outgoing connections for the node with the passed id
@@ -316,50 +310,50 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * @since 2.6 */
     MetaPortInfo[] getMetanodeOutputPortInfo(NodeID metaNodeID);
 
-    /** Get information on input ports of the argument (sub) node. It's used
-     * by the routines that allow the user to change the port information
-     * (add, delete, move).
-     * @param subNodeID The argument node
-     * @return the sub node's port info.
-     * @throws IllegalArgumentException If the node is invalid.
-     * @since 2.10 */
-    MetaPortInfo[] getSubnodeInputPortInfo(NodeID subNodeID);
-
-    /** Get information on output ports of the argument (sub) node. Similar
-     * to {@link #getSubnodeInputPortInfo(NodeID)}.
-     * @param subNodeID ...
-     * @return ...
-     * @throws IllegalArgumentException If the node is invalid.
-     * @since 2.10 */
-    MetaPortInfo[] getSubnodeOutputPortInfo(NodeID subNodeID);
-
-    /**
-     * @param subFlowID ID of the subflow
-     * @param newPorts The new ports
-     * @since 2.6
-     */
-    void changeMetaNodeInputPorts(NodeID subFlowID, MetaPortInfo[] newPorts);
-
-    /**
-     * @param subFlowID ID of the subflow
-     * @param newPorts The new ports
-     * @since 2.6
-     */
-    void changeMetaNodeOutputPorts(NodeID subFlowID, MetaPortInfo[] newPorts);
-
-    /**
-     * @param subFlowID ID of the subflow
-     * @param newPorts The new ports
-     * @since 2.10
-     */
-    void changeSubNodeInputPorts(NodeID subFlowID, MetaPortInfo[] newPorts);
-
-    /**
-     * @param subFlowID ID of the subflow
-     * @param newPorts The new ports
-     * @since 2.10
-     */
-    void changeSubNodeOutputPorts(NodeID subFlowID, MetaPortInfo[] newPorts);
+//    /** Get information on input ports of the argument (sub) node. It's used
+//     * by the routines that allow the user to change the port information
+//     * (add, delete, move).
+//     * @param subNodeID The argument node
+//     * @return the sub node's port info.
+//     * @throws IllegalArgumentException If the node is invalid.
+//     * @since 2.10 */
+//    MetaPortInfo[] getSubnodeInputPortInfo(NodeID subNodeID);
+//
+//    /** Get information on output ports of the argument (sub) node. Similar
+//     * to {@link #getSubnodeInputPortInfo(NodeID)}.
+//     * @param subNodeID ...
+//     * @return ...
+//     * @throws IllegalArgumentException If the node is invalid.
+//     * @since 2.10 */
+//    MetaPortInfo[] getSubnodeOutputPortInfo(NodeID subNodeID);
+//
+//    /**
+//     * @param subFlowID ID of the subflow
+//     * @param newPorts The new ports
+//     * @since 2.6
+//     */
+//    void changeMetaNodeInputPorts(NodeID subFlowID, MetaPortInfo[] newPorts);
+//
+//    /**
+//     * @param subFlowID ID of the subflow
+//     * @param newPorts The new ports
+//     * @since 2.6
+//     */
+//    void changeMetaNodeOutputPorts(NodeID subFlowID, MetaPortInfo[] newPorts);
+//
+//    /**
+//     * @param subFlowID ID of the subflow
+//     * @param newPorts The new ports
+//     * @since 2.10
+//     */
+//    void changeSubNodeInputPorts(NodeID subFlowID, MetaPortInfo[] newPorts);
+//
+//    /**
+//     * @param subFlowID ID of the subflow
+//     * @param newPorts The new ports
+//     * @since 2.10
+//     */
+//    void changeSubNodeOutputPorts(NodeID subFlowID, MetaPortInfo[] newPorts);
 
 //    /** Load Settings into specified node.
 //     *
@@ -399,12 +393,6 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //     * @since 2.7
 //     */
 //    void applyCommonSettings(NodeContainerSettings settings, NodeID... ids) throws InvalidSettingsException;
-
-    /** Resets and freshly configures all nodes in this workflow.
-     * @deprecated Use {@link #resetAndConfigureAll()} instead
-     */
-    @Deprecated
-    void resetAll();
 
     /** Resets and freshly configures all nodes in this workflow. */
     void resetAndConfigureAll();
@@ -473,38 +461,38 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * @since 2.6*/
     void executePredecessorsAndWait(NodeID id) throws InterruptedException;
 
-    /** Check if we can expand the selected metanode into a set of nodes in
-     * this WFM.
-     * This essentially checks if the nodes can be moved (=deleted from
-     * the original WFM) or if they are executed
-     *
-     * @param subNodeID the id of the metanode to be expanded
-     * @return null of ok otherwise reason (String) why not
-     * @since 2.10
-     */
-    String canExpandSubNode(NodeID subNodeID);
-
-    /** Check if we can expand the selected metanode into a set of nodes in
-     * this WFM.
-     * This essentially checks if the nodes can be moved (=deleted from
-     * the original WFM) or if they are executed
-     *
-     * @param wfmID the id of the metanode to be expanded
-     * @return null of ok otherwise reason (String) why not
-     */
-    String canExpandMetaNode(NodeID wfmID);
-
-
-    /** Check if we can collapse selected set of nodes into a metanode.
-     * This essentially checks if the nodes can be moved (=deleted from
-     * the original WFM), if they are executed, or if moving them would
-     * result in cycles in the original WFM (outgoing connections fed
-     * back into inports of the new Metanode).
-     *
-     * @param orgIDs the ids of the nodes to be moved to the new metanode.
-     * @return null or reason why this cannot be done as string.
-     */
-    String canCollapseNodesIntoMetaNode(NodeID[] orgIDs);
+//    /** Check if we can expand the selected metanode into a set of nodes in
+//     * this WFM.
+//     * This essentially checks if the nodes can be moved (=deleted from
+//     * the original WFM) or if they are executed
+//     *
+//     * @param subNodeID the id of the metanode to be expanded
+//     * @return null of ok otherwise reason (String) why not
+//     * @since 2.10
+//     */
+//    String canExpandSubNode(NodeID subNodeID);
+//
+//    /** Check if we can expand the selected metanode into a set of nodes in
+//     * this WFM.
+//     * This essentially checks if the nodes can be moved (=deleted from
+//     * the original WFM) or if they are executed
+//     *
+//     * @param wfmID the id of the metanode to be expanded
+//     * @return null of ok otherwise reason (String) why not
+//     */
+//    String canExpandMetaNode(NodeID wfmID);
+//
+//
+//    /** Check if we can collapse selected set of nodes into a metanode.
+//     * This essentially checks if the nodes can be moved (=deleted from
+//     * the original WFM), if they are executed, or if moving them would
+//     * result in cycles in the original WFM (outgoing connections fed
+//     * back into inports of the new Metanode).
+//     *
+//     * @param orgIDs the ids of the nodes to be moved to the new metanode.
+//     * @return null or reason why this cannot be done as string.
+//     */
+//    String canCollapseNodesIntoMetaNode(NodeID[] orgIDs);
 
     /**
      * Check if a node can be reset, meaning that it is executed and all of
@@ -516,8 +504,8 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      */
     boolean canResetNode(NodeID nodeID);
 
-    /** {@inheritDoc} */
-    boolean canResetContainedNodes();
+//    /** {@inheritDoc} */
+//    boolean canResetContainedNodes();
 
     /** Reset node and all executed successors of a specific node and
      * launch configure storm.
@@ -526,17 +514,17 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      */
     void resetAndConfigureNode(NodeID id);
 
-    /** {@inheritDoc}
-     * @since 2.11*/
-    boolean canConfigureNodes();
+//    /** {@inheritDoc}
+//     * @since 2.11*/
+//    boolean canConfigureNodes();
 
-    /** Check if a node can be executed directly.
-     *
-     * @param nodeID id of node
-     * @return true if node is configured and all immediate predecessors are executed.
-     * @since 2.9
-     */
-    boolean canExecuteNodeDirectly(NodeID nodeID);
+//    /** Check if a node can be executed directly.
+//     *
+//     * @param nodeID id of node
+//     * @return true if node is configured and all immediate predecessors are executed.
+//     * @since 2.9
+//     */
+//    boolean canExecuteNodeDirectly(NodeID nodeID);
 
     /** Check if a node can be executed either directly or via chain of nodes that
          * include an executable node.
@@ -581,13 +569,13 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //     */
 //    void resumeLoopExecution(UINodeContainer nc, boolean oneStep);
 
-    /** Is the node with the given ID ready to take a new job manager. This
-     * is generally true if the node is currently not executing.
-     * @param nodeID The node in question.
-     * @return Whether it's save to invoke the
-     * {@link #setJobManager(NodeID, NodeExecutionJobManager)} method.
-     */
-    boolean canSetJobManager(NodeID nodeID);
+//    /** Is the node with the given ID ready to take a new job manager. This
+//     * is generally true if the node is currently not executing.
+//     * @param nodeID The node in question.
+//     * @return Whether it's save to invoke the
+//     * {@link #setJobManager(NodeID, NodeExecutionJobManager)} method.
+//     */
+//    boolean canSetJobManager(NodeID nodeID);
 
 //    /** Sets a new job manager on the node.
 //     * @param nodeID The node in question.
@@ -711,9 +699,6 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     @Override
     String toString();
 
-//    /** {@inheritDoc} */
-//    Collection<NodeContainer> getNodeContainers();
-
     /**
      * @return all node containers within this workflow manager
      */
@@ -742,15 +727,6 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * @since 2.10
      * @noreference This method is not intended to be referenced by clients (only used in core and testing plugin). */
     <T> T getNodeContainer(NodeID id, Class<T> subclass, boolean failOnError);
-
-    /** Does the workflow contain a node with the argument id?
-     * @param id The id in question.
-     * @return true if there is node with the given id, false otherwise.
-     */
-    boolean containsNodeContainer(NodeID id);
-
-    /** {@inheritDoc} */
-    boolean containsExecutedNode();
 
     /**
      * @return list of errors messages (list empty if none exist).
@@ -785,11 +761,11 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //    List<INodeContainer> getNodesInScopeOLD(SingleNodeContainer anchor);
 
     /**
-     * {@inheritDoc}
+     * @return Whether edit operations are not permitted.
      */
     boolean isWriteProtected();
 
-//    /** @return the templateInformation */
+    //    /** @return the templateInformation */
 //    MetaNodeTemplateInformation getTemplateInformation();
 
 //    /** {@inheritDoc} */
@@ -884,18 +860,6 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //     * valid metanode. */
 //    MetaNodeTemplateInformation setTemplateInformation(NodeID id, MetaNodeTemplateInformation templateInformation);
 
-    /** Set password on this metanode. See {@link WorkflowCipher} for details
-     * on what is protected/locked.
-     * @param password The new password (or null to always unlock)
-     * @param hint The hint/copyright.
-     * @throws NoSuchAlgorithmException If encryption fails. */
-    void setWorkflowPassword(String password, String hint) throws NoSuchAlgorithmException;
-
-//    /** {@inheritDoc}
-//     * @noreference This method is not intended to be referenced by clients.
-//     * @since 2.10 */
-//    WorkflowCipher getWorkflowCipher();
-
     /** @return see {@link WorkflowCipher#isUnlocked()}. */
     boolean isUnlocked();
 
@@ -908,12 +872,6 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 
     /** @return see {@link WorkflowCipher#isEncrypted()}. */
     boolean isEncrypted();
-
-    /** {@inheritDoc} */
-    OutputStream cipherOutput(OutputStream out) throws IOException;
-
-    /** {@inheritDoc} */
-    String getCipherFileName(String fileName);
 
     /**
      * Add listener to list.
@@ -1228,13 +1186,13 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 
     /** Get UI information for workflow input ports.
      * @return the ui info or null if not set.
-     * @see #setInPortsBarUIInfo(UIInformation)
+     * @see #setInPortsBarUIInfo(NodeUIInformation)
      */
     NodeUIInformation getInPortsBarUIInfo();
 
     /** Get UI information for workflow output ports.
      * @return the ui info or null if not set.
-     * @see #setOutPortsBarUIInfo(UIInformation)
+     * @see #setOutPortsBarUIInfo(NodeUIInformation)
      */
     NodeUIInformation getOutPortsBarUIInfo();
 
@@ -1264,8 +1222,7 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //    void addWorkflowVariables(boolean skipReset, FlowVariable... newVars);
 
     /**
-     * @return read-only collection of all currently registered annotations. The returned collection is sorted according
-     *         to the order of the associated {@link WorkflowAnnotationID}s of each {@link UIWorkflowAnnotation}.
+     * @return read-only collection of all currently registered annotations.
      */
     Collection<WorkflowAnnotation> getWorkflowAnnotations();
 
@@ -1456,7 +1413,6 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     WorkflowContext getContext();
 
     /**
-     * {@inheritDoc}
      * @since 2.10
      */
     void notifyTemplateConnectionChangedListener();
@@ -1465,7 +1421,7 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     /* -------- new methods that are not part of WorkflowManager -------- */
 
     /**
-     * Determines whether a workflow is refreshable. If refreshable, the {@link #refresh()} method will be called for
+     * Determines whether a workflow is refreshable. If refreshable, the {@link #refresh(boolean)} method will be called for
      * refreshing.
      *
      * @return <code>true</code> if the workflow can be refreshed
@@ -1504,7 +1460,7 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     }
 
     /**
-     * @param listener the listener to be removed and to not be modified anymore
+     * @param listener the listener to be removed and to not be called anymore
      */
     default void removeWriteProtectionChangedListener(final Runnable listener) {
         //nothing to do by default

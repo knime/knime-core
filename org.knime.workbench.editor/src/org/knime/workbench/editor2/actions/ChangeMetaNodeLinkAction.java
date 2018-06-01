@@ -48,6 +48,7 @@
 package org.knime.workbench.editor2.actions;
 
 import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
 
 import java.io.File;
 import java.io.IOException;
@@ -154,6 +155,10 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
         if (!(nc instanceof WorkflowManagerUI)) {
             return false;
         }
+        if (!wraps(nc, WorkflowManager.class)) {
+            //action not yet supported for the general UI workflow manager
+            return false;
+        }
         WorkflowManagerUI metaNode = (WorkflowManagerUI)nc;
         if (!Role.Link.equals(unwrapWFM(metaNode).getTemplateInformation().getRole()) || metaNode.getParent().isWriteProtected()) {
             // metanode must be linked and parent must not forbid the change
@@ -171,7 +176,7 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
         }
         // we can change absolute links if the mount points of flow and template are the same
         AbstractContentProvider workflowMountPoint = null;
-        WorkflowContext wfc = metaNode.getProjectWFM().getContext();
+        WorkflowContext wfc = unwrapWFM(metaNode).getProjectWFM().getContext();
         LocalExplorerFileStore fs =
             ExplorerFileSystem.INSTANCE.fromLocalFile(wfc.getMountpointRoot());
         if (fs != null) {
