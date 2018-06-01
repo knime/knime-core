@@ -52,6 +52,7 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.GraphicalNodeEditPolicy;
 import org.eclipse.gef.requests.CreateConnectionRequest;
 import org.eclipse.gef.requests.ReconnectRequest;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
@@ -107,6 +108,12 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
             WorkflowPortBar model = (WorkflowPortBar)barEditPart.getModel();
             wm = model.getWorkflowManager();
         } else {
+            return null;
+        }
+
+        if (!Wrapper.wraps(wm, WorkflowManager.class)) {
+            // command for creating connections only works with WorkflowManager so far
+            // but not with any other WorkflowManagerUI implementation
             return null;
         }
         CreateConnectionCommand cmd = new CreateConnectionCommand(Wrapper.unwrapWFM(wm));
