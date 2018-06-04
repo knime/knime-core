@@ -64,6 +64,12 @@
                 <message_argument value="register(JavaToDataCellConverterFactory&lt;?&gt;)"/>
             </message_arguments>
         </filter>
+        <filter comment="The method has the same signature with type erasure." id="422776937">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry.getFactoriesForSourceType(Class&lt;T&gt;)"/>
+                <message_argument value="T"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/convert/java/DataCellToJavaConverterFactory.java" type="org.knime.core.data.convert.java.DataCellToJavaConverterFactory">
         <filter comment="The method is still there, but moved into a super interface." id="403984517">

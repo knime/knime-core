@@ -144,7 +144,8 @@ public final class JavaToDataCellConverterRegistry extends
      * @param sourceType the sourceType
      * @return a {@link Collection} of converter factories with the given <code>sourceType</code>
      */
-    public <T> Collection<JavaToDataCellConverterFactory<?>> getFactoriesForSourceType(final Class<T> sourceType) {
+    @Override
+    public Collection<JavaToDataCellConverterFactory<?>> getFactoriesForSourceType(final Class<?> sourceType) {
         final LinkedHashSet<JavaToDataCellConverterFactory<?>> set = new LinkedHashSet<>();
 
         ClassUtil.recursiveMapToClassHierarchy(sourceType, (type) -> {
