@@ -252,7 +252,7 @@ public class AccuracyScorerCalculator {
             columnList.add(new DataColumnSpecCreator("Overall Error", DoubleCell.TYPE).createSpec());
         }
         if (config.isCohensKappaCalculated()) {
-            columnList.add(new DataColumnSpecCreator("Cohen's kappa (𝝹)", DoubleCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("Cohen's kappa", DoubleCell.TYPE).createSpec());
         }
         if (config.isCorrectClassifiedCalculated()) {
             columnList.add(new DataColumnSpecCreator("Correct Classified", IntCell.TYPE).createSpec());
