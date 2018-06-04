@@ -68,12 +68,12 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.LoopEndNode;
-import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
+import org.knime.core.ui.node.workflow.InteractiveWebViewsResultUI;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
 import org.knime.core.ui.node.workflow.SubNodeContainerUI;
@@ -371,14 +371,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     // it's only one or the other -- do not support nodes that have
                     // both (standard swing) interactive and web interactive views
                     //TODO for subnodes move to submenu?
-                    if (wraps(container, NativeNodeContainer.class)) {
-                        InteractiveWebViewsResult interactiveWebViewsResult =
-                            unwrapNC(container).getInteractiveWebViews();
-                        for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
-                            action = new OpenInteractiveWebViewAction(unwrapNC(container),
-                                interactiveWebViewsResult.get(i));
-                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                        }
+                    InteractiveWebViewsResultUI interactiveWebViewsResult = container.getInteractiveWebViews();
+                    for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
+                        action = new OpenInteractiveWebViewAction(container, interactiveWebViewsResult.get(i));
+                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                     }
                 }
 

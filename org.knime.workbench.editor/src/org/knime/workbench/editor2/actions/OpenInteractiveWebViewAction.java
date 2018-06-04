@@ -45,6 +45,9 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrap;
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
@@ -66,8 +69,12 @@ import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.SingleInteractiveWebViewResult;
+import org.knime.core.ui.node.workflow.InteractiveWebViewsResultUI.SingleInteractiveWebViewResultUI;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
+import org.knime.core.ui.wrapper.NodeContainerWrapper;
+import org.knime.core.ui.wrapper.SingleInteractiveWebViewResultWrapper;
 import org.knime.js.core.JSCorePlugin;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -86,8 +93,8 @@ public final class OpenInteractiveWebViewAction extends Action {
     private static final String CHROMIUM_BROWSER = "org.knime.ext.seleniumdrivers.multios.ChromiumWizardNodeView";
     private static final String CHROME_BROWSER = "org.knime.ext.seleniumdrivers.multios.ChromeWizardNodeView";
 
-    private final SingleInteractiveWebViewResult m_webViewForNode;
-    private final NodeContainer m_nodeContainer;
+    private final SingleInteractiveWebViewResultUI m_webViewForNode;
+    private final NodeContainerUI m_nodeContainer;
     private final boolean m_singleTitle;
 
 
@@ -98,11 +105,28 @@ public final class OpenInteractiveWebViewAction extends Action {
      * @param webViewForNode The view for the node (note, for {@link org.knime.core.node.workflow.SubNodeContainer}
      *        this is the content of a contained node.
      */
-    public OpenInteractiveWebViewAction(final NodeContainer nodeContainer,
-        final SingleInteractiveWebViewResult webViewForNode) {
+    public OpenInteractiveWebViewAction(final NodeContainerUI nodeContainer,
+        final SingleInteractiveWebViewResultUI webViewForNode) {
         m_nodeContainer = CheckUtils.checkArgumentNotNull(nodeContainer);
         m_webViewForNode = CheckUtils.checkArgumentNotNull(webViewForNode);
-        m_singleTitle = nodeContainer instanceof SubNodeContainer;
+        m_singleTitle = nodeContainer instanceof SubNodeContainerUI;
+    }
+
+    /**
+     * New action to open an interactive node view.
+     *
+     * @param nodeContainer The NC for the view, might not the NodeContainer for the model contained in the view arg
+     * @param webViewForNode The view for the node (note, for {@link org.knime.core.node.workflow.SubNodeContainer} this
+     *            is the content of a contained node.
+     *
+     * @deprecated use
+     *             {@link OpenInteractiveWebViewAction#OpenInteractiveWebViewAction(NodeContainerUI, SingleInteractiveWebViewResultUI)}
+     *             instead.
+     */
+    @Deprecated
+    public OpenInteractiveWebViewAction(final NodeContainer nodeContainer,
+        final SingleInteractiveWebViewResult webViewForNode) {
+        this(NodeContainerWrapper.wrap(nodeContainer), SingleInteractiveWebViewResultWrapper.wrap(webViewForNode));
     }
 
     @Override
@@ -133,27 +157,39 @@ public final class OpenInteractiveWebViewAction extends Action {
     @Override
     public void run() {
         LOGGER.debug("Open Interactive Web Node View " + m_nodeContainer.getName());
-        NativeNodeContainer nativeNC = m_webViewForNode.getNativeNodeContainer();
-        try {
-            @SuppressWarnings("rawtypes")
-            AbstractWizardNodeView view = null;
-            NodeContext.pushContext(nativeNC);
+        if(wraps(m_nodeContainer, NodeContainer.class)) {
+            //in case we are in the 'old' world and UI-classes are not used
+            //required objects need to be unwrapped
+            NativeNodeContainer nativeNC =
+                unwrap(m_webViewForNode, SingleInteractiveWebViewResult.class).getNativeNodeContainer();
             try {
-                NodeModel nodeModel = nativeNC.getNodeModel();
-                view = getConfiguredWizardNodeView(nodeModel);
-            } finally {
-                NodeContext.removeLastContext();
-            }
-            view.setWorkflowManagerAndNodeID(nativeNC.getParent(), nativeNC.getID());
-            final String title = m_webViewForNode.getViewName();
-            Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
-        } catch (Throwable t) {
-            final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
-            mb.setText("Interactive View cannot be opened");
-            mb.setMessage("The interactive view cannot be opened for the following reason:\n" + t.getMessage());
-            mb.open();
-            LOGGER.error("The interactive view for node '" + nativeNC.getNameWithID() + "' has thrown a '"
+                @SuppressWarnings("rawtypes")
+                AbstractWizardNodeView view = null;
+                NodeContext.pushContext(nativeNC);
+                try {
+                    NodeModel nodeModel = nativeNC.getNodeModel();
+                    view = getConfiguredWizardNodeView(nodeModel);
+                } finally {
+                    NodeContext.removeLastContext();
+                }
+                view.setWorkflowManagerAndNodeID(nativeNC.getParent(), nativeNC.getID());
+                final String title = m_webViewForNode.getViewName();
+                Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
+            } catch (Throwable t) {
+                final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
+                mb.setText("Interactive View cannot be opened");
+                mb.setMessage("The interactive view cannot be opened for the following reason:\n" + t.getMessage());
+                mb.open();
+                LOGGER.error("The interactive view for node '" + nativeNC.getNameWithID() + "' has thrown a '"
                     + t.getClass().getSimpleName() + "'. That is most likely an implementation error.", t);
+            }
+        } else {
+           //create view by using the UI-objects directly
+           //TODO don't block the UI
+           @SuppressWarnings("rawtypes")
+           AbstractWizardNodeView view = getConfiguredWizardNodeView(m_webViewForNode.getModel());
+           final String title = m_webViewForNode.getViewName();
+           Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
         }
     }
 
