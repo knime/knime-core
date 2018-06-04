@@ -32,3 +32,4 @@ Require-Bundle: org.hamcrest.library;bundle-version="[1.3.0,2.0.0)",
  org.knime.js.core,
  com.fasterxml.jackson.core.jackson-databind;bundle-version="2.7.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Import-Package: org.knime.core.data.convert.map

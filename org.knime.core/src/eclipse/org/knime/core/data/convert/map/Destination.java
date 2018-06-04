@@ -2,7 +2,6 @@ package org.knime.core.data.convert.map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.convert.map.MappingFramework.CellValueConsumer;
 
 /**
  * Interface for the destination for extracting and writing {@link DataCell}/{@link DataValue} contents.

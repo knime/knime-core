@@ -3,8 +3,6 @@ package org.knime.core.data.convert.map;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
-import org.knime.core.data.convert.map.MappingFramework.CellValueProducer;
-import org.knime.core.data.convert.map.MappingFramework.CellValueProducerFactory;
 
 /**
  * A selection of {@link CellValueProducer} to {@link JavaToDataCellConverter} to write a certain value from

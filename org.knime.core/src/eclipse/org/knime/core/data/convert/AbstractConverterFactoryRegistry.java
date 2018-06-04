@@ -88,6 +88,7 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
     /** Factories stored by identifier */
     protected final HashMap<String, ConverterFactoryType> m_byIdentifier = new HashMap<>();
 
+    /** Parent of this registry. If a converter factory is not found in the registry, this registry will be queried next. */
     protected RegistryImpl m_parent = null;
 
     /**

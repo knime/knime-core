@@ -1,7 +1,6 @@
 package org.knime.core.data.convert.map;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.convert.map.MappingFramework.CellValueProducer;
 
 /**
  * Interface for data sources from which to create KNIME {@link DataCell data cells} using {@link CellValueProducer cell

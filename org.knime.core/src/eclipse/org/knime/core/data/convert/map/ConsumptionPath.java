@@ -3,14 +3,13 @@ package org.knime.core.data.convert.map;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.convert.java.DataCellToJavaConverter;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
-import org.knime.core.data.convert.map.MappingFramework.CellValueConsumer;
-import org.knime.core.data.convert.map.MappingFramework.CellValueConsumerFactory;
 
 /**
  * A selection of {@link DataCellToJavaConverter} to {@link CellValueConsumer} to write a certain {@link DataValue} to a
  * {@link Destination}.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
+ * @since 3.6
  */
 public class ConsumptionPath {
     /**
