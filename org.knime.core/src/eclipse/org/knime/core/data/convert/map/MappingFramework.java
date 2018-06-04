@@ -223,7 +223,7 @@ public class MappingFramework {
      * @param mapping Consumption paths to take when extracting a value from a cell and "consuming" to write to an
      *            external type.
      * @param params Per column parameters for the consumers used
-     * @throws Exception If conversion fails
+     * @throws Exception If an exception occurs during conversion or mapping
      */
     public static <ExternalType extends Destination, CP extends ConsumerParameters<ExternalType>> void
         map(final DataRow row, final ExternalType dest, final ConsumptionPath[] mapping, final CP[] params)

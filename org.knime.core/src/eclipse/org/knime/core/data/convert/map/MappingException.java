@@ -49,26 +49,20 @@
 package org.knime.core.data.convert.map;
 
 /**
- * A cell value producer fetches a value from a {@link Source} which then can be written to a KNIME DataCell.
  *
- * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <SourceType> Type of {@link Source} this consumer writes to
- * @param <T> Type of Java value the consumer accepts
- * @param <CP> Subtype of {@link Source.ProducerParameters} that can be used to configure this consumer
+ * @author Jonathan Hale
  * @since 3.6
  */
-@FunctionalInterface
-public interface CellValueProducer<SourceType extends Source<?>, T, CP extends Source.ProducerParameters<SourceType>> {
+public class MappingException extends Exception {
+
+    private static final long serialVersionUID = 666198552753931179L;
 
     /**
-     * Reads the <code>value</code> to <code>destination</code> using given <code>destinationParams</code>.
+     * Constructor
      *
-     * @param source The {@link Source}.
-     * @param params The parameters further specifying how to read from the {@link Source}, e.g. to which SQL column or
-     *            table to read from. Specific to the type of {@link Source} and {@link CellValueProducer} that is being
-     *            used.
-     * @return The value which was read from source
-     * @throws MappingException When an exception occurs while producing the cell value
+     * @param cause Cause for the conversion failure
      */
-    public T produceCellValue(final SourceType source, final CP params) throws MappingException;
+    public MappingException(final Throwable cause) {
+        super(cause);
+    }
 }

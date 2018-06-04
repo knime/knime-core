@@ -9,9 +9,10 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * @param <DestinationType> Type of {@link Destination} this consumer writes to
  * @param <T> Type of Java value the consumer accepts
  * @param <CP> Subtype of {@link ConsumerParameters} that can be used to configure this consumer
+ * @since 3.6
  */
 @FunctionalInterface
-public interface CellValueConsumer<DestinationType extends Destination, T, CP extends Destination.ConsumerParameters<DestinationType>> {
+public interface CellValueConsumer<DestinationType extends Destination<?>, T, CP extends Destination.ConsumerParameters<DestinationType>> {
 
     /**
      * Writes the <code>value</code> to <code>destination</code> using given <code>destinationParams</code>.
@@ -19,8 +20,10 @@ public interface CellValueConsumer<DestinationType extends Destination, T, CP ex
      * @param destination The {@link Destination}.
      * @param value The value to write.
      * @param destinationParams The parameters further specifying how to write to the destination, e.g. to which SQL
-     *            column or table to write. Specific to the type of {@link Destination} and
-     *            {@link CellValueConsumer} that is being used.
+     *            column or table to write. Specific to the type of {@link Destination} and {@link CellValueConsumer}
+     *            that is being used.
+     * @throws MappingException If an exception occurs while consuming the cell value
      */
-    public void consumeCellValue(final DestinationType destination, final T value, final CP destinationParams);
+    public void consumeCellValue(final DestinationType destination, final T value, final CP destinationParams)
+        throws MappingException;
 }
