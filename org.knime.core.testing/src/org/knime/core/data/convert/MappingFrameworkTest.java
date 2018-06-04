@@ -61,6 +61,7 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.IntValue;
@@ -406,6 +407,11 @@ public class MappingFrameworkTest {
             assertEquals(LongCell.TYPE, row.getCell(2).getType());
             assertEquals(42L, ((LongValue)row.getCell(2)).getLongValue());
         }
+
+        DataTableSpec spec = MappingFramework.createSpec(new String[]{"s", "i", "l"}, mapping);
+        assertEquals(StringCell.TYPE, spec.getColumnSpec(0).getType());
+        assertEquals(IntCell.TYPE, spec.getColumnSpec(1).getType());
+        assertEquals(LongCell.TYPE, spec.getColumnSpec(2).getType());
     }
 
     /**

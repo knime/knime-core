@@ -9,6 +9,7 @@ import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
  * {@link Source} to a {@link DataCell}.
  *
  * @author Jonathan Hale
+ * @since 3.6
  */
 public class ProductionPath {
 

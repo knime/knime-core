@@ -2,6 +2,7 @@ package org.knime.core.data.convert.map;
 
 import java.util.HashMap;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -238,5 +239,18 @@ public class MappingFramework {
             consumer.consumeCellValue(dest, converter.convertUnsafe(cell), params[i]);
             ++i;
         }
+    }
+
+    /**
+     * Create data table spec from column names and production paths.
+     *
+     * @param names Column names
+     * @param paths Production paths
+     * @return Spec of a table that would be mapped to using the given parameters.
+     */
+    public static <ExternalType extends Destination, CP extends ConsumerParameters<ExternalType>> DataTableSpec
+        createSpec(final String[] names, final ProductionPath[] paths) {
+        return new DataTableSpec(names,
+            Stream.of(paths).map(p -> p.m_converterFactory.getDestinationType()).toArray(n -> new DataType[n]));
     }
 }
