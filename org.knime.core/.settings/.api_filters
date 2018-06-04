@@ -99,6 +99,12 @@
                 <message_argument value="T"/>
             </message_arguments>
         </filter>
+        <filter comment="It's the same signature when type erasure occurred" id="422776937">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.java.DataCellToJavaConverterRegistry.getFactoriesForSourceType(DataType)"/>
+                <message_argument value="T"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/convert/util/SerializeUtil.java" type="org.knime.core.data.convert.util.SerializeUtil">
         <filter comment="The method storeConverterFactory is actually compatible." id="338792546">

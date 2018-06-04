@@ -61,14 +61,12 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
@@ -123,7 +121,7 @@ public class MappingFrameworkTest {
      *
      * @author Jonathan Hale
      */
-    protected static class H2ODestination implements Destination {
+    protected static class H2ODestination implements Destination<String> {
         /** Represents the destiny for all the data */
         public ArrayList<Object[]> h2oFrame = new ArrayList<>();
     }
@@ -133,7 +131,7 @@ public class MappingFrameworkTest {
      *
      * @author Jonathan Hale
      */
-    protected static class H2OSource implements Source {
+    protected static class H2OSource implements Source<String> {
 
         final ArrayList<Object[]> h2oFrame = new ArrayList<Object[]>();
     }
@@ -154,12 +152,12 @@ public class MappingFrameworkTest {
     public static interface H2OProducer<T> extends CellValueProducer<H2OSource, T, H2OParameters> {
     }
 
-    final SimpleCellValueProducerFactory<H2OSource, String, H2OParameters> stringProducer =
+    final SimpleCellValueProducerFactory<H2OSource, String, String, H2OParameters> stringProducer =
         new SimpleCellValueProducerFactory<>("STR", String.class, (c, p) -> {
             return (String)c.h2oFrame.get(p.rowIndex)[p.columnIndex];
         });
 
-    final SimpleCellValueConsumerFactory<H2ODestination, String, H2OParameters> stringConsumer =
+    final SimpleCellValueConsumerFactory<H2ODestination, String, String, H2OParameters> stringConsumer =
         new SimpleCellValueConsumerFactory<>(String.class, "STR", (c, v, p) -> {
             c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
         });
@@ -169,7 +167,7 @@ public class MappingFrameworkTest {
      */
     @Test
     public void consumptionPaths() {
-        final SimpleCellValueConsumerFactory<H2ODestination, Integer, H2OParameters> intConsumer =
+        final SimpleCellValueConsumerFactory<H2ODestination, Integer, String, H2OParameters> intConsumer =
             new SimpleCellValueConsumerFactory<>(Integer.class, "INT", (c, v, p) -> {
                 c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
             });
@@ -207,7 +205,7 @@ public class MappingFrameworkTest {
      */
     @Test
     public void productionPaths() {
-        final SimpleCellValueProducerFactory<H2OSource, Integer, H2OParameters> intProducer =
+        final SimpleCellValueProducerFactory<H2OSource, String, Integer, H2OParameters> intProducer =
             new SimpleCellValueProducerFactory<>("INT", Integer.class, (c, p) -> {
                 return (Integer)c.h2oFrame.get(p.rowIndex)[p.columnIndex];
             });
@@ -245,7 +243,7 @@ public class MappingFrameworkTest {
     @Test
     public void consumerTest() throws Exception {
         /* One time setup */
-        final SimpleCellValueConsumerFactory<H2ODestination, Integer, H2OParameters> intConsumer =
+        final SimpleCellValueConsumerFactory<H2ODestination, Integer, String, H2OParameters> intConsumer =
             new SimpleCellValueConsumerFactory<>(Integer.class, "INT", (c, v, p) -> {
                 c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
             });
@@ -296,8 +294,6 @@ public class MappingFrameworkTest {
         /* Some example input */
         final DefaultRow row =
             new DefaultRow(RowKey.createRowKey(0L), new StringCell("KNIME"), new IntCell(42), new LongCell(42L));
-        final DataTableSpec spec = new DataTableSpec(new String[]{"String", "Integer", "Long"},
-            new DataType[]{StringCell.TYPE, IntCell.TYPE, LongCell.TYPE});
 
         final H2ODestination testSink = new H2ODestination();
         testSink.h2oFrame.add(new Object[3]);
@@ -340,11 +336,11 @@ public class MappingFrameworkTest {
         final CellValueProducer<H2OSource, Integer, H2OParameters> lambda = (c, p) -> {
             return (Integer)c.h2oFrame.get(p.rowIndex)[p.columnIndex];
         };
-        final SimpleCellValueProducerFactory<H2OSource, Integer, H2OParameters> intProducer =
+        final SimpleCellValueProducerFactory<H2OSource, String, Integer, H2OParameters> intProducer =
             new SimpleCellValueProducerFactory<>("INT", Integer.class, lambda);
-        final SimpleCellValueProducerFactory<H2OSource, Integer, H2OParameters> intProducerFromBIGINT =
+        final SimpleCellValueProducerFactory<H2OSource, String, Integer, H2OParameters> intProducerFromBIGINT =
             new SimpleCellValueProducerFactory<>("BIGINT", Integer.class, lambda);
-        final SimpleCellValueProducerFactory<H2OSource, Long, H2OParameters> longProducer =
+        final SimpleCellValueProducerFactory<H2OSource, String, Long, H2OParameters> longProducer =
             new SimpleCellValueProducerFactory<>("LONG", Long.class, (c, p) -> {
                 return (Long)c.h2oFrame.get(p.rowIndex)[p.columnIndex];
             });
@@ -375,10 +371,6 @@ public class MappingFrameworkTest {
         assertTrue(MappingFramework.forDestinationType(H2ODestination.class).getFactories(ConsumptionPath.class, "INT")
             .isEmpty());
 
-        /* Some example input */
-        final DataTableSpec spec = new DataTableSpec(new String[]{"String", "Integer", "Long"},
-            new DataType[]{StringCell.TYPE, IntCell.TYPE, LongCell.TYPE});
-
         ProductionPath[] mapping = new ProductionPath[]{
             new ProductionPath(
                 MappingFramework.forSourceType(H2OSource.class).getFactory("STR->java.lang.String").get(),
@@ -400,8 +392,6 @@ public class MappingFrameworkTest {
         }
 
         {
-            final DataContainer container = new DataContainer(spec);
-
             final H2OSource testSource = new H2OSource();
             testSource.h2oFrame.add(new Object[]{"KNIME", new Integer(42), new Long(42L)});
 
@@ -418,6 +408,11 @@ public class MappingFrameworkTest {
         }
     }
 
+    /**
+     * Test serialization of production path
+     *
+     * @throws InvalidSettingsException
+     */
     @Test
     public void productionPathSerializeTest() throws InvalidSettingsException {
         MappingFramework.forSourceType(H2OSource.class).register(stringProducer);
@@ -438,6 +433,11 @@ public class MappingFrameworkTest {
         assertEquals(path, loadedPath.get());
     }
 
+    /**
+     * Test serialization of consumption path
+     *
+     * @throws InvalidSettingsException
+     */
     @Test
     public void consumptionPathSerializeTest() throws InvalidSettingsException {
         MappingFramework.forDestinationType(H2ODestination.class).register(stringConsumer);

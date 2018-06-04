@@ -209,10 +209,11 @@ public class MappingFramework {
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      * @param <DestinationType> Type of destination
      * @param <T> Java value to be consumed by the created {@link CellValueConsumer}
+     * @param <ExternalType> Type of destination types
      * @param <CP> Subclass of {@link ConsumerParameters} for the given source type
      */
-    public static interface CellValueConsumerFactory<DestinationType extends Destination, T, CP extends ConsumerParameters<DestinationType>>
-        extends ConverterFactory<Class<?>, String, CellValueConsumer<DestinationType, ?, CP>> {
+    public static interface CellValueConsumerFactory<DestinationType extends Destination, T, ExternalType, CP extends ConsumerParameters<DestinationType>>
+        extends ConverterFactory<Class<?>, ExternalType, CellValueConsumer<DestinationType, ?, CP>> {
 
         /**
          * Create a {@link CellValueConsumer}.
@@ -223,7 +224,7 @@ public class MappingFramework {
 
         @Override
         default String getName() {
-            return getDestinationType();
+            return getDestinationType().toString();
         }
     }
 
@@ -233,10 +234,11 @@ public class MappingFramework {
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      * @param <DestinationType> Type of destination
      * @param <T> Java type the created consumer is able to accept
+     * @param <ExternalType> Type of destination types
      * @param <CP> Subclass of {@link ConsumerParameters} for given destination type
      */
-    public static abstract class AbstractCellValueConsumerFactory<DestinationType extends Destination, T, CP extends ConsumerParameters<DestinationType>>
-        implements CellValueConsumerFactory<DestinationType, T, CP> {
+    public static abstract class AbstractCellValueConsumerFactory<DestinationType extends Destination, T, ExternalType, CP extends ConsumerParameters<DestinationType>>
+        implements CellValueConsumerFactory<DestinationType, T, ExternalType, CP> {
 
         @Override
         public int hashCode() {
@@ -261,12 +263,13 @@ public class MappingFramework {
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      * @param <DestinationType> Type of destination
      * @param <T> Java type the created consumer is able to accept
+     * @param <ExternalType> Type of destination types
      * @param <CP> Subclass of {@link ConsumerParameters} for given destination type
      */
-    public static class SimpleCellValueConsumerFactory<DestinationType extends Destination, T, CP extends ConsumerParameters<DestinationType>>
-        extends AbstractCellValueConsumerFactory<DestinationType, T, CP> {
+    public static class SimpleCellValueConsumerFactory<DestinationType extends Destination, T, ExternalType, CP extends ConsumerParameters<DestinationType>>
+        extends AbstractCellValueConsumerFactory<DestinationType, T, ExternalType, CP> {
 
-        final String m_externalTypeIdentifier;
+        final ExternalType m_externalType;
 
         final Class<?> m_sourceType;
 
@@ -279,16 +282,16 @@ public class MappingFramework {
          * @param destType Identifier of the external type this consumer writes as
          * @param consumer The consumer function (e.g. a Lambda)
          */
-        public SimpleCellValueConsumerFactory(final Class<?> sourceType, final String destType,
+        public SimpleCellValueConsumerFactory(final Class<?> sourceType, final ExternalType destType,
             final CellValueConsumer<DestinationType, T, CP> consumer) {
             m_sourceType = sourceType;
-            m_externalTypeIdentifier = destType;
+            m_externalType = destType;
             m_consumer = consumer;
         }
 
         @Override
         public String getIdentifier() {
-            return m_sourceType.getName() + "->" + m_externalTypeIdentifier;
+            return m_sourceType.getName() + "->" + m_externalType;
         }
 
         @Override
@@ -297,8 +300,8 @@ public class MappingFramework {
         }
 
         @Override
-        public String getDestinationType() {
-            return m_externalTypeIdentifier;
+        public ExternalType getDestinationType() {
+            return m_externalType;
         }
 
         @Override
@@ -335,11 +338,12 @@ public class MappingFramework {
      *
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      * @param <SourceType> Type of source
+     * @param <ExternalType> Type of the external type
      * @param <T> Java type the created consumer is able to accept
      * @param <PP> Subclass of {@link ProducerParameters} for given destination type
      */
-    public static interface CellValueProducerFactory<SourceType extends Source, T, PP extends ProducerParameters<SourceType>>
-        extends ConverterFactory<String, Class<?>, CellValueProducer<SourceType, ?, PP>> {
+    public static interface CellValueProducerFactory<SourceType extends Source<ExternalType>, ExternalType, T, PP extends ProducerParameters<SourceType>>
+        extends ConverterFactory<ExternalType, Class<?>, CellValueProducer<SourceType, ?, PP>> {
 
         @Override
         default String getName() {
@@ -360,10 +364,11 @@ public class MappingFramework {
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      * @param <SourceType> Type of source
      * @param <T> Java type the created consumer is able to accept
+     * @param <ExternalType> Type of the external type
      * @param <PP> Subclass of {@link ProducerParameters} for given destination type
      */
-    public static abstract class AbstractCellValueProducerFactory<SourceType extends Source, T, PP extends ProducerParameters<SourceType>>
-        implements CellValueProducerFactory<SourceType, T, PP> {
+    public static abstract class AbstractCellValueProducerFactory<SourceType extends Source<ExternalType>, ExternalType, T, PP extends ProducerParameters<SourceType>>
+        implements CellValueProducerFactory<SourceType, ExternalType, T, PP> {
 
         @Override
         public int hashCode() {
@@ -387,13 +392,14 @@ public class MappingFramework {
      *
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      * @param <SourceType> Type of source
+     * @param <ExternalType> Type of the external type
      * @param <T> Java type that is produced
      * @param <PP> Producer parameter subclass for the source type
      */
-    public static class SimpleCellValueProducerFactory<SourceType extends Source, T, PP extends ProducerParameters<SourceType>>
-        extends AbstractCellValueProducerFactory<SourceType, T, PP> {
+    public static class SimpleCellValueProducerFactory<SourceType extends Source<ExternalType>, ExternalType, T, PP extends ProducerParameters<SourceType>>
+        extends AbstractCellValueProducerFactory<SourceType, ExternalType, T, PP> {
 
-        final String m_externalTypeIdentifier;
+        final ExternalType m_externalType;
 
         final Class<?> m_destType;
 
@@ -406,16 +412,16 @@ public class MappingFramework {
          * @param destType Target Java type
          * @param producer Cell value producer function (e.g. as lambda)
          */
-        public SimpleCellValueProducerFactory(final String externalType, final Class<?> destType,
+        public SimpleCellValueProducerFactory(final ExternalType externalType, final Class<?> destType,
             final CellValueProducer<SourceType, T, PP> producer) {
-            m_externalTypeIdentifier = externalType;
+            m_externalType = externalType;
             m_destType = destType;
             m_producer = producer;
         }
 
         @Override
         public String getIdentifier() {
-            return m_externalTypeIdentifier + "->" + m_destType.getName();
+            return m_externalType + "->" + m_destType.getName();
         }
 
         @Override
@@ -424,8 +430,8 @@ public class MappingFramework {
         }
 
         @Override
-        public String getSourceType() {
-            return m_externalTypeIdentifier;
+        public ExternalType getSourceType() {
+            return m_externalType;
         }
 
         @Override
@@ -441,9 +447,10 @@ public class MappingFramework {
      *
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      * @param <DestinationType> Type of {@link Destination} for which this registry holds consumers.
+     * @param <ExternalType> Type of destination types
      */
-    public static class ConsumerRegistry<DestinationType extends Destination> extends
-        AbstractConverterFactoryRegistry<Class<?>, String, CellValueConsumerFactory<DestinationType, ?, ?>, ConsumerRegistry<DestinationType>> {
+    public static class ConsumerRegistry<ExternalType, DestinationType extends Destination<ExternalType>> extends
+        AbstractConverterFactoryRegistry<Class<?>, ExternalType, CellValueConsumerFactory<DestinationType, ?, ExternalType, ?>, ConsumerRegistry<ExternalType, DestinationType>> {
 
         /**
          * Constructor
@@ -460,8 +467,8 @@ public class MappingFramework {
          * @param parentType type of {@link Destination}, which should be this types parent.
          * @return reference to self (for method chaining)
          */
-        public ConsumerRegistry<DestinationType> setParent(final Class<? extends Destination> parentType) {
-            m_parent = (ConsumerRegistry<DestinationType>)MappingFramework.forDestinationType(parentType);
+        public ConsumerRegistry<ExternalType, DestinationType> setParent(final Class<? extends Destination> parentType) {
+            m_parent = MappingFramework.forDestinationType(parentType);
             return this;
         }
 
@@ -474,7 +481,7 @@ public class MappingFramework {
 
             for (final DataCellToJavaConverterFactory<?, ?> f : DataCellToJavaConverterRegistry.getInstance()
                 .getFactoriesForSourceType(type)) {
-                for (final CellValueConsumerFactory<DestinationType, ?, ?> c : getFactoriesForSourceType(
+                for (final CellValueConsumerFactory<DestinationType, ?, ?, ?> c : getFactoriesForSourceType(
                     f.getDestinationType())) {
                     if (c != null) {
                         cp.add(new ConsumptionPath(f, c));
@@ -490,7 +497,7 @@ public class MappingFramework {
          *
          * @return self (for method chaining)
          */
-        public ConsumerRegistry<DestinationType> unregisterAllConsumers() {
+        public ConsumerRegistry<ExternalType, DestinationType> unregisterAllConsumers() {
             m_byDestinationType.clear();
             m_bySourceType.clear();
             m_byIdentifier.clear();
@@ -505,10 +512,11 @@ public class MappingFramework {
      * Place to register consumers for a specific destination type.
      *
      * @author Jonathan Hale, KNIME, Konstanz, Germany
+     * @param <ExternalType> Type of the external type
      * @param <SourceType> Type of {@link Destination} for which this registry holds consumers.
      */
-    public static class ProducerRegistry<SourceType extends Source> extends
-        AbstractConverterFactoryRegistry<String, Class<?>, CellValueProducerFactory<SourceType, ?, ?>, ProducerRegistry<SourceType>> {
+    public static class ProducerRegistry<ExternalType, SourceType extends Source<ExternalType>> extends
+        AbstractConverterFactoryRegistry<ExternalType, Class<?>, CellValueProducerFactory<SourceType, ExternalType, ?, ?>, ProducerRegistry<ExternalType, SourceType>> {
 
         /**
          * Constructor
@@ -525,8 +533,8 @@ public class MappingFramework {
          * @param parentType type of {@link Destination}, which should be this types parent.
          * @return reference to self (for method chaining)
          */
-        public ProducerRegistry<SourceType> setParent(final Class<? extends Source> parentType) {
-            m_parent = (ProducerRegistry<SourceType>)MappingFramework.forSourceType(parentType);
+        public ProducerRegistry<ExternalType, SourceType> setParent(final Class<? extends Source> parentType) {
+            m_parent = MappingFramework.forSourceType(parentType);
             return this;
         }
 
@@ -536,10 +544,10 @@ public class MappingFramework {
          * @param externalType The external type
          * @return All possible production paths
          */
-        public List<ProductionPath> getAvailableProductionPaths(final String externalType) {
+        public List<ProductionPath> getAvailableProductionPaths(final ExternalType externalType) {
             final ArrayList<ProductionPath> cp = new ArrayList<>();
 
-            for (final CellValueProducerFactory<SourceType, ?, ?> producerFactory : getFactoriesForSourceType(
+            for (final CellValueProducerFactory<SourceType, ExternalType, ?, ?> producerFactory : getFactoriesForSourceType(
                 externalType)) {
 
                 for (final JavaToDataCellConverterFactory<?> f : JavaToDataCellConverterRegistry.getInstance()
@@ -560,7 +568,7 @@ public class MappingFramework {
          *
          * @return self (for method chaining)
          */
-        public ProducerRegistry<SourceType> unregisterAllProducers() {
+        public ProducerRegistry<ExternalType, SourceType> unregisterAllProducers() {
             m_byDestinationType.clear();
             m_bySourceType.clear();
             m_byIdentifier.clear();
@@ -575,10 +583,10 @@ public class MappingFramework {
      * @param destinationType {@link Destination} type for which to get the registry
      * @return Per destination type consumer registry for given destination type.
      */
-    public static <DestinationType extends Destination> ConsumerRegistry<DestinationType>
+    public static <ExternalType, DestinationType extends Destination<ExternalType>> ConsumerRegistry<ExternalType, DestinationType>
         forDestinationType(final Class<DestinationType> destinationType) {
 
-        final ConsumerRegistry<DestinationType> perDestinationType = getConsumerRegistry(destinationType);
+        final ConsumerRegistry<ExternalType, DestinationType> perDestinationType = getConsumerRegistry(destinationType);
         if (perDestinationType == null) {
             return createConsumerRegistry(destinationType);
         }
@@ -592,9 +600,9 @@ public class MappingFramework {
      * @param sourceType {@link Source} type for which to get the registry
      * @return Per source type producer registry for given source type.
      */
-    public static <SourceType extends Source> ProducerRegistry<SourceType>
+    public static <ExternalType, SourceType extends Source<ExternalType>> ProducerRegistry<ExternalType, SourceType>
         forSourceType(final Class<SourceType> sourceType) {
-        final ProducerRegistry<SourceType> perSourceType = getProducerRegistry(sourceType);
+        final ProducerRegistry<ExternalType, SourceType> perSourceType = getProducerRegistry(sourceType);
         if (perSourceType == null) {
             return createProducerRegistry(sourceType);
         }
@@ -602,37 +610,37 @@ public class MappingFramework {
         return perSourceType;
     }
 
-    private static HashMap<Class<? extends Destination>, ConsumerRegistry<?>> m_destinationTypes = new HashMap<>();
+    private static HashMap<Class<? extends Destination>, ConsumerRegistry<?, ?>> m_destinationTypes = new HashMap<>();
 
-    private static HashMap<Class<? extends Source>, ProducerRegistry<?>> m_sourceTypes = new HashMap<>();
+    private static HashMap<Class<? extends Source>, ProducerRegistry<?, ?>> m_sourceTypes = new HashMap<>();
 
     /* Get the consumer registry for given destination type */
-    private static <DestinationType extends Destination> ConsumerRegistry<DestinationType>
+    private static <ExternalType, DestinationType extends Destination<ExternalType>> ConsumerRegistry<ExternalType, DestinationType>
         getConsumerRegistry(final Class<DestinationType> destinationType) {
         @SuppressWarnings("unchecked")
-        final ConsumerRegistry<DestinationType> r =
-            (ConsumerRegistry<DestinationType>)m_destinationTypes.get(destinationType);
+        final ConsumerRegistry<ExternalType, DestinationType> r =
+            (ConsumerRegistry<ExternalType, DestinationType>)m_destinationTypes.get(destinationType);
         return r;
     }
 
-    private static <SourceType extends Source> ProducerRegistry<SourceType>
+    private static <ExternalType, SourceType extends Source<ExternalType>> ProducerRegistry<ExternalType, SourceType>
         getProducerRegistry(final Class<SourceType> sourceType) {
         @SuppressWarnings("unchecked")
-        final ProducerRegistry<SourceType> r = (ProducerRegistry<SourceType>)m_sourceTypes.get(sourceType);
+        final ProducerRegistry<ExternalType, SourceType> r = (ProducerRegistry<ExternalType, SourceType>)m_sourceTypes.get(sourceType);
         return r;
     }
 
     /* Create the consumer registry for given destination type */
-    private static <DestinationType extends Destination> ConsumerRegistry<DestinationType>
+    private static <ExternalType, DestinationType extends Destination<ExternalType>> ConsumerRegistry<ExternalType, DestinationType>
         createConsumerRegistry(final Class<DestinationType> destinationType) {
-        final ConsumerRegistry<DestinationType> r = new ConsumerRegistry<DestinationType>();
+        final ConsumerRegistry<ExternalType, DestinationType> r = new ConsumerRegistry<ExternalType, DestinationType>();
         m_destinationTypes.put(destinationType, r);
         return r;
     }
 
-    private static <SourceType extends Source> ProducerRegistry<SourceType>
+    private static <ExternalType, SourceType extends Source<ExternalType>> ProducerRegistry<ExternalType, SourceType>
         createProducerRegistry(final Class<SourceType> sourceType) {
-        final ProducerRegistry<SourceType> r = new ProducerRegistry<SourceType>();
+        final ProducerRegistry<ExternalType, SourceType> r = new ProducerRegistry<ExternalType, SourceType>();
         m_sourceTypes.put(sourceType, r);
         return r;
     }
@@ -677,14 +685,14 @@ public class MappingFramework {
      * @param params Per column parameters for the consumers used
      * @throws Exception If conversion fails
      */
-    public static <DestType extends Destination, CP extends ConsumerParameters<DestType>> void map(final DataRow row,
-        final DestType dest, final ConsumptionPath[] mapping, final CP[] params) throws Exception {
+    public static <ExternalType extends Destination, CP extends ConsumerParameters<ExternalType>> void map(final DataRow row,
+        final ExternalType dest, final ConsumptionPath[] mapping, final CP[] params) throws Exception {
 
         int i = 0;
         for (final DataCell cell : row) {
             final DataCellToJavaConverter<?, ?> converter = mapping[i].m_converterFactory.create();
-            final CellValueConsumer<DestType, Object, CP> consumer =
-                (CellValueConsumer<DestType, Object, CP>)mapping[i].m_consumerFactory.create();
+            final CellValueConsumer<ExternalType, Object, CP> consumer =
+                (CellValueConsumer<ExternalType, Object, CP>)mapping[i].m_consumerFactory.create();
 
             consumer.consumeCellValue(dest, converter.convertUnsafe(cell), params[i]);
             ++i;

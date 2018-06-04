@@ -267,14 +267,14 @@ public final class SerializeUtil {
 
     /**
      * Store a {@link ConsumptionPath} to node settings.
+     *
      * @param path Path to store
      * @param config Config to store to
      * @param key Key to store at in the config
      * @throws InvalidSettingsException
      * @since 3.6
      */
-    public static <DestinationType extends Destination> void storeConsumptionPath(final ConsumptionPath path,
-        final ConfigBaseWO config, final String key)
+    public static void storeConsumptionPath(final ConsumptionPath path, final ConfigBaseWO config, final String key)
         throws InvalidSettingsException {
         storeConverterFactory(path.m_converterFactory, config, key + "_converter");
         storeConverterFactory(path.m_consumerFactory, config, key + "_consumer");
@@ -291,9 +291,9 @@ public final class SerializeUtil {
      * @throws InvalidSettingsException
      * @since 3.6
      */
-    public static <DestType extends Destination> Optional<ConsumptionPath>
-        loadConsumptionPath(final ConfigBaseRO config, final ConsumerRegistry<DestType> registry, final String key)
-            throws InvalidSettingsException {
+    public static <ExternalType, DestType extends Destination<ExternalType>> Optional<ConsumptionPath> loadConsumptionPath(
+        final ConfigBaseRO config, final ConsumerRegistry<ExternalType, DestType> registry, final String key)
+        throws InvalidSettingsException {
         final Optional<DataCellToJavaConverterFactory<?, ?>> converter =
             loadDataCellToJavaConverterFactory(config, key + "_converter");
 
@@ -302,7 +302,8 @@ public final class SerializeUtil {
         }
 
         final String consumerId = config.getString(key + "_consumer");
-        final Optional<CellValueConsumerFactory<DestType, ?, ?>> consumer = registry.getFactory(consumerId);
+        final Optional<CellValueConsumerFactory<DestType, ?, ExternalType, ?>> consumer =
+            registry.getFactory(consumerId);
 
         if (!consumer.isPresent()) {
             return Optional.empty();
@@ -320,8 +321,8 @@ public final class SerializeUtil {
      * @throws InvalidSettingsException
      * @since 3.6
      */
-    public static <SourceType extends Source> void storeProductionPath(final ProductionPath path,
-        final ConfigBaseWO config, final String key) throws InvalidSettingsException {
+    public static void storeProductionPath(final ProductionPath path, final ConfigBaseWO config, final String key)
+        throws InvalidSettingsException {
         storeConverterFactory(path.m_converterFactory, config, key + "_converter");
         storeConverterFactory(path.m_producerFactory, config, key + "_producer");
     }
@@ -337,8 +338,9 @@ public final class SerializeUtil {
      * @throws InvalidSettingsException
      * @since 3.6
      */
-    public static <SourceType extends Source> Optional<ProductionPath> loadProductionPath(final ConfigBaseRO config,
-        final ProducerRegistry<SourceType> registry, final String key) throws InvalidSettingsException {
+    public static <ExternalType, SourceType extends Source<ExternalType>> Optional<ProductionPath> loadProductionPath(
+        final ConfigBaseRO config, final ProducerRegistry<ExternalType, SourceType> registry, final String key)
+        throws InvalidSettingsException {
         final Optional<JavaToDataCellConverterFactory<?>> converter =
             loadJavaToDataCellConverterFactory(config, key + "_converter");
 
@@ -347,7 +349,8 @@ public final class SerializeUtil {
         }
 
         final String producerId = config.getString(key + "_producer");
-        final Optional<CellValueProducerFactory<SourceType, ?, ?>> producer = registry.getFactory(producerId);
+        final Optional<CellValueProducerFactory<SourceType, ExternalType, ?, ?>> producer =
+            registry.getFactory(producerId);
 
         if (!producer.isPresent()) {
             return Optional.empty();

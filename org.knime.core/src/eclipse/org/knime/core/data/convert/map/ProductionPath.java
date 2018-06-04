@@ -17,7 +17,7 @@ public class ProductionPath {
     /**
      * Producer factory
      */
-    public final CellValueProducerFactory<?, ?, ?> m_producerFactory;
+    public final CellValueProducerFactory<?, ?, ?, ?> m_producerFactory;
 
     /**
      * Converter factory
@@ -30,7 +30,7 @@ public class ProductionPath {
      * @param producerFactory Factory to create the producer which gets a value from an external source
      * @param f Factory to create a converter used to wrap the value from the producer into a data cell
      */
-    public ProductionPath(final CellValueProducerFactory<?, ?, ?> producerFactory,
+    public ProductionPath(final CellValueProducerFactory<?, ?, ?, ?> producerFactory,
         final JavaToDataCellConverterFactory<?> f) {
         this.m_producerFactory = producerFactory;
         this.m_converterFactory = f;

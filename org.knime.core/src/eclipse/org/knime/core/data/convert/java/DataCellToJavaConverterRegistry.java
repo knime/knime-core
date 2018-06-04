@@ -202,7 +202,7 @@ public final class DataCellToJavaConverterRegistry extends
      * @return a {@link Collection} of all possible source types which can be converted into the given
      *         <code>destType</code>. The first is always the preferred type.
      */
-    public <T> Collection<DataCellToJavaConverterFactory<?, ?>> getFactoriesForSourceType(final DataType sourceType) {
+    public Collection<DataCellToJavaConverterFactory<?, ?>> getFactoriesForSourceType(final DataType sourceType) {
         final LinkedHashSet<DataCellToJavaConverterFactory<?, ?>> set = new LinkedHashSet<>();
 
         ClassUtil.recursiveMapToDataTypeClasses(sourceType, (type) -> {

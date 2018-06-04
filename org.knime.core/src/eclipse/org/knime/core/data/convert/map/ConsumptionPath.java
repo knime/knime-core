@@ -21,7 +21,7 @@ public class ConsumptionPath {
     /**
      * Consumer factory
      */
-    public final CellValueConsumerFactory<?, ?, ?> m_consumerFactory;
+    public final CellValueConsumerFactory<?, ?, ?, ?> m_consumerFactory;
 
     /**
      * Constructor.
@@ -31,7 +31,7 @@ public class ConsumptionPath {
      *            {@link Destination}.
      */
     public ConsumptionPath(final DataCellToJavaConverterFactory<?, ?> factory,
-        final CellValueConsumerFactory<?, ?, ?> consumer) {
+        final CellValueConsumerFactory<?, ?, ?, ?> consumer) {
         this.m_converterFactory = factory;
         this.m_consumerFactory = consumer;
     }
