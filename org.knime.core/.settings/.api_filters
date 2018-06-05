@@ -93,6 +93,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/convert/java/DataCellToJavaConverterRegistry.java" type="org.knime.core.data.convert.java.DataCellToJavaConverterRegistry">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.java.DataCellToJavaConverterRegistry"/>
+                <message_argument value="register(DataCellToJavaConverterFactory&lt;?,?&gt;)"/>
+            </message_arguments>
+        </filter>
         <filter comment="The method is binary and source compatible with this change." id="422776937">
             <message_arguments>
                 <message_argument value="org.knime.core.data.convert.java.DataCellToJavaConverterRegistry.getFactoriesForDestinationType(Class&lt;T&gt;)"/>

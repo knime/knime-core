@@ -58,6 +58,8 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * @param <T> Java type the created consumer is able to accept
  * @param <ExternalType> Type of destination types
  * @param <CP> Subclass of {@link ConsumerParameters} for given destination type
+ *
+ * @since 3.6
  */
 public class SimpleCellValueConsumerFactory<DestinationType extends Destination<?>, T, ExternalType, CP extends ConsumerParameters<DestinationType>>
     extends AbstractCellValueConsumerFactory<DestinationType, T, ExternalType, CP> {

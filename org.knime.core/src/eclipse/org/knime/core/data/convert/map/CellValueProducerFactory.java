@@ -42,7 +42,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   04.06.2018 (Jonathan Hale): created
  */
@@ -59,6 +59,7 @@ import org.knime.core.data.convert.map.Source.ProducerParameters;
  * @param <ExternalType> Type of the external type
  * @param <T> Java type the created consumer is able to accept
  * @param <PP> Subclass of {@link ProducerParameters} for given destination type
+ * @since 3.6
  */
 public interface CellValueProducerFactory<SourceType extends Source<ExternalType>, ExternalType, T, PP extends ProducerParameters<SourceType>>
     extends ConverterFactory<ExternalType, Class<?>, CellValueProducer<SourceType, ?, PP>> {
