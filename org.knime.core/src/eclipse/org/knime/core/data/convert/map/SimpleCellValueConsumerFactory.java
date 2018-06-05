@@ -42,7 +42,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   04.06.2018 (Jonathan Hale): created
  */
@@ -59,7 +59,7 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * @param <ExternalType> Type of destination types
  * @param <CP> Subclass of {@link ConsumerParameters} for given destination type
  */
-public class SimpleCellValueConsumerFactory<DestinationType extends Destination, T, ExternalType, CP extends ConsumerParameters<DestinationType>>
+public class SimpleCellValueConsumerFactory<DestinationType extends Destination<?>, T, ExternalType, CP extends ConsumerParameters<DestinationType>>
     extends AbstractCellValueConsumerFactory<DestinationType, T, ExternalType, CP> {
 
     final ExternalType m_externalType;

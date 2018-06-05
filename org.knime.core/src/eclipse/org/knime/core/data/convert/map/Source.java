@@ -20,6 +20,6 @@ public interface Source<ExternalType> {
      * @author Jonathan Hale
      * @param <S> Type of {@link Source} these parameters work with
      */
-    public static interface ProducerParameters<S extends Source> {
+    public static interface ProducerParameters<S extends Source<?>> {
     }
 }

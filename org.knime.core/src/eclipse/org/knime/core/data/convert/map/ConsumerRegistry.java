@@ -84,7 +84,7 @@ public class ConsumerRegistry<ExternalType, DestinationType extends Destination<
      * @param parentType type of {@link Destination}, which should be this types parent.
      * @return reference to self (for method chaining)
      */
-    public ConsumerRegistry<ExternalType, DestinationType> setParent(final Class<? extends Destination> parentType) {
+    public ConsumerRegistry<ExternalType, DestinationType> setParent(final Class<DestinationType> parentType) {
         m_parent = MappingFramework.forDestinationType(parentType);
         return this;
     }

@@ -60,7 +60,7 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * @param <CP> Subclass of {@link ConsumerParameters} for given destination type
  * @since 3.6
  */
-public abstract class AbstractCellValueConsumerFactory<DestinationType extends Destination, T, ExternalType, CP extends ConsumerParameters<DestinationType>>
+public abstract class AbstractCellValueConsumerFactory<DestinationType extends Destination<?>, T, ExternalType, CP extends ConsumerParameters<DestinationType>>
     implements CellValueConsumerFactory<DestinationType, T, ExternalType, CP> {
 
     @Override
@@ -74,7 +74,7 @@ public abstract class AbstractCellValueConsumerFactory<DestinationType extends D
             return false;
         }
         if (obj instanceof CellValueConsumerFactory) {
-            return getIdentifier().equals(((CellValueConsumerFactory)obj).getIdentifier());
+            return getIdentifier().equals(((CellValueConsumerFactory<?, ?, ?, ?>)obj).getIdentifier());
         }
         return false;
     }

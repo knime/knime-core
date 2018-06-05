@@ -22,7 +22,7 @@ public interface Destination<ExternalType> {
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      * @param <DestinationType> type of destination
      */
-    public static interface ConsumerParameters<DestinationType extends Destination> {
+    public static interface ConsumerParameters<DestinationType extends Destination<?>> {
 
     }
 }

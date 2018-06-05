@@ -74,7 +74,7 @@ public abstract class AbstractCellValueProducerFactory<SourceType extends Source
             return false;
         }
         if (obj instanceof CellValueProducerFactory) {
-            return getIdentifier().equals(((CellValueProducerFactory)obj).getIdentifier());
+            return getIdentifier().equals(((CellValueProducerFactory<?, ?, ?, ?>)obj).getIdentifier());
         }
         return false;
     }

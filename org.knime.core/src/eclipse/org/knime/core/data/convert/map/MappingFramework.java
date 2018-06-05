@@ -122,7 +122,7 @@ public class MappingFramework {
      */
     public static <ExternalType, DestinationType extends Destination<ExternalType>>
         ConsumerRegistry<ExternalType, DestinationType>
-        forDestinationType(final Class<DestinationType> destinationType) {
+        forDestinationType(final Class<? extends DestinationType> destinationType) {
 
         final ConsumerRegistry<ExternalType, DestinationType> perDestinationType = getConsumerRegistry(destinationType);
         if (perDestinationType == null) {
@@ -139,7 +139,7 @@ public class MappingFramework {
      * @return Per source type producer registry for given source type.
      */
     public static <ExternalType, SourceType extends Source<ExternalType>> ProducerRegistry<ExternalType, SourceType>
-        forSourceType(final Class<SourceType> sourceType) {
+        forSourceType(final Class<? extends SourceType> sourceType) {
         final ProducerRegistry<ExternalType, SourceType> perSourceType = getProducerRegistry(sourceType);
         if (perSourceType == null) {
             return createProducerRegistry(sourceType);
@@ -148,14 +148,14 @@ public class MappingFramework {
         return perSourceType;
     }
 
-    private static HashMap<Class<? extends Destination>, ConsumerRegistry<?, ?>> m_destinationTypes = new HashMap<>();
+    private static HashMap<Class<? extends Destination<?>>, ConsumerRegistry<?, ?>> m_destinationTypes = new HashMap<>();
 
-    private static HashMap<Class<? extends Source>, ProducerRegistry<?, ?>> m_sourceTypes = new HashMap<>();
+    private static HashMap<Class<? extends Source<?>>, ProducerRegistry<?, ?>> m_sourceTypes = new HashMap<>();
 
     /* Get the consumer registry for given destination type */
     private static <ExternalType, DestinationType extends Destination<ExternalType>>
         ConsumerRegistry<ExternalType, DestinationType>
-        getConsumerRegistry(final Class<DestinationType> destinationType) {
+        getConsumerRegistry(final Class<? extends DestinationType> destinationType) {
         @SuppressWarnings("unchecked")
         final ConsumerRegistry<ExternalType, DestinationType> r =
             (ConsumerRegistry<ExternalType, DestinationType>)m_destinationTypes.get(destinationType);
@@ -163,7 +163,7 @@ public class MappingFramework {
     }
 
     private static <ExternalType, SourceType extends Source<ExternalType>> ProducerRegistry<ExternalType, SourceType>
-        getProducerRegistry(final Class<SourceType> sourceType) {
+        getProducerRegistry(final Class<? extends SourceType> sourceType) {
         @SuppressWarnings("unchecked")
         final ProducerRegistry<ExternalType, SourceType> r =
             (ProducerRegistry<ExternalType, SourceType>)m_sourceTypes.get(sourceType);
@@ -173,14 +173,14 @@ public class MappingFramework {
     /* Create the consumer registry for given destination type */
     private static <ExternalType, DestinationType extends Destination<ExternalType>>
         ConsumerRegistry<ExternalType, DestinationType>
-        createConsumerRegistry(final Class<DestinationType> destinationType) {
+        createConsumerRegistry(final Class<? extends DestinationType> destinationType) {
         final ConsumerRegistry<ExternalType, DestinationType> r = new ConsumerRegistry<ExternalType, DestinationType>();
         m_destinationTypes.put(destinationType, r);
         return r;
     }
 
     private static <ExternalType, SourceType extends Source<ExternalType>> ProducerRegistry<ExternalType, SourceType>
-        createProducerRegistry(final Class<SourceType> sourceType) {
+        createProducerRegistry(final Class<? extends SourceType> sourceType) {
         final ProducerRegistry<ExternalType, SourceType> r = new ProducerRegistry<ExternalType, SourceType>();
         m_sourceTypes.put(sourceType, r);
         return r;
@@ -197,7 +197,7 @@ public class MappingFramework {
      * @return The DataRow which contains the data read from the source
      * @throws Exception If conversion fails
      */
-    public static <SourceType extends Source, PP extends ProducerParameters<SourceType>> DataRow map(final RowKey key,
+    public static <SourceType extends Source<?>, PP extends ProducerParameters<SourceType>> DataRow map(final RowKey key,
         final SourceType source, final ProductionPath[] mapping, final PP[] params, final ExecutionContext context)
         throws Exception {
 
@@ -206,6 +206,7 @@ public class MappingFramework {
         int i = 0;
         for (final ProductionPath path : mapping) {
             final JavaToDataCellConverter<?> converter = path.m_converterFactory.create(context);
+            @SuppressWarnings("unchecked")
             final CellValueProducer<SourceType, ?, PP> producer =
                 (CellValueProducer<SourceType, ?, PP>)path.m_producerFactory.create();
 
@@ -226,13 +227,14 @@ public class MappingFramework {
      * @param params Per column parameters for the consumers used
      * @throws Exception If an exception occurs during conversion or mapping
      */
-    public static <ExternalType extends Destination, CP extends ConsumerParameters<ExternalType>> void
+    public static <ExternalType extends Destination<?>, CP extends ConsumerParameters<ExternalType>> void
         map(final DataRow row, final ExternalType dest, final ConsumptionPath[] mapping, final CP[] params)
             throws Exception {
 
         int i = 0;
         for (final DataCell cell : row) {
             final DataCellToJavaConverter<?, ?> converter = mapping[i].m_converterFactory.create();
+            @SuppressWarnings("unchecked")
             final CellValueConsumer<ExternalType, Object, CP> consumer =
                 (CellValueConsumer<ExternalType, Object, CP>)mapping[i].m_consumerFactory.create();
 
@@ -248,8 +250,7 @@ public class MappingFramework {
      * @param paths Production paths
      * @return Spec of a table that would be mapped to using the given parameters.
      */
-    public static <ExternalType extends Destination, CP extends ConsumerParameters<ExternalType>> DataTableSpec
-        createSpec(final String[] names, final ProductionPath[] paths) {
+    public static DataTableSpec createSpec(final String[] names, final ProductionPath[] paths) {
         return new DataTableSpec(names,
             Stream.of(paths).map(p -> p.m_converterFactory.getDestinationType()).toArray(n -> new DataType[n]));
     }

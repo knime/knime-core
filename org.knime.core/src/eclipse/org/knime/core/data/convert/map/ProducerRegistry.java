@@ -83,7 +83,7 @@ public class ProducerRegistry<ExternalType, SourceType extends Source<ExternalTy
      * @param parentType type of {@link Destination}, which should be this types parent.
      * @return reference to self (for method chaining)
      */
-    public ProducerRegistry<ExternalType, SourceType> setParent(final Class<? extends Source> parentType) {
+    public ProducerRegistry<ExternalType, SourceType> setParent(final Class<? extends SourceType> parentType) {
         m_parent = MappingFramework.forSourceType(parentType);
         return this;
     }
