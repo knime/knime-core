@@ -55,6 +55,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -73,7 +75,9 @@ import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
 import org.knime.core.data.convert.map.CellValueConsumer;
+import org.knime.core.data.convert.map.CellValueConsumerFactory;
 import org.knime.core.data.convert.map.CellValueProducer;
+import org.knime.core.data.convert.map.CellValueProducerFactory;
 import org.knime.core.data.convert.map.ConsumptionPath;
 import org.knime.core.data.convert.map.Destination;
 import org.knime.core.data.convert.map.MappingFramework;
@@ -163,15 +167,21 @@ public class MappingFrameworkTest {
             c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
         });
 
+    final SimpleCellValueConsumerFactory<H2ODestination, Integer, String, H2OParameters> intConsumer =
+        new SimpleCellValueConsumerFactory<>(Integer.class, "INT", (c, v, p) -> {
+            c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
+        });
+
+    final SimpleCellValueProducerFactory<H2OSource, String, Integer, H2OParameters> intProducer =
+        new SimpleCellValueProducerFactory<>("INT", Integer.class, (c, p) -> {
+            return (Integer)c.h2oFrame.get(p.rowIndex)[p.columnIndex];
+        });
+
     /**
      * Tests {@link ConsumptionPath#equals} and {@link ConsumptionPath#toString()}
      */
     @Test
     public void consumptionPaths() {
-        final SimpleCellValueConsumerFactory<H2ODestination, Integer, String, H2OParameters> intConsumer =
-            new SimpleCellValueConsumerFactory<>(Integer.class, "INT", (c, v, p) -> {
-                c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
-            });
         final DataCellToJavaConverterFactory<? extends DataValue, Integer> intFactory = DataCellToJavaConverterRegistry
             .getInstance().getConverterFactories(IntCell.TYPE, Integer.class).stream().findFirst().get();
         final DataCellToJavaConverterFactory<? extends DataValue, String> stringFactory =
@@ -193,6 +203,8 @@ public class MappingFrameworkTest {
         assertFalse(pathA.equals(pathD));
         assertFalse(pathE.equals(pathD));
         assertFalse(pathD.equals(pathE));
+        assertFalse(pathE.equals(pathA));
+        assertFalse(pathA.equals(null));
 
         assertEquals("IntValue --(\"Integer\")-> Integer ---> INT", pathA.toString());
 
@@ -206,10 +218,6 @@ public class MappingFrameworkTest {
      */
     @Test
     public void productionPaths() {
-        final SimpleCellValueProducerFactory<H2OSource, String, Integer, H2OParameters> intProducer =
-            new SimpleCellValueProducerFactory<>("INT", Integer.class, (c, p) -> {
-                return (Integer)c.h2oFrame.get(p.rowIndex)[p.columnIndex];
-            });
         final JavaToDataCellConverterFactory<Integer> intFactory = JavaToDataCellConverterRegistry.getInstance()
             .getConverterFactories(Integer.class, IntCell.TYPE).stream().findFirst().get();
         final JavaToDataCellConverterFactory<String> stringFactory = JavaToDataCellConverterRegistry.getInstance()
@@ -230,6 +238,8 @@ public class MappingFrameworkTest {
         assertFalse(pathA.equals(pathD));
         assertFalse(pathE.equals(pathD));
         assertFalse(pathD.equals(pathE));
+        assertFalse(pathE.equals(pathA));
+        assertFalse(pathA.equals(null));
 
         assertEquals("INT ---> Integer --(\"Integer\")-> Number (integer)", pathA.toString());
 
@@ -244,10 +254,6 @@ public class MappingFrameworkTest {
     @Test
     public void consumerTest() throws Exception {
         /* One time setup */
-        final SimpleCellValueConsumerFactory<H2ODestination, Integer, String, H2OParameters> intConsumer =
-            new SimpleCellValueConsumerFactory<>(Integer.class, "INT", (c, v, p) -> {
-                c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
-            });
         final CellValueConsumer<H2ODestination, Object, H2OParameters> generalConsumer = (c, v, p) -> {
             c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
         };
@@ -333,12 +339,9 @@ public class MappingFrameworkTest {
     @Test
     public void producerTest() throws Exception {
         /* One time setup */
-
         final CellValueProducer<H2OSource, Integer, H2OParameters> lambda = (c, p) -> {
             return (Integer)c.h2oFrame.get(p.rowIndex)[p.columnIndex];
         };
-        final SimpleCellValueProducerFactory<H2OSource, String, Integer, H2OParameters> intProducer =
-            new SimpleCellValueProducerFactory<>("INT", Integer.class, lambda);
         final SimpleCellValueProducerFactory<H2OSource, String, Integer, H2OParameters> intProducerFromBIGINT =
             new SimpleCellValueProducerFactory<>("BIGINT", Integer.class, lambda);
         final SimpleCellValueProducerFactory<H2OSource, String, Long, H2OParameters> longProducer =
@@ -414,6 +417,115 @@ public class MappingFrameworkTest {
         assertEquals(LongCell.TYPE, spec.getColumnSpec(2).getType());
     }
 
+    @Test
+    public void parentTest() throws Exception {
+        class HitchHikersSource extends H2OSource {
+            // Marker class
+        }
+        class HitchHikersDest extends H2ODestination {
+            // Marker class
+        }
+        class HitchHikersParams
+            implements Source.ProducerParameters<HitchHikersSource>, Destination.ConsumerParameters<HitchHikersDest> {
+            // Marker class
+        }
+
+        /* Producers */
+        {
+            final SimpleCellValueProducerFactory<HitchHikersSource, String, Integer, HitchHikersParams> fourtyTwo =
+                new SimpleCellValueProducerFactory<>("INT", Integer.class, (c, p) -> {
+                    return new Integer(42);
+                });
+
+            MappingFramework.forSourceType(H2OSource.class) //
+                .unregisterAllProducers() //
+                .register(stringProducer);
+            MappingFramework.forSourceType(HitchHikersSource.class) //
+                .unregisterAllProducers() //
+                .setParent(H2OSource.class) // Now also knows string
+                .register(fourtyTwo);
+
+            {
+                /* Child registry should know factories of parent */
+                Collection<CellValueProducerFactory<HitchHikersSource, String, ?, ?>> factories =
+                    MappingFramework.forSourceType(HitchHikersSource.class).getFactoriesForSourceType("STR");
+                assertEquals(1, factories.size());
+
+                assertTrue(MappingFramework.forSourceType(HitchHikersSource.class).getFactory("STR->java.lang.String")
+                    .isPresent());
+                assertArrayEquals(new Object[]{stringProducer}, MappingFramework.forSourceType(HitchHikersSource.class)
+                    .getFactories("STR", String.class).toArray());
+
+                /* The order is not important here */
+                assertCollectionEquals(new Object[]{fourtyTwo, stringProducer},
+                    MappingFramework.forSourceType(HitchHikersSource.class).getAllConverterFactories());
+                assertCollectionEquals(new Object[]{"STR", "INT"},
+                    MappingFramework.forSourceType(HitchHikersSource.class).getAllSourceTypes());
+                assertCollectionEquals(new Object[]{fourtyTwo.getDestinationType(), stringProducer.getDestinationType()},
+                    MappingFramework.forSourceType(HitchHikersSource.class).getAllDestinationTypes());
+            }
+            {
+                /* Parent registry should *not* know factories of child */
+                Collection<CellValueProducerFactory<H2OSource, String, ?, ?>> factories =
+                    MappingFramework.forSourceType(H2OSource.class).getFactoriesForSourceType("INT");
+                assertTrue(factories.isEmpty());
+
+                assertFalse(
+                    MappingFramework.forSourceType(H2OSource.class).getFactory("INT->java.lang.Integer").isPresent());
+                assertTrue(
+                    MappingFramework.forSourceType(H2OSource.class).getFactories("INT", Integer.class).isEmpty());
+            }
+        }
+
+        /* Consumers */
+        {
+            final SimpleCellValueConsumerFactory<HitchHikersDest, Integer, String, HitchHikersParams> fourtyTwo =
+                new SimpleCellValueConsumerFactory<>(Integer.class, "INT", (c, v, p) -> {
+                    /* consumed by gnab gib */
+                });
+
+            MappingFramework.forDestinationType(H2ODestination.class) //
+                .unregisterAllConsumers() //
+                .register(stringConsumer);
+            MappingFramework.forDestinationType(HitchHikersDest.class) //
+                .unregisterAllConsumers() //
+                .setParent(H2ODestination.class) // Now also knows string
+                .register(fourtyTwo);
+
+            {
+                /* Child registry should know factories of parent */
+                Collection<CellValueConsumerFactory<HitchHikersDest, ?, String, ?>> factories =
+                    MappingFramework.forDestinationType(HitchHikersDest.class).getFactoriesForDestinationType("STR");
+                assertEquals(1, factories.size());
+
+                assertTrue(MappingFramework.forDestinationType(HitchHikersDest.class)
+                    .getFactory("java.lang.String->STR").isPresent());
+                assertArrayEquals(new Object[]{stringConsumer}, MappingFramework
+                    .forDestinationType(HitchHikersDest.class).getFactories(String.class, "STR").toArray());
+
+                /* The order is not important here */
+                assertCollectionEquals(new Object[]{fourtyTwo, stringConsumer},
+                    MappingFramework.forDestinationType(HitchHikersDest.class).getAllConverterFactories());
+                assertCollectionEquals(new Object[]{stringConsumer.getSourceType(), fourtyTwo.getSourceType()},
+                    MappingFramework.forDestinationType(HitchHikersDest.class).getAllSourceTypes());
+                assertCollectionEquals(new Object[]{stringConsumer.getDestinationType(), fourtyTwo.getDestinationType()},
+                    MappingFramework.forDestinationType(HitchHikersDest.class).getAllDestinationTypes());
+            }
+            {
+                /* Parent registry should *not* know factories of child */
+                Collection<CellValueConsumerFactory<H2ODestination, ?, String, ?>> factories =
+                    MappingFramework.forDestinationType(H2ODestination.class).getFactoriesForDestinationType("INT");
+                assertTrue(factories.isEmpty());
+
+                assertFalse(MappingFramework.forDestinationType(H2ODestination.class)
+                    .getFactory("java.lang.Integer->INT").isPresent());
+                assertTrue(MappingFramework.forDestinationType(H2ODestination.class).getFactories(Integer.class, "INT")
+                    .isEmpty());
+            }
+        }
+
+    }
+
     /**
      * Test serialization of production path
      *
@@ -460,5 +572,11 @@ public class MappingFrameworkTest {
 
         assertTrue(loadedPath.isPresent());
         assertEquals(path, loadedPath.get());
+    }
+
+    /** Assert that a collection has given contents independent of order */
+    private static void assertCollectionEquals(final Object[] expected, final Collection<?> actual) {
+        assertEquals(expected.length, actual.size());
+        assertTrue(actual.containsAll(Arrays.asList(expected)));
     }
 }

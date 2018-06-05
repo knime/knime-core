@@ -50,7 +50,6 @@ package org.knime.core.data.convert;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Optional;
@@ -72,7 +71,7 @@ import org.knime.core.node.NodeLogger;
  * @param <RegistryImpl> Implementing class, used for proper method chaining
  * @since 3.6
  */
-public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, ConverterFactoryType extends ConverterFactory<SourceType, DestType, ?>, RegistryImpl extends AbstractConverterFactoryRegistry<?, ?, ?, RegistryImpl>> {
+public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, ConverterFactoryType extends ConverterFactory<SourceType, DestType>, RegistryImpl extends AbstractConverterFactoryRegistry<SourceType, DestType, ConverterFactoryType, RegistryImpl>> {
 
     private final static NodeLogger LOGGER = NodeLogger.getLogger(AbstractConverterFactoryRegistry.class);
 
@@ -88,7 +87,9 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
     /** Factories stored by identifier */
     protected final HashMap<String, ConverterFactoryType> m_byIdentifier = new HashMap<>();
 
-    /** Parent of this registry. If a converter factory is not found in the registry, this registry will be queried next. */
+    /**
+     * Parent of this registry. If a converter factory is not found in the registry, this registry will be queried next.
+     */
     protected RegistryImpl m_parent = null;
 
     /**
@@ -101,7 +102,7 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
         final Set<ConverterFactoryType> factories =
             m_factories.values().stream().flatMap(c -> c.stream()).collect(Collectors.toSet());
         if (m_parent != null) {
-            factories.addAll((Collection<? extends ConverterFactoryType>)m_parent.getAllConverterFactories());
+            factories.addAll(m_parent.getAllConverterFactories());
         }
         return factories;
     }
@@ -115,7 +116,7 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
         Set<SourceType> sourceTypes = m_factories.values().stream().flatMap(c -> c.stream())
             .map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
         if (m_parent != null) {
-            sourceTypes.addAll((Collection<? extends SourceType>)m_parent.getAllSourceTypes());
+            sourceTypes.addAll(m_parent.getAllSourceTypes());
         }
         return sourceTypes;
     }
@@ -129,7 +130,7 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
         final Set<DestType> destTypes = m_factories.values().stream().flatMap(c -> c.stream())
             .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
         if (m_parent != null) {
-            destTypes.addAll((Collection<? extends DestType>)m_parent.getAllSourceTypes());
+            destTypes.addAll(m_parent.getAllDestinationTypes());
         }
         return destTypes;
     }
@@ -191,7 +192,7 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
         final ConverterFactoryType factory = m_byIdentifier.get(id);
 
         if (factory == null) {
-            return Optional.empty();
+            return m_parent != null ? m_parent.getFactory(id) : Optional.empty();
         }
 
         return Optional.of(factory);
@@ -210,6 +211,10 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
         final Set<ConverterFactoryType> types = m_byDestinationType.get(destType);
         if (types != null) {
             set.addAll(types);
+        }
+
+        if (m_parent != null) {
+            set.addAll(m_parent.getFactoriesForDestinationType(destType));
         }
 
         return set;
@@ -231,15 +236,35 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
             set.addAll(types);
         }
 
+        if (m_parent != null) {
+            set.addAll(m_parent.getFactoriesForSourceType(sourceType));
+        }
+
         return set;
     }
 
-    public <D> Collection<ConverterFactoryType> getFactories(final SourceType sourceType, final DestType destType) {
-        final ArrayList<ConverterFactoryType> factories = m_factories.get(new ConversionKey(sourceType, destType));
-        if (factories != null) {
-            return Collections.unmodifiableList(factories);
+    /**
+     * Get all factories from given source to given destination type.
+     *
+     * They may convert in different ways are distinguishable by {@link ConverterFactory#getIdentifier()} and usually
+     * also by {@link ConverterFactory#getName()}.
+     *
+     * @param sourceType Source type to convert
+     * @param destType Destination type to convert to
+     * @return Collection of suitable converter factories
+     */
+    public Collection<ConverterFactoryType> getFactories(final SourceType sourceType, final DestType destType) {
+        final ArrayList<ConverterFactoryType> factories = new ArrayList<>();
+
+        final ArrayList<ConverterFactoryType> list = m_factories.get(new ConversionKey(sourceType, destType));
+        if (list != null) {
+            factories.addAll(list);
         }
 
-        return Collections.emptyList();
+        if (m_parent != null) {
+            factories.addAll(m_parent.getFactoriesForSourceType(sourceType));
+        }
+
+        return factories;
     }
 }
