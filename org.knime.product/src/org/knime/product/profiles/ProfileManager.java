@@ -194,7 +194,7 @@ public class ProfileManager {
             combinedProperties.putAll(props);
         }
 
-        // removed "/instance" prefixes from preferences because otherwise they are not applied as default preferences
+        // remove "/instance" prefixes from preferences because otherwise they are not applied as default preferences
         // (because they are instance preferences...)
         for (Object key : new HashSet<>(combinedProperties.keySet())) {
             if (key.toString().startsWith("/instance/")) {
@@ -223,11 +223,13 @@ public class ProfileManager {
         DefaultPreferences.pluginCustomizationFile = pluginCustFile.toAbsolutePath().toString();
     }
 
-    private void replaceVariables(final Properties props, final Path profileLocation) {
+    private void replaceVariables(final Properties props, final Path profileLocation) throws IOException {
         List<VariableReplacer> replacers = Arrays.asList(
             new VariableReplacer.EnvVariableReplacer(m_collectedLogs),
             new VariableReplacer.SyspropVariableReplacer(m_collectedLogs),
             new VariableReplacer.ProfileVariableReplacer(profileLocation, m_collectedLogs),
+            new VariableReplacer.OriginVariableReplacer(profileLocation.getParent().resolve(".originHeaders"),
+                m_collectedLogs),
             new VariableReplacer.CustomVariableReplacer(m_provider, m_collectedLogs));
 
         for (String key : props.stringPropertyNames()) {
@@ -295,7 +297,7 @@ public class ProfileManager {
                     .map(p -> new HttpHost(((InetSocketAddress) p.address()).getAddress()))
                     .orElse(null);
 
-            // timeout; we cannot access KNIMEConstants here because that would acccess preferences
+            // timeout; we cannot access KNIMEConstants here because that would access preferences
             int timeout = 2000;
             String to = System.getProperty("knime.url.timeout", Integer.toString(timeout));
             try {
@@ -346,7 +348,11 @@ public class ProfileManager {
                         PathUtils.deleteDirectoryIfExists(profileDir);
                         Files.move(tempDir, profileDir, StandardCopyOption.ATOMIC_MOVE);
                         Files.delete(tempFile);
-                    } else if (code != 304) { // 304 = Not Modified
+
+                        writeOriginHeaders(response.getAllHeaders(), profileDir);
+                    } else if (code == 304) { // 304 = Not Modified
+                        writeOriginHeaders(response.getAllHeaders(), profileDir);
+                    } else {
                         HttpEntity body = response.getEntity();
                         String msg;
                         if (body.getContentType().getValue().startsWith("text/")) {
@@ -371,5 +377,16 @@ public class ProfileManager {
         }
 
         return profileDir;
+    }
+
+    private static void writeOriginHeaders(final Header[] allHeaders, final Path profileDir) throws IOException {
+        Path originHeadersCache = profileDir.resolve(".originHeaders");
+        Properties props = new Properties();
+        for (Header h : allHeaders) {
+            props.put(h.getName(), h.getValue());
+        }
+        try (OutputStream os = Files.newOutputStream(originHeadersCache)) {
+            props.store(os, "");
+        }
     }
 }

@@ -1,0 +1,15 @@
+#
+#Tue Jun 05 14:13:38 CEST 2018
+Link=<http\://localhost\:8080/knime/rest/v4/_profile/knime-server-doc-v4.xml>;rel\="profile"
+Cache-Control=public, max-age\=21600
+KNIME-REST-Address=http\://localhost\:8080/knime/rest/
+Content-Length=2322
+KNIME-WebPortal-Address=http\://localhost\:8080/knime/
+KNIME-Is-Admin=false
+Server=Apache TomEE
+KNIME-EJB-Address=http\://localhost\:12345/tomee/ejb
+Date=Tue, 05 Jun 2018 12\:13\:38 GMT
+Expires=Thu, 01 Jan 1970 01\:00\:00 CET
+Content-Disposition=attachment; filename\="preferences.zip"
+Content-Type=application/zip
+KNIME-Default-Mountpoint-ID=test-mountpoint2

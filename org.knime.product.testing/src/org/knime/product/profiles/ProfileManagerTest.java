@@ -66,6 +66,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.application.ApplicationHandle;
+import org.osgi.service.prefs.Preferences;
 
 /**
  * Basic test for the profile manager.
@@ -145,5 +146,13 @@ public class ProfileManagerTest {
         // escaped "variable" (with $$) => no replacement
         assertThat("Unexpected value for escaped variable", prefs.get("non-variable", "XXX"),
             is("bla/${custom:var}/foo"));
+
+        // "origin" variable replacement
+        IEclipsePreferences explorerPrefs = DefaultScope.INSTANCE.getNode("org.knime.workbench.explorer.view");
+        Preferences mpPrefs = explorerPrefs.node("mountpointNode/test-mountpoint2");
+        assertThat("Unexpected value for origin variable", mpPrefs.get("address", "XXX"),
+            is("http://localhost:12345/tomee/ejb"));
+        assertThat("Unexpected value for origin variable", mpPrefs.get("mountID", "XXX"),
+            is("test-mountpoint2"));
     }
 }

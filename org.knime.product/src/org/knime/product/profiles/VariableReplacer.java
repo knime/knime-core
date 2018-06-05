@@ -48,9 +48,13 @@
  */
 package org.knime.product.profiles;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -111,6 +115,30 @@ abstract class VariableReplacer {
                 case "name":  return Optional.of(m_profileLocation.getFileName().toString());
                 default: return Optional.empty();
             }
+        }
+    }
+
+    static class OriginVariableReplacer extends VariableReplacer {
+        private final Properties m_originHeaders = new Properties();
+
+        OriginVariableReplacer(final Path originHeadersCache, final List<Runnable> logMessages) throws IOException {
+            super("origin", logMessages);
+            if (Files.isReadable(originHeadersCache)) {
+                try (InputStream is = Files.newInputStream(originHeadersCache)) {
+                    m_originHeaders.load(is);
+                }
+            } else {
+                logMessages.add(() -> NodeLogger.getLogger(getClass()).warn("Origin headers cache file '"
+                    + originHeadersCache + "' does not exist. 'origin' variables will not be replaced."));
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        Optional<String> getVariableValue(final String varName) {
+            return Optional.ofNullable(m_originHeaders.getProperty(varName));
         }
     }
 
