@@ -95,7 +95,7 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
     /*
      * The title of the tab of the column selection panel.
      */
-    private static final String INEXCLUDE_LIST_TAB = "Column Options";
+    private static final String INEXCLUDE_LIST_TAB = "Column Selection";
 
     /*
      * The tooltip of the column selection panel.
@@ -121,17 +121,17 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
     /*
      * The title of the group of options that allow to limit the filtering to specific values.
      */
-    private static final String FILTER_OPTIONS_TITLE = "Remove constant value columns";
+    private static final String FILTER_OPTIONS_TITLE = "Remove constant value columns from";
 
     /*
      * The label of the option to filter all constant value columns.
      */
-    static final String FILTER_OPTIONS_ALL_LABEL = "All";
+    static final String FILTER_OPTIONS_ALL_LABEL = "all selected columns";
 
     /*
      * The label of the option to filter .
      */
-    static final String FILTER_OPTIONS_PARTIAL_LABEL = "Partial";
+    static final String FILTER_OPTIONS_PARTIAL_LABEL = "selected columns containing only";
 
     /*
      * The tooltip of the option to filter all or only specific constant value columns.
@@ -142,7 +142,7 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
     /*
      * The label of the option to filter columns with a specific constant numeric value.
      */
-    private static final String FILTER_OPTIONS_NUMERIC_LABEL = "containing only numeric values of";
+    private static final String FILTER_OPTIONS_NUMERIC_LABEL = "numeric values of";
 
     /*
      * The tooltip of the option to filter columns with a specific constant numeric value.
@@ -153,7 +153,7 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
     /*
      * The label of the option to filter columns with a specific constant String value.
      */
-    private static final String FILTER_OPTIONS_STRING_LABEL = "containing only String values of";
+    private static final String FILTER_OPTIONS_STRING_LABEL = "String values of";
 
     /*
      * The tooltip of the option to filter columns with a specific constant String value.
@@ -164,7 +164,7 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
     /*
      * The label of the option to filter columns containing only missing values.
      */
-    private static final String FILTER_OPTIONS_MISSING_LABEL = "containing only missing values";
+    private static final String FILTER_OPTIONS_MISSING_LABEL = "missing values";
 
     /*
      * The tooltip of the option to filter columns containing only missing values.
@@ -239,6 +239,7 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
         JPanel filterPanel = new JPanel();
         filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.Y_AXIS));
         filterPanel.setBorder(new TitledBorder(FILTER_OPTIONS_TITLE));
+
         addDialogComponentsWithGlue(false, filterPanel, FILTER_OPTIONS_SPECIFICITY_TOOLTIP,
             new DialogComponentButtonGroup(filterAll, true, null, FILTER_OPTIONS_ALL_LABEL,
                 FILTER_OPTIONS_PARTIAL_LABEL));

@@ -6,51 +6,56 @@
 		containing only duplicates of the same value. 
 	</shortDescription>
 	<fullDescription>
-		<intro> This node filters columns containing only duplicates of the
-			same value from the input data table. Examples include a column
+		<intro> This node filters columns exclusively containing duplicates of
+			the same value from the input data table. Examples include a column
 			containing only zeroes, a column containing only identical Strings,
-			or a column comprising only empty / missing cells. In a dialog
-			window, the user can specify whether to filter only columns with a
-			specific constant numeric value or String, columns containing only
-			missing values, or all constant columns. In addition, the user can
-			specify the minimum number of rows a table must have to be considered
-			for filtering. Individual columns can also be manually excluded from
-			the filter, i.e., passed to the output even if they contain only
-			identical values.
+			or a column comprising only missing cells. In a dialog window, you
+			can select which columns to apply the filter to (with all
+			columns selected by default). From these selected columns, you
+			can choose to remove either all constant value columns or columns
+			containing only specific constant numeric, String, or missing values.
+			Finally, you can also specify the minimum number of rows a table
+			must have to be considered for filtering.
 		</intro>
-		<option name="Filter all constant value columns"> Select this option to filter all constant value
-			columns independent of the value they contain in duplicates.
+		<option
+			name="Remove constant value columns from all selected columns"> Select this option to remove all constant value columns from
+			the columns selected in the Column Selection tab, independent of the
+			specific value they contain in duplicates.
 		</option>
-		<option name="Filter constant value columns with numeric value"> Select this option to filter columns containing
-			only a specific numeric value.
+		<option
+			name="Remove constant value columns from selected columns containing only numeric values of"> Select this option to remove columns containing only a specific
+			numeric value from the columns selected in the Column Selection tab.
 		</option>
-		<option name="Filter constant value columns with String value"> Select this option to filter columns containing
-			only a specific String value.
+		<option
+			name="Remove constant value columns from selected columns containing only String values of"> Select this option to remove columns containing only a specific
+			String value from the columns selected in the Column Selection tab.
 		</option>
-		<option name="Filter constant value columns with missing value"> Select this option to filter columns containing
-			only empty cells / missing values.
+		<option
+			name="Remove constant value columns from selected columns containing only missing values"> Select this option to remove columns containing only empty
+			cells / missing values from the columns selected in the Column
+			Selection tab.
 		</option>
 		<option name="Minimum number of rows"> The minimum number of rows a table must have to
 			be considered for filtering. If the table size is below the specified
 			value, the table will not be filtered / altered.
 		</option>
-		<option name="Include"> This list contains the column names of the input
+		<option name="Apply filter"> This list contains the column names of the input
 			table that are to be considered for filtering.
 		</option>
-		<option name="Enforce Inclusion"> Select this option to enforce the current
-			inclusion list to stay the same even if the input table specification
-			changes. If some of the included columns are not available anymore, a
+		<option name="Enforce Inclusion"> Select this option to enforce the current "Apply
+			filter" list to stay the same even if the input table specification
+			changes. If some of the listed columns are not available anymore, a
 			warning is displayed. (New columns will automatically be added to the
-			exclusion list.)
+			"Do not apply filter" list.)
 		</option>
-		<option name="Exclude"> This list contains the column names of the input
+		<option name="Do not apply filter (retain column)"> This list contains the column names of the input
 			table that are passed to the output without undergoing filtering.
 		</option>
-		<option name="Enforce Exclusion"> Select this option to enforce the current
-			exclusion list to stay the same even if the input table specification
-			changes. If some of the excluded columns are not available anymore, a
-			warning is displayed. (New columns will automatically be added to the
-			inclusion list.)
+		<option name="Enforce Exclusion"> Select this option to enforce the current "Do not
+			apply filter" list to stay the same even if the input table
+			specification changes. If some of the listed columns are not
+			available anymore, a warning is displayed. (New columns will
+			automatically be added to the "Apply filter" list.)
 		</option>
 	</fullDescription>
 	<ports>
