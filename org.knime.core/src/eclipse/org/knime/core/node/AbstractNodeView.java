@@ -93,15 +93,33 @@ public abstract class AbstractNodeView<T extends ViewableModel> {
      * @since 3.4
      */
     protected AbstractNodeView(final T viewableModel) {
+        this(viewableModel, true);
+    }
+
+    /**
+     * Creates new view. This constructor keeps the node model reference and instantiates the logger. If desired, also a
+     * {@link NodeContext} reference is kept and will be made available.
+     *
+     * @param viewableModel The underlying viewable model.
+     * @param requireNodeContext If a reference to the node context should be kept, otherwise m_nodeContext will be
+     *            <code>null</code>
+     * @throws NullPointerException If the <code>nodeModel</code> is null.
+     * @since 3.6
+     */
+    protected AbstractNodeView(final T viewableModel, final boolean requireNodeContext) {
         if (viewableModel == null) {
             throw new IllegalArgumentException("Node model must not be null");
         }
         m_logger = NodeLogger.getLogger(this.getClass());
         m_viewableModel = viewableModel;
 
-        m_nodeContext = NodeContext.getContext();
-        m_logger.assertLog(m_nodeContext != null, "No node context available in constructor of node view "
-            + getClass().getName());
+        if (requireNodeContext) {
+            m_nodeContext = NodeContext.getContext();
+            m_logger.assertLog(m_nodeContext != null,
+                "No node context available in constructor of node view " + getClass().getName());
+        } else {
+            m_nodeContext = null;
+        }
     }
 
     /**

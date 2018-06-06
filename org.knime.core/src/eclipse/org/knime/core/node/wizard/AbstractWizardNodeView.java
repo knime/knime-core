@@ -119,7 +119,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
      * @since 3.4
      */
     protected AbstractWizardNodeView(final T nodeModel) {
-        super(nodeModel);
+        super(nodeModel, false);
         m_delegate = new InteractiveViewDelegate<VAL>();
     }
 
