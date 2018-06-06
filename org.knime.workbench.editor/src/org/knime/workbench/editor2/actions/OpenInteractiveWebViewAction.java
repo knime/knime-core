@@ -189,6 +189,7 @@ public final class OpenInteractiveWebViewAction extends Action {
         } else {
             //create view by using the UI-objects directly
             //and don't block the UI
+            Throwable[] throwable = new Throwable[1];
             try {
                 PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
                     monitor.beginTask("Waiting for the view to open", 100);
@@ -197,20 +198,29 @@ public final class OpenInteractiveWebViewAction extends Action {
                     AbstractWizardNodeView view = getConfiguredWizardNodeView(m_webViewForNode.getModel());
                     final String title = m_webViewForNode.getViewName();
                     Display.getDefault().asyncExec(() -> {
-                        Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
+                        try {
+                            Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
+                        } catch (Throwable e) {
+                            throwable[0] = e;
+                        }
                     });
                 });
             } catch (InvocationTargetException e) {
-                //don't open the view but a error dialog
-                final Shell shell = Display.getCurrent().getActiveShell();
-                MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
-                mb.setText("View cannot be opened");
-                mb.setMessage("The view cannot be opened for the following" + " reason:\n" + e.getCause().getMessage());
-                mb.open();
+                throwable[0] = e.getCause();
             } catch (InterruptedException e) {
                 //canceled by user, don't open
                 //(cancellation doesn't work, yet)
             }
+            if (throwable[0] != null) {
+                //don't open the view but a error dialog
+                final Shell shell = Display.getCurrent().getActiveShell();
+                MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
+                mb.setText("View cannot be opened");
+                mb.setMessage("The view cannot be opened for the following" + " reason:\n" + throwable[0].getMessage());
+                mb.open();
+                LOGGER.warn("View cannot be opened", throwable[0]);
+            }
+
         }
     }
 
