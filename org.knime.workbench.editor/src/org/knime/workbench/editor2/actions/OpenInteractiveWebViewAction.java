@@ -49,6 +49,7 @@ import static org.knime.core.ui.wrapper.Wrapper.unwrap;
 import static org.knime.core.ui.wrapper.Wrapper.wraps;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.apache.commons.lang3.StringUtils;
@@ -60,6 +61,8 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
@@ -184,12 +187,30 @@ public final class OpenInteractiveWebViewAction extends Action {
                     + t.getClass().getSimpleName() + "'. That is most likely an implementation error.", t);
             }
         } else {
-           //create view by using the UI-objects directly
-           //TODO don't block the UI
-           @SuppressWarnings("rawtypes")
-           AbstractWizardNodeView view = getConfiguredWizardNodeView(m_webViewForNode.getModel());
-           final String title = m_webViewForNode.getViewName();
-           Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
+            //create view by using the UI-objects directly
+            //and don't block the UI
+            try {
+                PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
+                    monitor.beginTask("Waiting for the view to open", 100);
+                    monitor.setCanceled(true);
+                    @SuppressWarnings("rawtypes")
+                    AbstractWizardNodeView view = getConfiguredWizardNodeView(m_webViewForNode.getModel());
+                    final String title = m_webViewForNode.getViewName();
+                    Display.getDefault().asyncExec(() -> {
+                        Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
+                    });
+                });
+            } catch (InvocationTargetException e) {
+                //don't open the view but a error dialog
+                final Shell shell = Display.getCurrent().getActiveShell();
+                MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
+                mb.setText("View cannot be opened");
+                mb.setMessage("The view cannot be opened for the following" + " reason:\n" + e.getCause().getMessage());
+                mb.open();
+            } catch (InterruptedException e) {
+                //canceled by user, don't open
+                //(cancellation doesn't work, yet)
+            }
         }
     }
 
