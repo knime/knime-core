@@ -45,7 +45,7 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
+import static org.knime.core.ui.wrapper.Wrapper.unwrap;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -56,10 +56,10 @@ import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
+import org.knime.core.ui.node.workflow.InteractiveWebViewsResultUI;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
-import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -126,7 +126,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         String tooltip = "Execute the selected node";
         NodeContainerEditPart[] parts = getSelectedParts(NodeContainerEditPart.class);
         if (parts.length == 1) {
-            NodeContainer nc = Wrapper.unwrapNC(parts[0].getNodeContainer());
+            NodeContainerUI nc = parts[0].getNodeContainer();
             if (nc.hasInteractiveView() || nc.getInteractiveWebViews().size() > 0) {
                 return tooltip + " and open interactive view.";
             }
@@ -147,17 +147,12 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
         // enable if we have at least one executable node in our selection
-        WorkflowManager wm = getEditor().getWorkflowManager().orElse(null);
-        if(wm == null) {
-            return false;
-        }
+        WorkflowManagerUI wm = getEditor().getWorkflowManagerUI();
         for (int i = 0; i < parts.length; i++) {
             NodeContainerUI nc = parts[i].getNodeContainer();
             boolean hasView = nc.getNrViews() > 0;
-            if (Wrapper.wraps(nc, NodeContainer.class)) {
-                hasView |= nc.hasInteractiveView() || unwrapNC(nc).getInteractiveWebViews().size() > 0;
-                hasView |= OpenSubnodeWebViewAction.hasContainerView(unwrapNC(nc));
-            }
+            hasView |= nc.hasInteractiveView() || nc.getInteractiveWebViews().size() > 0;
+            hasView |= OpenSubnodeWebViewAction.hasContainerView(nc);
             if (wm.canExecuteNode(nc.getID()) && hasView) {
                 return true;
             }
@@ -165,9 +160,10 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         return false;
     }
 
-    private void executeAndOpen(final NodeContainer cont) {
+    private void executeAndOpen(final NodeContainerUI cont) {
         boolean hasView = cont.getNrViews() > 0;
-        final InteractiveWebViewsResult interactiveWebViews = cont.getInteractiveWebViews();
+        @SuppressWarnings("rawtypes")
+        final InteractiveWebViewsResultUI interactiveWebViews = cont.getInteractiveWebViews();
         hasView |= cont.hasInteractiveView() || interactiveWebViews.size() > 0;
         hasView |= OpenSubnodeWebViewAction.hasContainerView(cont);
         if (hasView) {
@@ -179,7 +175,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                     NodeContainerState ncState = cont.getNodeContainerState();
                     // check if the node has finished (either executed or
                     // removed from the queue)
-                    if ((state.getSource() == cont.getID()) && ncState.isExecuted()) {
+                    if ((state.getSource().equals(cont.getID())) && ncState.isExecuted()) {
                         // if the node was successfully executed
                         // start the view
                         Display.getDefault().asyncExec(new Runnable() {
@@ -188,13 +184,13 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                                 // run open view action
                                 IAction viewAction;
                                 if (cont.hasInteractiveView()) {
-                                    viewAction = new OpenInteractiveViewAction(cont);
-                                } else if (cont instanceof SubNodeContainer) {
-                                    viewAction = new OpenSubnodeWebViewAction((SubNodeContainer)cont);
+                                    viewAction = new OpenInteractiveViewAction(unwrap(cont, NodeContainer.class));
+                                } else if (cont instanceof SubNodeContainerUI) {
+                                    viewAction = new OpenSubnodeWebViewAction(unwrap(cont, SubNodeContainer.class));
                                 } else if (interactiveWebViews.size() > 0) {
                                     viewAction = new OpenInteractiveWebViewAction(cont, interactiveWebViews.get(0));
                                 } else {
-                                    viewAction = new OpenViewAction(cont, 0);
+                                    viewAction = new OpenViewAction(unwrap(cont, NodeContainer.class), 0);
                                 }
                                 viewAction.run();
                             }
@@ -208,7 +204,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
 
             });
         }
-        getManager().executeUpToHere(cont.getID());
+        getManagerUI().executeUpToHere(cont.getID());
     }
 
     /**
@@ -221,7 +217,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         LOGGER.debug("Creating 'Execute and Open Views' job for "
                 + nodeParts.length + " node(s)...");
         for (NodeContainerEditPart p : nodeParts) {
-            final NodeContainer cont = unwrapNC(p.getNodeContainer());
+            final NodeContainerUI cont = p.getNodeContainer();
             executeAndOpen(cont);
         }
         try {
@@ -231,5 +227,13 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         } catch (Exception e) {
             // ignore
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean canHandleWorklfowManagerUI() {
+        return true;
     }
 }

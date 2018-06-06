@@ -59,6 +59,8 @@ import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.wizard.SinglePageManager;
 import org.knime.core.wizard.SubnodeViewableModel;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -149,13 +151,18 @@ public final class OpenSubnodeWebViewAction extends Action {
         return m_nodeContainer.getName();
     }
 
-    static boolean hasContainerView(final NodeContainer cont) {
-        boolean hasView = false;
-        if (cont instanceof SubNodeContainer) {
-            SinglePageManager spm = SinglePageManager.of(cont.getParent());
-            hasView = spm.hasWizardPage(cont.getID());
+    static boolean hasContainerView(final NodeContainerUI cont) {
+        if (Wrapper.wraps(cont, NodeContainer.class)) {
+            NodeContainer nc = Wrapper.unwrapNC(cont);
+            boolean hasView = false;
+            if (nc instanceof SubNodeContainer) {
+                SinglePageManager spm = SinglePageManager.of(nc.getParent());
+                hasView = spm.hasWizardPage(cont.getID());
+            }
+            return hasView;
+        } else {
+            return false;
         }
-        return hasView;
     }
 
 }
