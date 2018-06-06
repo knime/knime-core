@@ -87,7 +87,7 @@ import org.knime.core.node.ExecutionContext;
  * </pre></code>
  *
  * This will make certain consumption paths (pairs of {@link DataCellToJavaConverterFactory} and
- * {@link DataValueConsumerFactory}) available, which can be queried with
+ * {@link CellValueConsumerFactory}) available, which can be queried with
  * {@link ConsumerRegistry#getAvailableConsumptionPaths(DataType)}.
  *
  * For any given source type registering consumers is a matter of:
@@ -101,8 +101,8 @@ import org.knime.core.node.ExecutionContext;
  * </pre></code>
  *
  * This will make certain production paths (pairs of {@link JavaToDataCellConverterFactory} and
- * {@link DataValueProducerFactory}) available, which can be queried with
- * {@link ProducerRegistry#getAvailableProductionPaths(String)}.
+ * {@link CellValueProducerFactory}) available, which can be queried with
+ * {@link ProducerRegistry#getAvailableProductionPaths(Object)}.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @see SerializeUtil SerializeUtil - for serializing ConsumptionPath or ProductionPath.
@@ -148,7 +148,8 @@ public class MappingFramework {
         return perSourceType;
     }
 
-    private static HashMap<Class<? extends Destination<?>>, ConsumerRegistry<?, ?>> m_destinationTypes = new HashMap<>();
+    private static HashMap<Class<? extends Destination<?>>, ConsumerRegistry<?, ?>> m_destinationTypes =
+        new HashMap<>();
 
     private static HashMap<Class<? extends Source<?>>, ProducerRegistry<?, ?>> m_sourceTypes = new HashMap<>();
 
@@ -197,9 +198,9 @@ public class MappingFramework {
      * @return The DataRow which contains the data read from the source
      * @throws Exception If conversion fails
      */
-    public static <SourceType extends Source<?>, PP extends ProducerParameters<SourceType>> DataRow map(final RowKey key,
-        final SourceType source, final ProductionPath[] mapping, final PP[] params, final ExecutionContext context)
-        throws Exception {
+    public static <SourceType extends Source<?>, PP extends ProducerParameters<SourceType>> DataRow map(
+        final RowKey key, final SourceType source, final ProductionPath[] mapping, final PP[] params,
+        final ExecutionContext context) throws Exception {
 
         final DataCell[] cells = new DataCell[mapping.length];
 
