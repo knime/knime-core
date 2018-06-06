@@ -62,7 +62,7 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * @since 3.6
  */
 public interface CellValueConsumerFactory<DestinationType extends Destination<?>, T, ExternalType, CP extends ConsumerParameters<DestinationType>>
-    extends ConverterFactory<Class<?>, ExternalType, CellValueConsumer<DestinationType, ?, CP>> {
+    extends ConverterFactory<Class<?>, ExternalType> {
 
     /**
      * Create a {@link CellValueConsumer}.

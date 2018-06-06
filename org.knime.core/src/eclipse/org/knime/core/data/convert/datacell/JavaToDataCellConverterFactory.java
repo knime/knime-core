@@ -68,7 +68,7 @@ import org.knime.core.node.ExecutionContext;
  * @see JavaToDataCellConverter
  * @see JavaToDataCellConverterRegistry
  */
-public interface JavaToDataCellConverterFactory<S> extends ConverterFactory<Class<?>, DataType, JavaToDataCellConverter<S>> {
+public interface JavaToDataCellConverterFactory<S> extends ConverterFactory<Class<?>, DataType> {
     /**
      * Create an instance of a {@link JavaToDataCellConverter} which is able to convert instances of <code>S</code> into
      * {@link DataCell DataCells} with the {@link DataType} returned by {@link #getDestinationType()}.

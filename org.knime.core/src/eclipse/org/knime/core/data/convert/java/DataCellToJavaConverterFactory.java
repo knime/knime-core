@@ -66,7 +66,7 @@ import org.knime.core.data.convert.ConverterFactory;
  * @see DataCellToJavaConverter
  * @see DataCellToJavaConverterRegistry
  */
-public interface DataCellToJavaConverterFactory<S extends DataValue, D> extends ConverterFactory<Class<? extends DataValue>, Class<?>, DataCellToJavaConverter<S, D>> {
+public interface DataCellToJavaConverterFactory<S extends DataValue, D> extends ConverterFactory<Class<? extends DataValue>, Class<?>> {
 
     /**
      * Create an instance of a {@link DataCellToJavaConverter} which is able to convert <code>S</code> into

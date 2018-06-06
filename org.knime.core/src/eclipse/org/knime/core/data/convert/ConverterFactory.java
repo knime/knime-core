@@ -61,10 +61,9 @@ import org.knime.core.node.config.base.ConfigBaseWO;
  * @author Jonathan Hale
  * @param <SourceType> Type that is converted
  * @param <DestType> Type that is converted to
- * @param <ConverterType> Type of the converters that are created
  * @since 3.6
  */
-public interface ConverterFactory<SourceType, DestType, ConverterType> {
+public interface ConverterFactory<SourceType, DestType> {
 
     /**
      * Get the {@link DataType} (the type of {@link DataCell data cells}) which converters created by this factory are

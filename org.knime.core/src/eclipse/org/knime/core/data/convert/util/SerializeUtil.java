@@ -189,7 +189,7 @@ public final class SerializeUtil {
      * @throws InvalidSettingsException
      * @since 3.6
      */
-    public static void storeConverterFactory(final ConverterFactory<?, ?, ?> factory, final ConfigBaseWO config,
+    public static void storeConverterFactory(final ConverterFactory<?, ?> factory, final ConfigBaseWO config,
         final String key) throws InvalidSettingsException {
         config.addString(key, factory.getIdentifier());
 

@@ -62,7 +62,7 @@ import org.knime.core.data.convert.map.Source.ProducerParameters;
  * @since 3.6
  */
 public interface CellValueProducerFactory<SourceType extends Source<ExternalType>, ExternalType, T, PP extends ProducerParameters<SourceType>>
-    extends ConverterFactory<ExternalType, Class<?>, CellValueProducer<SourceType, ?, PP>> {
+    extends ConverterFactory<ExternalType, Class<?>> {
 
     @Override
     default String getName() {

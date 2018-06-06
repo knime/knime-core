@@ -91,7 +91,7 @@ public final class ConversionKey {
      *
      * @param factory The existing factory which should be referenced by this key
      */
-    public ConversionKey(final ConverterFactory<?, ?, ?> factory) {
+    public ConversionKey(final ConverterFactory<?, ?> factory) {
         this(factory.getSourceType(), factory.getDestinationType());
     }
 
