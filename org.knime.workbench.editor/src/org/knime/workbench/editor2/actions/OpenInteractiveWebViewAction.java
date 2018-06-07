@@ -61,7 +61,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.Node;
@@ -78,6 +77,7 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.core.ui.wrapper.NodeContainerWrapper;
 import org.knime.core.ui.wrapper.SingleInteractiveWebViewResultWrapper;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.js.core.JSCorePlugin;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -96,7 +96,7 @@ public final class OpenInteractiveWebViewAction extends Action {
     private static final String CHROMIUM_BROWSER = "org.knime.ext.seleniumdrivers.multios.ChromiumWizardNodeView";
     private static final String CHROME_BROWSER = "org.knime.ext.seleniumdrivers.multios.ChromeWizardNodeView";
 
-    private final SingleInteractiveWebViewResultUI m_webViewForNode;
+    private final SingleInteractiveWebViewResultUI<?, ?, ?> m_webViewForNode;
     private final NodeContainerUI m_nodeContainer;
     private final boolean m_singleTitle;
 
@@ -109,7 +109,7 @@ public final class OpenInteractiveWebViewAction extends Action {
      *        this is the content of a contained node.
      */
     public OpenInteractiveWebViewAction(final NodeContainerUI nodeContainer,
-        final SingleInteractiveWebViewResultUI webViewForNode) {
+        final SingleInteractiveWebViewResultUI<?, ?, ?> webViewForNode) {
         m_nodeContainer = CheckUtils.checkArgumentNotNull(nodeContainer);
         m_webViewForNode = CheckUtils.checkArgumentNotNull(webViewForNode);
         m_singleTitle = nodeContainer instanceof SubNodeContainerUI;
@@ -160,6 +160,7 @@ public final class OpenInteractiveWebViewAction extends Action {
     @Override
     public void run() {
         LOGGER.debug("Open Interactive Web Node View " + m_nodeContainer.getName());
+        Throwable[] throwable = new Throwable[1];
         if(wraps(m_nodeContainer, NodeContainer.class)) {
             //in case we are in the 'old' world and UI-classes are not used
             //required objects need to be unwrapped
@@ -179,17 +180,11 @@ public final class OpenInteractiveWebViewAction extends Action {
                 final String title = m_webViewForNode.getViewName();
                 Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
             } catch (Throwable t) {
-                final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
-                mb.setText("Interactive View cannot be opened");
-                mb.setMessage("The interactive view cannot be opened for the following reason:\n" + t.getMessage());
-                mb.open();
-                LOGGER.error("The interactive view for node '" + nativeNC.getNameWithID() + "' has thrown a '"
-                    + t.getClass().getSimpleName() + "'. That is most likely an implementation error.", t);
+                throwable[0] = t;
             }
         } else {
             //create view by using the UI-objects directly
             //and don't block the UI
-            Throwable[] throwable = new Throwable[1];
             try {
                 PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
                     monitor.beginTask("Waiting for the view to open", 100);
@@ -211,16 +206,25 @@ public final class OpenInteractiveWebViewAction extends Action {
                 //canceled by user, don't open
                 //(cancellation doesn't work, yet)
             }
-            if (throwable[0] != null) {
-                //don't open the view but a error dialog
-                final Shell shell = Display.getCurrent().getActiveShell();
-                MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
-                mb.setText("View cannot be opened");
-                mb.setMessage("The view cannot be opened for the following" + " reason:\n" + throwable[0].getMessage());
-                mb.open();
-                LOGGER.warn("View cannot be opened", throwable[0]);
+        }
+        if (throwable[0] != null) {
+            //don't open the view but an error dialog
+            Throwable t = throwable[0];
+            final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
+            mb.setText("Interactive View cannot be opened");
+            mb.setMessage("The interactive view cannot be opened for the following reason:\n" + t.getMessage());
+            mb.open();
+            StringBuilder sb = new StringBuilder("The interactive view for node '");
+            sb.append(m_nodeContainer.getNameWithID());
+            sb.append("' has thrown a '");
+            sb.append(t.getClass().getSimpleName());
+            sb.append("'.");
+            if (Wrapper.wraps(m_nodeContainer, NodeContainer.class)) {
+                sb.append(" That is most likely an implementation error.");
+                //in case of an UI implementation it's not necessarily an implementation error
+                //can, e.g., be a connection timeout
             }
-
+            LOGGER.error(sb.toString(), t);
         }
     }
 
