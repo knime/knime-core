@@ -43,8 +43,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Oct 13, 2016 (hornm): created
  */
 package org.knime.core.ui.wrapper;
 
@@ -57,10 +55,10 @@ import org.knime.core.ui.node.workflow.InteractiveWebViewsResultUI;
 /**
  * UI-interface implementation that wraps a {@link InteractiveWebViewsResult}.
  *
- * @author Martin Horn, University of Konstanz
- * @param <T>
- * @param <REP>
- * @param <VAL>
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @param <T> see {@link InteractiveWebViewsResultUI}
+ * @param <REP> see {@link InteractiveWebViewsResultUI}
+ * @param <VAL> see {@link InteractiveWebViewsResultUI}
  * @since 3.6
  */
 public class InteractiveWebViewsResultWrapper<T extends ViewableModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
@@ -79,6 +77,7 @@ public class InteractiveWebViewsResultWrapper<T extends ViewableModel & WizardNo
      * @param delegate the object to be wrapped
      * @return a new wrapper or a already existing one
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static final <T extends ViewableModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
         InteractiveWebViewsResultWrapper<T, REP, VAL> wrap(final InteractiveWebViewsResult delegate) {
         return (InteractiveWebViewsResultWrapper<T, REP, VAL>)Wrapper.wrapOrGet(delegate,
@@ -96,6 +95,7 @@ public class InteractiveWebViewsResultWrapper<T extends ViewableModel & WizardNo
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
     public SingleInteractiveWebViewResultUI<T, REP, VAL> get(final int index) {
         return SingleInteractiveWebViewResultWrapper.wrap(unwrap().get(index));

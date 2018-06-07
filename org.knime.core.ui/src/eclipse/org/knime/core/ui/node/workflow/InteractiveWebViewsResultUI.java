@@ -43,8 +43,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Dec 5, 2017 (hornm): created
  */
 package org.knime.core.ui.node.workflow;
 
@@ -62,11 +60,15 @@ import org.knime.core.ui.UI;
  * be expensive.
  *
  * @author Bernd Wiswedel, KNIME GmbH, Zurich, Switzland
- * @author Martin Horn, University of Konstanz
- * @param <T>
- * @param <REP>
- * @param <VAL>
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @param <T> an implementation of {@link ViewableModel} and {@link WizardNode}
+ * @param <REP> the view representation (i.e. static 'data')
+ * @param <VAL> the view value (i.e. properties that can change)
  * @since 3.6
+ *
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface InteractiveWebViewsResultUI<T extends ViewableModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
     extends UI {
@@ -82,10 +84,13 @@ public interface InteractiveWebViewsResultUI<T extends ViewableModel & WizardNod
      */
     SingleInteractiveWebViewResultUI<T, REP, VAL> get(final int index);
 
-    /** Represents a single web view, currently a model and a name.
-     * @param <T>
-     * @param <REP>
-     * @param <VAL> */
+    /**
+     * Represents a single web view, currently a model and a name.
+     *
+     * @param <T> see above
+     * @param <REP> see above
+     * @param <VAL> see above
+     */
     public static interface SingleInteractiveWebViewResultUI<T extends ViewableModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
         extends UI {
 

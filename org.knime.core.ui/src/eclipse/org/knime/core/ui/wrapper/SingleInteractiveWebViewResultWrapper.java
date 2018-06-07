@@ -57,7 +57,7 @@ import org.knime.core.ui.node.workflow.InteractiveWebViewsResultUI.SingleInterac
 /**
  * UI-interface implementation that wraps a {@link SingleInteractiveWebViewResult}.
  *
- * @author Martin Horn, University of Konstanz
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 3.6
  */
 public class SingleInteractiveWebViewResultWrapper<T extends ViewableModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
@@ -76,6 +76,7 @@ public class SingleInteractiveWebViewResultWrapper<T extends ViewableModel & Wiz
      * @param delegate the object to be wrapped
      * @return a new wrapper or a already existing one
      */
+    @SuppressWarnings("rawtypes")
     public static final SingleInteractiveWebViewResultWrapper wrap(final SingleInteractiveWebViewResult delegate) {
         return (SingleInteractiveWebViewResultWrapper)Wrapper.wrapOrGet(delegate,
             o -> new SingleInteractiveWebViewResultWrapper(o));
@@ -84,6 +85,7 @@ public class SingleInteractiveWebViewResultWrapper<T extends ViewableModel & Wiz
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
     public T getModel() {
         return (T)unwrap().getNativeNodeContainer().getNodeModel();
