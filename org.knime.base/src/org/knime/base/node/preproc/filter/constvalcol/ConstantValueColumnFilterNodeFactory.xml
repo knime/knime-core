@@ -10,28 +10,28 @@
 			the same value from the input data table. Examples include a column
 			containing only zeroes, a column containing only identical Strings,
 			or a column comprising only missing cells. In a dialog window, you
-			can select which columns to apply the filter to (with all
-			columns selected by default). From these selected columns, you
-			can choose to remove either all constant value columns or columns
-			containing only specific constant numeric, String, or missing values.
-			Finally, you can also specify the minimum number of rows a table
-			must have to be considered for filtering.
+			can select which columns to apply the filter to (with all columns
+			selected by default). From these selected columns, you can choose to
+			remove either all constant value columns or columns containing only
+			specific constant numeric, String, or missing values. Finally, you
+			can also specify the minimum number of rows a table must have to be
+			considered for filtering.
 		</intro>
 		<option
-			name="Remove constant value columns from all selected columns"> Select this option to remove all constant value columns from
+			name="Remove from the selected columns all constant value columns"> Select this option to remove all constant value columns from
 			the columns selected in the Column Selection tab, independent of the
 			specific value they contain in duplicates.
 		</option>
 		<option
-			name="Remove constant value columns from selected columns containing only numeric values of"> Select this option to remove columns containing only a specific
+			name="Remove from the selected columns constant value columns that only contain numeric values of"> Select this option to remove columns containing only a specific
 			numeric value from the columns selected in the Column Selection tab.
 		</option>
 		<option
-			name="Remove constant value columns from selected columns containing only String values of"> Select this option to remove columns containing only a specific
+			name="Remove from the selected columns constant value columns that only contain String values of"> Select this option to remove columns containing only a specific
 			String value from the columns selected in the Column Selection tab.
 		</option>
 		<option
-			name="Remove constant value columns from selected columns containing only missing values"> Select this option to remove columns containing only empty
+			name="Remove from the selected columns constant value columns that only contain missing values"> Select this option to remove columns containing only empty
 			cells / missing values from the columns selected in the Column
 			Selection tab.
 		</option>

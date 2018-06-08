@@ -121,17 +121,17 @@ final class ConstantValueColumnFilterNodeDialogPane extends NodeDialogPane {
     /*
      * The title of the group of options that allow to limit the filtering to specific values.
      */
-    private static final String FILTER_OPTIONS_TITLE = "Remove constant value columns from";
+    private static final String FILTER_OPTIONS_TITLE = "Remove from the selected columns";
 
     /*
      * The label of the option to filter all constant value columns.
      */
-    static final String FILTER_OPTIONS_ALL_LABEL = "all selected columns";
+    static final String FILTER_OPTIONS_ALL_LABEL = "all constant value columns";
 
     /*
      * The label of the option to filter .
      */
-    static final String FILTER_OPTIONS_PARTIAL_LABEL = "selected columns containing only";
+    static final String FILTER_OPTIONS_PARTIAL_LABEL = "constant value columns that only contain";
 
     /*
      * The tooltip of the option to filter all or only specific constant value columns.
