@@ -118,7 +118,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      * @throws InvalidSettingsException thrown in case something goes wrong during de-serialization, e.g. a new version
      *             of a writer has been used which hasn't been installed on the current system.
      */
-    protected void readMetaFromFile(final NodeSettingsRO settings, final int version)
+    public void readMetaFromFile(final NodeSettingsRO settings, final int version)
         throws IOException, InvalidSettingsException {
         if (version <= 6) {
             m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion1x(settings);

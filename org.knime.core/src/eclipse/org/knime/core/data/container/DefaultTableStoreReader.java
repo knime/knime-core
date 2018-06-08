@@ -155,7 +155,7 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
      * {@inheritDoc}
      */
     @Override
-    protected void readMetaFromFile(final NodeSettingsRO settings, final int version)
+    public void readMetaFromFile(final NodeSettingsRO settings, final int version)
         throws IOException, InvalidSettingsException {
         final CompressionFormat cF;
         if (version < 3) { // stream was not zipped in KNIME 1.1.x
