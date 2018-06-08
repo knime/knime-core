@@ -66,7 +66,7 @@ import org.knime.core.node.config.Config;
  */
 public class InCol extends JavaColumnField {
 
-    private Optional<DataCellToJavaConverterFactory<?, ?>> m_factory;
+    private Optional<DataCellToJavaConverterFactory<?, ?>> m_factory = Optional.empty();
 
     @Override
     public boolean isInput() {
@@ -125,7 +125,7 @@ public class InCol extends JavaColumnField {
      * @return An optional converter factory, present if converter factory id setting is valid, empty if not found.
      */
     public Optional<DataCellToJavaConverterFactory<?, ?>> getConverterFactory() {
-        if (m_factory == null || (m_factory.isPresent() && m_factory.get().getIdentifier().equals(m_converterFactoryId))) {
+        if (m_factory.isPresent() && m_factory.get().getIdentifier().equals(m_converterFactoryId)) {
             m_factory = ConverterUtil.getDataCellToJavaConverterFactory(m_converterFactoryId);
         }
         return m_factory;
