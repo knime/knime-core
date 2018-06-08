@@ -103,6 +103,8 @@ public final class ImageRepository {
         /** the KNIME triangle. */
         KNIME("icons/knime.png"),
 
+        /** Add icon in the form of a plus sign. */
+        AddPlus("icons/add_plus.png"),
         /** edit icon when cursor moves over annotations. */
         AnnotationEditHover("icons/anno_edit.png"),
         /** move icon when cursor moves over annotation top left corner. */
