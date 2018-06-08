@@ -1,4 +1,4 @@
-package org.knime.base.node.jsnippet.ui;
+package org.knime.core.node.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,11 +10,12 @@ import java.util.stream.Collectors;
 import javax.swing.AbstractListModel;
 
 /**
- * List model which filters bundleNames according to a search string.
+ * List model which filters its items according to a search string and considers a list of excluded items.
  *
  * @author Jonathan Hale, KNIME GmbH, Konstanz, Germany
+ * @since 3.6
  */
-final class FilterableListModel extends AbstractListModel<String> {
+public final class FilterableListModel extends AbstractListModel<String> {
 
     private static final long serialVersionUID = 1L;
 

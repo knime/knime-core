@@ -1,4 +1,4 @@
-package org.knime.base.node.jsnippet.ui;
+package org.knime.core.node.util;
 
 import static org.junit.Assert.assertEquals;
 

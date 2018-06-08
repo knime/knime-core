@@ -92,6 +92,7 @@ import javax.swing.tree.TreePath;
 
 import org.eclipse.core.runtime.Platform;
 import org.knime.base.node.jsnippet.JavaSnippet;
+import org.knime.core.node.util.FilterableListModel;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.util.filter.ArrayListModel;
 import org.osgi.framework.Bundle;
