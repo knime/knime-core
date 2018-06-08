@@ -80,7 +80,9 @@ public abstract class AbstractNodeView<T extends ViewableModel> {
     private final T m_viewableModel;
 
     /**
-     * The node context for this view.
+     * The node context for this view. Can be <code>null</code> if allowed by the implementation (see
+     * {@link #AbstractNodeView(ViewableModel, boolean)}.
+     *
      * @since 2.8
      */
     protected final NodeContext m_nodeContext;
@@ -93,7 +95,7 @@ public abstract class AbstractNodeView<T extends ViewableModel> {
      * @since 3.4
      */
     protected AbstractNodeView(final T viewableModel) {
-        this(viewableModel, true);
+        this(viewableModel, false);
     }
 
     /**
@@ -101,24 +103,21 @@ public abstract class AbstractNodeView<T extends ViewableModel> {
      * {@link NodeContext} reference is kept and will be made available.
      *
      * @param viewableModel The underlying viewable model.
-     * @param requireNodeContext If a reference to the node context should be kept, otherwise m_nodeContext will be
-     *            <code>null</code>
+     * @param allowNullNodeContext if <code>true</code> the absence of the node context will be tolerated (i.e.
+     *            {@link #m_nodeContext} can be <code>null</code>) - implementations need be able to deal with that!
      * @throws IllegalArgumentException If the <code>viewableModel</code> is null.
      * @since 3.6
      */
-    protected AbstractNodeView(final T viewableModel, final boolean requireNodeContext) {
+    protected AbstractNodeView(final T viewableModel, final boolean allowNullNodeContext) {
         if (viewableModel == null) {
             throw new IllegalArgumentException("Node model must not be null");
         }
         m_logger = NodeLogger.getLogger(this.getClass());
         m_viewableModel = viewableModel;
-
-        if (requireNodeContext) {
-            m_nodeContext = NodeContext.getContext();
+        m_nodeContext = NodeContext.getContext();
+        if (!allowNullNodeContext) {
             m_logger.assertLog(m_nodeContext != null,
                 "No node context available in constructor of node view " + getClass().getName());
-        } else {
-            m_nodeContext = null;
         }
     }
 
