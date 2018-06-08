@@ -333,6 +333,11 @@ final class ConstantValueColumnFilterNodeModel extends NodeModel {
             setWarningMessage(WARNING_SMALL_TABLE);
         } else if (inputTable.size() == 1) {
             setWarningMessage(WARNING_ONEROW);
+        } else if (!m_filterAll.getStringValue()
+            .equals(ConstantValueColumnFilterNodeDialogPane.FILTER_OPTIONS_ALL_LABEL)
+            && !m_filterNumeric.getBooleanValue() && !m_filterString.getBooleanValue()
+            && !m_filterMissing.getBooleanValue()) {
+            setWarningMessage(WARNING_NO_FILTER_SELECTED);
         }
 
         ConstantValueColumnFilter filter = new ConstantValueColumnFilter.ConstantValueColumnFilterBuilder()
