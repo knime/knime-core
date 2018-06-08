@@ -63,6 +63,7 @@ import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.EditorUIInformation;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
@@ -1204,10 +1205,10 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //     */
 //    void pushWorkflowVariablesOnStack(FlowObjectStack sos);
 
-//    /** Get read-only access on the current workflow variables.
-//     * @return the current workflow variables, never null.
-//     */
-//    List<FlowVariable> getWorkflowVariables();
+    /** Get read-only access on the current workflow variables.
+     * @return the current workflow variables, never null.
+     */
+    List<FlowVariable> getWorkflowVariables();
 
 //    /** {@inheritDoc} */
 //    FlowObjectStack getFlowObjectStack();

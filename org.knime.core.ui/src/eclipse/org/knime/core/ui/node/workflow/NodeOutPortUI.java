@@ -46,6 +46,7 @@ package org.knime.core.ui.node.workflow;
 
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeContainerStateObservable;
 import org.knime.core.node.workflow.NodeOutPort;
@@ -120,12 +121,12 @@ public interface NodeOutPortUI extends NodePortUI, NodeStateChangeListener, Node
 //     */
 //    public HiLiteHandler getHiLiteHandler();
 
-//    /**
-//     * Returns the {@link FlowObjectStack} of the underlying node.
-//     *
-//     * @return the flow obj stack container
-//     */
-//    public FlowObjectStack getFlowObjectStack();
+    /**
+     * Returns the {@link FlowObjectStack} of the underlying node.
+     *
+     * @return the flow obj stack container
+     */
+    public FlowObjectStack getFlowObjectStack();
 
 //    /**
 //     * Opens the port view for this port with the given name.

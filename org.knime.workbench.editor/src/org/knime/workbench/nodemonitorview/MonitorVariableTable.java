@@ -62,9 +62,9 @@ import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 
 /**
  * Puts info about workflow or node variables into the table.
@@ -82,13 +82,10 @@ public class MonitorVariableTable implements NodeMonitorTable {
     @Override
     public void loadTableData(final NodeContainerUI ncUI, final NodeContainer nc, final int count)
         throws LoadingFailedException {
-        if (nc == null) {
-            throw new LoadingFailedException("no info for '" + ncUI.getClass().getSimpleName() + "'.");
-        }
         // retrieve variables
-        if ((nc instanceof SingleNodeContainer) || nc.getNrOutPorts() > 0) {
+        if ((ncUI instanceof SingleNodeContainerUI) || ncUI.getNrOutPorts() > 0) {
             // for normal nodes port 0 is available (hidden variable OutPort!)
-            FlowObjectStack fos = nc.getOutPort(0).getFlowObjectStack();
+            FlowObjectStack fos = ncUI.getOutPort(0).getFlowObjectStack();
             if (fos != null) {
                 m_variables = fos.getAvailableFlowVariables(Type.values()).values();
                 m_infoLabel = "Node Variables";
@@ -97,7 +94,7 @@ public class MonitorVariableTable implements NodeMonitorTable {
             }
         } else {
             // no output port on metanode - display workflow variables
-            m_variables = ((WorkflowManager)nc).getWorkflowVariables();
+            m_variables = ((WorkflowManagerUI)ncUI).getWorkflowVariables();
             m_infoLabel = "Metanode Variables";
         }
 
@@ -129,6 +126,7 @@ public class MonitorVariableTable implements NodeMonitorTable {
      */
     @Override
     public void updateControls(final Button loadButton, final Combo portCombo, final int count) {
+        portCombo.setEnabled(false);
         if (count == 0) {
             loadButton.setEnabled(true);
             loadButton.setText("Load Variables");

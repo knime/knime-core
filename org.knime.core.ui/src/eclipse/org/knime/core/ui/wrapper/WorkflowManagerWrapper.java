@@ -60,6 +60,7 @@ import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.EditorUIInformation;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
@@ -400,6 +401,11 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     @Override
     public NodeUIInformation getOutPortsBarUIInfo() {
         return unwrap().getOutPortsBarUIInfo();
+    }
+
+    @Override
+    public List<FlowVariable> getWorkflowVariables() {
+        return unwrap().getWorkflowVariables();
     }
 
     @Override
