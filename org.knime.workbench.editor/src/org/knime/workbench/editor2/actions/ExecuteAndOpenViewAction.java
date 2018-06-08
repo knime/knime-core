@@ -175,7 +175,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                     NodeContainerState ncState = cont.getNodeContainerState();
                     // check if the node has finished (either executed or
                     // removed from the queue)
-                    if ((state.getSource().equals(cont.getID())) && ncState.isExecuted()) {
+                    if (state.getSource().equals(cont.getID()) && ncState.isExecuted()) {
                         // if the node was successfully executed
                         // start the view
                         Display.getDefault().asyncExec(new Runnable() {

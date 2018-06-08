@@ -89,7 +89,7 @@ public abstract class AbstractNodeView<T extends ViewableModel> {
     /** Creates new view. This constructor keeps the node model reference and
      * instantiates the logger.
      * @param viewableModel The underlying viewable model.
-     * @throws NullPointerException If the <code>nodeModel</code> is null.
+     * @throws IllegalArgumentException If the <code>viewableModel</code> is null.
      * @since 3.4
      */
     protected AbstractNodeView(final T viewableModel) {
@@ -103,7 +103,7 @@ public abstract class AbstractNodeView<T extends ViewableModel> {
      * @param viewableModel The underlying viewable model.
      * @param requireNodeContext If a reference to the node context should be kept, otherwise m_nodeContext will be
      *            <code>null</code>
-     * @throws NullPointerException If the <code>nodeModel</code> is null.
+     * @throws IllegalArgumentException If the <code>viewableModel</code> is null.
      * @since 3.6
      */
     protected AbstractNodeView(final T viewableModel, final boolean requireNodeContext) {

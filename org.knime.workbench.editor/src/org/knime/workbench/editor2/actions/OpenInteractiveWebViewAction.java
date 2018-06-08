@@ -161,7 +161,7 @@ public final class OpenInteractiveWebViewAction extends Action {
     public void run() {
         LOGGER.debug("Open Interactive Web Node View " + m_nodeContainer.getName());
         Throwable[] throwable = new Throwable[1];
-        if(wraps(m_nodeContainer, NodeContainer.class)) {
+        if (wraps(m_nodeContainer, NodeContainer.class)) {
             //in case we are in the 'old' world and UI-classes are not used
             //required objects need to be unwrapped
             NativeNodeContainer nativeNC =
