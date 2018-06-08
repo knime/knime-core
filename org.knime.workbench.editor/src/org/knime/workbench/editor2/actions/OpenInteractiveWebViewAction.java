@@ -160,7 +160,6 @@ public final class OpenInteractiveWebViewAction extends Action {
     @Override
     public void run() {
         LOGGER.debug("Open Interactive Web Node View " + m_nodeContainer.getName());
-        Throwable[] throwable = new Throwable[1];
         if (wraps(m_nodeContainer, NodeContainer.class)) {
             //in case we are in the 'old' world and UI-classes are not used
             //required objects need to be unwrapped
@@ -180,7 +179,7 @@ public final class OpenInteractiveWebViewAction extends Action {
                 final String title = m_webViewForNode.getViewName();
                 Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
             } catch (Throwable t) {
-                throwable[0] = t;
+                showWarningDialog(m_nodeContainer, t);
             }
         } else {
             //create view by using the UI-objects directly
@@ -196,36 +195,36 @@ public final class OpenInteractiveWebViewAction extends Action {
                         try {
                             Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
                         } catch (Throwable e) {
-                            throwable[0] = e;
+                            showWarningDialog(m_nodeContainer, e);
                         }
                     });
                 });
             } catch (InvocationTargetException e) {
-                throwable[0] = e.getCause();
+                //don't open the view but an error dialog
+                showWarningDialog(m_nodeContainer, e.getCause());
             } catch (InterruptedException e) {
                 //canceled by user, don't open
                 //(cancellation doesn't work, yet)
             }
         }
-        if (throwable[0] != null) {
-            //don't open the view but an error dialog
-            Throwable t = throwable[0];
-            final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
-            mb.setText("Interactive View cannot be opened");
-            mb.setMessage("The interactive view cannot be opened for the following reason:\n" + t.getMessage());
-            mb.open();
-            StringBuilder sb = new StringBuilder("The interactive view for node '");
-            sb.append(m_nodeContainer.getNameWithID());
-            sb.append("' has thrown a '");
-            sb.append(t.getClass().getSimpleName());
-            sb.append("'.");
-            if (Wrapper.wraps(m_nodeContainer, NodeContainer.class)) {
-                sb.append(" That is most likely an implementation error.");
-                //in case of an UI implementation it's not necessarily an implementation error
-                //can, e.g., be a connection timeout
-            }
-            LOGGER.error(sb.toString(), t);
+    }
+
+    private static void showWarningDialog(final NodeContainerUI nc, final Throwable t) {
+        final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
+        mb.setText("Interactive View cannot be opened");
+        mb.setMessage("The interactive view cannot be opened for the following reason:\n" + t.getMessage());
+        mb.open();
+        StringBuilder sb = new StringBuilder("The interactive view for node '");
+        sb.append(nc.getNameWithID());
+        sb.append("' has thrown a '");
+        sb.append(t.getClass().getSimpleName());
+        sb.append("'.");
+        if (Wrapper.wraps(nc, NodeContainer.class)) {
+            sb.append(" That is most likely an implementation error.");
+            //in case of an UI implementation it's not necessarily an implementation error
+            //can, e.g., be a connection timeout
         }
+        LOGGER.error(sb.toString(), t);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
