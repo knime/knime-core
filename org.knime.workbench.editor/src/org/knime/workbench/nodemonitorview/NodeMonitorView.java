@@ -116,14 +116,12 @@ import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.Pair;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
-/** An Eclipse View showing the interna of the currently
- * selected (meta)node.
+/**
+ * An Eclipse View showing the interna of the currently selected (meta)node.
  *
  * @author M. Berthold, KNIME.com AG
  */
-public class NodeMonitorView extends ViewPart
-                              implements ISelectionListener, LocationListener,
-                                         NodeStateChangeListener {
+public class NodeMonitorView extends ViewPart implements ISelectionListener, LocationListener, NodeStateChangeListener {
 
     /**
      * Number of rows to 'pre-load' in view when data table is shown.
@@ -136,18 +134,29 @@ public class NodeMonitorView extends ViewPart
     private static final int MAX_NUM_COLUMN = 100;
 
     private Text m_title;
+
     private Text m_state;
+
     private Label m_info;
+
     private ComboViewer m_portIndex;
+
     private Table m_table;
+
     private AddDataRowListener m_addDataRowListener;
 
     private IStructuredSelection m_lastSelection;
+
     private IStructuredSelection m_lastSelectionWhilePinned;
+
     private NodeContainerUI m_lastNode;
+
     private boolean m_pinned = false;
 
-    private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE, TIMER, GRAPHANNOTATIONS }
+    private enum DISPLAYOPTIONS {
+            VARS, SETTINGS, ALLSETTINGS, TABLE, TIMER, GRAPHANNOTATIONS
+    }
+
     private DISPLAYOPTIONS m_choice = DISPLAYOPTIONS.VARS;
 
     /** {@inheritDoc} */
@@ -156,8 +165,8 @@ public class NodeMonitorView extends ViewPart
         // Toolbar
         IToolBarManager toolbarMGR = getViewSite().getActionBars().getToolBarManager();
         // create button which allows to "pin" selection:
-        final RetargetAction pinButton
-             = new RetargetAction("PinView", "Pin view to selected node", IAction.AS_CHECK_BOX);
+        final RetargetAction pinButton =
+            new RetargetAction("PinView", "Pin view to selected node", IAction.AS_CHECK_BOX);
         pinButton.setImageDescriptor(ImageDescriptor.createFromFile(this.getClass(), "icons/pin.png"));
         pinButton.setChecked(m_pinned);
         pinButton.addPropertyChangeListener(new IPropertyChangeListener() {
@@ -178,8 +187,8 @@ public class NodeMonitorView extends ViewPart
         // configure drop down menu
         IMenuManager dropDownMenu = getViewSite().getActionBars().getMenuManager();
         // drop down menu entry for outport table:
-        final RetargetAction menuentrytable
-                = new RetargetAction("OutputTable", "Show Output Table", IAction.AS_RADIO_BUTTON);
+        final RetargetAction menuentrytable =
+            new RetargetAction("OutputTable", "Show Output Table", IAction.AS_RADIO_BUTTON);
         menuentrytable.setChecked(DISPLAYOPTIONS.TABLE.equals(m_choice));
         menuentrytable.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
@@ -193,11 +202,10 @@ public class NodeMonitorView extends ViewPart
         menuentrytable.setEnabled(true);
         dropDownMenu.add(menuentrytable);
         // drop down menu entry for node variables:
-        final RetargetAction dropdownmenuvars
-                = new RetargetAction("NodeVariables", "Show Variables", IAction.AS_RADIO_BUTTON);
+        final RetargetAction dropdownmenuvars =
+            new RetargetAction("NodeVariables", "Show Variables", IAction.AS_RADIO_BUTTON);
         dropdownmenuvars.setChecked(DISPLAYOPTIONS.VARS.equals(m_choice));
-        dropdownmenuvars.addPropertyChangeListener(
-                new IPropertyChangeListener() {
+        dropdownmenuvars.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent event) {
                 if (dropdownmenuvars.isChecked()) {
@@ -209,11 +217,10 @@ public class NodeMonitorView extends ViewPart
         dropdownmenuvars.setEnabled(true);
         dropDownMenu.add(dropdownmenuvars);
         // drop down menu entry for configuration/settings:
-        final RetargetAction menuentrysettings
-                = new RetargetAction("NodeConf", "Show Configuration", IAction.AS_RADIO_BUTTON);
+        final RetargetAction menuentrysettings =
+            new RetargetAction("NodeConf", "Show Configuration", IAction.AS_RADIO_BUTTON);
         menuentrysettings.setChecked(DISPLAYOPTIONS.SETTINGS.equals(m_choice));
-        menuentrysettings.addPropertyChangeListener(
-                new IPropertyChangeListener() {
+        menuentrysettings.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent event) {
                 if (menuentrysettings.isChecked()) {
@@ -225,11 +232,10 @@ public class NodeMonitorView extends ViewPart
         menuentrysettings.setEnabled(true);
         dropDownMenu.add(menuentrysettings);
         // drop down menu entry for configuration/settings:
-        final RetargetAction menuentryallsettings
-                = new RetargetAction("NodeConfAll", "Show Entire Configuration", IAction.AS_RADIO_BUTTON);
+        final RetargetAction menuentryallsettings =
+            new RetargetAction("NodeConfAll", "Show Entire Configuration", IAction.AS_RADIO_BUTTON);
         menuentryallsettings.setChecked(DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
-        menuentryallsettings.addPropertyChangeListener(
-                new IPropertyChangeListener() {
+        menuentryallsettings.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent event) {
                 if (menuentryallsettings.isChecked()) {
@@ -241,9 +247,8 @@ public class NodeMonitorView extends ViewPart
         menuentryallsettings.setEnabled(true);
         dropDownMenu.add(menuentryallsettings);
         // drop down menu entry for node timer
-        final RetargetAction menuentrynodetimer
-                = new RetargetAction("NodeTimer", "Show Node Timing Information",
-                            IAction.AS_RADIO_BUTTON);
+        final RetargetAction menuentrynodetimer =
+            new RetargetAction("NodeTimer", "Show Node Timing Information", IAction.AS_RADIO_BUTTON);
         menuentrynodetimer.setChecked(DISPLAYOPTIONS.TIMER.equals(m_choice));
         menuentrynodetimer.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
@@ -257,9 +262,8 @@ public class NodeMonitorView extends ViewPart
         menuentrynodetimer.setEnabled(true);
         dropDownMenu.add(menuentrynodetimer);
         // drop down menu entry for node graph annotations
-        final RetargetAction menuentrygraphannotations
-                = new RetargetAction("NodeGraphAnno", "Show Graph Annotations",
-                            IAction.AS_RADIO_BUTTON);
+        final RetargetAction menuentrygraphannotations =
+            new RetargetAction("NodeGraphAnno", "Show Graph Annotations", IAction.AS_RADIO_BUTTON);
         menuentrygraphannotations.setChecked(DISPLAYOPTIONS.GRAPHANNOTATIONS.equals(m_choice));
         menuentrygraphannotations.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
@@ -301,7 +305,7 @@ public class NodeMonitorView extends ViewPart
         m_info.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
         m_info.setText("n/a.                        ");
         m_portIndex = new ComboViewer(infoPanel);
-        m_portIndex.add(new String[] {"port 0", "port 1", "port 2"});
+        m_portIndex.add(new String[]{"port 0", "port 1", "port 2"});
         m_portIndex.getCombo().setEnabled(false);
         m_portIndex.addSelectionChangedListener(new ISelectionChangedListener() {
             @Override
@@ -427,7 +431,7 @@ public class NodeMonitorView extends ViewPart
         m_title.setText(nc.getName() + "  (" + nc.getID() + ")");
         m_state.setText(nc.getNodeContainerState().toString());
 
-        //deregister setdata listener
+        //de-register adddata listener
         if (m_addDataRowListener != null) {
             m_addDataRowListener.close();
             m_table.removeListener(SWT.SetData, m_addDataRowListener);
@@ -435,53 +439,53 @@ public class NodeMonitorView extends ViewPart
 
         Optional<NodeContainer> castNC;
         switch (m_choice) {
-        case VARS:
-            castNC = unwrapOptionalNC(nc);
-            if(castNC.isPresent()) {
-                updateVariableTable(castNC.get());
-            } else {
-                unsupportedSelection(nc);
-            }
-            break;
-        case SETTINGS:
-        case ALLSETTINGS:
-            updateSettingsTable(nc, DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
-            break;
-        case TABLE:
-            m_portIndex.getCombo().setEnabled(true);
-            int nrPorts = nc.getNrOutPorts();
-            if (nc instanceof SingleNodeContainerUI) {
-                // correct for (default - mostly invisible) Variable Port
-                nrPorts--;
-            }
-            String[] vals = new String[nrPorts];
-            for (int i = 0; i < nrPorts; i++) {
-                vals[i] = "Port " + i;
-            }
-            m_portIndex.getCombo().removeAll();
-            m_portIndex.getCombo().setItems(vals);
-            m_portIndex.getCombo().select(0);
+            case VARS:
+                castNC = unwrapOptionalNC(nc);
+                if (castNC.isPresent()) {
+                    updateVariableTable(castNC.get());
+                } else {
+                    unsupportedSelection(nc);
+                }
+                break;
+            case SETTINGS:
+            case ALLSETTINGS:
+                updateSettingsTable(nc, DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
+                break;
+            case TABLE:
+                m_portIndex.getCombo().setEnabled(true);
+                int nrPorts = nc.getNrOutPorts();
+                if (nc instanceof SingleNodeContainerUI) {
+                    // correct for (default - mostly invisible) Variable Port
+                    nrPorts--;
+                }
+                String[] vals = new String[nrPorts];
+                for (int i = 0; i < nrPorts; i++) {
+                    vals[i] = "Port " + i;
+                }
+                m_portIndex.getCombo().removeAll();
+                m_portIndex.getCombo().setItems(vals);
+                m_portIndex.getCombo().select(0);
 
-            updateDataTable(nc, 0);
-            break;
-        case TIMER:
-            castNC = unwrapOptionalNC(nc);
-            if(castNC.isPresent()) {
-                updateTimerTable(castNC.get());
-            } else {
-                unsupportedSelection(nc);
-            }
-            break;
-        case GRAPHANNOTATIONS:
-            castNC = unwrapOptionalNC(nc);
-            if(castNC.isPresent()) {
-                updateGraphAnnotationTable(castNC.get());
-            } else {
-                unsupportedSelection(nc);
-            }
-            break;
-        default:
-             throw new AssertionError("Unhandled switch case: " + m_choice);
+                updateDataTable(nc, 0);
+                break;
+            case TIMER:
+                castNC = unwrapOptionalNC(nc);
+                if (castNC.isPresent()) {
+                    updateTimerTable(castNC.get());
+                } else {
+                    unsupportedSelection(nc);
+                }
+                break;
+            case GRAPHANNOTATIONS:
+                castNC = unwrapOptionalNC(nc);
+                if (castNC.isPresent()) {
+                    updateGraphAnnotationTable(castNC.get());
+                } else {
+                    unsupportedSelection(nc);
+                }
+                break;
+            default:
+                throw new AssertionError("Unhandled switch case: " + m_choice);
         }
     }
 
@@ -600,8 +604,7 @@ public class NodeMonitorView extends ViewPart
         }
         // retrieve variables
         Collection<FlowVariable> fvs;
-        if ((nc instanceof SingleNodeContainer)
-                || nc.getNrOutPorts() > 0) {
+        if ((nc instanceof SingleNodeContainer) || nc.getNrOutPorts() > 0) {
             // for normal nodes port 0 is available (hidden variable OutPort!)
             FlowObjectStack fos = nc.getOutPort(0).getFlowObjectStack();
             if (fos != null) {
@@ -631,8 +634,7 @@ public class NodeMonitorView extends ViewPart
     /*
      *  Put info about node settings into table.
      */
-    private void updateSettingsTable(final NodeContainerUI nc,
-                                     final boolean showAll) {
+    private void updateSettingsTable(final NodeContainerUI nc, final boolean showAll) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
         m_info.setText("Node Configuration");
         // retrieve settings
@@ -704,7 +706,7 @@ public class NodeMonitorView extends ViewPart
                         stack.push(new Pair<Iterator<String>, ConfigBaseRO>(it2, confBase));
                     }
                 } else {
-                   noexpertskip = true;
+                    noexpertskip = true;
                 }
             }
             // in both cases, we report its value
@@ -714,7 +716,7 @@ public class NodeMonitorView extends ViewPart
                 //Yet, it would be better to add, e.g., a #toStringValue(String key) method to the ConfigRO interface ...
                 //However, so far there isn't any other implementation than ConfigBase anyway ...
                 String value;
-                if(second instanceof ConfigBase) {
+                if (second instanceof ConfigBase) {
                     value = ((ConfigBase)second).getEntry(key).toStringValue();
                 } else {
                     throw new IllegalStateException(
@@ -745,7 +747,7 @@ public class NodeMonitorView extends ViewPart
         // check if we can display something at all:
         int index = port;
         if (nc instanceof SingleNodeContainerUI) {
-            index++;  // we don't care about (hidden) variable OutPort
+            index++; // we don't care about (hidden) variable OutPort
         }
         if (nc.getNrOutPorts() <= index) {
             // no (real) port available
@@ -766,7 +768,7 @@ public class NodeMonitorView extends ViewPart
         long size;
         if (po instanceof BufferedDataTable) {
             size = ((BufferedDataTable)po).size();
-            dataTable = (DataTable) po;
+            dataTable = (DataTable)po;
         } else {
             size = ((KnowsRowCountTable)po).size();
             dataTable = (KnowsRowCountTable)po;
@@ -777,7 +779,7 @@ public class NodeMonitorView extends ViewPart
             column = new TableColumn(m_table, SWT.NONE);
             column.setText(dataTable.getDataTableSpec().getColumnSpec(i).getName());
         }
-        if(m_table.getColumnCount() >= MAX_NUM_COLUMN - 1) {
+        if (m_table.getColumnCount() >= MAX_NUM_COLUMN - 1) {
             column = new TableColumn(m_table, SWT.NONE);
             column.setText("(remaining columns skipped)");
         }
@@ -813,6 +815,7 @@ public class NodeMonitorView extends ViewPart
     }
 
     private final AtomicBoolean m_updateInProgress = new AtomicBoolean(false);
+
     /** {@inheritDoc} */
     @Override
     public void stateChanged(final NodeStateEvent state) {
