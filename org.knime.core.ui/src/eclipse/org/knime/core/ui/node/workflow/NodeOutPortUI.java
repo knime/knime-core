@@ -75,13 +75,13 @@ public interface NodeOutPortUI extends NodePortUI, NodeStateChangeListener, Node
      */
     public PortObjectSpec getPortObjectSpec();
 
-//    /**
-//     * Returns the DataTable for this port, as set by the node this port is
-//     * output for.
-//     *
-//     * @return PortObject the object for this port. Can be null.
-//     */
-//    public PortObject getPortObject();
+    /**
+     * Returns the DataTable for this port, as set by the node this port is
+     * output for.
+     *
+     * @return PortObject the object for this port. Can be null.
+     */
+    public PortObject getPortObject();
 
     /** Get summary of the underlying port object as provided by
      * {@link PortObject#getSummary()}. It's a separate method since calling

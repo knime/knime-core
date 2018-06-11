@@ -47,7 +47,6 @@
  */
 package org.knime.workbench.nodemonitorview;
 
-import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
 import static org.knime.core.ui.wrapper.Wrapper.unwrapOptionalNC;
 
 import java.util.Arrays;
@@ -91,8 +90,10 @@ import org.eclipse.ui.part.ViewPart;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
+import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigBaseRO;
@@ -103,13 +104,14 @@ import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeGraphAnnotation;
-import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.Pair;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -306,8 +308,13 @@ public class NodeMonitorView extends ViewPart
             public void selectionChanged(final SelectionChangedEvent event) {
                 ISelection sel = event.getSelection();
                 try {
+                    //deregister setdata listener
+                    if (m_addDataRowListener != null) {
+                        m_addDataRowListener.close();
+                        m_table.removeListener(SWT.SetData, m_addDataRowListener);
+                    }
                     int newIndex = Integer.parseInt(sel.toString().substring(5).replace(']', ' ').trim());
-                    updateDataTable(unwrapNC(m_lastNode), newIndex);
+                    updateDataTable(m_lastNode, newIndex);
                 } catch (NumberFormatException nfe) {
                     // ignore.
                 }
@@ -455,12 +462,7 @@ public class NodeMonitorView extends ViewPart
             m_portIndex.getCombo().setItems(vals);
             m_portIndex.getCombo().select(0);
 
-            castNC = unwrapOptionalNC(nc);
-            if(castNC.isPresent()) {
-                updateDataTable(castNC.get(), 0);
-            } else {
-                unsupportedSelection(nc);
-            }
+            updateDataTable(nc, 0);
             break;
         case TIMER:
             castNC = unwrapOptionalNC(nc);
@@ -733,7 +735,7 @@ public class NodeMonitorView extends ViewPart
     /*
      *  Put (static and simple) content of one output port table into table.
      */
-    private void updateDataTable(final NodeContainer nc, final int port) {
+    private void updateDataTable(final NodeContainerUI nc, final int port) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
         m_info.setText("Port Output");
         m_table.removeAll();
@@ -742,7 +744,7 @@ public class NodeMonitorView extends ViewPart
         }
         // check if we can display something at all:
         int index = port;
-        if (nc instanceof SingleNodeContainer) {
+        if (nc instanceof SingleNodeContainerUI) {
             index++;  // we don't care about (hidden) variable OutPort
         }
         if (nc.getNrOutPorts() <= index) {
@@ -751,28 +753,36 @@ public class NodeMonitorView extends ViewPart
             item.setText(0, "No output ports");
             return;
         }
-        NodeOutPort nop = nc.getOutPort(index);
+        NodeOutPortUI nop = nc.getOutPort(index);
         PortObject po = nop.getPortObject();
-        if ((po == null) || !(po instanceof BufferedDataTable)) {
+        if (!(po != null && ((po instanceof BufferedDataTable) || (po instanceof KnowsRowCountTable)))) {
             // no table in port - ignore.
             TableItem item = new TableItem(m_table, SWT.NONE);
             item.setText(0, "Unknown or no PortObject");
             return;
         }
         // retrieve table
-        BufferedDataTable bdt = (BufferedDataTable)po;
+        DataTable dataTable;
+        long size;
+        if (po instanceof BufferedDataTable) {
+            size = ((BufferedDataTable)po).size();
+            dataTable = (DataTable) po;
+        } else {
+            size = ((KnowsRowCountTable)po).size();
+            dataTable = (KnowsRowCountTable)po;
+        }
         TableColumn column = new TableColumn(m_table, SWT.NONE);
         column.setText("ID");
-        for (int i = 0; i < Math.min(bdt.getDataTableSpec().getNumColumns(), MAX_NUM_COLUMN - 2); i++) {
+        for (int i = 0; i < Math.min(dataTable.getDataTableSpec().getNumColumns(), MAX_NUM_COLUMN - 2); i++) {
             column = new TableColumn(m_table, SWT.NONE);
-            column.setText(bdt.getDataTableSpec().getColumnSpec(i).getName());
+            column.setText(dataTable.getDataTableSpec().getColumnSpec(i).getName());
         }
         if(m_table.getColumnCount() >= MAX_NUM_COLUMN - 1) {
             column = new TableColumn(m_table, SWT.NONE);
             column.setText("(remaining columns skipped)");
         }
-        m_table.setItemCount(Math.min((int)bdt.size(), NUM_LOOK_AHEAD_ROWS));
-        m_addDataRowListener = new AddDataRowListener(bdt, bdt.size(), m_table);
+        m_table.setItemCount(Math.min((int)size, NUM_LOOK_AHEAD_ROWS));
+        m_addDataRowListener = new AddDataRowListener(dataTable, size, m_table);
         m_table.addListener(SWT.SetData, m_addDataRowListener);
         //add one dummy item for the right "packing" (size etc.) of the table rows/columns
         TableItem item = new TableItem(m_table, SWT.NONE);
@@ -824,7 +834,7 @@ public class NodeMonitorView extends ViewPart
 
     private static class AddDataRowListener implements Listener {
 
-        private CloseableRowIterator m_it;
+        private RowIterator m_it;
 
         private Table m_table;
 
@@ -859,10 +869,8 @@ public class NodeMonitorView extends ViewPart
                 row = m_it.next();
             } else {
                 //reset row iterator and go to required index
-                if (m_it != null) {
-                    m_it.close();
-                }
-                m_it = ((BufferedDataTable)m_dataTable).iterator();
+                closeIterator();
+                m_it = m_dataTable.iterator();
                 for (m_currentIndex = 0; m_currentIndex <= index; m_currentIndex++) {
                     row = m_it.next();
                 }
@@ -886,8 +894,12 @@ public class NodeMonitorView extends ViewPart
         }
 
         public void close() {
-            if (m_it != null) {
-                m_it.close();
+            closeIterator();
+        }
+
+        private void closeIterator() {
+            if (m_it != null && m_it instanceof CloseableRowIterator) {
+                ((CloseableRowIterator)m_it).close();
             }
         }
     }
