@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.Platform;
 import org.junit.Before;
@@ -89,11 +88,6 @@ public class BundleListPanelTest extends UiTest {
         /* Test initialization */
         assertFalse(BundleListPanel.bundleNames.isEmpty());
 
-        /* Check for duplicate bundles */
-        assertEquals("Bundlenames should only contain latest versions, no duplicates.",
-            BundleListPanel.bundleNames.stream().map(s -> s.split(" ")[0]).collect(Collectors.toSet()).size(),
-            BundleListPanel.bundleNames.size());
-
         final String firstBundle = BundleListPanel.bundleNames.get(0);
 
         /* Test adding a bundle */
@@ -104,25 +98,25 @@ public class BundleListPanelTest extends UiTest {
         assertTrue(panel.addBundle(firstBundle));
         assertEquals(1, panel.m_listModel.size());
         assertEquals("Tree view out of sync.", 1 + 2, panel.m_tree.getRowCount());
-        final String bundleName = panel.m_listModel.getElementAt(0).name;
-        final Bundle bundle = Platform.getBundle(bundleName);
+        final String bundleString = panel.m_listModel.getElementAt(0).serialize();
+        final Bundle bundle = Platform.getBundle(panel.m_listModel.getElementAt(0).name);
         assertNotNull("Expected symbolic name of an existing bundle to have been added", bundle);
 
         assertTrue("Available bundles should not contain the added bundle",
             panel.m_bundleModel.getExcluded().contains(panel.m_listModel.getElementAt(0).toString()));
 
-        assertFalse("Adding an already added bundle should not be permitted", panel.addBundle(bundleName));
+        assertFalse("Adding an already added bundle should not be permitted", panel.addBundle(bundleString));
         assertEquals("Adding a bundle a second time should not increase size of list", 1, panel.m_listModel.size());
         assertEquals("Tree view out of sync.", 1 + 2, panel.m_tree.getRowCount());
 
-        assertTrue("Adding non-existent bundles should be allowed.", panel.addBundle("i.dont.exist"));
+        assertTrue("Adding non-existent bundles should be allowed.", panel.addBundle("i.dont.exist 0.0.0"));
 
         /* Test clearing */
         panel.setBundles(new String[]{});
         assertEquals(0, panel.m_listModel.size());
         assertEquals("Tree view out of sync.", 0 + 2, panel.m_tree.getRowCount());
         assertFalse("Available bundles should contain removed bundles again",
-            panel.m_bundleModel.getExcluded().contains(bundleName));
+            panel.m_bundleModel.getExcluded().contains(bundleString));
 
         /* Test initially setting bundles */
         panel.setBundles(new String[]{firstBundle});
