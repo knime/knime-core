@@ -77,7 +77,9 @@ import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
@@ -88,6 +90,8 @@ import org.eclipse.ui.actions.RetargetAction;
 import org.eclipse.ui.part.ViewPart;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBase;
@@ -118,11 +122,23 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 public class NodeMonitorView extends ViewPart
                               implements ISelectionListener, LocationListener,
                                          NodeStateChangeListener {
+
+    /**
+     * Number of rows to 'pre-load' in view when data table is shown.
+     */
+    private static final int NUM_LOOK_AHEAD_ROWS = 42;
+
+    /**
+     * Limit the maximum number of columns when data table is shown to avoid a unresponsive UI.
+     */
+    private static final int MAX_NUM_COLUMN = 100;
+
     private Text m_title;
     private Text m_state;
     private Label m_info;
     private ComboViewer m_portIndex;
     private Table m_table;
+    private AddDataRowListener m_addDataRowListener;
 
     private IStructuredSelection m_lastSelection;
     private IStructuredSelection m_lastSelectionWhilePinned;
@@ -298,7 +314,7 @@ public class NodeMonitorView extends ViewPart
             }
         });
         // Table:
-        m_table = new Table(parent, SWT.MULTI | SWT.BORDER);
+        m_table = new Table(parent, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
         m_table.setLinesVisible(true);
         m_table.setHeaderVisible(true);
         GridData tableGrid = new GridData(SWT.FILL, SWT.FILL, true, true);
@@ -403,6 +419,13 @@ public class NodeMonitorView extends ViewPart
         }
         m_title.setText(nc.getName() + "  (" + nc.getID() + ")");
         m_state.setText(nc.getNodeContainerState().toString());
+
+        //deregister setdata listener
+        if (m_addDataRowListener != null) {
+            m_addDataRowListener.close();
+            m_table.removeListener(SWT.SetData, m_addDataRowListener);
+        }
+
         Optional<NodeContainer> castNC;
         switch (m_choice) {
         case VARS:
@@ -420,7 +443,7 @@ public class NodeMonitorView extends ViewPart
         case TABLE:
             m_portIndex.getCombo().setEnabled(true);
             int nrPorts = nc.getNrOutPorts();
-            if (nc instanceof SingleNodeContainer) {
+            if (nc instanceof SingleNodeContainerUI) {
                 // correct for (default - mostly invisible) Variable Port
                 nrPorts--;
             }
@@ -740,22 +763,21 @@ public class NodeMonitorView extends ViewPart
         BufferedDataTable bdt = (BufferedDataTable)po;
         TableColumn column = new TableColumn(m_table, SWT.NONE);
         column.setText("ID");
-        for (int i = 0; i < bdt.getDataTableSpec().getNumColumns(); i++) {
+        for (int i = 0; i < Math.min(bdt.getDataTableSpec().getNumColumns(), MAX_NUM_COLUMN - 2); i++) {
             column = new TableColumn(m_table, SWT.NONE);
             column.setText(bdt.getDataTableSpec().getColumnSpec(i).getName());
         }
-        int rowIndex = 0;
-        Iterator<DataRow> rowIt = bdt.iteratorFailProve();
-        while (rowIndex < 42 && rowIt.hasNext()) {
-            DataRow thisRow = rowIt.next();
-            TableItem item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, thisRow.getKey().getString());
-            for (int i = 0; i < thisRow.getNumCells(); i++) {
-                DataCell c = thisRow.getCell(i);
-                String s = c.toString().replaceAll("\\p{Cntrl}", "_");
-                item.setText(i + 1, s);
-            }
-            rowIndex++;
+        if(m_table.getColumnCount() >= MAX_NUM_COLUMN - 1) {
+            column = new TableColumn(m_table, SWT.NONE);
+            column.setText("(remaining columns skipped)");
+        }
+        m_table.setItemCount(Math.min((int)bdt.size(), NUM_LOOK_AHEAD_ROWS));
+        m_addDataRowListener = new AddDataRowListener(bdt, bdt.size(), m_table);
+        m_table.addListener(SWT.SetData, m_addDataRowListener);
+        //add one dummy item for the right "packing" (size etc.) of the table rows/columns
+        TableItem item = new TableItem(m_table, SWT.NONE);
+        for (int j = 0; j < m_table.getColumnCount(); j++) {
+            item.setText(j, " ");
         }
         for (int i = 0; i < m_table.getColumnCount(); i++) {
             m_table.getColumn(i).pack();
@@ -797,6 +819,76 @@ public class NodeMonitorView extends ViewPart
                     updateNodeContainerInfo(m_lastNode);
                 }
             });
+        }
+    }
+
+    private static class AddDataRowListener implements Listener {
+
+        private CloseableRowIterator m_it;
+
+        private Table m_table;
+
+        private long m_currentIndex = -1;
+
+        private DataTable m_dataTable;
+
+        private long m_numRows;
+
+        /**
+         * @param dataTable the actual data table
+         * @param numRows the maximum number of rows in the data table
+         * @param table the swt table (UI)
+         */
+        public AddDataRowListener(final DataTable dataTable, final long numRows, final Table table) {
+            m_dataTable = dataTable;
+            m_numRows = numRows;
+            m_table = table;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void handleEvent(final Event event) {
+            TableItem item = (TableItem)event.item;
+            int index = m_table.indexOf(item);
+            m_table.setItemCount(Math.min((int)m_numRows, index + NUM_LOOK_AHEAD_ROWS));
+            DataRow row = null;
+            if (index == m_currentIndex) {
+                m_currentIndex++;
+                row = m_it.next();
+            } else {
+                //reset row iterator and go to required index
+                if (m_it != null) {
+                    m_it.close();
+                }
+                m_it = ((BufferedDataTable)m_dataTable).iterator();
+                for (m_currentIndex = 0; m_currentIndex <= index; m_currentIndex++) {
+                    row = m_it.next();
+                }
+            }
+            if (row != null) {
+                item.setText(0, row.getKey().getString());
+                //get right row count: without id column (and 'remaining column skipped'-column)
+                int colCount = m_table.getColumnCount() == MAX_NUM_COLUMN ? m_table.getColumnCount() - 2
+                    : m_table.getColumnCount() - 1;
+                for (int i = 0; i < colCount; i++) {
+                    DataCell c = row.getCell(i);
+                    String s = c.toString().replaceAll("\\p{Cntrl}", "_");
+                    item.setText(i + 1, s);
+                }
+                if (m_table.getColumnCount() == MAX_NUM_COLUMN) {
+                    item.setText(MAX_NUM_COLUMN - 1, "...");
+                }
+            } else {
+                item.setText("Row " + m_currentIndex + " couln't be read.");
+            }
+        }
+
+        public void close() {
+            if (m_it != null) {
+                m_it.close();
+            }
         }
     }
 
