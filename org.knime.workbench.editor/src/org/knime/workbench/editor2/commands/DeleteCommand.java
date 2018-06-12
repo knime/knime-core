@@ -136,7 +136,9 @@ public class DeleteCommand extends AbstractKNIMECommand {
             } else if (p instanceof ConnectionContainerEditPart) {
                 ConnectionContainerEditPart ccep =
                     (ConnectionContainerEditPart)p;
-                conSet.add(Wrapper.unwrapCC(ccep.getModel()));
+                if (Wrapper.wraps(ccep.getModel(), ConnectionContainer.class)) {
+                    conSet.add(Wrapper.unwrapCC(ccep.getModel()));
+                }
                 if (viewer == null && ccep.getParent() != null) {
                     viewer = ccep.getViewer();
                 }
