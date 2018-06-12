@@ -401,4 +401,20 @@ public class DataCellToJavaConversionTest {
         assertEquals(InputStream.class, cell.get());
     }
 
+    @Test
+    public void testIdentifiers() {
+        {
+            Optional<DataCellToJavaConverterFactory<? extends DataValue, String>> factory = DataCellToJavaConverterRegistry.getInstance().getConverterFactories(StringCell.TYPE, String.class).stream().filter(f -> f.getName().equals("String")).findFirst();
+            assertTrue(factory.isPresent());
+            assertEquals("org.knime.core.data.convert.java.SimpleDataCellToJavaConverterFactory(StringValue,class java.lang.String,String)", factory.get().getIdentifier());
+        }
+        {
+            Optional<DataCellToJavaConverterFactory<? extends DataValue, String>> factory = DataCellToJavaConverterRegistry.getInstance().getConverterFactories(StringCell.TYPE, String.class).stream().filter(f -> f.getName().equals("String (toString())")).findFirst();
+            assertTrue(factory.isPresent());
+            assertEquals("org.knime.core.data.convert.java.SimpleDataCellToJavaConverterFactory(DataValue,class java.lang.String,String (toString()))", factory.get().getIdentifier());
+        }
+
+        assertTrue(DataCellToJavaConverterRegistry.getInstance().getFactory("org.knime.core.data.convert.java.SimpleDataCellToJavaConverterFactory(StringValue,class java.lang.String,String)").isPresent());
+        assertTrue(DataCellToJavaConverterRegistry.getInstance().getFactory("org.knime.core.data.convert.java.SimpleDataCellToJavaConverterFactory(DataValue,class java.lang.String,String (toString()))").isPresent());
+    }
 }
