@@ -68,7 +68,7 @@ public class OutCol extends JavaColumnField {
 
     private boolean m_replaceExisting;
 
-    private Optional<JavaToDataCellConverterFactory<?>> m_factory;
+    private Optional<JavaToDataCellConverterFactory<?>> m_factory = Optional.empty();
 
     /**
      * Create an instance.
@@ -150,7 +150,7 @@ public class OutCol extends JavaColumnField {
      * @return An optional converter factory, present if converter factory id setting is valid, empty if not found.
      */
     public Optional<JavaToDataCellConverterFactory<?>> getConverterFactory() {
-        if (m_factory == null || (m_factory.isPresent() && m_factory.get().getIdentifier().equals(m_converterFactoryId))) {
+        if (!m_factory.isPresent() || (m_factory.isPresent() && !m_factory.get().getIdentifier().equals(m_converterFactoryId))) {
             m_factory = ConverterUtil.getJavaToDataCellConverterFactory(m_converterFactoryId);
         }
         return m_factory;
