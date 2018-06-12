@@ -82,9 +82,8 @@ public class MonitorVariableTable implements NodeMonitorTable {
     @Override
     public void loadTableData(final NodeContainerUI ncUI, final NodeContainer nc, final int count)
         throws LoadingFailedException {
-        if(nc == null) {
-            //TODO
-            return;
+        if (nc == null) {
+            throw new LoadingFailedException("no info for '" + ncUI.getClass().getSimpleName() + "'.");
         }
         // retrieve variables
         if ((nc instanceof SingleNodeContainer) || nc.getNrOutPorts() > 0) {
@@ -157,7 +156,7 @@ public class MonitorVariableTable implements NodeMonitorTable {
      */
     @Override
     public void dispose(final Table table) {
-
+        //nothing to do here
     }
 
 }

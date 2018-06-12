@@ -111,7 +111,9 @@ public class MonitorDataTable implements NodeMonitorTable {
     private Table m_table;
 
     /**
-     * TODO
+     * Creates a new monitor table to display node's data the given port index.
+     *
+     * @param portIndex port to use
      */
     public MonitorDataTable(final int portIndex) {
         m_portIndex = portIndex;

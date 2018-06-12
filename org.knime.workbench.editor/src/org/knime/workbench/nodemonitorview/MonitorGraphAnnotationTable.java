@@ -149,7 +149,7 @@ public class MonitorGraphAnnotationTable implements NodeMonitorTable {
      */
     @Override
     public void dispose(final Table table) {
-
+        //nothing to do here
     }
 
 }

@@ -83,7 +83,9 @@ public class MonitorSettingsTable implements NodeMonitorTable {
     private NodeAndBundleInformation m_nodeAndBundleInfo;
 
     /**
-     * TODO
+     * Creates a new monitor table to display node settings.
+     *
+     * @param showAll whether the entire settings should be displayed
      */
     public MonitorSettingsTable(final boolean showAll) {
         m_showAll = showAll;
@@ -223,6 +225,7 @@ public class MonitorSettingsTable implements NodeMonitorTable {
      */
     @Override
     public void dispose(final Table table) {
+        //nothing to do here
     }
 
 }
