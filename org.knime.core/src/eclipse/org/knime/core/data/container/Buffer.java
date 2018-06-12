@@ -1098,6 +1098,12 @@ public class Buffer implements KNIMEStreamConstants {
         subSettings.addString(CFG_TABLE_FORMAT, m_outputFormat.getClass().getName());
         NodeSettingsWO formatSettings = subSettings.addNodeSettings(CFG_TABLE_FORMAT_CONFIG);
         m_formatSettings.copyTo(formatSettings);
+        if (m_outputWriter instanceof DefaultTableStoreWriter) {
+            // AP-8954 -- for standard KNIME tables write the meta information into the root so that 3.5 and before
+            // can load it;
+            // these settings are no longer read in newer versions of KNIME (3.6+) -- attempt of forward compatibility
+            m_formatSettings.copyTo(subSettings);
+        }
         settings.saveToXML(out);
     }
 
