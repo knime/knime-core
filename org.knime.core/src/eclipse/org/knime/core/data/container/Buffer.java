@@ -389,6 +389,15 @@ public class Buffer implements KNIMEStreamConstants {
     private AbstractTableStoreWriter m_outputWriter;
     private AbstractTableStoreReader m_outputReader;
 
+    /** The settings for the table store format that describes how the table is persisted. That is:
+     * <ul>
+     * <li>while writing: null
+     * <li>after write: the settings that the writer writes as part of {@link #closeInternal()}
+     * <li>during read: the settings read in the constructor ({@link #readMetaFromFile(InputStream, File)})
+     * </ul>
+     */
+    private NodeSettingsRO m_formatSettings;
+
     /** maximum number of rows that are in memory. */
     private int m_maxRowsInMem;
 
@@ -1003,13 +1012,14 @@ public class Buffer implements KNIMEStreamConstants {
             try {
                 flushBuffer();
                 m_outputWriter.close();
-                NodeSettings nodeSettings = new NodeSettings("table-format-meta-info");
-                m_outputWriter.writeMetaInfoAfterWrite(nodeSettings);
+                NodeSettings formatSettings = new NodeSettings(CFG_TABLE_FORMAT_CONFIG);
+                m_outputWriter.writeMetaInfoAfterWrite(formatSettings);
+                m_formatSettings = formatSettings;
                 m_list = null;
                 double sizeInMB = m_binFile.length() / (double)(1 << 20);
                 String size = NumberFormat.getInstance().format(sizeInMB);
                 LOGGER.debug("Buffer file (" + m_binFile.getAbsolutePath() + ") is " + size + "MB in size");
-                initOutputReader(nodeSettings, IVERSION);
+                initOutputReader(formatSettings, IVERSION);
             } catch (IOException ioe) {
                 throw new RuntimeException("Cannot close stream of file \"" + m_binFile.getName() + "\"", ioe);
             } catch (InvalidSettingsException ex) {
@@ -1087,7 +1097,7 @@ public class Buffer implements KNIMEStreamConstants {
         subSettings.addInt(CFG_BUFFER_ID, m_bufferID);
         subSettings.addString(CFG_TABLE_FORMAT, m_outputFormat.getClass().getName());
         NodeSettingsWO formatSettings = subSettings.addNodeSettings(CFG_TABLE_FORMAT_CONFIG);
-        m_outputWriter.writeMetaInfoAfterWrite(formatSettings);
+        m_formatSettings.copyTo(formatSettings);
         settings.saveToXML(out);
     }
 
@@ -1163,6 +1173,7 @@ public class Buffer implements KNIMEStreamConstants {
                         "Invalid table format '%s' - unable to restore table.", outputFormat)));
             NodeSettingsRO outputFormatSettings =
                     m_version >= 10 ? subSettings.getNodeSettings(CFG_TABLE_FORMAT_CONFIG) : subSettings;
+            m_formatSettings = outputFormatSettings;
             initOutputReader(outputFormatSettings, m_version);
         }
     }
@@ -1560,6 +1571,9 @@ public class Buffer implements KNIMEStreamConstants {
             zipOut.setLevel(Deflater.NO_COMPRESSION);
         }
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
+        // these are the conditions:
+        //    !usesOutFile() --> data all kept in memory, small tables
+        //    m_version< ... --> container version bump
         if (!usesOutFile() || m_version < IVERSION) {
             // need to use new buffer since we otherwise write properties
             // of this buffer, which prevents it from further reading (version
