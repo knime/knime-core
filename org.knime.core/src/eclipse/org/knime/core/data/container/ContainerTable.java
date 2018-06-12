@@ -151,7 +151,7 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
     /** Get reference to buffer.
      * @return The buffer backing this object.
      */
-    Buffer getBuffer() {
+    public Buffer getBuffer() {
         ensureBufferOpen();
         return m_buffer;
     }

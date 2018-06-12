@@ -713,9 +713,6 @@ public class Buffer implements KNIMEStreamConstants {
 
     private DataCell handleIncomingBlob(final DataCell cell, final int col, final int totalColCount,
         final boolean copyForVersionHop, final boolean forceCopyOfBlobsArg) throws IOException {
-        if (!(m_outputFormat instanceof DefaultTableStoreFormat)) {
-            return cell;
-        }
         // whether the content of the argument row needs to be copied
         // into a new BlobSupportDataRow (will do that when either this
         // flag is true or cellCopies != null)
@@ -1193,9 +1190,7 @@ public class Buffer implements KNIMEStreamConstants {
         m_outputReader = m_outputFormat.createReader(m_binFile, m_spec, outputFormatSettings, m_globalRepository,
             version, !shouldSkipRowKey());
         m_outputReader.setFileStoreHandlerRepository(m_fileStoreHandlerRepository);
-        if (m_outputReader instanceof DefaultTableStoreReader) {
-            ((DefaultTableStoreReader)m_outputReader).setBufferAfterConstruction(this);
-        }
+        m_outputReader.setBufferAfterConstruction(this);
     }
 
     /**
@@ -1263,7 +1258,7 @@ public class Buffer implements KNIMEStreamConstants {
      *
      * @return (Workflow-) global table repository.
      */
-    final Map<Integer, ContainerTable> getGlobalRepository() {
+    public final Map<Integer, ContainerTable> getGlobalRepository() {
         return m_globalRepository;
     }
 
@@ -1698,7 +1693,7 @@ public class Buffer implements KNIMEStreamConstants {
      *
      * @return the buffer ID or -1
      */
-    int getBufferID() {
+    public int getBufferID() {
         return m_bufferID;
     }
 

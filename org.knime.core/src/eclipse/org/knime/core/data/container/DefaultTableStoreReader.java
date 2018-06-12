@@ -73,8 +73,6 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
 
     private final boolean m_isReadRowKey;
 
-    private Buffer m_buffer;
-
     /**
      * Constructs a reader for materializing serialized KNIME tables.
      *
@@ -95,10 +93,6 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
         m_spec = spec;
         m_version = version;
         m_isReadRowKey = isReadRowKey;
-    }
-
-    void setBufferAfterConstruction(final Buffer buffer) {
-        m_buffer = buffer;
     }
 
     @Override
@@ -138,17 +132,12 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
         return m_version;
     }
 
-    /** @return the buffer */
-    Buffer getBuffer() {
-        return m_buffer;
-    }
-
     /**
      * @return numbe of records
      * @see org.knime.core.data.container.Buffer#size()
      */
     long size() {
-        return m_buffer.size();
+        return getBuffer().size();
     }
 
     /**

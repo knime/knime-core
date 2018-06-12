@@ -348,17 +348,7 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
             boolean isBlob = BlobDataCell.class.isAssignableFrom(cellClass);
             final DataCell result;
             if (isBlob) {
-                BlobAddress address = inStream.readBlobAddress();
-                Buffer blobBuffer = m_tableFormatReader.getBuffer();
-                if (address.getBufferID() != blobBuffer.getBufferID()) {
-                    ContainerTable cnTbl = blobBuffer.getGlobalRepository().get(address.getBufferID());
-                    if (cnTbl == null) {
-                        throw new IOException(
-                        "Unable to retrieve table that owns the blob cell");
-                    }
-                    blobBuffer = cnTbl.getBuffer();
-                }
-                result = new BlobWrapperDataCell(blobBuffer, address, type);
+                result = m_tableFormatReader.createBlobWrapperCell(inStream.readBlobAddress(), type);
             } else if (isSerialized) {
                 ClassLoader cellLoader = cellClass.getClassLoader();
                 inStream.setCurrentClassLoader(cellLoader);

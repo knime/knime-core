@@ -107,7 +107,7 @@ public final class BlobWrapperDataCell extends DataCell {
      * @param ba Its address.
      * @param cl The class information of the blob.
      */
-    BlobWrapperDataCell(final Buffer b, final BlobAddress ba,
+    public BlobWrapperDataCell(final Buffer b, final BlobAddress ba,
             final CellClassInfo cl) {
         this(b, ba, cl, null);
     }
@@ -180,7 +180,7 @@ public final class BlobWrapperDataCell extends DataCell {
     }
 
     /** @return The blob address. */
-    BlobAddress getAddress() {
+    public BlobAddress getAddress() {
         // the blob address of the contained cell might already be assigned
         // but this blob address not:
         // the BlobDataCell is contained in another wrapper (added twice to
@@ -203,7 +203,7 @@ public final class BlobWrapperDataCell extends DataCell {
     }
 
     /** @return Class info to the blob. */
-    CellClassInfo getBlobClassInfo() {
+    public CellClassInfo getBlobClassInfo() {
         return m_blobClass;
     }
 

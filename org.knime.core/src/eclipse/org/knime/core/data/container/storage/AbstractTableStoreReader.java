@@ -54,9 +54,12 @@ import java.util.Set;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.Buffer;
 import org.knime.core.data.container.CellClassInfo;
 import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DefaultTableStoreFormat;
 import org.knime.core.data.container.KNIMEStreamConstants;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
@@ -76,6 +79,8 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
 
     private CellClassInfo[] m_shortCutsLookup;
 
+    private Buffer m_buffer;
+
     /**
      * Constructs an abstract table store reader.
      *
@@ -90,6 +95,28 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
     protected AbstractTableStoreReader(final File binFile, final NodeSettingsRO settings, final int version)
         throws IOException, InvalidSettingsException {
         readMetaFromFile(settings, version);
+    }
+
+    public void setBufferAfterConstruction(final Buffer buffer) {
+        m_buffer = buffer;
+    }
+
+    /** @return the buffer */
+    protected Buffer getBuffer() {
+        return m_buffer;
+    }
+
+    public BlobWrapperDataCell createBlobWrapperCell(final BlobAddress address, final CellClassInfo type)
+        throws IOException {
+        Buffer blobBuffer = getBuffer();
+        if (address.getBufferID() != blobBuffer.getBufferID()) {
+            ContainerTable cnTbl = blobBuffer.getGlobalRepository().get(address.getBufferID());
+            if (cnTbl == null) {
+                throw new IOException("Unable to retrieve table that owns the blob cell");
+            }
+            blobBuffer = cnTbl.getBuffer();
+        }
+        return new BlobWrapperDataCell(blobBuffer, address, type);
     }
 
     /**
@@ -118,7 +145,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      * @throws InvalidSettingsException thrown in case something goes wrong during de-serialization, e.g. a new version
      *             of a writer has been used which hasn't been installed on the current system.
      */
-    public void readMetaFromFile(final NodeSettingsRO settings, final int version)
+    protected void readMetaFromFile(final NodeSettingsRO settings, final int version)
         throws IOException, InvalidSettingsException {
         if (version <= 6) {
             m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion1x(settings);
