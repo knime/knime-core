@@ -47,15 +47,14 @@
  */
 package org.knime.workbench.nodemonitorview;
 
-import static org.knime.core.ui.wrapper.Wrapper.unwrapOptionalNC;
+import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
@@ -73,48 +72,31 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.RetargetAction;
 import org.eclipse.ui.part.ViewPart;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
-import org.knime.core.data.RowIterator;
-import org.knime.core.data.container.CloseableRowIterator;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.base.ConfigBase;
-import org.knime.core.node.config.base.ConfigBaseRO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.FlowObjectStack;
-import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.FlowVariable.Type;
-import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeGraphAnnotation;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
-import org.knime.core.node.workflow.NodeTimer;
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
-import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
-import org.knime.core.util.Pair;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.nodemonitorview.NodeMonitorTable.LoadingFailedException;
 
 /**
  * An Eclipse View showing the interna of the currently selected (meta)node.
@@ -123,15 +105,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  */
 public class NodeMonitorView extends ViewPart implements ISelectionListener, LocationListener, NodeStateChangeListener {
 
-    /**
-     * Number of rows to 'pre-load' in view when data table is shown.
-     */
-    private static final int NUM_LOOK_AHEAD_ROWS = 42;
-
-    /**
-     * Limit the maximum number of columns when data table is shown to avoid a unresponsive UI.
-     */
-    private static final int MAX_NUM_COLUMN = 100;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeMonitorView.class);
 
     private Text m_title;
 
@@ -143,7 +117,9 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
 
     private Table m_table;
 
-    private AddDataRowListener m_addDataRowListener;
+    private Button m_loadButton;
+
+    private AtomicInteger m_loadButtonPressedCount = new AtomicInteger(0);
 
     private IStructuredSelection m_lastSelection;
 
@@ -152,6 +128,8 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
     private NodeContainerUI m_lastNode;
 
     private boolean m_pinned = false;
+
+    private NodeMonitorTable m_currentMonitorTable;
 
     private enum DISPLAYOPTIONS {
             VARS, SETTINGS, ALLSETTINGS, TABLE, TIMER, GRAPHANNOTATIONS
@@ -300,7 +278,7 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         GridData infoGrid = new GridData(SWT.FILL, SWT.TOP, true, false);
         infoGrid.horizontalSpan = 2;
         infoPanel.setLayoutData(infoGrid);
-        GridLayoutFactory.swtDefaults().numColumns(3).applyTo(infoPanel);
+        GridLayoutFactory.swtDefaults().numColumns(4).applyTo(infoPanel);
         m_info = new Label(infoPanel, SWT.NONE);
         m_info.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
         m_info.setText("n/a.                        ");
@@ -312,18 +290,30 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
             public void selectionChanged(final SelectionChangedEvent event) {
                 ISelection sel = event.getSelection();
                 try {
-                    //deregister setdata listener
-                    if (m_addDataRowListener != null) {
-                        m_addDataRowListener.close();
-                        m_table.removeListener(SWT.SetData, m_addDataRowListener);
-                    }
                     int newIndex = Integer.parseInt(sel.toString().substring(5).replace(']', ' ').trim());
-                    updateDataTable(m_lastNode, newIndex);
+                    resetMonitorTable();
+                    switch (m_choice) {
+                       case TABLE:
+                            m_currentMonitorTable = new MonitorDataTable(newIndex);
+                            break;
+                    }
+                    if (wraps(m_lastNode, NodeContainer.class)) {
+                        //already load the data in case of an ordinary node monitor
+                        loadAndSetupMonitorTableForOrdinaryNC();
+                    } else {
+                        m_currentMonitorTable.updateControls(m_loadButton, m_portIndex.getCombo(), 0);
+                    }
                 } catch (NumberFormatException nfe) {
                     // ignore.
                 }
             }
         });
+        m_loadButton = new Button(infoPanel, SWT.PUSH);
+        m_loadButton.setText("   Manually load data   ");
+        m_loadButton.setToolTipText("Manual trigger to load the data.");
+        m_loadButton.setEnabled(false);
+        m_loadButton.addSelectionListener(new LoadButtonListener());
+
         // Table:
         m_table = new Table(parent, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
         m_table.setLinesVisible(true);
@@ -387,7 +377,7 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         if (structSel.size() > 1) {
             // too many selected items
             m_title.setText("");
-            m_state.setText("more than one element selected.");
+            m_state.setText("more than one element selected");
             m_table.removeAll();
             return;
         }
@@ -401,14 +391,25 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
             updateNodeContainerInfo(nc);
         } else {
             // unsupported selection
-            unsupportedSelection(sel);
+            if (m_lastNode != null) {
+                m_lastNode.removeNodeStateChangeListener(NodeMonitorView.this);
+                m_lastNode = null;
+            }
+            warningMessage("no node selected");
         }
     }
 
-    private void unsupportedSelection(final Object selectedObject) {
-        m_title.setText("");
-        m_state.setText("no info for '" + selectedObject.getClass().getSimpleName() + "'.");
-        m_table.removeAll();
+    private void warningMessage(final String message) {
+        resetMonitorTable();
+        if (m_lastNode != null) {
+            if (message != null) {
+                TableItem item = new TableItem(m_table, SWT.NONE);
+                item.setText(0, message);
+            }
+        } else {
+            m_title.setText("");
+            m_state.setText(message);
+        }
     }
 
     /* Update all visuals with information regarding new NodeContainer.
@@ -419,8 +420,9 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         if (nc == null) {
             return;
         }
-        m_portIndex.getCombo().setEnabled(false);
         assert Display.getCurrent().getThread() == Thread.currentThread();
+        resetMonitorTable();
+
         if ((m_lastNode != null) && (m_lastNode != nc)) {
             m_lastNode.removeNodeStateChangeListener(NodeMonitorView.this);
         }
@@ -431,369 +433,80 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         m_title.setText(nc.getName() + "  (" + nc.getID() + ")");
         m_state.setText(nc.getNodeContainerState().toString());
 
-        //de-register adddata listener
-        if (m_addDataRowListener != null) {
-            m_addDataRowListener.close();
-            m_table.removeListener(SWT.SetData, m_addDataRowListener);
+        m_portIndex.getCombo().setEnabled(true);
+        int nrPorts = nc.getNrOutPorts();
+        if (nc instanceof SingleNodeContainerUI) {
+            // correct for (default - mostly invisible) Variable Port
+            nrPorts--;
         }
+        String[] vals = new String[nrPorts];
+        for (int i = 0; i < nrPorts; i++) {
+            vals[i] = "Port " + i;
+        }
+        m_portIndex.getCombo().removeAll();
+        m_portIndex.getCombo().setItems(vals);
+        m_portIndex.getCombo().select(0);
 
-        Optional<NodeContainer> castNC;
         switch (m_choice) {
             case VARS:
-                castNC = unwrapOptionalNC(nc);
-                if (castNC.isPresent()) {
-                    updateVariableTable(castNC.get());
-                } else {
-                    unsupportedSelection(nc);
-                }
+                m_currentMonitorTable = new MonitorVariableTable();
                 break;
             case SETTINGS:
             case ALLSETTINGS:
-                updateSettingsTable(nc, DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
+                m_currentMonitorTable = new MonitorSettingsTable(DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
                 break;
             case TABLE:
-                m_portIndex.getCombo().setEnabled(true);
-                int nrPorts = nc.getNrOutPorts();
-                if (nc instanceof SingleNodeContainerUI) {
-                    // correct for (default - mostly invisible) Variable Port
-                    nrPorts--;
-                }
-                String[] vals = new String[nrPorts];
-                for (int i = 0; i < nrPorts; i++) {
-                    vals[i] = "Port " + i;
-                }
-                m_portIndex.getCombo().removeAll();
-                m_portIndex.getCombo().setItems(vals);
-                m_portIndex.getCombo().select(0);
-
-                updateDataTable(nc, 0);
+                m_currentMonitorTable = new MonitorDataTable(0);
                 break;
             case TIMER:
-                castNC = unwrapOptionalNC(nc);
-                if (castNC.isPresent()) {
-                    updateTimerTable(castNC.get());
-                } else {
-                    unsupportedSelection(nc);
-                }
+                m_currentMonitorTable = new MonitorTimerTable();
                 break;
             case GRAPHANNOTATIONS:
-                castNC = unwrapOptionalNC(nc);
-                if (castNC.isPresent()) {
-                    updateGraphAnnotationTable(castNC.get());
-                } else {
-                    unsupportedSelection(nc);
-                }
+                m_currentMonitorTable = new MonitorGraphAnnotationTable();
                 break;
             default:
                 throw new AssertionError("Unhandled switch case: " + m_choice);
         }
-    }
 
-    /*
-     *  Put info about node graph annotations into table.
-     */
-    private void updateGraphAnnotationTable(final NodeContainer nc) {
-        assert Display.getCurrent().getThread() == Thread.currentThread();
-        // Initialize table
-        m_table.removeAll();
-        for (TableColumn tc : m_table.getColumns()) {
-            tc.dispose();
-        }
-        String[] titles = {"Property", "Value"};
-        for (int i = 0; i < titles.length; i++) {
-            TableColumn column = new TableColumn(m_table, SWT.NONE);
-            column.setText(titles[i]);
-        }
-        // retrieve content
-        Set<NodeGraphAnnotation> ngas = nc.getParent().getNodeGraphAnnotation(nc.getID());
-        for (NodeGraphAnnotation nga : ngas) {
-            TableItem item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "ID");
-            item.setText(1, nga.getID().toString());
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "depth");
-            item.setText(1, "" + nga.getDepth());
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "outport Index");
-            item.setText(1, "" + nga.getOutportIndex());
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "connected inports");
-            item.setText(1, "" + nga.getConnectedInportIndices());
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "connected outports");
-            item.setText(1, "" + nga.getConnectedOutportIndices());
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "start node stack");
-            item.setText(1, nga.getStartNodeStackAsString());
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "end node stack");
-            item.setText(1, nga.getEndNodeStackAsString());
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "role");
-            item.setText(1, nga.getRole());
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "status");
-            String status = nga.getError();
-            item.setText(1, status == null ? "ok" : status);
-        }
-        m_info.setText("Node Annotation");
-        for (int i = 0; i < m_table.getColumnCount(); i++) {
-            m_table.getColumn(i).pack();
-        }
-    }
-
-    /*
-     *  Put info from node timer into table.
-     */
-    private void updateTimerTable(final NodeContainer nc) {
-        assert Display.getCurrent().getThread() == Thread.currentThread();
-        // Initialize table
-        m_table.removeAll();
-        for (TableColumn tc : m_table.getColumns()) {
-            tc.dispose();
-        }
-        String[] titles = {"Timer", "Value [ms]"};
-        for (int i = 0; i < titles.length; i++) {
-            TableColumn column = new TableColumn(m_table, SWT.NONE);
-            column.setText(titles[i]);
-        }
-        // retrieve time
-        NodeTimer nt = nc.getNodeTimer();
-        // update content
-        TableItem item = new TableItem(m_table, SWT.NONE);
-        item.setText(0, "Last Exec Time");
-        item.setText(1, nt.getLastExecutionDuration() < 0 ? "n/a" : "" + nt.getLastExecutionDuration());
-        if (nt.getLastExecutionDuration() < nt.getExecutionDurationSinceReset()) {
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "Total Execution Time since Reset");
-            item.setText(1, "" + nt.getExecutionDurationSinceReset());
-        }
-        if (nt.getLastExecutionDuration() < nt.getExecutionDurationSinceStart()) {
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "Total Execution Time");
-            item.setText(1, "" + nt.getExecutionDurationSinceStart());
-        }
-        if (nt.getNrExecsSinceReset() != 1) {
-            item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "#Executions since Reset");
-            item.setText(1, "" + nt.getNrExecsSinceReset());
-        }
-        item = new TableItem(m_table, SWT.NONE);
-        item.setText(0, "Total #Executions");
-        item.setText(1, "" + nt.getNrExecsSinceStart());
-        // finalize table
-        for (int i = 0; i < m_table.getColumnCount(); i++) {
-            m_table.getColumn(i).pack();
-        }
-    }
-
-    /*
-     *  Put info about workflow variables into table.
-     */
-    private void updateVariableTable(final NodeContainer nc) {
-        assert Display.getCurrent().getThread() == Thread.currentThread();
-        // Initialize table
-        m_table.removeAll();
-        for (TableColumn tc : m_table.getColumns()) {
-            tc.dispose();
-        }
-        String[] titles = {"Variable", "Value"};
-        for (int i = 0; i < titles.length; i++) {
-            TableColumn column = new TableColumn(m_table, SWT.NONE);
-            column.setText(titles[i]);
-        }
-        // retrieve variables
-        Collection<FlowVariable> fvs;
-        if ((nc instanceof SingleNodeContainer) || nc.getNrOutPorts() > 0) {
-            // for normal nodes port 0 is available (hidden variable OutPort!)
-            FlowObjectStack fos = nc.getOutPort(0).getFlowObjectStack();
-            if (fos != null) {
-                fvs = fos.getAvailableFlowVariables(Type.values()).values();
-            } else {
-                fvs = null;
-            }
-            m_info.setText("Node Variables");
+        m_currentMonitorTable.updateInfoLabel(m_info);
+        if (wraps(nc, NodeContainer.class)) {
+            //already load the data in case of an ordinary node monitor
+            loadAndSetupMonitorTableForOrdinaryNC();
         } else {
-            // no output port on metanode - display workflow variables
-            fvs = ((WorkflowManager)nc).getWorkflowVariables();
-            m_info.setText("Metanode Variables");
-        }
-        if (fvs != null) {
-            // update content
-            for (FlowVariable fv : fvs) {
-                TableItem item = new TableItem(m_table, SWT.NONE);
-                item.setText(0, fv.getName());
-                item.setText(1, fv.getValueAsString());
-            }
-        }
-        for (int i = 0; i < m_table.getColumnCount(); i++) {
-            m_table.getColumn(i).pack();
+            m_currentMonitorTable.updateControls(m_loadButton, m_portIndex.getCombo(), 0);
         }
     }
 
     /*
-     *  Put info about node settings into table.
+     * Loads and setups the table if ordinary node container is given.
      */
-    private void updateSettingsTable(final NodeContainerUI nc, final boolean showAll) {
-        assert Display.getCurrent().getThread() == Thread.currentThread();
-        m_info.setText("Node Configuration");
-        // retrieve settings
-        ConfigBaseRO settings = nc.getNodeSettings();
-        // and put them into the table
-        m_table.removeAll();
-        for (TableColumn tc : m_table.getColumns()) {
-            tc.dispose();
-        }
-        String[] titles = {"Key", "Value"};
-        for (int i = 0; i < titles.length; i++) {
-            TableColumn column = new TableColumn(m_table, SWT.NONE);
-            column.setText(titles[i]);
-        }
-        // add information about plugin and version to list (in show all/expert mode only)
-        if (Wrapper.wraps(nc, NativeNodeContainer.class) && showAll) {
-            NativeNodeContainer nnc = Wrapper.unwrap(nc, NativeNodeContainer.class);
-
-            TableItem item4 = new TableItem(m_table, SWT.NONE);
-            item4.setText(0, "Node's feature name");
-            item4.setText(1, nnc.getNodeAndBundleInformation().getFeatureName().orElse("?"));
-
-            TableItem item5 = new TableItem(m_table, SWT.NONE);
-            item5.setText(0, "Node's feature symbolic name");
-            item5.setText(1, nnc.getNodeAndBundleInformation().getFeatureSymbolicName().orElse("?"));
-
-            TableItem item6 = new TableItem(m_table, SWT.NONE);
-            item6.setText(0, "Node's feature version (last saved with)");
-            item6.setText(1, nnc.getNodeAndBundleInformation().getFeatureVersion().map(v -> v.toString()).orElse("?"));
-
-            TableItem item1 = new TableItem(m_table, SWT.NONE);
-            item1.setText(0, "Node's plug-in name");
-            item1.setText(1, nnc.getNodeAndBundleInformation().getBundleName().orElse("?"));
-
-            TableItem item2 = new TableItem(m_table, SWT.NONE);
-            item2.setText(0, "Node's plug-in symbolic name");
-            item2.setText(1, nnc.getNodeAndBundleInformation().getBundleSymbolicName().orElse("?"));
-
-            TableItem item3 = new TableItem(m_table, SWT.NONE);
-            item3.setText(0, "Node's plug-in version (last saved with)");
-            item3.setText(1, nnc.getNodeAndBundleInformation().getBundleVersion().map(v -> v.toString()).orElse("?"));
-        }
-        // add settings to table
-        Stack<Pair<Iterator<String>, ConfigBaseRO>> stack = new Stack<Pair<Iterator<String>, ConfigBaseRO>>();
-        Iterator<String> it = settings.keySet().iterator();
-        if (it.hasNext()) {
-            stack.push(new Pair<Iterator<String>, ConfigBaseRO>(it, settings));
-        }
-        while (!stack.isEmpty()) {
-            String key = stack.peek().getFirst().next();
-            int depth = stack.size();
-            boolean noexpertskip = (depth <= 1);
-            ConfigBaseRO second = stack.peek().getSecond();
-            ConfigBaseRO confBase = null;
-            try {
-                confBase = second.getConfigBase(key);
-            } catch (InvalidSettingsException e) {
-                //nothing to do here - then it's just null as handled below
-            }
-            if (!stack.peek().getFirst().hasNext()) {
-                stack.pop();
-            }
-            if (confBase != null) {
-                // it's another Config entry, push on stack!
-                String val = confBase.toString();
-                if ((!val.endsWith("_Internals")) || showAll) {
-                    Iterator<String> it2 = confBase.iterator();
-                    if (it2.hasNext()) {
-                        stack.push(new Pair<Iterator<String>, ConfigBaseRO>(it2, confBase));
-                    }
-                } else {
-                    noexpertskip = true;
-                }
-            }
-            // in both cases, we report its value
-            if ((!noexpertskip) || showAll) {
-                //TODO little problem here: there is no way to turn the entry for a specific key in the config base into a string!
-                //Hence, we check for a implementation that allows to do that as workaround.
-                //Yet, it would be better to add, e.g., a #toStringValue(String key) method to the ConfigRO interface ...
-                //However, so far there isn't any other implementation than ConfigBase anyway ...
-                String value;
-                if (second instanceof ConfigBase) {
-                    value = ((ConfigBase)second).getEntry(key).toStringValue();
-                } else {
-                    throw new IllegalStateException(
-                        "Sub type \"" + second.getClass() + "\" of ConfigBaseRO not supported.");
-                }
-                TableItem item = new TableItem(m_table, SWT.NONE);
-                char[] indent = new char[depth - 1];
-                Arrays.fill(indent, '_');
-                item.setText(0, new String(indent) + key);
-                item.setText(1, value != null ? value : "null");
-            }
-        }
-        for (int i = 0; i < m_table.getColumnCount(); i++) {
-            m_table.getColumn(i).pack();
+    private void loadAndSetupMonitorTableForOrdinaryNC() {
+        assert unwrapNC(m_lastNode) != null;
+        try {
+            //already load the data in case of an ordinary node monitor
+            m_currentMonitorTable.loadTableData(m_lastNode, unwrapNC(m_lastNode), 0);
+            m_currentMonitorTable.setupTable(m_table);
+        } catch (LoadingFailedException e) {
+            warningMessage(e.getMessage());
         }
     }
 
-    /*
-     *  Put (static and simple) content of one output port table into table.
-     */
-    private void updateDataTable(final NodeContainerUI nc, final int port) {
-        assert Display.getCurrent().getThread() == Thread.currentThread();
-        m_info.setText("Port Output");
+    private void resetMonitorTable() {
+        m_loadButton.setEnabled(false);
+        m_loadButton.setText("   Manually load data   ");
+
+        m_loadButtonPressedCount.set(0);
+
+        if (m_currentMonitorTable != null) {
+            m_currentMonitorTable.dispose(m_table);
+        }
+
         m_table.removeAll();
         for (TableColumn tc : m_table.getColumns()) {
             tc.dispose();
         }
-        // check if we can display something at all:
-        int index = port;
-        if (nc instanceof SingleNodeContainerUI) {
-            index++; // we don't care about (hidden) variable OutPort
-        }
-        if (nc.getNrOutPorts() <= index) {
-            // no (real) port available
-            TableItem item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "No output ports");
-            return;
-        }
-        NodeOutPortUI nop = nc.getOutPort(index);
-        PortObject po = nop.getPortObject();
-        if (!(po != null && ((po instanceof BufferedDataTable) || (po instanceof KnowsRowCountTable)))) {
-            // no table in port - ignore.
-            TableItem item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "Unknown or no PortObject");
-            return;
-        }
-        // retrieve table
-        DataTable dataTable;
-        long size;
-        if (po instanceof BufferedDataTable) {
-            size = ((BufferedDataTable)po).size();
-            dataTable = (DataTable)po;
-        } else {
-            size = ((KnowsRowCountTable)po).size();
-            dataTable = (KnowsRowCountTable)po;
-        }
-        TableColumn column = new TableColumn(m_table, SWT.NONE);
-        column.setText("ID");
-        for (int i = 0; i < Math.min(dataTable.getDataTableSpec().getNumColumns(), MAX_NUM_COLUMN - 2); i++) {
-            column = new TableColumn(m_table, SWT.NONE);
-            column.setText(dataTable.getDataTableSpec().getColumnSpec(i).getName());
-        }
-        if (m_table.getColumnCount() >= MAX_NUM_COLUMN - 1) {
-            column = new TableColumn(m_table, SWT.NONE);
-            column.setText("(remaining columns skipped)");
-        }
-        m_table.setItemCount(Math.min((int)size, NUM_LOOK_AHEAD_ROWS));
-        m_addDataRowListener = new AddDataRowListener(dataTable, size, m_table);
-        m_table.addListener(SWT.SetData, m_addDataRowListener);
-        //add one dummy item for the right "packing" (size etc.) of the table rows/columns
-        TableItem item = new TableItem(m_table, SWT.NONE);
-        for (int j = 0; j < m_table.getColumnCount(); j++) {
-            item.setText(j, " ");
-        }
-        for (int i = 0; i < m_table.getColumnCount(); i++) {
-            m_table.getColumn(i).pack();
-        }
+
+        m_portIndex.getCombo().setEnabled(false);
     }
 
     /** {@inheritDoc} */
@@ -835,76 +548,45 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         }
     }
 
-    private static class AddDataRowListener implements Listener {
+    private class LoadButtonListener implements SelectionListener {
 
-        private RowIterator m_it;
-
-        private Table m_table;
-
-        private long m_currentIndex = -1;
-
-        private DataTable m_dataTable;
-
-        private long m_numRows;
-
-        /**
-         * @param dataTable the actual data table
-         * @param numRows the maximum number of rows in the data table
-         * @param table the swt table (UI)
-         */
-        public AddDataRowListener(final DataTable dataTable, final long numRows, final Table table) {
-            m_dataTable = dataTable;
-            m_numRows = numRows;
-            m_table = table;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        public void handleEvent(final Event event) {
-            TableItem item = (TableItem)event.item;
-            int index = m_table.indexOf(item);
-            m_table.setItemCount(Math.min((int)m_numRows, index + NUM_LOOK_AHEAD_ROWS));
-            DataRow row = null;
-            if (index == m_currentIndex) {
-                m_currentIndex++;
-                row = m_it.next();
-            } else {
-                //reset row iterator and go to required index
-                closeIterator();
-                m_it = m_dataTable.iterator();
-                for (m_currentIndex = 0; m_currentIndex <= index; m_currentIndex++) {
-                    row = m_it.next();
+        public void widgetSelected(final SelectionEvent e) {
+            try {
+                final AtomicReference<LoadingFailedException> lfe =
+                    new AtomicReference<NodeMonitorTable.LoadingFailedException>();
+                PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
+                    monitor.beginTask("Loading data ...", 100);
+                    try {
+                        m_currentMonitorTable.loadTableData(m_lastNode, Wrapper.unwrapNCOptional(m_lastNode).orElse(null),
+                            m_loadButtonPressedCount.get());
+                    } catch (LoadingFailedException e1) {
+                        lfe.set(e1);
+                    }
+                });
+                if (lfe.get() != null) {
+                    throw lfe.get();
                 }
-            }
-            if (row != null) {
-                item.setText(0, row.getKey().getString());
-                //get right row count: without id column (and 'remaining column skipped'-column)
-                int colCount = m_table.getColumnCount() == MAX_NUM_COLUMN ? m_table.getColumnCount() - 2
-                    : m_table.getColumnCount() - 1;
-                for (int i = 0; i < colCount; i++) {
-                    DataCell c = row.getCell(i);
-                    String s = c.toString().replaceAll("\\p{Cntrl}", "_");
-                    item.setText(i + 1, s);
+                if(m_loadButtonPressedCount.get() == 0) {
+                    m_currentMonitorTable.setupTable(m_table);
                 }
-                if (m_table.getColumnCount() == MAX_NUM_COLUMN) {
-                    item.setText(MAX_NUM_COLUMN - 1, "...");
-                }
-            } else {
-                item.setText("Row " + m_currentIndex + " couln't be read.");
+                m_currentMonitorTable.updateControls(m_loadButton, m_portIndex.getCombo(), m_loadButtonPressedCount.get() + 1);
+                m_loadButtonPressedCount.incrementAndGet();
+            } catch (LoadingFailedException ex) {
+                warningMessage(ex.getMessage());
+            } catch (InvocationTargetException e1) {
+                warningMessage(e1.getCause().getMessage());
+                LOGGER.warn(e1.getCause());
+            } catch (InterruptedException e1) {
+                warningMessage(e1.getMessage());
+                LOGGER.warn(e1);
             }
         }
 
-        public void close() {
-            closeIterator();
+        @Override
+        public void widgetDefaultSelected(final SelectionEvent e) {
         }
 
-        private void closeIterator() {
-            if (m_it != null && m_it instanceof CloseableRowIterator) {
-                ((CloseableRowIterator)m_it).close();
-            }
-        }
     }
 
 }
