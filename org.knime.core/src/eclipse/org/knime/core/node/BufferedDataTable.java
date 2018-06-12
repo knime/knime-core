@@ -53,6 +53,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -76,11 +78,14 @@ import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.container.DefaultTableStoreFormat;
 import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.VoidTable;
 import org.knime.core.data.container.WrappedTable;
+import org.knime.core.data.container.storage.TableStoreFormat;
+import org.knime.core.data.container.storage.TableStoreFormatRegistry;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.config.Config;
@@ -88,6 +93,7 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.BufferedDataTableView;
 import org.knime.core.util.MutableBoolean;
 
@@ -443,9 +449,16 @@ public final class BufferedDataTable implements DataTable, PortObject {
     private static final String CFG_TABLE_TYPE = "table_type";
     private static final String CFG_TABLE_ID = "table_ID";
     private static final String CFG_TABLE_FILE_NAME = "table_file_name";
+    private static final String CFG_TABLE_CONTAINER_FORMAT = "table_format";
+    private static final String CFG_TABLE_CONTAINER_FORMAT_VERSION = "table_format_version";
+
     private static final String TABLE_TYPE_CONTAINER = "container_table";
-    private static final String TABLE_TYPE_REARRANGE_COLUMN =
-        "rearrange_columns_table";
+    /**
+     * As of 3.6 KNIME saves the container table type under this new value in order to make KNIME 3.5 fail when loading
+     * future workflows, see {@link ContainerTable#isUsingNewerTableFormat()} for details.
+     */
+    private static final String TABLE_TYPE_CONTAINER_CUSTOM = "container_table_custom";
+    private static final String TABLE_TYPE_REARRANGE_COLUMN = "rearrange_columns_table";
     private static final String TABLE_TYPE_NEW_SPEC = "new_spec_table";
     private static final String TABLE_TYPE_WRAPPED = "wrapped_table";
     private static final String TABLE_TYPE_CONCATENATE = "concatenate_table";
@@ -482,7 +495,15 @@ public final class BufferedDataTable implements DataTable, PortObject {
         if (!savedTableIDs.add(bufferedTableID)) {
             s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REFERENCE_IN_SAME_NODE);
         } else if (m_delegate instanceof ContainerTable) {
-            s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER);
+            TableStoreFormat tableStoreFormat = ((ContainerTable)m_delegate).getTableStoreFormat();
+            if (!DefaultTableStoreFormat.class.equals(tableStoreFormat.getClass())) {
+                // use different identifier to cause old versions of KNIME to fail loading newer workflows
+                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER_CUSTOM);
+                s.addString(CFG_TABLE_CONTAINER_FORMAT, tableStoreFormat.getClass().getName());
+                s.addString(CFG_TABLE_CONTAINER_FORMAT_VERSION, tableStoreFormat.getVersion());
+            } else {
+                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER);
+            }
             m_delegate.saveToFile(outFile, s, exec);
         } else {
             if (m_delegate instanceof RearrangeColumnsTable) {
@@ -531,7 +552,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
         saveSpec(getDataTableSpec(), dir);
         File dataXML = new File(dir, TABLE_DESCRIPTION_FILE);
-        s.saveToXML(new BufferedOutputStream(new FileOutputStream(dataXML)));
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(dataXML))) {
+            s.saveToXML(out);
+        }
     }
 
     /**
@@ -551,7 +574,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
         File specFile = new File(dataPortDir, TABLE_SPEC_FILE);
         Config c = new NodeSettings(TABLE_SPEC_FILE);
         spec.save(c);
-        c.saveToXML(new BufferedOutputStream(new FileOutputStream(specFile)));
+        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(specFile))) {
+            c.saveToXML(os);
+        }
     }
 
     /**
@@ -572,9 +597,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
                     "Table spec file is %s large - this may result in increased memory consumption (path '%s')",
                         FileUtils.byteCountToDisplaySize(specFile.length()), specFile.getAbsolutePath()));
             }
-            ConfigRO c = NodeSettings.loadFromXML(new BufferedInputStream(
-                    new FileInputStream(specFile)));
-            return DataTableSpec.load(c);
+            try (InputStream in = new BufferedInputStream(new FileInputStream(specFile))) {
+                ConfigRO c = NodeSettings.loadFromXML(in);
+                return DataTableSpec.load(c);
+            }
         } else {
             throw new IOException("No such file \""
                     + specFile.getAbsolutePath() + "\"");
@@ -615,8 +641,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
         DataTableSpec spec;
         if (dataXML.exists()) { // version 1.2.0 and later
-            s = NodeSettings.loadFromXML(
-                    new BufferedInputStream(new FileInputStream(dataXML)));
+            try (InputStream input = new BufferedInputStream(new FileInputStream(dataXML))) {
+                s = NodeSettings.loadFromXML(input);
+            }
             spec = loadSpec(dirRef);
             isVersion11x = false;
         } else { // version 1.1.x
@@ -641,80 +668,89 @@ public final class BufferedDataTable implements DataTable, PortObject {
             // for instance for a column filter node this is null.
             fileRef = null;
         }
-        String tableType = s.getString(CFG_TABLE_TYPE);
+        String tableType = CheckUtils.checkSettingNotNull(s.getString(CFG_TABLE_TYPE), "Table type must not be null");
         BufferedDataTable t;
-        if (tableType.equals(TABLE_TYPE_REFERENCE_IN_SAME_NODE)) {
-            t = tblRep.get(id);
-            if (t == null) {
-                throw new InvalidSettingsException("Table reference with ID "
-                        + id + " not found in load map");
-            }
-            return t;
-        } else if (tableType.equals(TABLE_TYPE_CONTAINER)) {
-            ContainerTable fromContainer;
-            if (isVersion11x) {
-                fromContainer =
-                    DataContainer.readFromZip(fileRef.getFile());
-            } else {
-                fromContainer =
-                    BufferedDataContainer.readFromZipDelayed(fileRef, spec,
-                            id, bufferRep, fileStoreHandlerRepository);
-            }
-            t = new BufferedDataTable(fromContainer, id);
-        } else {
-            String[] referenceDirs;
-            // in version 1.2.x and before there was one reference table at most
-            // (no concatenate table in those versions)
-            if (s.containsKey("table_reference")) {
-                String refDir = s.getString("table_reference");
-                referenceDirs = refDir == null
-                    ? new String[0] : new String[]{refDir};
-            } else {
-                referenceDirs = s.getStringArray(CFG_TABLE_REFERENCE);
-            }
-            for (String reference : referenceDirs) {
-                if (reference == null) {
-                    throw new InvalidSettingsException(
-                            "Reference dir is \"null\"");
-                }
-                ReferencedFile referenceDirRef =
-                    new ReferencedFile(dirRef, reference);
-                loadFromFile(referenceDirRef, s, exec, tblRep, bufferRep,
-                        fileStoreHandlerRepository);
-            }
-            if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
-                t = new BufferedDataTable(
-                        new RearrangeColumnsTable(fileRef, s, tblRep, spec,
-                                id, bufferRep, fileStoreHandlerRepository));
-            } else if (tableType.equals(TABLE_TYPE_JOINED)) {
-                JoinedTable jt = JoinedTable.load(s, spec, tblRep);
-                t = new BufferedDataTable(jt);
-            } else if (tableType.equals(TABLE_TYPE_VOID)) {
-                VoidTable jt = VoidTable.load(spec);
-                t = new BufferedDataTable(jt);
-            } else if (tableType.equals(TABLE_TYPE_CONCATENATE)) {
-                ConcatenateTable ct = ConcatenateTable.load(s, spec, tblRep);
-                t = new BufferedDataTable(ct);
-            } else if (tableType.equals(TABLE_TYPE_WRAPPED)) {
-                WrappedTable wt = WrappedTable.load(s, tblRep);
-                t = new BufferedDataTable(wt);
-            } else if (tableType.equals(TABLE_TYPE_NEW_SPEC)) {
-                TableSpecReplacerTable replTable;
+        switch (tableType) {
+            case TABLE_TYPE_REFERENCE_IN_SAME_NODE:
+                return CheckUtils.checkSettingNotNull(tblRep.get(id),
+                    "Table reference with ID %d not found in load map", id);
+            case TABLE_TYPE_CONTAINER:
+                ContainerTable fromContainer;
                 if (isVersion11x) {
-                    replTable = TableSpecReplacerTable.load11x(
-                            fileRef.getFile(), s, tblRep);
+                    fromContainer = DataContainer.readFromZip(fileRef.getFile());
                 } else {
-                    replTable = TableSpecReplacerTable.load(s, spec, tblRep);
+                    fromContainer = BufferedDataContainer.readFromZipDelayed(fileRef, spec, id, bufferRep,
+                        fileStoreHandlerRepository);
                 }
-                t = new BufferedDataTable(replTable);
-            } else if (tableType.equals(TABLE_TYPE_EXTENSION)) {
-                ExtensionTable et = ExtensionTable.loadExtensionTable(
-                        fileRef, spec, s, tblRep, exec);
-                t = new BufferedDataTable(et);
-            } else {
-                throw new InvalidSettingsException("Unknown table identifier: "
-                        + tableType);
-            }
+                t = new BufferedDataTable(fromContainer, id);
+                break;
+            case TABLE_TYPE_CONTAINER_CUSTOM: // added in 3.6
+                String formatFQN =
+                    CheckUtils.checkSettingNotNull(s.getString(CFG_TABLE_CONTAINER_FORMAT), "Container format is null");
+                TableStoreFormat format = TableStoreFormatRegistry.getInstance().getTableStoreFormat(formatFQN).
+                        orElseThrow(() -> new InvalidSettingsException("Unknown table format \"%s\""));
+                String versionString = CheckUtils.checkSettingNotNull(s.getString(CFG_TABLE_CONTAINER_FORMAT_VERSION),
+                    "Version string is null");
+                CheckUtils.checkSetting(format.validateVersion(versionString),
+                    "Unsupported version \"%s\" for table format \"%s\"", versionString, format.getClass().getName());
+                fromContainer =
+                    BufferedDataContainer.readFromZipDelayed(fileRef, spec, id, bufferRep, fileStoreHandlerRepository);
+                t = new BufferedDataTable(fromContainer, id);
+                break;
+            case TABLE_TYPE_REARRANGE_COLUMN:
+            case TABLE_TYPE_JOINED:
+            case TABLE_TYPE_VOID:
+            case TABLE_TYPE_CONCATENATE:
+            case TABLE_TYPE_WRAPPED:
+            case TABLE_TYPE_NEW_SPEC:
+            case TABLE_TYPE_EXTENSION:
+                String[] referenceDirs;
+                // in version 1.2.x and before there was one reference table at most
+                // (no concatenate table in those versions)
+                if (s.containsKey("table_reference")) {
+                    String refDir = s.getString("table_reference");
+                    referenceDirs = refDir == null ? new String[0] : new String[]{refDir};
+                } else {
+                    referenceDirs = s.getStringArray(CFG_TABLE_REFERENCE);
+                }
+                for (String reference : referenceDirs) {
+                    CheckUtils.checkSettingNotNull(reference, "Reference dir is \"null\"");
+                    ReferencedFile referenceDirRef = new ReferencedFile(dirRef, reference);
+                    loadFromFile(referenceDirRef, s, exec, tblRep, bufferRep, fileStoreHandlerRepository);
+                }
+                if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
+                    t = new BufferedDataTable(
+                        new RearrangeColumnsTable(fileRef, s, tblRep, spec, id, bufferRep, fileStoreHandlerRepository));
+                } else if (tableType.equals(TABLE_TYPE_JOINED)) {
+                    JoinedTable jt = JoinedTable.load(s, spec, tblRep);
+                    t = new BufferedDataTable(jt);
+                } else if (tableType.equals(TABLE_TYPE_VOID)) {
+                    VoidTable jt = VoidTable.load(spec);
+                    t = new BufferedDataTable(jt);
+                } else if (tableType.equals(TABLE_TYPE_CONCATENATE)) {
+                    ConcatenateTable ct = ConcatenateTable.load(s, spec, tblRep);
+                    t = new BufferedDataTable(ct);
+                } else if (tableType.equals(TABLE_TYPE_WRAPPED)) {
+                    WrappedTable wt = WrappedTable.load(s, tblRep);
+                    t = new BufferedDataTable(wt);
+                } else if (tableType.equals(TABLE_TYPE_NEW_SPEC)) {
+                    TableSpecReplacerTable replTable;
+                    if (isVersion11x) {
+                        replTable = TableSpecReplacerTable.load11x(fileRef.getFile(), s, tblRep);
+                    } else {
+                        replTable = TableSpecReplacerTable.load(s, spec, tblRep);
+                    }
+                    t = new BufferedDataTable(replTable);
+                } else if (tableType.equals(TABLE_TYPE_EXTENSION)) {
+                    ExtensionTable et = ExtensionTable.loadExtensionTable(fileRef, spec, s, tblRep, exec);
+                    t = new BufferedDataTable(et);
+                } else {
+                    assert false : "Insufficent case switch: " + tableType;
+                    throw new InvalidSettingsException("Unknown table identifier: " + tableType);
+                }
+                break;
+            default:
+                throw new InvalidSettingsException("Unknown table identifier: " + tableType);
         }
         t.m_tableID = id;
         tblRep.put(id, t);

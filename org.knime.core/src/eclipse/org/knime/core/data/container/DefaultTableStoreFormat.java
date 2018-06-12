@@ -163,5 +163,22 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
         return new DefaultTableStoreReader(binFile, spec, settings, tblRep, version, isReadRowKey);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getVersion() {
+        return Buffer.VERSION; // we write it but don't read it
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean validateVersion(final String versionString) {
+        return true; // this method is really only called for 3rd party types. Actual validation happens in class Buffer
+
+    }
+
 
 }

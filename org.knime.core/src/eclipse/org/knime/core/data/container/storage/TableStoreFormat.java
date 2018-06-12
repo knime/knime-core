@@ -118,4 +118,20 @@ public interface TableStoreFormat {
         final NodeSettingsRO settings, final Map<Integer, ContainerTable> tblRep, int version,
         boolean isReadRowKey) throws IOException, InvalidSettingsException;
 
+    /**
+     * The (internal) version used to write the format. The value is {@link #validateVersion(String) validated} during
+     * reading.
+     *
+     * @return the version string that is persisted
+     */
+    public String getVersion();
+
+    /**
+     * Validates the version string that was saved along with the data.
+     *
+     * @param versionString The non-null version
+     * @return true if the version is 'known' and readable, false otherwise.
+     */
+    public boolean validateVersion(final String versionString);
+
 }

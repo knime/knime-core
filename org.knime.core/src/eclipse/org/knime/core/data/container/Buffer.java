@@ -220,10 +220,10 @@ public class Buffer implements KNIMEStreamConstants {
     private static final String CFG_SIZE_L = "table.size.long";
 
     /** Current version string. */
-    private static final String VERSION = "container_10";
+    public static final String VERSION = "container_10";
 
-    /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 10;
+    /** The version number corresponding to {@link #VERSION}. */
+    public static final int IVERSION = 10;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 

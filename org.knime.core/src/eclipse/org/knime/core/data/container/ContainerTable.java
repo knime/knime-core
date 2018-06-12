@@ -54,6 +54,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -188,10 +189,28 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         ensureBufferOpen();
-        ZipOutputStream zipOut = new ZipOutputStream(
-                new BufferedOutputStream(new FileOutputStream(f)));
-        m_buffer.addToZipFile(zipOut, exec);
-        zipOut.close();
+        try (ZipOutputStream zipOut = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(f)))) {
+            m_buffer.addToZipFile(zipOut, exec);
+        }
+    }
+
+    /**
+     * This methods exists to address possibly forward compatibility issues in KNIME 3.5 and before, see AP-8954.
+     * Workflows created and saved in KNIME AP 3.6 were saved incompatibly to prior versions of KNIME (column store
+     * added). Despite KNIME not supporting forward compatible the behavior in 3.5 was still undesired: The workflow
+     * would load (with the usual disclaimer of forward compatibility) and all nodes are loaded executed but then upon
+     * accessing the table errors are thrown (lazy loading). This also appears when the workflow is modified and saved,
+     * which is when the entire workflow is corrupted (due to load errors thrown during save). In order to work around
+     * these shortcomings we save the table type under a new value which will result in errors during loading the
+     * workflow in 3.5 (fail early).
+     *
+     * @return The instance used to persist container tables / buffers.
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 3.6
+     */
+    public TableStoreFormat getTableStoreFormat() {
+        ensureBufferOpen();
+        return m_buffer.getOutputFormat();
     }
 
     /**
