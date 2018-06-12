@@ -93,6 +93,7 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.KNIMEServerHostnameVerifier;
 import org.knime.core.util.PathUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -315,6 +316,7 @@ public class ProfileManager {
 
             try (CloseableHttpClient client = HttpClients.custom()
                     .setDefaultRequestConfig(requestConfig)
+                    .setSSLHostnameVerifier(KNIMEServerHostnameVerifier.getInstance())
                     .setRedirectStrategy(new DefaultRedirectStrategy()).build()) {
                 HttpGet get = new HttpGet(profileUri);
 
