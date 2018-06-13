@@ -263,22 +263,20 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         m_portIndex.getCombo().setEnabled(false);
         m_portIndex.addSelectionChangedListener(event -> {
             ISelection sel = event.getSelection();
-            try {
-                int newIndex = Integer.parseInt(sel.toString().substring(5).replace(']', ' ').trim());
-                resetMonitorTable();
-                switch (m_choice) {
-                   case TABLE:
-                        m_currentMonitorTable = new MonitorDataTable(newIndex);
-                        break;
+            if (m_choice == DISPLAYOPTIONS.TABLE) {
+                try {
+                    int newIndex = Integer.parseInt(sel.toString().substring(5).replace(']', ' ').trim());
+                    resetMonitorTable();
+                    m_currentMonitorTable = new MonitorDataTable(newIndex);
+                    if (wraps(m_lastNode, NodeContainer.class)) {
+                        //already load the data in case of an ordinary node container
+                        loadAndSetupMonitorTableForOrdinaryNC();
+                    } else {
+                        m_currentMonitorTable.updateControls(m_loadButton, m_portIndex.getCombo(), 0);
+                    }
+                } catch (NumberFormatException nfe) {
+                    // ignore.
                 }
-                if (wraps(m_lastNode, NodeContainer.class)) {
-                    //already load the data in case of an ordinary node container
-                    loadAndSetupMonitorTableForOrdinaryNC();
-                } else {
-                    m_currentMonitorTable.updateControls(m_loadButton, m_portIndex.getCombo(), 0);
-                }
-            } catch (NumberFormatException nfe) {
-                // ignore.
             }
         });
         m_loadButton = new Button(infoPanel, SWT.PUSH);
