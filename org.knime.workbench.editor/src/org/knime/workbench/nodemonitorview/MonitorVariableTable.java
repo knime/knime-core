@@ -49,6 +49,7 @@
 package org.knime.workbench.nodemonitorview;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
@@ -71,8 +72,7 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public class MonitorVariableTable implements NodeMonitorTable {
-
-    private Collection<FlowVariable> m_variables;
+    private Collection<FlowVariable> m_variables = Collections.emptyList();
 
     private String m_infoLabel;
 
@@ -93,7 +93,7 @@ public class MonitorVariableTable implements NodeMonitorTable {
                 m_variables = fos.getAvailableFlowVariables(Type.values()).values();
                 m_infoLabel = "Node Variables";
             } else {
-                m_variables = null;
+                m_variables = Collections.emptyList();
             }
         } else {
             // no output port on metanode - display workflow variables
@@ -113,13 +113,11 @@ public class MonitorVariableTable implements NodeMonitorTable {
             TableColumn column = new TableColumn(table, SWT.NONE);
             column.setText(titles[i]);
         }
-        if (m_variables != null) {
-            // update content
-            for (FlowVariable fv : m_variables) {
-                TableItem item = new TableItem(table, SWT.NONE);
-                item.setText(0, fv.getName());
-                item.setText(1, fv.getValueAsString());
-            }
+        // update content
+        for (FlowVariable fv : m_variables) {
+            TableItem item = new TableItem(table, SWT.NONE);
+            item.setText(0, fv.getName());
+            item.setText(1, fv.getValueAsString());
         }
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumn(i).pack();
@@ -158,5 +156,4 @@ public class MonitorVariableTable implements NodeMonitorTable {
     public void dispose(final Table table) {
         //nothing to do here
     }
-
 }

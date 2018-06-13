@@ -62,13 +62,9 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
@@ -102,6 +98,7 @@ import org.knime.workbench.nodemonitorview.NodeMonitorTable.LoadingFailedExcepti
  * An Eclipse View showing the interna of the currently selected (meta)node.
  *
  * @author M. Berthold, KNIME.com AG
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public class NodeMonitorView extends ViewPart implements ISelectionListener, LocationListener, NodeStateChangeListener {
 
@@ -147,16 +144,13 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
             new RetargetAction("PinView", "Pin view to selected node", IAction.AS_CHECK_BOX);
         pinButton.setImageDescriptor(ImageDescriptor.createFromFile(this.getClass(), "icons/pin.png"));
         pinButton.setChecked(m_pinned);
-        pinButton.addPropertyChangeListener(new IPropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                if (pinButton.isChecked()) {
-                    m_pinned = true;
-                    m_lastSelectionWhilePinned = m_lastSelection;
-                } else {
-                    m_pinned = false;
-                    selectionChanged(null, m_lastSelectionWhilePinned);
-                }
+        pinButton.addPropertyChangeListener(event -> {
+            if (pinButton.isChecked()) {
+                m_pinned = true;
+                m_lastSelectionWhilePinned = m_lastSelection;
+            } else {
+                m_pinned = false;
+                selectionChanged(null, m_lastSelectionWhilePinned);
             }
         });
         pinButton.setEnabled(true);
@@ -168,13 +162,10 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         final RetargetAction menuentrytable =
             new RetargetAction("OutputTable", "Show Output Table", IAction.AS_RADIO_BUTTON);
         menuentrytable.setChecked(DISPLAYOPTIONS.TABLE.equals(m_choice));
-        menuentrytable.addPropertyChangeListener(new IPropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                if (menuentrytable.isChecked()) {
-                    m_choice = DISPLAYOPTIONS.TABLE;
-                    updateNodeContainerInfo(m_lastNode);
-                }
+        menuentrytable.addPropertyChangeListener(event -> {
+            if (menuentrytable.isChecked()) {
+                m_choice = DISPLAYOPTIONS.TABLE;
+                updateNodeContainerInfo(m_lastNode);
             }
         });
         menuentrytable.setEnabled(true);
@@ -183,13 +174,10 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         final RetargetAction dropdownmenuvars =
             new RetargetAction("NodeVariables", "Show Variables", IAction.AS_RADIO_BUTTON);
         dropdownmenuvars.setChecked(DISPLAYOPTIONS.VARS.equals(m_choice));
-        dropdownmenuvars.addPropertyChangeListener(new IPropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                if (dropdownmenuvars.isChecked()) {
-                    m_choice = DISPLAYOPTIONS.VARS;
-                    updateNodeContainerInfo(m_lastNode);
-                }
+        dropdownmenuvars.addPropertyChangeListener(event -> {
+            if (dropdownmenuvars.isChecked()) {
+                m_choice = DISPLAYOPTIONS.VARS;
+                updateNodeContainerInfo(m_lastNode);
             }
         });
         dropdownmenuvars.setEnabled(true);
@@ -198,13 +186,10 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         final RetargetAction menuentrysettings =
             new RetargetAction("NodeConf", "Show Configuration", IAction.AS_RADIO_BUTTON);
         menuentrysettings.setChecked(DISPLAYOPTIONS.SETTINGS.equals(m_choice));
-        menuentrysettings.addPropertyChangeListener(new IPropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                if (menuentrysettings.isChecked()) {
-                    m_choice = DISPLAYOPTIONS.SETTINGS;
-                    updateNodeContainerInfo(m_lastNode);
-                }
+        menuentrysettings.addPropertyChangeListener(event -> {
+            if (menuentrysettings.isChecked()) {
+                m_choice = DISPLAYOPTIONS.SETTINGS;
+                updateNodeContainerInfo(m_lastNode);
             }
         });
         menuentrysettings.setEnabled(true);
@@ -213,13 +198,10 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         final RetargetAction menuentryallsettings =
             new RetargetAction("NodeConfAll", "Show Entire Configuration", IAction.AS_RADIO_BUTTON);
         menuentryallsettings.setChecked(DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
-        menuentryallsettings.addPropertyChangeListener(new IPropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                if (menuentryallsettings.isChecked()) {
-                    m_choice = DISPLAYOPTIONS.ALLSETTINGS;
-                    updateNodeContainerInfo(m_lastNode);
-                }
+        menuentryallsettings.addPropertyChangeListener(event -> {
+            if (menuentryallsettings.isChecked()) {
+                m_choice = DISPLAYOPTIONS.ALLSETTINGS;
+                updateNodeContainerInfo(m_lastNode);
             }
         });
         menuentryallsettings.setEnabled(true);
@@ -228,13 +210,10 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         final RetargetAction menuentrynodetimer =
             new RetargetAction("NodeTimer", "Show Node Timing Information", IAction.AS_RADIO_BUTTON);
         menuentrynodetimer.setChecked(DISPLAYOPTIONS.TIMER.equals(m_choice));
-        menuentrynodetimer.addPropertyChangeListener(new IPropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                if (menuentrynodetimer.isChecked()) {
-                    m_choice = DISPLAYOPTIONS.TIMER;
-                    updateNodeContainerInfo(m_lastNode);
-                }
+        menuentrynodetimer.addPropertyChangeListener(event -> {
+            if (menuentrynodetimer.isChecked()) {
+                m_choice = DISPLAYOPTIONS.TIMER;
+                updateNodeContainerInfo(m_lastNode);
             }
         });
         menuentrynodetimer.setEnabled(true);
@@ -243,13 +222,10 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         final RetargetAction menuentrygraphannotations =
             new RetargetAction("NodeGraphAnno", "Show Graph Annotations", IAction.AS_RADIO_BUTTON);
         menuentrygraphannotations.setChecked(DISPLAYOPTIONS.GRAPHANNOTATIONS.equals(m_choice));
-        menuentrygraphannotations.addPropertyChangeListener(new IPropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                if (menuentrygraphannotations.isChecked()) {
-                    m_choice = DISPLAYOPTIONS.GRAPHANNOTATIONS;
-                    updateNodeContainerInfo(m_lastNode);
-                }
+        menuentrygraphannotations.addPropertyChangeListener(event -> {
+            if (menuentrygraphannotations.isChecked()) {
+                m_choice = DISPLAYOPTIONS.GRAPHANNOTATIONS;
+                updateNodeContainerInfo(m_lastNode);
             }
         });
         menuentrygraphannotations.setEnabled(true);
@@ -285,27 +261,24 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
         m_portIndex = new ComboViewer(infoPanel);
         m_portIndex.add(new String[]{"port 0", "port 1", "port 2"});
         m_portIndex.getCombo().setEnabled(false);
-        m_portIndex.addSelectionChangedListener(new ISelectionChangedListener() {
-            @Override
-            public void selectionChanged(final SelectionChangedEvent event) {
-                ISelection sel = event.getSelection();
-                try {
-                    int newIndex = Integer.parseInt(sel.toString().substring(5).replace(']', ' ').trim());
-                    resetMonitorTable();
-                    switch (m_choice) {
-                       case TABLE:
-                            m_currentMonitorTable = new MonitorDataTable(newIndex);
-                            break;
-                    }
-                    if (wraps(m_lastNode, NodeContainer.class)) {
-                        //already load the data in case of an ordinary node container
-                        loadAndSetupMonitorTableForOrdinaryNC();
-                    } else {
-                        m_currentMonitorTable.updateControls(m_loadButton, m_portIndex.getCombo(), 0);
-                    }
-                } catch (NumberFormatException nfe) {
-                    // ignore.
+        m_portIndex.addSelectionChangedListener(event -> {
+            ISelection sel = event.getSelection();
+            try {
+                int newIndex = Integer.parseInt(sel.toString().substring(5).replace(']', ' ').trim());
+                resetMonitorTable();
+                switch (m_choice) {
+                   case TABLE:
+                        m_currentMonitorTable = new MonitorDataTable(newIndex);
+                        break;
                 }
+                if (wraps(m_lastNode, NodeContainer.class)) {
+                    //already load the data in case of an ordinary node container
+                    loadAndSetupMonitorTableForOrdinaryNC();
+                } else {
+                    m_currentMonitorTable.updateControls(m_loadButton, m_portIndex.getCombo(), 0);
+                }
+            } catch (NumberFormatException nfe) {
+                // ignore.
             }
         });
         m_loadButton = new Button(infoPanel, SWT.PUSH);
@@ -567,10 +540,11 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
                 if (lfe.get() != null) {
                     throw lfe.get();
                 }
-                if(m_loadButtonPressedCount.get() == 0) {
+                if (m_loadButtonPressedCount.get() == 0) {
                     m_currentMonitorTable.setupTable(m_table);
                 }
-                m_currentMonitorTable.updateControls(m_loadButton, m_portIndex.getCombo(), m_loadButtonPressedCount.get() + 1);
+                m_currentMonitorTable.updateControls(m_loadButton, m_portIndex.getCombo(),
+                    m_loadButtonPressedCount.get() + 1);
                 m_loadButtonPressedCount.incrementAndGet();
             } catch (LoadingFailedException ex) {
                 warningMessage(ex.getMessage());
@@ -580,6 +554,7 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
             } catch (InterruptedException e1) {
                 warningMessage(e1.getMessage());
                 LOGGER.warn(e1);
+                Thread.currentThread().interrupt();
             }
         }
 

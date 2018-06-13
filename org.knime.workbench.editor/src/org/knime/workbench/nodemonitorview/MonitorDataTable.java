@@ -141,7 +141,7 @@ public class MonitorDataTable implements NodeMonitorTable {
             }
             NodeOutPortUI nop = ncUI.getOutPort(index);
             PortObject po = nop.getPortObject();
-            if (!(po != null && ((po instanceof BufferedDataTable) || (po instanceof KnowsRowCountTable)))) {
+            if (!((po instanceof BufferedDataTable) || (po instanceof KnowsRowCountTable))) {
                 // no table in port - ignore.
                 throw new LoadingFailedException("Unknown or no PortObject");
             }
@@ -196,7 +196,7 @@ public class MonitorDataTable implements NodeMonitorTable {
         } else {
             loadButton.setText("Load more rows");
         }
-        if(m_numLoadedRows == m_numRows) {
+        if (m_numLoadedRows == m_numRows) {
             loadButton.setEnabled(false);
         } else {
             loadButton.setEnabled(true);
@@ -236,10 +236,10 @@ public class MonitorDataTable implements NodeMonitorTable {
     }
 
     private void closeIterator() {
-        if (m_it != null && m_it instanceof CloseableRowIterator) {
+        if (m_it instanceof CloseableRowIterator) {
             ((CloseableRowIterator)m_it).close();
         }
-        if (m_manualIt != null && m_manualIt instanceof CloseableRowIterator) {
+        if (m_manualIt instanceof CloseableRowIterator) {
             ((CloseableRowIterator)m_manualIt).close();
         }
     }
@@ -285,5 +285,4 @@ public class MonitorDataTable implements NodeMonitorTable {
             }
         }
     }
-
 }

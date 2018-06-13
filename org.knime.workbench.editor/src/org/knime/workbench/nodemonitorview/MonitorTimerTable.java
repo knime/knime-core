@@ -65,14 +65,14 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public class MonitorTimerTable implements NodeMonitorTable {
-
     private NodeTimer m_nodeTimer;
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void loadTableData(final NodeContainerUI ncUI, final NodeContainer nc, final int count) throws LoadingFailedException {
+    public void loadTableData(final NodeContainerUI ncUI, final NodeContainer nc, final int count)
+        throws LoadingFailedException {
         if (nc == null) {
             throw new LoadingFailedException("info for '" + ncUI.getClass().getSimpleName() + "'.");
         }
@@ -140,5 +140,4 @@ public class MonitorTimerTable implements NodeMonitorTable {
     public void dispose(final Table table) {
         //nothing to do here
     }
-
 }

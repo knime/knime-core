@@ -74,8 +74,6 @@ import org.knime.core.util.Pair;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public class MonitorSettingsTable implements NodeMonitorTable {
-
-
     private final boolean m_showAll;
 
     private ConfigBaseRO m_settings;
@@ -99,7 +97,7 @@ public class MonitorSettingsTable implements NodeMonitorTable {
         throws LoadingFailedException {
         // retrieve settings
         m_settings = ncUI.getNodeSettings();
-        if (nc != null && nc instanceof NativeNodeContainer) {
+        if (nc instanceof NativeNodeContainer) {
             m_nodeAndBundleInfo = ((NativeNodeContainer)nc).getNodeAndBundleInformation();
         }
     }
@@ -204,7 +202,7 @@ public class MonitorSettingsTable implements NodeMonitorTable {
     @Override
     public void updateControls(final Button loadButton, final Combo portCombo, final int count) {
         portCombo.setEnabled(false);
-        if(count == 0) {
+        if (count == 0) {
             loadButton.setText("Load settings");
             loadButton.setEnabled(true);
         } else {
@@ -227,5 +225,4 @@ public class MonitorSettingsTable implements NodeMonitorTable {
     public void dispose(final Table table) {
         //nothing to do here
     }
-
 }

@@ -65,13 +65,12 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public interface NodeMonitorTable {
-
     /**
      * Called to load the required data from the provided node container. Can be called multiple times (e.g., when the
      * load data button is pressed multiple times). Disable load button if not desired. This method is not called in the
      * UI thread!
      *
-     * @param ncUI the node container, never null
+     * @param ncUI the node container, never <code>null</code>
      * @param nc the ordinary node container instance, if available, otherwise <code>null</code>
      * @param count how many times this method has been called already
      * @throws LoadingFailedException if something went wrong during load
@@ -98,21 +97,21 @@ public interface NodeMonitorTable {
     /**
      * Let one change the info label.
      *
-     * @param info
+     * @param info the label to be updated
      */
     void updateInfoLabel(Label info);
 
     /**
      * Clean up when this monitor table isn't used anymore. E.g. de-registering listeneres etc.
      *
-     * @param table
+     * @param table the table to be disposed
      */
     void dispose(Table table);
 
     /**
      * Exception thrown when something went wrong with loading the data.
      */
-    public class LoadingFailedException extends Exception {
+    public static class LoadingFailedException extends Exception {
         private static final long serialVersionUID = 5320288247631681951L;
         LoadingFailedException(final String cause) {
             super(cause);
