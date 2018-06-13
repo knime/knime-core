@@ -75,6 +75,7 @@ import org.knime.core.data.DataType;
  * A panel that holding one bin column.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public class IntervalPanel extends JPanel {
 

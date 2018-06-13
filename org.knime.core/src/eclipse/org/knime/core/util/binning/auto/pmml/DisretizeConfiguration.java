@@ -55,6 +55,7 @@ import java.util.Map;
 /**
  *
  * @author Heiko Hofer
+ * @since 3.6
  *
  */
 public class DisretizeConfiguration {

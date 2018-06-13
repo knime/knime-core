@@ -75,6 +75,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * Implementation for auto binner node's number format settings tab.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public class NumberFormatSettingsPanel extends JPanel {
 

@@ -58,6 +58,7 @@ import org.xml.sax.helpers.AttributesImpl;
  * Encapsulates a DiscretizeBin in PMML.
  *
  * @author Heiko Hofer
+ * @since 3.6
  */
 public final class PMMLDiscretize {
     private String m_field;

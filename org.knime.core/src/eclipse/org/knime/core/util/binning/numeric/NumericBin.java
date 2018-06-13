@@ -57,6 +57,7 @@ import org.knime.core.node.NodeSettingsWO;
  * Delegates bin access function to local structure.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public class NumericBin implements Bin {
 

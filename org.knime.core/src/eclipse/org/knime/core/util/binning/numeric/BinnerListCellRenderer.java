@@ -60,6 +60,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * Override renderer to plot number of defined bins.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public class BinnerListCellRenderer extends DataColumnSpecListCellRenderer {
 

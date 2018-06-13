@@ -58,6 +58,7 @@ package org.knime.core.util.binning.auto.pmml;
  * </ul>
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public enum Closure {
 

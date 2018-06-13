@@ -55,6 +55,7 @@ import org.knime.core.node.NodeSettingsWO;
  * General bin.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public interface Bin {
 

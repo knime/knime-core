@@ -56,6 +56,7 @@ import org.xml.sax.helpers.AttributesImpl;
  * Encapsulates a Interval in PMML.
  *
  * @author Heiko Hofer
+ * @since 3.6
  */
 public final class PMMLInterval {
 

@@ -75,6 +75,7 @@ import org.knime.core.data.def.IntCell;
  * A panel that holding one interval.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public class IntervalItemPanel extends JPanel {
 

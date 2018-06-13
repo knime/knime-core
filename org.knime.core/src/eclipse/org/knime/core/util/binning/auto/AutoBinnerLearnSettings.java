@@ -62,6 +62,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  * This class hold the settings for the DB Auto Binner node.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public final class AutoBinnerLearnSettings {
 

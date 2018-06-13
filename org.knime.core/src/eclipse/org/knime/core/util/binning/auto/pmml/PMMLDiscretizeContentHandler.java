@@ -59,6 +59,7 @@ import org.xml.sax.SAXException;
 /**
  *
  * @author Heiko Hofer
+ * @since 3.6
  */
 @SuppressWarnings("deprecation")
 final class PMMLDiscretizeContentHandler extends PMMLContentHandler {

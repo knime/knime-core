@@ -56,6 +56,7 @@ package org.knime.core.util.binning.auto;
  * </ul>
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public enum BinningMethod {
         /**

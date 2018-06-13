@@ -65,6 +65,7 @@ import org.xml.sax.helpers.AttributesImpl;
 /**
  *
  * @author Heiko Hofer
+ * @since 3.6
  */
 @SuppressWarnings("deprecation")
 public final class PMMLPreprocDiscretize extends PMMLPreprocOperation {

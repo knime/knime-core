@@ -61,6 +61,7 @@ import org.knime.core.node.NodeSettingsWO;
  * Configuration class for database numeric binner node.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public class DBNumericBinnerConfig {
 

@@ -59,6 +59,7 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
  * </ul>
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public enum BinNaming implements ButtonGroupEnumInterface {
 

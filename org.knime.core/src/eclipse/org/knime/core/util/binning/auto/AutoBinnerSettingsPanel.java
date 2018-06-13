@@ -82,6 +82,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
  * Implementation for auto binner node settings tab.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public class AutoBinnerSettingsPanel extends JPanel {
 

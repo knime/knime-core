@@ -88,6 +88,7 @@ import org.knime.core.util.binning.numeric.PMMLBinningTranslator;
  * Utility class for auto binner nodes.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public final class AutoBinnerUtility {
 

@@ -75,6 +75,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * Binner dialog used to group numeric columns (int or double) into intervals.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 public class NumericBinnerPanel extends JPanel {
 

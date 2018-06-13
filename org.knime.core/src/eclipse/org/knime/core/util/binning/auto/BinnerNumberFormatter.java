@@ -59,6 +59,7 @@ import java.util.Locale;
  * Binner formatter for database auto binner node.
  *
  * @author Mor Kalla
+ * @since 3.6
  */
 final class BinnerNumberFormatter {
 
