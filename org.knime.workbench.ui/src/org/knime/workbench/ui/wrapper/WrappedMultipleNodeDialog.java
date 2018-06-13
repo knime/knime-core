@@ -82,7 +82,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WrappedMultipleNodeDialog.class);
 
-    private final WorkflowManager m_parentMgr;
+    private final WorkflowManager m_parentWorkflowManager;
 
     private final NodeID[] m_nodes;
 
@@ -103,12 +103,12 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
      * @param nodes 1-N nodes whose dialogs are being wrapped.
      */
     public WrappedMultipleNodeDialog(final Shell parentShell, final WorkflowManager parentMgr,
-                                     final SplitType splitType, final NodeID... nodes) {
+        final SplitType splitType, final NodeID... nodes) {
         super(parentShell);
 
-        m_parentMgr = parentMgr;
+        m_parentWorkflowManager = parentMgr;
         m_nodes = nodes;
-        m_initValue = m_parentMgr.getCommonSettings(nodes);
+        m_initValue = m_parentWorkflowManager.getCommonSettings(nodes);
         m_dialogPane = new NodeExecutorJobManagerDialogTab(splitType);
     }
 
@@ -127,8 +127,8 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
      */
     @Override
     protected Control createDialogArea(final Composite parent) {
-        Composite area = (Composite)super.createDialogArea(parent);
-        Color backgroundColor = Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
+        final Composite area = (Composite)super.createDialogArea(parent);
+        final Color backgroundColor = Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
         area.setBackground(backgroundColor);
 
         String title = "Select Job Manager";
@@ -155,7 +155,7 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
     public void create() {
         super.create();
         getShell().setSize(getInitialSize());
-        this.finishDialogCreation();
+        finishDialogCreation();
     }
 
     /**
@@ -170,7 +170,7 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
 
         ((GridLayout)parent.getLayout()).numColumns++;
 
-        this.swtKeyListener = new KeyListener() {
+        m_swtKeyListener = new KeyListener() {
             /** {@inheritDoc} */
             @Override
             public void keyReleased(final KeyEvent ke) {
@@ -196,35 +196,37 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
             }
         };
 
-        this.awtKeyListener = new KeyAdapter() {
+        m_awtKeyListener = new KeyAdapter() {
+            /** {@inheritDoc} */
             @Override
             public void keyReleased(final java.awt.event.KeyEvent ke) {
                 // TODO there's no point to this presently since we don't ever change the text
-                int menuAccelerator = (Platform.OS_MACOSX.equals(Platform.getOS())) ? java.awt.event.KeyEvent.VK_META
+                final int menuAccelerator = (Platform.OS_MACOSX.equals(Platform.getOS())) ? java.awt.event.KeyEvent.VK_META
                                                                                     : java.awt.event.KeyEvent.VK_CONTROL;
 
                 if (ke.getKeyCode() == menuAccelerator) {
-                    getShell().getDisplay().asyncExec(() -> {
+                    Display.getDefault().asyncExec(() -> {
                         btnOK.setText("OK");
                     });
                 }
             }
 
+            /** {@inheritDoc} */
             @Override
             public void keyPressed(final java.awt.event.KeyEvent ke) {
                 if (ke.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) {
                     // close dialog on ESC
-                    getShell().getDisplay().asyncExec(() -> {
+                    Display.getDefault().asyncExec(() -> {
                         doCancel();
                     });
                 }
 
                 // TODO this does not mimic the same behavior as found in WrappedNodeDialog to change the OK button text
-                int modifierKey = (Platform.OS_MACOSX.equals(Platform.getOS())) ? InputEvent.META_DOWN_MASK
+                final int modifierKey = (Platform.OS_MACOSX.equals(Platform.getOS())) ? InputEvent.META_DOWN_MASK
                                                                                 : InputEvent.CTRL_DOWN_MASK;
                 if ((ke.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER)
                                     && ((ke.getModifiersEx() & modifierKey) != 0)) {
-                    getShell().getDisplay().asyncExec(() -> {
+                    Display.getDefault().asyncExec(() -> {
                         // force OK - Execute when CTRL/Command and ENTER is pressed
                         if (doApply()) {
                             runOK();
@@ -235,14 +237,15 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
         };
 
         if (!Platform.OS_MACOSX.equals(Platform.getOS())) {
-            btnOK.addKeyListener(this.swtKeyListener);
-            btnCancel.addKeyListener(this.swtKeyListener);
-            m_wrapper.addKeyListener(this.swtKeyListener);
+            btnOK.addKeyListener(m_swtKeyListener);
+            btnCancel.addKeyListener(m_swtKeyListener);
+            m_wrapper.addKeyListener(m_swtKeyListener);
         }
 
         // Register listeners that notify the content object, which
         // in turn notify the dialog about the particular event.
         btnOK.addSelectionListener(new SelectionAdapter() {
+            /** {@inheritDoc} */
             @Override
             public void widgetSelected(final SelectionEvent se) {
                 // OK only
@@ -250,6 +253,7 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
             }
         });
         btnCancel.addSelectionListener(new SelectionAdapter() {
+            /** {@inheritDoc} */
             @Override
             public void widgetSelected(final SelectionEvent se) {
                 doCancel();
@@ -286,12 +290,12 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
 
     private boolean doApply() {
         try {
-            NodeContainerSettings newSettings = new NodeContainerSettings();
+            final NodeContainerSettings newSettings = new NodeContainerSettings();
             m_dialogPane.saveSettings(newSettings);
-            if (newSettings.equals(m_initValue) || (m_initValue == null && newSettings.getJobManager() == null)) {
+            if (newSettings.equals(m_initValue) || ((m_initValue == null) && (newSettings.getJobManager() == null))) {
                 informNothingChanged();
             } else {
-                m_parentMgr.applyCommonSettings(newSettings, m_nodes);
+                m_parentWorkflowManager.applyCommonSettings(newSettings, m_nodes);
             }
             return true;
         } catch (InvalidSettingsException ise) {
@@ -325,11 +329,8 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
      */
     @Override
     protected Point getInitialSize() {
-        ViewUtils.invokeAndWaitInEDT(new Runnable() {
-            @Override
-            public void run() {
-                m_dialogPane.doLayout();
-            }
+        ViewUtils.invokeAndWaitInEDT(() -> {
+            m_dialogPane.doLayout();
         });
 
         // underlying pane sizes
@@ -337,12 +338,12 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
         int height = m_dialogPane.getPreferredSize().height;
 
         // button bar sizes
-        int widthButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
-        int heightButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
+        final int widthButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
+        final int heightButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 
         // init dialog sizes
-        int widthDialog = super.getInitialSize().x;
-        int heightDialog = super.getInitialSize().y;
+        final int widthDialog = super.getInitialSize().x;
+        final int heightDialog = super.getInitialSize().y;
 
         // we need to make sure that we have at least enough space for
         // the button bar (+ some extra space)
@@ -350,7 +351,7 @@ public class WrappedMultipleNodeDialog extends AbstractWrappedDialog {
         height = Math.max(Math.max(heightButtonBar, heightDialog), height + heightDialog + EXTRA_HEIGHT);
 
         // set the size of the container composite
-        Point size = new Point(width, height);
+        final Point size = new Point(width, height);
         m_wrapper.setSize(size);
         return size;
     }

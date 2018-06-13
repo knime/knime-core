@@ -74,12 +74,11 @@ import org.knime.core.node.util.ViewUtils;
  * @author Florian Georg, University of Konstanz
  */
 public class Panel2CompositeWrapper extends Composite {
-
     /**
      * We track the root frame we create so that it can be handed off, on Mac platforms, to our
      *  key-tracking-instrumenter.
      */
-    protected Frame rootFrame;
+    protected Frame m_rootFrame;
 
     /**
      * Creates a new wrapper.
@@ -100,7 +99,7 @@ public class Panel2CompositeWrapper extends Composite {
         setLayout(gridLayout);
         setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        this.rootFrame = SWT_AWT.new_Frame(this);
+        m_rootFrame = SWT_AWT.new_Frame(this);
         // The lightweight Swing panel must be wrapped into a heavyweight AWT container-panel
         // otherwise the cursor changes when moving over a Swing component won't work correctly.
         // bug 6516
@@ -109,12 +108,12 @@ public class Panel2CompositeWrapper extends Composite {
         heavyweightPanel.setBackground(null);
         // use heavyweight panel as root
         heavyweightPanel.add(panel);
-        this.rootFrame.add(heavyweightPanel);
+        m_rootFrame.add(heavyweightPanel);
 
 
         // on some Linux systems tabs are not properly passed to AWT without the next line
         if (Platform.OS_LINUX.equals(Platform.getOS())) {
-            this.rootFrame.setFocusTraversalKeysEnabled(false);
+            m_rootFrame.setFocusTraversalKeysEnabled(false);
         }
 
         // the size of the composite is 0x0 at this point. The above SWT_AWT.newFrame() determines the client
@@ -122,19 +121,17 @@ public class Panel2CompositeWrapper extends Composite {
         // setting a dimension here in order to have reasonable defaults.
         // see bug 4431 (and the original bug 4418)
         Dimension size = panel.getPreferredSize();
-        this.setSize(size.width, size.height);
+        setSize(size.width, size.height);
 
         addFocusListener(new FocusAdapter() {
             /**
+             * {@inheritDoc}
              * @param e focus event passed to the underlying AWT component
              */
             @Override
             public void focusGained(final FocusEvent e) {
-                ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
-                    @Override
-                    public void run() {
-                        panel.requestFocus();
-                    }
+                ViewUtils.runOrInvokeLaterInEDT(() -> {
+                    panel.requestFocus();
                 });
             }
         });
@@ -145,32 +142,27 @@ public class Panel2CompositeWrapper extends Composite {
         // Note that this only works in conjunction with "resizeHasOccurred = true; getShell().layout();
         // in WrappedNodeDialog (lines 271 following), otherwise the size of the wrapper component (this) is also not correct.
         final FocusListener sizeFocusListener = new FocusListener() {
-
+            /** {@inheritDoc} */
             @Override
             public void focusLost(final java.awt.event.FocusEvent e) { /* do nothing */ }
 
+            /** {@inheritDoc} */
             @Override
             public void focusGained(final java.awt.event.FocusEvent e) {
                 final Dimension panelSize = heavyweightPanel.getSize();
                 if (!isDisposed()) {
-                    getDisplay().asyncExec(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!isDisposed()) {
-                                final Point wrapperSize = getSize();
-                                // Check if size of this component is the same as the panel
-                                if (panelSize.width != wrapperSize.x || panelSize.height != wrapperSize.y) {
-                                    ViewUtils.invokeLaterInEDT(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            // Set sizes on AWT frame and dialog panel if different from
-                                            // wrapper component
-                                            Panel2CompositeWrapper.this.rootFrame.setSize(wrapperSize.x, wrapperSize.y);
-                                            heavyweightPanel.setSize(wrapperSize.x, wrapperSize.y);
-                                            panel.setSize(wrapperSize.x, wrapperSize.y);
-                                        }
-                                    });
-                                }
+                    getDisplay().asyncExec(() -> {
+                        if (!isDisposed()) {
+                            final Point wrapperSize = getSize();
+                            // Check if size of this component is the same as the panel
+                            if (panelSize.width != wrapperSize.x || panelSize.height != wrapperSize.y) {
+                                ViewUtils.invokeLaterInEDT(() -> {
+                                    // Set sizes on AWT frame and dialog panel if different from
+                                    // wrapper component
+                                    m_rootFrame.setSize(wrapperSize.x, wrapperSize.y);
+                                    heavyweightPanel.setSize(wrapperSize.x, wrapperSize.y);
+                                    panel.setSize(wrapperSize.x, wrapperSize.y);
+                                });
                             }
                         }
                     });
@@ -183,6 +175,7 @@ public class Panel2CompositeWrapper extends Composite {
         // We reuse the panel on subsequent dialog opens but always create a new wrapper component.
         // Therefore we need to remove the focus listener on the dialog panel when the wrapper is disposed.
         addDisposeListener(new DisposeListener() {
+            /** {@inheritDoc} */
             @Override
             public void widgetDisposed(final DisposeEvent e) {
                 panel.removeFocusListener(sizeFocusListener);
@@ -191,7 +184,6 @@ public class Panel2CompositeWrapper extends Composite {
     }
 
     Frame getRootFrame () {
-        return this.rootFrame;
+        return m_rootFrame;
     }
-
 }

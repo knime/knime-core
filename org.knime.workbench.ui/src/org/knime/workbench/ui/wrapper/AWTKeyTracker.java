@@ -65,37 +65,38 @@ import org.eclipse.swt.widgets.Display;
 
 /**
  * This class provides a utility method to walk SWT and AWT/Swing component graphs instrumenting them with key listeners
- *  of their respective ilks. This enters existence due to AP-5670; as will be commented in that issue:
+ * of their respective ilks. This enters existence due to AP-5670 (and again as AP-9477).
  *
- *      "Along the way, i noticed that if i paused the SWT thread's execution during the construction of the
- *          WrappedNodeDialog's components, then the key listeners would work on Mac until something else in the dialog
- *          received focus, then never again. If i did not pause the thread's execution, the key listeners under Mac
- *          would never receive key events - at a very base level (like NSResponder never does an objc_msgSend for an
- *          OS.sel_flagsChanged_ event.)
- *       I am working around this unsavory situation by attaching key listeners throughout the SWT and AWT component
- *          trees for dialogs under Mac; pretty awful, but it gets us around some of the SWT_AWT issues here."
+ * Along the way, i noticed that if i paused the SWT thread's execution during the construction of the
+ * WrappedNodeDialog's components, then the key listeners would work on Mac until something else in the dialog received
+ * focus, then never again. If i did not pause the thread's execution, the key listeners under Mac would never receive
+ * key events - at a very base level (like NSResponder never does an objc_msgSend for an OS.sel_flagsChanged_ event.)
+ *
+ * I am working around this unsavory situation by attaching key listeners throughout the SWT and AWT component trees for
+ * dialogs under Mac; pretty awful, but it gets us around some of the SWT_AWT issues here.
+ *
+ * @author loki der quaeler
  */
-final class MacKeyTracker {
+final class AWTKeyTracker {
+    private static AWTKeyTracker INSTANCE = new AWTKeyTracker();
 
-    static private MacKeyTracker INSTANCE = new MacKeyTracker();
-
-    static MacKeyTracker getInstance () {
+    static AWTKeyTracker getInstance () {
         return INSTANCE;
     }
 
 
     // This map tracks the mapping between any currently on screen SWT control and its SWTKeyListener
-    protected HashMap<Control, SWTKeyListener> swtControlListenerMap;
+    protected HashMap<Control, SWTKeyListener> m_swtControlListenerMap;
 
-    private MacKeyTracker () {
-        this.swtControlListenerMap = new HashMap<>();
+    private AWTKeyTracker() {
+        m_swtControlListenerMap = new HashMap<>();
     }
 
     /**
      * This must be called on the SWT thread.
      */
-    void instrumentTree (final Container awtParentContainer, final java.awt.event.KeyListener awtKeyListener,
-                         final Composite swtParentComposite, final KeyListener swtKeyListener) {
+    void instrumentTree(final Container awtParentContainer, final java.awt.event.KeyListener awtKeyListener,
+        final Composite swtParentComposite, final KeyListener swtKeyListener) {
         if (Thread.currentThread() != Display.getCurrent().getThread()) {
             throw new IllegalStateException("This must be called on the SWT thread.");
         }
@@ -105,33 +106,33 @@ final class MacKeyTracker {
                 component.addKeyListener(new AWTKeyListener(awtKeyListener));
             };
 
-            this.walkAWTTree(awtParentContainer, awtAffector);
+            walkAWTTree(awtParentContainer, awtAffector);
         });
 
         // Since this can only ever be called on the SWT thread, we needn't worry about concurrency issues with the map.
         Consumer<Control> swtAffector = (control) -> {
-            SWTKeyListener keyListener = new SWTKeyListener(swtKeyListener);
+            final SWTKeyListener keyListener = new SWTKeyListener(swtKeyListener);
 
-            this.swtControlListenerMap.put(control, keyListener);
+            m_swtControlListenerMap.put(control, keyListener);
 
             control.addKeyListener(keyListener);
         };
 
-        this.walkSWTTree(swtParentComposite, swtAffector);
+        walkSWTTree(swtParentComposite, swtAffector);
     }
 
     /**
      * This must be called on the SWT thread.
      */
-    void removeListeners (final Container awtParentContainer, final Composite swtParentComposite) {
+    void removeListeners(final Container awtParentContainer, final Composite swtParentComposite) {
         if (Thread.currentThread() != Display.getCurrent().getThread()) {
             throw new IllegalStateException("This must be called on the SWT thread.");
         }
 
         SwingUtilities.invokeLater(() -> {
             Consumer<Component> awtAffector = (component) -> {
-                java.awt.event.KeyListener[] listeners = component.getKeyListeners();
-                HashSet<AWTKeyListener> listenersToRemove = new HashSet<>();
+                final java.awt.event.KeyListener[] listeners = component.getKeyListeners();
+                final HashSet<AWTKeyListener> listenersToRemove = new HashSet<>();
 
                 for (java.awt.event.KeyListener listener : listeners) {
                     if (listener instanceof AWTKeyListener) {
@@ -144,51 +145,49 @@ final class MacKeyTracker {
                 }
             };
 
-            this.walkAWTTree(awtParentContainer, awtAffector);
+            walkAWTTree(awtParentContainer, awtAffector);
         });
 
         // Since this can only ever be called on the SWT thread, we needn't worry about concurrency issues with the map.
         Consumer<Control> swtAffector = (control) -> {
-            SWTKeyListener keyListener = this.swtControlListenerMap.remove(control);
+            final SWTKeyListener keyListener = m_swtControlListenerMap.remove(control);
 
             if (keyListener != null) {
                 control.removeKeyListener(keyListener);
             }
         };
 
-        this.walkSWTTree(swtParentComposite, swtAffector);
+        walkSWTTree(swtParentComposite, swtAffector);
     }
 
-    private void walkAWTTree (final Container c, final Consumer<Component> componentAffector) {
+    private void walkAWTTree(final Container c, final Consumer<Component> componentAffector) {
         if (c != null) {
-            Component[] children;
+            final Component[] children;
 
             componentAffector.accept(c);
 
             children = c.getComponents();
             for (Component child : children) {
                 if (child instanceof Container) {
-                    this.walkAWTTree((Container)child, componentAffector);
-                }
-                else {
+                    walkAWTTree((Container)child, componentAffector);
+                } else {
                     componentAffector.accept(child);
                 }
             }
         }
     }
 
-    private void walkSWTTree (final Composite c, final Consumer<Control> controlAffector) {
+    private void walkSWTTree(final Composite c, final Consumer<Control> controlAffector) {
         if (c != null) {
-            Control[] children;
+            final Control[] children;
 
             controlAffector.accept(c);
 
             children = c.getChildren();
             for (Control child : children) {
                 if (child instanceof Composite) {
-                    this.walkSWTTree((Composite)child, controlAffector);
-                }
-                else {
+                    walkSWTTree((Composite)child, controlAffector);
+                } else {
                     controlAffector.accept(child);
                 }
             }
@@ -197,58 +196,53 @@ final class MacKeyTracker {
 
 
     // We wrap this for instanceof comparisons when deregistering listeners
-    static protected class AWTKeyListener
-            extends KeyAdapter {
+    private static class AWTKeyListener extends KeyAdapter {
+        private java.awt.event.KeyListener m_wrappedListener;
 
-        protected java.awt.event.KeyListener wrappedListener;
-
-        protected AWTKeyListener (final java.awt.event.KeyListener kl) {
-            this.wrappedListener = kl;
-        }
-
-        @Override
-        public void keyPressed (final java.awt.event.KeyEvent ke) {
-            this.wrappedListener.keyPressed(ke);
-        }
-
-        @Override
-        public void keyReleased (final java.awt.event.KeyEvent ke) {
-            this.wrappedListener.keyReleased(ke);
-        }
-
-    }
-
-
-    // We don't *need* to wrap the SWT one, but i prefer the symmetry for readability and it has low expense.
-    static protected class SWTKeyListener
-            implements KeyListener {
-
-        protected KeyListener wrappedListener;
-
-        protected SWTKeyListener (final KeyListener kl) {
-            this.wrappedListener = kl;
-        }
-
-
-        //
-        //
-        // KeyListener implementation
-        //
-        //
-
-        @Override
-        public void keyPressed (final KeyEvent ke) {
-            this.wrappedListener.keyPressed(ke);
+        private AWTKeyListener(final java.awt.event.KeyListener kl) {
+            m_wrappedListener = kl;
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void keyReleased (final KeyEvent ke) {
-            this.wrappedListener.keyReleased(ke);
+        public void keyPressed(final java.awt.event.KeyEvent ke) {
+            m_wrappedListener.keyPressed(ke);
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyReleased(final java.awt.event.KeyEvent ke) {
+            m_wrappedListener.keyReleased(ke);
+        }
     }
 
+
+    // We don't *need* to wrap the SWT one, but i prefer the symmetry for readability and it has low expense.
+    private static class SWTKeyListener implements KeyListener {
+        private KeyListener m_wrappedListener;
+
+        private SWTKeyListener(final KeyListener kl) {
+            m_wrappedListener = kl;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyPressed(final KeyEvent ke) {
+            m_wrappedListener.keyPressed(ke);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyReleased(final KeyEvent ke) {
+            m_wrappedListener.keyReleased(ke);
+        }
+    }
 }

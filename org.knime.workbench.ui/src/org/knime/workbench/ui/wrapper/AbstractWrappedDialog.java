@@ -59,11 +59,12 @@ import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 
 /**
- * There was commonality between WrappedNodeDialog and WrappedMultipleNodeDialog, so i consolidated it here while i
- *  was making changes to both classes as part of AP-5670 work.
+ * There was commonality between WrappedNodeDialog and WrappedMultipleNodeDialog, so i consolidated it here while i was
+ * making changes to both classes as part of AP-5670 work.
+ *
+ * @author loki der quaeler
  */
 public abstract class AbstractWrappedDialog extends Dialog {
-
     /**
      * This is the SWT-AWT bridge Composite instance.
      */
@@ -73,12 +74,12 @@ public abstract class AbstractWrappedDialog extends Dialog {
      * The action taken should any AWT component contained in this dialog, should KNIME be running on a Mac, for
      *  a key events.
      */
-    protected java.awt.event.KeyListener awtKeyListener;
+    protected java.awt.event.KeyListener m_awtKeyListener;
     /**
      * The action taken should any SWT component contained in this dialog, should KNIME be running on a Mac, for
      *  a key events.
      */
-    protected org.eclipse.swt.events.KeyListener swtKeyListener;
+    protected org.eclipse.swt.events.KeyListener m_swtKeyListener;
 
     /**
      * This constructs our superclass using parentShell, and sets the shell style to be SWT.PRIMARY_MODAL with
@@ -86,10 +87,10 @@ public abstract class AbstractWrappedDialog extends Dialog {
      *
      * @param parentShell
      */
-    protected AbstractWrappedDialog (final Shell parentShell) {
+    protected AbstractWrappedDialog(final Shell parentShell) {
         super(parentShell);
 
-        this.setShellStyle(SWT.PRIMARY_MODAL | SWT.SHELL_TRIM);
+        setShellStyle(SWT.PRIMARY_MODAL | SWT.SHELL_TRIM);
     }
 
     /**
@@ -101,7 +102,7 @@ public abstract class AbstractWrappedDialog extends Dialog {
     protected void configureShell(final Shell newShell) {
         super.configureShell(newShell);
 
-        Image img = ImageRepository.getIconImage(SharedImages.KNIME);
+        final Image img = ImageRepository.getIconImage(SharedImages.KNIME);
         newShell.setImage(img);
     }
 
@@ -110,10 +111,10 @@ public abstract class AbstractWrappedDialog extends Dialog {
      */
     @Override
     protected void handleShellCloseEvent() {
-        if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-            MacKeyTracker keyTracker = MacKeyTracker.getInstance();
+        if (Platform.OS_MACOSX.equals(Platform.getOS()) || Platform.OS_LINUX.equals(Platform.getOS())) {
+            final AWTKeyTracker keyTracker = AWTKeyTracker.getInstance();
 
-            keyTracker.removeListeners(this.m_wrapper.getRootFrame(), this.getShell());
+            keyTracker.removeListeners(m_wrapper.getRootFrame(), getShell());
         }
 
         super.handleShellCloseEvent();
@@ -123,22 +124,21 @@ public abstract class AbstractWrappedDialog extends Dialog {
      * Subclasses should call this function before exiting their implementation of create().
      *
      * @throws IllegalStateException this is invoked, and the platform is Mac, and the concrete subclass did not
-     *                  construct this instance variables awtKeyListener and swtKeyListener defined in this class.
+     *             construct this instance variables awtKeyListener and swtKeyListener defined in this class.
      */
-    protected void finishDialogCreation () {
-        if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-            if (this.awtKeyListener == null) {
+    protected void finishDialogCreation() {
+        if (Platform.OS_MACOSX.equals(Platform.getOS()) || Platform.OS_LINUX.equals(Platform.getOS())) {
+            if (m_awtKeyListener == null) {
                 throw new IllegalStateException("AWT KeyListener was never constructed.");
             }
 
-            if (this.swtKeyListener == null) {
+            if (m_swtKeyListener == null) {
                 throw new IllegalStateException("SWT KeyListener was never constructed.");
             }
 
-            MacKeyTracker keyTracker = MacKeyTracker.getInstance();
+            final AWTKeyTracker keyTracker = AWTKeyTracker.getInstance();
 
-            keyTracker.instrumentTree(this.m_wrapper.getRootFrame(), this.awtKeyListener,
-                                      this.getShell(), this.swtKeyListener);
+            keyTracker.instrumentTree(m_wrapper.getRootFrame(), m_awtKeyListener, getShell(), m_swtKeyListener);
         }
     }
 
@@ -148,7 +148,7 @@ public abstract class AbstractWrappedDialog extends Dialog {
      * @param message The error string.
      */
     protected void showErrorMessage(final String message) {
-        MessageBox mb = new MessageBox(getShell(), SWT.ICON_ERROR);
+        final MessageBox mb = new MessageBox(getShell(), SWT.ICON_ERROR);
         mb.setText("Error");
         mb.setMessage(message != null ? message : "(no message)");
         mb.open();
@@ -160,7 +160,7 @@ public abstract class AbstractWrappedDialog extends Dialog {
      * @param message The error string.
      */
     protected void showWarningMessage(final String message) {
-        MessageBox mb = new MessageBox(getShell(), SWT.ICON_WARNING);
+        final MessageBox mb = new MessageBox(getShell(), SWT.ICON_WARNING);
         mb.setText("Warning");
         mb.setMessage(message != null ? message : "(no message)");
         mb.open();
@@ -171,10 +171,9 @@ public abstract class AbstractWrappedDialog extends Dialog {
      * stays executed).
      */
     protected void informNothingChanged() {
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
+        final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
         mb.setText("Settings were not changed.");
         mb.setMessage("The settings were not changed. The node(s) will not be reset.");
         mb.open();
     }
-
 }
