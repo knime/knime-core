@@ -75,6 +75,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
     /** Compression format. */
     static final String CFG_COMPRESSION = "container.compression";
 
+    // TODO move to parent class
     /**
      * Sub element in config that keeps the list of cell class information (used to be a plain array).
      */

@@ -67,6 +67,8 @@ import org.knime.core.node.NodeLogger;
  * the framework will write the underlying blob to a dedicated file and
  * internally link to this blob file. The blob object itself can be garbage
  * collected and will silently re-instantiated if accessed.
+ *
+ * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class BlobWrapperDataCell extends DataCell {

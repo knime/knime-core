@@ -147,7 +147,8 @@ public abstract class BlobDataCell extends DataCell {
     }
 
     /** Utility class that holds information where the blob is located.
-     * This contains: bufferID, column index, index of blob in the column. */
+     * This contains: bufferID, column index, index of blob in the column.
+     * @noreference This class is not intended to be referenced by clients. */
     public static final class BlobAddress implements Serializable {
 
         private static final long serialVersionUID = -6278793794618726020L;

@@ -75,9 +75,10 @@ import org.knime.core.node.NodeSettingsRO;
  * @noreference This class is not intended to be referenced by clients.
  */
 public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
-    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
 
     private CellClassInfo[] m_shortCutsLookup;
+
+    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
 
     private Buffer m_buffer;
 
@@ -97,16 +98,16 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         readMetaFromFile(settings, version);
     }
 
-    public void setBufferAfterConstruction(final Buffer buffer) {
+    public final void setBufferAfterConstruction(final Buffer buffer) {
         m_buffer = buffer;
     }
 
     /** @return the buffer */
-    protected Buffer getBuffer() {
+    protected final Buffer getBuffer() {
         return m_buffer;
     }
 
-    public BlobWrapperDataCell createBlobWrapperCell(final BlobAddress address, final CellClassInfo type)
+    public final BlobWrapperDataCell createBlobWrapperCell(final BlobAddress address, final CellClassInfo type)
         throws IOException {
         Buffer blobBuffer = getBuffer();
         if (address.getBufferID() != blobBuffer.getBufferID()) {
@@ -129,6 +130,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
     /**
      * @param fileStoreHandlerRepository the fileStoreHandlerRepository to set
      */
+    // TODO Marc: join with setBuffer
     public final void setFileStoreHandlerRepository(final FileStoreHandlerRepository fileStoreHandlerRepository) {
         m_fileStoreHandlerRepository = fileStoreHandlerRepository;
     }
@@ -213,7 +215,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      * @return the associated cell class info
      * @throws IOException If the byte is invalid.
      */
-    public CellClassInfo getTypeForChar(final byte identifier) throws IOException {
+    public final CellClassInfo getTypeForChar(final byte identifier) throws IOException {
         int shortCutIndex = (byte)(identifier - BYTE_TYPE_START);
         if (shortCutIndex < 0 || shortCutIndex >= m_shortCutsLookup.length) {
             throw new IOException("Unknown shortcut byte '" + identifier + "'");
