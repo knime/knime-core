@@ -51,7 +51,6 @@ import org.knime.core.data.RowKey;
 
 /**
  * Defines some constants commonly used when writing {@link Buffer} files.
- *
  * @author Bernd Wiswedel, University of Konstanz
  * @noextend This class is not intended to be subclassed by clients.
  * @noreference This class is not intended to be referenced by clients.
@@ -65,8 +64,8 @@ public interface KNIMEStreamConstants {
     static final byte TC_TERMINATE = (byte)0x61;
 
     /**
-     * The byte being used to escape the next byte. The next byte will therefore neither be considered as terminate nor
-     * as escape byte.
+     * The byte being used to escape the next byte. The next byte will therefore
+     * neither be considered as terminate nor as escape byte.
      */
     static final byte TC_ESCAPE = (byte)0x62;
 
@@ -81,5 +80,6 @@ public interface KNIMEStreamConstants {
 
     /** Separator for different rows. */
     static final byte BYTE_ROW_SEPARATOR = BYTE_TYPE_MISSING + 3;
+
 
 }

@@ -187,7 +187,7 @@ public abstract class BlobDataCell extends DataCell {
         }
 
         /** @return the column */
-        public int getColumn() {
+        int getColumn() {
             return m_column;
         }
 
@@ -201,7 +201,7 @@ public abstract class BlobDataCell extends DataCell {
          * contains blobs, this method returns the row index).
          * @return The blob row address
          */
-        public int getIndexOfBlobInColumn() {
+        int getIndexOfBlobInColumn() {
             return m_indexOfBlobInColumn;
         }
 

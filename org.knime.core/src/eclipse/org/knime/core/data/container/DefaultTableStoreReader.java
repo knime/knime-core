@@ -64,13 +64,9 @@ import org.knime.core.node.NodeSettingsRO;
 final class DefaultTableStoreReader extends AbstractTableStoreReader {
 
     private CompressionFormat m_compressionFormat;
-
     private final File m_binFile;
-
     private final DataTableSpec m_spec;
-
     private int m_version;
-
     private final boolean m_isReadRowKey;
 
     /**
@@ -87,7 +83,8 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
      *             of a writer has been used which hasn't been installed on the current system.
      */
     DefaultTableStoreReader(final File binFile, final DataTableSpec spec, final NodeSettingsRO settings,
-        final int version, final boolean isReadRowKey) throws IOException, InvalidSettingsException {
+        final int version, final boolean isReadRowKey)
+                throws IOException, InvalidSettingsException {
         super(binFile, settings, version);
         m_binFile = binFile;
         m_spec = spec;

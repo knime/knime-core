@@ -88,8 +88,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
 
     /**
      * Static field to enable/disable the usage of a GZipInput/OutpuStream when writing the binary data. This option
-     * defaults to {@value DataContainer#DEF_GZIP_COMPRESSION}.
-     */
+     * defaults to {@value DataContainer#DEF_GZIP_COMPRESSION}. */
     static final boolean IS_USE_GZIP;
 
     static {
@@ -108,7 +107,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
         } else {
             debugLog = false;
             LOGGER.warn("Unable to read property " + KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION + " (\""
-                + isUseGzipString + "\"); defaulting to " + DataContainer.DEF_GZIP_COMPRESSION);
+                    + isUseGzipString + "\"); defaulting to " + DataContainer.DEF_GZIP_COMPRESSION);
             IS_USE_GZIP = DataContainer.DEF_GZIP_COMPRESSION;
         }
         if (debugLog) {
@@ -118,7 +117,8 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
 
     /** Compression on the binary (main) file. */
     enum CompressionFormat {
-            Gzip, None;
+            Gzip,
+            None;
     }
 
     @Override
@@ -153,14 +153,14 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
 
     /**
      * {@inheritDoc}
-     *
      * @throws IOException
      * @throws InvalidSettingsException
      */
     @Override
     public AbstractTableStoreReader createReader(final File binFile, final DataTableSpec spec,
         final NodeSettingsRO settings, final Map<Integer, ContainerTable> tblRep, final int version,
-        final boolean isReadRowKey) throws IOException, InvalidSettingsException {
+        final boolean isReadRowKey)
+                throws IOException, InvalidSettingsException {
         return new DefaultTableStoreReader(binFile, spec, settings, version, isReadRowKey);
     }
 

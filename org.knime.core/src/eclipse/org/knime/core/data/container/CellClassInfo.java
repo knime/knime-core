@@ -53,10 +53,8 @@ import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.util.ConvenienceMethods;
 
-/**
- * Pair of cell class and possibly a DataType that represents the collection element type (only if cell class is a
- * collection).
- *
+/** Pair of cell class and possibly a DataType that represents the
+ * collection element type (only if cell class is a collection).
  * @author Bernd Wiswedel, University of Konstanz
  * @noextend This class is not intended to be subclassed by clients.
  * @noreference This class is not intended to be referenced by clients.
@@ -155,7 +153,7 @@ public final class CellClassInfo {
     /** Get the DataType of the underlying cell.
      * @return The associated DataType.
      */
-    public DataType getDataType() {
+    DataType getDataType() {
         return DataType.getType(m_cellClass, m_collectionElementType);
     }
 
@@ -201,5 +199,6 @@ public final class CellClassInfo {
         }
         return b.toString();
     }
+
 
 }
