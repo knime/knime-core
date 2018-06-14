@@ -48,15 +48,12 @@
 package org.knime.product.rcp.intro;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -73,7 +70,6 @@ import org.ccil.cowan.tagsoup.Parser;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeLogger;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -119,8 +115,9 @@ class TipsAndNewsInjector extends AbstractInjector {
                 }
                 tipsTricksUrl =
                     new URL(("https://www.knime.com/tips-and-tricks?knid=" + KNIMEConstants.getKNIMEInstanceID()
-                        + "&version=" + KNIMEConstants.VERSION + "&os=" + Platform.getOS() + "&osname=" + detectOS()
-                        + "&arch=" + Platform.getOSArch() + branding).replace(" ", "%20"));
+                        + "&version=" + KNIMEConstants.VERSION + "&os=" + Platform.getOS() + "&osname="
+                        + KNIMEConstants.getOSVariant() + "&arch=" + Platform.getOSArch() + branding).replace(" ",
+                            "%20"));
             }
         } catch (MalformedURLException | UnsupportedEncodingException ex) {
             // does not happen
@@ -128,7 +125,7 @@ class TipsAndNewsInjector extends AbstractInjector {
         m_tipsAndNewsUrl = tipsTricksUrl;
     }
 
-    private Node checkIfNewsExist(final Node newsNode) {
+    private static Node checkIfNewsExist(final Node newsNode) {
         if (newsNode == null) {
             return null;
         }
@@ -252,29 +249,5 @@ class TipsAndNewsInjector extends AbstractInjector {
         if (m_newsGraphic != null) {
             fixRelativeURLs(m_newsGraphic, xpath);
         }
-    }
-
-    private String detectOS() {
-        String os = Platform.getOS();
-        try {
-            if (Platform.OS_LINUX.equals(os)) {
-                ProcessBuilder pb = new ProcessBuilder("lsb_release", "-d");
-                Process p = pb.start();
-                try (InputStream is = p.getInputStream()) {
-                    Properties props = new Properties();
-                    props.load(is);
-                    os = props.getProperty("Description", os).trim();
-                }
-            } else if (Platform.OS_MACOSX.equals(os)) {
-                os = System.getProperty("os.name") + " " + System.getProperty("os.version");
-            } else if (Platform.OS_WIN32.equals(os)) {
-                os = System.getProperty("os.name");
-            }
-        } catch (IOException ex) {
-            NodeLogger.getLogger(getClass()).info("I/O error while determining operating system: " + ex.getMessage(),
-                ex);
-        }
-
-        return os;
     }
 }

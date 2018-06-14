@@ -47,6 +47,7 @@
  */
 package org.knime.core.node;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,10 +60,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.Optional;
+import java.util.Properties;
 
 import javax.swing.ImageIcon;
 
 import org.apache.commons.codec.binary.Hex;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.eclipseUtil.OSGIHelper;
@@ -644,6 +647,47 @@ public final class KNIMEConstants {
      */
     public static boolean isNightlyBuild() {
         return BUILD_DATE.contains("Nightly");
+    }
+
+
+    /**
+     * Returns details about the current operating system, such as the Linux distribution name.
+     *
+     * @return details about the OS variant
+     * @since 3.6
+     */
+    public static String getOSVariant() {
+        String os = Platform.getOS();
+        try {
+            if (Platform.OS_LINUX.equals(os)) {
+                Path lsbRelease = Paths.get("/usr/bin/lsb_release");
+                if (Files.isExecutable(lsbRelease)) {
+                    ProcessBuilder pb = new ProcessBuilder("lsb_release", "-d");
+                    Process p = pb.start();
+                    try (InputStream is = p.getInputStream()) {
+                        Properties props = new Properties();
+                        props.load(is);
+                        os = props.getProperty("Description", os).trim();
+                    }
+                } else {
+                    Path redhatRelease = Paths.get("/etc/redhat-release");
+                    if (Files.isReadable(redhatRelease)) {
+                        try (BufferedReader in = Files.newBufferedReader(redhatRelease)) {
+                            os = in.readLine();
+                        }
+                    }
+                }
+            } else if (Platform.OS_MACOSX.equals(os)) {
+                os = System.getProperty("os.name") + " " + System.getProperty("os.version");
+            } else if (Platform.OS_WIN32.equals(os)) {
+                os = System.getProperty("os.name");
+            }
+        } catch (IOException ex) {
+            NodeLogger.getLogger(KNIMEConstants.class)
+                .info("I/O error while determining operating system: " + ex.getMessage(), ex);
+        }
+
+        return os;
     }
 
     /**
