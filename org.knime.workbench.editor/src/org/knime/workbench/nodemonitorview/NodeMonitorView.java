@@ -271,6 +271,7 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
                     if (wraps(m_lastNode, NodeContainer.class)) {
                         //already load the data in case of an ordinary node container
                         loadAndSetupMonitorTableForOrdinaryNC();
+                        m_portIndex.getCombo().setEnabled(true);
                     } else {
                         m_currentMonitorTable.updateControls(m_loadButton, m_portIndex.getCombo(), 0);
                     }
