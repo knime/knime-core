@@ -50,11 +50,13 @@ package org.knime.core.data;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobWrapperDataCell;
+import org.knime.core.node.NodeLogger;
 
 /**
  * <p>
@@ -103,6 +105,8 @@ import org.knime.core.data.container.BlobWrapperDataCell;
 public abstract class DataCell implements DataValue, Serializable {
     private static final long serialVersionUID = 7415713938002260608L;
 
+    private static final Map<Class<? extends DataCell>, DataType> classToTypeMap = new ConcurrentHashMap<>(100, 1 / 3f);
+
     /**
      * Returns this cell's <code>DataType</code>. This method is provided for
      * convenience only, it is a shortcut for
@@ -113,15 +117,24 @@ public abstract class DataCell implements DataValue, Serializable {
      * @see DataType#getType(Class)
      */
     public final DataType getType() {
+        DataType type = classToTypeMap.get(getClass());
+        if (type != null) {
+            return type;
+        }
         DataType elementType = null;
-        List<Class<? extends DataValue>> adapterValueList = Collections.emptyList();
+        List<Class<? extends DataValue>> adapterValueList = null;
         if (this instanceof CollectionDataValue) {
             elementType = ((CollectionDataValue)this).getElementType();
         }
         if (this instanceof AdapterValue) {
             adapterValueList = new ArrayList<Class<? extends DataValue>>(((AdapterValue)this).getAdapterMap().keySet());
         }
-        return DataType.getType(getClass(), elementType, adapterValueList);
+        DataType newType = DataType.getType(getClass(), elementType, adapterValueList);
+        if (adapterValueList == null && elementType == null) {
+            NodeLogger.getLogger(DataCell.class).error("Adding " + getClass().getSimpleName());
+            classToTypeMap.put(getClass(), newType);
+        }
+        return newType;
     }
 
     /**
