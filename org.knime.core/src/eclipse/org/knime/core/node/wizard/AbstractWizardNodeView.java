@@ -358,10 +358,12 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
                 String viewDesc = viewElement.getAttribute("description");
                 Class<AbstractWizardNodeView<?, ?, ?>> viewClass;
                 try {
-                    viewClass = (Class<AbstractWizardNodeView<?, ?, ?>>)Class.forName(viewClassName);
+                    viewClass = (Class<AbstractWizardNodeView<?, ?, ?>>)Platform
+                            .getBundle(viewElement.getDeclaringExtension().getContributor().getName())
+                            .loadClass(viewClassName);
                     viewExtensionList.add(new WizardNodeViewExtension(viewClass, viewName, viewDesc));
                 } catch (ClassNotFoundException ex) {
-                    NodeLogger.getLogger(AbstractWizardNodeView.class).coding(
+                    NodeLogger.getLogger(AbstractWizardNodeView.class).error(
                         "Could not find implementation for " + viewClassName, ex);
                 }
             }
