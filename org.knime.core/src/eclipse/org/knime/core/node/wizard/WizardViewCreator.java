@@ -74,11 +74,27 @@ public interface WizardViewCreator<REP extends WebViewContent, VAL extends WebVi
      * @param viewRepresentation the view representation
      * @param viewValue the view value
      * @param viewTitle the view title
+     * @param customCSS optional custom CSS
+     * @return the path to the view HTML
+     * @throws IOException on IO error
+     * @since 3.6
+     */
+    public String createWebResources(final String viewTitle, final REP viewRepresentation,
+            final VAL viewValue, final String customCSS) throws IOException;
+
+    /**
+     * Creates all web resources, returns path to the created HTML file which contains the JS view.
+     *
+     * @param viewRepresentation the view representation
+     * @param viewValue the view value
+     * @param viewTitle the view title
      * @return the path to the view HTML
      * @throws IOException on IO error
      */
-    public String createWebResources(final String viewTitle, final REP viewRepresentation, final VAL viewValue)
-            throws IOException;
+    public default String createWebResources(final String viewTitle, final REP viewRepresentation,
+        final VAL viewValue) throws IOException {
+        return createWebResources(viewTitle, viewRepresentation, viewValue, null);
+    }
 
     /**
      * Creates the JavaScript code to initialize the view implementation with the respective view representation and

@@ -449,6 +449,12 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.WizardViewCreator"/>
+                <message_argument value="createWebResources(String, REP, VAL, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardViewCreator"/>
                 <message_argument value="getCurrentLocation()"/>
             </message_arguments>
         </filter>

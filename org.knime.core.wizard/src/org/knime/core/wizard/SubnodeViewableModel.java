@@ -315,7 +315,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         }
         if (create) {
             try {
-                m_viewPath = m_viewCreator.createWebResources(m_viewName, getViewRepresentation(), null);
+                m_viewPath = m_viewCreator.createWebResources(m_viewName, getViewRepresentation(), null, null);
             } catch (IOException e) {
                 LOGGER.error("Unable to create temporary web resource: " + e.getMessage(), e);
             }
