@@ -56,7 +56,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobWrapperDataCell;
-import org.knime.core.node.NodeLogger;
 
 /**
  * <p>
@@ -131,7 +130,6 @@ public abstract class DataCell implements DataValue, Serializable {
         }
         DataType newType = DataType.getType(getClass(), elementType, adapterValueList);
         if (adapterValueList == null && elementType == null) {
-            NodeLogger.getLogger(DataCell.class).error("Adding " + getClass().getSimpleName());
             classToTypeMap.put(getClass(), newType);
         }
         return newType;
