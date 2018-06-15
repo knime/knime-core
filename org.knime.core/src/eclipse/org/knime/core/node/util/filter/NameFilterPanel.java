@@ -50,9 +50,11 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -84,6 +86,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -97,7 +100,9 @@ import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
+import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -509,6 +514,37 @@ public abstract class NameFilterPanel<T> extends JPanel {
         }
     }
 
+    /**
+     * A border including an icon on the left surrounded with some padding
+     *
+     * @author Johannes Schweig
+     */
+    private class IconBorder extends AbstractBorder {
+
+        // the icon to be drawn
+        private Icon m_icon;
+        // left and right padding of the image
+        private final int PADDING = 2;
+
+        IconBorder(final Icon icon) {
+            m_icon = icon;
+
+        }
+
+        @Override
+        public Insets getBorderInsets(final Component c, final Insets insets) {
+            insets.left = m_icon.getIconWidth() + 2*PADDING;
+            insets.right = insets.top = insets.bottom = 0;
+            return insets;
+        }
+
+        @Override
+        public void paintBorder(final Component c, final Graphics g, final int x, final int y, final int width, final int height) {
+            m_icon.paintIcon(c, g, x + PADDING, y + (height - m_icon.getIconHeight()) / 2);
+        }
+
+    }
+
 
     /**
      * Creates a panel allowing the user to select elements.
@@ -577,7 +613,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
         // keeps buttons such as '>', '>>', '<', and '<<'
         final JPanel buttonPan = new JPanel();
-        buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+        buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
         buttonPan.add(Box.createVerticalStrut(57));
 
@@ -615,7 +651,10 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_inclCards.add(jspIncl, ID_CARDLAYOUT_LIST);
         m_inclCards.add(m_inclTablePlaceholder, ID_CARDLAYOUT_PLACEHOLDER);
 
+
         m_inclSearchField = new JTextField(FILTER, 8);
+        m_inclSearchField.setPreferredSize(new Dimension(getPreferredSize().width, 24));
+        m_inclSearchField.setBorder(new CompoundBorder(m_inclSearchField.getBorder(), new IconBorder(SharedIcons.FILTER.get())));
         m_inclSearchField.setForeground(Color.GRAY);
         m_inclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
         m_inclSearchField.addKeyListener(new SearchKeyAdapter(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSorter, m_inclSearchField));
@@ -623,8 +662,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
         JPanel inclSearchPanel = new JPanel(new BorderLayout(8, 0));
         inclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
         inclSearchPanel.add(m_inclSearchField, BorderLayout.CENTER);
-        // filter icon
-        inclSearchPanel.add(new JLabel(SharedIcons.FILTER.get()), BorderLayout.WEST);
 
         JPanel includePanel = new JPanel(new BorderLayout());
         m_includeBorder = BorderFactory.createTitledBorder(INCLUDE_BORDER, " Include ");
@@ -655,6 +692,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_exclCards.add(m_exclTablePlaceholder, ID_CARDLAYOUT_PLACEHOLDER);
 
         m_exclSearchField = new JTextField(FILTER, 8);
+        m_exclSearchField.setPreferredSize(new Dimension(getPreferredSize().width, 24));
+        m_exclSearchField.setBorder(new CompoundBorder(m_exclSearchField.getBorder(), new IconBorder(SharedIcons.FILTER.get())));
         m_exclSearchField.setForeground(Color.GRAY);
         m_exclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
         m_exclSearchField.addKeyListener(new SearchKeyAdapter(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSorter, m_exclSearchField));
@@ -663,8 +702,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         JPanel exclSearchPanel = new JPanel(new BorderLayout(8, 0));
         exclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
         exclSearchPanel.add(m_exclSearchField, BorderLayout.CENTER);
-        // filter icon
-        exclSearchPanel.add(new JLabel(SharedIcons.FILTER.get()), BorderLayout.WEST);
+
         JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(EXCLUDE_BORDER, " Exclude ");
         excludePanel.setBorder(m_excludeBorder);
@@ -689,29 +727,32 @@ public abstract class NameFilterPanel<T> extends JPanel {
             m_enforceExclusion.doClick();
             excludePanel.add(m_enforceExclusion, BorderLayout.SOUTH);
         }
-        m_addButton = new JButton(SharedIcons.ADD.get());
-        m_addButton.setMaximumSize(new Dimension(125, 25));
+        int width = 24;
+        int height = width;
+        int spacing = 12;
+        m_addButton = new JButton(SharedIcons.ALT_ARROW_RIGHT.get());
+        m_addButton.setMinimumSize(new Dimension(width, height));
         m_addButton.setToolTipText("Move the selected " + getEntryDescription() +" from the left to the right list.");
         buttonPan.add(m_addButton);
         m_addButton.addActionListener(e -> onAddIt(m_exclTable.getSelectedRows()));
-        buttonPan.add(Box.createVerticalStrut(25));
+        buttonPan.add(Box.createVerticalStrut(spacing));
 
-        m_addAllButton = new JButton(SharedIcons.ADD_ALL.get());
-        m_addAllButton.setMaximumSize(new Dimension(125, 25));
+        m_addAllButton = new JButton(SharedIcons.ALT_DOUBLE_ARROW_RIGHT.get());
+        m_addAllButton.setMinimumSize(new Dimension(width, height));
         m_addAllButton.setToolTipText("Moves all visible " + getEntryDescription() + " from the left to the right list.");
         buttonPan.add(m_addAllButton);
         m_addAllButton.addActionListener(new MoveAllActionListener(m_exclTable));
-        buttonPan.add(Box.createVerticalStrut(25));
+        buttonPan.add(Box.createVerticalStrut(spacing));
 
-        m_remButton = new JButton(SharedIcons.REM.get());
-        m_remButton.setMaximumSize(new Dimension(125, 25));
+        m_remButton = new JButton(SharedIcons.ALT_ARROW_LEFT.get());
+        m_remButton.setMinimumSize(new Dimension(width, height));
         m_remButton.setToolTipText("Move the selected " + getEntryDescription() + " from the right to the left list.");
         buttonPan.add(m_remButton);
         m_remButton.addActionListener(e -> onRemIt(m_inclTable.getSelectedRows()));
-        buttonPan.add(Box.createVerticalStrut(25));
+        buttonPan.add(Box.createVerticalStrut(spacing));
 
-        m_remAllButton = new JButton(SharedIcons.REM_ALL.get());
-        m_remAllButton.setMaximumSize(new Dimension(125, 25));
+        m_remAllButton = new JButton(SharedIcons.ALT_DOUBLE_ARROW_LEFT.get());
+        m_remAllButton.setMinimumSize(new Dimension(width, height));
         m_remAllButton.setToolTipText("Moves all visible " + getEntryDescription() + " from the right to the left list.");
         buttonPan.add(m_remAllButton);
         m_remAllButton.addActionListener(new MoveAllActionListener(m_inclTable));

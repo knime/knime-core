@@ -77,14 +77,14 @@ public enum SharedIcons {
     /**
      * Arrows/Dropdowns
      */
-    /** Double arrow right **/
-    ADD_ALL("icons/add_all.png"),
-    /** Arrow right **/
-    ADD("icons/add.png"),
-    /** Arrow left **/
-    REM("icons/rem.png"),
+    /** Alternative double arrow right **/
+    ALT_DOUBLE_ARROW_RIGHT("icons/alt_double_arrow_right.png"),
+    /** Alternative arrow right **/
+    ALT_ARROW_RIGHT("icons/alt_arrow_right.png"),
+    /** Alternative arrow left **/
+    ALT_ARROW_LEFT("icons/alt_arrow_left.png"),
     /** Double arrow left**/
-    REM_ALL("icons/rem_all.png"),
+    ALT_DOUBLE_ARROW_LEFT("icons/alt_double_arrow_left.png"),
     /** Small arrow down **/
     SMALL_ARROW_DOWN("icons/small_arrow_drop_down.png"),
     /** Small arrow right **/
