@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./joiner.png" type="Manipulator">
+<knimeNode icon="./joiner.png" type="Manipulator" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
     <name>Joiner</name>
     <shortDescription>Joins two tables</shortDescription>
     <fullDescription>
@@ -92,6 +91,9 @@
             </option>
         </tab>
 
+		<link href="https://www.knime.com/knime-introductory-course/chapter3/section3/joins">
+			KNIME E-Learning Course: Join: inner join, right outer join, left outer join, full outer join
+		</link>
     </fullDescription>
     <ports>
         <inPort index="0" name="Top Input ('left' table)">Table contributing to the left part of the output table</inPort>

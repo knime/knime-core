@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<knimeNode icon="csvwriter.png" type="Sink"
-    xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+<knimeNode icon="csvwriter.png" type="Sink" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
 	<name>CSV Writer</name>
 	
 	<shortDescription>
@@ -141,6 +139,9 @@
     	        encoding of the Java VM, which may depend on the locale or the Java property &quot;file.encoding&quot;
             </option>
 	    </tab>
+		<link href="https://www.knime.com/knime-introductory-course/chapter4/section1/write-data-to-a-csv-file">
+			KNIME E-Learning Course: Write Data to a CSV File
+		</link>
 	</fullDescription>
 	
 	<ports>

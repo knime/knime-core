@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Source" icon="./filereader.png">
+<knimeNode type="Source" icon="./filereader.png" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
 	<name>File Reader</name>
 	
 	<shortDescription>
@@ -78,6 +77,9 @@
 	        "Domain". And, you can choose to skip this column entirely, i.e. it
 	        will not be included in the output table then.
 		    </option>	      	
+			<link href="https://www.knime.com/knime-introductory-course/chapter2/section1/file-reader-node">
+				KNIME E-Learning Course: File Reader Node
+			</link>
 	</fullDescription>
 	
 	<ports>

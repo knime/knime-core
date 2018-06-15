@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
-<knimeNode icon="groupBy.png" type="Manipulator">
+<knimeNode icon="groupBy.png" type="Manipulator" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
     <name>GroupBy</name>
     <shortDescription>
     	Groups the table by the selected column(s) and aggregates the remaining
@@ -179,6 +178,9 @@
                 which allows changing the operator specific settings.
             </option>
         </tab>
+		<link href="https://www.knime.com/knime-introductory-course/chapter3/section2/classic-aggregations-with-groupby-node">
+			KNIME E-Learning Course: Classic Aggregations with GroupBy node
+		</link>
     </fullDescription>
     <ports>
         <inPort index="0" name="Data table">
