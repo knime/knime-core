@@ -1186,11 +1186,11 @@ public class Buffer implements KNIMEStreamConstants {
      * @throws IOException
      * @throws InvalidSettingsException
      */
-    private void initOutputReader(final NodeSettingsRO outputFormatSettings, final int version) throws IOException, InvalidSettingsException {
+    private void initOutputReader(final NodeSettingsRO outputFormatSettings, final int version)
+        throws IOException, InvalidSettingsException {
         m_outputReader = m_outputFormat.createReader(m_binFile, m_spec, outputFormatSettings, m_globalRepository,
             version, !shouldSkipRowKey());
-        m_outputReader.setFileStoreHandlerRepository(m_fileStoreHandlerRepository);
-        m_outputReader.setBufferAfterConstruction(this);
+        m_outputReader.setBufferAndFileStoreHandlerRepository(this, m_fileStoreHandlerRepository);
     }
 
     /**

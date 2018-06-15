@@ -75,18 +75,6 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
     /** Compression format. */
     static final String CFG_COMPRESSION = "container.compression";
 
-    // TODO move to parent class
-    /**
-     * Sub element in config that keeps the list of cell class information (used to be a plain array).
-     */
-    public static final String CFG_CELL_CLASSES = "table.datacell.classes";
-
-    /** Class name of data cell. */
-    public static final String CFG_CELL_SINGLE_CLASS = "class";
-
-    /** Element type if a cell represents a collection. */
-    public static final String CFG_CELL_SINGLE_ELEMENT_TYPE = "collection.element.type";
-
     /**
      * Static field to enable/disable the usage of a GZipInput/OutpuStream when writing the binary data. This option
      * defaults to {@value DataContainer#DEF_GZIP_COMPRESSION}. */

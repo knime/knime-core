@@ -66,6 +66,17 @@ import org.knime.core.node.NodeSettingsRO;
  */
 public interface TableStoreFormat {
 
+    /**
+     * Sub element in config that keeps the list of cell class information (used to be a plain array).
+     */
+    static final String CFG_CELL_CLASSES = "table.datacell.classes";
+
+    /** Class name of data cell. */
+    static final String CFG_CELL_SINGLE_CLASS = "class";
+
+    /** Element type if a cell represents a collection. */
+    static final String CFG_CELL_SINGLE_ELEMENT_TYPE = "collection.element.type";
+
     /** @return non-blank short name shown in the preference page, e.g. "Default" or "Column Store (Apache XYZ)".*/
     public String getName();
 

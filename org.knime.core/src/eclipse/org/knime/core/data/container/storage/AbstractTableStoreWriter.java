@@ -58,7 +58,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellClassInfo;
-import org.knime.core.data.container.DefaultTableStoreFormat;
 import org.knime.core.data.container.KNIMEStreamConstants;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
@@ -145,15 +144,15 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMESt
             shortCutsLookup[shortCut - BYTE_TYPE_START] = type;
         }
         m_shortCutsLookup = shortCutsLookup;
-        NodeSettingsWO typeSubSettings = settings.addNodeSettings(DefaultTableStoreFormat.CFG_CELL_CLASSES);
+        NodeSettingsWO typeSubSettings = settings.addNodeSettings(TableStoreFormat.CFG_CELL_CLASSES);
         for (int i = 0; i < shortCutsLookup.length; i++) {
             CellClassInfo info = shortCutsLookup[i];
             NodeSettingsWO single = typeSubSettings.addNodeSettings("element_" + i);
-            single.addString(DefaultTableStoreFormat.CFG_CELL_SINGLE_CLASS, info.getCellClass().getName());
+            single.addString(TableStoreFormat.CFG_CELL_SINGLE_CLASS, info.getCellClass().getName());
             DataType elementType = info.getCollectionElementType();
             if (elementType != null) {
                 NodeSettingsWO subTypeConfig =
-                    single.addNodeSettings(DefaultTableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE);
+                    single.addNodeSettings(TableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE);
                 elementType.save(subTypeConfig);
             }
         }

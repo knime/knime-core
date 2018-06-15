@@ -60,7 +60,6 @@ import org.knime.core.data.container.Buffer;
 import org.knime.core.data.container.CellClassInfo;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.container.DefaultTableStoreFormat;
 import org.knime.core.data.container.KNIMEStreamConstants;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.node.InvalidSettingsException;
@@ -98,7 +97,13 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         readMetaFromFile(settings, version);
     }
 
-    public final void setBufferAfterConstruction(final Buffer buffer) {
+    /**
+     * @param buffer the buffer to set
+     * @param fileStoreHandlerRepository the fileStoreHandlerRepository to set
+     */
+    public final void setBufferAndFileStoreHandlerRepository(final Buffer buffer,
+        final FileStoreHandlerRepository fileStoreHandlerRepository) {
+        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
         m_buffer = buffer;
     }
 
@@ -127,14 +132,6 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         return m_fileStoreHandlerRepository;
     }
 
-    /**
-     * @param fileStoreHandlerRepository the fileStoreHandlerRepository to set
-     */
-    // TODO Marc: join with setBuffer
-    public final void setFileStoreHandlerRepository(final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
-    }
-
     public abstract TableStoreCloseableRowIterator iterator() throws IOException;
 
     /**
@@ -159,7 +156,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
     @SuppressWarnings("unchecked")
     private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion1x(final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        String[] cellClasses = settings.getStringArray(DefaultTableStoreFormat.CFG_CELL_CLASSES);
+        String[] cellClasses = settings.getStringArray(TableStoreFormat.CFG_CELL_CLASSES);
         CellClassInfo[] shortCutsLookup = new CellClassInfo[cellClasses.length];
 
         for (int i = 0; i < cellClasses.length; i++) {
@@ -180,21 +177,21 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
     @SuppressWarnings("unchecked")
     private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion2(final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        NodeSettingsRO typeSubSettings = settings.getNodeSettings(DefaultTableStoreFormat.CFG_CELL_CLASSES);
+        NodeSettingsRO typeSubSettings = settings.getNodeSettings(TableStoreFormat.CFG_CELL_CLASSES);
         Set<String> keys = typeSubSettings.keySet();
         CellClassInfo[] shortCutsLookup = new CellClassInfo[keys.size()];
         int i = 0;
         for (String s : keys) {
             NodeSettingsRO single = typeSubSettings.getNodeSettings(s);
-            String className = single.getString(DefaultTableStoreFormat.CFG_CELL_SINGLE_CLASS);
+            String className = single.getString(TableStoreFormat.CFG_CELL_SINGLE_CLASS);
 
             Class<?> cl = DataTypeRegistry.getInstance().getCellClass(className)
                 .orElseThrow(() -> new InvalidSettingsException("Can't load data cell class '" + className + "'"));
 
             DataType elementType = null;
-            if (single.containsKey(DefaultTableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE)) {
+            if (single.containsKey(TableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE)) {
                 NodeSettingsRO subTypeConfig =
-                    single.getNodeSettings(DefaultTableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE);
+                    single.getNodeSettings(TableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE);
                 elementType = DataType.load(subTypeConfig);
             }
             try {
