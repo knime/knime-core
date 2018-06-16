@@ -82,6 +82,7 @@ import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
 import org.knime.js.core.layout.bs.JSONLayoutRow;
 import org.knime.js.core.layout.bs.JSONLayoutViewContent;
+import org.knime.js.core.node.CSSModifiable;
 import org.knime.js.core.selections.json.JSONSelectionTranslator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -203,6 +204,10 @@ public abstract class AbstractPageManager {
                     jsonNode.setGetViewValueMethodName(template.getPullViewContentMethodName());
                     jsonNode.setViewRepresentation((JSONViewContent)wizardNode.getViewRepresentation());
                     jsonNode.setViewValue((JSONViewContent)wizardNode.getViewValue());
+
+                    if (wizardNode instanceof CSSModifiable) {
+                        jsonNode.setCustomCSS(((CSSModifiable)wizardNode).getCssStyles());
+                    }
             }
             jsonNode.setNodeInfo(info);
             nodes.put(e.getKey().toString(), jsonNode);
