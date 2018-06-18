@@ -63,10 +63,11 @@ class DurationOfSeconds extends AbstractExpression implements DateTimeExpression
     private final static String NAME = "durationOfSeconds";
 
     private final static String DESCRIPTION =
-        "Creates an object of type Duration that is a time-based amount of time from the provided number of seconds.";
+        "Creates an object of type Duration that is a time-based amount of time from the provided number of seconds."
+                + "<br/>Result Type: Duration";
 
     private final static String SCRIPT = "function " + NAME + "(amount) {\n "
-        + "return Java.type(\"java.time.Duration\").ofSeconds(amount);}";
+        + "return " + DateTimeExpressionJavaMethodProvider.ID + "." + NAME + "(amount);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

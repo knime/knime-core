@@ -59,7 +59,8 @@ import java.time.LocalTime;
 class LocalDateTimeFromYMDHMS extends AbstractLocalDateTime {
 
     private final static String DESCRIPTION =
-        "Creates an object of type LocalDateTime from the provided year, month, day, hours, minutes, and seconds.";
+        "Creates an object of type LocalDateTime from the provided year, month, day, hours, minutes, and seconds."
+                + "<br/>Result Type: LocalDateTime";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

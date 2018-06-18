@@ -58,7 +58,9 @@ import java.time.LocalDate;
 class LocalDateFromString extends AbstractLocalDate {
 
     private final static String DESCRIPTION = "Creates an object of type LocalDate from the a string. <br />"
-        + " This string has to comply ISO-8601. <br />" + "Example: \"2018-01-01\"";
+        + " This string has to comply ISO-8601. "
+        + "<br/>Result Type: LocalDate"
+        + "<br />" + "Example: \"2018-01-01\"";
 
     /**
      *

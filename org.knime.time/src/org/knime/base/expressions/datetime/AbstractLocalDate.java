@@ -63,8 +63,8 @@ abstract class AbstractLocalDate extends AbstractExpression implements DateTimeE
 
     private final static String SCRIPT = "function " + NAME + "() {\n "
         + "if(arguments.length == 1)\n"
-        + " return Java.type(\"java.time.LocalDate\").parse(arguments[0]);\n"
-        + "return Java.type(\"java.time.LocalDate\").of(arguments[0],arguments[1],arguments[2]);}";
+        + " return " + DateTimeExpressionJavaMethodProvider.ID + "." + NAME + "(arguments[0]);\n"
+        + "return " + DateTimeExpressionJavaMethodProvider.ID + "." + NAME + "(arguments[0],arguments[1],arguments[2]);}";
 
     /**
      * Creates an expression that creates a {@link LocalDate}.

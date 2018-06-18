@@ -59,7 +59,9 @@ import java.time.LocalTime;
 class LocalDateTimeFromString extends AbstractLocalDateTime {
 
     private final static String DESCRIPTION = "Creates an object of type LocalDateTime from the a string. <br />"
-            + " This string has to comply ISO-8601. <br />"
+            + " This string has to comply ISO-8601. "
+            + "<br/>Result Type: LocalDateTime"
+            + "<br />"
             + "Example: \"2018-01-01T10:30:15\"";
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

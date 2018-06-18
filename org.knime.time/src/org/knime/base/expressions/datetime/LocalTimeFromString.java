@@ -58,7 +58,9 @@ import java.time.LocalTime;
 class LocalTimeFromString extends AbstractLocalTime {
 
     private final static String DESCRIPTION = "Creates an object of type LocalTime from a string. <br />"
-        + "This string has to comply ISO-8601. <br />"
+        + "This string has to comply ISO-8601. "
+        + "<br/>Result Type: LocalTime"
+        + "<br />"
         + "Example: \"10:30\", \"10:30:15\"";
 
     /**

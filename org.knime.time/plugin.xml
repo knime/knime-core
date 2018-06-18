@@ -326,5 +326,11 @@
             expressionSet="org.knime.base.expressions.datetime.LocalDateTimeExpressionSet">
       </expressionSet>
    </extension>
+   <extension
+         point="org.knime.expressions.core.ExpressionJavaMethodProvider">
+      <expressionJavaMethodProvider
+            class="org.knime.base.expressions.datetime.DateTimeExpressionJavaMethodProvider">
+      </expressionJavaMethodProvider>
+   </extension>
    
 </plugin>

@@ -63,10 +63,11 @@ class PeriodOfYears extends AbstractExpression implements DateTimeExpression {
     private final static String NAME = "periodOfYears";
 
     private final static String DESCRIPTION =
-        "Creates an object of type Period that is a date-based amount of time from the provided number of years.";
+        "Creates an object of type Period that is a date-based amount of time from the provided number of years."
+                + "<br/>Result Type: Period";
 
     private final static String SCRIPT = "function " + NAME + "(years) {\n "
-        + "return Java.type(\"java.time.Period\").ofYears(years);}";
+        + "return " + DateTimeExpressionJavaMethodProvider.ID + "." + NAME + "(years);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

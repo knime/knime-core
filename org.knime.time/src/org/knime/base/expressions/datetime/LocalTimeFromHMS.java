@@ -57,7 +57,8 @@ import java.time.LocalTime;
  */
 class LocalTimeFromHMS extends AbstractLocalTime {
 
-    private final static String DESCRIPTION = "Creates an object of type LocalTime from the provided hours minutes and seconds.";
+    private final static String DESCRIPTION = "Creates an object of type LocalTime from the provided hours minutes and seconds."
+            + "<br/>Result Type: LocalTime";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

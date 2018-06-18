@@ -63,10 +63,11 @@ class PeriodOfMonths extends AbstractExpression implements DateTimeExpression {
     private final static String NAME = "periodOfMonths";
 
     private final static String DESCRIPTION =
-        "Creates an object of type Period that is a date-based amount of time from the provided number of months.";
+        "Creates an object of type Period that is a date-based amount of time from the provided number of months."
+                + "<br/>Result Type: Period";
 
     private final static String SCRIPT = "function " + NAME + "(months) {\n "
-        + "return Java.type(\"java.time.Period\").ofWeeks(months);}";
+        + "return " + DateTimeExpressionJavaMethodProvider.ID + "." + NAME + "(months);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

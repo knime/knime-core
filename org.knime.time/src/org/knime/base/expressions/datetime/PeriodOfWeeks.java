@@ -63,10 +63,11 @@ class PeriodOfWeeks extends AbstractExpression implements DateTimeExpression {
     private final static String NAME = "periodOfWeeks";
 
     private final static String DESCRIPTION =
-        "Creates an object of type Period that is a date-based amount of time from the provided number of weeks.";
+        "Creates an object of type Period that is a date-based amount of time from the provided number of weeks."
+                + "<br/>Result Type: Period";
 
     private final static String SCRIPT = "function " + NAME + "(weeks) {\n "
-        + "return Java.type(\"java.time.Period\").ofWeeks(weeks);}";
+        + "return " + DateTimeExpressionJavaMethodProvider.ID + "." + NAME + "(weeks);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;

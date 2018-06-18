@@ -71,7 +71,7 @@ class PlusTemporal extends AbstractExpression implements DateTimeExpression {
         + "</ul>";
 
     private final static String SCRIPT = "function " + NAME + "(t, a) {\n "
-        + "return t.plus(a);}";
+        + "return " + DateTimeExpressionJavaMethodProvider.ID + "." + NAME + "(t, a);}";
 
     /**
      * Creates an expression that creates a {@link LocalTime} from String;
