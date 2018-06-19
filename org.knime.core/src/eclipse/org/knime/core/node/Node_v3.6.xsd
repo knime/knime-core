@@ -85,8 +85,8 @@
       <xs:choice>
         <xs:element minOccurs="0" maxOccurs="unbounded" name="option" type="Option" />
         <xs:element minOccurs="0" maxOccurs="unbounded" name="tab" type="Tab" />
-        <xs:element minOccurs="0" maxOccurs="unbounded" name="link" type="Link" />
       </xs:choice>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="link" type="Link" />
     </xs:sequence>
   </xs:complexType>
   
@@ -353,6 +353,7 @@
   </xs:complexType>
 
   <xs:complexType name="Link" mixed="true">
+    <xs:attribute name="href" use="required" />
   </xs:complexType>
   
 </xs:schema>
