@@ -43,7 +43,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
   ===============================================================================
   
-  This XSD describes node description introduced with KNIME 3.1.
+  This XSD describes node description introduced with KNIME 3.6.
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
         xmlns="http://knime.org/node/v3.6" targetNamespace="http://knime.org/node/v3.6"
@@ -107,6 +107,10 @@
     <xs:attribute name="name" type="xs:string" use="required"/>
   </xs:complexType>
   
+  <xs:complexType name="Link">
+      <xs:attribute name="href" type="xs:string" use="required"/>
+  </xs:complexType>
+
   <xs:simpleType name="NodeType">
     <xs:restriction base="xs:token">
       <xs:enumeration value="Source" />
@@ -350,9 +354,6 @@
       <xs:element ref="h4"/>
       <xs:element ref="table"/>
     </xs:choice>
-  </xs:complexType>
-
-  <xs:complexType name="Link" mixed="true">
   </xs:complexType>
   
 </xs:schema>
