@@ -129,7 +129,7 @@ public class MonitorVariableTable implements NodeMonitorTable {
         portCombo.setEnabled(false);
         if (count == 0) {
             loadButton.setEnabled(true);
-            loadButton.setText("Load Variables");
+            loadButton.setText("Show variables");
         } else {
             loadButton.setEnabled(false);
         }

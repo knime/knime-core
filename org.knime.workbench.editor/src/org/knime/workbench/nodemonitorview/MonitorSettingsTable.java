@@ -203,7 +203,7 @@ public class MonitorSettingsTable implements NodeMonitorTable {
     public void updateControls(final Button loadButton, final Combo portCombo, final int count) {
         portCombo.setEnabled(false);
         if (count == 0) {
-            loadButton.setText("Load settings");
+            loadButton.setText("Show settings");
             loadButton.setEnabled(true);
         } else {
             loadButton.setEnabled(false);

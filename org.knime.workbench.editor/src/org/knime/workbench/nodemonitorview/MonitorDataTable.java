@@ -196,9 +196,9 @@ public class MonitorDataTable implements NodeMonitorTable {
     @Override
     public void updateControls(final Button loadButton, final Combo portCombo, final int count) {
         if (count == 0) {
-            loadButton.setText("Load rows");
+            loadButton.setText("Show rows");
         } else {
-            loadButton.setText("Load more rows");
+            loadButton.setText("Show more rows");
         }
         if (m_numLoadedRows == m_numRows) {
             loadButton.setEnabled(false);
