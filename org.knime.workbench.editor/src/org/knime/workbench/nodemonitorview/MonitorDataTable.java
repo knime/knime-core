@@ -174,6 +174,12 @@ public class MonitorDataTable implements NodeMonitorTable {
             column = new TableColumn(table, SWT.NONE);
             column.setText("(remaining columns skipped)");
         }
+
+        //needs to be added before calling 'setItemCount'
+        //- first items will be empty otherwise
+        m_addDataRowListener = new AddDataRowListener();
+        table.addListener(SWT.SetData, m_addDataRowListener);
+
         if (m_autoLoad) {
             table.setItemCount(Math.min((int)m_numRows, NUM_LOOK_AHEAD_ROWS));
         } else {
@@ -182,8 +188,6 @@ public class MonitorDataTable implements NodeMonitorTable {
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumn(i).pack();
         }
-        m_addDataRowListener = new AddDataRowListener();
-        table.addListener(SWT.SetData, m_addDataRowListener);
     }
 
     /**
