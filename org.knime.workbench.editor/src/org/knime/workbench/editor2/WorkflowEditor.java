@@ -932,6 +932,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_zoomWheelListener = new ZoomWheelListener(zm, (FigureCanvas)getViewer().getControl());
 
         m_nodeSupplantDragListener = new NodeSupplantDragListener(this);
+        if (m_manager != null) {
+            m_manager.addListener(m_nodeSupplantDragListener);
+        }
     }
 
     /**
@@ -3191,6 +3194,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         if (m_manager != null) {
             m_manager.removeListener(this);
+            if (m_nodeSupplantDragListener != null) {
+                m_manager.removeListener(m_nodeSupplantDragListener);
+            }
             m_manager.removeNodePropertyChangedListener(this);
             m_manager.removeNodeStateChangeListener(this);
             m_manager.removeUIInformationListener(this);
@@ -3198,6 +3204,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_manager = manager;
         if (m_manager != null) {
             m_manager.addListener(this);
+            if (m_nodeSupplantDragListener != null) {
+                m_manager.addListener(m_nodeSupplantDragListener);
+            }
             m_manager.addNodePropertyChangedListener(this);
             m_manager.addNodeStateChangeListener(this);
             m_manager.addUIInformationListener(this);

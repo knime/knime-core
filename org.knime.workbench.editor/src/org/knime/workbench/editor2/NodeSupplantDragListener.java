@@ -64,6 +64,9 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.workbench.editor2.commands.SupplantationCommand;
@@ -80,7 +83,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  *
  * @author loki der quaeler
  */
-public class NodeSupplantDragListener implements KeyListener, MouseListener, MouseMoveListener {
+public class NodeSupplantDragListener implements KeyListener, MouseListener, MouseMoveListener, WorkflowListener {
     // These will only be consulted from the SWT thread
     private NodeContainerEditPart m_nodeInDrag;
     private int[] m_mouseDownNodeBounds;
@@ -280,6 +283,33 @@ public class NodeSupplantDragListener implements KeyListener, MouseListener, Mou
             }
         } finally {
             endDragTracking();
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void workflowChanged(final WorkflowEvent we) {
+        switch (we.getType()) {
+            case NODE_REMOVED:
+                if ((m_nodeInDrag != null) && we.getOldValue() != null) {
+                    final Object o = we.getOldValue();
+
+                    if (o instanceof SingleNodeContainer) {
+                        final NodeID removedNodeId = ((SingleNodeContainer)o).getID();
+
+                        if ((removedNodeId != null) && removedNodeId.equals(m_nodeInDrag.getNodeContainer().getID())) {
+                            Display.getDefault().asyncExec(() -> {
+                                endDragTracking();
+                            });
+                        }
+                    }
+                }
+
+                break;
+            default:
         }
     }
 
