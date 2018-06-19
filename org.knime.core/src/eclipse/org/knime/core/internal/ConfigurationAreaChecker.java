@@ -101,8 +101,8 @@ public final class ConfigurationAreaChecker {
     }
 
     /**
-     * Queues a scan of the config area of KNIME/Eclipse and checks if files can be locked by the current user, logging
-     * an error if that's not possible.
+     * Queues a scan of the config area of KNIME/Eclipse and checks if there are user lock files that can't be locked.
+     * If so that indicates a concurrent usage of the config area by a different user and an error is logged.
      */
     public static void scheduleIntegrityCheck() {
         if (Boolean.getBoolean(KNIMEConstants.PROPERTY_DISABLE_VM_FILE_LOCK)) {
@@ -137,7 +137,9 @@ public final class ConfigurationAreaChecker {
 
                     // lock the file and leave lock open until VM terminates
                     if (userLockChannel.tryLock() == null) {
-                        getLogger().errorWithFormat(
+                        // this is an OK case: The user has two instances of KNIME open (two different workspaces)
+                        // and shares the same config area
+                        getLogger().debugWithFormat(
                             "File in configuration area (\"%s\") cannot be locked by current user %s; either the "
                                 + "file is already locked by a different KNIME instance or the file system does not "
                                 + "support locking. %s",
