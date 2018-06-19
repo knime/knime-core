@@ -446,7 +446,7 @@ public final class NodeLogger {
         l.info("#########################################################################################");
         l.info("#                                                                                       #");
         l.info("# "
-                + ("Welcome to the KNIME Analytics Platform v" + KNIMEConstants.VERSION + " (Build "
+                + ("Welcome to KNIME Analytics Platform v" + KNIMEConstants.VERSION + " (Build "
                         + KNIMEConstants.BUILD_DATE
                         + ")                                          ").substring(0, 85) + " #");
         l.info("# Based on Eclipse, http://www.eclipse.org                                              #");

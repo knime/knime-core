@@ -207,7 +207,7 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         if (alreadyAsked) {
             return;
         }
-        String message = "Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data. "
+        String message = "Help us to further improve KNIME Analytics Platform by sending us anonymous usage data. "
                 + "The data collected is used for recommendations of the new built-in Workflow Coach. "
                 + "Click <a href=\"https://www.knime.com/faq#usage_data\">here</a> to find out what is being transmitted. "
                 + "You can also change this setting in the KNIME preferences later.\n\n"
