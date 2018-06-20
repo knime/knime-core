@@ -55,6 +55,7 @@ import java.util.Set;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
@@ -389,10 +390,6 @@ public class SupplantationCommand extends AbstractKNIMECommand {
         private ScheduledConnection(final NodeContainerUI node, final WorkflowManager wm,
             final ConnectionContainer connection, final boolean input, final ConnectionManifest nidConnectionManifest,
             final Map<Integer, Integer> outportMap) {
-            final Integer nodePort = new Integer(input ? connection.getDestPort() : connection.getSourcePort());
-            final PortType portType;
-            int port;
-
             if ((!input) && (outportMap == null)) {
                 throw new IllegalArgumentException("outportMap cannot be null if input is false.");
             }
@@ -400,13 +397,17 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                 throw new IllegalArgumentException("outportMap cannot be non-null if input is true.");
             }
 
-            portType = input ? node.getInPort(nodePort.intValue()).getPortType()
+            final Integer nodePort = new Integer(input ? connection.getDestPort() : connection.getSourcePort());
+            final PortType portType = input ? node.getInPort(nodePort.intValue()).getPortType()
                 : node.getOutPort(nodePort.intValue()).getPortType();
+            final int port;
 
-            // The purpose of this whole thing is to address the scenario in which the targetted node has
-            //      an outport with, for example, 2 connections on it and the node-in-drag has 2 port-type
-            //      compatible outports where each of them gets assigned one of the connections.
-            if (outportMap != null) {
+            if (portType.equals(FlowVariablePortObject.TYPE)) {
+                port = nodePort.intValue();
+            } else if (outportMap != null) {
+                // The purpose of this whole thing is to address the scenario in which the targetted node has
+                //      an outport with, for example, 2 connections on it and the node-in-drag has 2 port-type
+                //      compatible outports where each of them gets assigned one of the connections.
                 final Integer portI = outportMap.get(nodePort);
 
                 if (portI == null) {
