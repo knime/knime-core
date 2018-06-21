@@ -153,7 +153,7 @@ public final class NumericOutliersModel {
      */
     void addEntry(final GroupKey key, final String outlier, final double[] interval) throws IllegalArgumentException {
         // check if the outlier column names contain the provided outlier string
-        if (!Arrays.stream(m_outlierColNames).anyMatch(outlier::matches)) {
+        if (!Arrays.stream(m_outlierColNames).anyMatch(outlier::equals)) {
             throw new IllegalArgumentException(UNKNOWN_OUTLIER_EXCEPTION);
         }
         // add the key if necessary
