@@ -60,6 +60,7 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.NodeID;
@@ -148,15 +149,17 @@ public class NodeSupplantDragListener implements KeyListener, MouseListener, Mou
     }
 
     private void endDragTracking() {
-        m_nodeInDrag = null;
-        m_mouseDownNodeBounds = null;
-        m_nodeInDragConnectionIds = null;
-        m_nodeInDragDegreeOneNodes = null;
-        m_nodeInDragInportManifest = null;
-        m_nodeInDragOutportManifest = null;
+        if (m_nodeInDrag != null) {
+            m_nodeInDrag = null;
+            m_mouseDownNodeBounds = null;
+            m_nodeInDragConnectionIds = null;
+            m_nodeInDragDegreeOneNodes = null;
+            m_nodeInDragInportManifest = null;
+            m_nodeInDragOutportManifest = null;
 
-        m_dragPositionProcessor.unmarkSelection();
-        m_dragPositionProcessor.clearMarkingAvoidance();
+            m_dragPositionProcessor.unmarkSelection();
+            m_dragPositionProcessor.clearMarkingAvoidance();
+        }
     }
 
     /**
@@ -181,7 +184,13 @@ public class NodeSupplantDragListener implements KeyListener, MouseListener, Mou
     @Override
     public void mouseMove(final MouseEvent me) {
         if (m_nodeInDrag != null) {
-            m_dragPositionProcessor.processDragEventAtPoint(me.display.getCursorLocation());
+            final boolean mouseDown = ((me.stateMask & SWT.BUTTON1) != 0);
+
+            if (mouseDown) {
+                m_dragPositionProcessor.processDragEventAtPoint(me.display.getCursorLocation());
+            } else {
+                endDragTracking();  // See AP-9560
+            }
         }
     }
 
@@ -189,7 +198,13 @@ public class NodeSupplantDragListener implements KeyListener, MouseListener, Mou
      * {@inheritDoc}
      */
     @Override
-    public void mouseDoubleClick(final MouseEvent me) { }
+    public void mouseDoubleClick(final MouseEvent me) {
+        // See AP-9560
+        // we're going to give everything a handful of milliseconds to settle their stuff out and then end the tracking
+        Display.getDefault().asyncExec(() -> {
+            endDragTracking();
+        });
+    }
 
     /**
      * {@inheritDoc}
