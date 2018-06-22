@@ -112,7 +112,11 @@ final class ZoomWheelListener implements MouseWheelListener {
      * Should be called as part of workflow disposition, before the parent figure canvas has been disposed.
      */
     public void dispose() {
-        Display.getCurrent().asyncExec(() -> {
+        Display display = Display.getCurrent();
+        display.asyncExec(() -> {
+            if (display.isDisposed()) { // this otherwise causes a "widget disposed" while removing the mouse listener
+                return;
+            }
             try {
                 ZoomWheelListener outer = ZoomWheelListener.this;
 
