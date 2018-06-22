@@ -345,7 +345,8 @@ public class LinkNodesAction extends AbstractNodeAction {
                         final NodeInPortUI destinationPort = destination.getInPort(j);
                         final PortType destinationPortType = destinationPort.getPortType();
 
-                        if (sourcePortType.isSuperTypeOf(destinationPortType)) {
+                        if (sourcePortType.isSuperTypeOf(destinationPortType)
+                            || destinationPortType.isSuperTypeOf(sourcePortType)) {
                             return Optional.of(new PlannedConnection(source, i, destination, j));
                         }
                     }
@@ -368,7 +369,8 @@ public class LinkNodesAction extends AbstractNodeAction {
                         final NodeInPortUI destinationPort = destination.getInPort(j);
                         final PortType destinationPortType = destinationPort.getPortType();
 
-                        if (sourcePortType.isSuperTypeOf(destinationPortType)) {
+                        if (sourcePortType.isSuperTypeOf(destinationPortType)
+                            || destinationPortType.isSuperTypeOf(sourcePortType)) {
                             return Optional.of(new PlannedConnection(source, i, destination, j));
                         }
                     }
@@ -393,7 +395,8 @@ public class LinkNodesAction extends AbstractNodeAction {
                     final NodeInPortUI destinationPort = destination.getInPort(j);
                     final PortType destinationPortType = destinationPort.getPortType();
 
-                    if (sourcePortType.isSuperTypeOf(destinationPortType)) {
+                    if (sourcePortType.isSuperTypeOf(destinationPortType)
+                        || destinationPortType.isSuperTypeOf(sourcePortType)) {
                         final boolean mustDetach = portAlreadyHasConnection(destination, j, true,
                             Collections.emptyList(), existingInConnections);
 
@@ -597,7 +600,8 @@ public class LinkNodesAction extends AbstractNodeAction {
                                 final NodeInPortUI destinationPort = right.getInPort(j);
                                 final PortType destinationPortType = destinationPort.getPortType();
 
-                                if (sourcePortType.isSuperTypeOf(destinationPortType)) {
+                                if (sourcePortType.isSuperTypeOf(destinationPortType)
+                                    || destinationPortType.isSuperTypeOf(sourcePortType)) {
                                     haveFoundALegalConnection = true;
 
                                     break;
