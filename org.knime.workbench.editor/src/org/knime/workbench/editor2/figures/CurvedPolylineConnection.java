@@ -110,9 +110,9 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
      *            <code>false</code>)
      */
     public void setCurved(final boolean curved) {
-        if(curved) {
-            if(m_approxCurve == null) {
-                calcCurve();
+        if (curved) {
+            if (m_approxCurve == null) {
+                calculateCurve();
             }
         } else {
             m_approxCurve = null;
@@ -166,7 +166,7 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
             //shrink the 'bounding box'-height a bit
             //(such that selection of an output port is not impeded when the successor node is 'before' - in x direction - its predecessor)
             //but make sure that the 'bounding box'-height is not smaller than a certain amount
-            if(LINEBOUNDS.height - 44 > 20) {
+            if (LINEBOUNDS.height - 44 > 20) {
                 LINEBOUNDS.shrink(0, 22);
             }
             if (!LINEBOUNDS.contains(x, y)) {
@@ -193,7 +193,7 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
     public Rectangle getBounds() {
         if (m_approxCurve != null) {
             if (bounds == null) {
-                int expand = (int)(getLineWidthFloat() / 2.0f) + 10;
+                final int expand = (int)(getLineWidthFloat() / 2.0f) + 10;
                 bounds = m_approxCurve.getBounds().getExpanded(expand, expand);
             }
             return bounds;
@@ -208,13 +208,15 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
     @Override
     protected void fireFigureMoved() {
         super.fireFigureMoved();
-        if(m_approxCurve != null) {
-        	bounds = null;
-            calcCurve();
+
+        if (m_approxCurve != null) {
+            calculateCurve();
+            erase();
+            repaint();
         }
     }
 
-    private void calcCurve() {
+    private void calculateCurve() {
         //redraw the path and re-determine the curve approximation
         if (m_approxCurve != null) {
             m_approxCurve.removeAllPoints();
@@ -222,7 +224,7 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
             m_approxCurve = new PointList();
         }
 
-        PointList points = getPoints();
+        final PointList points = getPoints();
         m_path = new Path(Display.getDefault());
         m_path.moveTo(points.getFirstPoint().x, points.getFirstPoint().y);
         m_approxCurve.addPoint(points.getFirstPoint().x, points.getFirstPoint().y);
@@ -239,9 +241,9 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
             int cp2y = y;
             m_path.cubicTo(cp1x, cp1y, cp2x, cp2y, x, y);
 
-            CubicCurve2D cc = new CubicCurve2D.Float(lastPoint.x, lastPoint.y, cp1x, cp1y, cp2x, cp2y, x, y);
-            FlatteningPathIterator fpi = new FlatteningPathIterator(cc.getPathIterator(null), 3, 5);
-            float[] coords = new float[6];
+            final CubicCurve2D cc = new CubicCurve2D.Float(lastPoint.x, lastPoint.y, cp1x, cp1y, cp2x, cp2y, x, y);
+            final FlatteningPathIterator fpi = new FlatteningPathIterator(cc.getPathIterator(null), 3, 5);
+            final float[] coords = new float[6];
             while (!fpi.isDone()) {
                 int type = fpi.currentSegment(coords);
                 switch (type) {
@@ -253,5 +255,7 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
             }
             lastPoint = new Point(x, y);
         }
+
+        bounds = null;
     }
 }
