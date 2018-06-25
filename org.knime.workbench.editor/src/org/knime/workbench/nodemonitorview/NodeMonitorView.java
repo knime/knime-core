@@ -478,7 +478,9 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
             tc.dispose();
         }
 
-        m_portIndex.getCombo().setEnabled(false);
+        if (m_choice != DISPLAYOPTIONS.TABLE) {
+            m_portIndex.getCombo().setEnabled(false);
+        }
     }
 
     /** {@inheritDoc} */
