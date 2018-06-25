@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<knimeNode icon="./dectree_predictor.png" type="Predictor" xmlns="http://knime.org/node/v2.8"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+<knimeNode icon="./dectree_predictor.png" type="Predictor" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
 	<name>Decision Tree Predictor</name>
 	
 	<shortDescription>
@@ -34,6 +32,9 @@
 			Suffix for the normalized distribution columns. Their names are like:
 			<tt>P (</tt>trainingColumn<tt>=</tt>value<tt>)</tt>.
 		</option>
+		<link href="https://www.knime.com/knime-introductory-course/chapter6/section3/decision-tree">
+			KNIME E-Learning Course: Decision Tree
+		</link>
 	</fullDescription>
 	
     <ports>
