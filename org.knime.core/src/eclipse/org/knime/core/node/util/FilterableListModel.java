@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractListModel;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * List model which filters its items according to a search string and considers a list of excluded items.
  *
@@ -58,12 +60,12 @@ public final class FilterableListModel extends AbstractListModel<String> {
         }
         if (m_filter != null && filter.startsWith(m_filter)) {
             // the most common use case will be a list gradually refined by user typing more characters
-            m_filtered = m_filtered.stream().filter(s -> s.contains(filter)).collect(Collectors.toList());
+            m_filtered = m_filtered.stream().filter(s -> StringUtils.containsIgnoreCase(s, filter)).collect(Collectors.toList());
         } else if (filter.isEmpty()) {
             // copy the full list
             m_filtered = new ArrayList<>(m_unfiltered);
         } else {
-            m_filtered = m_unfiltered.stream().filter(s -> s.contains(filter)).collect(Collectors.toList());
+            m_filtered = m_unfiltered.stream().filter(s -> StringUtils.containsIgnoreCase(s, filter)).collect(Collectors.toList());
         }
         m_filter = filter;
         m_filtered.removeAll(m_excluded);
