@@ -77,6 +77,8 @@ import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.WorkflowMarqueeSelectionTool;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.WorkflowSelectionTool;
@@ -472,7 +474,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         final EditPart parent = getParent();
         if (parent instanceof WorkflowRootEditPart) {
             WorkflowRootEditPart wkfRootEdit = (WorkflowRootEditPart)parent;
-            if (wkfRootEdit.getWorkflowManager().isWriteProtected()) {
+            if (wkfRootEdit.getWorkflowManager().isWriteProtected()
+                || !Wrapper.wraps(wkfRootEdit.getWorkflowManager(), WorkflowManager.class)) {
                 return;
             }
         }
