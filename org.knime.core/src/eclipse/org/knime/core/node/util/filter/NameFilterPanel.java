@@ -1054,7 +1054,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_patternPanel.saveConfiguration(config.getPatternConfig());
     }
 
-    /** @return list of all included T's */
+    /**
+     * Returns a set of manually included T's.
+     * <p>
+     * Note that this is not the list of included items with respect to the current wildcard or regex. If you want to
+     * get the included items with respect to the current settings use {@link NameFilterConfiguration#applyTo(String[])}
+     *
+     * @return a set of manually included T's.
+     */
     public Set<T> getIncludeList() {
         final Set<T> list = new LinkedHashSet<T>();
         for (Object o : m_inclMdl) {
@@ -1067,7 +1074,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
         return list;
     }
 
-    /** @return list of all excluded T's */
+    /**
+     * Returns a set of manually excluded T's.
+     * <p>
+     * Note that this is not the list of excluded items with respect to the current wildcard or regex. If you want to
+     * get the excluded items with respect to the current settings use {@link NameFilterConfiguration#applyTo(String[])}
+     *
+     * @return a set of manually excluded T's.
+     */
     public Set<T> getExcludeList() {
         final Set<T> list = new LinkedHashSet<T>();
         for (Object o : m_exclMdl) {
@@ -1289,9 +1303,12 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Returns a set of the names of all included items.
+     * Returns a set of the names of manually included items.
+     * <p>
+     * Note that this is not the list of included items with respect to the current wildcard or regex. If you want to
+     * get the included items with respect to the current settings use {@link NameFilterConfiguration#applyTo(String[])}
      *
-     * @return a set of the names of all included items.
+     * @return a set of the names of manually included items.
      */
     public Set<String> getIncludedNamesAsSet() {
         Set<T> inclList = getIncludeList();
@@ -1303,9 +1320,12 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Returns a set of the names of all excluded items.
+     * Returns a set of the names of manually excluded items.
+     * <p>
+     * Note that this is not the list of excluded items with respect to the current wildcard or regex. If you want to
+     * get the excluded items with respect to the current settings use {@link NameFilterConfiguration#applyTo(String[])}
      *
-     * @return a set of the names of all excluded items.
+     * @return a set of the names of manually excluded items.
      */
     public Set<String> getExcludedNamesAsSet() {
         Set<T> exclList = getExcludeList();
