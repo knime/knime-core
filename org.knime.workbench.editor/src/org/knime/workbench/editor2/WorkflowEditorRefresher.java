@@ -333,10 +333,6 @@ class WorkflowEditorRefresher {
     }
 
     private void setConnected(final boolean isConnected, final boolean callback) {
-        if (m_isConnected && !isConnected && isJobEditEnabled() && callback) {
-            //if the server is disconnected after it was connected, issue a log-warning
-            LOGGER.warn("Job view '" + m_editor.getTitle() + "' disconnected from server.");
-        }
         m_isConnected = isConnected;
         m_editor.getWorkflowManagerUI().setDisconnected(!isConnected);
         if (callback) {

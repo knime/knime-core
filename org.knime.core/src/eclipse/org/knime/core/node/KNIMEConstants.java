@@ -339,7 +339,7 @@ public final class KNIMEConstants {
                     .warn("Couldn't parse value for system property 'org.knime.ui.workflow_editor.timeout'");
             }
         }
-        return 1000;
+        return 1500;
     }
 
     /** KNIME home directory. */

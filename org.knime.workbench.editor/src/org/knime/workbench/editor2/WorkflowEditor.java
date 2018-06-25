@@ -2298,8 +2298,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             if (!m_refresher.isConnected() && m_refresher.isJobEditEnabled()) {
                 sb.setLength(0);
                 sb.append(
-                    "Connection to server lost. Job will not refresh, and no changes can be made until connection is"
-                        + " restored.");
+                    "Server not responding, either the server is overloaded or the connection is lost. Job will not "
+		        + " refresh and no changes can be made until connection is restored.");
                 workflowFigure.setErrorMessage(sb.toString());
             } else {
                 workflowFigure.setErrorMessage(null);
