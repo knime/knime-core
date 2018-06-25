@@ -194,6 +194,7 @@ import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.core.nodeprovider.NodeProvider.EventListener;
 import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
@@ -1337,6 +1338,11 @@ public class WorkflowEditor extends GraphicalEditor implements
         // also called from doSaveAs for projects -- old m_fileResource != null
         if (oldFileResource != null) {
             ProjectWorkflowMap.replace(m_fileResource, m_manager, oldFileResource);
+        }
+
+        if(!Wrapper.wraps(wfm, WorkflowManager.class)) {
+            //set different icon for job view
+            setTitleImage(ImageRepository.getIconImage(SharedImages.ServerJob));
         }
     }
 
