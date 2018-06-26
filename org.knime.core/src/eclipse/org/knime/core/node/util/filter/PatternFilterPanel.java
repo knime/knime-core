@@ -64,12 +64,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.filter.PatternFilterConfiguration.PatternFilterType;
 
 /**
@@ -137,37 +139,53 @@ public class PatternFilterPanel<T> extends JPanel {
         m_filter = filter;
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        // Pattern label
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        gbc.insets = new Insets(0, 0, 0, 8);
+        panel.add(new JLabel("Pattern:"), gbc);
+        // Pattern TextField
         m_pattern = new JTextField();
         m_pattern.setText("");
         m_patternValue = m_pattern.getText();
-        JPanel patternPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        patternPanel.add(new JLabel("Pattern:"), gbc);
         gbc.gridx++;
+        gbc.gridwidth = 4;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1;
-        gbc.insets = new Insets(0, 5, 0, 0);
-        patternPanel.add(m_pattern, gbc);
-        gbc.gridx = 0;
-        panel.add(patternPanel, gbc);
+        gbc.insets = new Insets(0, 0, 0, 0);
+        panel.add(m_pattern, gbc);
+        // Wildcard RadioButton + image
         ButtonGroup typeGroup = new ButtonGroup();
-        m_wildcard = new JRadioButton("Wildcard ('?' matches any character, '*' matches a sequence of any characters)");
+        m_wildcard = new JRadioButton("Wildcard", true);
+        m_wildcard.setToolTipText("'?' matches any character, '*' matches a sequence of any characters");
         typeGroup.add(m_wildcard);
+        gbc.weightx = 0;
+        gbc.gridwidth = 1;
         gbc.gridy++;
-        gbc.insets = new Insets(0, 20, 0, 0);
         panel.add(m_wildcard, gbc);
+        JLabel infoLabel = new JLabel("", SharedIcons.INFO_OUTLINE.get(), SwingConstants.LEFT);
+        infoLabel.setToolTipText("'?' matches any character, '*' matches a sequence of any characters");
+        gbc.gridx++;
+        gbc.insets = new Insets(4, 0, 0, 0);
+        panel.add(infoLabel, gbc);
+        // Case Sensitive CheckBox
+        m_caseSensitive = new JCheckBox("Case Sensitive", true);
+        gbc.gridx++;
+        gbc.insets = new Insets(0, 8, 0, 0);
+        panel.add(m_caseSensitive, gbc);
+        // Regex RadioButton
         m_regex = new JRadioButton("Regular expression");
         typeGroup.add(m_regex);
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.gridx = 1;
         gbc.gridy++;
+        gbc.gridwidth = 2;
         panel.add(m_regex, gbc);
-        m_wildcard.setSelected(true);
+
         m_typeValue = getSelectedFilterType();
-        m_caseSensitive = new JCheckBox("Case Sensitive");
-        gbc.gridy++;
-        panel.add(m_caseSensitive, gbc);
-        m_caseSensitive.setSelected(true);
+
         m_caseSensitiveValue = m_caseSensitive.isSelected();
         m_additionalCheckbox = createAdditionalCheckbox();
         if (m_additionalCheckbox != null) {
@@ -230,10 +248,12 @@ public class PatternFilterPanel<T> extends JPanel {
         m_preview =
             new FilterIncludeExcludePreview<T>(MATCH_LABEL, NON_MATCH_LABEL, m_parentFilter.getListCellRenderer());
         m_preview.setListSize(NORMAL_LIST);
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.gridx = 0;
         gbc.gridy++;
         gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1;
         gbc.weighty = 1;
+        gbc.gridwidth = 5;
         panel.add(m_preview, gbc);
         // Add invalid pattern label
         m_invalid = new JLabel();

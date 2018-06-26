@@ -47,6 +47,7 @@
 package org.knime.core.node.util.filter.column;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -58,9 +59,11 @@ import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.Icon;
 import javax.swing.JCheckBox;
-import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -77,7 +80,6 @@ import org.knime.core.data.LongValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.date.DateAndTimeValue;
-import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.util.filter.FilterIncludeExcludePreview;
 import org.knime.core.node.util.filter.InputFilter;
 
@@ -92,7 +94,7 @@ final class TypeFilterPanelImpl extends JPanel {
 
     @SuppressWarnings("unchecked")
     private static final List<Class<? extends DataValue>> DEFAULT_TYPES = Arrays.asList(BooleanValue.class,
-        DateAndTimeValue.class, DoubleValue.class, IntValue.class, LongValue.class, StringValue.class);
+        DoubleValue.class, StringValue.class, IntValue.class, LongValue.class, DateAndTimeValue.class);
 
     private final Map<String, JCheckBox> m_selections;
 
@@ -121,11 +123,13 @@ final class TypeFilterPanelImpl extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         m_parent = parent;
         m_filter = filter;
-        m_selectionPanel = new JPanel(new GridLayout(0, 2));
+        m_selectionPanel = new JPanel(new GridLayout(0, 3));
+        m_selectionPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         m_selections = new LinkedHashMap<String, JCheckBox>();
         add(m_selectionPanel);
         m_preview = new FilterIncludeExcludePreview<DataColumnSpec>(m_parent.getListCellRenderer());
         m_preview.setListSize(new Dimension(365, 195));
+        m_preview.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(m_preview);
     }
 
@@ -158,7 +162,7 @@ final class TypeFilterPanelImpl extends JPanel {
                 box.setSelected(valueSelected);
             } else if (valueSelected) {
                 // type included by currently not in the input spec
-                JCheckBox newCheckBox = addCheckBox(valueClassName, true);
+                JCheckBox newCheckBox = addCheckBox(null, valueClassName, true);
                 newCheckBox.setSelected(true);
                 m_selections.put(valueClassName, newCheckBox);
                 newCheckBox.setEnabled(isEnabled());
@@ -191,7 +195,7 @@ final class TypeFilterPanelImpl extends JPanel {
                         ExtensibleUtilityFactory eu = (ExtensibleUtilityFactory)utilityFor;
                         String label = eu.getName();
                         String key = prefValueClass.getName();
-                        JCheckBox newCheckbox = addCheckBox(label, false);
+                        JCheckBox newCheckbox = addCheckBox(utilityFor.getIcon(), label, false);
                         m_selections.put(key, newCheckbox);
                         newCheckbox.setEnabled(isEnabled());
                     }
@@ -214,7 +218,7 @@ final class TypeFilterPanelImpl extends JPanel {
                         ExtensibleUtilityFactory eu = (ExtensibleUtilityFactory)utilityFor;
                         String label = eu.getName();
                         String key = value.getName();
-                        JCheckBox newCheckbox = addCheckBox(label, false);
+                        JCheckBox newCheckbox = addCheckBox(utilityFor.getIcon(), label, false);
                         m_selections.put(key, newCheckbox);
                         newCheckbox.setEnabled(isEnabled());
                     }
@@ -250,14 +254,27 @@ final class TypeFilterPanelImpl extends JPanel {
         m_selections.clear();
     }
 
-    private JCheckBox addCheckBox(final String label, final boolean addRedBorderAsInvalid) {
-        final JCheckBox checkbox = new JCheckBox(label);
-        JComponent c = ViewUtils.getInFlowLayout(FlowLayout.LEFT, 0, 0, checkbox);
+    /**
+     * Adds a CheckBox to the selectionPanel with an icon and label representing the type. A red border is painted around the label if the type no longer exists in the input.
+     * @param icon type icon (see getIcon() in {@link DataValue.UtilityFactory})
+     * @param label label of the type
+     * @param addRedBorderAsInvalid if a red border should be painted around the label
+     * @return
+     */
+    private JCheckBox addCheckBox(final Icon icon, final String label, final boolean addRedBorderAsInvalid) {
+        final JCheckBox checkbox = new JCheckBox();
+        checkbox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JPanel jp = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel type = new JLabel(label);
+        type.setHorizontalAlignment(SwingConstants.LEFT);
+        type.setIcon(icon);
+        jp.add(checkbox);
+        jp.add(type);
         if (addRedBorderAsInvalid) {
             checkbox.setToolTipText("Type no longer exists in input");
-            c.setBorder(BorderFactory.createLineBorder(Color.RED));
+            jp.setBorder(BorderFactory.createLineBorder(Color.RED));
         }
-        m_selectionPanel.add(c);
+        m_selectionPanel.add(jp);
         m_selectionValues.put(label, checkbox.isSelected());
         checkbox.addChangeListener(new ChangeListener() {
             @Override

@@ -70,8 +70,10 @@ public enum SharedIcons {
     HELP("icons/help.png"),
     /** Warning sign filled **/
     WARNING("icons/warning.png"),
-    /** Info sign filled**/
+    /** Info sign filled **/
     INFO("icons/info.png"),
+    /** Info sign outline **/
+    INFO_OUTLINE("icons/info_outline.png"),
     /** Settings cog wheel **/
     SETTINGS("icons/settings.png"),
     /**
