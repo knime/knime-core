@@ -143,10 +143,8 @@ public class WriteTableNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_fileName.getStringValue() != null) {
-            m_fileName.saveSettingsTo(settings);
-            m_overwriteOK.saveSettingsTo(settings);
-        }
+        m_fileName.saveSettingsTo(settings);
+        m_overwriteOK.saveSettingsTo(settings);
     }
 
     /**
