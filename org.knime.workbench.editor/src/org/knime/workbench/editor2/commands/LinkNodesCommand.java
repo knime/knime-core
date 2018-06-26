@@ -126,11 +126,6 @@ public class LinkNodesCommand extends AbstractKNIMECommand {
                 MessageDialogWithToggle messageDialog =
                     CreateConnectionCommand.openReconnectConfirmDialog(m_confirmConnectionReplacement, null);
 
-                if (messageDialog.getToggleState()) {
-                    KNIMEUIPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.P_CONFIRM_RECONNECT,
-                        false);
-                }
-
                 if (messageDialog.getReturnCode() != IDialogConstants.YES_ID) {
                     return;
                 }
