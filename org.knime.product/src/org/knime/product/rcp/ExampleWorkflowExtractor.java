@@ -58,6 +58,7 @@ import java.util.zip.ZipInputStream;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.osgi.service.datalocation.Location;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -113,15 +114,18 @@ class ExampleWorkflowExtractor implements Runnable {
                 for (IViewReference ref : page.getViewReferences()) {
                     if (ExplorerView.ID.equals(ref.getId())) {
                         final ExplorerView explorer = (ExplorerView)ref.getView(true);
-                        final TreeViewer viewer = explorer.getViewer();
-                        if (viewer.getControl() != null && viewer.getControl().getDisplay() != null) {
-                            viewer.getControl().getDisplay().asyncExec(new Runnable() {
-                                @Override
-                                public void run() {
-                                    viewer.refresh();
-                                    viewer.expandAll();
-                                }
-                            });
+                        if (explorer != null) {
+                            final TreeViewer viewer = explorer.getViewer();
+                            final Control control = viewer.getControl();
+                            if (control != null && control.getDisplay() != null) {
+                                control.getDisplay().asyncExec(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        viewer.refresh();
+                                        viewer.expandAll();
+                                    }
+                                });
+                            }
                         }
                     }
                 }
