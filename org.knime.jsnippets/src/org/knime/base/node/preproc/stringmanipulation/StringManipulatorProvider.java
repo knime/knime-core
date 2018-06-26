@@ -85,6 +85,10 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.LengthManipula
 import org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.MD5ChecksumManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.PadLeftManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.PadLeftCharsManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.PadRightManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.PadRightCharsManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RegexMatcherManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RegexReplaceManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharsManipulator;
@@ -199,6 +203,10 @@ public final class StringManipulatorProvider implements ManipulatorProvider {
         manipulators.add(new RegexReplaceManipulator());
         manipulators.add(new MD5ChecksumManipulator());
         manipulators.add(new LastIndexOfCharManipulator());
+        manipulators.add(new PadLeftManipulator());
+        manipulators.add(new PadRightManipulator());
+        manipulators.add(new PadLeftCharsManipulator());
+        manipulators.add(new PadRightCharsManipulator());
 
         Set<String> categories = new TreeSet<String>();
         for (Manipulator m : manipulators) {
