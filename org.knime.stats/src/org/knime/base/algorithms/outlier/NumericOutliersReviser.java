@@ -579,6 +579,17 @@ public final class NumericOutliersReviser {
         if (interval == null) {
             return cell;
         }
+
+        // If the cell is of type long casting it to double value can cause precision problems, e.g.:
+        // final long a = -5307351023624618796l;
+        // final long b = (long)((double)a);
+        // > a : -5307351023624618796
+        // > b : -5307351023624619008
+        // Since the permitted interval is a double array this conversion is necessary (keep in mind that it is
+        // also deterministic). However, if we do not change the value, i.e., the cell is not an outlier, we
+        // return the original cell otherwise we have to create a new cell (see #getTreatedCell).
+        // In the latter case we cannot overcome the precision problem. Anyway, the intervals were also
+        // calculated by casting the long value to double!
         double val = ((DoubleValue)cell).getDoubleValue();
 
         // treat cell according the selected replacement strategy
