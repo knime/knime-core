@@ -109,7 +109,10 @@ import org.knime.core.node.streamable.StreamableOperatorInternals;
  */
 public final class NumericOutliersReviser {
 
-    /** The supported data types. */
+    /**
+     * The supported data types. The data types are restricted, since we have to create new cells, see
+     * {@link #getTreatedCell(DataCell, double)}, of the same type as the input column.
+     */
     private static final Set<DataType> SUPPORTED_DATA_TYPES =
         new HashSet<DataType>(Arrays.asList(new DataType[]{LongCell.TYPE, IntCell.TYPE, DoubleCell.TYPE}));
 
@@ -423,6 +426,9 @@ public final class NumericOutliersReviser {
      */
     private void treatOutliers(final ExecutionContext exec, final RowInput in, final RowOutput out,
         final NumericOutliersModel outlierModel, final long rowCount, final boolean inStreamingMode) throws Exception {
+        // check the outlier column type compatibility
+        checkOutlierCompatibility(in.getDataTableSpec(), outlierModel.getOutlierColNames());
+
         // start the treatment step
         exec.setMessage(TREATMENT_MSG);
 
@@ -467,6 +473,20 @@ public final class NumericOutliersReviser {
         }
         // cleare some memory
         m_outlierColNames = null;
+    }
+
+    /**
+     * Checks if all outlier column types are supported.
+     *
+     * @param inSpec the input data table spec
+     * @param outlierColNames the outlier column names
+     */
+    private static void checkOutlierCompatibility(final DataTableSpec inSpec, final String[] outlierColNames) {
+        if (!Arrays.stream(outlierColNames)//
+            .map(c -> inSpec.getColumnSpec(c).getType())//
+            .allMatch(NumericOutliersReviser::supports)) {
+            throw new IllegalArgumentException(ILLEGAL_CELL_TYPE_EXCEPTION);
+        }
     }
 
     /**
@@ -521,7 +541,8 @@ public final class NumericOutliersReviser {
                             // increment the member counter
                             memberCounter.incrementMemberCount(outlierColName, key);
                             // treat the value of the cell if its a outlier
-                            treatedCell = treatCellValue(colsMap.get(outlierColName), curCell);
+                            treatedCell =
+                                treatCellValue(colsMap.get(outlierColName), outlierSpecs[i].getType(), curCell);
                         } else {
                             missingGroupsCounter.incrementMemberCount(outlierColName, key);
                             treatedCell = curCell;
@@ -571,10 +592,11 @@ public final class NumericOutliersReviser {
      * strategy.
      *
      * @param interval the permitted interval
+     * @param colType the data type of the column storing the cell
      * @param cell the the current data cell
      * @return the new data cell after replacing its value if necessary
      */
-    private DataCell treatCellValue(final double[] interval, final DataCell cell) {
+    private DataCell treatCellValue(final double[] interval, final DataType colType, final DataCell cell) {
         // the model might not have learned anything about this key
         if (interval == null) {
             return cell;
@@ -597,7 +619,7 @@ public final class NumericOutliersReviser {
             return isOutlier(interval, val) ? DataType.getMissingCell() : cell;
         }
 
-        if (cell.getType().equals(DoubleCell.TYPE)) {
+        if (colType.equals(DoubleCell.TYPE)) {
             // sets to the lower interval bound if necessary
             if (m_detectionOption == NumericOutliersDetectionOption.LOWER_BOUND
                 || m_detectionOption == NumericOutliersDetectionOption.ALL) {
@@ -623,26 +645,26 @@ public final class NumericOutliersReviser {
             }
             // return the proper DataCell
         }
-        return getTreatedCell(cell, val);
+        return getTreatedCell(colType, cell, val);
     }
 
     /**
      * Returns the treated cell.
      *
+     * @param colType the data type of the column storing the cell
      * @param cell the data cell
      * @param val the new value of this cell
      * @return a new data cell if the cell's value is different from the new value
      */
-    private static DataCell getTreatedCell(final DataCell cell, final double val) {
-        final DataType cType = cell.getType();
+    private static DataCell getTreatedCell(final DataType colType, final DataCell cell, final double val) {
         final double prevVal = ((DoubleValue)cell).getDoubleValue();
         if (prevVal == val) {
             return cell;
-        } else if (cType.equals(DoubleCell.TYPE)) {
+        } else if (colType.equals(DoubleCell.TYPE)) {
             return DoubleCellFactory.create(val);
-        } else if (cType.equals(LongCell.TYPE)) {
+        } else if (colType.equals(LongCell.TYPE)) {
             return LongCellFactory.create((long)val);
-        } else if (cType.equals(IntCell.TYPE)) {
+        } else if (colType.equals(IntCell.TYPE)) {
             return IntCellFactory.create((int)val);
         }
         throw new IllegalArgumentException(ILLEGAL_CELL_TYPE_EXCEPTION);
