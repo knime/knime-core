@@ -57,7 +57,6 @@ import org.eclipse.gef.Request;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
-import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodePropertyChangedEvent;
 import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -185,7 +184,7 @@ public abstract class AbstractWorkflowPortBarEditPart
             if (ep instanceof AbstractPortEditPart) {
                 Object model = ((EditPart)ep).getModel();
                 if (model instanceof NodePortUI) {
-                    ((AbstractPortEditPart)ep).setIndex(((NodePort)model).getPortIndex());
+                    ((AbstractPortEditPart)ep).setIndex(((NodePortUI)model).getPortIndex());
                 }
             }
         }
