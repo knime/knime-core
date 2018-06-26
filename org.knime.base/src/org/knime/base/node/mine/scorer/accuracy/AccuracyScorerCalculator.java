@@ -89,6 +89,7 @@ import org.knime.core.node.util.CheckUtils;
  * @author Pascal Lee, KNIME GmbH, Berlin, Germany
  * @since 3.6
  */
+// TODO this class should be used also in the AccuracyScorerNodeModel AFTER deprecating (see AP-4800)
 public class AccuracyScorerCalculator {
 
     /** The node logger for this class. */
@@ -229,7 +230,7 @@ public class AccuracyScorerCalculator {
             columnList.add(new DataColumnSpecCreator("Sensitivity", DoubleCell.TYPE).createSpec());
         }
         if (config.isSpecifityCalculated()) {
-            columnList.add(new DataColumnSpecCreator("Specifity", DoubleCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("Specificity", DoubleCell.TYPE).createSpec());
         }
         if (config.isFmeasureCalculated()) {
             columnList.add(new DataColumnSpecCreator("F-measure", DoubleCell.TYPE).createSpec());
@@ -255,10 +256,10 @@ public class AccuracyScorerCalculator {
             columnList.add(new DataColumnSpecCreator("Cohen's kappa", DoubleCell.TYPE).createSpec());
         }
         if (config.isCorrectClassifiedCalculated()) {
-            columnList.add(new DataColumnSpecCreator("Correct Classified", IntCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("Correctly Classified", IntCell.TYPE).createSpec());
         }
         if (config.isWrongClassifiedCalculated()) {
-            columnList.add(new DataColumnSpecCreator("Wrong Classified", IntCell.TYPE).createSpec());
+            columnList.add(new DataColumnSpecCreator("Incorrectly Classified", IntCell.TYPE).createSpec());
         }
         DataColumnSpec[] overallStatsSpec = new DataColumnSpec[columnList.size()];
         overallStatsSpec = columnList.toArray(overallStatsSpec);
