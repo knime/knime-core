@@ -72,9 +72,14 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  * @author Florian Georg, University of Konstanz
  */
 public class CreateConnectionCommand extends AbstractKNIMECommand {
+    /**
+     * This text is displayed to the user if they are trying to replace an inport connection on a node which is already
+     * executed.
+     **/
+    public static final String REPLACE_CONNECTION_MESSAGE =
+        "Do you want to replace the existing connection?\nThis will reset the target node!";
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            CreateConnectionCommand.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(CreateConnectionCommand.class);
 
     private ConnectableEditPart m_sourceNode;
 
@@ -297,9 +302,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
                 // ask user if it should be replaced...
                 if (m_confirm && m_targetNode.getNodeContainer().getNodeContainerState().isExecuted()) {
                     // show confirmation message only if target node is executed
-                    MessageDialogWithToggle msgD = openReconnectConfirmDialog(
-                            m_confirm, "Do you want to replace existing connection? \n"
-                            + "This will reset the target node!");
+                    MessageDialogWithToggle msgD = openReconnectConfirmDialog(m_confirm, null);
                     m_confirm = !msgD.getToggleState();
                     if (msgD.getReturnCode() != IDialogConstants.YES_ID) {
                         return;
@@ -341,16 +344,15 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
 
     /**
      * @param confirm initial toggle state
-     * @param question of the confirmation dialog (not the toggle)
+     * @param question of the confirmation dialog (not the toggle), if this is null, this class'
+     *            REPLACE_CONNECTION_MESSAGE will be used
      * @return a confirmation dialog
      */
-    public static MessageDialogWithToggle openReconnectConfirmDialog(
-            final boolean confirm, final String question) {
-        return MessageDialogWithToggle.openYesNoQuestion(
-            Display.getDefault().getActiveShell(), "Replace Connection?",
-            question, "Always replace without confirming.", !confirm,
-            KNIMEUIPlugin.getDefault().getPreferenceStore(),
-            PreferenceConstants.P_CONFIRM_RECONNECT);
+    public static MessageDialogWithToggle openReconnectConfirmDialog(final boolean confirm, final String question) {
+        final String questionText = (question != null) ? question : REPLACE_CONNECTION_MESSAGE;
+        return MessageDialogWithToggle.openYesNoQuestion(Display.getDefault().getActiveShell(), "Replace Connection?",
+            questionText, "Always replace without confirming.", !confirm,
+            KNIMEUIPlugin.getDefault().getPreferenceStore(), PreferenceConstants.P_CONFIRM_RECONNECT);
     }
 
     /**

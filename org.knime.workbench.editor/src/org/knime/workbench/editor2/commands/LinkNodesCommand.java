@@ -51,6 +51,8 @@ package org.knime.workbench.editor2.commands;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -58,6 +60,8 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.LinkNodesAction;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * This is the Command association to the link nodes Action.
@@ -71,6 +75,8 @@ public class LinkNodesCommand extends AbstractKNIMECommand {
     private final Collection<LinkNodesAction.PlannedConnection> m_connectionPlans;
     private Collection<ConnectionContainer> m_removedConnections;
 
+    private boolean m_confirmConnectionReplacement;
+
     /**
      * The constructor for this class.
      *
@@ -82,6 +88,8 @@ public class LinkNodesCommand extends AbstractKNIMECommand {
         super(wm);
 
         m_connectionPlans = plans;
+        m_confirmConnectionReplacement =
+            KNIMEUIPlugin.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
     }
 
     /**
@@ -102,6 +110,32 @@ public class LinkNodesCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         final WorkflowManager wm = getHostWFM();
+
+        if (m_confirmConnectionReplacement) {
+            boolean willReplaceAtLeastOneAlreadyExecutedIncoming = false;
+
+            for (final LinkNodesAction.PlannedConnection planAction : m_connectionPlans) {
+                if (planAction.getDestinationNode().getNodeContainerState().isExecuted()) {
+                    willReplaceAtLeastOneAlreadyExecutedIncoming = true;
+
+                    break;
+                }
+            }
+
+            if (willReplaceAtLeastOneAlreadyExecutedIncoming) {
+                MessageDialogWithToggle messageDialog =
+                    CreateConnectionCommand.openReconnectConfirmDialog(m_confirmConnectionReplacement, null);
+
+                if (messageDialog.getToggleState()) {
+                    KNIMEUIPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.P_CONFIRM_RECONNECT,
+                        false);
+                }
+
+                if (messageDialog.getReturnCode() != IDialogConstants.YES_ID) {
+                    return;
+                }
+            }
+        }
 
         m_removedConnections = new ArrayList<>();
         for (final LinkNodesAction.PlannedConnection planAction : m_connectionPlans) {
