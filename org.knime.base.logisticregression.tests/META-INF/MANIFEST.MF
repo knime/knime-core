@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Unit-Tests for org.knime.base.logisticregression
-Bundle-SymbolicName: org.knime.base.logisticregression.testing;singleton:=true
+Bundle-SymbolicName: org.knime.base.logisticregression.tests;singleton:=true
 Bundle-Version: 3.8.0.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.knime.base.logisticregression;bundle-version="2.11.0.qualifier"

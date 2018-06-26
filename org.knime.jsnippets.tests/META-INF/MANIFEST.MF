@@ -1,7 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Unit-Tests for org.knime.jsnippets
-Bundle-SymbolicName: org.knime.jsnippets.testing;singleton:=true
+Bundle-SymbolicName: org.knime.jsnippets.tests;singleton:=true
 Bundle-Version: 3.8.0.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.knime.jsnippets;bundle-version="2.5.0"

@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Unit-Tests for org.knime.core
-Bundle-SymbolicName: org.knime.core.testing;singleton:=true
+Bundle-SymbolicName: org.knime.core.tests;singleton:=true
 Bundle-Version: 3.8.0.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.knime.core;bundle-version="3.2.0.qualifier"

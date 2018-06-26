@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>org.knime.workbench.repository.testing</name>
+	<name>org.knime.workbench.repository.tests</name>
 	<comment></comment>
 	<projects>
 	</projects>

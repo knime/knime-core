@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>org.knime.base.testing</name>
+	<name>org.knime.core.tests</name>
 	<comment></comment>
 	<projects>
 	</projects>
