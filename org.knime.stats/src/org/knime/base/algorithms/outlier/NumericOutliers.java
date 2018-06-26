@@ -58,6 +58,7 @@ import org.knime.base.algorithms.outlier.options.NumericOutliersDetectionOption;
 import org.knime.base.algorithms.outlier.options.NumericOutliersReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortObjectSpec;
@@ -248,6 +249,16 @@ public final class NumericOutliers {
         m_calculator = b.m_intervalsBuilder.build();
         m_reviser = b.m_reviserBuilder.build();
         b.m_listener.forEach(l -> m_reviser.addListener(l));
+    }
+
+    /**
+     * Tells whether or not the provided {@link DataType} is supported.
+     *
+     * @param type the data type to be evaluated
+     * @return {@code True} if the provided {@link DataType} is supported
+     */
+    public static boolean supports(final DataType type) {
+        return NumericOutliersReviser.supports(type);
     }
 
     /**

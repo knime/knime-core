@@ -64,7 +64,6 @@ import org.knime.base.algorithms.outlier.options.NumericOutliersReplacementStrat
 import org.knime.base.algorithms.outlier.options.NumericOutliersTreatmentOption;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -83,6 +82,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.filter.InputFilter;
+import org.knime.core.node.util.filter.NameFilterConfiguration;
 
 /**
  * Model to identify outliers based on interquartile ranges.
@@ -92,10 +92,10 @@ import org.knime.core.node.util.filter.InputFilter;
 final class NumericOutliersNodeModel extends NodeModel implements NumericOutlierWarningListener {
 
     /** Invalid input exception text. */
-    private static final String INVALID_INPUT_EXCEPTION = "No double compatible columns in input";
+    private static final String INVALID_INPUT_EXCEPTION = "Input does not contain numerical columns";
 
     /** Missing outlier column exception text. */
-    private static final String MISSING_OUTLIER_COLUMN_EXCEPTION = "Please include at least one numerical column!";
+    private static final String MISSING_OUTLIER_COLUMN_EXCEPTION = "Please include at least one numerical column";
 
     /** Scalar exception text. */
     private static final String SCALAR_EXCEPTION = "The IQR scalar has to be greater than or equal 0.";
@@ -261,7 +261,9 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         // check if the table contains any row holding numerical values
         DataTableSpec inSpec = (DataTableSpec)inSpecs[0];
-        if (!inSpec.containsCompatibleType(DoubleValue.class)) {
+        if (!inSpec.stream()//
+            .map(DataColumnSpec::getType)//
+            .anyMatch(NumericOutliers::supports)) {
             throw new InvalidSettingsException(INVALID_INPUT_EXCEPTION);
         }
 
@@ -477,14 +479,19 @@ final class NumericOutliersNodeModel extends NodeModel implements NumericOutlier
     }
 
     /**
-     * Returns the settings model of the columns to check for outliers.
+     * Returns the settings model holding the selected outliers (restricted to numerical columns).
      *
      * @return the outlier settings model
      */
-    @SuppressWarnings("unchecked")
     public static SettingsModelColumnFilter2 createOutlierFilterModel() {
-        return new SettingsModelColumnFilter2(CFG_OUTLIER_COLS, DoubleValue.class);
+        return new SettingsModelColumnFilter2(CFG_OUTLIER_COLS, new InputFilter<DataColumnSpec>() {
 
+            @Override
+            public boolean include(final DataColumnSpec spec) {
+                return NumericOutliers.supports(spec.getType());
+            }
+
+        }, NameFilterConfiguration.FILTER_BY_NAMEPATTERN);
     }
 
     /**

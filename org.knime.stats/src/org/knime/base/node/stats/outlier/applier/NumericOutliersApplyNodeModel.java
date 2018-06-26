@@ -63,7 +63,6 @@ import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarning;
 import org.knime.base.algorithms.outlier.listeners.NumericOutlierWarningListener;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -169,18 +168,18 @@ final class NumericOutliersApplyNodeModel extends NodeModel implements NumericOu
         final String[] outlierColNames = outlierPortSpec.getOutlierColNames();
 
         // check for outlier columns that are missing the input table
-        final List<String> nonExistOrCompatibleOutliers = Arrays.stream(outlierColNames)
+        final List<String> nonExisingtOrIncompatibleOutliers = Arrays.stream(outlierColNames)
             .filter(s -> (!inTableSpec.containsName(s)
-                || !inTableSpec.getColumnSpec(s).getType().isCompatible(DoubleValue.class)))//
+                || !NumericOutliersReviser.supports(inTableSpec.getColumnSpec(s).getType())))//
             .collect(Collectors.toList());
         // if all of them  are missing throw an exception
-        if (outlierColNames.length == nonExistOrCompatibleOutliers.size()) {
+        if (outlierColNames.length == nonExisingtOrIncompatibleOutliers.size()) {
             throw new InvalidSettingsException(MISSING_OUTLIERS_EXCEPTION_PREFIX
                 + ConvenienceMethods.getShortStringFrom(Arrays.asList(outlierColNames), MAX_PRINT));
         }
-        if (nonExistOrCompatibleOutliers.size() > 0) {
+        if (nonExisingtOrIncompatibleOutliers.size() > 0) {
             setWarningMessage(MISSING_OUTLIERS_WARNING_PREFIX
-                + ConvenienceMethods.getShortStringFrom(nonExistOrCompatibleOutliers, MAX_PRINT));
+                + ConvenienceMethods.getShortStringFrom(nonExisingtOrIncompatibleOutliers, MAX_PRINT));
         }
         return new PortObjectSpec[]{NumericOutliersReviser.getOutTableSpec(inTableSpec),
             NumericOutliersReviser.getSummaryTableSpec(inTableSpec, groupColNames)};
