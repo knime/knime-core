@@ -1340,7 +1340,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             ProjectWorkflowMap.replace(m_fileResource, m_manager, oldFileResource);
         }
 
-        if(!Wrapper.wraps(wfm, WorkflowManager.class)) {
+        if (!Wrapper.wraps(wfm, WorkflowManager.class)) {
             //set different icon for job view
             setTitleImage(ImageRepository.getIconImage(SharedImages.ServerJob));
         }
@@ -2299,7 +2299,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     sb.append("\nJob locked for edits. Enable edit operations in the preferences.");
                 }
             }
-            workflowFigure.setWarningMessage(sb.toString());
+            workflowFigure.setInfoMessage(sb.toString());
 
             if (!m_refresher.isConnected() && m_refresher.isJobEditEnabled()) {
                 sb.setLength(0);

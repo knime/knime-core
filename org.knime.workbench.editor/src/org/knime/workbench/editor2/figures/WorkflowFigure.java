@@ -68,11 +68,13 @@ public class WorkflowFigure extends FreeformLayeredPane {
 
     private static final Color MSG_BG = new Color(null, 255, 249, 0);
 
+    private static final Color INFO_MSG_BG = new Color(null, 240, 240, 240);
+
     private ProgressToolTipHelper m_progressToolTipHelper;
 
     private Image m_jobManagerFigure;
 
-    /* Error (index 0) and warning (index 1) messages. */
+    /* Error (index 1) and warning/info (index 0) messages. */
     private Label[] m_messages = new Label[2];
 
     /* Rectangle underneath the message figure */
@@ -123,13 +125,22 @@ public class WorkflowFigure extends FreeformLayeredPane {
     }
 
     /**
-     * Sets a warning message displayed at the top of the editor (above an error message if there is any).
+     * Sets an info message (with an info icon and light grey background) at the top of the editor (above an error
+     * message, if there is any, and instead of a warning message).
      *
+     * @param msg the message to display or <code>null</code> to remove it
+     */
+    public void setInfoMessage(final String msg) {
+        setMessage(msg, 0, SharedImages.Info, INFO_MSG_BG);
+    }
+
+    /**
+     * Sets a warning message displayed at the top of the editor (above an error message if there is any).
      *
      * @param msg the message to display or <code>null</code> to remove it
      */
     public void setWarningMessage(final String msg) {
-        setMessage(msg, 0, SharedImages.Warning);
+        setMessage(msg, 0, SharedImages.Warning, MSG_BG);
     }
 
     /**
@@ -138,10 +149,10 @@ public class WorkflowFigure extends FreeformLayeredPane {
      * @param msg the message to display or <code>null</code> to remove it
      */
     public void setErrorMessage(final String msg) {
-        setMessage(msg, 1, SharedImages.Error);
+        setMessage(msg, 1, SharedImages.Error, MSG_BG);
     }
 
-    private void setMessage(final String msg, final int index, final SharedImages icon) {
+    private void setMessage(final String msg, final int index, final SharedImages icon, final Color msgColor) {
         if ((msg == null && m_messages[index] == null)
             || (msg != null && m_messages[index] != null && msg.equals(m_messages[index].getText()))) {
             //nothing has changed
@@ -158,13 +169,13 @@ public class WorkflowFigure extends FreeformLayeredPane {
         if (msg != null) {
             m_messageRects[index] = new RectangleFigure();
             m_messageRects[index].setOpaque(true);
-            m_messageRects[index].setBackgroundColor(MSG_BG);
-            m_messageRects[index].setForegroundColor(MSG_BG);
+            m_messageRects[index].setBackgroundColor(msgColor);
+            m_messageRects[index].setForegroundColor(msgColor);
             add(m_messageRects[index]);
 
             m_messages[index] = new Label(msg);
             m_messages[index].setOpaque(true);
-            m_messages[index].setBackgroundColor(MSG_BG);
+            m_messages[index].setBackgroundColor(msgColor);
             m_messages[index].setIcon(ImageRepository.getUnscaledIconImage(icon));
             Rectangle msgBounds = new Rectangle(m_messages[index].getBounds());
             msgBounds.x += 10;
