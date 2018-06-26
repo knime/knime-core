@@ -282,6 +282,11 @@ public class ProfileManager {
         Path profileDir = stateDir.resolve("profiles");
 
         try {
+            // compute list of profiles that are requested but not present locally yet
+            List<String> newRequestedProfiles = new ArrayList<>(m_provider.getRequestedProfiles());
+            Files.newDirectoryStream(profileDir, p -> Files.isDirectory(p))
+                .forEach(p -> newRequestedProfiles.remove(p.getFileName().toString()));
+
             Files.createDirectories(stateDir);
 
             URIBuilder builder = new URIBuilder(profileLocation);
@@ -320,7 +325,8 @@ public class ProfileManager {
                     .setRedirectStrategy(new DefaultRedirectStrategy()).build()) {
                 HttpGet get = new HttpGet(profileUri);
 
-                if (Files.isDirectory(profileDir)) {
+                if (newRequestedProfiles.isEmpty() && Files.isDirectory(profileDir)) {
+                    // if new profiles are requested we must not make a conditional request
                     Instant lastModified = Files.getLastModifiedTime(profileDir).toInstant();
                     get.setHeader("If-Modified-Since",
                         DateTimeFormatter.RFC_1123_DATE_TIME.format(lastModified.atZone(ZoneId.of("GMT"))));
