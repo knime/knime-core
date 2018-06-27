@@ -68,7 +68,7 @@ public class WorkflowFigure extends FreeformLayeredPane {
 
     private static final Color MSG_BG = new Color(null, 255, 249, 0);
 
-    private static final Color INFO_MSG_BG = new Color(null, 240, 240, 240);
+    private static final Color INFO_MSG_BG = new Color(null, 200, 200, 255);
 
     private ProgressToolTipHelper m_progressToolTipHelper;
 
