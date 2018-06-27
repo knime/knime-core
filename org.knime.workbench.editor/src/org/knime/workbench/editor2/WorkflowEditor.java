@@ -2277,9 +2277,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                 origRemoteLocation = parentEditor.m_origRemoteLocation;
                 parentEditor = parentEditor.m_parentEditor;
             }
-            workflowFigure.setWarningMessage("  This is a temporary copy of \"" + URIUtil.toDecodedString(origRemoteLocation)
-                + "\".\n  Use \"Save\" to upload it back to its original location on the server or \"Save As...\" to "
-                + "store it in a different location.");
+            workflowFigure.setWarningMessage("  This is a temporary copy of \""
+                + URIUtil.toDecodedString(origRemoteLocation)
+                + "\".\n  Use \"Save As...\" to save a permanent copy of the workflow to your local workspace, or a mounted KNIME Server.");
         } else if (!getWorkflowManager().isPresent()) {
             // if the underlying workflow manager is a WorkflowManagerUI instance
             StringBuilder sb = new StringBuilder();
