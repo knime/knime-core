@@ -144,7 +144,7 @@ public class PatternFilterPanel<T> extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.FIRST_LINE_START;
-        gbc.insets = new Insets(0, 0, 0, 8);
+        gbc.insets = new Insets(4, 0, 0, 8);
         panel.add(new JLabel("Pattern:"), gbc);
         // Pattern TextField
         m_pattern = new JTextField();
@@ -154,7 +154,7 @@ public class PatternFilterPanel<T> extends JPanel {
         gbc.gridwidth = 4;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(4, 0, 0, 0);
         panel.add(m_pattern, gbc);
         // Wildcard RadioButton + image
         ButtonGroup typeGroup = new ButtonGroup();
@@ -164,25 +164,23 @@ public class PatternFilterPanel<T> extends JPanel {
         gbc.weightx = 0;
         gbc.gridwidth = 1;
         gbc.gridy++;
+        gbc.insets = new Insets(0, 0, 0, 0);
         panel.add(m_wildcard, gbc);
         JLabel infoLabel = new JLabel("", SharedIcons.INFO_OUTLINE.get(), SwingConstants.LEFT);
         infoLabel.setToolTipText("'?' matches any character, '*' matches a sequence of any characters");
         gbc.gridx++;
-        gbc.insets = new Insets(4, 0, 0, 0);
+        gbc.insets = new Insets(4, 0, 8, 0);
         panel.add(infoLabel, gbc);
-        // Case Sensitive CheckBox
-        m_caseSensitive = new JCheckBox("Case Sensitive", true);
-        gbc.gridx++;
-        gbc.insets = new Insets(0, 8, 0, 0);
-        panel.add(m_caseSensitive, gbc);
         // Regex RadioButton
         m_regex = new JRadioButton("Regular expression");
         typeGroup.add(m_regex);
-        gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.gridx = 1;
-        gbc.gridy++;
-        gbc.gridwidth = 2;
+        gbc.insets = new Insets(0, 8, 8, 0);
+        gbc.gridx++;
         panel.add(m_regex, gbc);
+        // Case Sensitive CheckBox
+        m_caseSensitive = new JCheckBox("Case Sensitive", true);
+        gbc.gridx++;
+        panel.add(m_caseSensitive, gbc);
 
         m_typeValue = getSelectedFilterType();
 
@@ -254,6 +252,7 @@ public class PatternFilterPanel<T> extends JPanel {
         gbc.weightx = 1;
         gbc.weighty = 1;
         gbc.gridwidth = 5;
+        gbc.insets = new Insets(0, 0, 0, 0);
         panel.add(m_preview, gbc);
         // Add invalid pattern label
         m_invalid = new JLabel();

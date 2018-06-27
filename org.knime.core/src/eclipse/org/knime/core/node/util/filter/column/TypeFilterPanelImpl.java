@@ -47,23 +47,25 @@
 package org.knime.core.node.util.filter.column;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -94,7 +96,7 @@ final class TypeFilterPanelImpl extends JPanel {
 
     @SuppressWarnings("unchecked")
     private static final List<Class<? extends DataValue>> DEFAULT_TYPES = Arrays.asList(BooleanValue.class,
-        DoubleValue.class, StringValue.class, IntValue.class, LongValue.class, DateAndTimeValue.class);
+        IntValue.class, DoubleValue.class, LongValue.class, StringValue.class, DateAndTimeValue.class);
 
     private final Map<String, JCheckBox> m_selections;
 
@@ -120,17 +122,27 @@ final class TypeFilterPanelImpl extends JPanel {
      */
     @SuppressWarnings("unchecked")
     TypeFilterPanelImpl(final DataColumnSpecFilterPanel parent, final InputFilter<DataColumnSpec> filter) {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new GridBagLayout());
         m_parent = parent;
         m_filter = filter;
-        m_selectionPanel = new JPanel(new GridLayout(0, 3));
-        m_selectionPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        m_selectionPanel = new JPanel(new GridBagLayout());
         m_selections = new LinkedHashMap<String, JCheckBox>();
-        add(m_selectionPanel);
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        c.insets = new Insets(4, 0, 4, 0);
+        c.anchor = GridBagConstraints.BASELINE_LEADING;
+        add(m_selectionPanel, c);
         m_preview = new FilterIncludeExcludePreview<DataColumnSpec>(m_parent.getListCellRenderer());
         m_preview.setListSize(new Dimension(365, 195));
-        m_preview.setAlignmentX(Component.LEFT_ALIGNMENT);
-        add(m_preview);
+        c.gridy++;
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 1;
+        c.insets = new Insets(0, 0, 0, 0);
+        add(m_preview, c);
     }
 
     /**
@@ -150,9 +162,13 @@ final class TypeFilterPanelImpl extends JPanel {
     void loadConfiguration(final TypeFilterConfigurationImpl config, final DataTableSpec spec) {
         m_tableSpec = spec;
         clearTypes();
-        addDataValues(DEFAULT_TYPES);
-        addDataColumns(spec);
-        // copy to remove
+        // ArrayList holding all the JPanels with the type checkboxes
+        ArrayList<JPanel> checkboxes = new ArrayList<JPanel>();
+        // add checkboxes from the DataTableSpec
+        checkboxes.addAll(getCheckBoxPanelsForDataColumns(spec));
+        // add checkboxes for the default data values
+        checkboxes.addAll(getCheckBoxPanelsForDataValues(DEFAULT_TYPES, spec));
+        // add checkboxes from the configuration
         Map<String, Boolean> mapping = new LinkedHashMap<String, Boolean>(config.getSelections());
         for (Map.Entry<String, Boolean> entry : mapping.entrySet()) {
             final String valueClassName = entry.getKey();
@@ -162,13 +178,38 @@ final class TypeFilterPanelImpl extends JPanel {
                 box.setSelected(valueSelected);
             } else if (valueSelected) {
                 // type included by currently not in the input spec
-                JCheckBox newCheckBox = addCheckBox(null, valueClassName, true);
-                newCheckBox.setSelected(true);
-                m_selections.put(valueClassName, newCheckBox);
-                newCheckBox.setEnabled(isEnabled());
+                checkboxes.add(getCheckBoxPanel(Optional.empty(), valueClassName, true, isEnabled(), valueClassName, true, false));
             }
         }
+        initTypeSelectionPanel(checkboxes);
         update();
+    }
+
+    /**
+     * Initializes the type selection panel with the provided CheckBoxes
+     * @param checkboxes List of JPanels containing the JCheckBoxes, an Icon depicting the type and a Label
+     */
+    private void initTypeSelectionPanel(final ArrayList<JPanel> checkboxes) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        // number of columns
+        int columns = 3;
+
+        for (JPanel jp : checkboxes) {
+            // add CheckBox Panel to selectionPanel
+            m_selectionPanel.add(jp, gbc);
+            // if CheckBox was the last in entry in the row
+            if (gbc.gridx == (columns - 1)) {
+                gbc.gridx = 0;
+                gbc.gridy++;
+            } else {
+                gbc.gridx++;
+            }
+        }
     }
 
     /** @param config to save to */
@@ -181,11 +222,12 @@ final class TypeFilterPanelImpl extends JPanel {
     }
 
     /**
-     * Add columns to selection.
+     * Returns the type checkboxes (each in a JPanel) columns.
      *
      * @param columns The columns contained in the current data table.
      */
-    void addDataColumns(final Iterable<DataColumnSpec> columns) {
+    private ArrayList<JPanel> getCheckBoxPanelsForDataColumns(final Iterable<DataColumnSpec> columns) {
+        ArrayList<JPanel> panels = new ArrayList<JPanel>();
         for (DataColumnSpec column : columns) {
             if (m_filter == null || m_filter.include(column)) {
                 Class<? extends DataValue> prefValueClass = column.getType().getPreferredValueClass();
@@ -195,21 +237,21 @@ final class TypeFilterPanelImpl extends JPanel {
                         ExtensibleUtilityFactory eu = (ExtensibleUtilityFactory)utilityFor;
                         String label = eu.getName();
                         String key = prefValueClass.getName();
-                        JCheckBox newCheckbox = addCheckBox(utilityFor.getIcon(), label, false);
-                        m_selections.put(key, newCheckbox);
-                        newCheckbox.setEnabled(isEnabled());
+                        panels.add(getCheckBoxPanel(Optional.of(utilityFor.getIcon()), label, false, isEnabled(), key, false, true));
                     }
                 }
             }
         }
+        return panels;
     }
 
     /**
-     * Add data values to the selection.
+     * Returns the type checkboxes (each in a JPanel) for the  data values.
      *
      * @param values The data values to add
      */
-    void addDataValues(final Iterable<Class<? extends DataValue>> values) {
+    private ArrayList<JPanel> getCheckBoxPanelsForDataValues(final Iterable<Class<? extends DataValue>> values, final DataTableSpec spec) {
+        ArrayList<JPanel> panels = new ArrayList<JPanel>();
         for (Class<? extends DataValue> value : values) {
             if (isIncludedByFilter(value)) {
                 if (value != null && !m_selections.containsKey(value.getName())) {
@@ -218,14 +260,14 @@ final class TypeFilterPanelImpl extends JPanel {
                         ExtensibleUtilityFactory eu = (ExtensibleUtilityFactory)utilityFor;
                         String label = eu.getName();
                         String key = value.getName();
-                        JCheckBox newCheckbox = addCheckBox(utilityFor.getIcon(), label, false);
-                        m_selections.put(key, newCheckbox);
-                        newCheckbox.setEnabled(isEnabled());
+                        panels.add(getCheckBoxPanel(Optional.of(utilityFor.getIcon()), label, false, isEnabled(), key, false, false));
                     }
                 }
             }
         }
+        return panels;
     }
+
 
     /**
      * @param value
@@ -255,27 +297,25 @@ final class TypeFilterPanelImpl extends JPanel {
     }
 
     /**
-     * Adds a CheckBox to the selectionPanel with an icon and label representing the type. A red border is painted around the label if the type no longer exists in the input.
-     * @param icon type icon (see getIcon() in {@link DataValue.UtilityFactory})
+     * Returns a CheckBox with an icon and label representing the type.
+     * A red border is painted around the label if the type no longer exists in the input. The checkbox label is written italic if the type is not present in the DataTableSpec.
+     *
      * @param label label of the type
      * @param addRedBorderAsInvalid if a red border should be painted around the label
+     * @param isEnabled if the checkbox is enabled
+     * @param icon type icon (see getIcon() in {@link DataValue.UtilityFactory})
+     * @param setSelected if the checkbox should be selected
+     * @param inDataTableSpec whether the type of this checkbox is contained in the DataTableSpec
      * @return
      */
-    private JCheckBox addCheckBox(final Icon icon, final String label, final boolean addRedBorderAsInvalid) {
+    private JPanel getCheckBoxPanel(final Optional<Icon> icon, final String label, final boolean addRedBorderAsInvalid, final boolean isEnabled, final String key,  final boolean setSelected, final boolean inDataTableSpec) {
+        JPanel jp = new JPanel(new GridBagLayout());
+        // Checkbox - no text
         final JCheckBox checkbox = new JCheckBox();
-        checkbox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JPanel jp = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel type = new JLabel(label);
-        type.setHorizontalAlignment(SwingConstants.LEFT);
-        type.setIcon(icon);
-        jp.add(checkbox);
-        jp.add(type);
-        if (addRedBorderAsInvalid) {
-            checkbox.setToolTipText("Type no longer exists in input");
-            jp.setBorder(BorderFactory.createLineBorder(Color.RED));
+        // has to be executed before the ChangeListener is registered
+        if(setSelected) {
+            checkbox.setSelected(true);
         }
-        m_selectionPanel.add(jp);
-        m_selectionValues.put(label, checkbox.isSelected());
         checkbox.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -285,7 +325,38 @@ final class TypeFilterPanelImpl extends JPanel {
                 }
             }
         });
-        return checkbox;
+        if (addRedBorderAsInvalid) {
+            checkbox.setToolTipText("Type no longer exists in input");
+            jp.setBorder(BorderFactory.createLineBorder(Color.RED));
+        }
+        // JLabel with type icon and text
+        JLabel type = new JLabel(label);
+        if (icon.isPresent()) {
+            type.setIcon(icon.get());
+        }
+        if (!inDataTableSpec) {
+            type.setFont(getFont().deriveFont(Font.ITALIC));
+        }
+        type.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                checkbox.setSelected(!checkbox.isSelected());
+            }
+        });
+        // add to JPanel
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        gbc.anchor = GridBagConstraints.WEST;
+        jp.add(checkbox, gbc);
+        gbc.gridx++;
+        gbc.weightx = 0.1;
+        jp.add(type, gbc);
+
+        m_selectionValues.put(label, checkbox.isSelected());
+        m_selections.put(key, checkbox);
+        return jp;
     }
 
     /**
