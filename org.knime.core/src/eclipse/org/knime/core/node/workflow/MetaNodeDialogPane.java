@@ -101,8 +101,9 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
     }
 
     /** Constructor.
-     * @param usedInSubnode false for meta nodes, true for sub node. */
-    MetaNodeDialogPane(final boolean usedInSubnode) {
+     * @param usedInSubnode false for meta nodes, true for sub node.
+     * @since 3.6*/
+    public MetaNodeDialogPane(final boolean usedInSubnode) {
         m_nodes = new LinkedHashMap<NodeID, MetaNodeDialogNode>();
         m_quickFormInputNodePanels = new LinkedHashMap<NodeID, QuickFormConfigurationPanel>();
         m_dialogNodePanels = new LinkedHashMap<NodeID, DialogNodePanel>();
@@ -136,8 +137,9 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
      * {@link #loadSettingsFrom(NodeSettingsRO,
      * org.knime.core.data.DataTableSpec[])} is called.
      * @param nodes the quickform nodes to show settings for
+     * @since 3.6
      */
-    final void setQuickformNodes(final Map<NodeID, MetaNodeDialogNode> nodes) {
+    public final void setQuickformNodes(final Map<NodeID, MetaNodeDialogNode> nodes) {
         m_nodes.clear();
         m_quickFormInputNodePanels.clear();
         m_dialogNodePanels.clear();
