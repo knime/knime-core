@@ -51,12 +51,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import javax.swing.UIManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -286,20 +287,28 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             @Override
             public void run() {
                 Shell shell = Display.getCurrent().getActiveShell();
-                if (result.getMissingNodes().isEmpty()) {
+                if (result.getMissingNodes().isEmpty() && result.getMissingTableFormats().isEmpty()) {
                     // will not open if status is OK.
                     ErrorDialog.openError(shell, "Workflow Load", message, status);
                 } else {
-                    String missing = result.getMissingNodes().stream().map(i -> i.getNodeNameNotNull()).distinct()
-                        .collect(Collectors.joining(", "));
+
+                    List<String> missingExtensionList = new ArrayList<>();
+
+                    result.getMissingNodes().stream().map(i -> i.getComponentName()).distinct()
+                        .forEach(missingExtensionList::add);
+
+                    result.getMissingTableFormats().stream().map(i -> i.getComponentName()).distinct()
+                        .forEach(missingExtensionList::add);
+
+                    String missingExtensions = StringUtils.join(missingExtensionList, ", ");
 
                     String[] dialogButtonLabels = {IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL};
-                    MessageDialog dialog = new MessageDialog(shell, "Workflow contains missing nodes", null,
-                        message + " due to missing nodes (" + missing
+                    MessageDialog dialog = new MessageDialog(shell, "Workflow contains missing extensions", null,
+                        message + " due to missing extensions (" + missingExtensions
                             + "). Do you want to search and install the required extensions?",
                         MessageDialog.WARNING, dialogButtonLabels, 0);
                     if (dialog.open() == 0) {
-                        Job j = new InstallMissingNodesJob(result.getMissingNodes());
+                        Job j = new InstallMissingNodesJob(result.getMissingNodes(), result.getMissingTableFormats());
                         j.setUser(true);
                         j.schedule();
                     }

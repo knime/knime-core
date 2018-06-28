@@ -69,7 +69,7 @@ import org.osgi.framework.Version;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 2.6
  */
-public final class NodeAndBundleInformation {
+public final class NodeAndBundleInformation implements KNIMEComponentInformation {
 
     /** Maps a regular expression to the a new extension name. For instance, after open sourcing the big data extensions
      * the namespace changed from "com.knime(.features).bigdata.()" to "org.knime(.features).bigdata.()." */
@@ -208,13 +208,7 @@ public final class NodeAndBundleInformation {
         return Optional.ofNullable(m_bundleName);
     }
 
-    /**
-     * Returns the bundle's symbolic name in which the node is contained. If the bundle is unknown an empty result is
-     * returned.
-     *
-     * @return the bundle's symbolic name
-     * @since 3.0
-     */
+    @Override
     public Optional<String> getBundleSymbolicName() {
         return Optional.ofNullable(m_bundleSymbolicName);
     }
@@ -259,6 +253,14 @@ public final class NodeAndBundleInformation {
         return name;
     }
 
+    /** The value as per {@link #getNodeNameNotNull()}.
+     * {@inheritDoc}
+     */
+    @Override
+    public String getComponentName() {
+        return getNodeNameNotNull();
+    }
+
     /**
      * Returns the node's name. If the name is unknown an empty result is returned.
      *
@@ -288,12 +290,7 @@ public final class NodeAndBundleInformation {
         return Optional.ofNullable(m_featureName);
     }
 
-    /**
-     * Returns the features's symbolic name in which the node is contained. If the feature is unknown an empty result is returned.
-     *
-     * @return the feature's symbolic name
-     * @since 3.0
-     */
+    @Override
     public Optional<String> getFeatureSymbolicName() {
         return Optional.ofNullable(m_featureSymbolicName);
     }

@@ -50,7 +50,6 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -58,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.storage.TableStoreFormatInformation;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
@@ -511,6 +511,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
         private final List<NodeAndBundleInformation> m_missingNodes = new ArrayList<>();
 
+        private final List<TableStoreFormatInformation> m_missingTableFormats = new ArrayList<>();
+
         /** */
         public LoadResult(final String name) {
             super(LoadResultEntryType.Ok, name);
@@ -534,6 +536,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
         public void addChildError(final LoadResult loadResult) {
             m_errors.add(loadResult);
+            m_missingNodes.addAll(loadResult.getMissingNodes());
+            m_missingTableFormats.addAll(loadResult.getMissingTableFormats());
         }
 
         /** {@inheritDoc} */
@@ -553,15 +557,6 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
 
         /**
-         * Adds information about missing nodes.
-         *
-         * @param missingNodes information about missing nodes; must not be <code>null</code>
-         */
-        void addMissingNodes(final Collection<NodeAndBundleInformation> missingNode) {
-            m_missingNodes.addAll(missingNode);
-        }
-
-        /**
          * Adds information about a missing node.
          *
          * @param missingNode information about a missing node; must not be <code>null</code>
@@ -578,6 +573,22 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          */
         public List<NodeAndBundleInformation> getMissingNodes() {
             return Collections.unmodifiableList(m_missingNodes);
+        }
+
+        /** Called when a table format is unknown to this installation (e.g. parquet).
+         * @param formatInfo Non-null info object on the table format
+         * @since 3.6
+         */
+        public void addMissingTableFormat(final TableStoreFormatInformation formatInfo) {
+            m_missingTableFormats.add(formatInfo);
+        }
+
+        /**
+         * @return a list (possibly with duplicates) of missing table formats.
+         * @since 3.6
+         */
+        public List<TableStoreFormatInformation> getMissingTableFormats() {
+            return m_missingTableFormats;
         }
     }
 
@@ -730,5 +741,4 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
 
     }
-
 }

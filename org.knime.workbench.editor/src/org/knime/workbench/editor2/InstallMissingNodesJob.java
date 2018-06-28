@@ -51,6 +51,7 @@ package org.knime.workbench.editor2;
 import static org.knime.core.node.util.ConvenienceMethods.distinctByKey;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -79,6 +80,8 @@ import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.data.container.storage.TableStoreFormatInformation;
+import org.knime.core.node.KNIMEComponentInformation;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeLogger;
 import org.osgi.framework.Bundle;
@@ -90,39 +93,45 @@ import org.osgi.framework.FrameworkUtil;
  *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
-class InstallMissingNodesJob extends Job {
+final class InstallMissingNodesJob extends Job {
+
     private final List<NodeAndBundleInformation> m_missingNodes;
+    private final List<TableStoreFormatInformation> m_missingTableFormats;
 
     /**
      * Creates a new job.
      *
      * @param missingNodes a list of information about missing nodes
+     * @param missingTableFormats list of missing table formats (fully qualified names), not null.
      */
-    protected InstallMissingNodesJob(final List<NodeAndBundleInformation> missingNodes) {
-        super("Find extensions for missing nodes");
+    InstallMissingNodesJob(final List<NodeAndBundleInformation> missingNodes,
+        final List<TableStoreFormatInformation> missingTableFormats) {
+        super("Find extensions for missing components");
         m_missingNodes = missingNodes;
+        m_missingTableFormats = missingTableFormats;
     }
 
     @Override
     protected IStatus run(final IProgressMonitor monitor) {
-        List<NodeAndBundleInformation> missingNodes =
-            m_missingNodes.stream().filter(distinctByKey(i -> i.getFactoryClass())).collect(Collectors.toList());
+        List<KNIMEComponentInformation> missingComponents = new ArrayList<>();
+        m_missingNodes.stream().filter(distinctByKey(i -> i.getFactoryClass())).forEach(missingComponents::add);
+        m_missingTableFormats.stream().distinct().collect(Collectors.toList()).forEach(missingComponents::add);
         Set<IInstallableUnit> featuresToInstall = new HashSet<>();
-        IStatus status = findExtensions(monitor, missingNodes, featuresToInstall);
+        IStatus status = findExtensions(monitor, missingComponents, featuresToInstall);
         if (!status.isOK()) {
             return status;
         } else if (featuresToInstall.isEmpty()) {
             Display.getDefault().asyncExec(() -> {
                 MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "No suitable extension found",
-                    "Could not find any extension(s) that provides the missing node(s).");
+                    "Could not find any extension(s) that provides the missing component(s).");
             });
             return Status.OK_STATUS;
         } else {
-            if (!missingNodes.isEmpty()) {
+            if (!missingComponents.isEmpty()) {
                 Display.getDefault().syncExec(() -> {
-                    MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Not all extension found",
-                        "No extensions for the following nodes were found: "
-                            + missingNodes.stream().map(i -> i.getNodeNameNotNull()).collect(Collectors.joining(", ")));
+                    MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Not all extensions found",
+                        "No extensions for the following components were found: " + missingComponents.stream()
+                            .map(i -> i.getComponentName()).collect(Collectors.joining(", ")));
                 });
             }
             startInstallJob(featuresToInstall);
@@ -130,7 +139,7 @@ class InstallMissingNodesJob extends Job {
         }
     }
 
-    private void startInstallJob(final Set<IInstallableUnit> featuresToInstall) {
+    private static void startInstallJob(final Set<IInstallableUnit> featuresToInstall) {
         final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
         Job.getJobManager().cancel(LoadMetadataRepositoryJob.LOAD_FAMILY);
         final LoadMetadataRepositoryJob loadJob = new LoadMetadataRepositoryJob(provUI);
@@ -157,8 +166,8 @@ class InstallMissingNodesJob extends Job {
         loadJob.schedule();
     }
 
-    private IStatus findExtensions(final IProgressMonitor monitor, final List<NodeAndBundleInformation> missingNodes,
-        final Set<IInstallableUnit> featuresToInstall) {
+    private IStatus findExtensions(final IProgressMonitor monitor,
+        final List<KNIMEComponentInformation> missingComponents, final Set<IInstallableUnit> featuresToInstall) {
         ProvisioningSession session = ProvisioningUI.getDefaultUI().getSession();
         Bundle myself = FrameworkUtil.getBundle(getClass());
         try {
@@ -166,12 +175,12 @@ class InstallMissingNodesJob extends Job {
                 .getService(IMetadataRepositoryManager.SERVICE_NAME);
 
             for (URI uri : metadataManager.getKnownRepositories(IRepositoryManager.REPOSITORIES_ALL)) {
-                if (!missingNodes.isEmpty()) {
-                    IMetadataRepository repo = metadataManager.loadRepository(uri, monitor);
+                IMetadataRepository repo = metadataManager.loadRepository(uri, monitor);
 
-                    for (Iterator<NodeAndBundleInformation> it = missingNodes.iterator(); it.hasNext();) {
-                        NodeAndBundleInformation info = it.next();
-                        if (searchInRepository(repo, info, metadataManager, monitor, featuresToInstall)) {
+                if (!missingComponents.isEmpty()) {
+                    for (Iterator<KNIMEComponentInformation> it = missingComponents.iterator(); it.hasNext();) {
+                        KNIMEComponentInformation info = it.next();
+                        if (searchInRepository(repo, info, monitor, featuresToInstall)) {
                             it.remove();
                         }
                     }
@@ -185,21 +194,21 @@ class InstallMissingNodesJob extends Job {
         }
     }
 
-    private boolean searchInRepository(final IMetadataRepository repository, final NodeAndBundleInformation nodeInfo,
-        final IMetadataRepositoryManager repoManager, final IProgressMonitor monitor,
+    private static boolean searchInRepository(final IMetadataRepository repository,
+        final KNIMEComponentInformation componentInfo, final IProgressMonitor monitor,
         final Set<IInstallableUnit> featuresToInstall) throws ProvisionException, OperationCanceledException {
-        if (nodeInfo.getFeatureSymbolicName().isPresent()) {
+        if (componentInfo.getFeatureSymbolicName().isPresent()) {
             IQuery<IInstallableUnit> query =
-                QueryUtil.createLatestQuery(QueryUtil.createIUQuery(nodeInfo.getFeatureSymbolicName().get()));
+                QueryUtil.createLatestQuery(QueryUtil.createIUQuery(componentInfo.getFeatureSymbolicName().get()));
             IQueryResult<IInstallableUnit> result = repository.query(query, monitor);
 
             // the result is empty after the iterator has been used (Eclipse bug?)
             boolean empty = result.isEmpty();
             result.forEach(i -> featuresToInstall.add(i));
             return !empty;
-        } else if (nodeInfo.getBundleSymbolicName().isPresent()) {
+        } else if (componentInfo.getBundleSymbolicName().isPresent()) {
             IQuery<IInstallableUnit> bundleQuery =
-                QueryUtil.createLatestQuery(QueryUtil.createIUQuery(nodeInfo.getBundleSymbolicName().get()));
+                QueryUtil.createLatestQuery(QueryUtil.createIUQuery(componentInfo.getBundleSymbolicName().get()));
             IQueryResult<IInstallableUnit> bundleResult = repository.query(bundleQuery, monitor);
 
             if (bundleResult.isEmpty()) {

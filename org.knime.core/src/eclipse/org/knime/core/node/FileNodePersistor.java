@@ -65,6 +65,7 @@ import java.util.stream.IntStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.storage.TableStoreFormatUnknownException;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
@@ -300,11 +301,10 @@ public class FileNodePersistor implements NodePersistor {
                 if (m_isExecuted) {
                     PortObject object;
                     if (isDataPort) {
-                        object =
-                            loadBufferedDataTable(node, settings, execPort, loadTblRep, oldIndex, tblRep,
-                                fileStoreHandlerRepository);
+                        object = loadBufferedDataTable(node, settings, execPort, loadTblRep, oldIndex, tblRep,
+                            fileStoreHandlerRepository);
                     } else {
-                        throw new IOException("Can't restore model ports of " + "old 1.x workflows. Execute node again.");
+                        throw new IOException("Can't restore model ports of old 1.x workflows. Execute node again.");
                     }
                     String summary = object != null ? object.getSummary() : null;
                     setPortObject(i, object);
@@ -1013,6 +1013,10 @@ public class FileNodePersistor implements NodePersistor {
                 getLogger().warn(err, e);
             } else {
                 getLogger().debug(err);
+            }
+            if (e instanceof TableStoreFormatUnknownException) {
+                ((TableStoreFormatUnknownException)e).getTableStoreMissingInfo()
+                    .ifPresent(loadResult::addMissingTableFormat);
             }
             setNeedsResetAfterLoad();
         }

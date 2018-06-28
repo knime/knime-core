@@ -1170,9 +1170,7 @@ public class Buffer implements KNIMEStreamConstants {
                 }
             }
             String outputFormat = subSettings.getString(CFG_TABLE_FORMAT, DefaultTableStoreFormat.class.getName());
-            m_outputFormat = TableStoreFormatRegistry.getInstance().getTableStoreFormat(outputFormat)
-                    .orElseThrow(() -> new InvalidSettingsException(String.format(
-                        "Invalid table format '%s' - unable to restore table.", outputFormat)));
+            m_outputFormat = TableStoreFormatRegistry.getInstance().getTableStoreFormat(outputFormat);
             NodeSettingsRO outputFormatSettings =
                     m_version >= 10 ? subSettings.getNodeSettings(CFG_TABLE_FORMAT_CONFIG) : subSettings;
             m_formatSettings = outputFormatSettings;

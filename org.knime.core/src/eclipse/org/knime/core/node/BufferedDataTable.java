@@ -687,9 +687,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
             case TABLE_TYPE_CONTAINER_CUSTOM: // added in 3.6
                 String formatFQN =
                     CheckUtils.checkSettingNotNull(s.getString(CFG_TABLE_CONTAINER_FORMAT), "Container format is null");
-                TableStoreFormat format =
-                    TableStoreFormatRegistry.getInstance().getTableStoreFormat(formatFQN).orElseThrow(
-                        () -> new InvalidSettingsException(String.format("Unknown table format \"%s\"", formatFQN)));
+                TableStoreFormat format = TableStoreFormatRegistry.getInstance().getTableStoreFormat(formatFQN);
                 String versionString = CheckUtils.checkSettingNotNull(s.getString(CFG_TABLE_CONTAINER_FORMAT_VERSION),
                     "Version string is null");
                 CheckUtils.checkSetting(format.validateVersion(versionString),
