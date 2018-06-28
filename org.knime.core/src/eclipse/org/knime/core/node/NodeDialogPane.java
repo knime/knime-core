@@ -108,6 +108,7 @@ import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.ICredentials;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeContext;
@@ -284,8 +285,8 @@ public abstract class NodeDialogPane {
      * @param splitType indicates how table splitting is supported in this node
      */
     public void addJobMgrTab(final SplitType splitType) {
-        m_jobMgrTab =
-            new NodeExecutorJobManagerDialogTab(splitType, Optional.ofNullable(m_nodeContext.getNodeContainer()));
+        NodeContainer nc = Optional.ofNullable(m_nodeContext).map(ctx -> ctx.getNodeContainer()).orElse(null);
+        m_jobMgrTab = new NodeExecutorJobManagerDialogTab(splitType, Optional.ofNullable(nc));
         addTab(m_jobMgrTab.getTabName(), m_jobMgrTab);
     }
 
