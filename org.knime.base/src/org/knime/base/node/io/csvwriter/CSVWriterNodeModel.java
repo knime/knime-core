@@ -321,14 +321,13 @@ public class CSVWriterNodeModel extends NodeModel {
             } else {
                 return null;
             }
-        } catch (CanceledExecutionException cee) {
+        } catch (CanceledExecutionException | InterruptedException e) {
             try {
                 tableWriter.close();
             } catch (IOException ex) {
                 // may happen if the stream is already closed by the interrupted thread
             }
             if (localPath != null) {
-                LOGGER.info("Table FileWriter canceled.");
                 try {
                     Files.delete(localPath);
                     LOGGER.debug("File '" + m_settings.getFileName() + "' deleted after node has been canceled.");
@@ -337,7 +336,7 @@ public class CSVWriterNodeModel extends NodeModel {
                             + m_settings.getFileName() + "' after cancellation: " + ex.getMessage(), ex);
                 }
             }
-            throw cee;
+            throw e;
         }
 
     }

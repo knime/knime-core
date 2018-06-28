@@ -199,7 +199,6 @@ public class WriteTableNodeModel extends NodeModel {
             return new BufferedDataTable[0];
         } catch (CanceledExecutionException cee) {
             if (localPath != null) {
-                LOGGER.info("Table FileWriter canceled.");
                 try {
                     Files.delete(localPath);
                     LOGGER.debug("File '" + m_fileName + "' deleted after node has been canceled.");
