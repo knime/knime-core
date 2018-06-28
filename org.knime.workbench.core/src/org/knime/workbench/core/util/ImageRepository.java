@@ -253,6 +253,8 @@ public final class ImageRepository {
         ServerJobExecuted("icons/server_space/running_job_execed.png"),
         /** ServerSpace Explorer Icon: idle job. */
         ServerJobIdle("icons/server_space/running_job_idle.png"),
+        /** ServerSpace Explorer Icon: unknown job status. */
+        ServerJobUnknown("icons/server_space/running_job_unknown.png"),
         /** ServerSpace Explorer Icon: running job. */
         ServerJob("icons/server_space/running_job.png"),
         /** ServerSpace Explorer Icon: Dialog icon - group permissions. */
