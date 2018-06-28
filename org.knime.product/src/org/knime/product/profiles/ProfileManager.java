@@ -284,8 +284,10 @@ public class ProfileManager {
         try {
             // compute list of profiles that are requested but not present locally yet
             List<String> newRequestedProfiles = new ArrayList<>(m_provider.getRequestedProfiles());
-            Files.newDirectoryStream(profileDir, p -> Files.isDirectory(p))
-                .forEach(p -> newRequestedProfiles.remove(p.getFileName().toString()));
+            if (Files.isDirectory(profileDir)) {
+                Files.newDirectoryStream(profileDir, p -> Files.isDirectory(p))
+                    .forEach(p -> newRequestedProfiles.remove(p.getFileName().toString()));
+            }
 
             Files.createDirectories(stateDir);
 
