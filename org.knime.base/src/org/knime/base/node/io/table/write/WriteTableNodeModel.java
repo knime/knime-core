@@ -61,7 +61,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -121,9 +120,6 @@ public class WriteTableNodeModel extends NodeModel {
             openStream().close();
         }
     }
-
-    /** The node logger for this class. */
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(WriteTableNodeModel.class);
 
     /** Config identifier for the settings object. */
     static final String CFG_FILENAME = "filename";
@@ -201,10 +197,10 @@ public class WriteTableNodeModel extends NodeModel {
             if (localPath != null) {
                 try {
                     Files.delete(localPath);
-                    LOGGER.debug("File '" + m_fileName + "' deleted after node has been canceled.");
+                    getLogger().debug("File '" + m_fileName + "' deleted after node has been canceled.");
                 } catch (IOException ex) {
-                    LOGGER.warn("Unable to delete file '" + m_fileName + "' after cancellation: " + ex.getMessage(),
-                        ex);
+                    getLogger()
+                        .warn("Unable to delete file '" + m_fileName + "' after cancellation: " + ex.getMessage(), ex);
                 }
             }
             throw cee;
