@@ -239,7 +239,8 @@ public class MappingFramework {
             final CellValueConsumer<ExternalType, Object, CP> consumer =
                 (CellValueConsumer<ExternalType, Object, CP>)mapping[i].m_consumerFactory.create();
 
-            consumer.consumeCellValue(dest, converter.convertUnsafe(cell), params[i]);
+            final Object cellValue = cell.isMissing() ? null : converter.convertUnsafe(cell);
+            consumer.consumeCellValue(dest, cellValue, params[i]);
             ++i;
         }
     }

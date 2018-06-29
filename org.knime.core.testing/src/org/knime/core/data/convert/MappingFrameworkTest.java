@@ -68,6 +68,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
@@ -300,10 +301,10 @@ public class MappingFrameworkTest {
 
         /* Some example input */
         final DefaultRow row =
-            new DefaultRow(RowKey.createRowKey(0L), new StringCell("KNIME"), new IntCell(42), new LongCell(42L));
+            new DefaultRow(RowKey.createRowKey(0L), new StringCell("KNIME"), new IntCell(42), new LongCell(42L), new MissingCell("missing"));
 
         final H2ODestination testSink = new H2ODestination();
-        testSink.h2oFrame.add(new Object[3]);
+        testSink.h2oFrame.add(new Object[4]);
 
         final ConsumptionPath[] mapping = new ConsumptionPath[]{
             new ConsumptionPath(
@@ -317,9 +318,13 @@ public class MappingFrameworkTest {
             new ConsumptionPath(
                 DataCellToJavaConverterRegistry.getInstance().getConverterFactories(LongCell.TYPE, Long.class).stream()
                     .findFirst().get(),
+                MappingFramework.forDestinationType(H2ODestination.class).getFactory("java.lang.Long->LONG").get()),
+            new ConsumptionPath(
+                DataCellToJavaConverterRegistry.getInstance().getConverterFactories(LongCell.TYPE, Long.class).stream()
+                    .findFirst().get(),
                 MappingFramework.forDestinationType(H2ODestination.class).getFactory("java.lang.Long->LONG").get())};
 
-        H2OParameters[] parameters = new H2OParameters[3];
+        H2OParameters[] parameters = new H2OParameters[4];
         for (int i = 0; i < parameters.length; ++i) {
             parameters[i] = new H2OParameters();
             parameters[i].columnIndex = i;
@@ -329,8 +334,8 @@ public class MappingFrameworkTest {
         MappingFramework.map(row, testSink, mapping, parameters);
 
         assertEquals(1, testSink.h2oFrame.size());
-        assertEquals(3, testSink.h2oFrame.get(0).length);
-        assertArrayEquals(new Object[]{"KNIME", new Integer(42), new Long(42L)}, testSink.h2oFrame.get(0));
+        assertEquals(4, testSink.h2oFrame.get(0).length);
+        assertArrayEquals(new Object[]{"KNIME", new Integer(42), new Long(42L), null}, testSink.h2oFrame.get(0));
     }
 
     /**
@@ -386,9 +391,12 @@ public class MappingFrameworkTest {
                     .stream().findFirst().get()),
             new ProductionPath(MappingFramework.forSourceType(H2OSource.class).getFactory("LONG->java.lang.Long").get(),
                 JavaToDataCellConverterRegistry.getInstance().getConverterFactories(Long.class, LongCell.TYPE).stream()
+                    .findFirst().get()),
+            new ProductionPath(MappingFramework.forSourceType(H2OSource.class).getFactory("LONG->java.lang.Long").get(),
+                JavaToDataCellConverterRegistry.getInstance().getConverterFactories(Long.class, LongCell.TYPE).stream()
                     .findFirst().get())};
 
-        H2OParameters[] parameters = new H2OParameters[3];
+        H2OParameters[] parameters = new H2OParameters[4];
         for (int i = 0; i < parameters.length; ++i) {
             parameters[i] = new H2OParameters();
             parameters[i].columnIndex = i;
@@ -397,7 +405,7 @@ public class MappingFrameworkTest {
 
         {
             final H2OSource testSource = new H2OSource();
-            testSource.h2oFrame.add(new Object[]{"KNIME", new Integer(42), new Long(42L)});
+            testSource.h2oFrame.add(new Object[]{"KNIME", new Integer(42), new Long(42L), null});
 
             final DataRow row = MappingFramework.map(RowKey.createRowKey(0L), testSource, mapping, parameters, null);
 
@@ -409,11 +417,14 @@ public class MappingFrameworkTest {
 
             assertEquals(LongCell.TYPE, row.getCell(2).getType());
             assertEquals(42L, ((LongValue)row.getCell(2)).getLongValue());
+
+            assertTrue(row.getCell(3).isMissing());
         }
 
-        DataTableSpec spec = MappingFramework.createSpec(new String[]{"s", "i", "l"}, mapping);
+        DataTableSpec spec = MappingFramework.createSpec(new String[]{"s", "i", "l", "missing"}, mapping);
         assertEquals(StringCell.TYPE, spec.getColumnSpec(0).getType());
         assertEquals(IntCell.TYPE, spec.getColumnSpec(1).getType());
+        assertEquals(LongCell.TYPE, spec.getColumnSpec(2).getType());
         assertEquals(LongCell.TYPE, spec.getColumnSpec(2).getType());
     }
 
