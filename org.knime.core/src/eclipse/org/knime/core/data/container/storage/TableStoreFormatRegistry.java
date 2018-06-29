@@ -157,7 +157,9 @@ public final class TableStoreFormatRegistry {
         // experimental ORC/hadoop format as default when running nightlies
         String defaultFormatClassName;
         if (KNIMEConstants.isNightlyBuild()) {
-            defaultFormatClassName = "org.knime.parquet.ParquetTableStoreFormat";
+            defaultFormatClassName = DefaultTableStoreFormat.class.getName();
+            // TODO make this the nightly build default once we're there
+            // defaultFormatClassName = "org.knime.parquet.ParquetTableStoreFormat";
         } else {
             defaultFormatClassName = DefaultTableStoreFormat.class.getName();
         }
