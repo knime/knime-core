@@ -125,6 +125,8 @@ public class ColumnSelectionSearchableListPanel extends JPanel {
 
     private JTextField m_searchField;
 
+    private JPanel m_filterPanel;
+
     /**
      * @param searchedItemsSelectionMode the {@link SearchedItemsSelectionMode} to use
      * @param configuredColumnDeterminer callback for determining if a certain column is configured
@@ -212,8 +214,8 @@ public class ColumnSelectionSearchableListPanel extends JPanel {
         searchPanel.setBorder(BorderFactory.createTitledBorder(" Column Search "));
         searchPanel.add(m_searchField, BorderLayout.CENTER);
 
-        JPanel jPanel = new JPanel(new GridLayout(0, 1));
-        jPanel.setBorder(BorderFactory.createTitledBorder("Filter Options"));
+        m_filterPanel = new JPanel(new GridLayout(0, 1));
+        m_filterPanel.setBorder(BorderFactory.createTitledBorder("Filter Options"));
         m_filters = new JComboBox(FilterOption.values());
         // simulate a change in the search field to trigger a new search.
         m_filters.addActionListener(new ActionListener() {
@@ -223,9 +225,9 @@ public class ColumnSelectionSearchableListPanel extends JPanel {
                 processSearch();
             }
         });
-        jPanel.add(m_filters);
+        m_filterPanel.add(m_filters);
 
-        searchPanel.add(jPanel, BorderLayout.SOUTH);
+        searchPanel.add(m_filterPanel, BorderLayout.SOUTH);
         setLayout(new BorderLayout());
 
         add(searchPanel, BorderLayout.NORTH);
@@ -425,22 +427,22 @@ public class ColumnSelectionSearchableListPanel extends JPanel {
      * @author Marcel Hanser
      */
     public enum SearchedItemsSelectionMode {
-        /**
-         * Selects the first entry which matches the search string.
-         */
-        SELECT_FIRST,
-        /**
-         * Selects all entries which matches the search string.
-         */
-        SELECT_ALL,
-        /**
-         * Selects no entries.
-         */
-        SELECT_NONE;
+            /**
+             * Selects the first entry which matches the search string.
+             */
+            SELECT_FIRST,
+            /**
+             * Selects all entries which matches the search string.
+             */
+            SELECT_ALL,
+            /**
+             * Selects no entries.
+             */
+            SELECT_NONE;
     }
 
     private enum FilterOption {
-        NONE, MODIFIED, UNMODIFIED, UNKNOWN;
+            NONE, MODIFIED, UNMODIFIED, UNKNOWN;
 
         @Override
         public String toString() {
@@ -668,20 +670,30 @@ public class ColumnSelectionSearchableListPanel extends JPanel {
          * @author Marcel Hanser
          */
         public enum Type {
-            /**
-             * The user wants to create a configuration.
-             */
-            CREATION,
-            /**
-             * The user wants to delete a configuration.
-             */
-            DELETION,
-            /**
-             * The user changed the selection.
-             */
-            SELECTION;
+                /**
+                 * The user wants to create a configuration.
+                 */
+                CREATION,
+                /**
+                 * The user wants to delete a configuration.
+                 */
+                DELETION,
+                /**
+                 * The user changed the selection.
+                 */
+                SELECTION;
         }
 
+    }
+
+    /**
+     * This methods enables/disables the filter option panel.
+     *
+     * @param show If false, the filter option panel will not be shown anymore.
+     * @since 3.6
+     */
+    public void showSelectionPanel(final boolean show) {
+        m_filterPanel.setVisible(show);
     }
 
     /**
@@ -817,8 +829,10 @@ public class ColumnSelectionSearchableListPanel extends JPanel {
         }
     }
 
-    /** @return the columnList
-     * @since 2.11 */
+    /**
+     * @return the columnList
+     * @since 2.11
+     */
     protected ColumnSelectionList getColumnList() {
         return m_columnList;
     }
