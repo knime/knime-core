@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./variable2table.png" type="Other">
+<knimeNode icon="./variable2table.png" type="Other" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
 	<name>Variable to Table Row</name>
 	
 	<shortDescription>
@@ -14,6 +13,9 @@
 		<option name="Variable Filter">Include list contains all variables that are converted into a column of the resulting row, excluded variables are not used. All variables remain on the variable stack. Enforce exclusion and 
 		inclusion options can be used to force all new variables to be included or excluded, resp.</option>
 		<option name="Generated RowID">The name of the RowID used for the resulting row.</option>
+		<link href="https://www.knime.com/knime-introductory-course/chapter7/section1/creation-and-usage-of-flow-variables">
+			KNIME E-Learning Course: Creation and usage of Flow Variables in a KNIME workflow
+		</link>
 	</fullDescription>
 	
 	<ports>

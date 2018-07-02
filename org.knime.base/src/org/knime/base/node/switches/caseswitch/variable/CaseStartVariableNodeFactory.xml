@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./switch_case_variable.png" type="Manipulator">
+<knimeNode icon="./switch_case_variable.png" type="Manipulator" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
     <name>CASE Switch Variable (Start)</name>
     <shortDescription> Flow variable CASE Switch to alter active branch of flow variable ports. 
     </shortDescription>
@@ -32,6 +31,9 @@
             inactive. It's recommended to switch this flag off for production workflows as this avoids unnecessary
             configuration calls of the inactive branches.
         </option>
+        <link href="https://www.knime.com/knime-introductory-course/chapter7/section1/creation-and-usage-of-flow-variables">
+            KNIME E-Learning Course: Creation and usage of Flow Variables in a KNIME workflow
+        </link>
     </fullDescription>
     <ports>
         <inPort index="0" name="Flow Variable input port">Flow Variable input port</inPort>

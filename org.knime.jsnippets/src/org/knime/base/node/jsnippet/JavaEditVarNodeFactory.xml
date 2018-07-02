@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./java_editvar.png" type="Manipulator">
+<knimeNode icon="./java_editvar.png" type="Manipulator" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
     <name>Java Edit Variable</name>
     <shortDescription>Edit or add flow variables using java code.</shortDescription>
     <fullDescription>
@@ -70,6 +69,9 @@
           meaningless default value. However, sometimes this is necessary when for instance the snippet involves
           heavy computation, network access or other type of I/O. If unsure, leave unselected. 
         </option>
+        <link href="https://www.knime.com/knime-introductory-course/chapter7/section1/creation-and-usage-of-flow-variables">
+            KNIME E-Learning Course: Creation and usage of Flow Variables in a KNIME workflow
+        </link>
     </fullDescription>
     <ports>
         <inPort name="Input variables (optional)" index="0">

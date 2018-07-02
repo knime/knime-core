@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<knimeNode type="Manipulator" icon="./rule_engine_variable.png"
-	xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+<knimeNode type="Manipulator" icon="./rule_engine_variable.png" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
 	<name>Rule Engine Variable (Dictionary)</name>
 	<shortDescription>
 		 Applies user-defined (in a table) business rules to the flow variables
@@ -99,6 +97,9 @@ $${SFlowVar10}$$ MATCHES $${SFlowVar0}$$ OR $${DFlowVar2}$$ &lt; $${IFlowVar1}$$
 		</option>
         <option name="Errors">The errors found in the input table parsing the rules column</option>
         <option name="Warnings">The warnings found in the input table parsing the rules column</option>
+		<link href="https://www.knime.com/knime-introductory-course/chapter7/section1/creation-and-usage-of-flow-variables">
+			KNIME E-Learning Course: Creation and usage of Flow Variables in a KNIME workflow
+		</link>
 	</fullDescription>
 
 	<ports>

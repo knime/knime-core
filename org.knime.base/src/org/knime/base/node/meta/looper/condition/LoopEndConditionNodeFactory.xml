@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="variable_condition_loop_end.png" type="LoopEnd">
+<knimeNode icon="variable_condition_loop_end.png" type="LoopEnd" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
     <name>Variable Condition Loop End</name>
 
     <shortDescription>Loop end node that checks for a condition in one of the flow variables</shortDescription>
@@ -28,6 +27,9 @@
         <option name="Add iteration column">
             Allows you to add a column containing the iteration number to the output table.
         </option>
+        <link href="https://www.knime.com/knime-introductory-course/chapter7/section1/creation-and-usage-of-flow-variables">
+            KNIME E-Learning Course: Creation and usage of Flow Variables in a KNIME workflow
+        </link>
     </fullDescription>
 
     <ports>
