@@ -111,9 +111,8 @@ public interface ConverterFactory<SourceType, DestType> {
      * strings for a date time related converter.
      *
      * @param factoryConfig Config to save to
-     * @throws InvalidSettingsException If invalid settings were encountered
      */
-    default void storeAdditionalConfig(final ConfigBaseWO factoryConfig) throws InvalidSettingsException {
+    default void storeAdditionalConfig(final ConfigBaseWO factoryConfig) {
     }
 
     /**

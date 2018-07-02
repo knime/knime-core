@@ -186,11 +186,10 @@ public final class SerializeUtil {
      * @param factory factory to store
      * @param config config to store to
      * @param key setting key
-     * @throws InvalidSettingsException
      * @since 3.6
      */
     public static void storeConverterFactory(final ConverterFactory<?, ?> factory, final ConfigBaseWO config,
-        final String key) throws InvalidSettingsException {
+        final String key) {
         config.addString(key, factory.getIdentifier());
 
         // store information to be able to display something in UI if factories go missing.
@@ -271,11 +270,9 @@ public final class SerializeUtil {
      * @param path Path to store
      * @param config Config to store to
      * @param key Key to store at in the config
-     * @throws InvalidSettingsException
      * @since 3.6
      */
-    public static void storeConsumptionPath(final ConsumptionPath path, final ConfigBaseWO config, final String key)
-        throws InvalidSettingsException {
+    public static void storeConsumptionPath(final ConsumptionPath path, final ConfigBaseWO config, final String key) {
         storeConverterFactory(path.m_converterFactory, config, key + "_converter");
         storeConverterFactory(path.m_consumerFactory, config, key + "_consumer");
     }
@@ -291,9 +288,9 @@ public final class SerializeUtil {
      * @throws InvalidSettingsException
      * @since 3.6
      */
-    public static <ExternalType, DestType extends Destination<ExternalType>> Optional<ConsumptionPath> loadConsumptionPath(
-        final ConfigBaseRO config, final ConsumerRegistry<ExternalType, DestType> registry, final String key)
-        throws InvalidSettingsException {
+    public static <ExternalType, DestType extends Destination<ExternalType>> Optional<ConsumptionPath>
+        loadConsumptionPath(final ConfigBaseRO config, final ConsumerRegistry<ExternalType, DestType> registry,
+            final String key) throws InvalidSettingsException {
         final Optional<DataCellToJavaConverterFactory<?, ?>> converter =
             loadDataCellToJavaConverterFactory(config, key + "_converter");
 
@@ -318,11 +315,9 @@ public final class SerializeUtil {
      * @param path Path to store
      * @param config Config to store to
      * @param key Key to store at in the config
-     * @throws InvalidSettingsException
      * @since 3.6
      */
-    public static void storeProductionPath(final ProductionPath path, final ConfigBaseWO config, final String key)
-        throws InvalidSettingsException {
+    public static void storeProductionPath(final ProductionPath path, final ConfigBaseWO config, final String key) {
         storeConverterFactory(path.m_converterFactory, config, key + "_converter");
         storeConverterFactory(path.m_producerFactory, config, key + "_producer");
     }
