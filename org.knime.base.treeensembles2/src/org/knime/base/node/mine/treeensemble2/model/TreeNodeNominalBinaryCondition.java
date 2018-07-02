@@ -66,6 +66,7 @@ import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TreeColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.Version;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -131,11 +132,22 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
         super(input, metaData);
         TreeColumnMetaData columnMetaData = super.getColumnMetaData();
         checkTypeCorrectness(columnMetaData, TreeNominalColumnMetaData.class);
-        byte v = input.readByte();
-        // most significant bit is set logic bit
-        m_setLogic = ((v & 0x80) != 0) ? SetLogic.IS_IN : SetLogic.IS_NOT_IN;
-        // 7 LSB is byte array length
-        int length = v & 0x7F;
+        int length;
+        if (input.getVersion().sameOrNewer(Version.V360)) {
+            // Fix for AP-9449
+            int v = input.readInt();
+            // most significant bit is set logic bit
+            // (an array length can't be negative so we would otherwise waste this bit)
+            m_setLogic = ((v & 0x80000000) != 0) ? SetLogic.IS_IN : SetLogic.IS_NOT_IN;
+            // 31 LSB encode byte array length
+            length = v & 0x7FFFFFFF;
+        } else {
+            byte v = input.readByte();
+            // most significant bit is set logic bit
+            m_setLogic = ((v & 0x80) != 0) ? SetLogic.IS_IN : SetLogic.IS_NOT_IN;
+            // 7 LSB is byte array length
+            length = v & 0x7F;
+        }
         byte[] maskAsBytes = new byte[length];
         input.readFully(maskAsBytes);
         m_valuesMask = treeBuildingInterner.internBigInt(new BigInteger(maskAsBytes));
@@ -226,9 +238,10 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
     protected void saveContent(final DataOutputStream s) throws IOException {
         byte[] byteArray = m_valuesMask.toByteArray();
         // saved as MSB
-        int logicInt = SetLogic.IS_IN.equals(m_setLogic) ? 0x80 : 0x0;
+        int logicInt = SetLogic.IS_IN.equals(m_setLogic) ? 0x80000000 : 0x0;
+        // array length is larger than 0 hence its MSB is 0
         int v = logicInt | byteArray.length;
-        s.writeByte(v);
+        s.writeInt(v);
         s.write(byteArray);
     }
 
