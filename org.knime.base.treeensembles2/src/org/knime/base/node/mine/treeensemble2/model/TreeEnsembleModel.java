@@ -53,6 +53,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
@@ -71,7 +72,64 @@ import org.knime.core.node.NodeLogger;
  */
 public class TreeEnsembleModel extends AbstractTreeEnsembleModel {
 
+    /**
+     * Tracks the version of the tree ensemble.
+     * The version is only updated when some changes are made to the tree ensembles.
+     *
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+     */
+    public enum Version {
 
+        /**
+         * Version 2.6.0.
+         * First public release.
+         */
+        V260(20121019),
+
+        /**
+         * Version 2.10.0.
+         * Optionally omit target distribution to save memory.
+         */
+        V2100(20140201),
+
+        /**
+         * Version 3.2.0.
+         * Release of gradient boosted trees.
+         */
+        V320(20160114),
+
+        /**
+         * Version 3.6.0.
+         * Fix a serialization bug that only appears if a categorical column has many (>128) possible values.
+         */
+        V360(20180702);
+
+        private int m_versionNumber;
+
+        Version(final int versionNumber) {
+            m_versionNumber = versionNumber;
+        }
+
+        public int getVersionNumber() {
+            return m_versionNumber;
+        }
+
+        /**
+         * Checks if this version is as new or newer as the <b>other</b> version.
+         *
+         * @param other the version to compare to
+         * @return true if this version is as recent as other or newer
+         */
+        public boolean sameOrNewer(final Version other) {
+            return m_versionNumber >= other.m_versionNumber;
+        }
+
+        public static Version getVersion(final int versionNumber) throws IOException {
+            return Arrays.stream(values()).filter(v -> versionNumber == v.m_versionNumber).findFirst()
+                    .orElseThrow(() -> new IOException("Tree Ensemble version " + versionNumber + " not supported"));
+        }
+
+    }
 
     private final AbstractTreeModel[] m_models;
 
@@ -116,19 +174,28 @@ public class TreeEnsembleModel extends AbstractTreeEnsembleModel {
     }
 
     /**
-     * @return the models
+     * Retrieves the tree at <b>index</b> and casts it to a classification tree.
+     *
+     * @param index of the classification tree to retrieve
+     * @return the model at <b>index</b>
      */
     public TreeModelClassification getTreeModelClassification(final int index) {
         return (TreeModelClassification)m_models[index];
     }
 
     /**
+     * Retrieves the tree at <b>index</b> and casts it to a regression tree.
+     *
+     * @param index of the regression tree to retrieve
      * @return the models
      */
     public TreeModelRegression getTreeModelRegression(final int index) {
         return (TreeModelRegression)m_models[index];
     }
 
+    /**
+     * @return the number of models
+     */
     public int getNrModels() {
         return m_models.length;
     }
@@ -169,9 +236,8 @@ public class TreeEnsembleModel extends AbstractTreeEnsembleModel {
     /**
      * Saves ensemble to target in binary format, output is NOT closed afterwards.
      *
-     * @param out ...
-     * @throws IOException ...
-     * @throws CanceledExecutionException ...
+     * @param out the stream to write to
+     * @throws IOException if IO problems occur
      */
     public void save(final OutputStream out) throws IOException {
         // wrapping the (zip) output stream with a buffered stream reduces
@@ -181,7 +247,7 @@ public class TreeEnsembleModel extends AbstractTreeEnsembleModel {
         // 20121019 - first public release
         // 20140201 - omit target distribution in each tree node
         // 20160114 - first version of gradient boosting
-        dataOutput.writeInt(20160114); // version number
+        dataOutput.writeInt(Version.V360.getVersionNumber()); // version number
         if (this instanceof GradientBoostedTreesModel) {
             dataOutput.writeByte('t');
         } else if (this instanceof MultiClassGradientBoostedTreesModel) {
@@ -237,20 +303,21 @@ public class TreeEnsembleModel extends AbstractTreeEnsembleModel {
         TreeModelDataInputStream input =
             new TreeModelDataInputStream(new BufferedInputStream(new NonClosableInputStream(in)));
         int version = input.readInt();
-        if (version > 20160114) {
+        if (version > Version.V360.getVersionNumber()) {
             throw new IOException("Tree Ensemble version " + version + " not supported");
         }
         byte ensembleType;
-        if (version == 20160114) {
+        if (version >= Version.V320.getVersionNumber()) {
             ensembleType = input.readByte();
         } else {
             ensembleType = 'r';
         }
+        input.setVersion(Version.getVersion(version));
         TreeType type = TreeType.load(input);
         TreeMetaData metaData = TreeMetaData.load(input);
         int nrModels = input.readInt();
         boolean containsClassDistribution;
-        if (version == 20121019) {
+        if (version == Version.V260.getVersionNumber()) {
             containsClassDistribution = true;
         } else {
             containsClassDistribution = input.readBoolean();

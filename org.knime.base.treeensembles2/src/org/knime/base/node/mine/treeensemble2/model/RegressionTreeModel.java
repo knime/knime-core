@@ -56,6 +56,7 @@ import java.io.OutputStream;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
+import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.Version;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -144,7 +145,7 @@ public final class RegressionTreeModel extends AbstractTreeEnsembleModel {
         // previous version numbers:
         // 20121019 - first public release
         // 20140201 - omit target distribution in each tree node
-        dataOutput.writeInt(20140201); // version number
+        dataOutput.writeInt(Version.V360.getVersionNumber()); // version number
         getType().save(dataOutput);
         getMetaData().save(dataOutput);
         try {
@@ -173,9 +174,10 @@ public final class RegressionTreeModel extends AbstractTreeEnsembleModel {
         TreeModelDataInputStream input =
             new TreeModelDataInputStream(new BufferedInputStream(new NonClosableInputStream(in)));
         int version = input.readInt();
-        if (version > 20140201) {
+        if (version > Version.V360.getVersionNumber()) {
             throw new IOException("Tree Ensemble version " + version + " not supported");
         }
+        input.setVersion(Version.getVersion(version));
         TreeType type = TreeType.load(input);
         TreeMetaData metaData = TreeMetaData.load(input);
         boolean isRegression = metaData.isRegression();

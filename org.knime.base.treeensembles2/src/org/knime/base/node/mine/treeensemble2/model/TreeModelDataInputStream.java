@@ -49,18 +49,22 @@ package org.knime.base.node.mine.treeensemble2.model;
 import java.io.DataInputStream;
 import java.io.InputStream;
 
+import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.Version;
+
 /**
  * An input stream that carries additional information used during loading.
- * 
+ *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 final class TreeModelDataInputStream extends DataInputStream {
 
     private boolean m_containsClassDistribution;
 
+    private Version m_version;
+
     /**
      * ...
-     * 
+     *
      * @param in passed on to super.
      */
     TreeModelDataInputStream(final InputStream in) {
@@ -79,6 +83,14 @@ final class TreeModelDataInputStream extends DataInputStream {
      */
     void setContainsClassDistribution(final boolean value) {
         m_containsClassDistribution = value;
+    }
+
+    Version getVersion() {
+        return m_version;
+    }
+
+    void setVersion(final Version version) {
+        m_version = version;
     }
 
 }
