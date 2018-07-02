@@ -41,9 +41,9 @@
                 </xsl:if>
 
                 <xsl:if test="t:fullDescription/t:link">
-                    <h2>Additional Resources</h2>
+                    <h2>More Information</h2>
                     <dl>
-                        Additional information on using this node is available online:
+                        Find more information here:
                     </dl>
 
                     <dd>
