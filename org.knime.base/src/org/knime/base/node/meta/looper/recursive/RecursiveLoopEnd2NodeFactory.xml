@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./delegateloopend2.png" type="LoopEnd">
+<knimeNode icon="./delegateloopend2.png" type="LoopEnd" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
     <name>Recursive Loop End (2 ports)</name>
     
     <shortDescription>
@@ -37,6 +36,9 @@
         <option name="End Loop with Variable">Whether the node execution is controlled by a variable, when enabled allows choosing the Flow Variable that ends the loop if it's value equals "true".</option>   
         <option name="Collect data from last iteration only">If this option is checked only the last input to the collecting data port is passed through to the outport. Hence, the data of earlier iterations is discarded.</option>  
         <option name="Add iteration column">Allows you to add a column containing the iteration number to the output table.</option>
+        <link href="https://www.knime.com/knime-introductory-course/chapter7/section2">
+            KNIME E-Learning Course: Section 7.2. Re-executing Workflow Parts: Loops
+        </link>
     </fullDescription>
     
     <ports>
