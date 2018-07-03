@@ -133,6 +133,23 @@
 				show up at the output.
 			</option>
 		</tab>
+		<tab name="Additional Libraries">
+			<description>
+				This tab allows adding custom java library archives to make them
+				available on the classpath of the java snippet.
+			</description>
+			<option name="Library List">
+				List of libraries that will be present in the snippets classpath.
+				Use the buttons below to add or remove libraries.
+			</option>
+			<option name="Add File(s)...">
+				Add a .jar or .zip file from your system.
+			</option>
+			<option name="Add KNIME URL...">
+				Add a KNIME protocol url to a .jar or .zip file. E.g.
+				"knime://knime.workflow/example.jar".
+			</option>
+		</tab>
 	</fullDescription>
 	<ports>
 		<inPort name="An input table" index="0">
