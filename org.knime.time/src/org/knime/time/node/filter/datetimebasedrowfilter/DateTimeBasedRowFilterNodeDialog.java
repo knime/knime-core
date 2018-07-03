@@ -87,10 +87,10 @@ import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.time.util.DialogComponentDateTimeSelection;
+import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
 import org.knime.time.util.DurationPeriodFormatUtils;
 import org.knime.time.util.Granularity;
 import org.knime.time.util.SettingsModelDateTime;
-import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
 
 /**
  * The node dialog of the node which filters rows based on a time window on one of the new date&time columns.
@@ -166,7 +166,7 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
         m_dialogCompStartInclusive = new DialogComponentBoolean(startInclusiveModel, "Inclusive");
 
         final SettingsModelBoolean startAlwaysNowModel = DateTimeBasedRowFilterNodeModel.createStartAlwaysNowModel();
-        m_dialogCompStartAlwaysNow = new DialogComponentBoolean(startAlwaysNowModel, "Use execution date&ime");
+        m_dialogCompStartAlwaysNow = new DialogComponentBoolean(startAlwaysNowModel, "Use execution date&time");
 
         final SettingsModelString endSelectionModel = DateTimeBasedRowFilterNodeModel.createEndSelectionModel();
         m_dialogCompEndSelection = new DialogComponentButtonGroup(endSelectionModel, null, true,
