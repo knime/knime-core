@@ -2270,6 +2270,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     private void updateWorkflowMessages() {
         WorkflowFigure workflowFigure = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getFigure();
+        StringBuilder sb = new StringBuilder();
         if (isTempRemoteWorkflowEditor()) {
             URI origRemoteLocation = m_origRemoteLocation;
             WorkflowEditor parentEditor = m_parentEditor;
@@ -2277,12 +2278,19 @@ public class WorkflowEditor extends GraphicalEditor implements
                 origRemoteLocation = parentEditor.m_origRemoteLocation;
                 parentEditor = parentEditor.m_parentEditor;
             }
-            workflowFigure.setWarningMessage("  This is a temporary copy of \""
-                + URIUtil.toDecodedString(origRemoteLocation)
-                + "\".\n  Use \"Save As...\" to save a permanent copy of the workflow to your local workspace, or a mounted KNIME Server.");
+            String uriString = URIUtil.toDecodedString(origRemoteLocation);
+            sb.append("  This is a temporary copy of \"" + uriString + "\".");
+            if (!(uriString.startsWith("knime://EXAMPLE") || uriString.startsWith("file://"))) {
+                //"Save"-action only allowed for server-workflows, but not temporary workflows from the example-server nor an external file
+                sb.append(
+                    "\n  Use \"Save\" to upload it back to its original location on the server or \"Save As...\" to store it in a different location.");
+            } else {
+                sb.append(
+                    "\n  Use \"Save As...\" to save a permanent copy of the workflow to your local workspace, or a mounted KNIME Server.");
+            }
+            workflowFigure.setWarningMessage(sb.toString());
         } else if (!getWorkflowManager().isPresent()) {
             // if the underlying workflow manager is a WorkflowManagerUI instance
-            StringBuilder sb = new StringBuilder();
             if(m_fileResource != null && m_parentEditor == null) {
                 //root workflow
                 sb.append("This is a view on the remote job running on KNIME Server (" + m_fileResource.getAuthority() + ").");
