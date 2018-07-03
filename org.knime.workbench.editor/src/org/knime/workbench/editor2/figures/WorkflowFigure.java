@@ -74,11 +74,11 @@ public class WorkflowFigure extends FreeformLayeredPane {
 
     private Image m_jobManagerFigure;
 
-    /* Error (index 1) and warning/info (index 0) messages. */
-    private Label[] m_messages = new Label[2];
+    /* Info (index 0), warning (index 1) and error (index 2) messages. */
+    private Label[] m_messages = new Label[3];
 
     /* Rectangle underneath the message figure */
-    private RectangleFigure[] m_messageRects = new RectangleFigure[2];
+    private RectangleFigure[] m_messageRects = new RectangleFigure[3];
 
     /**
      * New workflow root figure.
@@ -119,7 +119,7 @@ public class WorkflowFigure extends FreeformLayeredPane {
                 Rectangle r = new Rectangle(0, y_offset, getBounds().width, m_messages[i].getBounds().height + 20);
                 //setConstraint(m_messageRects[i], r);
                 m_messageRects[i].getBounds().setBounds(r);//setting the bounds without repainting it
-                y_offset += b.y + b.height + 10;
+                y_offset = b.y + b.height + 10;
             }
         }
     }
@@ -140,7 +140,7 @@ public class WorkflowFigure extends FreeformLayeredPane {
      * @param msg the message to display or <code>null</code> to remove it
      */
     public void setWarningMessage(final String msg) {
-        setMessage(msg, 0, SharedImages.Warning, MSG_BG);
+        setMessage(msg, 1, SharedImages.Warning, MSG_BG);
     }
 
     /**
@@ -149,7 +149,7 @@ public class WorkflowFigure extends FreeformLayeredPane {
      * @param msg the message to display or <code>null</code> to remove it
      */
     public void setErrorMessage(final String msg) {
-        setMessage(msg, 1, SharedImages.Error, MSG_BG);
+        setMessage(msg, 2, SharedImages.Error, MSG_BG);
     }
 
     private void setMessage(final String msg, final int index, final SharedImages icon, final Color msgColor) {

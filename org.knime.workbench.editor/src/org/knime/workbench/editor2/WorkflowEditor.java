@@ -2319,6 +2319,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 workflowFigure.setErrorMessage(null);
             }
         } else {
+            workflowFigure.setInfoMessage(null);
             workflowFigure.setWarningMessage(null);
             workflowFigure.setErrorMessage(null);
         }
