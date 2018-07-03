@@ -2305,7 +2305,15 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         } else {
             return getWorkflowManager().isResetable();
         }
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isInWizardExecution() {
+        //can never be determined here, must always ask its parent
+        return getDirectNCParent().isInWizardExecution();
     }
 
     /** {@inheritDoc} */

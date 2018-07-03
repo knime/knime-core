@@ -9525,6 +9525,30 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isInWizardExecution() {
+        try (WorkflowLock lock = lock()) {
+            NodeContainerParent parent = getDirectNCParent();
+            if (isProject()) {
+                ExecutionController ec = getExecutionController();
+                if (ec instanceof WizardExecutionController) {
+                    //only if the workflow contains subnodes it is considered to be in
+                    //wizard execution
+                    return WebResourceController.hasWizardExecution(this);
+                } else {
+                    return false;
+                }
+            } else {
+                //if not a project workflow, parent should never be null
+                assert parent != null;
+                return parent.isInWizardExecution();
+            }
+        }
+    }
+
+    /**
      * Meta data such as who create the workflow and who edited it last and when.
      *
      * @since 2.8

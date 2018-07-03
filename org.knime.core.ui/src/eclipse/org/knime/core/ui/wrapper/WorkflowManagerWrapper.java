@@ -498,4 +498,9 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
         return !unwrap().getCredentialsStore().listNames().isEmpty();
     }
 
+    @Override
+    public boolean isInWizardExecution() {
+        return unwrap().isInWizardExecution();
+    }
+
 }

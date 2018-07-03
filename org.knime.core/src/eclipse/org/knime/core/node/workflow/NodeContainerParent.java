@@ -143,4 +143,16 @@ public interface NodeContainerParent {
     /** Called by children when they are set dirty. */
     public void setDirty();
 
+    /**
+     * Checks whether this object (i.e. a workflow or subnode) or another parent up the hierarchy is in wizard execution
+     * mode.
+     *
+     * @return <code>true</code> if the workflow or subnode (or one of its parents) is executed in wizard execution
+     *         (i.e. step by step), otherwise <code>false</code>
+     * @since 3.6
+     */
+    default public boolean isInWizardExecution() {
+        return false;
+    }
+
 }

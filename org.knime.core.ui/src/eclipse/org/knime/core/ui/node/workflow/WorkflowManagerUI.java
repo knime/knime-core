@@ -1414,6 +1414,14 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     WorkflowContext getContext();
 
     /**
+     * Returns whether the workflow is executed in wizard execution or in regular execution mode.
+     *
+     * @return <code>true</code> if the workflow is executed in wizard execution (i.e. step by step), otherwise
+     *         <code>false</code>
+     */
+    boolean isInWizardExecution();
+
+    /**
      * @since 2.10
      */
     void notifyTemplateConnectionChangedListener();
@@ -1466,5 +1474,4 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     default void removeWriteProtectionChangedListener(final Runnable listener) {
         //nothing to do by default
     }
-
 }
