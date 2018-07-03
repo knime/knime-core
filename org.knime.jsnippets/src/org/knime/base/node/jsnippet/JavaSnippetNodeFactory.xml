@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./java_snippet.png" type="Manipulator">
+<knimeNode icon="./java_snippet.png" type="Manipulator" xmlns="http://knime.org/node/v3.6"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
+
 	<name>Java Snippet</name>
 	<shortDescription>Calculates a new columns or flow variables based on
 		java code snippets.</shortDescription>
@@ -10,6 +12,7 @@
 				new columns or replace existing ones. Enter the java code in
 				the text area.
 			</p>
+			<h3>Output Columns</h3>
 			<p> Output columns are defined by creating and binding a java field
 				for each column. The value assigned to this field will be written
 				to the output.
@@ -31,87 +34,105 @@
 				and can be accessed via the "Templates" tab.
 			</p>
 		</intro>
-		<option name="Column List">
-			This list contains the columns that are available in the input table.
-			Double click any of the entries to insert a respective field
-			in the code editor and insert the field name at the current cursor
-			position (replacing the selection, if any).
-		</option>
-		<option name="Flow Variable List">
-			This list contains the flow variables that are currently available at
-			the node input.
-			Double click any of the entries to insert a respective field
-			in the code editor and insert the field name at the current cursor
-			position (replacing the selection, if any).
-		</option>
-		<option name="Snippet text area">
-			Enter your java code here. You can access input columns or flow
-			variables by defining them in the <b>"Input"</b> table of the dialog.
-			Alternatively use the methods <i>getCell(name, type)</i> or
-			<i>getFlowVariable(name, type)</i> where <i>name</i> is the name of
-			the input column or the flow variable.
+		<tab name="Java Snippet">
+			<description>
+				Contains the Java code editor to edit the snippet.
+			</description>
+			<option name="Column List">
+				This list contains the columns that are available in the input table.
+				Double click any of the entries to insert a respective field
+				in the code editor and insert the field name at the current cursor
+				position (replacing the selection, if any).
+			</option>
+			<option name="Flow Variable List">
+				This list contains the flow variables that are currently available at
+				the node input.
+				Double click any of the entries to insert a respective field
+				in the code editor and insert the field name at the current cursor
+				position (replacing the selection, if any).
+			</option>
+			<option name="Snippet text area">
+				<p>
+				Enter your java code here. You can access input columns or flow
+				variables by defining them in the <b>"Input"</b> table of the dialog.
+				Alternatively use the methods <i>getCell(name, type)</i> or
+				<i>getFlowVariable(name, type)</i> where <i>name</i> is the name of
+				the input column or the flow variable.
+				You can use the following values for the <i>type</i> parameter.
+				<ul>
+					<li><i>tString</i> : String (f)</li>
+					<li><i>tInt</i> : Integer (f)</li>
+					<li><i>tDouble</i> : Double (f)</li>
+					<li><i>tLong</i> : Long</li>
+					<li><i>tBoolean</i> : Boolean</li>
+					<li><i>tDate</i> : java.util.Date</li>
+					<li><i>tCalendar</i> : java.util.Calendar</li>
+					<li><i>tXML</i> : org.w3c.document</li>
+				</ul>
 
-			You can use the following values for the <i>type</i> parameter. <br />
-			<i>tString</i> : String (f) <br />
-			<i>tInt</i> : Integer (f) <br />
-			<i>tDouble</i> : Double (f) <br />
-			<i>tLong</i> : Long <br />
-			<i>tBoolean</i> : Boolean <br />
-			<i>tDate</i> : java.util.Date <br />
-			<i>tCalendar</i> : java.util.Calendar <br />
-			<i>tXML</i> : org.w3c.document <br />
+				(f) These Types can be used for flow variables.
+				</p>
 
-			(f) These Types can be used for flow variables. <br />
-			<br />
+				<p>
+					<b>Java Snippet Code</b>
+				</p>
+				<p>For columns:</p>
+				<ul>
+					<li><i>getCell(name, type)*</i> : Get value of a cell by column name</li>
+					<li><i>isType(name, type)*</i> : Test for type by column name</li>
+					<li><i>isMissing(name)*</i> : Check if missing by column name</li>
+					<li><i>columnExists(name)*</i> : Check if column with given name exists</li>
+					<li><i>getColumnCount(index, type)</i> : Number of columns in the input table</li>
+					<li><i>getColumnName(index)</i> : Retrieve column name at index</li>
+				</ul>
+				<p>For flow variables:</p>
+				<ul>
+					<li><i>getFlowVariable(name, type)</i> : Get value of a flow variable by name</li>
+					<li><i>getFlowVariables(type)</i> : Get all flow variables by type. A name to value map is returned.</li>
+					<li><i>flowVariableExists(name)</i> : Check if a flow variable with given name exists</li>
+					<li><i>isFlowVariableOfType(name, type)</i> : Check if a flow variable is of type</li>
+				</ul>
 
-			<b>Java Snippet Methods:</b><br />
-			<i>getCell(name, type)*</i> : Get value of a cell by column name <br />
-			<i>isType(name, type)*</i> : Test for type by column name <br />
-			<i>isMissing(name)*</i> : Check if missing by column name <br />
-			<i>columnExists(name)*</i> : Check if column with given name exists <br />
-			<i>getColumnCount(index, type)</i> : Number of columns in the input table <br />
-			<i>getColumnName(index)</i> : Retrieve column name at index <br />
-			<br />
-			<i>getFlowVariable(name, type)</i> : Get value of a flow variable by name <br />
-			<i>getFlowVariables(type)</i> : Get all flow variables by type. A name to value map is returned. <br />
-			<i>flowVariableExists(name)</i> : Check if a flow variable with given name exists <br />
-			<i>isFlowVariableOfType(name, type)</i> : Check if a flow variable is of type <br />
+				<p>
+				* For these methods there is a variant that takes the column
+				index instead of its name.
+				</p>
 
-			* Methods exist in a variant that takes the column index instead of
-			its name.
+				<p>Note that the snippet allows defining custom global variables and imports. </p>
 
-			<p>
-				You can hit <i>CTRL+SPACE</i> for auto completion which will popup
-				a list with all available classes, methods and fields available
-				at your current cursor location. When you select a class and hit
-				<i>enter</i> an import statement will be generated if missing.
-			</p>
+				<p>
+					Exceptions in the snippet are caught by the framework and will
+					result in missing values for all output columns of the row being
+					processed—unless there are flow variables defined by the
+					snippet (in which case the execution will always fail).
+					You can force the node to fail execution by throwing an exception
+					of class <tt>Abort</tt>.
+				</p>
 
-			<p>Note that the snippet allows defining custom global variables
-				and imports.
-			</p>
-
-			<p>
-				Exceptions in the snippet are caught by the framework and will
-				result in missing values for all output columns of the row being
-				processed—unless there are flow variables defined by the
-				snippet (in which case the execution will always fail).
-				You can force the node to fail execution by throwing an exception
-				of class <tt>Abort</tt>.
-			</p>
-		</option>
-		<option name="Input">
-			Define input fields for the snippet here. Every field will be populated
-			with the data of the associated input column or flow variable
-			during execution.
-			For missing values in the input the field is set to <tt>null</tt>.
-		</option>
-		<option name="Output">
-			Define output columns and flow variables here. Every row in the
-			<b>Output</b> table defines a java field bound to an output column
-			or flow variable. Values assigned to this field in the snippet will
-			show up at the output.
-		</option>
+				<p><b>Code Assistance</b></p>
+				<p>
+					<i>CTRL+SPACE</i> for auto completion will popup a list with
+					all classes, methods and fields available at your current
+					cursor location.
+				</p>
+				<p>
+					<i>ENTER</i> will generate missing import statements for a
+					selected class.
+				</p>
+			</option>
+			<option name="Input">
+				Define input fields for the snippet here. Every field will be populated
+				with the data of the associated input column or flow variable
+				during execution.
+				For missing values in the input the field is set to <tt>null</tt>.
+			</option>
+			<option name="Output">
+				Define output columns and flow variables here. Every row in the
+				<b>Output</b> table defines a java field bound to an output column
+				or flow variable. Values assigned to this field in the snippet will
+				show up at the output.
+			</option>
+		</tab>
 	</fullDescription>
 	<ports>
 		<inPort name="An input table" index="0">
