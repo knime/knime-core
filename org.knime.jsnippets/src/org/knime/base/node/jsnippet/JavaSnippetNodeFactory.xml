@@ -152,23 +152,19 @@
 		</tab>
 		<tab name="Additional Bundles">
 			<description>
-				<p>
 				This tab allows making installed bundles available on the
 				classpath of the java snippet, allowing you to use classes e.g.
-				from org.apache.commons, org.json, com.google.guava and more.
-				</p>
-				<p>
+				from org.apache.commons, org.json, com.google.guava and more.<br/>
+
 				Once a bundle has been added, its version will be saved with the
 				settings. Should the bundle not be present on an installation
 				the workflow is then opened with, the node will produce an error
-				and not run.
-				</p>
-				<p>
+				and not run.<br/>
+
 				Should the bundle be present but in another version, it will suffice
 				as long as the major version did not change and the minor version
 				is larger or equal to the version the workflow was saved with
 				("semantic versioning").
-				</p>
 			</description>
 			<option name="Active Bundles">
 				Bundles that have been manually added to the classpath of the
