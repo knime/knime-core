@@ -411,8 +411,6 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
 
     /**
      * {@inheritDoc}
-     *
-     * @since 3.6
      */
     @Override
     public void validateSettingsBeforeSave() throws InvalidSettingsException {
