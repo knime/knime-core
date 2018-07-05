@@ -128,7 +128,15 @@ public class BundleListPanelTest extends UiTest {
             panel.m_bundleModel.getExcluded().contains(panel.m_listModel.getElementAt(0).toString()));
 
         /* Select first value */
-        panel.m_bundleList.setSelectedIndex(1);
+        int indexToSelect = 0;
+        final String addedBundleName = panel.m_listModel.getElementAt(0).name;
+        for (; indexToSelect < panel.m_bundleList.getModel().getSize(); ++indexToSelect) {
+            final String bundleName = panel.m_bundleList.getModel().getElementAt(indexToSelect).split(" ")[0];
+            if (!addedBundleName.equals(bundleName)) {
+                break;
+            }
+        }
+        panel.m_bundleList.setSelectedIndex(indexToSelect);
         /* Simulate a double-click to close and add */
         panel.m_bundleList
             .dispatchEvent(new MouseEvent(panel, MouseEvent.MOUSE_CLICKED, 1, 0, 0, 0, 2, false, MouseEvent.BUTTON1));
@@ -139,7 +147,7 @@ public class BundleListPanelTest extends UiTest {
         final String[] bundleNames = panel.getBundles();
         // getBundles() is used to get the bundles for saving as settings. Hence their version should also be returned.
         assertArrayEquals("getBundles should return array of bundles with versions in list model",
-            new String[]{panel.m_listModel.getElementAt(0).toString(), panel.m_listModel.getElementAt(1).toString()}, bundleNames);
+            new String[]{panel.m_listModel.getElementAt(0).serialize(), panel.m_listModel.getElementAt(1).serialize()}, bundleNames);
 
         panel.setBundles(new String[]{bundleNames[0]});
         panel.addBundles(Arrays.asList(bundleNames[0], bundleNames[1], bundleNames[1], null));
