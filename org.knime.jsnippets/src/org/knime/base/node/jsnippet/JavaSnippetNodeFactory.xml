@@ -12,7 +12,7 @@
 				new columns or replace existing ones. Enter the java code in
 				the text area.
 			</p>
-			<h3>Output Columns</h3>
+			<h3>Output Columns and Variables</h3>
 			<p> Output columns are defined by creating and binding a java field
 				for each column. The value assigned to this field will be written
 				to the output.
@@ -20,6 +20,7 @@
 			<p> This node allows adding or modifying flow variables in the same
 				manner.
 			</p>
+			<h3>Additional libraries</h3>
 			<p>It is also possible to use external java libraries (libraries that are
 				not part of java boot classpath). In order to include external jar or
 				zip files, add their location in the "Additional Libraries" tab.
@@ -29,6 +30,7 @@
 				Adding them to the list in the "Additional Bundles" tab will make them
 				available to the java snippet's classpath.
 			</p>
+			<h3>Templates</h3>
 			<p>You can define reusable templates with the "Create templates..."
 				button. Templates are stored in the user's workspace by default
 				and can be accessed via the "Templates" tab.
