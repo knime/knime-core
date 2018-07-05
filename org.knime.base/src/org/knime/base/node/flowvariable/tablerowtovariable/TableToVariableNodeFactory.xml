@@ -21,6 +21,9 @@
 		<link href="https://www.knime.com/knime-introductory-course/chapter7/section1/creation-and-usage-of-flow-variables">
 			KNIME E-Learning Course: Creation and usage of Flow Variables in a KNIME workflow
 		</link>
+		<link href="https://www.knime.com/knime-introductory-course/chapter7/section1/transforming-data-cell-into-flow-variable">
+			KNIME E-Learning Course: Transforming a data cell into a flow variable
+		</link>
 	</fullDescription>
 	
 	<ports>

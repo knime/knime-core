@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<knimeNode icon="loop_start_window.png" type="LoopStart"
-	xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
+<knimeNode icon="loop_start_window.png" type="LoopStart" xmlns="http://knime.org/node/v3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v3.6 http://knime.org/node/v3.6.xsd">
 	<name>Window Loop Start</name>
 
 	<shortDescription>Sliding window over input table.</shortDescription>
@@ -60,6 +58,9 @@
 			In the case of time-based windowing, the current point of time defines the temporal end point of the window.
 		</option>
 		</tab>
+		<link href="https://www.knime.com/knime-introductory-course/chapter7/section2">
+			KNIME E-Learning Course: Section 7.2. Re-executing Workflow Parts: Loops
+		</link>
 	</fullDescription>
 
 	<ports>
