@@ -211,22 +211,29 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
                 store.getString(HeadlessPreferencesConstants.P_TEMP_DIR);
         boolean tempDirChanged = !m_tempPath.equals(currentTmpDir);
         if (tempDirChanged) {
-
             // reset the directory
             m_tempPath = currentTmpDir;
-            MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_QUESTION | SWT.YES | SWT.NO);
-            mb.setText("Restart workbench...");
-            mb.setMessage("Changes of the temporary directory become "
+            String message = "Changes of the temporary directory become "
                     + "first available after restarting the workbench.\n"
-                    + "Do you want to restart the workbench now?");
-            if (mb.open() != SWT.YES) {
-                return;
-            }
+                    + "Do you want to restart the workbench now?";
 
-            PlatformUI.getWorkbench().restart();
+            Display.getDefault().asyncExec(
+                () -> promptRestartWithMessage(message));
+
         }
+    }
+
+    private static void promptRestartWithMessage(final String message){
+        MessageBox mb =
+                new MessageBox(Display.getDefault().getActiveShell(),
+                        SWT.ICON_QUESTION | SWT.YES | SWT.NO);
+        mb.setText("Restart workbench...");
+        mb.setMessage(message);
+        if (mb.open() != SWT.YES) {
+            return;
+        }
+
+        PlatformUI.getWorkbench().restart();
     }
 
     /**
