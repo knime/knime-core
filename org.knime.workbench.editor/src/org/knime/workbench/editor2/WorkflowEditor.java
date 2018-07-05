@@ -2280,7 +2280,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
             String uriString = URIUtil.toDecodedString(origRemoteLocation);
             sb.append("  This is a temporary copy of \"" + uriString + "\".");
-            if (!(uriString.startsWith("knime://EXAMPLE") || uriString.startsWith("file://"))) {
+            if (!(uriString.startsWith("knime://EXAMPLE") || uriString.startsWith("file:/"))) {
                 //"Save"-action only allowed for server-workflows, but not temporary workflows from the example-server nor an external file
                 sb.append(
                     "\n  Use \"Save\" to upload it back to its original location on the server or \"Save As...\" to store it in a different location.");
