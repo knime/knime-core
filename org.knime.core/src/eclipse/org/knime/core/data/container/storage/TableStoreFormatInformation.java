@@ -58,6 +58,8 @@ import org.knime.core.node.KNIMEComponentInformation;
 /**
  * Class that represents (hard-coded) format information for known formats provided by KNIME. (Currently for ORC and
  * Parquet.)
+ *
+ * @since 3.6
  */
 public final class TableStoreFormatInformation implements KNIMEComponentInformation {
     private final String m_bundleName;
