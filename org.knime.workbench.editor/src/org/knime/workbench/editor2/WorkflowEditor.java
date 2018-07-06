@@ -2272,6 +2272,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     private void updateWorkflowMessages() {
         if (getViewer() == null) {
             //do nothing if it hasn't been loaded entirely, yet
+            return;
         }
         WorkflowFigure workflowFigure = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getFigure();
         StringBuilder sb = new StringBuilder();
