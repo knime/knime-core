@@ -48,7 +48,7 @@
         	<b>Stochastic average gradient (SAG)</b> This solver implements a variant of stochastic gradient descent which tends to
         	converge considerably faster than vanilla stochastic gradient descent. For more information on the algorithm see 
         	the following <a href="https://arxiv.org/abs/1309.2388">paper</a>. It works well for large tables and also tables with
-        	more columns than rows. Note that in the later case a regularization prior other than <i>uniform</i> must be selected.
+        	more columns than rows. Note that in the later case a regularization prior other than "uniform" must be selected.
         	The default learning rate of 0.1 was selected because it often works well but ultimately the optimal learning rate always
         	depends on the data and should be treated as a hyperparameter.
         </li>
