@@ -30,6 +30,9 @@
         <link href="https://www.knime.com/knime-introductory-course/chapter7/section1/creation-and-usage-of-flow-variables">
             KNIME E-Learning Course: Creation and usage of Flow Variables in a KNIME workflow
         </link>
+        <link href="https://www.knime.com/knime-introductory-course/chapter7/section2">
+            KNIME E-Learning Course: Re-executing Workflow Parts: Loops
+        </link>
     </fullDescription>
 
     <ports>
