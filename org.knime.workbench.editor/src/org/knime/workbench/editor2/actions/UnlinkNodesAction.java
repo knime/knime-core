@@ -48,24 +48,23 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.UnlinkNodesCommand;
+import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowOutPortBarEditPart;
 
 /**
  * This provides the 'action' for removing the connections between two or more nodes; this only removes
@@ -81,7 +80,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  *
  * @author loki der quaeler
  */
-public class UnlinkNodesAction extends AbstractNodeAction {
+public class UnlinkNodesAction extends AbstractLinkNodesAction {
     /** actions registry ID for this action. **/
     public static final String ID = "knime.actions.unlinknodes";
     /** org.eclipse.ui.commands command ID for this action. **/
@@ -141,14 +140,11 @@ public class UnlinkNodesAction extends AbstractNodeAction {
      * {@inheritDoc}
      */
     @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final WorkflowManager wm = getManager();
-        try (WorkflowLock lock = wm.lock()) {
-            final Collection<ConnectionContainer> toRemove = findRemoveableConnections(nodeParts);
-            final UnlinkNodesCommand command = new UnlinkNodesCommand(toRemove, wm);
+    protected Command createCommandForConnectablesInManager(final ConnectableEditPart[] selected,
+        final WorkflowManager wm) {
+        final Collection<ConnectionContainer> toRemove = findRemovableConnections(selected, false);
 
-            execute(command);
-        }
+        return new UnlinkNodesCommand(toRemove, wm);
     }
 
     /**
@@ -156,67 +152,128 @@ public class UnlinkNodesAction extends AbstractNodeAction {
      *
      * @return <code>true</code> if we have:
      *                  • at least two nodes which share a connection
-     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
-    protected boolean internalCalculateEnabled() {
-        final NodeContainerEditPart[] selected = getSelectedParts(NodeContainerEditPart.class);
+    protected boolean canEnableForConnectables(final ConnectableEditPart[] selected) {
+        final Collection<ConnectionContainer> toRemove = findRemovableConnections(selected, true);
 
-        if (selected.length < 2) {
-            return false;
-        }
-        WorkflowManager manager = getManager();
-        try (WorkflowLock lock = manager.lock()) {
-            // disable if there are nodes that are not (= no longer) contained in the workflow
-            // this is a very common case when nodes get deleted and actions in the toolbar are
-            // updated in response to that
-            if (!Arrays.stream(selected).map(NodeContainerEditPart::getNodeContainer) //
-                .map(NodeContainerUI::getID) //
-                .anyMatch(manager::containsNodeContainer)) {
-                return false;
-            }
-            final Collection<ConnectionContainer> toRemove = findRemoveableConnections(selected);
-
-            return !toRemove.isEmpty();
-        }
-
-
+        return !toRemove.isEmpty();
     }
 
     /**
      * This method examines the nodes passed in for connections that exist between elements of that set.
      *
      * @param nodes the currently selected nodes
-     * @return a collection of 0-M ConnectionContainer instances representing connections which should
-     *              be removed (the are connections between elements of the set of nodes specified
-     *              via <code>nodes</code>
+     * @param onlyNeedOne if true, we return as soon as the cardinality of the return instance is non-zero; this is all
+     *            we need for the case in which we just want to know whether or not to enable an action, and there's
+     *            no reason to saddle that frequently called determination with the O(abyssmal) time here.
+     * @return a collection of 0-M ConnectionContainer instances representing connections which should be removed (the
+     *         are connections between elements of the set of nodes specified via <code>nodes</code>)
      */
-    private Collection<ConnectionContainer> findRemoveableConnections(final NodeContainerEditPart[] nodes) {
+    private Collection<ConnectionContainer> findRemovableConnections(final ConnectableEditPart[] nodes,
+        final boolean onlyNeedOne) {
         final WorkflowManager wm = getManager();
+        final EditPartConnectionsTuple[] tuples = new EditPartConnectionsTuple[nodes.length];
+
+        for (int i = 0; i < nodes.length; i++) {
+            tuples[i] = new EditPartConnectionsTuple(nodes[i], wm);
+        }
+
         // relying on a correct hashCode() implementation in ConnectionContainer to let us use
         //          HashSet to avoid duplicates
-        Set<NodeID> nodeIdSet = Stream.of(nodes).map(n -> n.getNodeContainer().getID()).collect(Collectors.toSet());
+        final Collection<ConnectionContainer> removableConnections = new HashSet<>();
+        for (int i = 0; i < (tuples.length - 1); i++) {
+            final EditPartConnectionsTuple tupleA = tuples[i];
 
-        final Collection<ConnectionContainer> removeableConnections = new HashSet<>();
-        for (final NodeContainerEditPart node : nodes) {
-            final NodeID nid = node.getNodeContainer().getID();
+            if (workflowManagerContainsConnectable(tupleA.getEditPart(), wm)) {
+                for (int j = (i + 1); j < tuples.length; j++) {
+                    final EditPartConnectionsTuple tupleB = tuples[j];
 
-            // We are not guaranteed that the WorkflowManager state still contains these nodes; check before we get
-            //      an exception thrown from getIncomingConnectionsFor(NodeID). I'm tempted to obtain the workflow
-            //      lock for this block but that seems like i would be making this race condition even more fraught.
-            if (wm.containsNodeContainer(nid)) {
-                // We should only need check incoming *or* outgoing, since members of the set which connect to
-                //      other members of the set will each have references to themselves defined in both.
-                final Set<ConnectionContainer> connections = wm.getIncomingConnectionsFor(nid);
+                    if (workflowManagerContainsConnectable(tupleB.getEditPart(), wm)) {
+                        removableConnections.addAll(tupleA.sharedConnections(tupleB, onlyNeedOne));
 
-                connections.forEach((connection) -> {
-                    if (nodeIdSet.contains(connection.getSource()) && nodeIdSet.contains(connection.getDest())) {
-                        removeableConnections.add(connection);
+                        if (onlyNeedOne && (removableConnections.size() > 0)) {
+                            return removableConnections;
+                        }
                     }
-                });
+                }
             }
         }
 
-        return removeableConnections;
+        return removableConnections;
+    }
+
+
+    /**
+     * This class is a part of the re-architecture centered around handling metanode workflow in and out bars; the
+     * underlying problem with them is that they share the same NodeID, and so we need more hand holding in order to
+     * determine whether a given existing connection exists to the in bar or the out bar edit part.
+     */
+    private class EditPartConnectionsTuple {
+        final private ConnectableEditPart m_editPart;
+        final private NodeID m_nodeId;
+        final private boolean m_nodeContainer;
+        final private Set<ConnectionContainer> m_incomingConnections;
+        final private Set<ConnectionContainer> m_outgoingConnections;
+
+        // Private, but scoped as package just to indicate it will be called from the outer class where as the private
+        // scoped functions are scoped private to connote that they will only be called from this inner class.
+        EditPartConnectionsTuple(final ConnectableEditPart cep, final WorkflowManager wm) {
+            m_editPart = cep;
+            m_nodeId = cep.getNodeContainer().getID();
+            m_nodeContainer = (cep instanceof NodeContainerEditPart);
+
+            m_incomingConnections = getConnectionsForConnectable(cep, false, wm);
+            m_outgoingConnections = getConnectionsForConnectable(cep, true, wm);
+        }
+
+        Set<ConnectionContainer> sharedConnections(final EditPartConnectionsTuple other, final boolean onlyNeedOne) {
+            final Set<ConnectionContainer> shared = new HashSet<>();
+
+            shared.addAll(sharedConnections(other, true, onlyNeedOne));
+            if (onlyNeedOne && (shared.size() > 0)) {
+                return shared;
+            }
+
+            shared.addAll(sharedConnections(other, false, onlyNeedOne));
+
+            return shared;
+        }
+
+        ConnectableEditPart getEditPart() {
+            return m_editPart;
+        }
+
+        private Set<ConnectionContainer> sharedConnections(final EditPartConnectionsTuple other, final boolean incoming, final boolean onlyNeedOne) {
+            final Set<ConnectionContainer> shared = new HashSet<>();
+            final Set<ConnectionContainer> connectionsToExamine = incoming ? m_incomingConnections : m_outgoingConnections;
+
+            for (ConnectionContainer cc : connectionsToExamine) {
+                boolean match = other.getNodeId().equals(incoming ? cc.getSource() : cc.getDest());
+
+                if (match && !other.isNodeContainer()) {
+                    match = (((other.getEditPart() instanceof WorkflowOutPortBarEditPart) && !incoming)
+                        || ((other.getEditPart() instanceof WorkflowInPortBarEditPart) && incoming));
+                }
+
+                if (match) {
+                    shared.add(cc);
+
+                    if (onlyNeedOne) {
+                        return shared;
+                    }
+                }
+            }
+
+            return shared;
+        }
+
+        private NodeID getNodeId() {
+            return m_nodeId;
+        }
+
+        private boolean isNodeContainer() {
+            return m_nodeContainer;
+        }
     }
 }

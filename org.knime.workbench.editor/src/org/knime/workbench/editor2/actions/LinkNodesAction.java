@@ -49,7 +49,6 @@
 package org.knime.workbench.editor2.actions;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -58,30 +57,34 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.NodeInPortUI;
 import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.LinkNodesCommand;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.ConnectableEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowOutPortBarEditPart;
 
 /**
  * This provides the 'action' for connecting two or more nodes.
  *
  * @author loki der quaeler
  */
-public class LinkNodesAction extends AbstractNodeAction {
+public class LinkNodesAction extends AbstractLinkNodesAction {
 
     /** actions registry ID for this action. **/
     public static final String ID = "knime.actions.linknodes";
@@ -89,7 +92,10 @@ public class LinkNodesAction extends AbstractNodeAction {
     private static final String COMMAND_ID = "knime.commands.linknodes";
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(LinkNodesAction.class);
-    private static final NodeSpatialComparator SPATIAL_COMPARATOR = new NodeSpatialComparator();
+
+    private static final ConnectableSpatialComparator CONNECTABLE_SPATIAL_COMPARATOR =
+        new ConnectableSpatialComparator();
+    private static final BoundsSpatialComparator BOUNDS_SPATIAL_COMPARATOR = new BoundsSpatialComparator();
 
     /**
      * This method determines whether the UI representation of the two nodes have an overlap in the x-domain.
@@ -108,6 +114,37 @@ public class LinkNodesAction extends AbstractNodeAction {
 
         return (((bounds1[0] <= bounds2[0]) && (bounds2[0] <= node1x2))
             || ((bounds2[0] <= bounds1[0]) && (bounds1[0] <= node2x2)));
+    }
+
+    /**
+     * We're interested in returning bounds depending on the type of edit part we're dealing with (primarily
+     * differentiating between workflow port bars and 'nodes.')
+     *
+     * @param ep the edit part for which we want UI info
+     * @return the spatial bounds for the edit part, or a rectangle of [0, 0, 0, 0] if an underlying edit part of a
+     *         selected metanode workflow bar has not yet been fully initialized
+     */
+    protected static Rectangle getBoundsForConnectable(final ConnectableEditPart ep) {
+        if (ep instanceof WorkflowInPortBarEditPart) {
+            final WorkflowInPortBarEditPart ipbep = (WorkflowInPortBarEditPart)ep;
+            final Optional<Rectangle> bounds = ipbep.getUIBounds();
+
+            return bounds.isPresent() ? bounds.get() : new Rectangle(0, 0, 0, 0);
+        } else if (ep instanceof WorkflowOutPortBarEditPart) {
+            final WorkflowOutPortBarEditPart opbep = (WorkflowOutPortBarEditPart)ep;
+            final Optional<Rectangle> bounds = opbep.getUIBounds();
+
+            return bounds.isPresent() ? bounds.get() : new Rectangle(0, 0, 0, 0);
+        }
+
+        final NodeUIInformation uiInfo = ep.getNodeContainer().getUIInformation();
+        if (uiInfo != null) {
+            int[] bounds = uiInfo.getBounds();
+
+            return new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
+        }
+
+        return null;
     }
 
 
@@ -164,14 +201,11 @@ public class LinkNodesAction extends AbstractNodeAction {
      * {@inheritDoc}
      */
     @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final WorkflowManager wm = getManager();
-        try (WorkflowLock lock = wm.lock()) {
-            final Collection<PlannedConnection> plan = generateConnections(nodeParts);
-            final LinkNodesCommand command = new LinkNodesCommand(plan, wm);
+    protected Command createCommandForConnectablesInManager(final ConnectableEditPart[] selected,
+        final WorkflowManager wm) {
+        final Collection<PlannedConnection> plan = generateConnections(selected);
 
-            execute(command);
-        }
+        return new LinkNodesCommand(plan, wm);
     }
 
     /**
@@ -181,46 +215,26 @@ public class LinkNodesAction extends AbstractNodeAction {
      *                  • at least two nodes which do not have the same left spatial location
      *                  • that the left most node has at least 1 outport
      *                  • that the right most node has at least 1 inport
-     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
-    protected boolean internalCalculateEnabled() {
-        final NodeContainerEditPart[] selected = getSelectedParts(NodeContainerEditPart.class);
-        WorkflowManager manager = getManager();
+    protected boolean canEnableForConnectables(final ConnectableEditPart[] selected) {
+        final ScreenedSelectionSet sss = screenNodeSelection(selected);
 
-        if (selected.length < 2) {
-            return false;
-        }
-
-        try (WorkflowLock lock = manager.lock()) {
-            // disable if there are nodes that are not (= no longer) contained in the workflow
-            // this is a very common case when nodes get deleted and actions in the toolbar are
-            // updated in response to that
-            if (!Arrays.stream(selected).map(NodeContainerEditPart::getNodeContainer) //
-                .map(NodeContainerUI::getID) //
-                .anyMatch(manager::containsNodeContainer)) {
-                return false;
-            }
-
-            final ScreenedSelectionSet sss = screenNodeSelection(selected);
-
-            return sss.setIsConnectable();
-        }
-
+        return sss.setIsConnectable();
     }
 
     /**
      * This examines the set of nodes provided and creates a list of connections to be performed taking in to account
      * the spatial layout of the nodes and their available ports.
      *
-     * @param nodes the set of selected nodes for which connections will be generated
+     * @param connectables the set of selected connectables for which connections will be generated
      * @return This returns a collection of PlannedConnection instances which can then be "executed" to form the
      *         resulting connected subset of nodes. The ordering of the connection events is unimportant and so is
      *         returned as a Collection to emphasize that.
      */
-    protected Collection<PlannedConnection> generateConnections(final NodeContainerEditPart[] nodes) {
+    protected Collection<PlannedConnection> generateConnections(final ConnectableEditPart[] connectables) {
         final ArrayList<PlannedConnection> plannedConnections = new ArrayList<>();
-        final ScreenedSelectionSet sss = screenNodeSelection(nodes);
+        final ScreenedSelectionSet sss = screenNodeSelection(connectables);
 
         // Should never be the case since this method is only ever called as part of run, which can't
         //      execute unless we're enabled, the crux of which already checks this condition.
@@ -232,32 +246,34 @@ public class LinkNodesAction extends AbstractNodeAction {
         /*
          * Take first node from sss, get spatially next that:
          *
-         *      . has an inport
-         *      . is not spatially overlapping
-         *      . is not connected to the outport of another node in this set already (not considering the
+         *      • has an inport
+         *      • is not spatially overlapping
+         *      • is not connected to the outport of another node in this set already (not considering the
          *              plan of connections to be made due to this action)
          *
          *
          * This doesn't embody the "on the same y-line" connection logic. (TODO)
          */
-        final List<NodeContainerUI> orderedNodes = sss.getConnectableNodes();
+        final List<ConnectableEditPart> orderedNodes = sss.getConnectableNodes();
         final boolean[] hasIncomingPlanned = new boolean[orderedNodes.size() - 1]; // indices are shifted by -1
 
         for (int i = 0; i < (orderedNodes.size() - 1); i++) {
-            final NodeContainerUI sourceNode = orderedNodes.get(i);
+            final ConnectableEditPart source = orderedNodes.get(i);
+            final NodeContainerUI sourceNode = source.getNodeContainer();
             final int sourcePortStart = (sourceNode instanceof WorkflowManagerUI) ? 0 : 1;
             int currentIndex = i + 1;
 
             if (sourceNode.getNrOutPorts() > sourcePortStart) {
                 while (currentIndex < orderedNodes.size()) {
-                    final NodeContainerUI destinationNode = orderedNodes.get(currentIndex);
+                    final ConnectableEditPart destination = orderedNodes.get(currentIndex);
+                    final NodeContainerUI destinationNode = destination.getNodeContainer();
                     final int destinationPortStart = (destinationNode instanceof WorkflowManagerUI) ? 0 : 1;
 
                     if ((destinationNode.getNrInPorts() > destinationPortStart)
                         && (!nodesOverlapInXDomain(sourceNode, destinationNode)
-                            && (!nodeHasConnectionWithinSet(destinationNode, orderedNodes)))) {
+                            && (!nodeHasConnectionWithinSet(destination, orderedNodes)))) {
                         final Optional<PlannedConnection> pc =
-                            createConnectionPlan(sourceNode, destinationNode, plannedConnections);
+                            createConnectionPlan(source, destination, plannedConnections);
 
                         if (pc.isPresent()) {
                             hasIncomingPlanned[currentIndex - 1] = true;
@@ -278,21 +294,24 @@ public class LinkNodesAction extends AbstractNodeAction {
          *
          * Such situations may arise due certain spatial configurations.
          */
-        final int zereothX = orderedNodes.get(0).getUIInformation().getBounds()[0];
+        final Rectangle zereothBounds = getBoundsForConnectable(orderedNodes.get(0));
         for (int i = 1; i < orderedNodes.size(); i++) {
-            final NodeContainerUI destinationNode = orderedNodes.get(i);
+            final ConnectableEditPart destination = orderedNodes.get(i);
+            final Rectangle destinationBounds = getBoundsForConnectable(destination);
 
-            if (!hasIncomingPlanned[i - 1] && (destinationNode.getUIInformation().getBounds()[0] > zereothX)) {
+            if (!hasIncomingPlanned[i - 1] && (destinationBounds.x > zereothBounds.x)) {
+                final NodeContainerUI destinationNode = destination.getNodeContainer();
                 final int destinationPortStart = (destinationNode instanceof WorkflowManagerUI) ? 0 : 1;
 
                 if (destinationNode.getNrInPorts() > destinationPortStart) {
                     for (int j = (i - 1); j >= 0; j--) {
-                        final NodeContainerUI sourceNode = orderedNodes.get(j);
+                        final ConnectableEditPart source = orderedNodes.get(j);
+                        final NodeContainerUI sourceNode = source.getNodeContainer();
                         final int sourcePortStart = (sourceNode instanceof WorkflowManagerUI) ? 0 : 1;
 
                         if (sourceNode.getNrOutPorts() > sourcePortStart) {
                             final Optional<PlannedConnection> pc =
-                                createConnectionPlan(sourceNode, destinationNode, plannedConnections);
+                                createConnectionPlan(source, destination, plannedConnections);
 
                             if (pc.isPresent()) {
                                 // there's no existing reason to set this to true (it's not used afterwards)
@@ -316,8 +335,8 @@ public class LinkNodesAction extends AbstractNodeAction {
      * putting that into a utilities class and potentially changing this to act as a second round processing on the
      * returned Map.
      *
-     * @param source the source, traditionally spatially left, node
-     * @param destination the destination, traditionally spatially right, node
+     * @param sourceEP the source, traditionally spatially left, node
+     * @param destinationEP the destination, traditionally spatially right, node
      * @param existingPlan the already existing planned connections
      * @return an instance of PlannedConnection as an Optional, by request; this takes into account port types. The
      *         priority is the first (in natural ordering) unused and unplanned port on source and desination side of
@@ -325,15 +344,17 @@ public class LinkNodesAction extends AbstractNodeAction {
      *         matching port types. If no connection plan could be determined under these rules, an empty() Optional is
      *         returned.
      */
-    protected Optional<PlannedConnection> createConnectionPlan(final NodeContainerUI source,
-        final NodeContainerUI destination, final List<PlannedConnection> existingPlan) {
+    protected Optional<PlannedConnection> createConnectionPlan(final ConnectableEditPart sourceEP,
+        final ConnectableEditPart destinationEP, final List<PlannedConnection> existingPlan) {
         final WorkflowManager wm = getManager();
+        final NodeContainerUI source = sourceEP.getNodeContainer();
+        final NodeContainerUI destination = destinationEP.getNodeContainer();
         final int sourceStartIndex = (source instanceof WorkflowManagerUI) ? 0 : 1;
         final int sourcePortCount = source.getNrOutPorts();
         final int destinationStartIndex = (destination instanceof WorkflowManagerUI) ? 0 : 1;
         final int destinationPortCount = destination.getNrInPorts();
-        final Set<ConnectionContainer> existingOutConnections = wm.getOutgoingConnectionsFor(source.getID());
-        final Set<ConnectionContainer> existingInConnections = wm.getIncomingConnectionsFor(destination.getID());
+        final Set<ConnectionContainer> existingOutConnections = getConnectionsForConnectable(sourceEP, true, wm);
+        final Set<ConnectionContainer> existingInConnections = getConnectionsForConnectable(destinationEP, false, wm);
 
         for (int i = sourceStartIndex; i < sourcePortCount; i++) {
             if (!portAlreadyHasConnection(source, i, false, existingPlan, existingOutConnections)) {
@@ -347,7 +368,7 @@ public class LinkNodesAction extends AbstractNodeAction {
 
                         if (sourcePortType.isSuperTypeOf(destinationPortType)
                             || destinationPortType.isSuperTypeOf(sourcePortType)) {
-                            return Optional.of(new PlannedConnection(source, i, destination, j));
+                            return Optional.of(new PlannedConnection(sourceEP, i, destinationEP, j));
                         }
                     }
                 }
@@ -371,7 +392,7 @@ public class LinkNodesAction extends AbstractNodeAction {
 
                         if (sourcePortType.isSuperTypeOf(destinationPortType)
                             || destinationPortType.isSuperTypeOf(sourcePortType)) {
-                            return Optional.of(new PlannedConnection(source, i, destination, j));
+                            return Optional.of(new PlannedConnection(sourceEP, i, destinationEP, j));
                         }
                     }
                 }
@@ -400,7 +421,7 @@ public class LinkNodesAction extends AbstractNodeAction {
                         final boolean mustDetach = portAlreadyHasConnection(destination, j, true,
                             Collections.emptyList(), existingInConnections);
 
-                        return Optional.of(new PlannedConnection(source, i, destination, j, mustDetach));
+                        return Optional.of(new PlannedConnection(sourceEP, i, destinationEP, j, mustDetach));
                     }
                 }
             }
@@ -441,8 +462,11 @@ public class LinkNodesAction extends AbstractNodeAction {
         final NodeID nid = node.getID();
 
         for (final PlannedConnection pc : existingPlan) {
-            if ((inport && pc.getDestinationNode().getID().equals(nid) && (pc.getDestinationInportIndex() == port))
-                || ((!inport) && pc.getSourceNode().getID().equals(nid) && (pc.getSourceOutportIndex() == port))) {
+            final NodeID destinationNID = pc.getDestinationNode().getNodeContainer().getID();
+            final NodeID sourceNID = pc.getSourceNode().getNodeContainer().getID();
+
+            if ((inport && destinationNID.equals(nid) && (pc.getDestinationInportIndex() == port))
+                || ((!inport) && sourceNID.equals(nid) && (pc.getSourceOutportIndex() == port))) {
                 return true;
             }
         }
@@ -459,16 +483,17 @@ public class LinkNodesAction extends AbstractNodeAction {
      * @return <code>true</code> if the specified node already has an inport connected to the outport of a node in the
      *         set, <code>false</code> otherwise
      */
-    protected boolean nodeHasConnectionWithinSet(final NodeContainerUI node, final Collection<NodeContainerUI> set) {
+    protected boolean nodeHasConnectionWithinSet(final ConnectableEditPart node,
+        final Collection<ConnectableEditPart> set) {
         final WorkflowManager wm = getManager();
-        final Set<ConnectionContainer> incoming = wm.getIncomingConnectionsFor(node.getID());
+        final Set<ConnectionContainer> incoming = getConnectionsForConnectable(node, true, wm);
 
         if (!incoming.isEmpty()) {
             for (ConnectionContainer cc : incoming) {
                 final NodeID nid = cc.getSource();
 
-                for (NodeContainerUI setItem : set) {
-                    if (nid.equals(setItem.getID())) {
+                for (ConnectableEditPart setItem : set) {
+                    if (nid.equals(setItem.getNodeContainer().getID())) {
                         return true;
                     }
                 }
@@ -488,29 +513,38 @@ public class LinkNodesAction extends AbstractNodeAction {
      * in the selection, that are valid, and discards any invalid nodes (nodes which are spatially leftmost but have
      * only inports or are spatially rightmost but have only outports.)
      *
-     * @param nodes the current selection set of nodes in the workflow editor
+     * @param connectables the current selection set of connectable parts in the workflow editor
      * @return an instance of ScreenedSelectionSet
      */
-    protected ScreenedSelectionSet screenNodeSelection(final NodeContainerEditPart[] nodes) {
-        final ArrayList<NodeContainerUI> validLeft = new ArrayList<>();
-        final ArrayList<NodeContainerUI> validRight = new ArrayList<>();
+    protected ScreenedSelectionSet screenNodeSelection(final ConnectableEditPart[] connectables) {
+        final ArrayList<ConnectableEditPart> validLeft = new ArrayList<>();
+        final ArrayList<ConnectableEditPart> validRight = new ArrayList<>();
         final WorkflowManager wm = getManager();
 
-        for (int i = 0; i < nodes.length; i++) {
-            final NodeContainerUI node = nodes[i].getNodeContainer();
-
+        for (int i = 0; i < connectables.length; i++) {
+            final NodeContainerUI node = connectables[i].getNodeContainer();
+            final NodeID nid = node.getID();
             // We are not guaranteed that the WorkflowManager state still contains these nodes, so check.
-            if (wm.containsNodeContainer(node.getID())) {
+            final boolean contains = wm.containsNodeContainer(nid);
+            boolean usableMetaNode = false;
+
+            if (!contains && (node instanceof WorkflowManagerWrapper)) {
+                final WorkflowManager subWM = ((WorkflowManagerWrapper)node).unwrap();
+
+                usableMetaNode = subWM.equals(wm) && subWM.getParent().containsNodeContainer(nid);
+            }
+
+            if (contains || usableMetaNode) {
                 final int portLowWaterMark = (node instanceof WorkflowManagerUI) ? 0 : 1;
                 final boolean canBeLeftMost = (node.getNrOutPorts() > portLowWaterMark);
                 final boolean canBeRightMost = (node.getNrInPorts() > portLowWaterMark);
 
                 if (canBeLeftMost) {
-                    validLeft.add(node);
+                    validLeft.add(connectables[i]);
                 }
 
                 if (canBeRightMost) {
-                    validRight.add(node);
+                    validRight.add(connectables[i]);
                 }
             }
         }
@@ -520,59 +554,63 @@ public class LinkNodesAction extends AbstractNodeAction {
         }
 
         try {
-            Collections.sort(validLeft, SPATIAL_COMPARATOR);
-            Collections.sort(validRight, SPATIAL_COMPARATOR);
+            Collections.sort(validLeft, CONNECTABLE_SPATIAL_COMPARATOR);
+            Collections.sort(validRight, CONNECTABLE_SPATIAL_COMPARATOR);
         } catch (NullPointerException e) {
             // This sneaky way assures us that we have UI bounds information for the rest of this screening code
-            LOGGER.warn("Some nodes in the current selection returned invalid UI information.");
+            LOGGER.warn("Some nodes in the current selection returned invalid UI information.", e);
 
             return new ScreenedSelectionSet(Collections.emptySet(), null, null);
         }
 
-        final NodeContainerUI[] spatialBounds = new NodeContainerUI[2];
-        spatialBounds[0] = validLeft.get(0);
-        spatialBounds[1] = validRight.get(validRight.size() - 1);
+        final ConnectableEditPart[] borderParts = new ConnectableEditPart[2];
+        borderParts[0] = validLeft.get(0);
+        borderParts[1] = validRight.get(validRight.size() - 1);
 
-        final ArrayList<NodeContainerUI> discards = new ArrayList<>();
-        NodeUIInformation uiInfo = spatialBounds[1].getUIInformation();
+        final Rectangle[] spatialBounds = new Rectangle[2];
+        spatialBounds[0] = getBoundsForConnectable(borderParts[0]);
+        spatialBounds[1] = getBoundsForConnectable(borderParts[1]);
+
+        final ArrayList<ConnectableEditPart> discards = new ArrayList<>();
         for (int i = (validLeft.size() - 1); i >= 0; i--) {
-            final NodeContainerUI node = validLeft.get(i);
-            final NodeUIInformation uiInfoToo = node.getUIInformation();
+            final ConnectableEditPart cep = validLeft.get(i);
 
-            if (node == spatialBounds[1]) {
+            if (cep == borderParts[1]) {
                 continue;
             }
 
-            if (uiInfoToo.getBounds()[0] < uiInfo.getBounds()[0]) {
+            final Rectangle boundsToo = getBoundsForConnectable(cep);
+            if (boundsToo.x < spatialBounds[1].x) {
                 break;
             }
 
+            final NodeContainerUI node = cep.getNodeContainer();
             final int portLowWaterMark = (node instanceof WorkflowManagerUI) ? 0 : 1;
-            // It's not clear whether there may ever be a node which doesn't have a flow input, <= to be sure
-            if (node.getNrInPorts() <= portLowWaterMark) {
-                discards.add(node);
+            // It's not clear whether there may ever be a node which doesn't have a flow output, <= to be sure
+            if (node.getNrOutPorts() <= portLowWaterMark) {
+                discards.add(cep);
             }
         }
         validLeft.removeAll(discards);
 
         discards.clear();
-        uiInfo = spatialBounds[0].getUIInformation();
         for (int i = (validRight.size() - 1); i >= 0; i--) {
-            final NodeContainerUI node = validRight.get(i);
-            final NodeUIInformation uiInfoToo = node.getUIInformation();
+            final ConnectableEditPart cep = validRight.get(i);
 
-            if (node == spatialBounds[0]) {
+            if (cep == borderParts[0]) {
                 continue;
             }
 
-            if (uiInfoToo.getBounds()[0] > uiInfo.getBounds()[0]) {
+            final Rectangle boundsToo = getBoundsForConnectable(cep);
+            if (boundsToo.x < spatialBounds[0].x) {
                 break;
             }
 
+            final NodeContainerUI node = cep.getNodeContainer();
             final int portLowWaterMark = (node instanceof WorkflowManagerUI) ? 0 : 1;
-            // It's not clear whether there may ever be a node which doesn't have a flow output, <= to be sure
-            if (node.getNrOutPorts() <= portLowWaterMark) {
-                discards.add(node);
+            // It's not clear whether there may ever be a node which doesn't have a flow input, <= to be sure
+            if (node.getNrInPorts() <= portLowWaterMark) {
+                discards.add(cep);
             }
         }
         validRight.removeAll(discards);
@@ -581,23 +619,25 @@ public class LinkNodesAction extends AbstractNodeAction {
         // We should consider changing this to use an approach with maps should the common use case ever become scores
         //  of nodes being selected - this is currently a poly-time solution.
         boolean haveFoundALegalConnection = false;
-        for (final NodeContainerUI left : validLeft) {
-            final int sourcePortStart = (left instanceof WorkflowManagerUI) ? 0 : 1;
-            final NodeUIInformation leftUIInfo = left.getUIInformation();
+        for (final ConnectableEditPart left : validLeft) {
+            final NodeContainerUI node = left.getNodeContainer();
+            final int sourcePortStart = (node instanceof WorkflowManagerUI) ? 0 : 1;
+            final Rectangle leftBounds = getBoundsForConnectable(left);
 
-            for (int i = sourcePortStart; (i < left.getNrOutPorts()) && (!haveFoundALegalConnection); i++) {
-                final NodeOutPortUI sourcePort = left.getOutPort(i);
+            for (int i = sourcePortStart; (i < node.getNrOutPorts()) && (!haveFoundALegalConnection); i++) {
+                final NodeOutPortUI sourcePort = node.getOutPort(i);
                 final PortType sourcePortType = sourcePort.getPortType();
 
-                for (final NodeContainerUI right : validRight) {
+                for (final ConnectableEditPart right : validRight) {
                     if (left != right) {
-                        final NodeUIInformation rightUIInfo = right.getUIInformation();
+                        final Rectangle rightBounds = getBoundsForConnectable(right);
 
-                        if (leftUIInfo.getBounds()[0] < rightUIInfo.getBounds()[0]) {
-                            final int destinationPortStart = (right instanceof WorkflowManagerUI) ? 0 : 1;
+                        if (leftBounds.x < rightBounds.x) {
+                            final NodeContainerUI rightNode = right.getNodeContainer();
+                            final int destinationPortStart = (rightNode instanceof WorkflowManagerUI) ? 0 : 1;
 
-                            for (int j = destinationPortStart; j < right.getNrInPorts(); j++) {
-                                final NodeInPortUI destinationPort = right.getInPort(j);
+                            for (int j = destinationPortStart; j < rightNode.getNrInPorts(); j++) {
+                                final NodeInPortUI destinationPort = rightNode.getInPort(j);
                                 final PortType destinationPortType = destinationPort.getPortType();
 
                                 if (sourcePortType.isSuperTypeOf(destinationPortType)
@@ -626,28 +666,28 @@ public class LinkNodesAction extends AbstractNodeAction {
         }
 
 
-        final HashSet<NodeContainerUI> connectableNodes = new HashSet<>();
+        final HashSet<ConnectableEditPart> connectableEditParts = new HashSet<>();
         // cramming them into a HashSet rids us of the problem that there will usually be a non-null intersection
         //  between the valid left and valid right sets of nodes.
-        connectableNodes.addAll(validLeft);
-        connectableNodes.addAll(validRight);
+        connectableEditParts.addAll(validLeft);
+        connectableEditParts.addAll(validRight);
 
-        return new ScreenedSelectionSet(connectableNodes, spatialBounds[0], spatialBounds[1]);
+        return new ScreenedSelectionSet(connectableEditParts, borderParts[0].getNodeContainer(), borderParts[1].getNodeContainer());
     }
 
 
     static class ScreenedSelectionSet {
-        private final List<NodeContainerUI> m_connectableNodes;
+        private final List<ConnectableEditPart> m_connectableNodes;
         private final NodeContainerUI m_spatiallyLeftMostNode;
         private final NodeContainerUI m_spatiallyRightMostNode;
 
-        ScreenedSelectionSet(final Collection<NodeContainerUI> connectables, final NodeContainerUI left,
+        ScreenedSelectionSet(final Collection<ConnectableEditPart> connectables, final NodeContainerUI left,
             final NodeContainerUI right) {
-            m_connectableNodes = new ArrayList<>(connectables);
             m_spatiallyLeftMostNode = left;
             m_spatiallyRightMostNode = right;
 
-            Collections.sort(m_connectableNodes, SPATIAL_COMPARATOR);
+            m_connectableNodes = new ArrayList<>(connectables);
+            Collections.sort(m_connectableNodes, CONNECTABLE_SPATIAL_COMPARATOR);
         }
 
         boolean setIsConnectable() {
@@ -659,7 +699,7 @@ public class LinkNodesAction extends AbstractNodeAction {
          * @return a spatially in-order list of connectable nodes
          * @see NodeSpatialComparator
          */
-        List<NodeContainerUI> getConnectableNodes() {
+        List<ConnectableEditPart> getConnectableNodes() {
             return m_connectableNodes;
         }
     }
@@ -672,20 +712,20 @@ public class LinkNodesAction extends AbstractNodeAction {
      * @author loki der quaeler
      */
     public static class PlannedConnection {
-        private final NodeContainerUI m_sourceNode;
+        private final ConnectableEditPart m_sourceNode;
         private final int m_sourceOutportIndex;
 
-        private final NodeContainerUI m_destinationNode;
+        private final ConnectableEditPart m_destinationNode;
         private final int m_destinationInportIndex;
 
         private final boolean m_detachDestinationFirst;
 
-        PlannedConnection(final NodeContainerUI source, final int sourcePort, final NodeContainerUI destination,
+        PlannedConnection(final ConnectableEditPart source, final int sourcePort, final ConnectableEditPart destination,
             final int destinationPort) {
             this(source, sourcePort, destination, destinationPort, false);
         }
 
-        PlannedConnection(final NodeContainerUI source, final int sourcePort, final NodeContainerUI destination,
+        PlannedConnection(final ConnectableEditPart source, final int sourcePort, final ConnectableEditPart destination,
             final int destinationPort, final boolean destinationRequiresDetachEvent) {
             m_sourceNode = source;
             m_sourceOutportIndex = sourcePort;
@@ -699,7 +739,7 @@ public class LinkNodesAction extends AbstractNodeAction {
         /**
          * @return the sourceNode
          */
-        public NodeContainerUI getSourceNode() {
+        public ConnectableEditPart getSourceNode() {
             return m_sourceNode;
         }
 
@@ -713,7 +753,7 @@ public class LinkNodesAction extends AbstractNodeAction {
         /**
          * @return the destinationNode
          */
-        public NodeContainerUI getDestinationNode() {
+        public ConnectableEditPart getDestinationNode() {
             return m_destinationNode;
         }
 
@@ -736,8 +776,8 @@ public class LinkNodesAction extends AbstractNodeAction {
          */
         @Override
         public String toString() {
-            return m_sourceNode.getNameWithID() + ":" + m_sourceOutportIndex + " -> "
-                + m_destinationNode.getNameWithID() + ":" + m_destinationInportIndex
+            return m_sourceNode.getNodeContainer().getNameWithID() + ":" + m_sourceOutportIndex + " -> "
+                + m_destinationNode.getNodeContainer().getNameWithID() + ":" + m_destinationInportIndex
                 + (m_detachDestinationFirst ? " [DETACH]" : "");
         }
     }
@@ -746,22 +786,31 @@ public class LinkNodesAction extends AbstractNodeAction {
     /**
      * This orders ascending first by x-coordinate and second by y-coordinate.
      */
-    static class NodeSpatialComparator implements Comparator<NodeContainerUI> {
+    static class BoundsSpatialComparator implements Comparator<Rectangle> {
         /**
          * {@inheritDoc}
          */
         @Override
-        public int compare(final NodeContainerUI node1, final NodeContainerUI node2) {
-            final NodeUIInformation ui1 = node1.getUIInformation();
-            final NodeUIInformation ui2 = node2.getUIInformation();
-            final int[] bounds1 = ui1.getBounds();
-            final int[] bounds2 = ui2.getBounds();
-
-            if (bounds1[0] != bounds2[0]) {
-                return bounds1[0] - bounds2[0];
+        public int compare(final Rectangle bounds1, final Rectangle bounds2) {
+            if (bounds1.x != bounds2.x) {
+                return bounds1.x - bounds2.x;
             }
 
-            return bounds1[1] - bounds2[1];
+            return bounds1.y - bounds2.y;
+        }
+    }
+
+
+    /**
+     * This orders ascending first by x-coordinate and second by y-coordinate.
+     */
+    static class ConnectableSpatialComparator implements Comparator<ConnectableEditPart> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int compare(final ConnectableEditPart cep1, final ConnectableEditPart cep2) {
+            return BOUNDS_SPATIAL_COMPARATOR.compare(getBoundsForConnectable(cep1), getBoundsForConnectable(cep2));
         }
     }
 }

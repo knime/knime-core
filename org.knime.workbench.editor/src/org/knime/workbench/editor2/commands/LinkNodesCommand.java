@@ -55,10 +55,11 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.actions.LinkNodesAction;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -115,7 +116,7 @@ public class LinkNodesCommand extends AbstractKNIMECommand {
             boolean willReplaceAtLeastOneAlreadyExecutedIncoming = false;
 
             for (final LinkNodesAction.PlannedConnection planAction : m_connectionPlans) {
-                if (planAction.getDestinationNode().getNodeContainerState().isExecuted()) {
+                if (planAction.getDestinationNode().getNodeContainer().getNodeContainerState().isExecuted()) {
                     willReplaceAtLeastOneAlreadyExecutedIncoming = true;
 
                     break;
@@ -134,10 +135,10 @@ public class LinkNodesCommand extends AbstractKNIMECommand {
 
         m_removedConnections = new ArrayList<>();
         for (final LinkNodesAction.PlannedConnection planAction : m_connectionPlans) {
-            final NodeID sourceNodeID = planAction.getSourceNode().getID();
-            final NodeContainer sourceNode = wm.getNodeContainer(sourceNodeID);
-            final NodeID destinationNodeID = planAction.getDestinationNode().getID();
-            final NodeContainer destinationNode = wm.getNodeContainer(destinationNodeID);
+            final NodeContainerUI sourceUI = planAction.getSourceNode().getNodeContainer();
+            final NodeID sourceNodeID = sourceUI.getID();
+            final NodeContainerUI destinationUI = planAction.getDestinationNode().getNodeContainer();
+            final NodeID destinationNodeID = destinationUI.getID();
 
             if (planAction.shouldDetachDestinationFirst()) {
                 final ConnectionContainer cc =
@@ -160,11 +161,12 @@ public class LinkNodesCommand extends AbstractKNIMECommand {
                 wm.addConnection(sourceNodeID, planAction.getSourceOutportIndex(), destinationNodeID,
                     planAction.getDestinationInportIndex());
 
-                NodeTimer.GLOBAL_TIMER.addConnectionCreation(sourceNode, destinationNode);
+                NodeTimer.GLOBAL_TIMER.addConnectionCreation(Wrapper.unwrapNC(sourceUI),
+                    Wrapper.unwrapNC(destinationUI));
             } catch (Exception e) {
                 LOGGER.error("Failed to connect " + sourceNodeID + ":" + planAction.getSourceOutportIndex() + " to "
-                        + destinationNodeID + ":" + planAction.getDestinationInportIndex() + " due to: " + e.getMessage(),
-                        e);
+                    + destinationNodeID + ":" + planAction.getDestinationInportIndex() + " due to: " + e.getMessage(),
+                    e);
             }
         }
     }
@@ -177,7 +179,7 @@ public class LinkNodesCommand extends AbstractKNIMECommand {
         final WorkflowManager wm = getHostWFM();
 
         for (final LinkNodesAction.PlannedConnection planAction : m_connectionPlans) {
-            final NodeID destinationNodeID = planAction.getDestinationNode().getID();
+            final NodeID destinationNodeID = planAction.getDestinationNode().getNodeContainer().getID();
             final ConnectionContainer cc =
                     wm.getIncomingConnectionFor(destinationNodeID, planAction.getDestinationInportIndex());
 

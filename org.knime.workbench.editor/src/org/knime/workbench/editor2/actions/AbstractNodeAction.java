@@ -63,6 +63,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -181,27 +182,43 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * @param <T> The class to the argument
      * @return The selected <code>EditParts</code> of the given part.
      */
-    protected <T extends EditPart> T[] getSelectedParts(
-            final Class<T> editPartClass) {
+    protected <T extends EditPart> T[] getSelectedParts(final Class<T> editPartClass) {
         return filterObjects(editPartClass, getSelectedObjects());
     }
 
-    /** Get all edit parts.
+    /**
+     * Get selected connectable edit parts. Honestly i have no idea why <code>getSelectedParts</code> clamps down on T -
+     * if the consumer want to look for all selected objects that subclass AtomicBoolean, so be it - they'll get an
+     * empty list - their problem. Until we come to consensus on that, i've implemented this variant. TODO
+     *
+     * <b>NOTE:</b> The parts returned by this may no longer exist in the associated <code>WorkflowManager</code>
+     * instance.
+     *
+     * @param connectableClass The class of interest
+     * @param <T> The class to the argument
+     * @return The selected <code>ConnectableEditPart</code> of the given part.
+     */
+    protected <T extends ConnectableEditPart> T[] getSelectedConnectables(final Class<T> connectableClass) {
+        return filterObjectsForConnectables(connectableClass, getSelectedObjects());
+    }
+
+    /**
+     * Get all edit parts.
      * @param editPartClass The class of interest
      * @param <T> The class to the argument
-     * @return The <code>EditParts</code> of the given part. */
-    protected <T extends EditPart> T[] getAllParts(
-            final Class<T> editPartClass) {
+     * @return The <code>EditParts</code> of the given part.
+     */
+    protected <T extends EditPart> T[] getAllParts(final Class<T> editPartClass) {
         return filterObjects(editPartClass, getAllObjects());
     }
 
-    /** @param editPartClass The class of interest
+    /**
+     * @param editPartClass The class of interest
      * @param list To filter from
      * @param <T> The class to the argument
      * @return The selected <code>EditParts</code> of the given part. */
-    public static final <T extends EditPart> T[] filterObjects(
-            final Class<T> editPartClass, final List<?> list) {
-        ArrayList<T> objects = new ArrayList<T>();
+    public static final <T extends EditPart> T[] filterObjects(final Class<T> editPartClass, final List<?> list) {
+        final ArrayList<T> objects = new ArrayList<T>();
 
         // clean list, that is, remove all objects that are not edit
         // parts for a NodeContainer
@@ -211,7 +228,32 @@ public abstract class AbstractNodeAction extends SelectionAction {
             }
         }
         @SuppressWarnings("unchecked")
-        T[] array = (T[])Array.newInstance(editPartClass, objects.size());
+        final T[] array = (T[])Array.newInstance(editPartClass, objects.size());
+        return objects.toArray(array);
+    }
+
+    /**
+     * See comments in <code>getSelectedConnectables</code>.
+     *
+     * @param connectableClass The class of interest
+     * @param list To filter from
+     * @param <T> The class to the argument
+     * @return The selected <code>EditParts</code> of the given part.
+     * @see #getSelectedConnectables(Class)
+     */
+    public static final <T extends ConnectableEditPart> T[]
+        filterObjectsForConnectables(final Class<T> connectableClass, final List<?> list) {
+        final ArrayList<T> objects = new ArrayList<T>();
+
+        // clean list, that is, remove all objects that are not edit parts for a NodeContainer
+        for (Object e : list) {
+            if (connectableClass.isInstance(e)) {
+                T cast = connectableClass.cast(e);
+                objects.add(cast);
+            }
+        }
+        @SuppressWarnings("unchecked")
+        final T[] array = (T[])Array.newInstance(connectableClass, objects.size());
         return objects.toArray(array);
     }
 
@@ -219,13 +261,15 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * {@inheritDoc}
      */
     @Override
+    // Cannot generic type to List<?> due to AbstractClipboardAction casting to ArrayList<ConnectionContainerEditPart>
+    // (which is arguably code that need be tweaked...)
+    @SuppressWarnings("rawtypes")
     protected List getSelectedObjects() {
-        ISelectionProvider provider = m_editor.getEditorSite()
-                .getSelectionProvider();
+        final ISelectionProvider provider = m_editor.getEditorSite().getSelectionProvider();
         if (provider == null) {
             return Collections.EMPTY_LIST;
         }
-        ISelection sel = provider.getSelection();
+        final ISelection sel = provider.getSelection();
         if (!(sel instanceof IStructuredSelection)) {
             return Collections.EMPTY_LIST;
         }
@@ -236,17 +280,15 @@ public abstract class AbstractNodeAction extends SelectionAction {
     /**
      * @return all objects of the selected editor site.
      */
-    protected List getAllObjects() {
-
-        ScrollingGraphicalViewer provider = (ScrollingGraphicalViewer)m_editor
-                .getEditorSite().getSelectionProvider();
+    protected List<?> getAllObjects() {
+        final ScrollingGraphicalViewer provider =
+            (ScrollingGraphicalViewer)m_editor.getEditorSite().getSelectionProvider();
         if (provider == null) {
             return Collections.EMPTY_LIST;
         }
 
         // get parent of the node parts
-        EditPart editorPart = (EditPart)provider.getRootEditPart()
-                .getChildren().get(0);
+        final EditPart editorPart = (EditPart)provider.getRootEditPart().getChildren().get(0);
 
         return editorPart.getChildren();
     }

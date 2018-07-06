@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import java.util.Optional;
+
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.LayoutManager;
 import org.eclipse.draw2d.geometry.Rectangle;
@@ -96,6 +98,30 @@ public abstract class AbstractWorkflowPortBarEditPart
     public void deactivate() {
         super.deactivate();
         getNodeContainer().removeNodePropertyChangedListener(this);
+    }
+
+    /**
+     * This attempts to determine the UI bounds from either the hopefully existant (or soon to be, on demand) IFigure
+     * or, as a backup, the underlying WorkflowPortBar model. If both fail, this returns null.
+     *
+     * @return The spatial bounds of this workflow port bar edit part.
+     */
+    public Optional<Rectangle> getUIBounds() {
+        final IFigure partFigure = getFigure();
+
+        if (partFigure != null) {
+            return Optional.ofNullable(partFigure.getBounds());
+        } else {
+            final NodeUIInformation uiInfo = ((WorkflowPortBar)getModel()).getUIInfo();
+
+            if (uiInfo != null) {
+                int[] bounds = uiInfo.getBounds();
+
+                return Optional.of(new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]));
+            }
+        }
+
+        return Optional.empty();
     }
 
     /**
