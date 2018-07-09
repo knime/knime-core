@@ -2113,14 +2113,17 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      */
     private static void saveWizardState(final WorkflowManager wm, final NodeSettings preFilledSettings,
         final WorkflowSaveHelper saveHelper) {
-        if (!saveHelper.isSaveWizardController() || !wm.isProject()) {
+        //don't save the wizard state if
+        //(1) simply not desired
+        //(2) the workflow is or is part of a metanode
+        //(3) hasn't been started in wizard execution mode (i.e. not from the web portal)
+        if (!saveHelper.isSaveWizardController() || !wm.isProject() || !wm.isInWizardExecution()) {
             return;
         }
         NodeSettingsWO wizardSettings = preFilledSettings.addNodeSettings("wizard");
         final WizardExecutionController wizardController = wm.getWizardExecutionController();
-        if (wizardController != null) {
-            wizardController.save(wizardSettings);
-        }
+        assert wizardController != null;
+        wizardController.save(wizardSettings);
     }
 
     protected static void saveWorkflowName(final NodeSettingsWO settings, final String name) {
