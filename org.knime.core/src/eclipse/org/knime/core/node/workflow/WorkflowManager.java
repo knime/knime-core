@@ -2521,7 +2521,8 @@ public final class WorkflowManager extends NodeContainer
      * not meant to be used by multiple clients (only one steps back/forth in the workflow), though this is not asserted
      * by the returned controller object.
      *
-     * @return A controller for the wizard execution (a new or a previously created and modified instance).
+     * @return A controller for the wizard execution (a new or a previously created and modified instance, i.e. never
+     *         <code>null</code>).
      * @throws IllegalStateException If this workflow is not a project.
      * @since 2.10
      */
