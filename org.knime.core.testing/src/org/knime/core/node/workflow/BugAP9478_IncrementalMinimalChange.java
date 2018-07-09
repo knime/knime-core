@@ -107,6 +107,8 @@ public class BugAP9478_IncrementalMinimalChange extends WorkflowTestCase {
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_dataGenerator_1, m_createBlob_2, m_createFileStore_4);
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_testFileStore_3, m_testBlob_5);
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
+        closeWorkflow();
+
         initWorkflowFromTemp();
         Assert.assertThat("Workflow dirty state", getManager().isDirty(), is(false));
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_dataGenerator_1, m_createBlob_2, m_createFileStore_4);
@@ -122,11 +124,15 @@ public class BugAP9478_IncrementalMinimalChange extends WorkflowTestCase {
     public void testLoadPartialExecuteSaveModifyExecute() throws Exception {
         executeAndWait(m_createFileStore_4, m_createBlob_2);
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
+        closeWorkflow();
+
         initWorkflowFromTemp();
         Assert.assertThat("Workflow dirty state", getManager().isDirty(), is(false));
         findNodeContainer(m_dataGenerator_1).setDirty();
         findNodeContainer(m_createBlob_2).setDirty();
         getManager().save(m_workflowDir, new ExecutionMonitor(), true); // this caused the NPE to be thrown
+        closeWorkflow();
+
         initWorkflowFromTemp();
         executeAllAndWait();
         checkState(getManager(), InternalNodeContainerState.EXECUTED);

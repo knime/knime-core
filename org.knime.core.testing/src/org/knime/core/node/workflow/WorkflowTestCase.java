@@ -454,6 +454,20 @@ public abstract class WorkflowTestCase {
     @After
     public void tearDown() throws Exception {
         closeWorkflow();
+
+        // Executed after each test, checks that there are no open workflows dangling around.
+        Collection<NodeContainer> openWorkflows = WorkflowManager.ROOT.getNodeContainers();
+        if (openWorkflows.size() > 2) {
+            throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
+        } else if (openWorkflows.size() > 0) { // 1 or 2
+            for (NodeContainer m : openWorkflows) {
+                if (m.getName().contains("MetaNode Repository") || m.getName().contains("Workflow Template Root")) {
+                    continue;
+                } else {
+                    throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
+                }
+            }
+        }
     }
 
     /**
