@@ -133,7 +133,7 @@ public class LinkNodesAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Link selected nodes\t" + getHotkey(COMMAND_ID);
+        return "Connect selected nodes\t" + getHotkey(COMMAND_ID);
     }
 
     /**
@@ -157,7 +157,7 @@ public class LinkNodesAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Link selected nodes";
+        return "Connect selected nodes";
     }
 
     /**

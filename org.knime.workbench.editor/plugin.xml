@@ -145,14 +145,14 @@
             name="Select Loop"/>
       <command
             categoryId="knime.command.category"
-            description="Unlink selected nodes"
+            description="Disconnect selected nodes"
             id="knime.commands.unlinknodes"
-            name="Unlink selected nodes"/>
+            name="Disconnect selected nodes"/>
       <command
             categoryId="knime.command.category"
-            description="Link selected nodes"
+            description="Connect selected nodes"
             id="knime.commands.linknodes"
-            name="Link selected nodes"/>
+            name="Connect selected nodes"/>
     </extension>
     <extension
          point="org.eclipse.ui.editors">
