@@ -110,7 +110,7 @@ public class UnlinkNodesAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Unlink selected nodes\t" + getHotkey(COMMAND_ID);
+        return "Disconnect selected nodes\t" + getHotkey(COMMAND_ID);
     }
 
     /**
@@ -134,7 +134,7 @@ public class UnlinkNodesAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Unlink selected nodes";
+        return "Disconnect selected nodes";
     }
 
     /**
