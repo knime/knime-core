@@ -47,6 +47,7 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -101,15 +102,12 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     private final boolean m_isInPort;
 
     /**
-     * Instead of using the Collections.EMPTY_LIST we have our own typed empty
-     * list if no connections are available.
+     * Instead of using the Collections.EMPTY_LIST we have our own typed empty list if no connections are available.
      *
      * @see WorkflowOutPortEditPart#getModelSourceConnections()
      * @see WorkflowOutPortEditPart#getModelTargetConnections()
-     *
      */
-    protected static final List<ConnectionContainerUI> EMPTY_LIST =
-            new LinkedList<ConnectionContainerUI>();
+    protected static final List<ConnectionContainerUI> EMPTY_LIST = Collections.unmodifiableList(new LinkedList<>());
 
     /**
      * Subclasses must call this with the appropriate port type, port index and
