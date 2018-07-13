@@ -35,6 +35,20 @@ public class ProductionPath {
         this.m_converterFactory = f;
     }
 
+    /**
+     * @return The cell value producer factory used in this path.
+     */
+    public CellValueProducerFactory<?, ?, ?, ?> getProducerFactory() {
+        return m_producerFactory;
+    }
+
+    /**
+     * @return The converter factory used in this path.
+     */
+    public JavaToDataCellConverterFactory<?> getConverterFactory() {
+        return m_converterFactory;
+    }
+
     @Override
     public String toString() {
         return String.format("%s ---> %s --(\"%s\")-> %s", m_producerFactory.getSourceType(),

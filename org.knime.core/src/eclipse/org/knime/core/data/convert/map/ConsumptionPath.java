@@ -35,6 +35,20 @@ public class ConsumptionPath {
         this.m_consumerFactory = consumer;
     }
 
+    /**
+     * @return The converter factory used in this path.
+     */
+    public DataCellToJavaConverterFactory<?, ?> getConverterFactory() {
+        return m_converterFactory;
+    }
+
+    /**
+     * @return The consumer factory used in this path.
+     */
+    public CellValueConsumerFactory<?, ?, ?, ?> getConsumerFactory() {
+        return m_consumerFactory;
+    }
+
     @Override
     public String toString() {
         return String.format("%s --(\"%s\")-> %s ---> %s", m_converterFactory.getSourceType().getSimpleName(),

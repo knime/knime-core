@@ -212,6 +212,9 @@ public class MappingFrameworkTest {
         assertEquals(pathA.hashCode(), pathA.hashCode());
         assertEquals(pathA.hashCode(), pathB.hashCode());
         assertNotEquals(pathA.hashCode(), pathC.hashCode());
+
+        assertEquals(pathA.getConsumerFactory(), pathA.m_consumerFactory);
+        assertEquals(pathA.getConverterFactory(), pathA.m_converterFactory);
     }
 
     /**
@@ -247,6 +250,9 @@ public class MappingFrameworkTest {
         assertEquals(pathA.hashCode(), pathA.hashCode());
         assertEquals(pathA.hashCode(), pathB.hashCode());
         assertNotEquals(pathA.hashCode(), pathC.hashCode());
+
+        assertEquals(pathA.getProducerFactory(), pathA.m_producerFactory);
+        assertEquals(pathA.getConverterFactory(), pathA.m_converterFactory);
     }
 
     /**
