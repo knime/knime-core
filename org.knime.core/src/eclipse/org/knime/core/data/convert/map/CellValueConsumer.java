@@ -6,13 +6,13 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * A cell value consumer receives a Java value and writes it to a {@link Destination} using a certain external type.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <DestinationType> Type of {@link Destination} this consumer writes to
+ * @param <DT> Type of {@link Destination} this consumer writes to
  * @param <T> Type of Java value the consumer accepts
  * @param <CP> Subtype of {@link ConsumerParameters} that can be used to configure this consumer
  * @since 3.6
  */
 @FunctionalInterface
-public interface CellValueConsumer<DestinationType extends Destination<?>, T, CP extends Destination.ConsumerParameters<DestinationType>> {
+public interface CellValueConsumer<DT extends Destination<?>, T, CP extends Destination.ConsumerParameters<DT>> {
 
     /**
      * Writes the <code>value</code> to <code>destination</code> using given <code>destinationParams</code>.
@@ -24,6 +24,6 @@ public interface CellValueConsumer<DestinationType extends Destination<?>, T, CP
      *            that is being used.
      * @throws MappingException If an exception occurs while consuming the cell value
      */
-    public void consumeCellValue(final DestinationType destination, final T value, final CP destinationParams)
+    public void consumeCellValue(final DT destination, final T value, final CP destinationParams)
         throws MappingException;
 }

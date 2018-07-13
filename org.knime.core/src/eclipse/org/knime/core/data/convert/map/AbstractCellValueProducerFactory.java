@@ -54,14 +54,14 @@ import org.knime.core.data.convert.map.Source.ProducerParameters;
  * Abstract implementation of {@link CellValueProducerFactory}.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <SourceType> Type of source
+ * @param <ST> Type of source
  * @param <T> Java type the created consumer is able to accept
- * @param <ExternalType> Type of the external type
+ * @param <ET> Type of the external type
  * @param <PP> Subclass of {@link ProducerParameters} for given destination type
  * @since 3.6
  */
-public abstract class AbstractCellValueProducerFactory<SourceType extends Source<ExternalType>, ExternalType, T, PP extends ProducerParameters<SourceType>>
-    implements CellValueProducerFactory<SourceType, ExternalType, T, PP> {
+public abstract class AbstractCellValueProducerFactory<ST extends Source<ET>, ET, T, PP extends ProducerParameters<ST>>
+    implements CellValueProducerFactory<ST, ET, T, PP> {
 
     @Override
     public int hashCode() {

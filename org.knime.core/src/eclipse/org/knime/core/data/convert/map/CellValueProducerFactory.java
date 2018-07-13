@@ -55,14 +55,14 @@ import org.knime.core.data.convert.map.Source.ProducerParameters;
  * Factory for {@link CellValueProducer}.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <SourceType> Type of source
- * @param <ExternalType> Type of the external type
+ * @param <ST> Type of source
+ * @param <ET> Type of the external type
  * @param <T> Java type the created consumer is able to accept
  * @param <PP> Subclass of {@link ProducerParameters} for given destination type
  * @since 3.6
  */
-public interface CellValueProducerFactory<SourceType extends Source<ExternalType>, ExternalType, T, PP extends ProducerParameters<SourceType>>
-    extends ConverterFactory<ExternalType, Class<?>> {
+public interface CellValueProducerFactory<ST extends Source<ET>, ET, T, PP extends ProducerParameters<ST>>
+    extends ConverterFactory<ET, Class<?>> {
 
     @Override
     default String getName() {
@@ -74,5 +74,5 @@ public interface CellValueProducerFactory<SourceType extends Source<ExternalType
      *
      * @return The created producer
      */
-    CellValueProducer<SourceType, T, PP> create();
+    CellValueProducer<ST, T, PP> create();
 }

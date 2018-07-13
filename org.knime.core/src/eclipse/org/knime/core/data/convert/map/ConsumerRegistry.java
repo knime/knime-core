@@ -62,12 +62,12 @@ import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
  * Place to register consumers for a specific destination type.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <DestinationType> Type of {@link Destination} for which this registry holds consumers.
- * @param <ExternalType> Type of destination types
+ * @param <DT> Type of {@link Destination} for which this registry holds consumers.
+ * @param <ET> External type
  * @since 3.6
  */
-public class ConsumerRegistry<ExternalType, DestinationType extends Destination<ExternalType>> extends
-    AbstractConverterFactoryRegistry<Class<?>, ExternalType, CellValueConsumerFactory<DestinationType, ?, ExternalType, ?>, ConsumerRegistry<ExternalType, DestinationType>> {
+public class ConsumerRegistry<ET, DT extends Destination<ET>> extends
+    AbstractConverterFactoryRegistry<Class<?>, ET, CellValueConsumerFactory<DT, ?, ET, ?>, ConsumerRegistry<ET, DT>> {
 
     /**
      * Constructor
@@ -83,10 +83,11 @@ public class ConsumerRegistry<ExternalType, DestinationType extends Destination<
      *
      * @param parentType type of {@link Destination}, which should be this types parent.
      * @return reference to self (for method chaining)
+     * @param <PT> Type of parent registry
      */
-    public <ParentType extends Destination<ExternalType>> ConsumerRegistry<ExternalType, DestinationType>
-        setParent(final Class<ParentType> parentType) {
-        m_parent = (ConsumerRegistry<ExternalType, DestinationType>)MappingFramework.forDestinationType(parentType);
+    public <PT extends Destination<ET>> ConsumerRegistry<ET, DT>
+        setParent(final Class<PT> parentType) {
+        m_parent = (ConsumerRegistry<ET, DT>)MappingFramework.forDestinationType(parentType);
         return this;
     }
 
@@ -99,7 +100,7 @@ public class ConsumerRegistry<ExternalType, DestinationType extends Destination<
 
         for (final DataCellToJavaConverterFactory<?, ?> f : DataCellToJavaConverterRegistry.getInstance()
             .getFactoriesForSourceType(type)) {
-            for (final CellValueConsumerFactory<DestinationType, ?, ?, ?> c : getFactoriesForSourceType(
+            for (final CellValueConsumerFactory<DT, ?, ?, ?> c : getFactoriesForSourceType(
                 f.getDestinationType())) {
                 if (c != null) {
                     cp.add(new ConsumptionPath(f, c));
@@ -115,7 +116,7 @@ public class ConsumerRegistry<ExternalType, DestinationType extends Destination<
      *
      * @return self (for method chaining)
      */
-    public ConsumerRegistry<ExternalType, DestinationType> unregisterAllConsumers() {
+    public ConsumerRegistry<ET, DT> unregisterAllConsumers() {
         m_byDestinationType.clear();
         m_bySourceType.clear();
         m_byIdentifier.clear();

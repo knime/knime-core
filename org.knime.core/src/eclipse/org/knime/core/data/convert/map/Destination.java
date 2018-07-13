@@ -9,20 +9,20 @@ import org.knime.core.data.DataValue;
  * May be implemented to represent an SQL Database, file, H2O frame and more.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <ExternalType> Type of external types (used for generic parameter deduction in
+ * @param <ET> Type of external types (used for generic parameter deduction in
  *            {@link MappingFramework#forDestinationType(Class)} for example.
  * @since 3.6
  */
-public interface Destination<ExternalType> {
+public interface Destination<ET> {
 
     /**
      * Parameters passed to a {@link CellValueConsumer}. Meant for very temporary parameters such as row specific
      * configuration.
      *
      * @author Jonathan Hale, KNIME, Konstanz, Germany
-     * @param <DestinationType> type of destination
+     * @param <DT> type of destination
      */
-    public static interface ConsumerParameters<DestinationType extends Destination<?>> {
+    public static interface ConsumerParameters<DT extends Destination<?>> {
 
     }
 }
