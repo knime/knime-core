@@ -84,12 +84,32 @@ public final class MissingValueNodeDescriptionHelper {
     }
 
     /**
-     * Adds an additional option tag with name "Missing Value Handler Selection"
-     * to the fullDescription of the given node
-     * description.
+     * Adds an additional option tag with name "Missing Value Handler Selection" to the fullDescription of the given
+     * node description.
+     *
+     * To retrieve the individual handler descriptions the {@link MissingCellHandlerFactoryManager#getInstance()} is
+     * used.
      *
      * @param parentDescription the parent description to add the tag to
-     * @param manager handler factory manager
+     * @return a node description with the <option=''/> added
+     * @throws IOException some problem on reading the description
+     * @throws SAXException not going to happen
+     */
+    public static NodeDescription createNodeDescription(final NodeDescription parentDescription)
+        throws SAXException, IOException {
+        return createNodeDescription(parentDescription, null);
+    }
+
+    /**
+     * Adds an additional option tag with name "Missing Value Handler Selection" to the fullDescription of the given
+     * node description.
+     *
+     * Please note that if a {@link MissingCellHandlerFactoryManager} is provided, the node description is newly
+     * compiled with every call what might cause some overhead.
+     *
+     * @param parentDescription the parent description to add the tag to
+     * @param manager handler factory manager, if <code>null</code>
+     *            {@link MissingCellHandlerFactoryManager#getInstance()} will be used
      * @return a node description with the <option=''/> added
      * @throws IOException some problem on reading the description
      * @throws SAXException not going to happen
@@ -100,13 +120,16 @@ public final class MissingValueNodeDescriptionHelper {
         NodeDescription createNodeDescription = parentDescription;
         Element knimeNode = createNodeDescription.getXMLDescription();
 
-        List<MissingCellHandlerFactory> factories = manager.getFactories();
-        factories.sort((a,b) ->  a.getDisplayName().compareTo(b.getDisplayName()));
-
         Element fullDescription = findFullDescription(knimeNode);
 
         if (fullDescription != null) {
-            MissingCellHandlerDescriptionFactory.addShortDescriptionToNodeDescription(fullDescription, factories);
+            if (manager == null) {
+                MissingCellHandlerDescriptionFactory.addShortDescriptionToNodeDescription(fullDescription);
+            } else {
+                List<MissingCellHandlerFactory> factories = manager.getFactories();
+                factories.sort((a,b) ->  a.getDisplayName().compareTo(b.getDisplayName()));
+                MissingCellHandlerDescriptionFactory.addShortDescriptionToNodeDescription(fullDescription, factories);
+            }
             //a deep copy is created and returned as there exist some trouble
             //with the namespaces and the following xslt transformation
             return new NodeDescriptionXmlProxy(createNodeDescription, deepCopy(knimeNode));

@@ -50,7 +50,9 @@ package org.knime.base.node.preproc.pmml.missingval.utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.lang.ref.SoftReference;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -62,6 +64,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactoryManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.missingval.v10.MissingcellhandlerDocument;
@@ -86,6 +89,10 @@ public final class MissingCellHandlerDescriptionFactory {
     private static final String SHORT_DESCRIPTION_TEMPLATE;
 
     private static final XmlOptions OPTIONS = new XmlOptions();
+
+    /* Caches the subdescriptions of the missing cell handlers */
+    private static SoftReference<Document> SUB_DESCRIPTION = new SoftReference<Document>(null);
+
     static {
         Map<String, String> namespaceMap = new HashMap<String, String>(1);
         namespaceMap.put("", MissingcellhandlerDocument.type.getContentModel().getName().getNamespaceURI());
@@ -129,47 +136,41 @@ public final class MissingCellHandlerDescriptionFactory {
     /**
      * Adds the short description of the given {@link MissingCellHandlerFactory}s to the fullDescription DOM-Element.
      *
+     * It uses {@link MissingCellHandlerFactoryManager#getInstance()} to get the {@link MissingCellHandlerFactory}s that
+     * in turn provide the individual handler descriptions. A once created short description (i.e. on the first call)
+     * will be cached.
+     *
+     * @param fullDescription DOM-Element of a Knime-Node
+     */
+    public static void addShortDescriptionToNodeDescription(final Element fullDescription) {
+        Document subDescriptionNode;
+        if (SUB_DESCRIPTION.get() == null) {
+            List<MissingCellHandlerFactory> factories = MissingCellHandlerFactoryManager.getInstance().getFactories();
+            factories.sort((a, b) -> a.getDisplayName().compareTo(b.getDisplayName()));
+            subDescriptionNode = createShortDescription(factories);
+            SUB_DESCRIPTION = new SoftReference<Document>(subDescriptionNode);
+        } else {
+            subDescriptionNode = SUB_DESCRIPTION.get();
+        }
+        Node importedNode = fullDescription.getOwnerDocument().importNode(subDescriptionNode.getFirstChild(), true);
+        fullDescription.appendChild(importedNode);
+    }
+
+    /**
+     * Adds the short description of the given {@link MissingCellHandlerFactory}s to the fullDescription DOM-Element.
+     *
+     * Please note that with every call the short description is newly created (i.e. xml-files read in, parsed etc.)
+     * what causes some overhead if called repeatedly.
+     *
      * @param fullDescription DOM-Element of a Knime-Node
      * @param factoriesOfType registration types
      */
     public static void addShortDescriptionToNodeDescription(final Element fullDescription,
         final Iterable<MissingCellHandlerFactory> factoriesOfType) {
         CheckUtils.checkNotNull(factoriesOfType);
-        StringBuilder builder =
-            new StringBuilder("<option name='Missing Value Handler Selection' optional='false'>"
-                + "Select and configure the missing value handler to be used for data types or columns. "
-                + "Handlers that do not produce valid PMML 4.2 are marked with an asterisk (*).");
-
-        for (MissingCellHandlerFactory reg : factoriesOfType) {
-            if (!reg.isDeprecated()) {
-                MissingCellHandlerDescription description = reg.getDescription();
-                String shortDescription = StringEscapeUtils.escapeXml(description.getShortDescription());
-                String name = description.getName();
-                if (!reg.producesPMML4_2()) {
-                    name += MissingCellHandlerFactory.NO_PMML_INDICATOR;
-                }
-                String subDescription = SHORT_DESCRIPTION_TEMPLATE.replace("[NAME]", name).replace("[SHORT_DESCRIPTION]",
-                    shortDescription);
-                try {
-                    // try to parse the xml snippet and ignore it if that fails
-                    loadXmlFromString(subDescription);
-                    builder.append(subDescription);
-                } catch (ParserConfigurationException | SAXException | IOException e2) {
-                    LOGGER.coding("Fail on adding description for missing cell handler: " + reg.getID(), e2);
-                }
-            }
-        }
-        builder.append("</option>");
-        Document subDescriptionNode;
-        try {
-            subDescriptionNode = loadXmlFromString(builder.toString());
-            Node importedNode = fullDescription.getOwnerDocument().importNode(subDescriptionNode.getFirstChild(), true);
-            fullDescription.appendChild(importedNode);
-        } catch (ParserConfigurationException | SAXException | IOException e) {
-            // that should not happen, as it would be a bug!
-            LOGGER.coding("Invalid html fallback handling.", e);
-            throw new IllegalArgumentException("Invalid html fallback handling.", e);
-        }
+        Node importedNode = fullDescription.getOwnerDocument()
+            .importNode(createShortDescription(factoriesOfType).getFirstChild(), true);
+        fullDescription.appendChild(importedNode);
     }
 
     /**
@@ -186,6 +187,42 @@ public final class MissingCellHandlerDescriptionFactory {
         DocumentBuilder builder = factory.newDocumentBuilder();
         InputSource is = new InputSource(new StringReader(xml));
         return builder.parse(is);
+    }
+
+    /* Reads and compiles the short description from the respective missing cell handlers */
+    private static Document createShortDescription(final Iterable<MissingCellHandlerFactory> factoriesOfType) {
+        StringBuilder builder = new StringBuilder("<option name='Missing Value Handler Selection' optional='false'>"
+            + "Select and configure the missing value handler to be used for data types or columns. "
+            + "Handlers that do not produce valid PMML 4.2 are marked with an asterisk (*).");
+        Document subDescriptionNode;
+        for (MissingCellHandlerFactory reg : factoriesOfType) {
+            if (!reg.isDeprecated()) {
+                MissingCellHandlerDescription description = reg.getDescription();
+                String shortDescription = StringEscapeUtils.escapeXml(description.getShortDescription());
+                String name = description.getName();
+                if (!reg.producesPMML4_2()) {
+                    name += MissingCellHandlerFactory.NO_PMML_INDICATOR;
+                }
+                String subDescription =
+                    SHORT_DESCRIPTION_TEMPLATE.replace("[NAME]", name).replace("[SHORT_DESCRIPTION]", shortDescription);
+                try {
+                    // try to parse the xml snippet and ignore it if that fails
+                    loadXmlFromString(subDescription);
+                    builder.append(subDescription);
+                } catch (ParserConfigurationException | SAXException | IOException e2) {
+                    LOGGER.coding("Fail on adding description for missing cell handler: " + reg.getID(), e2);
+                }
+            }
+        }
+        builder.append("</option>");
+        try {
+            subDescriptionNode = loadXmlFromString(builder.toString());
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            // that should not happen, as it would be a bug!
+            LOGGER.coding("Invalid html fallback handling.", e);
+            throw new IllegalArgumentException("Invalid html fallback handling.", e);
+        }
+        return subDescriptionNode;
     }
 
     /**
