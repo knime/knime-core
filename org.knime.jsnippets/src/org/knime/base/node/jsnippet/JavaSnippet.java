@@ -1124,7 +1124,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
      * @return the compiled snippet
      */
     @SuppressWarnings("unchecked")
-    private Class<? extends AbstractJSnippet> createSnippetClass() {
+    private synchronized Class<? extends AbstractJSnippet> createSnippetClass() {
         JavaSnippetCompiler compiler = new JavaSnippetCompiler(this);
 
         /* Recompile/Reload either if the code changed or the class loader has been closed since */
