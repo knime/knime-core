@@ -126,10 +126,12 @@ class CredentialsValidateNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // verifies fix for AP-8636: Credentials not available during loadInternals()
-        try {
-            validate();
-        } catch (InvalidSettingsException e) {
-            throw new IOException(e);
+        if (m_configuration.isValidateCredentialsAtLoad()) {
+            try {
+                validate();
+            } catch (InvalidSettingsException e) {
+                throw new IOException(e);
+            }
         }
     }
 

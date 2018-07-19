@@ -78,6 +78,7 @@ final class CredentialsValidateNodeDialogPane extends NodeDialogPane {
     private final JTextField m_usernameField;
     private final JTextField m_passwordField;
     private final JCheckBox m_passwordExpectedToBeSetChecker;
+    private final JCheckBox m_validateCredentialsAtLoadChecker;
 
     CredentialsValidateNodeDialogPane() {
         final int cols = 20;
@@ -88,6 +89,7 @@ final class CredentialsValidateNodeDialogPane extends NodeDialogPane {
         m_passwordExpectedToBeSetChecker.addItemListener(
             e -> m_passwordField.setEnabled(m_passwordExpectedToBeSetChecker.isSelected()));
         m_passwordExpectedToBeSetChecker.doClick();
+        m_validateCredentialsAtLoadChecker = new JCheckBox("Validate credentials when loading executed node");
 
         addTab("Main", createPanel());
     }
@@ -121,6 +123,12 @@ final class CredentialsValidateNodeDialogPane extends NodeDialogPane {
         gbc.gridx += 1;
         p.add(m_passwordField, gbc);
 
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        gbc.gridwidth = 2;
+        p.add(m_validateCredentialsAtLoadChecker, gbc);
+        gbc.gridwidth = 1;
+
         return p;
     }
 
@@ -133,6 +141,7 @@ final class CredentialsValidateNodeDialogPane extends NodeDialogPane {
         c.setUsername(m_usernameField.getText());
         c.setPassword(m_passwordExpectedToBeSetChecker.isSelected() ? m_passwordField.getText() : null);
         c.setPasswordExpectedToBeSet(m_passwordExpectedToBeSetChecker.isSelected());
+        c.setValidateCredentialsAtLoad(m_validateCredentialsAtLoadChecker.isSelected());
 
         c.saveSettings(settings);
     }
@@ -157,6 +166,7 @@ final class CredentialsValidateNodeDialogPane extends NodeDialogPane {
         if (m_passwordExpectedToBeSetChecker.isSelected() != configuration.isPasswordExpectedToBeSet()) {
             m_passwordExpectedToBeSetChecker.doClick(); // triggers event
         }
+        m_validateCredentialsAtLoadChecker.setSelected(configuration.isValidateCredentialsAtLoad());
     }
 
 }

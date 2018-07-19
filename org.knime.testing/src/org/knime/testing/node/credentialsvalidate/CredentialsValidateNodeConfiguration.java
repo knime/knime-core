@@ -68,6 +68,7 @@ final class CredentialsValidateNodeConfiguration {
     private String m_password;
 
     private boolean m_passwordExpectedToBeSet;
+    private boolean m_validateCredentialsAtLoad;
 
     /**
      * @return the credId
@@ -125,6 +126,20 @@ final class CredentialsValidateNodeConfiguration {
         m_passwordExpectedToBeSet = passwordExpectedToBeSet;
     }
 
+    /**
+     * @return the validateCredentialsAtLoad
+     */
+    public boolean isValidateCredentialsAtLoad() {
+        return m_validateCredentialsAtLoad;
+    }
+
+    /**
+     * @param validateCredentialsAtLoad the validateCredentialsAtLoad to set
+     */
+    public void setValidateCredentialsAtLoad(final boolean validateCredentialsAtLoad) {
+        m_validateCredentialsAtLoad = validateCredentialsAtLoad;
+    }
+
     void verify(final CredentialsProvider credProvider) throws InvalidSettingsException {
         CheckUtils.checkSetting(credProvider.listNames().contains(m_credentialsID),
             "Invalid credentials ID '%s'", m_credentialsID);
@@ -146,6 +161,7 @@ final class CredentialsValidateNodeConfiguration {
         s.addString("username", m_username);
         s.addString("password", m_password);
         s.addBoolean("passwordExpectedToBeSet", m_passwordExpectedToBeSet);
+        s.addBoolean("validateCredentialsAtLoad", m_validateCredentialsAtLoad);
     }
 
     CredentialsValidateNodeConfiguration loadSettingsInModel(final NodeSettingsRO s) throws InvalidSettingsException {
@@ -153,6 +169,7 @@ final class CredentialsValidateNodeConfiguration {
         m_username = s.getString("username");
         m_password = s.getString("password");
         m_passwordExpectedToBeSet = s.getBoolean("passwordExpectedToBeSet");
+        m_validateCredentialsAtLoad = s.getBoolean("validateCredentialsAtLoad", true);
         return this;
     }
 
@@ -161,5 +178,6 @@ final class CredentialsValidateNodeConfiguration {
         m_username = s.getString("username", "some-user-name");
         m_password = s.getString("password", "some-password");
         m_passwordExpectedToBeSet = s.getBoolean("passwordExpectedToBeSet", false);
+        m_validateCredentialsAtLoad = s.getBoolean("validateCredentialsAtLoad", true);
     }
 }
