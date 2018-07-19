@@ -70,11 +70,14 @@ public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCa
     private File m_workflowDir;
     private NodeID m_rowSplitter;
     private NodeID m_tableCreator;
+    private WorkflowManager m_sandboxedWM;
 
     @Before
     public void setUp() throws Exception {
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
+        m_sandboxedWM = WorkflowManager.ROOT.createAndAddProject(
+            "Sandboxed Temp Workflow", new WorkflowCreationHelper());
         initWorkflowFromTemp();
     }
 
@@ -106,24 +109,19 @@ public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCa
 
         // Set the location and the WFM
         File sandboxedDir = FileUtil.createTempDir(getClass().getSimpleName() + "-sandboxed");
-        WorkflowManager sandboxedWM = WorkflowManager.ROOT.createAndAddProject(
-            "Sandboxed Temp Workflow", new WorkflowCreationHelper());
+
 
         // Create the SandboxedNode
-        SandboxedNodeCreator nodeCreator = new SandboxedNodeCreator(rowSplitter, inputData, sandboxedWM);
+        SandboxedNodeCreator nodeCreator = new SandboxedNodeCreator(rowSplitter, inputData, m_sandboxedWM);
         nodeCreator.setLocalWorkflowDir(CheckUtils.checkArgumentNotNull(sandboxedDir));
         nodeCreator.setCopyData(true);
         NodeContext.pushContext(rowSplitter);
         NodeID workflowID;
-        try {
-            SandboxedNode node = nodeCreator.createSandbox(exec);
+        try (SandboxedNode node = nodeCreator.createSandbox(exec)) {
             workflowID = node.getSandboxNode(NodeContainer.class).getParent().getID();
         } finally {
             NodeContext.removeLastContext();
         }
-
-        // Remove the temp workflow of the SandboxedNode from the WFM
-        sandboxedWM.removeProject(workflowID);
 
         // Now, try to execute the original workflow. This should still work
         executeAllAndWait();
@@ -135,6 +133,7 @@ public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCa
     @Override
     @After
     public void tearDown() throws Exception {
+        WorkflowManager.ROOT.removeProject(m_sandboxedWM.getID());
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowDir);
     }
