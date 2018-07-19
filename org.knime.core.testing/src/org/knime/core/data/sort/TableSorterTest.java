@@ -232,7 +232,7 @@ public class TableSorterTest {
             public TestDataIterator(final int size, final int randSeed) {
                 m_rand = new Random(randSeed);
                 // every output row has size * 2 bytes
-                m_strCellSize = 1000000;
+                m_strCellSize = 100000;
                 m_size = size;
                 m_count = 0;
             }
