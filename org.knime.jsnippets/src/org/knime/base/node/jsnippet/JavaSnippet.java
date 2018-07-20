@@ -327,7 +327,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
      *
      * @param settings the settings
      */
-    public void setSettings(final JavaSnippetSettings settings) {
+    public synchronized void setSettings(final JavaSnippetSettings settings) {
         m_settings = settings;
         setJavaSnippetFields(settings.getJavaSnippetFields());
         setJarFiles(settings.getJarFiles());
