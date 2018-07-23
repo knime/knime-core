@@ -120,12 +120,12 @@ public class MappingFramework {
      * @param destinationType {@link Destination} type for which to get the registry
      * @return Per destination type consumer registry for given destination type.
      * @param <ET> External type
-     * @param <DT> Destination type
+     * @param <D> Destination type
      */
-    public static <ET, DT extends Destination<ET>> ConsumerRegistry<ET, DT>
-        forDestinationType(final Class<? extends DT> destinationType) {
+    public static <ET, D extends Destination<ET>> ConsumerRegistry<ET, D>
+        forDestinationType(final Class<? extends D> destinationType) {
 
-        final ConsumerRegistry<ET, DT> perDT = getConsumerRegistry(destinationType);
+        final ConsumerRegistry<ET, D> perDT = getConsumerRegistry(destinationType);
         if (perDT == null) {
             return createConsumerRegistry(destinationType);
         }
@@ -139,11 +139,11 @@ public class MappingFramework {
      * @param sourceType {@link Source} type for which to get the registry
      * @return Per source type producer registry for given source type.
      * @param <ET> External type
-     * @param <ST> Source type
+     * @param <S> Source type
      */
-    public static <ET, ST extends Source<ET>> ProducerRegistry<ET, ST>
-        forSourceType(final Class<? extends ST> sourceType) {
-        final ProducerRegistry<ET, ST> perST = getProducerRegistry(sourceType);
+    public static <ET, S extends Source<ET>> ProducerRegistry<ET, S>
+        forSourceType(final Class<? extends S> sourceType) {
+        final ProducerRegistry<ET, S> perST = getProducerRegistry(sourceType);
         if (perST == null) {
             return createProducerRegistry(sourceType);
         }
@@ -160,32 +160,32 @@ public class MappingFramework {
     private static <ET, DT extends Destination<ET>> ConsumerRegistry<ET, DT>
         getConsumerRegistry(final Class<? extends DT> destinationType) {
         @SuppressWarnings("unchecked")
-        final ConsumerRegistry<ET, DT> r = (ConsumerRegistry<ET, DT>)m_destinationTypes.get(destinationType);
-        return r;
+        final ConsumerRegistry<ET, DT> registry = (ConsumerRegistry<ET, DT>)m_destinationTypes.get(destinationType);
+        return registry;
     }
 
     /* Get the producer registry for given destination type */
-    private static <ET, ST extends Source<ET>> ProducerRegistry<ET, ST>
-        getProducerRegistry(final Class<? extends ST> sourceType) {
+    private static <ET, S extends Source<ET>> ProducerRegistry<ET, S>
+        getProducerRegistry(final Class<? extends S> sourceType) {
         @SuppressWarnings("unchecked")
-        final ProducerRegistry<ET, ST> r = (ProducerRegistry<ET, ST>)m_sourceTypes.get(sourceType);
-        return r;
+        final ProducerRegistry<ET, S> registry = (ProducerRegistry<ET, S>)m_sourceTypes.get(sourceType);
+        return registry;
     }
 
     /* Create the consumer registry for given destination type */
-    private static <ET, DT extends Destination<ET>> ConsumerRegistry<ET, DT>
-        createConsumerRegistry(final Class<? extends DT> destinationType) {
-        final ConsumerRegistry<ET, DT> r = new ConsumerRegistry<ET, DT>();
-        m_destinationTypes.put(destinationType, r);
-        return r;
+    private static <ET, D extends Destination<ET>> ConsumerRegistry<ET, D>
+        createConsumerRegistry(final Class<? extends D> destinationType) {
+        final ConsumerRegistry<ET, D> registry = new ConsumerRegistry<ET, D>();
+        m_destinationTypes.put(destinationType, registry);
+        return registry;
     }
 
     /* Create the producer registry for given destination type */
-    private static <ET, ST extends Source<ET>> ProducerRegistry<ET, ST>
-        createProducerRegistry(final Class<? extends ST> sourceType) {
-        final ProducerRegistry<ET, ST> r = new ProducerRegistry<ET, ST>();
-        m_sourceTypes.put(sourceType, r);
-        return r;
+    private static <ET, S extends Source<ET>> ProducerRegistry<ET, S>
+        createProducerRegistry(final Class<? extends S> sourceType) {
+        final ProducerRegistry<ET, S> registry = new ProducerRegistry<ET, S>();
+        m_sourceTypes.put(sourceType, registry);
+        return registry;
     }
 
     /**
@@ -201,8 +201,8 @@ public class MappingFramework {
      * @param <ST> Source type
      * @param <PP> Producer parameters subclass
      */
-    public static <ST extends Source<?>, PP extends ProducerParameters<ST>> DataRow map(final RowKey key,
-        final ST source, final ProductionPath[] mapping, final PP[] params, final ExecutionContext context)
+    public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRow map(final RowKey key,
+        final S source, final ProductionPath[] mapping, final PP[] params, final ExecutionContext context)
         throws Exception {
 
         final DataCell[] cells = new DataCell[mapping.length];
@@ -211,7 +211,7 @@ public class MappingFramework {
         for (final ProductionPath path : mapping) {
             final JavaToDataCellConverter<?> converter = path.m_converterFactory.create(context);
             @SuppressWarnings("unchecked")
-            final CellValueProducer<ST, ?, PP> producer = (CellValueProducer<ST, ?, PP>)path.m_producerFactory.create();
+            final CellValueProducer<S, ?, PP> producer = (CellValueProducer<S, ?, PP>)path.m_producerFactory.create();
 
             cells[i] = converter.convertUnsafe(producer.produceCellValue(source, params[i]));
             ++i;
@@ -232,15 +232,15 @@ public class MappingFramework {
      * @param <DT> Destination type
      * @param <CP> Consumer parameters subclass
      */
-    public static <DT extends Destination<?>, CP extends ConsumerParameters<DT>> void map(final DataRow row,
-        final DT dest, final ConsumptionPath[] mapping, final CP[] params) throws Exception {
+    public static <D extends Destination<?>, CP extends ConsumerParameters<D>> void map(final DataRow row,
+        final D dest, final ConsumptionPath[] mapping, final CP[] params) throws Exception {
 
         int i = 0;
         for (final DataCell cell : row) {
             final DataCellToJavaConverter<?, ?> converter = mapping[i].m_converterFactory.create();
             @SuppressWarnings("unchecked")
-            final CellValueConsumer<DT, Object, CP> consumer =
-                (CellValueConsumer<DT, Object, CP>)mapping[i].m_consumerFactory.create();
+            final CellValueConsumer<D, Object, CP> consumer =
+                (CellValueConsumer<D, Object, CP>)mapping[i].m_consumerFactory.create();
 
             final Object cellValue = cell.isMissing() ? null : converter.convertUnsafe(cell);
             consumer.consumeCellValue(dest, cellValue, params[i]);
@@ -257,6 +257,6 @@ public class MappingFramework {
      */
     public static DataTableSpec createSpec(final String[] names, final ProductionPath[] paths) {
         return new DataTableSpec(names,
-            Stream.of(paths).map(p -> p.m_converterFactory.getDestinationType()).toArray(n -> new DataType[n]));
+            Stream.of(paths).map(path -> path.m_converterFactory.getDestinationType()).toArray(n -> new DataType[n]));
     }
 }

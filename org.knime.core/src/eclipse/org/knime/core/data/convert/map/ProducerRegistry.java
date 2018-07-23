@@ -96,22 +96,22 @@ public class ProducerRegistry<ET, ST extends Source<ET>> extends
      * @return All possible production paths
      */
     public List<ProductionPath> getAvailableProductionPaths(final ET externalType) {
-        final ArrayList<ProductionPath> cp = new ArrayList<>();
+        final ArrayList<ProductionPath> productionPaths = new ArrayList<>();
 
         for (final CellValueProducerFactory<ST, ET, ?, ?> producerFactory : getFactoriesForSourceType(
             externalType)) {
 
-            for (final JavaToDataCellConverterFactory<?> f : JavaToDataCellConverterRegistry.getInstance()
+            for (final JavaToDataCellConverterFactory<?> converterFactory : JavaToDataCellConverterRegistry.getInstance()
                 .getFactoriesForSourceType(producerFactory.getDestinationType())) {
-                cp.add(new ProductionPath(producerFactory, f));
+                productionPaths.add(new ProductionPath(producerFactory, converterFactory));
             }
         }
 
         if (m_parent != null) {
-            cp.addAll(m_parent.getAvailableProductionPaths(externalType));
+            productionPaths.addAll(m_parent.getAvailableProductionPaths(externalType));
         }
 
-        return cp;
+        return productionPaths;
     }
 
     /**

@@ -27,12 +27,12 @@ public class ProductionPath {
      * Constructor.
      *
      * @param producerFactory Factory to create the producer which gets a value from an external source
-     * @param f Factory to create a converter used to wrap the value from the producer into a data cell
+     * @param converterFactory Factory to create a converter used to wrap the value from the producer into a data cell
      */
     public ProductionPath(final CellValueProducerFactory<?, ?, ?, ?> producerFactory,
-        final JavaToDataCellConverterFactory<?> f) {
+        final JavaToDataCellConverterFactory<?> converterFactory) {
         this.m_producerFactory = producerFactory;
-        this.m_converterFactory = f;
+        this.m_converterFactory = converterFactory;
     }
 
     /**
@@ -76,7 +76,7 @@ public class ProductionPath {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        ProductionPath other = (ProductionPath)obj;
+        final ProductionPath other = (ProductionPath)obj;
         if (m_producerFactory == null) {
             if (other.m_producerFactory != null) {
                 return false;

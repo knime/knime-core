@@ -25,14 +25,14 @@ public class ConsumptionPath {
     /**
      * Constructor.
      *
-     * @param factory Factory of the converter used to extract a Java value out a DataCell.
-     * @param consumer CellValueConsumer which accepts the Java value extracted by the converter and writes it to some
+     * @param converterFactory Factory of the converter used to extract a Java value out a DataCell.
+     * @param consumerFactory CellValueConsumer which accepts the Java value extracted by the converter and writes it to some
      *            {@link Destination}.
      */
-    public ConsumptionPath(final DataCellToJavaConverterFactory<?, ?> factory,
-        final CellValueConsumerFactory<?, ?, ?, ?> consumer) {
-        this.m_converterFactory = factory;
-        this.m_consumerFactory = consumer;
+    public ConsumptionPath(final DataCellToJavaConverterFactory<?, ?> converterFactory,
+        final CellValueConsumerFactory<?, ?, ?, ?> consumerFactory) {
+        this.m_converterFactory = converterFactory;
+        this.m_consumerFactory = consumerFactory;
     }
 
     /**
@@ -76,7 +76,7 @@ public class ConsumptionPath {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        ConsumptionPath other = (ConsumptionPath)obj;
+        final ConsumptionPath other = (ConsumptionPath)obj;
         if (m_consumerFactory == null) {
             if (other.m_consumerFactory != null) {
                 return false;

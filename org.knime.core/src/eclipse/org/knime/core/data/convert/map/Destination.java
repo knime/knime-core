@@ -20,9 +20,9 @@ public interface Destination<ET> {
      * configuration.
      *
      * @author Jonathan Hale, KNIME, Konstanz, Germany
-     * @param <DT> type of destination
+     * @param <D> type of destination
      */
-    public static interface ConsumerParameters<DT extends Destination<?>> {
+    public static interface ConsumerParameters<D extends Destination<?>> {
 
     }
 }

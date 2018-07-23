@@ -54,14 +54,14 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * Abstract implementation of {@link CellValueConsumerFactory}.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <DT> Type of destination
+ * @param <D> Type of destination
  * @param <T> Java type the created consumer is able to accept
  * @param <ET> Type of destination types
  * @param <CP> Subclass of {@link ConsumerParameters} for given destination type
  * @since 3.6
  */
-public abstract class AbstractCellValueConsumerFactory<DT extends Destination<?>, T, ET, CP extends ConsumerParameters<DT>>
-    implements CellValueConsumerFactory<DT, T, ET, CP> {
+public abstract class AbstractCellValueConsumerFactory<D extends Destination<ET>, T, ET, CP extends ConsumerParameters<D>>
+    implements CellValueConsumerFactory<D, T, ET, CP> {
 
     @Override
     public int hashCode() {

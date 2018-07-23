@@ -54,21 +54,21 @@ import org.knime.core.data.convert.map.Source.ProducerParameters;
  * Simple implementation of {@link CellValueProducer} that allows passing the production function as a lambda
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <ST> Type of source
+ * @param <S> Type of source this producer reads from
  * @param <ET> Type of the external type
  * @param <T> Java type that is produced
  * @param <PP> Producer parameter subclass for the source type
  *
  * @since 3.6
  */
-public class SimpleCellValueProducerFactory<ST extends Source<ET>, ET, T, PP extends ProducerParameters<ST>>
-    extends AbstractCellValueProducerFactory<ST, ET, T, PP> {
+public class SimpleCellValueProducerFactory<S extends Source<ET>, ET, T, PP extends ProducerParameters<S>>
+    extends AbstractCellValueProducerFactory<S, ET, T, PP> {
 
     final ET m_externalType;
 
     final Class<?> m_destType;
 
-    final CellValueProducer<ST, T, PP> m_producer;
+    final CellValueProducer<S, T, PP> m_producer;
 
     /**
      * Constructor
@@ -78,7 +78,7 @@ public class SimpleCellValueProducerFactory<ST extends Source<ET>, ET, T, PP ext
      * @param producer Cell value producer function (e.g. as lambda)
      */
     public SimpleCellValueProducerFactory(final ET externalType, final Class<?> destType,
-        final CellValueProducer<ST, T, PP> producer) {
+        final CellValueProducer<S, T, PP> producer) {
         m_externalType = externalType;
         m_destType = destType;
         m_producer = producer;
@@ -100,7 +100,7 @@ public class SimpleCellValueProducerFactory<ST extends Source<ET>, ET, T, PP ext
     }
 
     @Override
-    public CellValueProducer<ST, T, PP> create() {
+    public CellValueProducer<S, T, PP> create() {
         return m_producer;
     }
 }
