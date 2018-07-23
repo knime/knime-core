@@ -98,6 +98,7 @@ import org.knime.core.util.MutableInteger;
  * @author Michael Berthold, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
  */
+@Deprecated
 public class KnnNodeModel extends NodeModel {
     private KnnSettings m_settings = new KnnSettings();
 
@@ -346,7 +347,7 @@ public class KnnNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        (new KnnSettings()).loadSettings(settings);
+        (new KnnSettings2()).loadSettings(settings);
     }
 
     /**

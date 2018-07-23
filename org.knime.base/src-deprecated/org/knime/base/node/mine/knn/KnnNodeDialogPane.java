@@ -70,6 +70,7 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  * @author Michael Berthold, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
  */
+@Deprecated
 public class KnnNodeDialogPane extends NodeDialogPane {
     private final ColumnSelectionComboxBox m_classColumn =
             new ColumnSelectionComboxBox((Border)null, NominalValue.class);

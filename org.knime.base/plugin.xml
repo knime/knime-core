@@ -798,6 +798,7 @@
          category-path="/manipulation/row/row-other"/>
       <node
             category-path="/analytics/mining/miscClass"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.knn.KnnNodeFactory"/>  
    <node
          category-path="/analytics/mining/clustering"
@@ -1953,6 +1954,11 @@
             category-path="/analytics/mining/featureselection"
             deprecated="false"
             factory-class="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopStartNodeFactory2">
+      </node>
+      <node
+            category-path="/analytics/mining/miscClass"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.knn.KnnNodeFactory2">
       </node>
    </extension>
    

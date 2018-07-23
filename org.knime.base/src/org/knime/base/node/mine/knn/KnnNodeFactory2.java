@@ -52,30 +52,31 @@ import org.knime.core.node.NodeView;
  * This factory creates all necessary object for the kNN node.
  *
  * @author Michael Berthold, University of Konstanz
+ * @since 3.7
  */
-public class KnnNodeFactory extends NodeFactory<KnnNodeModel> {
+public class KnnNodeFactory2 extends NodeFactory<KnnNodeModel2> {
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new KnnNodeDialogPane();
+        return new KnnNodeDialogPane2();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public KnnNodeModel createNodeModel() {
-        return new KnnNodeModel();
+    public KnnNodeModel2 createNodeModel() {
+        return new KnnNodeModel2();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<KnnNodeModel> createNodeView(final int viewIndex,
-            final KnnNodeModel nodeModel) {
+    public NodeView<KnnNodeModel2> createNodeView(final int viewIndex,
+            final KnnNodeModel2 nodeModel) {
         return null;
     }
 

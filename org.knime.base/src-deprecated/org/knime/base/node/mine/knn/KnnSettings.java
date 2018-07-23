@@ -53,6 +53,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
+@Deprecated
 public class KnnSettings {
     private String m_classColumn;
 
