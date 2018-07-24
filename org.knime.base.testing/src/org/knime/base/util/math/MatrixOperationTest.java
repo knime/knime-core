@@ -296,7 +296,7 @@ public class MatrixOperationTest extends TestCase {
             inverse = MathUtils.inverse(d);
             double[][] unity = MathUtils.multiply(inverse, d);
             double error = compareToUnitMatrix(unity);
-            if (error > 1E-10) {
+            if (error > 1.1E-9) {
                 fail("Matrix inversion failed, max error: " + error);
             }
         }
