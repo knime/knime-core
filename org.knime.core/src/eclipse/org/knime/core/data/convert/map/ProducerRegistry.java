@@ -90,6 +90,28 @@ public class ProducerRegistry<ET, ST extends Source<ET>> extends
     }
 
     /**
+     * Get all available production paths
+     *
+     * @return All possible production paths
+     */
+    public List<ProductionPath> getAvailableProductionPaths() {
+        final ArrayList<ProductionPath> productionPaths = new ArrayList<>();
+
+        for (final CellValueProducerFactory<ST, ET, ?, ?> producerFactory : getAllConverterFactories()) {
+            for (final JavaToDataCellConverterFactory<?> converterFactory : JavaToDataCellConverterRegistry.getInstance()
+                .getFactoriesForSourceType(producerFactory.getDestinationType())) {
+                productionPaths.add(new ProductionPath(producerFactory, converterFactory));
+            }
+        }
+
+        if (m_parent != null) {
+            productionPaths.addAll(m_parent.getAvailableProductionPaths());
+        }
+
+        return productionPaths;
+    }
+
+    /**
      * Get production paths that can map the given external type to a DataCell.
      *
      * @param externalType The external type

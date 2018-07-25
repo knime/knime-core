@@ -82,6 +82,7 @@ import org.knime.core.data.convert.map.CellValueProducerFactory;
 import org.knime.core.data.convert.map.ConsumptionPath;
 import org.knime.core.data.convert.map.Destination;
 import org.knime.core.data.convert.map.MappingFramework;
+import org.knime.core.data.convert.map.ProducerRegistry;
 import org.knime.core.data.convert.map.ProductionPath;
 import org.knime.core.data.convert.map.SimpleCellValueConsumerFactory;
 import org.knime.core.data.convert.map.SimpleCellValueProducerFactory;
@@ -306,8 +307,8 @@ public class MappingFrameworkTest {
         //expectedPath.map(Col, RESULTSET);
 
         /* Some example input */
-        final DefaultRow row =
-            new DefaultRow(RowKey.createRowKey(0L), new StringCell("KNIME"), new IntCell(42), new LongCell(42L), new MissingCell("missing"));
+        final DefaultRow row = new DefaultRow(RowKey.createRowKey(0L), new StringCell("KNIME"), new IntCell(42),
+            new LongCell(42L), new MissingCell("missing"));
 
         final H2ODestination testSink = new H2ODestination();
         testSink.h2oFrame.add(new Object[4]);
@@ -478,7 +479,8 @@ public class MappingFrameworkTest {
                     MappingFramework.forSourceType(HitchHikersSource.class).getAllConverterFactories());
                 assertCollectionEquals(new Object[]{"STR", "INT"},
                     MappingFramework.forSourceType(HitchHikersSource.class).getAllSourceTypes());
-                assertCollectionEquals(new Object[]{fourtyTwo.getDestinationType(), stringProducer.getDestinationType()},
+                assertCollectionEquals(
+                    new Object[]{fourtyTwo.getDestinationType(), stringProducer.getDestinationType()},
                     MappingFramework.forSourceType(HitchHikersSource.class).getAllDestinationTypes());
             }
             {
@@ -525,7 +527,8 @@ public class MappingFrameworkTest {
                     MappingFramework.forDestinationType(HitchHikersDest.class).getAllConverterFactories());
                 assertCollectionEquals(new Object[]{stringConsumer.getSourceType(), fourtyTwo.getSourceType()},
                     MappingFramework.forDestinationType(HitchHikersDest.class).getAllSourceTypes());
-                assertCollectionEquals(new Object[]{stringConsumer.getDestinationType(), fourtyTwo.getDestinationType()},
+                assertCollectionEquals(
+                    new Object[]{stringConsumer.getDestinationType(), fourtyTwo.getDestinationType()},
                     MappingFramework.forDestinationType(HitchHikersDest.class).getAllDestinationTypes());
             }
             {
@@ -540,7 +543,23 @@ public class MappingFrameworkTest {
                     .isEmpty());
             }
         }
+    }
 
+    /** Test getting all availbale production paths from {@link ProducerRegistry} */
+    @Test
+    public void availableProductionPathsTest() {
+        final ProducerRegistry<String, H2OSource> reg = MappingFramework.forSourceType(H2OSource.class);
+        final JavaToDataCellConverterRegistry convReg = JavaToDataCellConverterRegistry.getInstance();
+        assertTrue(reg.getAvailableProductionPaths().isEmpty());
+
+        reg.register(intProducer);
+        final List<ProductionPath> paths = reg.getAvailableProductionPaths();
+        assertCollectionEquals(new Object[]{
+            new ProductionPath(intProducer,
+                convReg.getConverterFactories(Integer.class, IntCell.TYPE).stream().findFirst().get()),
+            new ProductionPath(intProducer,
+                convReg.getConverterFactories(Integer.class, LongCell.TYPE).stream().findFirst().get())},
+            paths);
     }
 
     /**
@@ -593,7 +612,7 @@ public class MappingFrameworkTest {
 
     /** Assert that a collection has given contents independent of order */
     private static void assertCollectionEquals(final Object[] expected, final Collection<?> actual) {
-        assertEquals(expected.length, actual.size());
-        assertTrue(actual.containsAll(Arrays.asList(expected)));
+        assertEquals("Sizes of collections differ", expected.length, actual.size());
+        assertTrue("Contents of collections differ", actual.containsAll(Arrays.asList(expected)));
     }
 }
