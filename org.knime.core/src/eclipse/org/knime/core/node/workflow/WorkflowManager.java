@@ -1649,13 +1649,13 @@ public final class WorkflowManager extends NodeContainer
                 m_workflow.removeConnection(old);
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
-            Workflow subFlow = snc.getWorkflowManager().m_workflow;
+            WorkflowManager subFlow = snc.getWorkflowManager();
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
-                subFlow.changeSourcePortsForMetaNode(snc.getVirtualInNodeID(), newPorts, true);
+                subFlow.m_workflow.changeSourcePortsForMetaNode(snc.getVirtualInNodeID(), newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
                 subFlow.removeConnection(old);
-                snc.getWorkflowManager()
+                subFlow
                     .notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
             PortType[] portTypes = new PortType[newPorts.length - 1];
@@ -1670,12 +1670,10 @@ public final class WorkflowManager extends NodeContainer
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
-                ConnectionContainer newConn = new ConnectionContainer(snc.getVirtualInNodeID(),
-                    p.getSecond().getSourcePort(), p.getSecond().getDest(), p.getSecond().getDestPort(),
-                    p.getSecond().getType(), p.getSecond().isFlowVariablePortConnection());
-                subFlow.addConnection(newConn);
-                snc.getWorkflowManager().resetAndConfigureNode(newConn.getDest());
-                snc.getWorkflowManager().notifyWorkflowListeners(
+                ConnectionContainer newConn = subFlow.addConnection(snc.getVirtualInNodeID(),
+                    p.getSecond().getSourcePort(), p.getSecond().getDest(), p.getSecond().getDestPort());
+                subFlow.resetAndConfigureNode(newConn.getDest());
+                subFlow.notifyWorkflowListeners(
                     new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
             setDirty();
