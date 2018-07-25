@@ -68,6 +68,7 @@ import org.knime.expressions.core.exceptions.ScriptExecutionException;
  * @noreference This class is not intended to be referenced by clients.
  *
  */
+@SuppressWarnings("static-method")
 public final class DateTimeExpressionJavaMethodProvider implements ExpressionJavaMethodProvider {
 
     final static String ID = DateTimeExpressionJavaMethodProvider.class.getName().replaceAll("\\.", "_");
@@ -147,7 +148,7 @@ public final class DateTimeExpressionJavaMethodProvider implements ExpressionJav
      *
      * @throws ScriptExecutionException If an error occurs.
      */
-    public LocalDateTime LocalDateTime(final Object year, final Object month, final Object day, final Object hour,
+    public LocalDateTime dateTime(final Object year, final Object month, final Object day, final Object hour,
         final Object minute, final Object second) throws ScriptExecutionException {
         checkNumberType(year, "year");
         checkNumberType(month, "month");
