@@ -9,9 +9,9 @@
 	
 	<fullDescription>
 		<intro>
-			Converts numbers in a column (or a set of columns) to strings. <br />
-			If the 
-        	optional PMML inport is connected and contains preprocessing
+			Converts numbers in a column (or a set of columns) to strings. Note that for an advanced configuration, such
+			as rounding or representation in scientific notification you can also use the "Round Double" node.<br />
+			If the optional PMML inport is connected and contains preprocessing
         	operations in the TransformationDictionary the conversion operations
         	of this node are appended.
 		</intro>
