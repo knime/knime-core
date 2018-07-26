@@ -2019,7 +2019,12 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 ExecutionMonitor subExec = execMon.createSubProgress(progRatio);
                 execMon.setMessage(nextNode.getNameWithID());
                 NodeSettingsWO sub = nodesSettings.addNodeSettings("node_" + id);
-                saveNodeContainer(sub, workflowDirRef, nextNode, subExec, saveHelper);
+                NodeContext.pushContext(nextNode);
+                try {
+                    saveNodeContainer(sub, workflowDirRef, nextNode, subExec, saveHelper);
+                } finally {
+                    NodeContext.removeLastContext();
+                }
                 subExec.setProgress(1.0);
             }
 
