@@ -1535,14 +1535,11 @@ public final class WorkflowManager extends NodeContainer
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
 
-            Workflow subFlow = subFlowMgr.m_workflow;
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
-                subFlow.changeSourcePortsForMetaNode(subFlowID, newPorts, false);
+                subFlowMgr.m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, false);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
-                subFlow.removeConnection(old);
-                subFlowMgr
-                    .notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+                subFlowMgr.removeConnection(old);
             }
 
             WorkflowInPort[] newMNPorts = new WorkflowInPort[newPorts.length];
@@ -1565,9 +1562,8 @@ public final class WorkflowManager extends NodeContainer
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer newConn = p.getSecond();
-                subFlow.addConnection(newConn);
-                subFlowMgr.notifyWorkflowListeners(
-                    new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+                subFlowMgr.addConnection(newConn.getSource(), newConn.getSourcePort(), newConn.getDest(),
+                    newConn.getDestPort());
             }
             subFlowMgr.setDirty();
             setDirty();
@@ -1593,14 +1589,11 @@ public final class WorkflowManager extends NodeContainer
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
 
-            Workflow subFlow = subFlowMgr.m_workflow;
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
-                subFlow.changeDestinationPortsForMetaNode(subFlowID, newPorts, false);
+                subFlowMgr.m_workflow.changeDestinationPortsForMetaNode(subFlowID, newPorts, false);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
-                subFlow.removeConnection(old);
-                subFlowMgr
-                    .notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+                subFlowMgr.removeConnection(old);
             }
 
             WorkflowOutPort[] newMNPorts = new WorkflowOutPort[newPorts.length];
@@ -1623,9 +1616,8 @@ public final class WorkflowManager extends NodeContainer
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer newConn = p.getSecond();
-                subFlow.addConnection(newConn);
-                subFlowMgr.notifyWorkflowListeners(
-                    new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+                subFlowMgr.addConnection(newConn.getSource(), newConn.getSourcePort(), newConn.getDest(),
+                    newConn.getDestPort());
             }
             subFlowMgr.setDirty();
         }
@@ -1653,10 +1645,7 @@ public final class WorkflowManager extends NodeContainer
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
                 subFlow.m_workflow.changeSourcePortsForMetaNode(snc.getVirtualInNodeID(), newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
-                ConnectionContainer old = p.getFirst();
-                subFlow.removeConnection(old);
-                subFlow
-                    .notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+                subFlow.removeConnection(p.getFirst());
             }
             PortType[] portTypes = new PortType[newPorts.length - 1];
             for (int i = 0; i < newPorts.length - 1; i++) {
@@ -1670,11 +1659,8 @@ public final class WorkflowManager extends NodeContainer
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
-                ConnectionContainer newConn = subFlow.addConnection(snc.getVirtualInNodeID(),
-                    p.getSecond().getSourcePort(), p.getSecond().getDest(), p.getSecond().getDestPort());
-                subFlow.resetAndConfigureNode(newConn.getDest());
-                subFlow.notifyWorkflowListeners(
-                    new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+                subFlow.addConnection(snc.getVirtualInNodeID(), p.getSecond().getSourcePort(), p.getSecond().getDest(),
+                    p.getSecond().getDestPort());
             }
             setDirty();
         }
@@ -1698,14 +1684,12 @@ public final class WorkflowManager extends NodeContainer
                 m_workflow.removeConnection(old);
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
-            Workflow subFlow = snc.getWorkflowManager().m_workflow;
+            WorkflowManager subFlow = snc.getWorkflowManager();
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
-                subFlow.changeDestinationPortsForMetaNode(snc.getVirtualOutNodeID(), newPorts, true);
+                subFlow.m_workflow.changeDestinationPortsForMetaNode(snc.getVirtualOutNodeID(), newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
                 subFlow.removeConnection(old);
-                snc.getWorkflowManager()
-                    .notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
             PortType[] portTypes = new PortType[newPorts.length - 1];
             for (int i = 0; i < newPorts.length - 1; i++) {
@@ -1719,13 +1703,8 @@ public final class WorkflowManager extends NodeContainer
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
-                ConnectionContainer newConn = new ConnectionContainer(p.getSecond().getSource(),
-                    p.getSecond().getSourcePort(), snc.getVirtualOutNodeID(), p.getSecond().getDestPort(),
-                    p.getSecond().getType(), p.getSecond().isFlowVariablePortConnection());
-                subFlow.addConnection(newConn);
-                snc.getWorkflowManager().resetAndConfigureNode(newConn.getDest());
-                snc.getWorkflowManager().notifyWorkflowListeners(
-                    new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+                subFlow.addConnection(p.getSecond().getSource(), p.getSecond().getSourcePort(),
+                    snc.getVirtualOutNodeID(), p.getSecond().getDestPort());
             }
             setDirty();
         }
