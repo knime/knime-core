@@ -48,6 +48,8 @@
 package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -64,9 +66,18 @@ public class ConnectionUIInformation {
 
 
     ConnectionUIInformation(final Builder connectionUIInfo) {
-        m_bendpoints =new int[connectionUIInfo.m_bendpoints.size()][];
-        for (int i = 0; i < m_bendpoints.length; i++) {
-            m_bendpoints[i] = connectionUIInfo.m_bendpoints.get(i).clone();
+        if(connectionUIInfo.m_bendpoints != null) {
+            m_bendpoints = new int[connectionUIInfo.m_bendpoints.size()][];
+            for (int i = 0; i < m_bendpoints.length; i++) {
+                m_bendpoints[i] = connectionUIInfo.m_bendpoints.get(i).clone();
+            }
+        } else if (connectionUIInfo.m_bendpointsArr != null) {
+            m_bendpoints = new int[connectionUIInfo.m_bendpointsArr.length][];
+            for (int i = 0; i < m_bendpoints.length; i++) {
+                m_bendpoints[i] = connectionUIInfo.m_bendpointsArr[i].clone();
+            }
+        } else {
+            m_bendpoints = new int[0][0];
         }
     }
 
@@ -132,7 +143,8 @@ public class ConnectionUIInformation {
      * @since 3.5*/
     public static final class Builder {
 
-        private ArrayList<int[]> m_bendpoints = new ArrayList<int[]>();
+        private ArrayList<int[]> m_bendpoints = null;
+        private int[][] m_bendpointsArr = null;
 
         /** Builder with defaults. */
         Builder() {
@@ -158,15 +170,21 @@ public class ConnectionUIInformation {
          * @return this
          */
         public Builder translate(final int[] moveDist) {
-            m_bendpoints.forEach(point -> {
+            Consumer<int[]> move = (point) -> {
                 point[0] = point[0] + moveDist[0];
                 point[1] = point[1] + moveDist[1];
-            });
+            };
+            if (m_bendpoints != null) {
+                m_bendpoints.forEach(move);
+            } else if (m_bendpointsArr != null) {
+                Arrays.stream(m_bendpointsArr).forEach(move);
+            }
             return this;
         }
 
         /**
-         * Add a bendpoint.
+         * Add a bendpoint. Bendpoints set by {@link #setBendpoints(int[]...)} will be discarded!
+         * (i.e. don't the use those two methods together)
          *
          * @param x x coordinate
          * @param y y cordinate
@@ -174,7 +192,24 @@ public class ConnectionUIInformation {
          * @return this
          */
         public Builder addBendpoint(final int x, final int y, final int index) {
+            m_bendpointsArr = null;
+            if (m_bendpoints == null) {
+                m_bendpoints = new ArrayList<int[]>();
+            }
             m_bendpoints.add(index, new int[]{x, y});
+            return this;
+        }
+
+        /**
+         * Sets all bendpoints at once. Already added bendpoints via {@link #addBendpoint(int, int, int)} will be
+         * overridden! (i.e. don't use those tow methods together)
+         *
+         * @param bendpoints the bendpoints to set
+         * @return this
+         */
+        public Builder setBendpoints(final int[]... bendpoints) {
+            m_bendpoints = null;
+            m_bendpointsArr = bendpoints;
             return this;
         }
 

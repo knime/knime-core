@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,71 +41,68 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Oct 21, 2011 (wiswedel): created
+ *   Jul 18, 2018 (hornm): created
  */
 package org.knime.core.node.workflow;
 
-/** Workflow annotation (not associated with a node).
- * Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+import java.util.Objects;
+
+/**
+ * Unique identifier for a {@link WorkflowAnnotation}.
+ *
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class WorkflowAnnotation extends Annotation {
+public class WorkflowAnnotationID {
 
-    private WorkflowAnnotationID m_id = null;
+    private int m_index;
+    private NodeID m_wfID;
 
-    /** New empty annotation. */
-    public WorkflowAnnotation() {
-        this(new AnnotationData());
+    /**
+     * @param wfID node id of the workflow the annotation is part of
+     * @param index the annotation index within a workflow
+     */
+    public WorkflowAnnotationID(final NodeID wfID, final int index) {
+        m_wfID = wfID;
+        m_index = index;
     }
 
-    /** Restore annotation.
-     * @param data Data */
-    public WorkflowAnnotation(final AnnotationData data) {
-        super(data);
+    /**
+     * @return the annotation's index within a workflow
+     */
+    public int getIndex() {
+        return m_index;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * @return node id of the workflow the annotation is part of
+     */
+    public NodeID getNodeID() {
+        return m_wfID;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public WorkflowAnnotation clone() {
-        WorkflowAnnotation anno = (WorkflowAnnotation)super.clone();
-        anno.unsetID();
-        return anno;
-    }
-
-    /**
-     * Sets the annotation id. Can only be called once in order to make sure that the very same annotation is not part
-     * of two or more workflows. If the id has been set already, an exception will be thrown.
-     *
-     * @param id the id
-     * @throws IllegalStateException if the id has been set already
-     */
-    void setID(final WorkflowAnnotationID id) throws IllegalStateException {
-        if (m_id != null) {
-            throw new IllegalStateException("Workflow annotation id has been set already");
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        } else if (!(obj instanceof WorkflowAnnotationID)) {
+            return false;
+        } else {
+            WorkflowAnnotationID waID = (WorkflowAnnotationID)obj;
+            return m_index == waID.m_index && m_wfID.equals(waID.m_wfID);
         }
-        m_id = id;
     }
 
     /**
-     * Sets the associated id to <code>null</code> such that {@link #setID(WorkflowAnnotationID)} cann be called again.
-     * Is called when a workflow annotation is removed from its workflow manager
-     * ({@link WorkflowManager#removeAnnotation(WorkflowAnnotation)}).
+     * {@inheritDoc}
      */
-    void unsetID() {
-        m_id = null;
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_index, m_wfID);
     }
-
-    /**
-     * Gives access to the workflow annotation id. Id is only available iff the workflow annotations part of a workflow
-     * manager. I.e. when the annotation is added to a workflow manager the annotation id will be set by the workflow
-     * manager (see {@link WorkflowManager#addWorkflowAnnotation(WorkflowAnnotation)}).
-     *
-     * @return the id or <code>null</code> the workflow annotation is not part of a workflow, yet
-     */
-    public WorkflowAnnotationID getID() {
-        return m_id;
-    }
-
 }

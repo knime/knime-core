@@ -74,7 +74,9 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -175,8 +177,8 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //     */
 //    NodeID addNodeAndApplyContext(NodeFactory<?> factory, NodeCreationContext context);
 
-    /** Check if specific node can be removed (i.e. is not currently being
-     * executed or waiting to be).
+    /**
+     * Check if specific node can be removed (i.e. is not currently being executed or waiting to be).
      *
      * @param nodeID id of node to be removed
      * @return true if node can safely be removed.
@@ -191,7 +193,16 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //     */
 //    void removeNode(NodeID nodeID);
 
-//    /** Creates new metanode. We will automatically find the next available
+    /**
+     * Removes the given workflow parts. If there is no corresponding part for a given id, it will be ignored.
+     *
+     * @param nodeIDs the ids of the nodes to be removed. Never <code>null</code>.
+     * @param connectionIDs the ids of the connections to be removed. Never <code>null</code>.
+     * @param annotationIDs the ids of the workflow annotations to be removed. Never <code>null</code>.
+     */
+    void remove(NodeID[] nodeIDs, ConnectionID[] connectionIDs, WorkflowAnnotationID[] annotationIDs);
+
+    //    /** Creates new metanode. We will automatically find the next available
 //     * free index for the new node within this workflow.
 //     * @param inPorts types of external inputs (going into this workflow)
 //     * @param outPorts types of external outputs (exiting this workflow)
@@ -206,18 +217,6 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * @return This property.
      * @since 2.6 */
     boolean isProject();
-
-//    /** Add new connection - throw Exception if the same connection
-//     * already exists.
-//     *
-//     * @param source node id
-//     * @param sourcePort port index at source node
-//     * @param dest destination node id
-//     * @param destPort port index at destination node
-//     * @return newly created Connection object
-//     * @throws IllegalArgumentException if connection already exists
-//     */
-//    ConnectionContainerUI addConnection(NodeID source, int sourcePort, NodeID dest, int destPort);
 
     /** Check if a new connection can be added.
      *
@@ -239,18 +238,32 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      */
     boolean canAddNewConnection(NodeID source, int sourcePort, NodeID dest, int destPort);
 
-//    /** Check if a connection can safely be removed.
-//     *
-//     * @param cc connection
-//     * @return true if connection cc is removable.
-//     */
-//    boolean canRemoveConnection(ConnectionContainerUI cc);
-//
+    /**
+     * Check if a connection can safely be removed.
+     *
+     * @param connectionID
+     * @return true if connection is removable.
+     */
+    boolean canRemoveConnection(ConnectionID connectionID);
+
 //    /** Remove connection.
 //     *
 //     * @param cc connection
 //     */
 //    void removeConnection(ConnectionContainerUI cc);
+
+    /**
+     * Add new connection - throw Exception if the same connection already exists.
+     *
+     * @param source node id
+     * @param sourcePort port index at source node
+     * @param dest destination node id
+     * @param destPort port index at destination node
+     * @param bendpoints
+     * @return newly created Connection object
+     * @throws IllegalArgumentException if connection already exists
+     */
+    ConnectionContainerUI addConnection(NodeID source, int sourcePort, NodeID dest, int destPort, int[]... bendpoints);
 
     /**
      * Returns the set of outgoing connections for the node with the passed id
@@ -716,6 +729,14 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      */
     NodeContainerUI getNodeContainer(NodeID id);
 
+    /**
+     * Does the workflow contain a node with the argument id?
+     *
+     * @param id The id in question.
+     * @return true if there is node with the given id, false otherwise.
+     */
+    public boolean containsNodeContainer(final NodeID id);
+
     /** Get contained node container and cast to argument class. Throws exception if it not exists or not implementing
      * requested class unless the flag is false.
      * @param <T> The interface or subclass the {@link NodeContainer} is expected to implement.
@@ -896,43 +917,32 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //     */
 //    WorkflowCopyContent copyFromAndPasteHere(IWorkflowManager sourceManager, WorkflowCopyContent content);
 
-//    /** Copy the given content (for within
-//     * @param content The content to copy (must exist).
-//     * @return A workflow persistor hosting the node templates, ready to be
-//     * used in the {@link #paste(WorkflowPersistor)} method.
-//     */
-//    Object copy(WorkflowCopyContent content);
+    /**
+     * Copy the given content
+     *
+     * @param content The content to copy (must exist).
+     * @return An object representing the copied objects ready to be used in the {@link #paste(WorkflowCopyUI)} method.
+     */
+    WorkflowCopyUI copy(WorkflowCopyContent content);
 
-//    /** Copy the nodes with the given ids.
-//     * @param isUndoableDeleteCommand <code>true</code> if the returned persistor is used
-//     * in the delete command (which supports undo). This has two effects:
-//     * <ol>
-//     *   <li>It keeps the locations of the node's directories (e.g.
-//     *   &lt;workflow&gt;/File Reader (#xy)/). This is true if the copy serves
-//     *   as backup of an undoable delete command (undoable = undo enabled).
-//     *   If it is undone, the directories must not be cleared before the
-//     *   next save (in order to keep the drop folder)
-//     *   </li>
-//     *   <li>The returned persistor will insert a reference to the contained
-//     *   workflow annotations instead of copying them (enables undo on previous
-//     *   move or edit commands.
-//     *   </li>
-//     * </ol>
-//     * @param content The content to copy (must exist).
-//     * @return A workflow persistor hosting the node templates, ready to be
-//     * used in the {@link #paste(WorkflowPersistor)} method.
-//     */
-//    WorkflowPersistor copy(boolean isUndoableDeleteCommand, WorkflowCopyContent content);
+    /**
+     * Cuts, i.e. copies and deletes, the given content.
+     *
+     * @param content The content to copy and delete (must exist).
+     * @return An object representing the copied objects ready to be used in the {@link #paste(WorkflowCopyUI)} method
+     *         for undo.
+     */
+    WorkflowCopyUI cut(WorkflowCopyContent content);
 
-//    /** Pastes the contents of the argument persistor into this wfm.
-//     * @param persistor The persistor created with
-//     * {@link #copy(WorkflowCopyContent)} method.
-//     * @return The new node ids of the inserted nodes and the annotations in a
-//     *         dedicated object.
-//     */
-//    WorkflowCopyContent paste(WorkflowPersistor persistor);
+    /**
+     * Pastes the contents of the argument workflow copy into this wfm.
+     *
+     * @param workflowCopy The copy created with {@link #copy(WorkflowCopyContent)} method.
+     * @return The new node ids of the inserted nodes and the annotations in a dedicated object.
+     */
+    WorkflowCopyContent paste(WorkflowCopyUI workflowCopy);
 
-//    /** Get working folder associated with this WFM. May be null if
+    //    /** Get working folder associated with this WFM. May be null if
 //     * not saved yet.
 //     * @return working directory.
 //     */
@@ -1227,13 +1237,26 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      */
     Collection<WorkflowAnnotation> getWorkflowAnnotations();
 
-    /** Add new workflow annotation, sets the workflow annotation id, fire events.
+    /**
+     * Helper method to get the workflow annotations referenced by the respective id.
+     *
+     * @param ids the ids to get the annotation for
+     * @return a new array with the annotations
+     */
+    public WorkflowAnnotation[] getWorkflowAnnotations(final WorkflowAnnotationID... ids);
+
+    /**
+     * Add new workflow annotation, fire events.
+     *
+     * The workflow annotation id will be set, too!
+     *
      * @param annotation to add
-     * @throws IllegalArgumentException If annotation already registered. */
-    /** Add new workflow annotation, fire events.
-     * @param annotation to add
-     * @throws IllegalArgumentException If annotation already registered. */
-    void addWorkflowAnnotation(WorkflowAnnotation annotation);
+     * @return a new id for annotation
+     * @throws IllegalArgumentException If annotation already registered.
+     * @throws IllegalStateException If the annotation is already part of another workflow (i.e. its id has been set
+     *             already)
+     */
+    WorkflowAnnotationID addWorkflowAnnotation(WorkflowAnnotation annotation);
 
     /**
      * Resorts the internal ids to move the specified annotation to the last index.
@@ -1425,53 +1448,4 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * @since 2.10
      */
     void notifyTemplateConnectionChangedListener();
-
-
-    /* -------- new methods that are not part of WorkflowManager -------- */
-
-    /**
-     * Determines whether a workflow is refreshable. If refreshable, the {@link #refresh(boolean)} method will be called for
-     * refreshing.
-     *
-     * @return <code>true</code> if the workflow can be refreshed
-     */
-    default boolean isRefreshable() {
-        return false;
-    }
-
-    /**
-     * Refreshes the workflow (e.g. downloads the new state). Only called when {@link #isRefreshable()} returns
-     * <code>true</code>.
-     *
-     * @param deepRefresh if <code>true</code> the workflow itself and all contained sub-workflows (i.e. metanodes)
-     *            will be refreshed, if <code>false</code> only the top level workflow will be refreshed
-     */
-    default void refresh(final boolean deepRefresh) {
-        //nothing to do, not refreshable
-    }
-
-    /**
-     * Sets the disconnected-status of the workflow manager. I.e. in case the workflow manager implementation is just a
-     * client and has lost the connection to the server.
-     *
-     * @param disconnected <code>true</code> if disconnected, otherwise <code>false</code>
-     */
-    default void setDisconnected(final boolean disconnected) {
-        //nothing to do, to be overridden by implementations
-    }
-
-    /**
-     * @param listener listener that gets informed when the write protection status has changed. The actual status can
-     *            be accessed via {@link #isWriteProtected()}.
-     */
-    default void addWriteProtectionChangedListener(final Runnable listener) {
-        //nothing to do by default
-    }
-
-    /**
-     * @param listener the listener to be removed and to not be called anymore
-     */
-    default void removeWriteProtectionChangedListener(final Runnable listener) {
-        //nothing to do by default
-    }
 }

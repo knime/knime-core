@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,48 +41,74 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   21.02.2006 (sieb): created
  */
 package org.knime.workbench.editor2;
 
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.WorkflowCopyUI;
 
 
 /**
  * Holds a workflow persistor that contains nodes and connections that were
  * copied or cut and a retrieval counter used to determine visual offsets when
  * inserting the nodes.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ClipboardObject {
-    
+
     /** The content to hold in the clipboard. */
-    private final WorkflowPersistor m_copyPersistor;
+    private WorkflowPersistor m_copyPersistor = null;
 
     /** To remember how often the object was retrieved.
      * Used to adjust the coordinates of a node when inserted multiple times. */
     private int m_retrievalCounter;
 
+    private WorkflowCopyUI m_wfCopy = null;
+
     /** Create new object, memorize persistor.
      * @param copyPersistor The copy persistor.
+     * @deprecated use {@link #ClipboardObject(WorkflowCopyUI)} instead
      */
+    @Deprecated
     public ClipboardObject(final WorkflowPersistor copyPersistor) {
         m_copyPersistor = copyPersistor;
         m_retrievalCounter = 0;
     }
 
-    
-    /** @return the persistor. */
+    /**
+     * Creates a new object, memorize workflow copy
+     *
+     * @param wfCopy the workflow copy
+     */
+    public ClipboardObject(final WorkflowCopyUI wfCopy) {
+        m_wfCopy = wfCopy;
+    }
+
+    /**
+     * @return the copy. Can be <code>null</code> if it has been initialized with
+     *         {@link #ClipboardObject(WorkflowPersistor)}.
+     */
+    public WorkflowCopyUI getWorkflowCopy() {
+       return m_wfCopy;
+    }
+
+    /**
+     * @return the persistor. Can be <code>null</code> if it has been initialized with
+     *         {@link #ClipboardObject(WorkflowCopyUI)}.
+     * @deprecated use {@link #getWorkflowCopy()} instead
+     */
+    @Deprecated
     public WorkflowPersistor getCopyPersistor() {
         return m_copyPersistor;
     }
 
     /**
-     * @return the (incremented) retrieval counter. 
+     * @return the (incremented) retrieval counter.
      */
     public int incrementAndGetRetrievalCounter() {
         return ++m_retrievalCounter;

@@ -255,7 +255,13 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public List<WorkflowAnnotation> getWorkflowAnnotations() {
-        return m_workflowAnnotations;
+        // must create a new fresh copy on each invocation
+        // (multiple pastes possible)
+        ArrayList<WorkflowAnnotation> result = new ArrayList<WorkflowAnnotation>(m_workflowAnnotations.size());
+        for (WorkflowAnnotation a : m_workflowAnnotations) {
+            result.add(a.clone());
+        }
+        return result;
     }
 
     /** {@inheritDoc} */

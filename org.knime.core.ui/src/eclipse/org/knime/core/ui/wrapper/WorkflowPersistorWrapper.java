@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,71 +41,29 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   Oct 21, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.ui.wrapper;
 
-/** Workflow annotation (not associated with a node).
- * Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.WorkflowCopyUI;
+
+/**
+ * UI-interface implementation that wraps a {@link WorkflowPersistor}.
+ *
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class WorkflowAnnotation extends Annotation {
-
-    private WorkflowAnnotationID m_id = null;
-
-    /** New empty annotation. */
-    public WorkflowAnnotation() {
-        this(new AnnotationData());
-    }
-
-    /** Restore annotation.
-     * @param data Data */
-    public WorkflowAnnotation(final AnnotationData data) {
-        super(data);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public WorkflowAnnotation clone() {
-        WorkflowAnnotation anno = (WorkflowAnnotation)super.clone();
-        anno.unsetID();
-        return anno;
-    }
+public class WorkflowPersistorWrapper extends AbstractWrapper<WorkflowPersistor> implements WorkflowCopyUI {
 
     /**
-     * Sets the annotation id. Can only be called once in order to make sure that the very same annotation is not part
-     * of two or more workflows. If the id has been set already, an exception will be thrown.
-     *
-     * @param id the id
-     * @throws IllegalStateException if the id has been set already
+     * @param delegate the implementation to delegate to
      */
-    void setID(final WorkflowAnnotationID id) throws IllegalStateException {
-        if (m_id != null) {
-            throw new IllegalStateException("Workflow annotation id has been set already");
-        }
-        m_id = id;
+    private WorkflowPersistorWrapper(final WorkflowPersistor delegate) {
+        super(delegate);
     }
 
-    /**
-     * Sets the associated id to <code>null</code> such that {@link #setID(WorkflowAnnotationID)} cann be called again.
-     * Is called when a workflow annotation is removed from its workflow manager
-     * ({@link WorkflowManager#removeAnnotation(WorkflowAnnotation)}).
-     */
-    void unsetID() {
-        m_id = null;
+    public static final WorkflowPersistorWrapper wrap(final WorkflowPersistor wp) {
+        return (WorkflowPersistorWrapper)Wrapper.wrapOrGet(wp, o -> new WorkflowPersistorWrapper(o));
     }
-
-    /**
-     * Gives access to the workflow annotation id. Id is only available iff the workflow annotations part of a workflow
-     * manager. I.e. when the annotation is added to a workflow manager the annotation id will be set by the workflow
-     * manager (see {@link WorkflowManager#addWorkflowAnnotation(WorkflowAnnotation)}).
-     *
-     * @return the id or <code>null</code> the workflow annotation is not part of a workflow, yet
-     */
-    public WorkflowAnnotationID getID() {
-        return m_id;
-    }
-
 }

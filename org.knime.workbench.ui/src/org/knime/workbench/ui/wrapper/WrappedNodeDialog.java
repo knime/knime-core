@@ -49,6 +49,7 @@ package org.knime.workbench.ui.wrapper;
 
 import static org.knime.core.ui.wrapper.Wrapper.unwrapNCOptional;
 import static org.knime.core.ui.wrapper.Wrapper.wraps;
+import static org.knime.workbench.ui.async.AsyncSwitch.ncAsyncSwitchRethrow;
 
 import java.awt.Dimension;
 import java.awt.event.InputEvent;
@@ -96,6 +97,8 @@ import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.NodeOutPortUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -133,12 +136,17 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
     public WrappedNodeDialog(final Shell parentShell, final NodeContainerUI nodeContainer) throws NotConfigurableException {
         super(parentShell);
         m_nodeContainer = nodeContainer;
-        m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
+        m_dialogPane =
+            ncAsyncSwitchRethrow(nc -> nc.getDialogPaneWithSettings(), nc -> nc.getDialogPaneWithSettingsAsync(),
+                nodeContainer, "Waiting for the dialog to open", NotConfigurableException.class);
 
         if (m_nodeContainer.getParent() != null) {
             m_writeProtectionChangedListener = () -> updateWriteProtectedState();
-            m_nodeContainer.getParent().addWriteProtectionChangedListener(m_writeProtectionChangedListener);
-            //TODO node state changed listener could be added, too, in order to update the write protected state
+            WorkflowManagerUI parent = m_nodeContainer.getParent();
+            if(parent instanceof AsyncWorkflowManagerUI) {
+                ((AsyncWorkflowManagerUI)parent).addWriteProtectionChangedListener(m_writeProtectionChangedListener);
+                //TODO node state changed listener could be added, too, in order to update the write protected state
+            }
         } else {
             m_writeProtectionChangedListener = null;
         }
@@ -186,8 +194,9 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
     @Override
     public boolean close() {
         boolean res = super.close();
-        if (m_writeProtectionChangedListener != null) {
-            m_nodeContainer.getParent().removeWriteProtectionChangedListener(m_writeProtectionChangedListener);
+        WorkflowManagerUI parent = m_nodeContainer.getParent();
+        if (m_writeProtectionChangedListener != null && parent instanceof AsyncWorkflowManagerUI) {
+            ((AsyncWorkflowManagerUI)parent).removeWriteProtectionChangedListener(m_writeProtectionChangedListener);
         }
         return res;
     }

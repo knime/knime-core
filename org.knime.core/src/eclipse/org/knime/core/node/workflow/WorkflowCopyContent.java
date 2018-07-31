@@ -62,7 +62,7 @@ import java.util.Map;
 public final class WorkflowCopyContent {
 
     private final List<NodeID> m_nodeIDs;
-    private final List<WorkflowAnnotation> m_annotations;
+    private final List<WorkflowAnnotationID> m_annotationIDs;
     /** see {@link #setIncludeInOutConnections(boolean)}. */
     private final boolean m_isIncludeInOutConnections;
     /** A map which maps old NodeID to preferred ID suffix in the target wfm. Used for template loading. */
@@ -79,10 +79,10 @@ public final class WorkflowCopyContent {
         } else {
             m_nodeIDs = Collections.emptyList();
         }
-        if (builder.m_annotations != null) {
-            m_annotations = Collections.unmodifiableList(Arrays.asList(builder.m_annotations));
+        if (builder.m_annotationIDs != null) {
+            m_annotationIDs = Collections.unmodifiableList(Arrays.asList(builder.m_annotationIDs));
         } else {
-            m_annotations = Collections.emptyList();
+            m_annotationIDs = Collections.emptyList();
         }
         m_isIncludeInOutConnections = builder.m_isIncludeInOutConnections;
         if (builder.m_suggestedNodeIDSuffixMap != null) {
@@ -125,10 +125,10 @@ public final class WorkflowCopyContent {
         return m_isIncludeInOutConnections;
     }
 
-    /** @return the annotations as a newly created array, never null
+    /** @return the annotation ids as a newly created array, never null
      * @since 3.5*/
-    public WorkflowAnnotation[] getAnnotations() {
-    	return m_annotations.toArray(new WorkflowAnnotation[m_annotations.size()]);
+    public WorkflowAnnotationID[] getAnnotationIDs() {
+    	return m_annotationIDs.toArray(new WorkflowAnnotationID[m_annotationIDs.size()]);
     }
 
     /**
@@ -146,7 +146,7 @@ public final class WorkflowCopyContent {
     public static class Builder {
 
         private NodeID[] m_nodeIDs;
-        private WorkflowAnnotation[] m_annotations;
+        private WorkflowAnnotationID[] m_annotationIDs;
         /** see {@link #setIncludeInOutConnections(boolean)}. */
         private boolean m_isIncludeInOutConnections;
         /** A map which maps old NodeID to preferred ID suffix in the target wfm. Used for template loading. */
@@ -191,12 +191,12 @@ public final class WorkflowCopyContent {
             return this;
         }
 
-        /** Sets annotations.
-         * @param annotations the annotations
+        /** Sets annotation ids.
+         * @param annotationIDs the annotation ids
          * @return this;
          */
-        public Builder setAnnotation(final WorkflowAnnotation... annotations) {
-            m_annotations = annotations;
+        public Builder setAnnotationIDs(final WorkflowAnnotationID... annotationIDs) {
+            m_annotationIDs = annotationIDs;
             return this;
         }
 

@@ -184,7 +184,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
             for (NodeID id : ids) {
                 wm.removeNode(id);
             }
-            for (WorkflowAnnotation anno : m_copyContent.getAnnotations()) {
+            for (WorkflowAnnotation anno : wm.getWorkflowAnnotations(m_copyContent.getAnnotationIDs())) {
                 wm.removeAnnotation(anno);
             }
         } else {

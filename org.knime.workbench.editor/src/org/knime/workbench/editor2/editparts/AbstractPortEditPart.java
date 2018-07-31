@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import static org.knime.core.ui.wrapper.Wrapper.wrap;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,11 +66,11 @@ import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.gef.tools.ConnectionDragCreationTool;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.UI;
 import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.NodeInPortUI;
@@ -303,14 +305,16 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
                     if (!isActive()) {
                         return;
                     }
-                    ConnectionContainer c = null;
+                    ConnectionContainerUI c = null;
 
                     if (event.getType().equals(
                             WorkflowEvent.Type.CONNECTION_ADDED)) {
-                        c = (ConnectionContainer)event.getNewValue();
+                        UI uiVal = wrap(event.getNewValue());
+                        c = (ConnectionContainerUI)uiVal;
                     } else if (event.getType().equals(
                             WorkflowEvent.Type.CONNECTION_REMOVED)) {
-                        c = (ConnectionContainer)event.getOldValue();
+                        UI uiVal = wrap(event.getOldValue());
+                        c = (ConnectionContainerUI)uiVal;
                     }
 
                     // if we have a connection to refresh...

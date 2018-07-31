@@ -114,7 +114,8 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
             }
 
             m_expandResult = hostWFM.expandSubWorkflow(m_id);
-            WorkflowAnnotation[] annotations = m_expandResult.getExpandedCopyContent().getAnnotations();
+            WorkflowAnnotation[] annotations =
+                hostWFM.getWorkflowAnnotations(m_expandResult.getExpandedCopyContent().getAnnotationIDs());
             NodeID[] nodeIDs = m_expandResult.getExpandedCopyContent().getNodeIDs();
 
             EditPartViewer partViewer = m_editor.getViewer();

@@ -56,6 +56,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -217,7 +218,7 @@ class WorkflowEditorRefresher {
      * Tries to start the refresh timer if enabled, not already running etc.
      */
     void tryStartingRefreshTimer() {
-        if (m_editor.getWorkflowManagerUI() != null && m_editor.getWorkflowManagerUI().isRefreshable()
+        if (m_editor.getWorkflowManagerUI() != null && m_editor.getWorkflowManagerUI() instanceof AsyncWorkflowManagerUI
             && m_refreshTimerTask == null && m_isAutoRefreshEnabled) {
             synchronized (WorkflowEditor.class) {
                 if (REFRESH_TIMER == null) {
@@ -229,7 +230,7 @@ class WorkflowEditorRefresher {
                 @Override
                 public void run() {
                     try {
-                        m_editor.getWorkflowManagerUI().refresh(false);
+                        getAsyncWFM().refresh(false).get();
                         m_hasBeenRefreshed.set(true);
                         m_lastRefreshSuccessful = true;
                     } catch (Exception e) {
@@ -334,7 +335,7 @@ class WorkflowEditorRefresher {
 
     private void setConnected(final boolean isConnected, final boolean callback) {
         m_isConnected = isConnected;
-        m_editor.getWorkflowManagerUI().setDisconnected(!isConnected);
+        getAsyncWFM().setDisconnected(!isConnected);
         if (callback) {
             m_connectedCallback.run();
         }
@@ -352,6 +353,15 @@ class WorkflowEditorRefresher {
             return true;
         }
         return false;
+    }
+
+    private AsyncWorkflowManagerUI getAsyncWFM() {
+        if (m_editor.getWorkflowManagerUI() instanceof AsyncWorkflowManagerUI) {
+            return (AsyncWorkflowManagerUI)m_editor.getWorkflowManagerUI();
+        } else {
+            throw new IllegalStateException(
+                "Workflow refresher only works with AsyncWorkflowManagerUI-implementations.");
+        }
     }
 
 }

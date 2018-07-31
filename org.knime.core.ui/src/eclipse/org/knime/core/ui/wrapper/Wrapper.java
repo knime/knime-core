@@ -56,6 +56,7 @@ import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.UI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 
 import com.google.common.collect.MapMaker;
 
@@ -221,4 +222,27 @@ public interface Wrapper<W> {
         }
     }
 
+    /**
+     * Tries to wrap the passed object into its specific UI-wrapper, e.g. {@link WorkflowManager} into
+     * {@link WorkflowManagerUI}. If it's already a {@link UI}-class, the very same object is just returned.
+     *
+     * @param obj the object to possibly wrap
+     * @return the object wrapped into a UI-wrapper or itself if already UI
+     * @throws IllegalArgumentException if the object is _not_ of type {@link UI}, {@link ConnectionContainer} or
+     *             {@link NodeContainer}
+     */
+    public static UI wrap(final Object obj) {
+        if (obj == null) {
+            return null;
+        } else if (obj instanceof UI) {
+            return (UI)obj;
+        } else if (obj instanceof ConnectionContainer) {
+            return ConnectionContainerWrapper.wrap((ConnectionContainer)obj);
+        } else if (obj instanceof NodeContainer) {
+            return NodeContainerWrapper.wrap((NodeContainer)obj);
+        } else {
+            throw new IllegalArgumentException("The obj '" + obj.getClass().getSimpleName()
+                + "' cannot be wrapped into a UI-object nor is it a UI object.");
+        }
+    }
 }

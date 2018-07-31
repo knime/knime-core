@@ -117,7 +117,7 @@ public class CutAction extends AbstractClipboardAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        if (getManager().isWriteProtected()) {
+        if (getManagerUI().isWriteProtected()) {
             return false;
         }
         NodeContainerEditPart[] parts =
@@ -146,7 +146,7 @@ public class CutAction extends AbstractClipboardAction {
         coll.addAll(Arrays.asList(annotationParts));
 
         DeleteCommand delete = new DeleteCommand(
-                coll, getEditor().getWorkflowManager().get());
+                coll, getEditor().getWorkflowManagerUI());
         getCommandStack().execute(delete); // enable undo
 
         getEditor().updateActions();
@@ -161,5 +161,13 @@ public class CutAction extends AbstractClipboardAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         throw new IllegalStateException(
                 "Not to be called as runInSWT is overwritten.");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean canHandleWorklfowManagerUI() {
+        return true;
     }
 }

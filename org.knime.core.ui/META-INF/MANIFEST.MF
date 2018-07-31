@@ -7,6 +7,7 @@ Bundle-ClassPath: .
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.core.ui,
  org.knime.core.ui.node.workflow,
+ org.knime.core.ui.node.workflow.async,
  org.knime.core.ui.wrapper
 Require-Bundle: org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
  org.knime.core.util;bundle-version="[5.4.1,6.0.0)",

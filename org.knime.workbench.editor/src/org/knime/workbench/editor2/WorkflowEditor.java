@@ -46,6 +46,7 @@
 package org.knime.workbench.editor2;
 
 import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
+import static org.knime.core.ui.wrapper.Wrapper.wrap;
 
 import java.io.File;
 import java.io.IOException;
@@ -177,16 +178,17 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
-import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
+import org.knime.core.ui.UI;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.Pointer;
@@ -360,7 +362,11 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private final Semaphore m_workflowCanBeDeleted = new Semaphore(1);
 
-    private WorkflowEditorRefresher m_refresher;
+    /**
+     * Refresher for the workflow editor. Only non-null if underlying workflow manager is of type
+     * {@link AsyncWorkflowManagerUI}.
+     */
+    private WorkflowEditorRefresher m_refresher = null;
 
     /**
      * No arg constructor, creates the edit domain for this editor.
@@ -382,14 +388,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // initialize actions (can't be in init(), as setInput is called before)
         createActions();
-
-        m_refresher = new WorkflowEditorRefresher(this, () -> {
-            Display.getDefault().syncExec(() -> {
-                updateWorkflowMessages();
-                updateEditorBackgroundColor();
-                updateActions();
-            });
-        });
     }
 
     /**
@@ -627,7 +625,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         prefStore.removePropertyChangeListener(this);
 
-        m_refresher.dispose();
+        if (m_refresher != null) {
+            m_refresher.dispose();
+        }
 
         super.dispose();
     }
@@ -986,7 +986,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         super.setInput(input);
         m_origRemoteLocation = null;
         if (input instanceof WorkflowManagerInput) { // metanode, subnode, remote workflows
-            m_refresher.setup();
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else if (input instanceof IURIEditorInput) {
             File wfFile;
@@ -1344,6 +1343,18 @@ public class WorkflowEditor extends GraphicalEditor implements
             //set different icon for job view
             setTitleImage(ImageRepository.getIconImage(SharedImages.ServerJob));
         }
+
+        //initialize workflow refresh if workflow manager is of type AsyncWorkflowManagerUI
+        if (wfm instanceof AsyncWorkflowManagerUI) {
+            m_refresher = new WorkflowEditorRefresher(this, () -> {
+                Display.getDefault().syncExec(() -> {
+                    updateWorkflowMessages();
+                    updateEditorBackgroundColor();
+                    updateActions();
+                });
+            });
+            m_refresher.setup();
+        }
     }
 
     /** The file store to the argument URI (can be file: or knime:).
@@ -1481,14 +1492,15 @@ public class WorkflowEditor extends GraphicalEditor implements
      * {@link WorkflowManager#isWriteProtected()}. */
     private void updateEditorBackgroundColor() {
         final Color color;
-        if (Wrapper.wraps(m_manager, WorkflowManager.class)) {
-            if (m_manager.isWriteProtected()) {
+        if (m_manager instanceof AsyncWorkflowManagerUI) {
+            assert m_refresher != null;
+            if (m_manager.isWriteProtected() || !m_refresher.isConnected() || !m_refresher.isJobEditEnabled()) {
                 color = BG_COLOR_WRITE_LOCK;
             } else {
                 color = BG_COLOR_DEFAULT;
             }
         } else {
-            if (m_manager.isWriteProtected() || !m_refresher.isConnected() || !m_refresher.isJobEditEnabled()) {
+            if (m_manager.isWriteProtected()) {
                 color = BG_COLOR_WRITE_LOCK;
             } else {
                 color = BG_COLOR_DEFAULT;
@@ -2299,8 +2311,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                     "\n  Use \"Save As...\" to save a permanent copy of the workflow to your local workspace, or a mounted KNIME Server.");
             }
             workflowFigure.setWarningMessage(sb.toString());
-        } else if (!getWorkflowManager().isPresent()) {
-            // if the underlying workflow manager is a WorkflowManagerUI instance
+        } else if (getWorkflowManagerUI() instanceof AsyncWorkflowManagerUI) {
+            // if the underlying workflow manager is a AsyncWorkflowManagerUI instance
+            assert m_refresher != null;
             if(m_fileResource != null && m_parentEditor == null) {
                 //root workflow
                 sb.append("This is a view on the remote job running on KNIME Server (" + m_fileResource.getAuthority() + ").");
@@ -3121,19 +3134,20 @@ public class WorkflowEditor extends GraphicalEditor implements
                 case NODE_REMOVED:
                     Object oldValue = event.getOldValue();
                     // close sub-editors if a child metanode is deleted
-                    WorkflowManager wm = null;
-                    //NOTE: workflow event has by definition only unwrapped (non-UI) objects!!
-                    if (oldValue instanceof WorkflowManager) {
-                        wm = (WorkflowManager)oldValue;
-                    } else if (oldValue instanceof SubNodeContainer) {
-                        wm = ((SubNodeContainer)oldValue).getWorkflowManager();
+                    WorkflowManagerUI wm = null;
+                    //NOTE: workflow event can contain either UI objects or non-UI objects!!
+                    UI uiVal = wrap(oldValue);
+                    if (uiVal instanceof WorkflowManagerUI) {
+                        wm = (WorkflowManagerUI)uiVal;
+                    } else if (uiVal instanceof SubNodeContainerUI) {
+                        wm = ((SubNodeContainerUI)uiVal).getWorkflowManager();
                     }
                     if (wm != null) {
                         // since the equals method of the WorkflowManagerInput
                         // only looks for the WorkflowManager, we can pass
                         // null as the editor argument
                         WorkflowManagerInput in =
-                            new WorkflowManagerInput(WorkflowManagerWrapper.wrap(wm), (WorkflowEditor) null);
+                            new WorkflowManagerInput(wm, (WorkflowEditor) null);
                         IEditorPart editor =
                             getEditorSite().getPage().findEditor(in);
                         if (editor != null) {
@@ -3200,7 +3214,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         //only can be marked dirty if not write protected
         if (!m_manager.isWriteProtected()) {
             m_manager.setDirty(); // call anyway to allow auto-save copy to be dirty (the WFM has 2 dirty flags, really)
-            if (!m_isDirty) {
+            //some WM-implementations won't allow to be set dirty -> i.e. check whether dirty
+            if (!m_isDirty && m_manager.isDirty()) {
                 m_isDirty = true;
 
                 SyncExecQueueDispatcher.asyncExec(new Runnable() {

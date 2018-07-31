@@ -313,7 +313,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         // and copy content
         WorkflowCopyContent.Builder c = WorkflowCopyContent.builder();
-        c.setAnnotation(content.getWorkflowAnnotations().toArray(new WorkflowAnnotation[0]));
+        c.setAnnotationIDs(content.getWorkflowAnnotationIDs().toArray(new WorkflowAnnotationID[0]));
         c.setNodeIDs(content.getWorkflow().getNodeIDs().toArray(new NodeID[0]));
         c.setIncludeInOutConnections(false);
         WorkflowPersistor wp = content.copy(c.build());
@@ -1799,7 +1799,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * once the node is unwrapped to a metanode. */
     WorkflowPersistor getConvertToMetaNodeCopyPersistor() {
         assert isLockedByCurrentThread();
-        Collection<WorkflowAnnotation> workflowAnnotations = m_wfm.getWorkflowAnnotations();
+        Collection<WorkflowAnnotationID> workflowAnnotations = m_wfm.getWorkflowAnnotationIDs();
         // all but virtual in and output node
         NodeID[] nodes = m_wfm.getNodeContainers().stream().map(nc -> nc.getID())
                 .filter(id -> id.getIndex() != m_virtualInNodeIDSuffix)
@@ -1807,7 +1807,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 .toArray(NodeID[]::new);
         WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
         cnt.setNodeIDs(nodes);
-        cnt.setAnnotation(workflowAnnotations.toArray(new WorkflowAnnotation[workflowAnnotations.size()]));
+        cnt.setAnnotationIDs(workflowAnnotations.toArray(new WorkflowAnnotationID[workflowAnnotations.size()]));
         cnt.setIncludeInOutConnections(true);
         WorkflowPersistor persistor = m_wfm.copy(true, cnt.build());
         final Set<ConnectionContainerTemplate> additionalConnectionSet = persistor.getAdditionalConnectionSet();

@@ -103,7 +103,7 @@ public final class ExpandSubnodeResult {
         for (NodeID id : m_expandedCopyContent.getNodeIDs()) {
             hostWFM.removeNode(id);
         }
-        for (WorkflowAnnotation anno : m_expandedCopyContent.getAnnotations()) {
+        for (WorkflowAnnotation anno : hostWFM.getWorkflowAnnotations(m_expandedCopyContent.getAnnotationIDs())) {
             hostWFM.removeAnnotation(anno);
         }
         hostWFM.paste(m_undoCopyPersistor);

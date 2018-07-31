@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,71 +41,59 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   Oct 21, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.ui.node.workflow.async;
 
-/** Workflow annotation (not associated with a node).
- * Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.function.Supplier;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+
+/**
+ * UI-interface that provides asynchronous versions of some methods of {@link NodeContainerUI}.
+ *
+ * The methods that are overridden and provided with a asynchronous counterpart here are expected to (potentially)
+ * return their result with a delay (e.g. because it is requested from a server). If there is a asynchronous counterpart
+ * it is advised to use it instead of the synchronous method!
+ *
+ * All methods not overridden here are expected to return almost immediately.
+ *
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ *
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
-public class WorkflowAnnotation extends Annotation {
+public interface AsyncNodeContainerUI extends NodeContainerUI {
 
-    private WorkflowAnnotationID m_id = null;
-
-    /** New empty annotation. */
-    public WorkflowAnnotation() {
-        this(new AnnotationData());
-    }
-
-    /** Restore annotation.
-     * @param data Data */
-    public WorkflowAnnotation(final AnnotationData data) {
-        super(data);
-    }
-
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public WorkflowAnnotation clone() {
-        WorkflowAnnotation anno = (WorkflowAnnotation)super.clone();
-        anno.unsetID();
-        return anno;
+    default NodeDialogPane getDialogPaneWithSettings() throws NotConfigurableException {
+        throw new UnsupportedOperationException("Please use async method instead.");
     }
 
     /**
-     * Sets the annotation id. Can only be called once in order to make sure that the very same annotation is not part
-     * of two or more workflows. If the id has been set already, an exception will be thrown.
+     * Async version of {@link #getDialogPaneWithSettings()}.
      *
-     * @param id the id
-     * @throws IllegalStateException if the id has been set already
+     * @return result as {@link Future}
+     * @throws NotConfigurableException
      */
-    void setID(final WorkflowAnnotationID id) throws IllegalStateException {
-        if (m_id != null) {
-            throw new IllegalStateException("Workflow annotation id has been set already");
-        }
-        m_id = id;
-    }
+    public CompletableFuture<NodeDialogPane> getDialogPaneWithSettingsAsync() throws NotConfigurableException;
 
     /**
-     * Sets the associated id to <code>null</code> such that {@link #setID(WorkflowAnnotationID)} cann be called again.
-     * Is called when a workflow annotation is removed from its workflow manager
-     * ({@link WorkflowManager#removeAnnotation(WorkflowAnnotation)}).
-     */
-    void unsetID() {
-        m_id = null;
-    }
-
-    /**
-     * Gives access to the workflow annotation id. Id is only available iff the workflow annotations part of a workflow
-     * manager. I.e. when the annotation is added to a workflow manager the annotation id will be set by the workflow
-     * manager (see {@link WorkflowManager#addWorkflowAnnotation(WorkflowAnnotation)}).
+     * Creates a new {@link CompletableFuture}.
      *
-     * @return the id or <code>null</code> the workflow annotation is not part of a workflow, yet
+     * @param sup the actual stuff to run
+     * @return a new future
      */
-    public WorkflowAnnotationID getID() {
-        return m_id;
+    public static <U> CompletableFuture<U> future(final Supplier<U> sup) {
+        return CompletableFuture.supplyAsync(sup);
     }
-
 }

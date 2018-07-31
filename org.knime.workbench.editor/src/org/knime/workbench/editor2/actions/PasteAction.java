@@ -51,7 +51,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.PasteFromWorkflowPersistorCommand;
@@ -111,7 +111,7 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        if (getManager().isWriteProtected()) {
+        if (getManagerUI().isWriteProtected()) {
             return false;
         }
         return getEditor().getClipboardContent() != null;
@@ -150,7 +150,7 @@ public class PasteAction extends AbstractClipboardAction {
             /** {@inheritDoc} */
             @Override
             public int[] calculateShift(final Iterable<int[]> boundsList,
-                    final WorkflowManager manager,
+                    final WorkflowManagerUI manager,
                     final ClipboardObject clipObject) {
                 final int counter =
                     clipObject.incrementAndGetRetrievalCounter();
@@ -165,6 +165,22 @@ public class PasteAction extends AbstractClipboardAction {
                 int newY = (offsetY * counter);
                 return new int[] {newX, newY};
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public int[] calculateShift(final int offsetX, final int offsetY, final ClipboardObject clipObject) {
+                return calculateShift(null, null, clipObject);
+            }
         };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean canHandleWorklfowManagerUI() {
+        return true;
     }
 }

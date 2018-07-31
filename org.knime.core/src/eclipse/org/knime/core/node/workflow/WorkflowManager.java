@@ -269,7 +269,10 @@ public final class WorkflowManager extends NodeContainer
     /** Vector holding workflow specific variables. */
     private Vector<FlowVariable> m_workflowVariables;
 
+    /** There is a 1:1 correspondence between annotations and their id
+     * TODO: better using hash maps here? */
     private final Vector<WorkflowAnnotation> m_annotations = new Vector<WorkflowAnnotation>();
+    private final Vector<WorkflowAnnotationID> m_annotationIDs = new Vector<WorkflowAnnotationID>();
 
     // Misc members:
 
@@ -3654,14 +3657,14 @@ public final class WorkflowManager extends NodeContainer
             }
             // retrieve all workflow annotations
             Collection<WorkflowAnnotation> annos = subWFM.getWorkflowAnnotations();
-            WorkflowAnnotation[] orgAnnos = annos.toArray(new WorkflowAnnotation[annos.size()]);
+            WorkflowAnnotationID[] orgAnnos = annos.toArray(new WorkflowAnnotationID[annos.size()]);
             // copy the nodes from the sub workflow manager:
             WorkflowCopyContent.Builder orgContent = WorkflowCopyContent.builder();
             orgContent.setNodeIDs(orgIDs);
-            orgContent.setAnnotation(orgAnnos);
+            orgContent.setAnnotationIDs(orgAnnos);
             WorkflowCopyContent newContent = this.copyFromAndPasteHere(subWFM, orgContent.build());
             NodeID[] newIDs = newContent.getNodeIDs();
-            Annotation[] newAnnos = newContent.getAnnotations();
+            Annotation[] newAnnos = getWorkflowAnnotations(newContent.getAnnotationIDs());
             // create map and set of quick lookup/search
             Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
             HashSet<NodeID> newIDsHashSet = new HashSet<NodeID>();
@@ -4159,7 +4162,7 @@ public final class WorkflowManager extends NodeContainer
             // copy the nodes into the newly create WFM:
             WorkflowCopyContent.Builder orgContentBuilder = WorkflowCopyContent.builder();
             orgContentBuilder.setNodeIDs(orgIDs);
-            orgContentBuilder.setAnnotation(orgAnnos);
+            orgContentBuilder.setAnnotationIDs(getWorkflowAnnotationIDs(orgAnnos));
             orgContentBuilder.setIncludeInOutConnections(true);
             final WorkflowPersistor undoPersistor = copy(true, orgContentBuilder.build());
 
@@ -7370,7 +7373,7 @@ public final class WorkflowManager extends NodeContainer
                 }
             }
             return new PasteWorkflowContentPersistor(loaderMap, connTemplates, additionalConnTemplates,
-                content.getAnnotations(), isUndoableDeleteCommand);
+                getWorkflowAnnotations(content.getAnnotationIDs()), isUndoableDeleteCommand);
         }
     }
 
@@ -7769,7 +7772,7 @@ public final class WorkflowManager extends NodeContainer
         WorkflowAnnotation[] newAnnotations = annos.toArray(new WorkflowAnnotation[annos.size()]);
         addConnectionsFromTemplates(persistor.getAdditionalConnectionSet(), loadResult, translationMap, false);
         WorkflowCopyContent.Builder result = WorkflowCopyContent.builder();
-        result.setAnnotation(newAnnotations);
+        result.setAnnotationIDs(getWorkflowAnnotationIDs(newAnnotations));
         result.setNodeIDs(newIDs);
         return result.build();
     }
@@ -8769,6 +8772,9 @@ public final class WorkflowManager extends NodeContainer
                     }
                 });
             }
+
+            //unset workflow annotation ids (in case they are about to be used somerwhere else)
+            getWorkflowAnnotations().forEach(wa -> wa.unsetID());
         }
     }
 
@@ -8971,36 +8977,92 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * @return read-only collection of the ids of all currently registered annotations.
+     */
+    public Collection<WorkflowAnnotationID> getWorkflowAnnotationIDs() {
+        return Collections.unmodifiableList(m_annotationIDs);
+    }
+
+    /**
+     * Helper method to get the workflow annotations referenced by the respective ids.
+     *
+     * @param ids the ids to get the annotations for
+     * @return a new array with the annotations - might contain <code>null</code>-entries if there is no annotation for
+     *         the given id
+     */
+    public WorkflowAnnotation[] getWorkflowAnnotations(final WorkflowAnnotationID... ids) {
+        WorkflowAnnotation[] res = new WorkflowAnnotation[ids.length];
+        for (int i = 0; i < res.length; i++) {
+            int idx = m_annotationIDs.indexOf(ids[i]);
+            if (idx != -1) {
+                res[i] = m_annotations.get(idx);
+            }
+        }
+        return res;
+    }
+
+    /**
+     * Helper method to get ids that reference the given workflow annotations.
+     *
+     * @param annotations the annotations to get the ids for
+     * @return a new array with the ids
+     */
+    private WorkflowAnnotationID[] getWorkflowAnnotationIDs(final WorkflowAnnotation... annotations) {
+        WorkflowAnnotationID[] res = new WorkflowAnnotationID[annotations.length];
+        for (int i = 0; i < res.length; i++) {
+            res[i] = m_annotationIDs.get(m_annotations.indexOf(annotations[i]));
+        }
+        return res;
+    }
+
+    /**
      * Add new workflow annotation, fire events.
      *
+     * The workflow annotation id will be set, too!
+     *
      * @param annotation to add
+     * @return a new id for annotation
      * @throws IllegalArgumentException If annotation already registered.
+     * @throws IllegalStateException If the annotation is already part of another workflow (i.e. its id has been set
+     *             already)
      */
-    public void addWorkflowAnnotation(final WorkflowAnnotation annotation) {
-        addWorkflowAnnotationInternal(annotation);
+    public WorkflowAnnotationID addWorkflowAnnotation(final WorkflowAnnotation annotation) {
+        WorkflowAnnotationID annoID = addWorkflowAnnotationInternal(annotation);
         setDirty();
+        return annoID;
     }
 
     /** Adds annotation as in #addWorkf but does not fire dirty event. */
-    private void addWorkflowAnnotationInternal(final WorkflowAnnotation annotation) {
+    private WorkflowAnnotationID addWorkflowAnnotationInternal(final WorkflowAnnotation annotation) {
         if (m_annotations.contains(annotation)) {
             throw new IllegalArgumentException("Annotation \"" + annotation + "\" already exists");
         }
+        WorkflowAnnotationID waID = new WorkflowAnnotationID(getID(), m_annotations.size());
+        annotation.setID(waID);
         m_annotations.add(annotation);
+        m_annotationIDs.add(waID);
         annotation.addUIInformationListener(this);
         notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.ANNOTATION_ADDED, null, null, annotation));
+        return waID;
     }
 
     /**
      * Remove workflow annotation, fire events.
      *
+     * The annotation id will be unset!
+     *
      * @param annotation to remove
      * @throws IllegalArgumentException If annotation is not registered.
      */
     public void removeAnnotation(final WorkflowAnnotation annotation) {
-        if (!m_annotations.remove(annotation)) {
+        int index = m_annotations.indexOf(annotation);
+        if (index == -1) {
             throw new IllegalArgumentException("Annotation \"" + annotation + "\" does not exists");
         }
+        m_annotations.remove(index);
+        m_annotationIDs.remove(index);
+        //unset the annotation id
+        annotation.unsetID();
         annotation.removeUIInformationListener(this);
         notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.ANNOTATION_REMOVED, null, annotation, null));
         setDirty();
@@ -9013,11 +9075,15 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.6
      */
     public void bringAnnotationToFront(final WorkflowAnnotation annotation) {
-        if (!m_annotations.remove(annotation)) {
+        int index = m_annotations.indexOf(annotation);
+        if (index == -1) {
             throw new IllegalArgumentException(
                 "Annotation \"" + annotation + "\" does not exists - can't be moved to front");
         }
+        m_annotations.remove(index);
         m_annotations.add(annotation);
+        WorkflowAnnotationID waID = m_annotationIDs.remove(index);
+        m_annotationIDs.add(waID);
         annotation.fireChangeEvent(); // triggers workflow dirty
     }
 
@@ -9028,11 +9094,15 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.6
      */
     public void sendAnnotationToBack(final WorkflowAnnotation annotation) {
-        if (!m_annotations.remove(annotation)) {
+        int index = m_annotations.indexOf(annotation);
+        if (index == -1) {
             throw new IllegalArgumentException(
                 "Annotation \"" + annotation + "\" does not exists - can't be moved to front");
         }
+        m_annotations.remove(index);
         m_annotations.insertElementAt(annotation, 0);
+        WorkflowAnnotationID waID = m_annotationIDs.remove(index);
+        m_annotationIDs.insertElementAt(waID, 0);
         annotation.fireChangeEvent(); // triggers workflow dirty
     }
 

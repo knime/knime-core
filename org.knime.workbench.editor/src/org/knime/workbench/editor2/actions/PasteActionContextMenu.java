@@ -49,7 +49,7 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.PasteFromWorkflowPersistorCommand.ShiftCalculator;
@@ -89,10 +89,8 @@ public class PasteActionContextMenu extends PasteAction {
             /** {@inheritDoc} */
             @Override
             public int[] calculateShift(final Iterable<int[]> boundsList,
-                    final WorkflowManager manager,
+                    final WorkflowManagerUI manager,
                     final ClipboardObject clipObject) {
-                int x = getEditor().getSelectionTool().getXLocation();
-                int y = getEditor().getSelectionTool().getYLocation();
                 int smallestX = Integer.MAX_VALUE;
                 int smallestY = Integer.MAX_VALUE;
                 for (int[] bounds : boundsList) {
@@ -105,12 +103,25 @@ public class PasteActionContextMenu extends PasteAction {
                         smallestY = currentY;
                     }
                 }
-                ZoomManager zoomManager =
-                        (ZoomManager)getEditor().getViewer().getProperty(
-                                ZoomManager.class.toString());
+                return calculateShift(smallestX, smallestY);
+            }
 
-                Point viewPortLocation =
-                    zoomManager.getViewport().getViewLocation();
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public int[] calculateShift(final int offsetX, final int offsetY, final ClipboardObject clipObject) {
+                return calculateShift(offsetX, offsetY);
+            }
+
+            private int[] calculateShift(final int smallestX, final int smallestY) {
+                int x = getEditor().getSelectionTool().getXLocation();
+                int y = getEditor().getSelectionTool().getYLocation();
+                ZoomManager zoomManager =
+                    (ZoomManager)getEditor().getViewer().getProperty(ZoomManager.class.toString());
+
+                Point viewPortLocation = zoomManager.getViewport().getViewLocation();
                 x += viewPortLocation.x;
                 y += viewPortLocation.y;
                 double zoom = zoomManager.getZoom();

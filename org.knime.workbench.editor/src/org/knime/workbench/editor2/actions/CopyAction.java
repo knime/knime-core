@@ -47,18 +47,22 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.Arrays;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.WorkflowCopyContent;
-import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.WorkflowCopyUI;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.ui.async.AsyncSwitch;
 
 /**
  * Implements the clipboard copy action to copy nodes and connections into the
@@ -133,17 +137,19 @@ public class CopyAction extends AbstractClipboardAction {
             NodeContainerEditPart nodeEP = m_nodeParts[i];
             ids[i] = nodeEP.getNodeContainer().getID();
         }
-        WorkflowAnnotation[] annotations =
-            AnnotationEditPart.extractWorkflowAnnotations(m_annotationParts);
+        WorkflowAnnotationID[] annotationIDs = Arrays.stream(
+            AnnotationEditPart.extractWorkflowAnnotations(m_annotationParts)).map(a -> a.getID())
+            .toArray(size -> new WorkflowAnnotationID[size]);
 
         WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
         content.setNodeIDs(ids);
-        content.setAnnotation(annotations);
-        WorkflowPersistor copyPersistor = getManager().copy(false, content.build());
+        content.setAnnotationIDs(annotationIDs);
+        WorkflowCopyUI wfCopy = AsyncSwitch.wfmAsyncSwitch(wfm -> wfm.copy(content.build()),
+            wfm -> wfm.copyAsync(content.build()), super.getManagerUI(), "Copying workflow parts ...");
 
         // the information about the nodes is stored in the config XML format
         // also used to store workflow information in the kflow files
-        getEditor().setClipboardContent(new ClipboardObject(copyPersistor));
+        getEditor().setClipboardContent(new ClipboardObject(wfCopy));
 
         // update the actions
         getEditor().updateActions();
@@ -168,6 +174,14 @@ public class CopyAction extends AbstractClipboardAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         throw new IllegalStateException(
                 "Not to be called as runInSWT is overwritten.");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean canHandleWorklfowManagerUI() {
+        return true;
     }
 
 }

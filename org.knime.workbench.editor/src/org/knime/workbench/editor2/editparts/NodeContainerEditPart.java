@@ -61,7 +61,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -836,18 +835,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             // This is embedded in a special JFace wrapper dialog
             //
             try {
-                WrappedNodeDialog dlg;
-                if (Wrapper.wraps(container, NodeContainer.class)) {
-                    dlg = new WrappedNodeDialog(shell, container);
-                } else {
-                    dlg = initDialogWithoutBlockingUI(shell, container);
-                }
+                WrappedNodeDialog dlg = new WrappedNodeDialog(shell, container);
                 dlg.open();
             } catch (NotConfigurableException ex) {
                 MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
                 mb.setText("Dialog cannot be opened");
-                mb.setMessage("The dialog cannot be opened for the following" + " reason:\n"
-                    + ex.getMessage());
+                mb.setMessage("The dialog cannot be opened for the following" + " reason:\n" + ex.getMessage());
                 mb.open();
             } catch (Throwable t) {
                 LOGGER.error("The dialog pane for node '" + container.getNameWithID() + "' has thrown a '"
@@ -856,32 +849,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         } finally {
             shell.setEnabled(true);
         }
-    }
-
-    /**
-     * Opens the config dialog asynchronously. Used for "remote workflow" that need to retrieve the settings from the
-     * remote side first.
-     */
-    private static WrappedNodeDialog initDialogWithoutBlockingUI(final Shell shell, final NodeContainerUI container)
-        throws Throwable {
-        AtomicReference<Throwable> throwable = new AtomicReference<>();
-        AtomicReference<WrappedNodeDialog> dialog = new AtomicReference<>();
-        try {
-            PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
-                monitor.beginTask("Waiting for the dialog to open", 100);
-                try {
-                    dialog.set(new WrappedNodeDialog(shell, container));
-                } catch (Throwable t) {
-                    throwable.set(t);
-                }
-            });
-        } catch (InvocationTargetException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        if (throwable.get() != null) {
-            throw throwable.get();
-        }
-        return dialog.get();
     }
 
     public void openSubWorkflowEditor() {
