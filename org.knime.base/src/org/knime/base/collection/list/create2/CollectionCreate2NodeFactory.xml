@@ -80,6 +80,6 @@
 	<ports>
 		<inPort index="0" name="Any input data">Any input data</inPort>
 		<outPort index="0" name="Input data with new collection column">
-		The input data along with a newly append collection column.</outPort>
+		The input data along with a newly appended collection column.</outPort>
 	</ports>
 </knimeNode>
