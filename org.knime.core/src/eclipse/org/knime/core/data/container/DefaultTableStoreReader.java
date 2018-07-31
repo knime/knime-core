@@ -85,7 +85,7 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
     DefaultTableStoreReader(final File binFile, final DataTableSpec spec, final NodeSettingsRO settings,
         final int version, final boolean isReadRowKey)
                 throws IOException, InvalidSettingsException {
-        super(binFile, settings, version);
+        super(binFile, spec, settings, version);
         m_binFile = binFile;
         m_spec = spec;
         m_version = version;
@@ -93,11 +93,19 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
     }
 
     @Override
-    public TableStoreCloseableRowIterator iterator() throws IOException {
-        if (m_version <= 5) { // 2.0 tech preview and before
-            return new BufferFromFileIteratorVersion1x(this);
-        } else {
-            return new BufferFromFileIteratorVersion20(this);
+    public TableStoreCloseableRowIterator iterator() {
+        try {
+            if (m_version <= 5) { // 2.0 tech preview and before
+                return new BufferFromFileIteratorVersion1x(this);
+            } else {
+                return new BufferFromFileIteratorVersion20(this);
+            }
+        } catch (IOException ioe) {
+            StringBuilder b = new StringBuilder("Cannot read file \"");
+            b.append(m_binFile != null ? m_binFile.getName() : "<unknown>");
+            b.append("\"");
+            Buffer.checkAndReportOpenFiles(ioe);
+            throw new RuntimeException(b.toString(), ioe);
         }
     }
 

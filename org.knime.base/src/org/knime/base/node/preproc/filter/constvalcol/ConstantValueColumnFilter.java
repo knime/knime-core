@@ -60,6 +60,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowIterator.RowIteratorBuilder;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.node.BufferedDataTable;
@@ -151,9 +152,9 @@ public class ConstantValueColumnFilter {
          */
         Set<String> colNamesToFilterSet = new HashSet<>(Arrays.asList(colNamesToFilter));
         String[] allColNames = inputTable.getDataTableSpec().getColumnNames();
+        Map<Integer, ConstantChecker> columnCheckers = new HashMap<>();
         try (CloseableRowIterator rowIt = inputTable.iterator()) {
             DataRow firstRow = rowIt.next();
-            Map<Integer, ConstantChecker> columnCheckers = new HashMap<>();
             for (int i = 0; i < allColNames.length; i++) {
                 if (colNamesToFilterSet.contains(allColNames[i])) {
                     DataCell firstCell = firstRow.getCell(i);
@@ -164,7 +165,14 @@ public class ConstantValueColumnFilter {
                     }
                 }
             }
+        }
 
+        RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder = inputTable.iteratorBuilder();
+        iteratorBuilder.filterColumns(columnCheckers.keySet().stream().mapToInt(i -> i).toArray());
+
+        try (CloseableRowIterator rowIt = iteratorBuilder.build()) {
+            // the first row has already been read
+            rowIt.next();
             /*
              * Across all filter candidates, check if there is any cell whose value differs from the first cell's value.
              * When found, this column is not constant and, thus, should be removed from the filter candidates. This method

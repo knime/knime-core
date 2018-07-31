@@ -55,6 +55,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -78,6 +79,7 @@ import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.DataColumnPropertiesView;
 import org.knime.core.node.workflow.DataTableSpecView;
 
@@ -236,6 +238,26 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     }
 
     /**
+     * Static helper method for converting an array of column names to an array of column indices.
+     *
+     * @param columns the column names to find the indices for
+     * @return an array of column indices corresponding to the column names
+     * @throws IllegalArgumentException If a column is not contained in the table
+     *
+     * @since 3.7
+     */
+    public int[] columnsToIndices(final String... columns) {
+        int[] indices = new int[columns.length];
+        for (int i = 0; i < columns.length; i++) {
+            indices[i] = findColumnIndex(columns[i]);
+            if (indices[i] == -1) {
+                throw new IllegalArgumentException("Column not found: \"" + columns[i] + "\"");
+            }
+        }
+        return indices;
+    }
+
+    /**
      * Static helper method to create a {@link DataColumnSpec} array from the
      * given names and types.
      *
@@ -316,6 +338,28 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
 
         return new DataTableSpec(name, specs, map);
+    }
+
+    /**
+     * Static helper method for verifying that, when accessing a set of columns by index, column indices are not
+     * duplicates or out of bounds.
+     *
+     * @param indices the indices that are to be verified
+     * @throws IllegalArgumentException If the array argument contains duplicates
+     * @throws IndexOutOfBoundsException If any array element is out of bounds
+     * @since 3.7
+     */
+    public void verifyIndices(final int... indices) {
+        Set<Integer> indicesSet = new HashSet<>();
+        CheckUtils.checkArgumentNotNull(indices);
+        for (int index : indices) {
+            if (index < 0 || index >= getNumColumns()) {
+                throw new IndexOutOfBoundsException("Column index out of range: " + index);
+            }
+            if (!indicesSet.add(index)) {
+                throw new IllegalArgumentException("Duplicate index: " + index);
+            }
+        }
     }
 
     /** Keeps column name to column index mapping for faster access. */

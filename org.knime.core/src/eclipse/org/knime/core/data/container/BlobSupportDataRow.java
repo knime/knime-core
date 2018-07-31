@@ -62,7 +62,7 @@ import org.knime.core.data.def.DefaultCellIterator;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class BlobSupportDataRow implements DataRow {
+public class BlobSupportDataRow implements DataRow {
 
     private final RowKey m_key;
 

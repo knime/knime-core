@@ -44,10 +44,13 @@
  */
 package org.knime.core.data;
 
+import org.knime.core.data.RowIterator.DefaultRowIteratorBuilder;
+import org.knime.core.data.RowIterator.RowIteratorBuilder;
+
 /**
  * Most general data interface in table structure with a fixed number of columns
  * and iterable rows (no random access).
- * 
+ *
  * <p>
  * Each <code>DataTable</code> is a read-only container of {@link DataRow}
  * elements which are returned by the {@link RowIterator}. Each row must have
@@ -57,9 +60,9 @@ package org.knime.core.data;
  * of the table. The {@link DataTableSpec} consists of {@link DataColumnSpec}s
  * which contain information about the column, e.g. name, type, and possible
  * values etc.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
- * 
+ *
  * @see DataCell
  * @see DataRow
  * @see RowIterator
@@ -69,18 +72,31 @@ public interface DataTable extends Iterable<DataRow> {
     /**
      * Returns the {@link DataTableSpec} object of this table which gives
      * information about the structure of this data table.
-     * 
+     *
      * @return the DataTableSpec of this table
      */
     DataTableSpec getDataTableSpec();
 
     /**
      * Returns a row iterator which returns each row one-by-one from the table.
-     * 
+     *
      * @return row iterator
-     * 
+     *
      * @see org.knime.core.data.DataRow
      */
+    @Override
     RowIterator iterator();
+
+    /**
+     * Returns a {@link RowIteratorBuilder} that can be used to assemble more complex {@link RowIterator} that only
+     * iterate over parts of a table.
+     *
+     * @return a {@link RowIteratorBuilder} that can be used to assemble complex {@link RowIterator}s
+     *
+     * @since 3.7
+     */
+    default RowIteratorBuilder<? extends RowIterator> iteratorBuilder() {
+        return new DefaultRowIteratorBuilder<RowIterator>(() -> iterator(), getDataTableSpec());
+    }
 
 }

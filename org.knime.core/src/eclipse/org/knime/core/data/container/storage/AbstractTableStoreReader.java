@@ -52,8 +52,11 @@ import java.io.IOException;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.RowIterator.DefaultRowIteratorBuilder;
+import org.knime.core.data.RowIterator.RowIteratorBuilder;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.Buffer;
@@ -75,6 +78,8 @@ import org.knime.core.node.NodeSettingsRO;
  */
 public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
 
+    private final DataTableSpec m_spec;
+
     private CellClassInfo[] m_shortCutsLookup;
 
     private FileStoreHandlerRepository m_fileStoreHandlerRepository;
@@ -85,6 +90,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      * Constructs an abstract table store reader.
      *
      * @param binFile the local file from which to read
+     * @param spec Non-null spec of the table being read.
      * @param settings The settings (written by
      *            {@link AbstractTableStoreWriter#writeMetaInfoAfterWrite(org.knime.core.node.NodeSettingsWO)})
      * @param version The version as defined in the {@link Buffer} class
@@ -92,8 +98,9 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      * @throws InvalidSettingsException thrown in case something goes wrong during de-serialization, e.g. a new version
      *             of a writer has been used which hasn't been installed on the current system.
      */
-    protected AbstractTableStoreReader(final File binFile, final NodeSettingsRO settings, final int version)
-        throws IOException, InvalidSettingsException {
+    protected AbstractTableStoreReader(final File binFile, final DataTableSpec spec, final NodeSettingsRO settings,
+        final int version) throws IOException, InvalidSettingsException {
+        m_spec = spec;
         readMetaFromFile(settings, version);
     }
 
@@ -132,7 +139,33 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         return m_fileStoreHandlerRepository;
     }
 
-    public abstract TableStoreCloseableRowIterator iterator() throws IOException;
+    /**
+     * Returns a row iterator which returns each row one-by-one from the table.
+     *
+     * @return row iterator
+     */
+    public abstract TableStoreCloseableRowIterator iterator();
+
+    /**
+     * Returns a {@link RowIteratorBuilder} that can be used to assemble more complex
+     * {@link TableStoreCloseableRowIterator}s that only iterate over parts of a table.
+     *
+     * @return a {@link RowIteratorBuilder} that can be used to assemble complex {@link TableStoreCloseableRowIterator}s
+     *
+     * @since 3.7
+     */
+    public RowIteratorBuilder<? extends TableStoreCloseableRowIterator> iteratorBuilder() {
+        return new DefaultRowIteratorBuilder<TableStoreCloseableRowIterator>(() -> iterator(), m_spec) {
+            @Override
+            public TableStoreCloseableRowIterator build() {
+                TableStoreCloseableRowIterator iterator = super.build();
+                if (m_buffer != null) {
+                    m_buffer.registerNewIteratorInstance(iterator);
+                }
+                return iterator;
+            }
+        };
+    }
 
     /**
      * Reads meta information, such as the classes of serialized {@link DataCell} instances.
@@ -190,8 +223,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
 
             DataType elementType = null;
             if (single.containsKey(TableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE)) {
-                NodeSettingsRO subTypeConfig =
-                    single.getNodeSettings(TableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE);
+                NodeSettingsRO subTypeConfig = single.getNodeSettings(TableStoreFormat.CFG_CELL_SINGLE_ELEMENT_TYPE);
                 elementType = DataType.load(subTypeConfig);
             }
             try {
@@ -203,6 +235,15 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
             i++;
         }
         return shortCutsLookup;
+    }
+
+    /**
+     * Method for obtaining the {@link DataTableSpec} beloning to the table read by this table store reader.
+     *
+     * @return the spec belonging to this reader, not null
+     */
+    protected final DataTableSpec getSpec() {
+        return m_spec;
     }
 
     /**

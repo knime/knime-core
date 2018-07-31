@@ -359,6 +359,13 @@
                serializerClass="org.knime.core.data.MissingCell$MissingSerializer">
          </serializer>
       </DataType>
+      <DataType
+            cellClass="org.knime.core.data.UnmaterializedCell">
+         <serializer
+               cellClass="org.knime.core.data.UnmaterializedCell"
+               serializerClass="org.knime.core.data.UnmaterializedCell$UnmaterializedSerializer">
+         </serializer>
+      </DataType>
      
       <DataType
             cellClass="org.knime.core.data.vector.bitvector.SparseBitVectorCell">
@@ -490,13 +497,6 @@
          <serializer
                cellClass="org.knime.core.data.xml.PMMLBlobCell"
                serializerClass="org.knime.core.data.xml.PMMLBlobCell$PMMLSerializer">
-         </serializer>
-      </DataType>
-      <DataType
-            cellClass="org.knime.core.data.MissingCell">
-         <serializer
-               cellClass="org.knime.core.data.MissingCell"
-               serializerClass="org.knime.core.data.MissingCell$MissingSerializer">
          </serializer>
       </DataType>
    </extension>

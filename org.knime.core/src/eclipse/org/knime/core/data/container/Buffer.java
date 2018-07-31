@@ -94,6 +94,8 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowIterator.DefaultRowIteratorBuilder;
+import org.knime.core.data.RowIterator.RowIteratorBuilder;
 import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.CollectionDataValue;
@@ -386,6 +388,7 @@ public class Buffer implements KNIMEStreamConstants {
     private IFileStoreHandler m_fileStoreHandler;
 
     /** Number of open file input streams on m_binFile. */
+    // TODO move to AbstractTableStoreReader (and also the other one... whose name I forgot)
     private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
 
     private TableStoreFormat m_outputFormat;
@@ -1431,6 +1434,7 @@ public class Buffer implements KNIMEStreamConstants {
      *
      * @return a new Iterator over all rows.
      */
+    // TODO retire
     synchronized CloseableRowIterator iterator() {
         if (usesOutFile()) {
             if (m_useBackIntoMemoryIterator) {
@@ -1441,29 +1445,31 @@ public class Buffer implements KNIMEStreamConstants {
                 m_list = new ArrayList<BlobSupportDataRow>((int) size());
                 return new FromListIterator();
             }
-            try {
-                LOGGER.debug("Opening input stream on file \"" + m_binFile.getAbsolutePath() + "\", "
-                        + m_nrOpenInputStreams + " open streams");
-
-                TableStoreCloseableRowIterator iterator = m_outputReader.iterator();
-                iterator.setBuffer(this);
-                m_nrOpenInputStreams.incrementAndGet();
-                synchronized (m_openIteratorSet) {
-                    m_openIteratorSet.put(iterator, DUMMY);
-                }
-                return iterator;
-            } catch (IOException ioe) {
-                StringBuilder b = new StringBuilder("Cannot read file \"");
-                b.append(m_binFile != null ? m_binFile.getName() : "<unknown>");
-                b.append("\"");
-                checkAndReportOpenFiles(ioe);
-                throw new RuntimeException(b.toString(), ioe);
-            }
+            TableStoreCloseableRowIterator iterator = m_outputReader.iterator();
+            registerNewIteratorInstance(iterator);
+            return iterator;
         } else {
             return new FromListIterator();
         }
     }
 
+    synchronized RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder() {
+        if (usesOutFile()) {
+            if (m_useBackIntoMemoryIterator) {
+                // the order of the following lines is very important!
+                m_useBackIntoMemoryIterator = false;
+                m_backIntoMemoryIterator = iterator();
+                // we never store more than 2^31 rows in memory, therefore it's safe to cast to int
+                m_list = new ArrayList<BlobSupportDataRow>((int) size());
+                return new DefaultRowIteratorBuilder<>(() -> new FromListIterator(), getTableSpec());
+            }
+            RowIteratorBuilder<? extends TableStoreCloseableRowIterator> iteratorBuilder =
+                m_outputReader.iteratorBuilder();
+            return iteratorBuilder;
+        } else {
+            return new DefaultRowIteratorBuilder<>(() -> new FromListIterator(), getTableSpec());
+        }
+    }
 
     private static List<OutputStream> DEBUG_STREAMS = new ArrayList<>();
 
@@ -1481,7 +1487,8 @@ public class Buffer implements KNIMEStreamConstants {
 
 
     /** prints debug output to catch random failures on test system, see AP-7978. */
-    private static void checkAndReportOpenFiles(final IOException ex) {
+    // TODO move to ATableStoreReader?
+    public static void checkAndReportOpenFiles(final IOException ex) {
         if (KNIMEConstants.ASSERTIONS_ENABLED && Platform.OS_LINUX.equals(Platform.getOS())) {
             if (ex.getMessage().contains("Too many") || ex.getMessage().contains("Zu viele")) {
                 try {
@@ -1705,7 +1712,22 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Clear the argument iterator (free the allocated resources.
+     * Register a new iterator with this buffer.
+     *
+     * @param it The iterator
+     */
+    public synchronized void registerNewIteratorInstance (final TableStoreCloseableRowIterator it) {
+        LOGGER.debug("Opening input stream on file \"" + m_binFile.getAbsolutePath() + "\", "
+                + m_nrOpenInputStreams + " open streams");
+        it.setBuffer(this);
+        m_nrOpenInputStreams.incrementAndGet();
+        synchronized (m_openIteratorSet) {
+            m_openIteratorSet.put(it, DUMMY);
+        }
+    }
+
+    /**
+     * Clear the argument iterator (free the allocated resources).
      *
      * @param it The iterator
      * @param removeFromHash Whether to remove from global hash.
