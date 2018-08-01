@@ -138,7 +138,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
         m_nodeContainer = nodeContainer;
         m_dialogPane =
             ncAsyncSwitchRethrow(nc -> nc.getDialogPaneWithSettings(), nc -> nc.getDialogPaneWithSettingsAsync(),
-                nodeContainer, "Waiting for the dialog to open", NotConfigurableException.class);
+                nodeContainer, "Waiting for the dialog to open");
 
         if (m_nodeContainer.getParent() != null) {
             m_writeProtectionChangedListener = () -> updateWriteProtectedState();

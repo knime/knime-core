@@ -70,6 +70,7 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowCopyUI;
 import org.knime.core.ui.node.workflow.WorkflowCopyWithOffsetUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.OperationNotAllowedException;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
@@ -238,8 +239,14 @@ public final class PasteFromWorkflowPersistorCommand
         NodeID[] nodeIDs = m_pastedContent.getNodeIDs();
         ConnectionID[] connIDs = new ConnectionID[0];
         WorkflowAnnotationID[] annoIDs = m_pastedContent.getAnnotationIDs();
-        AsyncSwitch.wfmAsyncSwitchVoid(wfm -> wfm.remove(nodeIDs, connIDs, annoIDs),
-            wfm -> wfm.removeAsync(nodeIDs, connIDs, annoIDs), manager, "Removing workflow parts ...");
+        try {
+            AsyncSwitch.wfmAsyncSwitchRethrow(wfm -> {
+                wfm.remove(nodeIDs, connIDs, annoIDs);
+                return null;
+            }, wfm -> wfm.removeAsync(nodeIDs, connIDs, annoIDs), manager, "Removing workflow parts ...");
+        } catch (OperationNotAllowedException e) {
+            openDialog("Problem undoing paste command", "Pasted parts cannot removed anymore: " + e.getMessage());
+        }
     }
 
     /**

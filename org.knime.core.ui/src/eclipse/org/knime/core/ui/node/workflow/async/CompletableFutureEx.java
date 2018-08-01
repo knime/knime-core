@@ -43,69 +43,66 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Aug 1, 2018 (hornm): created
  */
 package org.knime.core.ui.node.workflow.async;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 
 /**
- * UI-interface that provides asynchronous versions of some methods of {@link NodeContainerUI}.
+ * Wrapper for {@link CompletableFuture}s that additional re-throws a predefined exception on calling
+ * {@link #getOrThrow()}.
  *
- * The methods that are overridden and provided with a asynchronous counterpart here are expected to (potentially)
- * return their result with a delay (e.g. because it is requested from a server). If there is a asynchronous counterpart
- * it is advised to use it instead of the synchronous method!
- *
- * All methods not overridden here are expected to return almost immediately.
+ * The exception to be re-thrown needs to be wrapped into a {@link CompletionException} in the actual code that the
+ * future uses for execution.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @noimplement This interface is not intended to be implemented by clients.
- * @noextend This interface is not intended to be extended by clients.
- * @noreference This interface is not intended to be referenced by clients.
+ * @param <T> the type of the future result
+ * @param <E> the exception type to be re-thrown
  */
-public interface AsyncNodeContainerUI extends NodeContainerUI {
+public final class CompletableFutureEx<T, E extends Exception> {
+
+    private final CompletableFuture<T> m_future;
+
+    private final Class<E> m_exceptionClass;
 
     /**
-     * {@inheritDoc}
+     * @param future
+     * @param exceptionClass
      */
-    @Override
-    default NodeDialogPane getDialogPaneWithSettings() throws NotConfigurableException {
-        throw new UnsupportedOperationException("Please use async method instead.");
+    public CompletableFutureEx(final CompletableFuture<T> future, final Class<E> exceptionClass) {
+        m_future = future;
+        m_exceptionClass = exceptionClass;
     }
 
     /**
-     * Async version of {@link #getDialogPaneWithSettings()}.
+     * Same as {@link CompletableFuture#get()} but also potentially throws a predefined exception.
      *
-     * @return result as future that possibly throws a {@link NotConfigurableException} on
-     *         {@link CompletableFutureEx#getOrThrow()}
+     * @return the result
+     * @throws E the predefined exception that is potentially thrown
+     * @throws InterruptedException
+     * @throws ExecutionException
      */
-    public CompletableFutureEx<NodeDialogPane, NotConfigurableException> getDialogPaneWithSettingsAsync();
-
-    /**
-     * Creates a new {@link CompletableFuture}.
-     *
-     * @param sup the actual stuff to run
-     * @return a new future
-     */
-    public static <U> CompletableFuture<U> future(final Supplier<U> sup) {
-        return CompletableFuture.supplyAsync(sup);
+    @SuppressWarnings("unchecked")
+    public T getOrThrow() throws E, InterruptedException, ExecutionException {
+        try {
+            return m_future.get();
+        } catch (ExecutionException e) {
+            if (m_exceptionClass.isAssignableFrom(e.getCause().getClass())) {
+                throw (E)e.getCause();
+            } else {
+                throw e;
+            }
+        }
     }
 
     /**
-     * Creates a new {@link CompletableFutureEx}.
-     *
-     * @param sup the actual stuff to run
-     * @param exceptionClass the exception class that the future potentially throws on
-     *            {@link CompletableFutureEx#getOrThrow()}
-     * @return a new future
+     * @return class of the exception that is potentially thrown from {@link #getOrThrow()}
      */
-    public static <U, E extends Exception> CompletableFutureEx<U, E> futureEx(final Supplier<U> sup,
-        final Class<E> exceptionClass) {
-        return new CompletableFutureEx<U, E>(CompletableFuture.supplyAsync(sup), exceptionClass);
+    public Class<E> getExceptionClass() {
+        return m_exceptionClass;
     }
 }

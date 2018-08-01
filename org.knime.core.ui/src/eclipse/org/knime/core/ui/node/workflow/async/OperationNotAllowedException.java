@@ -43,69 +43,33 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Aug 1, 2018 (hornm): created
  */
 package org.knime.core.ui.node.workflow.async;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
-
 /**
- * UI-interface that provides asynchronous versions of some methods of {@link NodeContainerUI}.
- *
- * The methods that are overridden and provided with a asynchronous counterpart here are expected to (potentially)
- * return their result with a delay (e.g. because it is requested from a server). If there is a asynchronous counterpart
- * it is advised to use it instead of the synchronous method!
- *
- * All methods not overridden here are expected to return almost immediately.
+ * Indicates that an operation is not allowed.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @noimplement This interface is not intended to be implemented by clients.
- * @noextend This interface is not intended to be extended by clients.
- * @noreference This interface is not intended to be referenced by clients.
  */
-public interface AsyncNodeContainerUI extends NodeContainerUI {
+public class OperationNotAllowedException extends Exception {
+
+    private static final long serialVersionUID = -5877092141551730657L;
 
     /**
-     * {@inheritDoc}
+     * @param message the exception message
      */
-    @Override
-    default NodeDialogPane getDialogPaneWithSettings() throws NotConfigurableException {
-        throw new UnsupportedOperationException("Please use async method instead.");
+    public OperationNotAllowedException(final String message) {
+        super(message);
     }
 
     /**
-     * Async version of {@link #getDialogPaneWithSettings()}.
-     *
-     * @return result as future that possibly throws a {@link NotConfigurableException} on
-     *         {@link CompletableFutureEx#getOrThrow()}
+     * @param message the exception message
+     * @param cause a cause
      */
-    public CompletableFutureEx<NodeDialogPane, NotConfigurableException> getDialogPaneWithSettingsAsync();
-
-    /**
-     * Creates a new {@link CompletableFuture}.
-     *
-     * @param sup the actual stuff to run
-     * @return a new future
-     */
-    public static <U> CompletableFuture<U> future(final Supplier<U> sup) {
-        return CompletableFuture.supplyAsync(sup);
+    public OperationNotAllowedException(final String message, final Throwable cause) {
+        super(message, cause);
     }
 
-    /**
-     * Creates a new {@link CompletableFutureEx}.
-     *
-     * @param sup the actual stuff to run
-     * @param exceptionClass the exception class that the future potentially throws on
-     *            {@link CompletableFutureEx#getOrThrow()}
-     * @return a new future
-     */
-    public static <U, E extends Exception> CompletableFutureEx<U, E> futureEx(final Supplier<U> sup,
-        final Class<E> exceptionClass) {
-        return new CompletableFutureEx<U, E>(CompletableFuture.supplyAsync(sup), exceptionClass);
-    }
 }

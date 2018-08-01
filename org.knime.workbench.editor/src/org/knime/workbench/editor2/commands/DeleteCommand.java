@@ -48,7 +48,7 @@
 package org.knime.workbench.editor2.commands;
 
 import static org.knime.workbench.ui.async.AsyncSwitch.wfmAsyncSwitch;
-import static org.knime.workbench.ui.async.AsyncSwitch.wfmAsyncSwitchVoid;
+import static org.knime.workbench.ui.async.AsyncSwitch.wfmAsyncSwitchRethrow;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,6 +70,7 @@ import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowCopyUI;
 import org.knime.core.ui.node.workflow.WorkflowCopyWithOffsetUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.OperationNotAllowedException;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -223,16 +224,27 @@ public class DeleteCommand extends AbstractKNIMECommand {
             WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
             content.setNodeIDs(m_nodeIDs);
             content.setAnnotationIDs(m_annotationIDs);
-            m_undoCopy = wfmAsyncSwitch(wfm -> wfm.cut(content.build()),
-                wfm -> wfm.cutAsync(content.build()), hostWFM, "Deleting content ...");
+            try {
+                m_undoCopy = wfmAsyncSwitchRethrow(wfm -> wfm.cut(content.build()), wfm -> wfm.cutAsync(content.build()),
+                    hostWFM, "Deleting content ...");
+            } catch (OperationNotAllowedException e) {
+                openDialog("Problem while deleting parts", e.getMessage());
+                return;
+            }
         }
 
         //remove dangling connections that haven't been removed by the cut
         ConnectionID[] connectionIDs =
             Arrays.stream(m_connections).map(cc -> cc.getID()).toArray(size -> new ConnectionID[size]);
-        wfmAsyncSwitchVoid(wfm -> wfm.remove(new NodeID[0], connectionIDs, new WorkflowAnnotationID[0]),
-            wfm -> wfm.removeAsync(new NodeID[0], connectionIDs, new WorkflowAnnotationID[0]), hostWFM,
-            "Deleting connections ...");
+        try {
+            wfmAsyncSwitchRethrow(wfm -> {
+                wfm.remove(new NodeID[0], connectionIDs, new WorkflowAnnotationID[0]);
+                return null;
+            }, wfm -> wfm.removeAsync(new NodeID[0], connectionIDs, new WorkflowAnnotationID[0]), hostWFM,
+                "Deleting connections ...");
+        } catch (OperationNotAllowedException e) {
+            openDialog("Problem while deleting parts", e.getMessage());
+        }
     }
 
     /** {@inheritDoc} */
@@ -247,7 +259,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
         }
 
         WorkflowManagerUI hostWFM = getHostWFMUI();
-        wfmAsyncSwitchVoid(wfm -> {
+        wfmAsyncSwitch(wfm -> {
             //paste copied content
             if (m_undoCopy != null) {
                 wfm.paste(m_undoCopy);
@@ -258,6 +270,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
                 wfm.addConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort(),
                     cc.getUIInfo().getAllBendpoints());
             }
+            return null;
         }, wfm -> {
             //paste copied content
             CompletableFuture<WorkflowCopyContent> pasteFuture = null;
@@ -308,5 +321,4 @@ public class DeleteCommand extends AbstractKNIMECommand {
     public int getAnnotationCount() {
         return m_annotationIDs.length;
     }
-
 }

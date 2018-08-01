@@ -53,7 +53,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.eclipse.swt.SWT;
@@ -67,6 +66,7 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.AsyncNodeContainerUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.CompletableFutureEx;
 
 /**
  * Helper methods to switch between the synchronous and asynchronous implementations of an interface (such as
@@ -124,7 +124,7 @@ public class AsyncSwitch {
                     try {
                         ref.set(asyncWfm.apply((AsyncWorkflowManagerUI)wfm).get());
                     } catch (ExecutionException e) {
-                        exception.set(e);
+                        exception.set(e.getCause());
                     }
                 });
             } catch (InterruptedException | InvocationTargetException ex) {
@@ -140,66 +140,76 @@ public class AsyncSwitch {
     }
 
     /**
-     * Same as {@link #wfmAsyncSwitch(Function, Function, WorkflowManagerUI, String)} but without a return type (i.e.
-     * void).
-     *
-     * For parameter descriptions please refer to
-     * {@link #wfmAsyncSwitch(Function, Function, WorkflowManagerUI, String)}.
+     * Almost the same as {@link #wfmAsyncSwitch(Function, Function, WorkflowManagerUI, String)} but additionally
+     * re-throws a specified exception caught from {@link CompletableFutureEx#getOrThrow()}.
      *
      * @param syncWfm
      * @param asyncWfm
      * @param wfm
      * @param waitingMessage
+     * @return the actual result, possibly after some waiting in the asynch case
+     * @throws E the expected exception
      */
-    public static void wfmAsyncSwitchVoid(final Consumer<WorkflowManagerUI> syncWfm,
-        final Function<AsyncWorkflowManagerUI, CompletableFuture<Void>> asyncWfm, final WorkflowManagerUI wfm,
-        final String waitingMessage) {
+    public static <T, E extends Exception> T wfmAsyncSwitchRethrow(
+        final RethrowFunction<WorkflowManagerUI, T, E> syncWfm,
+        final Function<AsyncWorkflowManagerUI, CompletableFutureEx<? extends T, E>> asyncWfm,
+        final WorkflowManagerUI wfm, final String waitingMessage) throws E {
         if (wfm instanceof AsyncWorkflowManagerUI) {
+            final AtomicReference<T> ref = new AtomicReference<T>();
             final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
+            CompletableFutureEx<? extends T, E> future = asyncWfm.apply((AsyncWorkflowManagerUI)wfm);
             try {
                 PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
                     monitor.beginTask(waitingMessage, 100);
                     try {
-                        asyncWfm.apply((AsyncWorkflowManagerUI)wfm).get();
+                        ref.set(future.getOrThrow());
                     } catch (ExecutionException e) {
-                        exception.set(e);
+                        exception.set(e.getCause());
+                    } catch (Exception ex) {
+                        exception.set(ex);
                     }
                 });
             } catch (InterruptedException | InvocationTargetException ex) {
                 exception.set(ex);
             }
             if (exception.get() != null) {
-                openDialogAndLog(exception.get(), waitingMessage);
+                Throwable t = exception.get();
+                if (future.getExceptionClass().isAssignableFrom(t.getClass())) {
+                    throw (E)t;
+                } else {
+                    openDialogAndLog(t, waitingMessage);
+                }
             }
+            return ref.get();
         } else {
-            syncWfm.accept(wfm);
+            return syncWfm.apply(wfm);
         }
     }
 
     /**
-     * Almost the same as {@link #wfmAsyncSwitch(Function, Function, WorkflowManagerUI, String)} with two main
-     * differences: 1) deals with {@link NodeContainerUI} and it's counterpart {@link AsyncNodeContainerUI} (instead of
-     * {@link WorkflowManagerUI}), 2) re-throws a specified exception
+     * Almost the same as {@link #wfmAsyncSwitchRethrow(Function, Function, WorkflowManagerUI, String)} but for
+     * {@link NodeContainerUI}/{@link AsyncNodeContainerUI}.
      *
      *
      * @param syncNc
      * @param asyncNc
      * @param nc
      * @param waitingMessage
-     * @param exceptionClass the class of the exception to be re-thrown
      * @return the actual result, possibly after some waiting in the asynch case
+     * @throws E the expected exception
      */
     public static <T, E extends Exception> T ncAsyncSwitchRethrow(final RethrowFunction<NodeContainerUI, T, E> syncNc,
-        final RethrowFunction<AsyncNodeContainerUI, CompletableFuture<T>, E> asyncNc, final NodeContainerUI nc, final String waitingMessage,
-        final Class<E> exceptionClass) throws E {
+        final Function<AsyncNodeContainerUI, CompletableFutureEx<T, E>> asyncNc, final NodeContainerUI nc,
+        final String waitingMessage) throws E {
         if (nc instanceof AsyncNodeContainerUI) {
             final AtomicReference<T> ref = new AtomicReference<T>();
             final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
+            CompletableFutureEx<T, E> future = asyncNc.apply((AsyncNodeContainerUI)nc);
             try {
                 PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
                     monitor.beginTask(waitingMessage, 100);
                     try {
-                        ref.set(asyncNc.apply((AsyncNodeContainerUI)nc).get());
+                        ref.set(future.getOrThrow());
                     } catch (ExecutionException ex) {
                         exception.set(ex.getCause());
                     } catch (Exception ex) {
@@ -211,8 +221,8 @@ public class AsyncSwitch {
             }
             if (exception.get() != null) {
                 Throwable t = exception.get();
-                if (exceptionClass.isAssignableFrom(t.getClass())) {
-                    throw (E) t;
+                if (future.getExceptionClass().isAssignableFrom(t.getClass())) {
+                    throw (E)t;
                 } else {
                     openDialogAndLog(t, waitingMessage);
                 }
@@ -233,7 +243,7 @@ public class AsyncSwitch {
 
     private static void openDialogAndLog(final Throwable e, final String waitingMessage) {
         String message = "An unexpected problem occurred while '" + waitingMessage + "': " + e.getMessage();
-        Display.getDefault().asyncExec(() -> {
+        Display.getDefault().syncExec(() -> {
             final Shell shell = Display.getDefault().getActiveShell();
             MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
             mb.setText("Unexpected Problem");

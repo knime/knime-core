@@ -90,10 +90,11 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
      * @param nodeIDs
      * @param connectionIDs
      * @param annotationIDs
-     * @return void as future
+     * @return void as future - throws a {@link OperationNotAllowedException} if operation couldn't be performed (e.g.
+     *         because there are executing node's successors) on {@link CompletableFutureEx#getOrThrow()}
      */
-    CompletableFuture<Void> removeAsync(final NodeID[] nodeIDs, final ConnectionID[] connectionIDs,
-        WorkflowAnnotationID[] annotationIDs);
+    CompletableFutureEx<Void, OperationNotAllowedException> removeAsync(final NodeID[] nodeIDs,
+        final ConnectionID[] connectionIDs, WorkflowAnnotationID[] annotationIDs);
 
     /**
      * {@inheritDoc}
@@ -147,9 +148,11 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
      * Async version of {@link #cut(WorkflowCopyContent)}.
      *
      * @param content
-     * @return result as future
+     * @return result as future - throws a {@link OperationNotAllowedException} if operation couldn't be performed (e.g.
+     *         because there are executing node's successors) on {@link CompletableFutureEx#getOrThrow()}
      */
-    CompletableFuture<WorkflowCopyWithOffsetUI> cutAsync(final WorkflowCopyContent content);
+    CompletableFutureEx<WorkflowCopyWithOffsetUI, OperationNotAllowedException>
+        cutAsync(final WorkflowCopyContent content);
 
     /**
      * {@inheritDoc}
