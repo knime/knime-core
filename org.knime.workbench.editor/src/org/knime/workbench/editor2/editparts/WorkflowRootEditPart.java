@@ -85,6 +85,7 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.workbench.editor2.WorkflowEditorMode;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
@@ -531,6 +532,10 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 m_annotationSelection.remove(model);
                 // reveal the editpart after it has been created completely
                 revealPart(part);
+                // If our model exists in this selection it's because it has been added after the workflow editor
+                //      has been opened for this workflow - and the action of that dictates that the workflow
+                //      editor has been moved to AE mode, so notify the part.
+                ((AnnotationEditPart)part).workflowEditorModeWasSet(WorkflowEditorMode.ANNOTATION_EDIT);
             }
         }
         // connections are selected in workflowChanged

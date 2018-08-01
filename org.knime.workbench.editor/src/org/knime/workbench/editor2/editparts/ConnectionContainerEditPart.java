@@ -50,6 +50,7 @@ package org.knime.workbench.editor2.editparts;
 import java.util.ArrayList;
 
 import org.eclipse.draw2d.AbsoluteBendpoint;
+import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Point;
@@ -62,6 +63,7 @@ import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
+import org.eclipse.swt.graphics.Color;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionProgressEvent;
 import org.knime.core.node.workflow.ConnectionProgressListener;
@@ -71,7 +73,9 @@ import org.knime.core.node.workflow.ConnectionUIInformationListener;
 import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.workbench.editor2.EditorModeParticipant;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.WorkflowEditorMode;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapOffBendPointConnectionRouter;
@@ -89,10 +93,13 @@ import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
-    implements ConnectionUIInformationListener, ConnectionProgressListener {
+    implements ConnectionUIInformationListener, ConnectionProgressListener, EditorModeParticipant {
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(ConnectionContainerEditPart.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ConnectionContainerEditPart.class);
+
+
+    private WorkflowEditorMode m_currentEditorMode = WorkflowEditor.INITIAL_EDITOR_MODE;
+    private Color m_figureOriginalForegroundColor;
 
     /** {@inheritDoc} */
     @Override
@@ -177,9 +184,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     public Command getBendpointAdaptionCommand(final Request request) {
         assert (request instanceof ChangeBoundsRequest) : "Unexpected request type: " + request.getClass();
 
-        ZoomManager zoomManager =
-                (ZoomManager)(getRoot().getViewer()
-                        .getProperty(ZoomManager.class.toString()));
+        ZoomManager zoomManager = (ZoomManager)(getRoot().getViewer().getProperty(ZoomManager.class.toString()));
 
         Point moveDelta = ((ChangeBoundsRequest) request).getMoveDelta();
         return new ChangeBendPointLocationCommand(this, moveDelta, zoomManager);
@@ -190,26 +195,21 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      */
     @Override
     protected void createEditPolicies() {
-
-        installEditPolicy(EditPolicy.CONNECTION_ENDPOINTS_ROLE,
-                new ConnectionEndpointEditPolicy());
+        installEditPolicy(EditPolicy.CONNECTION_ENDPOINTS_ROLE, new ConnectionEndpointEditPolicy());
 
         // enable bendpoints (must be stored in extra info)
-        installEditPolicy(EditPolicy.CONNECTION_BENDPOINTS_ROLE,
-                new ConnectionBendpointEditPolicy());
-
+        installEditPolicy(EditPolicy.CONNECTION_BENDPOINTS_ROLE, new ConnectionBendpointEditPolicy());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("rawtypes")  // untyped ArrayList creation
     protected IFigure createFigure() {
-
         ProgressPolylineConnection conn = new CurvedPolylineConnection(false);
         // Bendpoints
-        SnapOffBendPointConnectionRouter router =
-                new SnapOffBendPointConnectionRouter();
+        SnapOffBendPointConnectionRouter router = new SnapOffBendPointConnectionRouter();
         conn.setConnectionRouter(router);
         conn.setRoutingConstraint(new ArrayList());
         conn.setLineWidth(getCurrentEditorSettings().getConnectionLineWidth());
@@ -218,7 +218,24 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         if (getModel().isFlowVariablePortConnection()) {
             conn.setForegroundColor(AbstractPortFigure.getFlowVarPortColor());
         }
+
+        m_figureOriginalForegroundColor = conn.getForegroundColor();
+
         return conn;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * We don't want to be selected if we're not in node-edit-mode.
+     */
+    @Override
+    public EditPart getTargetEditPart(final Request request) {
+        if (m_currentEditorMode.equals(WorkflowEditorMode.NODE_EDIT) ) {
+            return super.getTargetEditPart(request);
+        }
+
+        return null;
     }
 
 //    private boolean isFlowVariablePortConnection() {
@@ -243,27 +260,25 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 //        return false;
 //    }
 
-    /**
-     * Returns true, if the connection is a connection from a metanode incoming
-     * port to a node inside the metanode.
-     *
-     * @param conn
-     * @return
-     */
-    private boolean isIncomingConnection(final ConnectionContainerUI conn) {
-        switch (conn.getType()) {
-            case WFMIN:
-            case WFMTHROUGH:
-                return true;
-            default:
-                return false;
-        }
-    }
+//    /**
+//     * Returns true, if the connection is a connection from a metanode incoming port to a node inside the metanode.
+//     *
+//     * @param conn
+//     * @return
+//     */
+//    private boolean isIncomingConnection(final ConnectionContainerUI conn) {
+//        switch (conn.getType()) {
+//            case WFMIN:
+//            case WFMTHROUGH:
+//                return true;
+//            default:
+//                return false;
+//        }
+//    }
 
     /** {@inheritDoc} */
     @Override
-    public void connectionUIInformationChanged(
-            final ConnectionUIInformationEvent evt) {
+    public void connectionUIInformationChanged(final ConnectionUIInformationEvent evt) {
         refreshVisuals();
     }
 
@@ -316,5 +331,19 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         ProgressPolylineConnection conn =
             (ProgressPolylineConnection)getFigure();
         conn.progressChanged(pe.getConnectionProgress());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void workflowEditorModeWasSet(final WorkflowEditorMode newMode) {
+        m_currentEditorMode = newMode;
+        final Color fgColor = WorkflowEditorMode.NODE_EDIT.equals(newMode) ? m_figureOriginalForegroundColor
+                : ColorConstants.lightGray;
+        final CurvedPolylineConnection cpc = (CurvedPolylineConnection)getFigure();
+
+        cpc.setForegroundColor(fgColor);
+        cpc.repaint();
     }
 }

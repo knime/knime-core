@@ -51,6 +51,7 @@ import org.eclipse.draw2d.DelegatingLayout;
 import org.eclipse.draw2d.RectangleFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.ChangeWorkflowPortBarCommand;
@@ -63,6 +64,9 @@ import org.knime.workbench.editor2.editparts.WorkflowOutPortBarEditPart;
  */
 public abstract class AbstractWorkflowPortBarFigure extends RectangleFigure {
 
+    /** This is the default background color **/
+    public static Color DEFAULT_BACKGROUND_COLOR = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
+
     /** Default width for the port bar. */
     protected static final int WIDTH = 30;
     /** Default offset from the workflow borders. */
@@ -70,16 +74,13 @@ public abstract class AbstractWorkflowPortBarFigure extends RectangleFigure {
 
     private boolean m_isInitialized = false;
 
-
     /**
      *
      */
     public AbstractWorkflowPortBarFigure() {
         super();
-        DelegatingLayout layout = new DelegatingLayout();
-        setLayoutManager(layout);
-        setBackgroundColor(Display.getCurrent().getSystemColor(
-                SWT.COLOR_GRAY));
+        setLayoutManager(new DelegatingLayout());
+        setBackgroundColor(DEFAULT_BACKGROUND_COLOR);
     }
 
     /**
@@ -108,15 +109,13 @@ public abstract class AbstractWorkflowPortBarFigure extends RectangleFigure {
     }
 
     /**
+     * {@inheritDoc}
      *
      * @see ChangeWorkflowPortBarCommand#canExecute()
-     *
-     * {@inheritDoc}
      */
     @Override
     public Dimension getMinimumSize(final int hint, final int hint2) {
         return new Dimension(AbstractPortFigure.getPortSizeWorkflow() + 10,
-                AbstractPortFigure.getPortSizeWorkflow() + 10);
+            AbstractPortFigure.getPortSizeWorkflow() + 10);
     }
-
 }

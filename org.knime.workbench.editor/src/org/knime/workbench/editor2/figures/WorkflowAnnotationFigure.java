@@ -48,61 +48,150 @@
  */
 package org.knime.workbench.editor2.figures;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.LineBorder;
+import org.eclipse.draw2d.MouseEvent;
+import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.WorkflowEditorMode;
+import org.knime.workbench.editor2.actions.ToggleEditorModeAction;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
- *
  * @author ohl
  */
 public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
+    private static final Image SWITCH_MODE_ICON = ImageRepository.getImage(SharedImages.AnnotationEditModeHover);
 
-    private final Label m_editIcon;
 
-    private static final Image MOVE_ICON = ImageRepository.getImage(SharedImages.AnnotationMoveHover);
+    private final Label m_modeIcon;
 
+    private final AtomicBoolean m_figureTriggeredToggle;
+
+    private ToggleEditorModeAction m_toggleAction;
+
+    /**
+     * @param anno the annotation which serves as the model backing this figure
+     */
     public WorkflowAnnotationFigure(final Annotation anno) {
         super(anno);
-        ImageData d = MOVE_ICON.getImageData();
-        m_editIcon = new Label(MOVE_ICON);
-        m_editIcon.setBounds(new Rectangle(0, 0, d.width, d.height));
-        m_editIcon.setVisible(false); // visible only when mouse enters
-        add(m_editIcon);
+
+        final ImageData d = SWITCH_MODE_ICON.getImageData();
+        m_modeIcon = new Label(SWITCH_MODE_ICON);
+        m_modeIcon.setBounds(new Rectangle(2, 2, d.width, d.height));
+        m_modeIcon.setVisible(false); // visible only when mouse enters
+        add(m_modeIcon);
+
+        m_modeIcon.addMouseListener(new MouseListener() {
+            @Override
+            public void mousePressed(final MouseEvent me) {
+                me.consume();
+            }
+
+            @Override
+            public void mouseReleased(final MouseEvent me) {
+                performToggleAction();
+                showEditIcon(false);
+            }
+
+            @Override
+            public void mouseDoubleClicked(final MouseEvent me) { }
+         });
+
+        m_figureTriggeredToggle = new AtomicBoolean(false);
     }
 
-    public void showEditIcon(final boolean showit) {
-        m_editIcon.setVisible(showit);
+    private void performToggleAction() {
+        if (m_toggleAction == null) {
+            final WorkflowEditor we =
+                (WorkflowEditor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+
+            m_toggleAction = new ToggleEditorModeAction(we);
+        }
+
+        m_figureTriggeredToggle.set(true);
+        m_toggleAction.runInSWT();
     }
 
+    /**
+     * @return whether the mode change icon held by this instance was the cause of the toggle action; once queried, this
+     *         will return false until the next time this instances mode icon triggers a toggle action
+     */
+    public boolean getAndClearTriggeredToggleState() {
+        return m_figureTriggeredToggle.getAndSet(false);
+    }
+
+    /**
+     * @param flag if true, set the edit mode icon visible, else hidden if false
+     */
+    public void showEditIcon(final boolean flag) {
+        m_modeIcon.setVisible(flag);
+    }
+
+    /**
+     * @return The bounds of the icon representing edit mode change.
+     */
     public Rectangle getEditIconBounds() {
-        return m_editIcon.getBounds();
+        return m_modeIcon.getBounds();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void newContent(final Annotation annotation) {
         super.newContent(annotation);
 
-        AnnotationData data = annotation.getData();
+        final boolean renderEnabled = determineRenderEnabledState(annotation);
+        final AnnotationData data = annotation.getData();
 
         Color bg = AnnotationEditPart.RGBintToColor(data.getBgColor());
+        if (!renderEnabled) {
+            bg = ColorConstants.lightGray;
+        }
         setBackgroundColor(bg);
         m_page.setBackgroundColor(bg);
+
+        Color fg = AnnotationEditPart.getAnnotationDefaultForegroundColor();
+        if (!renderEnabled) {
+            fg = AnnotationEditPart.convertToGrayscale(fg, 32);
+        }
+        setForegroundColor(fg);
+        m_page.setForegroundColor(fg);
 
         // set border with specified annotation color
         if (data.getBorderSize() > 0) {
             Color col = AnnotationEditPart.RGBintToColor(data.getBorderColor());
+            if (!renderEnabled) {
+                col = AnnotationEditPart.convertToGrayscale(col, 32);
+            }
             m_page.setBorder(new LineBorder(col, data.getBorderSize()));
         } else {
             m_page.setBorder(null);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void workflowEditorModeWasSet(final WorkflowEditorMode newMode) {
+        if (WorkflowEditorMode.ANNOTATION_EDIT.equals(newMode)) {
+            showEditIcon(false);
+        }
+
+        super.workflowEditorModeWasSet(newMode);
     }
 }

@@ -51,13 +51,21 @@ package org.knime.workbench.editor2;
 import static org.knime.core.ui.wrapper.Wrapper.wraps;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
+import org.eclipse.draw2d.FigureCanvas;
+import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.Viewport;
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartViewer;
+import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
@@ -72,6 +80,10 @@ import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
  * @author loki der quaeler
  */
 class DragPositionProcessor {
+    /**
+     * @see #processDragEventAtPoint(Point, boolean, StructuredSelection)
+     */
+    private static final int USER_DRAG_SLOP_FOR_BOUNDS = 10;
 
     /**
      * Implementors of this interface will have the method invoked on the SWT thread; it will not be invoked for
@@ -98,6 +110,8 @@ class DragPositionProcessor {
 
     private ConnectionContainerEditPart m_markedEdge;
 
+    private org.eclipse.draw2d.geometry.Point m_lastPosition;
+
     private int m_nodeCount;
 
     private int m_edgeCount;
@@ -107,6 +121,9 @@ class DragPositionProcessor {
 
     private ConnectionContainerEditPart m_edge;
     private ConnectionContainerEditPart m_avoidMarkingEdge;
+
+    private AnnotationEditPart m_annotation;
+    private AnnotationEditPart m_avoidMarkingAnnotation;
 
     private Color m_edgeColor;
 
@@ -128,7 +145,7 @@ class DragPositionProcessor {
      * @param p This is expected to be in untranslated (untranslated from the source SWT event) coordinates.
      */
     void processDragEventAtPoint(final Point p) {
-        processDragEventAtPoint(p, true);
+        processDragEventAtPoint(p, true, null);
     }
 
     /**
@@ -141,13 +158,58 @@ class DragPositionProcessor {
      *            markedNode or markedEdge populated appropriately.
      */
     void processDragEventAtPoint(final Point p, final boolean shouldAffectMark) {
-        final org.eclipse.draw2d.geometry.Point dropLocation = getDropLocation(p);
-        final EditPart ep = m_parentViewer.findObjectAt(dropLocation);
+        processDragEventAtPoint(p, shouldAffectMark, null);
+    }
+
+    /**
+     * Consumers of this processor should call this method (when appropriate) as their drag event processor; after
+     * execution returns from this block, the package-access getters of this class can be consulted concerning the
+     * results of the processing.
+     *
+     * @param p This is expected to be in untranslated (untranslated from the source SWT event) coordinates.
+     * @param shouldAffectMark If this is true, the UI is updated concerning hit detected objects, as well as keeping
+     *            markedNode or markedEdge populated appropriately.
+     * @param encouragedReselects if non-null, for any of the selection which are instances of subclasses of
+     *            AbstractGraphicalEditPart, if the processing point is within the bounds of the edit part's figure,
+     *            then this edit part will be the chosen one for hit detection. The bounds are actually expanded by
+     *            USER_DRAG_SLOP_FOR_BOUNDS pixels to account for user slop at the resize handle boundaries.
+     */
+    void processDragEventAtPoint(final Point p, final boolean shouldAffectMark,
+        final StructuredSelection encouragedReselects) {
+        setDropLocation(p);
+
+        EditPart ep = null;
+
+        if (encouragedReselects != null) {
+            final Iterator<?> it = encouragedReselects.iterator();
+            while (it.hasNext()) {
+                Object o = it.next();
+
+                if (o instanceof AbstractGraphicalEditPart) {
+                    final AbstractGraphicalEditPart encouragedReselect = (AbstractGraphicalEditPart)o;
+                    final IFigure f = encouragedReselect.getFigure();
+                    final Rectangle bounds =
+                        f.getBounds().getExpanded(USER_DRAG_SLOP_FOR_BOUNDS, USER_DRAG_SLOP_FOR_BOUNDS);
+
+                    translateFigureLocation(bounds);
+
+                    if (bounds.contains(m_lastPosition)) {
+                        ep = encouragedReselect;
+                    }
+                }
+            }
+        }
+
+        if (ep == null) {
+            ep = m_parentViewer.findObjectAt(m_lastPosition);
+        }
+
         final NodeContainerEditPart priorNodeSelection = m_node;
         final ConnectionContainerEditPart priorEdgeSelection = m_edge;
 
         m_node = null;
         m_edge = null;
+        m_annotation = null;
         m_nodeCount = 0;
         m_edgeCount = 0;
 
@@ -168,6 +230,12 @@ class DragPositionProcessor {
                 && (hit.equals(priorEdgeSelection) || (!consultVetoers(null, hit)))) {
                 m_edge = hit;
                 m_edgeCount++;
+            }
+        } else if (ep instanceof AnnotationEditPart) {
+            final AnnotationEditPart hit = (AnnotationEditPart)ep;
+
+            if (!hit.equals(m_avoidMarkingAnnotation)) {
+                m_annotation = hit;
             }
         }
 
@@ -194,6 +262,9 @@ class DragPositionProcessor {
 
             // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
             WindowsDNDHelper.hideDragImage();
+        } else if (m_annotation != null) {
+            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+            WindowsDNDHelper.hideDragImage();
         }
     }
 
@@ -218,11 +289,13 @@ class DragPositionProcessor {
     void rememberCurrentTargetsToAvoidMarking() {
         m_avoidMarkingNode = m_node;
         m_avoidMarkingEdge = m_edge;
+        m_avoidMarkingAnnotation = m_annotation;
     }
 
     void clearMarkingAvoidance() {
         m_avoidMarkingNode = null;
         m_avoidMarkingEdge = null;
+        m_avoidMarkingAnnotation = null;
     }
 
     /**
@@ -271,6 +344,13 @@ class DragPositionProcessor {
     }
 
     /**
+     * @return the annotation
+     */
+    AnnotationEditPart getAnnotation() {
+        return m_annotation;
+    }
+
+    /**
      * @return the node
      */
     NodeContainerEditPart getNode() {
@@ -284,21 +364,36 @@ class DragPositionProcessor {
         return m_edge;
     }
 
+    /**
+     * @return the location described in the last invocation of <code>processDragEventAtPoint(...)</code>
+     */
+    org.eclipse.draw2d.geometry.Point getLastPosition() {
+        return m_lastPosition;
+    }
 
     //
     // Only private functionality follows
     //
 
+    private void translateFigureLocation(final Rectangle bounds) {
+        final Viewport vp = ((FigureCanvas)m_parentViewer.getControl()).getViewport();
+        final org.eclipse.draw2d.geometry.Point location = vp.getViewLocation();
+
+        final int translatedX = bounds.x - location.x;
+        final int translatedY = bounds.y - location.y;
+
+        bounds.setLocation(translatedX, translatedY);
+    }
+
     /**
      * Converts the event mouse location to editor relative coordinates.
      *
      * @param the position (relative to whole display)
-     * @return point converted to the editor coordinates
      */
-    private org.eclipse.draw2d.geometry.Point getDropLocation(final Point p) {
-        Point swtPoint = m_parentViewer.getControl().toControl(p.x, p.y);
+    private void setDropLocation(final Point p) {
+        final Point swtPoint = m_parentViewer.getControl().toControl(p.x, p.y);
 
-        return new org.eclipse.draw2d.geometry.Point(swtPoint.x, swtPoint.y);
+        m_lastPosition = new org.eclipse.draw2d.geometry.Point(swtPoint.x, swtPoint.y);
     }
 
     /**

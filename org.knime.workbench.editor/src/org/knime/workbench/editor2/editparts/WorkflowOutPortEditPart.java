@@ -54,7 +54,6 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.gef.GraphicalEditPart;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowOutPort;
@@ -135,11 +134,8 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      */
     @Override
     protected IFigure createFigure() {
-        LOGGER.debug("create figure. Parent's figure: "
-                + ((GraphicalEditPart)getParent()).getFigure());
-        return new WorkflowOutPortFigure(getType(),
-                getManager().getNrOutPorts(), getIndex(),
-                getManager().getDisplayLabel());
+        return new WorkflowOutPortFigure(getType(), getManager().getNrOutPorts(), getIndex(),
+            getManager().getDisplayLabel());
     }
 
 

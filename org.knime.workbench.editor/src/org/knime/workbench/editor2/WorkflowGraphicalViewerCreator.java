@@ -103,7 +103,7 @@ public class WorkflowGraphicalViewerCreator {
      * @param parent Parent composite
      * @return The viewer
      */
-    protected GraphicalViewer createViewer(final Composite parent) {
+    protected ViewportPinningGraphicalViewer createViewer(final Composite parent) {
         final ViewportPinningGraphicalViewer viewer = new ViewportPinningGraphicalViewer();
 
         viewer.createControl(parent);

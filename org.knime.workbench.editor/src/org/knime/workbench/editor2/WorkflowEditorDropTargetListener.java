@@ -75,6 +75,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.CreateDropRequest.RequestType;
 import org.knime.workbench.editor2.actions.CreateSpaceAction.CreateSpaceDirection;
+import org.knime.workbench.editor2.actions.ToggleEditorModeAction;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
@@ -143,6 +144,8 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
     private int m_distanceToMoveTarget = 0;
 
     private final DragPositionProcessor m_dragPositionProcessor;
+
+    private ToggleEditorModeAction m_toggleAction;
 
     /**
      * @param viewer the edit part viewer this drop target listener is attached to
@@ -452,22 +455,28 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
                 }
             }
 
+            final WorkflowEditor we =
+                (WorkflowEditor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+            if ((we != null) && (!WorkflowEditorMode.NODE_EDIT.equals(we.getEditorMode()))) {
+                performEditModeToggleAction(we);
+            }
+
             final Command command = getCommand();
             if (command instanceof CompoundCommand) {
                 // If the command is a compound command the drop request also needs to
                 // create space for the new node and therefore moves other nodes.
                 // The commands are executed one after another so the user can undo
                 // the move if wanted but still has the new node inserted.
-                List<?> commands = ((CompoundCommand)command).getCommands();
+                final List<?> commands = ((CompoundCommand)command).getCommands();
                 if (commands instanceof ArrayList<?>) {
-                    for (Command c : (ArrayList<Command>)commands) {
+                    for (final Command c : (ArrayList<Command>)commands) {
 
-                        Command p = getViewer().getEditDomain().getCommandStack().getUndoCommand();
+                        final Command before = getViewer().getEditDomain().getCommandStack().getUndoCommand();
                         getViewer().getEditDomain().getCommandStack().execute(c);
-                        Command a = getViewer().getEditDomain().getCommandStack().getUndoCommand();
-                        if (p == null && a == null) {
+                        final Command after = getViewer().getEditDomain().getCommandStack().getUndoCommand();
+                        if ((before == null) && (after == null)) {
                             break;
-                        } else if (p != null && p.equals(a)) {
+                        } else if ((before != null) && before.equals(after)) {
                             break;
                         }
                     }
@@ -476,19 +485,17 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
             } else {
                 getViewer().getEditDomain().getCommandStack().execute(command);
             }
+
             // after adding a node the editor should get the focus
             // this is issued asynchronously, in order to avoid bug #3029
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    IWorkbenchWindow w = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-                    if (w != null) {
-                        IWorkbenchPage p = w.getActivePage();
-                        if (p != null) {
-                            IEditorPart e = p.getActiveEditor();
-                            if (e != null) {
-                                e.setFocus();
-                            }
+            Display.getDefault().asyncExec(() -> {
+                IWorkbenchWindow w = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+                if (w != null) {
+                    IWorkbenchPage p = w.getActivePage();
+                    if (p != null) {
+                        IEditorPart e = p.getActiveEditor();
+                        if (e != null) {
+                            e.setFocus();
                         }
                     }
                 }
@@ -496,6 +503,14 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
         } else {
             getCurrentEvent().detail = DND.DROP_NONE;
         }
+    }
+
+    private void performEditModeToggleAction(final WorkflowEditor we) {
+        if (m_toggleAction == null) {
+            m_toggleAction = new ToggleEditorModeAction(we);
+        }
+
+        m_toggleAction.runInSWT();
     }
 
     /**

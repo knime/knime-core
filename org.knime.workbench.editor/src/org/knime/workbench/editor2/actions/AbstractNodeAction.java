@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.gef.EditPart;
+import org.eclipse.gef.SelectionManager;
 import org.eclipse.gef.ui.actions.SelectionAction;
 import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.jface.viewers.ISelection;
@@ -275,6 +276,23 @@ public abstract class AbstractNodeAction extends SelectionAction {
         }
 
         return ((IStructuredSelection)sel).toList();
+    }
+
+    /**
+     * @return the selection manager associated to the editor's selection provider's root edit part
+     */
+    protected SelectionManager getSelectionManager() {
+        final ScrollingGraphicalViewer provider =
+            (ScrollingGraphicalViewer)m_editor.getEditorSite().getSelectionProvider();
+
+        if (provider == null) {
+            return null;
+        }
+
+        // get parent of the node parts
+        final EditPart editorPart = (EditPart)provider.getRootEditPart().getChildren().get(0);
+
+        return editorPart.getViewer().getSelectionManager();
     }
 
     /**

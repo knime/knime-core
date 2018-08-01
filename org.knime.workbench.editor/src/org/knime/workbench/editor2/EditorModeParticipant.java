@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,68 +44,26 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   09.06.2008 (Fabian Dill): created
+ *   Jul 24, 2018 (loki): created
  */
-package org.knime.workbench.editor2.figures;
-
-import org.eclipse.swt.graphics.Image;
-import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.workflow.NodeContainerState;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
-import org.knime.workbench.KNIMEEditorPlugin;
-import org.knime.workbench.core.util.ImageRepository;
-
+package org.knime.workbench.editor2;
 
 /**
- * @author Fabian Dill, University of Konstanz
+ * This interface defines method which EditPart subclasses which wish to hear about editor mode changes (presumably
+ * because they have Figure subclasses which render and behave differently depending upon which editor mode is current)
+ * should implement.
+ *
+ * @author loki der quaeler
  */
-public class SubworkflowFigure extends NodeContainerFigure {
-
-    // load images
-    private static final Image IDLE_STATE = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID,
-            "icons/meta/meta_idle2.png");
-
-    private static final Image EXECUTING_STATE = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID,
-            "icons/meta/meta_executing5.png");
-
-    private static final Image EXECUTED_STATE = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID,
-            "icons/meta/meta_executed.png");
+public interface EditorModeParticipant {
 
     /**
-     * Everything like the {@link NodeContainerFigure} but without the status
-     * traffic light, state is reflected by icons on the node.
+     * Implementors will have this invoked after the WorkflowEditor has had its internal state updated. The
+     *  notification will be delivered on the SWT thread, however if the implementor requires a heavy resource
+     *  load, they should spin off that processing so as to not bog down the thread.
      *
-     * @param progress progress figure for super constructor
+     * @param newMode the now-current mode of the workflow editor
      */
-    public SubworkflowFigure(final ProgressFigure progress) {
-        super(progress);
-        remove(getStatusFigure());
-        ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setType(NodeType.Meta);
-    }
+    void workflowEditorModeWasSet(WorkflowEditorMode newMode);
 
-    /**
-     * {@inheritDoc}
-     * Only reflects three different states: idle, executing, executed.
-     */
-    @Override
-    public void setStateFromNC(final NodeContainerUI nc) {
-        NodeContainerState state = nc.getNodeContainerState();
-        Image image;
-        if (state.isExecuted()) {
-            image = EXECUTED_STATE;
-        } else if (state.isExecutionInProgress()) {
-            image = EXECUTING_STATE;
-        } else {
-            image = IDLE_STATE;
-        }
-        ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setIcon(image);
-        revalidate();
-    }
-
-    /**
-     * {@inheritDoc}
-     * Ignores it - since the type is fixed.
-     */
-    @Override
-    public void setType(final NodeType type) { }
 }

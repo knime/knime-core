@@ -48,6 +48,7 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainer;
@@ -55,6 +56,8 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.WorkflowEditorMode;
+import org.knime.workbench.editor2.actions.ToggleEditorModeAction;
 
 /**
  * GEF command for adding a new empty metanode (called from the new metanode wizard).
@@ -108,6 +111,14 @@ public class AddNewMetaNodeCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public void execute() {
+        final WorkflowEditor we =
+            (WorkflowEditor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+        if ((we != null) && (!WorkflowEditorMode.NODE_EDIT.equals(we.getEditorMode()))) {
+            final ToggleEditorModeAction toggleAction = new ToggleEditorModeAction(we);
+
+            toggleAction.runInSWT();
+        }
+
         m_metanodeID = getHostWFM().createAndAddSubWorkflow(m_inPorts, m_outPorts, m_name).getID();
         // create extra info and set it
         NodeContainer cont = getHostWFM().getNodeContainer(m_metanodeID);

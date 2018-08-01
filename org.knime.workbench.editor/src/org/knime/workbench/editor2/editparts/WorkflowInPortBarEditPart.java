@@ -63,35 +63,33 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowInPortBarEditPart extends AbstractWorkflowPortBarEditPart {
-
     /**
      * {@inheritDoc}
      */
     @Override
     protected List<NodePortUI> getModelChildren() {
-        WorkflowManagerUI manager = ((WorkflowPortBar)getModel())
-            .getWorkflowManager();
-        List<NodePortUI> ports
-            = new ArrayList<NodePortUI>();
+        final WorkflowManagerUI manager = ((WorkflowPortBar)getModel()).getWorkflowManager();
+        final List<NodePortUI> ports = new ArrayList<NodePortUI>();
         for (int i = 0; i < manager.getNrWorkflowIncomingPorts(); i++) {
             ports.add(manager.getInPort(i));
         }
         return ports;
     }
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected IFigure createFigure() {
-        NodeUIInformation uiInfo = ((WorkflowPortBar)getModel()).getUIInfo();
+        final NodeUIInformation uiInfo = ((WorkflowPortBar)getModel()).getUIInfo();
+
         if (uiInfo != null) {
-            int[] bounds = uiInfo.getBounds();
-            Rectangle newBounds = new Rectangle(
-                    bounds[0], bounds[1], bounds[2], bounds[3]);
+            final int[] bounds = uiInfo.getBounds();
+            final Rectangle newBounds = new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
+
             return new WorkflowInPortBarFigure(newBounds);
         } else {
             return new WorkflowInPortBarFigure(getMinMaxXcoordInWorkflow()[0] /* pass the min workflow coord */);
         }
     }
-
 }

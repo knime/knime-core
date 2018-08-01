@@ -68,28 +68,40 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  *
  * @author Florian Georg, University of Konstanz
  */
-public abstract class AbstractEditorAction implements IEditorActionDelegate,
-        NodeStateChangeListener {
+public abstract class AbstractEditorAction implements IEditorActionDelegate, NodeStateChangeListener {
     private WorkflowEditor m_editor;
 
     private AbstractNodeAction m_decoratedAction;
 
-    private final List<NodeContainerEditPart> m_currentSelection
-        = new ArrayList<NodeContainerEditPart>();
+    private final List<NodeContainerEditPart> m_currentSelection = new ArrayList<NodeContainerEditPart>();
+
+    private final SelectionRunnable m_selectionRunnable = new SelectionRunnable();
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public final void setActiveEditor(final IAction action,
-            final IEditorPart targetEditor) {
-
+    public final void setActiveEditor(final IAction action, final IEditorPart targetEditor) {
         if (targetEditor instanceof WorkflowEditor) {
-
             m_editor = (WorkflowEditor)targetEditor;
             m_editor.getWorkflowManager().ifPresent(wfm -> wfm.addNodeStateChangeListener(this));
             m_decoratedAction = createAction(m_editor);
-
+            if (editorActionRepresentsToolBarToggle()) {
+//
+// This code is left here for future developers as an example of how one would ensure a toggle-state icon
+//          in the toolbar is correctly updated when switching between workflows.
+//
+//
+//                Display.getDefault().asyncExec(() -> {
+//                    final IActionBars actionBars = m_editor.getEditorSite().getActionBars();
+//                    final IToolBarManager toolBar = actionBars.getToolBarManager();
+//                    final ActionContributionItem aci =
+//                        (ActionContributionItem)toolBar.find(ToggleEditorModeEditorAction.ACTION_ID);
+//                    final IAction toolBarAction = aci.getAction();
+//
+//                    toolBarAction.setImageDescriptor(m_decoratedAction.getImageDescriptor());
+//                });
+            }
         } else {
             if (m_decoratedAction != null) {
                 m_decoratedAction.dispose();
@@ -109,6 +121,8 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
     @Override
     public final void run(final IAction action) {
         if (m_decoratedAction != null) {
+            actionWillRun(action);
+
             m_decoratedAction.run();
         }
     }
@@ -117,15 +131,13 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
      * {@inheritDoc}
      */
     @Override
-    public final void selectionChanged(final IAction action,
-            final ISelection selection) {
+    public final void selectionChanged(final IAction action, final ISelection selection) {
         if (m_decoratedAction != null) {
             m_decoratedAction.dispose();
             m_decoratedAction = null;
             // and unregister from old selection
             for (NodeContainerEditPart cont : m_currentSelection) {
-                cont.getNodeContainer().removeNodeStateChangeListener(
-                        this);
+                cont.getNodeContainer().removeNodeStateChangeListener(this);
             }
             m_currentSelection.clear();
         }
@@ -138,22 +150,16 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
                 for (Iterator<?> itr = sel.iterator(); itr.hasNext();) {
                     Object o = itr.next();
                     if (o instanceof NodeContainerEditPart) {
-                        NodeContainerEditPart ncEP
-                            = (NodeContainerEditPart)o;
+                        NodeContainerEditPart ncEP = (NodeContainerEditPart)o;
                         m_currentSelection.add(ncEP);
-                        ncEP.getNodeContainer().addNodeStateChangeListener(
-                                this);
+                        ncEP.getNodeContainer().addNodeStateChangeListener(this);
                     }
                 }
             }
             action.setEnabled(m_decoratedAction.isEnabled());
             action.setChecked(m_decoratedAction.isChecked());
         }
-
     }
-
-    private final SelectionRunnable m_selectionRunnable =
-        new SelectionRunnable();
 
     private class SelectionRunnable implements Runnable {
         /** Flags to memorize if this runnable has already been queued. I
@@ -183,7 +189,6 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
         }
     }
 
-
     /**
      *
      * {@inheritDoc}
@@ -199,7 +204,34 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
      * @param editor the knime editor
      * @return Decorated action
      */
-    protected abstract AbstractNodeAction createAction(
-            final WorkflowEditor editor);
+    protected abstract AbstractNodeAction createAction(final WorkflowEditor editor);
 
+    /**
+     * This will be called just prior to the decorated action having its <code>run()</code> method invoked. This
+     * implementation does nothing but subclasses may override if interested.
+     *
+     * @param action the IAction implementor instance being passed to this class' <code>run(IAction)</code> method.
+     */
+    protected void actionWillRun(final IAction action) { }
+
+    /**
+     * This default implementation returns false.
+     *
+     * @return if this returns true, an action's image descriptor will be updated after its construction to give it a
+     *         chance to display an icon that reflects some state attribute of its workflow editor.
+     */
+    protected boolean editorActionRepresentsToolBarToggle() {
+        return false;
+    }
+
+    /**
+     * Subclasses must implement this method if <code>editorActionRepresentsToolBarToggle()</code> returns true; this
+     * method will not be invoked if <code>editorActionRepresentsToolBarToggle()</code> returns false.
+     *
+     * @return a String that will be used with <code>IToolBarManager.find(String)</code>
+     */
+    protected String getToolbarManagerIdString() {
+        throw new UnsupportedOperationException(
+            "This class returns true for editorActionRepresentsToggle() and so must implement this method.");
+    }
 }

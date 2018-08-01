@@ -134,10 +134,10 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
     private final AtomicInteger m_currentMessageViewHeight = new AtomicInteger(0);
 
     /* Message figures indexed per MessageIndex */
-    private final Label[] m_messages = new Label[3];
+    private final Label[] m_messages = new Label[MessageAttributes.values().length];
 
     /* Background rectangles for the message figures; indexed per MessageIndex */
-    private final Composite[] m_fillRectangles = new Composite[3];
+    private final Composite[] m_fillRectangles = new Composite[MessageAttributes.values().length];
 
     private Composite m_parent;
 
@@ -293,9 +293,9 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
 
             for (int i = 0; i < m_messages.length; i++) {
                 if (m_messages[i] != null) {
-                    final Dimension preferredSize = m_messages[i].getPreferredSize();
-                    final Rectangle messageBounds = new Rectangle(MESSAGE_INSET,
-                        (yOffset + MESSAGE_INSET), (bounds.width - (2 * MESSAGE_INSET)), preferredSize.height);
+                    final Dimension preferredMessageSize = m_messages[i].getPreferredSize();
+                    final Rectangle messageBounds = new Rectangle(MESSAGE_INSET, (yOffset + MESSAGE_INSET),
+                        (bounds.width - (2 * MESSAGE_INSET)), preferredMessageSize.height);
                     final int rectangleHeight = (messageBounds.height + (2 * MESSAGE_INSET));
 
                     m_messages[i].setBounds(messageBounds);

@@ -247,6 +247,7 @@ import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.ShowNodeIdsAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
+import org.knime.workbench.editor2.actions.ToggleEditorModeAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.actions.UnlinkNodesAction;
 import org.knime.workbench.editor2.actions.ZoomResetAction;
@@ -295,15 +296,18 @@ public class WorkflowEditor extends GraphicalEditor implements
     /** Id as defined in plugin.xml. */
     public static final String ID = "org.knime.workbench.editor.WorkflowEditor";
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(WorkflowEditor.class);
+    /** The editor mode which a newly opened worklow is in **/
+    public static final WorkflowEditorMode INITIAL_EDITOR_MODE = WorkflowEditorMode.NODE_EDIT;
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowEditor.class);
+
+    /** The root clipboard name **/
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
 
     /**
      * The static clipboard for copy/cut/paste.
      */
-    private static ClipboardObject clipboard;
+    private static ClipboardObject CLIPBOARD;
 
     private static final Color BG_COLOR_WRITE_LOCK =
         new Color(null, 235, 235, 235);
@@ -332,7 +336,10 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private ZoomWheelListener m_zoomWheelListener;
 
+    private AnnotationModeExitEnabler m_annotationModeExitEnabler;
     private NodeSupplantDragListener m_nodeSupplantDragListener;
+
+    private WorkflowEditorMode m_editorMode;
 
     /** path to the workflow directory (that contains the workflow.knime file). */
     private URI m_fileResource;
@@ -396,6 +403,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // initialize actions (can't be in init(), as setInput is called before)
         createActions();
+
+        m_editorMode = INITIAL_EDITOR_MODE;
     }
 
     /**
@@ -411,17 +420,32 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @return the clipboard for this editor
      */
     public ClipboardObject getClipboardContent() {
-        return clipboard;
+        return CLIPBOARD;
     }
 
     /**
-     * Sets the clipboard content for this editor.
+     * Sets the clipboard content; note that this sets the class variable object and so applies to all instances of
+     * this class within the JVM.
      *
      * @param content the content to set into the clipboard
-     *
      */
     public void setClipboardContent(final ClipboardObject content) {
-        clipboard = content;
+        CLIPBOARD = content;
+    }
+
+    /**
+     * @return the current edit mode of this editor.
+     */
+    public WorkflowEditorMode getEditorMode() {
+        return m_editorMode;
+    }
+
+    /**
+     * @param wme the new editor mode; this setting does not trigger any sort of listener notification, so it should
+     *            therefore be done in a code lifecycle prior to any dependent code querying the WorkflowEditor.
+     */
+    public void setEditorMode(final WorkflowEditorMode wme) {
+        m_editorMode = wme;
     }
 
     /**
@@ -557,6 +581,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         if (m_nodeSupplantDragListener != null) {
             m_nodeSupplantDragListener.dispose();
+        }
+        if (m_annotationModeExitEnabler != null) {
+            m_annotationModeExitEnabler.dispose();
         }
         if (m_fileResource != null && m_manager != null) {
             // disposed is also called when workflow load fails or is canceled
@@ -963,6 +990,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (m_manager != null) {
             m_manager.addListener(m_nodeSupplantDragListener);
         }
+
+        m_annotationModeExitEnabler = new AnnotationModeExitEnabler(this);
     }
 
     /**
@@ -2502,43 +2531,44 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Listener interface method of the {@link NodeProvider}. Called when other
-     * instances want to add a node to the workflow in the editor. <br>
-     * The implementation only adds it if the editor is active and one node is
-     * selected in the editor, to which the new node will then be connected to.
+     * Listener interface method of the {@link NodeProvider}. Called when other instances want to add a node to the
+     * workflow in the editor. <br>
+     * The implementation only adds it if the editor is active; if one node is selected in the editor, the new node will
+     * then be connected to it.
      * {@inheritDoc}
      */
     @Override
     public boolean addNode(final NodeFactory<? extends NodeModel> nodeFactory) {
-
         if (!isEditorActive()) {
             return false;
         }
 
-        NodeContainerEditPart preNode = getTheOneSelectedNode();
-        Point nodeLoc = null;
-        Command newNodeCmd = null;
+        final NodeContainerEditPart preNode = getTheOneSelectedNode();
+        final Point nodeLoc;
+        final Command newNodeCmd;
         if (preNode == null) {
             nodeLoc = getViewportCenterLocation();
             // this command accepts/requires relative coordinates
             newNodeCmd = new CreateNodeCommand(m_manager, nodeFactory, nodeLoc, getEditorSnapToGrid());
         } else {
             nodeLoc = getLocationRightOf(preNode);
-            newNodeCmd =
-                    new CreateNewConnectedNodeCommand(getViewer(), m_manager,
-                            nodeFactory, nodeLoc, preNode.getNodeContainer()
-                                    .getID());
+            newNodeCmd = new CreateNewConnectedNodeCommand(getViewer(), m_manager, nodeFactory, nodeLoc,
+                preNode.getNodeContainer().getID());
         }
 
         getCommandStack().execute(newNodeCmd);
+
         // after adding a node the editor should get the focus
         // this is issued asynchronously, in order to avoid bug #3029
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                setFocus();
+        Display.getDefault().asyncExec(() -> {
+            if (WorkflowEditorMode.ANNOTATION_EDIT.equals(m_editorMode)) {
+                final ToggleEditorModeAction action = new ToggleEditorModeAction(this, false);
+                action.runInSWT();
             }
+
+            setFocus();
         });
+
         return true;
     }
 

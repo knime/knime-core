@@ -76,6 +76,8 @@ import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.OperationNotAllowedException;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.WorkflowEditorMode;
+import org.knime.workbench.editor2.actions.ToggleEditorModeAction;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.ui.async.AsyncUtil;
 
@@ -146,49 +148,62 @@ public final class PasteFromWorkflowPersistorCommand
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        WorkflowManagerUI manager = m_editor.getWorkflowManagerUI();
-        WorkflowCopyUI wfCopy = m_clipboardObject.getWorkflowCopy();
+        final WorkflowManagerUI manager = m_editor.getWorkflowManagerUI();
+        final WorkflowCopyUI wfCopy = m_clipboardObject.getWorkflowCopy();
+
         m_pastedContent = AsyncUtil.wfmAsyncSwitch(wfm -> {
             //in case of a sync workflow managewr:
             //paste the content, calculate the shift and then move the pasted objects accordingly
-            WorkflowCopyContent pastedContent = wfm.paste(wfCopy);
+            final WorkflowCopyContent pastedContent = wfm.paste(wfCopy);
 
-            NodeID[] pastedNodes = pastedContent.getNodeIDs();
-            WorkflowAnnotation[] pastedAnnos = wfm.getWorkflowAnnotations(pastedContent.getAnnotationIDs());
-            Set<NodeID> newIDs = new HashSet<NodeID>(); // fast lookup below
-            List<int[]> insertedElementBounds = new ArrayList<int[]>();
-            for (NodeID i : pastedNodes) {
-                NodeContainerUI nc = manager.getNodeContainer(i);
-                NodeUIInformation ui = nc.getUIInformation();
-                int[] bounds = ui.getBounds();
+            final NodeID[] pastedNodes = pastedContent.getNodeIDs();
+            // As of AP-8593, it will not be possible to have nodes and annotations on the clipboard concurrently
+            final WorkflowAnnotation[] pastedAnnos = wfm.getWorkflowAnnotations(pastedContent.getAnnotationIDs());
+            final boolean pasteIsForNodes = ((pastedNodes != null) && (pastedNodes.length > 0));
+            final boolean needToggle =
+                pasteIsForNodes ? (!WorkflowEditorMode.NODE_EDIT.equals(m_editor.getEditorMode()))
+                    : (!WorkflowEditorMode.ANNOTATION_EDIT.equals(m_editor.getEditorMode()));
+
+            if (needToggle) {
+                final ToggleEditorModeAction toggleAction = new ToggleEditorModeAction(m_editor);
+
+                toggleAction.runInSWT();
+            }
+
+            final Set<NodeID> newIDs = new HashSet<>(); // fast lookup below
+            final List<int[]> insertedElementBounds = new ArrayList<>();
+            for (final NodeID i : pastedNodes) {
+                final NodeContainerUI nc = manager.getNodeContainer(i);
+                final NodeUIInformation ui = nc.getUIInformation();
+                final int[] bounds = ui.getBounds();
                 insertedElementBounds.add(bounds);
             }
-            for (WorkflowAnnotation a : pastedAnnos) {
-                int[] bounds = new int[]{a.getX(), a.getY(), a.getWidth(), a.getHeight()};
+            for (final WorkflowAnnotation a : pastedAnnos) {
+                final int[] bounds = new int[]{a.getX(), a.getY(), a.getWidth(), a.getHeight()};
                 insertedElementBounds.add(bounds);
             }
-            int[] moveDist = m_shiftCalculator.calculateShift(insertedElementBounds, manager, m_clipboardObject);
+            final int[] moveDist = m_shiftCalculator.calculateShift(insertedElementBounds, manager, m_clipboardObject);
             // for redo-operations we need the exact same shift.
             m_shiftCalculator = new FixedShiftCalculator(moveDist);
-            for (NodeID id : pastedNodes) {
+            for (final NodeID id : pastedNodes) {
                 newIDs.add(id);
-                NodeContainerUI nc = manager.getNodeContainer(id);
-                NodeUIInformation oldUI = nc.getUIInformation();
-                NodeUIInformation newUI = NodeUIInformation.builder(oldUI).translate(moveDist).build();
+                final NodeContainerUI nc = manager.getNodeContainer(id);
+                final NodeUIInformation oldUI = nc.getUIInformation();
+                final NodeUIInformation newUI = NodeUIInformation.builder(oldUI).translate(moveDist).build();
                 nc.setUIInformation(newUI);
             }
-            for (ConnectionContainerUI conn : manager.getConnectionContainers()) {
+            for (final ConnectionContainerUI conn : manager.getConnectionContainers()) {
                 if (newIDs.contains(conn.getDest()) && newIDs.contains(conn.getSource())) {
                     // get bend points and move them
-                    ConnectionUIInformation oldUI = conn.getUIInfo();
+                    final ConnectionUIInformation oldUI = conn.getUIInfo();
                     if (oldUI != null) {
-                        ConnectionUIInformation newUI =
+                        final ConnectionUIInformation newUI =
                             ConnectionUIInformation.builder(oldUI).translate(moveDist).build();
                         conn.setUIInfo(newUI);
                     }
                 }
             }
-            for (WorkflowAnnotation a : pastedAnnos) {
+            for (final WorkflowAnnotation a : pastedAnnos) {
                 a.shiftPosition(moveDist[0], moveDist[1]);
             }
             setFutureSelection(pastedContent.getNodeIDs(),
@@ -198,10 +213,11 @@ public final class PasteFromWorkflowPersistorCommand
             //in case of async workflow managers:
             //get the offset, calculate the shift and then paste the objects considering this shift
             assert wfCopy instanceof WorkflowCopyWithOffsetUI;
-            WorkflowCopyWithOffsetUI wfCopyOffset = (WorkflowCopyWithOffsetUI)wfCopy;
+            final WorkflowCopyWithOffsetUI wfCopyOffset = (WorkflowCopyWithOffsetUI)wfCopy;
 
             //calc shift
-            int[] shift = m_shiftCalculator.calculateShift(wfCopyOffset.getX(), wfCopyOffset.getY(), m_clipboardObject);
+            final int[] shift =
+                m_shiftCalculator.calculateShift(wfCopyOffset.getX(), wfCopyOffset.getY(), m_clipboardObject);
             // for redo-operations we need the exact same shift.
             m_shiftCalculator = new FixedShiftCalculator(shift);
             wfCopyOffset.setXShift(shift[0]);

@@ -63,6 +63,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -137,7 +138,9 @@ import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.editor2.EditorModeParticipant;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.WorkflowEditorMode;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
@@ -162,9 +165,9 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
  * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
-public class NodeContainerEditPart extends AbstractWorkflowEditPart implements NodeStateChangeListener,
-    NodeProgressListener, NodeMessageListener, NodeUIInformationListener, EditPartListener, ConnectableEditPart,
-    NodeEditPart, NodePropertyChangedListener, IPropertyChangeListener, IAdaptable {
+public class NodeContainerEditPart extends AbstractWorkflowEditPart implements ConnectableEditPart, EditPartListener,
+    EditorModeParticipant, IAdaptable, IPropertyChangeListener, NodeEditPart, NodeMessageListener, NodeProgressListener,
+    NodePropertyChangedListener, NodeStateChangeListener, NodeUIInformationListener {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeContainerEditPart.class);
 
@@ -196,12 +199,15 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     private static final Image NODE_LOCK_ICON =
             ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_lock_decorator.png");
 
+
     /**
      * true, if the figure was initialized from the node extra info object.
      */
     private boolean m_uiListenerActive = true;
 
     private boolean m_showFlowVarPorts = false;
+
+    private WorkflowEditorMode m_currentEditorMode = WorkflowEditor.INITIAL_EDITOR_MODE;
 
     /**
      * @return The <code>NodeContainer</code>(= model)
@@ -315,12 +321,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     @Override
     protected IFigure createFigure() {
         // create the visuals for the node container.
-        final NodeContainerFigure nodeFigure = new NodeContainerFigure(new ProgressFigure());
+        final NodeContainerFigure containerFigure = new NodeContainerFigure(new ProgressFigure());
         // init the user specified node name
         if (getRootEditPart() != null) {
-            nodeFigure.hideNodeName(getRootEditPart().hideNodeNames());
+            containerFigure.hideNodeName(getRootEditPart().hideNodeNames());
         }
-        return nodeFigure;
+        return containerFigure;
     }
 
     /**
@@ -688,6 +694,20 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     @Override
     public DragTracker getDragTracker(final Request request) {
         return new WorkflowSelectionDragEditPartsTracker(this);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * We don't want to be selected if we're not in node-edit-mode.
+     */
+    @Override
+    public EditPart getTargetEditPart(final Request request) {
+        if (m_currentEditorMode.equals(WorkflowEditorMode.NODE_EDIT) ) {
+            return super.getTargetEditPart(request);
+        }
+
+        return null;
     }
 
     /**
@@ -1293,4 +1313,24 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")  // getChildren().stream() ...
+    @Override
+    public void workflowEditorModeWasSet(final WorkflowEditorMode newMode) {
+        m_currentEditorMode = newMode;
+
+        ((NodeContainerFigure)getFigure()).workflowEditorModeWasSet(newMode);
+        getAllConnections();
+        Stream.of(getAllConnections()).forEach((c) -> {
+           c.workflowEditorModeWasSet(newMode);
+        });
+
+        getChildren().stream().forEach((c) -> {
+            if (c instanceof AbstractPortEditPart) {
+                ((AbstractPortEditPart)c).workflowEditorModeWasSet(newMode);
+            }
+        });
+    }
 }

@@ -63,20 +63,19 @@ import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.workbench.editor2.commands.AsyncCommand;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Adjusts the default <code>DragEditPartsTracker</code> to create commands
- * that also move bendpoints.
+ * Adjusts the default <code>DragEditPartsTracker</code> to create commands that also move bendpoints and also
+ *  create temporary selections for the spatial children of annotations in annotation edit mode.
  *
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker {
-
     /**
-     * Constructs a new WorkflowSelectionDragEditPartsTracker with the given
-     * source edit part.
+     * Constructs a new WorkflowSelectionDragEditPartsTracker with the given source edit part.
      *
      * @param sourceEditPart the source edit part
      */
@@ -84,7 +83,20 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         super(sourceEditPart);
     }
 
-    /**
+    @Override
+    protected boolean handleButtonUp(final int button) {
+        if (getSourceEditPart() instanceof AnnotationEditPart) {
+            final Input i = getCurrentInput();
+
+            if (AnnotationModeExitEnabler.annotationDragTrackerShouldVeto(i.getMouseLocation())) {
+                return false;
+            }
+        }
+
+        return super.handleButtonUp(button);
+    }
+
+    /*
      * {@inheritDoc}
      */
     @Override
@@ -93,6 +105,7 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         if (button != WorkflowSelectionTool.PAN_BUTTON) {
             return super.handleButtonDown(button);
         }
+
         return true;
     }
 
@@ -114,15 +127,6 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Request createTargetRequest() {
-        // TODO Auto-generated method stub
-        return super.createTargetRequest();
-    }
-
-    /**
      * Asks each edit part in the
      * {@link org.eclipse.gef.tools.AbstractTool#getOperationSet() operation set}
      * to contribute to a {@link CompoundCommand} after first setting the
@@ -135,13 +139,14 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
      *
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")  // generic casting
     @Override
     protected Command getCommand() {
 
         CompoundCommand command = new CompoundCommand();
         command.setDebugLabel("Drag Object Tracker");
 
-        Iterator iter = getOperationSet().iterator();
+        Iterator<?> iter = getOperationSet().iterator();
 
         Request request = getTargetRequest();
 
@@ -256,12 +261,9 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
     }
 
     @SuppressWarnings("unchecked")
-    private static ConnectionContainerEditPart[] getOutportConnections(
-            final EditPart containerPart) {
-
+    private static ConnectionContainerEditPart[] getOutportConnections(final EditPart containerPart) {
         // result list
-        List<ConnectionContainerEditPart> result =
-                new ArrayList<ConnectionContainerEditPart>();
+        List<ConnectionContainerEditPart> result = new ArrayList<ConnectionContainerEditPart>();
         List<EditPart> children = containerPart.getChildren();
 
         for (EditPart part : children) {

@@ -47,8 +47,10 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.LayoutManager;
 import org.eclipse.draw2d.geometry.Rectangle;
@@ -56,6 +58,7 @@ import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
@@ -67,6 +70,9 @@ import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.NodePortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.workbench.editor2.EditorModeParticipant;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.WorkflowEditorMode;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.AbstractWorkflowPortBarFigure;
@@ -77,9 +83,11 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public abstract class AbstractWorkflowPortBarEditPart
-    extends AbstractWorkflowEditPart implements ConnectableEditPart, NodePropertyChangedListener {
+public abstract class AbstractWorkflowPortBarEditPart extends AbstractWorkflowEditPart
+    implements ConnectableEditPart, EditorModeParticipant, NodePropertyChangedListener {
 
+    /** The editor mode state as last set via the EditorModeParticipant method **/
+    protected WorkflowEditorMode m_currentEditorMode = WorkflowEditor.INITIAL_EDITOR_MODE;
 
     /**
      * {@inheritDoc}
@@ -130,14 +138,11 @@ public abstract class AbstractWorkflowPortBarEditPart
      */
     @Override
     protected void refreshVisuals() {
-        NodeUIInformation uiInfo = ((WorkflowPortBar)getModel())
-            .getUIInfo();
-        if (uiInfo != null
-                && !((AbstractWorkflowPortBarFigure)getFigure())
-                .isInitialized()) {
+        NodeUIInformation uiInfo = ((WorkflowPortBar)getModel()).getUIInfo();
+        if (uiInfo != null && !((AbstractWorkflowPortBarFigure)getFigure()).isInitialized()) {
             int[] bounds = uiInfo.getBounds();
-            ((AbstractWorkflowPortBarFigure)getFigure()).setBounds(
-                    new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]));
+            ((AbstractWorkflowPortBarFigure)getFigure())
+                .setBounds(new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]));
         }
         super.refreshVisuals();
     }
@@ -203,25 +208,38 @@ public abstract class AbstractWorkflowPortBarEditPart
     }
 
     /**
+     * We do this in order to allow compiler-complaint-free stream() usage.
+     *
+     * We can remove this when org.eclipse.gef.editparts.AbstractEditPart starts typing its signature. 4.8?
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<EditPart> getChildren() {
+        return super.getChildren();
+    }
+
+    /**
      * Updates the port index in all port editparts from the underlying port model.
      */
     private void updatePortIndex() {
-        for (Object ep : getChildren()) {
+        getChildren().stream().forEach((ep) -> {
             if (ep instanceof AbstractPortEditPart) {
-                Object model = ((EditPart)ep).getModel();
+                Object model = ep.getModel();
                 if (model instanceof NodePortUI) {
                     ((AbstractPortEditPart)ep).setIndex(((NodePortUI)model).getPortIndex());
                 }
             }
-        }
+        });
     }
 
     private void updateNumberOfPorts() {
-        for (Object ep : getChildren()) {
+        getChildren().stream().forEach((ep) -> {
             if (ep instanceof AbstractPortEditPart) {
                 ((AbstractPortEditPart)ep).updateNumberOfPorts();
             }
-        }
+        });
     }
 
     private void relayoutPorts() {
@@ -258,6 +276,19 @@ public abstract class AbstractWorkflowPortBarEditPart
         return new WorkflowSelectionDragEditPartsTracker(this);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * We don't want to be selected if we're not in node-edit-mode.
+     */
+    @Override
+    public EditPart getTargetEditPart(final Request request) {
+        if (m_currentEditorMode.equals(WorkflowEditorMode.NODE_EDIT) ) {
+            return super.getTargetEditPart(request);
+        }
+
+        return null;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -293,4 +324,26 @@ public abstract class AbstractWorkflowPortBarEditPart
         });
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void workflowEditorModeWasSet(final WorkflowEditorMode newMode) {
+        m_currentEditorMode = newMode;
+
+        getChildren().stream().forEach((ep) -> {
+            if (ep instanceof AbstractPortEditPart) {
+                // TODO
+                ((AbstractPortEditPart)ep).workflowEditorModeWasSet(newMode);
+            }
+        });
+
+        final Color fgColor =
+            WorkflowEditorMode.NODE_EDIT.equals(newMode) ? AbstractWorkflowPortBarFigure.DEFAULT_BACKGROUND_COLOR
+                : ColorConstants.lightGray;
+        final AbstractWorkflowPortBarFigure barFigure = (AbstractWorkflowPortBarFigure)getFigure();
+
+        barFigure.setBackgroundColor(fgColor);
+        barFigure.repaint();
+    }
 }

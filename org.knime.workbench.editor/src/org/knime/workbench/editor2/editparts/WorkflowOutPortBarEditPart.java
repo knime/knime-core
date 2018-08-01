@@ -62,18 +62,15 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class WorkflowOutPortBarEditPart
-    extends AbstractWorkflowPortBarEditPart {
-
+public class WorkflowOutPortBarEditPart extends AbstractWorkflowPortBarEditPart {
     /**
      *
      * {@inheritDoc}
      */
     @Override
     protected List<NodePortUI> getModelChildren() {
-        WorkflowManagerUI manager = ((WorkflowPortBar)getModel())
-            .getWorkflowManager();
-        List<NodePortUI> ports = new ArrayList<NodePortUI>();
+        final WorkflowManagerUI manager = ((WorkflowPortBar)getModel()).getWorkflowManager();
+        final List<NodePortUI> ports = new ArrayList<NodePortUI>();
         for (int i = 0; i < manager.getNrWorkflowOutgoingPorts(); i++) {
             ports.add(manager.getOutPort(i));
         }
@@ -85,16 +82,15 @@ public class WorkflowOutPortBarEditPart
      */
     @Override
     protected IFigure createFigure() {
-        NodeUIInformation uiInfo = ((WorkflowPortBar)getModel()).getUIInfo();
+        final NodeUIInformation uiInfo = ((WorkflowPortBar)getModel()).getUIInfo();
+
         if (uiInfo != null) {
-            int[] bounds = uiInfo.getBounds();
-            Rectangle newBounds = new Rectangle(
-                    bounds[0], bounds[1], bounds[2], bounds[3]);
+            final int[] bounds = uiInfo.getBounds();
+            final Rectangle newBounds = new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
+
             return new WorkflowOutPortBarFigure(newBounds);
         } else {
-            int[] minmax = getMinMaxXcoordInWorkflow();
-            return new WorkflowOutPortBarFigure(minmax[1] /* pass the max x coord */);
+            return new WorkflowOutPortBarFigure(getMinMaxXcoordInWorkflow()[1] /* pass the max x coord */);
         }
     }
-
 }

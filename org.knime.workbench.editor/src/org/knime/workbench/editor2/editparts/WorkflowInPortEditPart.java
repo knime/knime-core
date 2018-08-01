@@ -65,6 +65,7 @@ import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.core.ui.node.workflow.WorkflowInPortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.WorkflowContextMenuProvider;
+import org.knime.workbench.editor2.WorkflowEditorMode;
 import org.knime.workbench.editor2.figures.NewToolTipFigure;
 import org.knime.workbench.editor2.figures.WorkflowInPortFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
@@ -135,56 +136,53 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
     }
 
     /**
-     * Creates {@link WorkflowInPortFigure}, sets the tooltip and adds a
-     * {@link MouseListener} to the figure in order to detect if the figure was
-     * clicked and a context menu entry should be provided to open the port
-     * view.
-     *
-     * @see WorkflowContextMenuProvider#buildContextMenu(
-     * org.eclipse.jface.action.IMenuManager)
-     * @see WorkflowInPortFigure
-     *
      * {@inheritDoc}
+     *
+     * Creates {@link WorkflowInPortFigure}, sets the tooltip and adds a {@link MouseListener} to the figure in order to
+     * detect if the figure was clicked and a context menu entry should be provided to open the port view.
+     *
+     * @see WorkflowContextMenuProvider#buildContextMenu( org.eclipse.jface.action.IMenuManager)
+     * @see WorkflowInPortFigure
      */
     @Override
     protected IFigure createFigure() {
-        NodeOutPortUI port = getManager().getInPort(getIndex()).getUnderlyingPort();
-        String tooltip = getTooltipText(PORT_NAME + ": "  + getIndex(), port);
-        WorkflowInPortFigure f = new WorkflowInPortFigure(getType(),
-                getManager().getNrInPorts(), getIndex(), tooltip);
+        final NodeOutPortUI port = getManager().getInPort(getIndex()).getUnderlyingPort();
+        final String tooltip = getTooltipText(PORT_NAME + ": " + getIndex(), port);
+        final WorkflowInPortFigure f =
+            new WorkflowInPortFigure(getType(), getManager().getNrInPorts(), getIndex(), tooltip);
         f.addMouseListener(new MouseListener() {
 
             @Override
             public void mouseDoubleClicked(final MouseEvent me) { }
 
             /**
-             * Set the selection state of the figure to true. This is
-             * evaluated in the context menu. If it is selected a context menu
-             * entry is provided to open the port view.
-             *
-             * @see WorkflowContextMenuProvider#buildContextMenu(
-             *  org.eclipse.jface.action.IMenuManager)
-             *
              * {@inheritDoc}
+             *
+             * Set the selection state of the figure to true. This is evaluated in the context menu. If it is selected a
+             * context menu entry is provided to open the port view.
+             *
+             * @see WorkflowContextMenuProvider#buildContextMenu( org.eclipse.jface.action.IMenuManager)
              */
             @Override
             public void mousePressed(final MouseEvent me) {
-                setSelected(true);
+                if (WorkflowEditorMode.NODE_EDIT.equals(m_currentEditorMode)) {
+                    setSelected(true);
+                }
             }
 
             /**
-             * Set the selection state of the figure to true. This is
-             * evaluated in the context menu. If it is selected a context menu
-             * entry is provided to open the port view.
-             *
-             * @see WorkflowContextMenuProvider#buildContextMenu(
-             *  org.eclipse.jface.action.IMenuManager)
-             *
              * {@inheritDoc}
+             *
+             * Set the selection state of the figure to true. This is evaluated in the context menu. If it is selected a
+             * context menu entry is provided to open the port view.
+             *
+             * @see WorkflowContextMenuProvider#buildContextMenu( org.eclipse.jface.action.IMenuManager)
              */
             @Override
             public void mouseReleased(final MouseEvent me) {
-                setSelected(false);
+                if (WorkflowEditorMode.NODE_EDIT.equals(m_currentEditorMode)) {
+                    setSelected(false);
+                }
             }
 
         });

@@ -55,8 +55,7 @@ import org.knime.workbench.editor2.figures.WorkflowAnnotationFigure;
  * By default, only editparts whose figure's are on the primary layer will be
  * considered within the enclosed rectangle.
  */
-public class WorkflowMarqueeSelectionTool extends AbstractTool implements
-        DragTracker {
+public class WorkflowMarqueeSelectionTool extends AbstractTool implements DragTracker {
 
     /**
      * The property to be used in
@@ -94,6 +93,17 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
 
     static final int APPEND_MODE = 2;
 
+    private static final Request MARQUEE_REQUEST;
+
+    static {
+        final Request r = new Request(RequestConstants.REQ_SELECTION);
+
+        r.getExtendedData().put(PROPERTY_MARQUEE_BEHAVIOR, new Object());
+
+        MARQUEE_REQUEST = r;
+    }
+
+
     private Figure marqueeRectangleFigure;
 
     private Set<GraphicalEditPart> allChildren = new HashSet<GraphicalEditPart>();
@@ -109,9 +119,6 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     private int marqueeBehavior = BEHAVIOR_NODES_CONTAINED;
 
     private int mode;
-
-    private static final Request MARQUEE_REQUEST =
-            new Request(RequestConstants.REQ_SELECTION);
 
     /**
      * Creates a new MarqueeSelectionTool of default type

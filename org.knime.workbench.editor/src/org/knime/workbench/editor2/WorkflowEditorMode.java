@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,68 +44,27 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   09.06.2008 (Fabian Dill): created
+ *   Jul 21, 2018 (loki): created
  */
-package org.knime.workbench.editor2.figures;
-
-import org.eclipse.swt.graphics.Image;
-import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.workflow.NodeContainerState;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
-import org.knime.workbench.KNIMEEditorPlugin;
-import org.knime.workbench.core.util.ImageRepository;
-
+package org.knime.workbench.editor2;
 
 /**
- * @author Fabian Dill, University of Konstanz
+ * With AP-8593 as its genesis, this enumeration captures whether we are in annotation edit mode or node edit mode; this
+ * state expression is implemented as an enumeration for future-proofing.
+ *
+ * @author loki der quaeler
  */
-public class SubworkflowFigure extends NodeContainerFigure {
-
-    // load images
-    private static final Image IDLE_STATE = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID,
-            "icons/meta/meta_idle2.png");
-
-    private static final Image EXECUTING_STATE = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID,
-            "icons/meta/meta_executing5.png");
-
-    private static final Image EXECUTED_STATE = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID,
-            "icons/meta/meta_executed.png");
+public enum WorkflowEditorMode {
 
     /**
-     * Everything like the {@link NodeContainerFigure} but without the status
-     * traffic light, state is reflected by icons on the node.
-     *
-     * @param progress progress figure for super constructor
+     * That annotations and their textual contents are allowed to be edited, and that annotations, their textual content
+     * and their node content are allowed to be moved as an atomic unit (but not nodes and their connections.)
      */
-    public SubworkflowFigure(final ProgressFigure progress) {
-        super(progress);
-        remove(getStatusFigure());
-        ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setType(NodeType.Meta);
-    }
+    ANNOTATION_EDIT,
 
     /**
-     * {@inheritDoc}
-     * Only reflects three different states: idle, executing, executed.
+     * That nodes and their connections are allowed to be edited and moved (but not annotations.)
      */
-    @Override
-    public void setStateFromNC(final NodeContainerUI nc) {
-        NodeContainerState state = nc.getNodeContainerState();
-        Image image;
-        if (state.isExecuted()) {
-            image = EXECUTED_STATE;
-        } else if (state.isExecutionInProgress()) {
-            image = EXECUTING_STATE;
-        } else {
-            image = IDLE_STATE;
-        }
-        ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setIcon(image);
-        revalidate();
-    }
+    NODE_EDIT;
 
-    /**
-     * {@inheritDoc}
-     * Ignores it - since the type is fixed.
-     */
-    @Override
-    public void setType(final NodeType type) { }
 }

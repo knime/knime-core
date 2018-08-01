@@ -61,15 +61,9 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
- *
  * @author ohl, KNIME AG, Zurich, Switzerland
  */
 public class AddAnnotationCommand extends AbstractKNIMECommand {
-
-    private final GraphicalViewer m_viewer;
-
-    private final Point m_location;
-
     private static final int DEFAULT_HEIGHT = 140;
 
     private static final int DEFAULT_WIDTH = 250;
@@ -80,7 +74,10 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
     private static final int INITAL_FLOWBORDER_COLOR =
             AnnotationEditPart.colorToRGBint(AnnotationEditPart.getAnnotationDefaultBorderColor());
 
-    public static final String INITIAL_FLOWANNO_TEXT = "Double-click top left corner to edit.";
+
+    private final GraphicalViewer m_viewer;
+
+    private final Point m_location;
 
     // remember the new annotation for undo
     private WorkflowAnnotation m_anno;
@@ -98,7 +95,6 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
         m_viewer = viewer;
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -106,37 +102,33 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
     public void execute() {
         // adapt location to the viewport location and the zoom factor
         // this seems to be a workaround for a bug in the framework
-        ZoomManager zoomManager =
-                (ZoomManager)m_viewer.getProperty(ZoomManager.class.toString());
+        final ZoomManager zoomManager = (ZoomManager)m_viewer.getProperty(ZoomManager.class.toString());
 
         // adjust the location according to the viewport position
         // seems to be a workaround for a bug in the framework
         // (should imediately deliver the correct view position and not
         // the position of the viewport)
-        PrecisionPoint location =
-                new PrecisionPoint(m_location.x, m_location.y);
+        final PrecisionPoint location = new PrecisionPoint(m_location.x, m_location.y);
         WorkflowEditor.adaptZoom(zoomManager, location, true);
 
         m_anno = new WorkflowAnnotation();
-        AnnotationData data = new AnnotationData();
+        final AnnotationData data = new AnnotationData();
         // it is a workflow annotation
         data.setBgColor(INITIAL_FLOWANNO_COLOR);
-        data.setDimension((int)location.preciseX, (int)location.preciseY, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        data.setDimension((int)location.preciseX(), (int)location.preciseY(), DEFAULT_WIDTH, DEFAULT_HEIGHT);
         data.setBorderSize(AnnotationEditPart.getAnnotationDefaultBorderSizePrefValue());
         data.setBorderColor(INITAL_FLOWBORDER_COLOR);
-        data.setText(INITIAL_FLOWANNO_TEXT);
         data.setStyleRanges(new AnnotationData.StyleRange[0]);
         m_anno.copyFrom(data, true);
-        WorkflowManager hostWFM = getHostWFM();
+        final WorkflowManager hostWFM = getHostWFM();
         hostWFM.addWorkflowAnnotation(m_anno);
         m_viewer.deselectAll();
         // select the new ones....
-        if (m_viewer.getRootEditPart().getContents() != null
-                && m_viewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart) {
+        if ((m_viewer.getRootEditPart().getContents() != null)
+            && (m_viewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart)) {
             ((WorkflowRootEditPart)m_viewer.getRootEditPart().getContents())
-                    .setFutureAnnotationSelection(Collections.singleton(m_anno));
+                .setFutureAnnotationSelection(Collections.singleton(m_anno));
         }
-
     }
 
     /**

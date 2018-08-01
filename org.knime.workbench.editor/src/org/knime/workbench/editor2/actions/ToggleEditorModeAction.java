@@ -40,104 +40,50 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.graphics.Point;
-import org.knime.workbench.KNIMEEditorPlugin;
-import org.knime.workbench.core.util.ImageRepository;
+import java.util.List;
+
+import org.knime.core.node.NodeLogger;
+import org.knime.workbench.editor2.EditorModeParticipant;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowEditorMode;
-import org.knime.workbench.editor2.commands.AddAnnotationCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * @author ohl, KNIME AG, Zurich, Switzerland
+ * This is the action which toggles between Annotation Edit Mode and Node Edit Mode.
+ *
+ * @author loki der quaeler
  */
-public class AddAnnotationAction extends AbstractNodeAction {
-    /** unique ID for this action. * */
-    public static final String ID = "knime.action.addannotation";
+public class ToggleEditorModeAction extends AbstractNodeAction {
+    /** The ID returned by getId() and used in the plugin.xml **/
+    public static final String ID = "knime.action.editor.toggleEditorMode";
 
-    private static final int DEFAULT_XLOC = 20;
-
-    private static final int DEFAULT_YLOC = 29;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ToggleEditorModeAction.class);
 
 
-    private int m_x;
-
-    private int m_y;
+    private final boolean m_clearSelectionOnToggle;
 
     /**
-     * Create a new 'Add Annotation' action.
-     * @param editor underlying workflow editor
+     * This calls <code>this(editor, true)</code>
+     *
+     * @param editor The workflow editor
      */
-    public AddAnnotationAction(final WorkflowEditor editor) {
+    public ToggleEditorModeAction(final WorkflowEditor editor) {
+        this(editor, true);
+    }
+
+    /**
+     * @param editor The workflow editor
+     * @param deselectAllOnToggle is set to true, the elements on the canvas will be deselected as part of the action
+     */
+    public ToggleEditorModeAction(final WorkflowEditor editor, final boolean deselectAllOnToggle) {
         super(editor);
-        m_x = DEFAULT_XLOC;
-        m_y = DEFAULT_YLOC;
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean internalCalculateEnabled() {
-        return !getManager().isWriteProtected();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getText() {
-        return "New Workflow Annotation";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation.png");
-    }
-
-    /**
-     * @param xLoc
-     * @param yLoc
-     */
-    public void setLocation(final int xLoc, final int yLoc) {
-        m_x = xLoc;
-        m_y = yLoc;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final WorkflowEditor we = getEditor();
-        final AddAnnotationCommand aac =
-            new AddAnnotationCommand(getManager(), we.getViewer(), new Point(m_x, m_y));
-
-        getCommandStack().execute(aac); // enables undo
-
-        // update the actions
-        we.updateActions();
-
-        // Give focus to the editor again. Otherwise the actions (selection)
-        // is not updated correctly.
-        getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-
-        if (WorkflowEditorMode.NODE_EDIT.equals(we.getEditorMode())) {
-            final ToggleEditorModeAction action = new ToggleEditorModeAction(we);
-
-            // the method we are in is invoked by our parent's runInSWT() method, so it's safe to assume we can invoke
-            // that method on this action from this thread
-            action.runInSWT();
-        }
+        m_clearSelectionOnToggle = deselectAllOnToggle;
     }
 
     /**
@@ -146,5 +92,69 @@ public class AddAnnotationAction extends AbstractNodeAction {
     @Override
     public String getId() {
         return ID;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getText() {
+        return "Toggle Editor Mode...";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText() {
+        return "Toggles the edit mode between Annotation Edit and Node Edit";
+    }
+
+    /**
+     * @return <code>true</code> - we are always enabled
+     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
+     */
+    @Override
+    protected boolean internalCalculateEnabled() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void runInSWT() {
+        final WorkflowEditor we = (WorkflowEditor)getWorkbenchPart();
+
+        if (we != null) {
+            final WorkflowEditorMode currentMode = we.getEditorMode();
+            final WorkflowEditorMode newMode = currentMode.equals(WorkflowEditorMode.NODE_EDIT)
+                ? WorkflowEditorMode.ANNOTATION_EDIT : WorkflowEditorMode.NODE_EDIT;
+            final List<?> canvasObjects = getAllObjects();
+
+            we.setEditorMode(newMode);
+
+            if (m_clearSelectionOnToggle) {
+                getSelectionManager().deselectAll();
+            }
+
+            if (canvasObjects != null) {
+                canvasObjects.stream().forEach((o) -> {
+                    if (o instanceof EditorModeParticipant) {
+                        ((EditorModeParticipant)o).workflowEditorModeWasSet(newMode);
+                    }
+                });
+            }
+        } else {
+            LOGGER.error("Some how we failed to get the workflow editor instance.");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        throw new IllegalStateException("This method should not be called.");
     }
 }
