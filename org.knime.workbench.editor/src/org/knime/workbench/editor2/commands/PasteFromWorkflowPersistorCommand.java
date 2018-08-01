@@ -198,6 +198,11 @@ public final class PasteFromWorkflowPersistorCommand
             return wfm.pasteAsync(wfCopyOffset);
         }, manager, "Pasting workflow parts ...");
 
+        if (m_pastedContent == null) {
+            //can happen, if workflow copy is not available on the server anymore
+            //will almost never happen
+            return;
+        }
 
         EditPartViewer partViewer = m_editor.getViewer();
         partViewer.deselectAll();
@@ -217,6 +222,11 @@ public final class PasteFromWorkflowPersistorCommand
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
+        if (m_pastedContent == null) {
+            //can happen, if workflow copy is not available on the server anymore
+            //will almost never happen
+            return false;
+        }
         WorkflowManagerUI manager = m_editor.getWorkflowManagerUI();
         NodeID[] pastedNodes = m_pastedContent.getNodeIDs();
         WorkflowAnnotationID[] pastedAnnos = m_pastedContent.getAnnotationIDs();
