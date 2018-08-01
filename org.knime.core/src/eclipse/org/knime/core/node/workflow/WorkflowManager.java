@@ -8773,7 +8773,7 @@ public final class WorkflowManager extends NodeContainer
                 });
             }
 
-            //unset workflow annotation ids (in case they are about to be used somerwhere else)
+            //unset workflow annotation ids (in case they are about to be used somewhere else)
             getWorkflowAnnotations().forEach(wa -> wa.unsetID());
         }
     }
@@ -9021,7 +9021,7 @@ public final class WorkflowManager extends NodeContainer
      * The workflow annotation id will be set, too!
      *
      * @param annotation to add
-     * @return a new id for annotation
+     * @return the new id for the annotation
      * @throws IllegalArgumentException If annotation already registered.
      * @throws IllegalStateException If the annotation is already part of another workflow (i.e. its id has been set
      *             already)

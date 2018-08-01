@@ -259,7 +259,7 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * @param sourcePort port index at source node
      * @param dest destination node id
      * @param destPort port index at destination node
-     * @param bendpoints
+     * @param bendpoints the connection's bendpoints, or empty if none
      * @return newly created Connection object
      * @throws IllegalArgumentException if connection already exists
      */
@@ -1241,7 +1241,8 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * Helper method to get the workflow annotations referenced by the respective id.
      *
      * @param ids the ids to get the annotation for
-     * @return a new array with the annotations
+     * @return a new array with the annotations - might contain <code>null</code>-entries if there is no annotation for
+     *         the given id
      */
     public WorkflowAnnotation[] getWorkflowAnnotations(final WorkflowAnnotationID... ids);
 

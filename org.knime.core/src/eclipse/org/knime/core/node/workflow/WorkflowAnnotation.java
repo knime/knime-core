@@ -97,11 +97,11 @@ public class WorkflowAnnotation extends Annotation {
     }
 
     /**
-     * Gives access to the workflow annotation id. Id is only available iff the workflow annotations part of a workflow
-     * manager. I.e. when the annotation is added to a workflow manager the annotation id will be set by the workflow
-     * manager (see {@link WorkflowManager#addWorkflowAnnotation(WorkflowAnnotation)}).
+     * Gives access to the workflow annotation id. Id is only available iff the workflow annotation is part of a
+     * workflow manager. I.e. when the annotation is added to a workflow manager the annotation id will be set by the
+     * workflow manager (see {@link WorkflowManager#addWorkflowAnnotation(WorkflowAnnotation)}).
      *
-     * @return the id or <code>null</code> the workflow annotation is not part of a workflow, yet
+     * @return the id or <code>null</code> if the workflow annotation is not part of a workflow, yet
      */
     public WorkflowAnnotationID getID() {
         return m_id;

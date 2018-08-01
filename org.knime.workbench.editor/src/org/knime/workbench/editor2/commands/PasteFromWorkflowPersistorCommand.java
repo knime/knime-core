@@ -260,7 +260,7 @@ public final class PasteFromWorkflowPersistorCommand
                 final ClipboardObject clipObject);
 
         /**
-         * Calculates the sift passed on a given position (x,y).
+         * Calculates the shift based on a given position (x,y).
          *
          * @param offsetX the actual offset in X direction
          * @param offsetY the actual offset in Y direction
