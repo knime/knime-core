@@ -196,9 +196,9 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     /**
      * Removes the given workflow parts. If there is no corresponding part for a given id, it will be ignored.
      *
-     * @param nodeIDs the ids of the nodes to be removed. Never <code>null</code>.
-     * @param connectionIDs the ids of the connections to be removed. Never <code>null</code>.
-     * @param annotationIDs the ids of the workflow annotations to be removed. Never <code>null</code>.
+     * @param nodeIDs the ids of the nodes to be removed or <code>null</code>.
+     * @param connectionIDs the ids of the connections to be removed or <code>null</code>.
+     * @param annotationIDs the ids of the workflow annotations to be removed or <code>null</code>.
      */
     void remove(NodeID[] nodeIDs, ConnectionID[] connectionIDs, WorkflowAnnotationID[] annotationIDs);
 

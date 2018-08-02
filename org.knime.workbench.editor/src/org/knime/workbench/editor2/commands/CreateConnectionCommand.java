@@ -48,16 +48,22 @@
 package org.knime.workbench.editor2.commands;
 
 import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+import static org.knime.workbench.ui.async.AsyncSwitch.wfmAsyncSwitchRethrow;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.OperationNotAllowedException;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -93,10 +99,10 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
 
     private ConnectionUIInformation m_newConnectionUIInfo;
 
-    private ConnectionContainer m_connection;
+    private ConnectionContainerUI m_connection;
 
     // for undo
-    private ConnectionContainer m_oldConnection;
+    private ConnectionContainerUI m_oldConnection;
 
     private boolean m_confirm;
 
@@ -106,7 +112,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      * not.
      * @param hostWFM The host workflow
      */
-    public CreateConnectionCommand(final WorkflowManager hostWFM) {
+    public CreateConnectionCommand(final WorkflowManagerUI hostWFM) {
         super(hostWFM);
         m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
             .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
@@ -221,7 +227,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      * @return Returns the connection, <code>null</code> if execute() was not
      *         called before.
      */
-    public ConnectionContainer getConnection() {
+    public ConnectionContainerUI getConnection() {
         return m_connection;
     }
 
@@ -241,7 +247,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
         if (m_sourceNode == null || m_targetNode == null) {
             return false;
         }
-        WorkflowManager wm = getHostWFM();
+        WorkflowManagerUI wm = getHostWFMUI();
         if (m_targetPortID < 0) {
             ConnectableEditPart target = getTargetNode();
             if (target instanceof NodeContainerEditPart) {
@@ -250,9 +256,9 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
         }
 
         // check whether an existing connection can be removed
-        ConnectionContainer conn = wm.getIncomingConnectionFor(
+        ConnectionContainerUI conn = wm.getIncomingConnectionFor(
                 m_targetNode.getNodeContainer().getID(), m_targetPortID);
-        boolean canRemove = conn == null || wm.canRemoveConnection(conn);
+        boolean canRemove = conn == null || wm.canRemoveConnection(conn.getID());
         // let the workflow manager check if the connection can be created
         // or removed
         boolean canAdd = wm.canAddConnection(
@@ -270,7 +276,10 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      */
     @Override
     public boolean canUndo() {
-        return getHostWFM().canRemoveConnection(m_connection);
+        if (m_connection == null) {
+            return false;
+        }
+        return getHostWFMUI().canRemoveConnection(m_connection.getID());
     }
 
     /**
@@ -279,7 +288,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         // check whether it is the same connection
-        ConnectionContainer conn = getHostWFM().getIncomingConnectionFor(
+        ConnectionContainerUI conn = getHostWFMUI().getIncomingConnectionFor(
                 m_targetNode.getNodeContainer().getID(), m_targetPortID);
         if (conn != null
                 && conn.getSource().equals(
@@ -291,7 +300,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
             // it is the very same connection -> do nothing
             return;
         }
-        WorkflowManager wm = getHostWFM();
+        WorkflowManagerUI wm = getHostWFMUI();
 
         // let the workflow manager check if the connection can be created
         // in case it cannot an exception is thrown which is caught and
@@ -308,8 +317,8 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
                         return;
                     }
                 }
-                // remove existing connection
-                wm.removeConnection(conn);
+                //removing the existing connection will be done while creating the new one
+                //removeConnection(wm, conn);
                 m_oldConnection = conn;
             }
 
@@ -318,16 +327,20 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
                     + m_sourcePortID + " to "
                     + m_targetNode.getNodeContainer().getID()
                     + " " + m_targetPortID);
-            m_connection = wm.addConnection(
-                    m_sourceNode.getNodeContainer().getID(), m_sourcePortID,
-                    m_targetNode.getNodeContainer().getID(), m_targetPortID);
-            NodeTimer.GLOBAL_TIMER.addConnectionCreation(unwrapNC(m_sourceNode.getNodeContainer()),
-                                                         unwrapNC(m_targetNode.getNodeContainer()));
+
+            m_connection = createConnection(wm, m_sourceNode.getNodeContainer().getID(), m_sourcePortID,
+                m_targetNode.getNodeContainer().getID(), m_targetPortID);
+
+            if (wraps(wm, WorkflowManager.class)) {
+                //only record node stats for a local workflows
+                NodeTimer.GLOBAL_TIMER.addConnectionCreation(unwrapNC(m_sourceNode.getNodeContainer()),
+                    unwrapNC(m_targetNode.getNodeContainer()));
+            }
             if (m_newConnectionUIInfo != null) {
                 m_connection.setUIInfo(m_newConnectionUIInfo);
             }
         } catch (Exception e) {
-            LOGGER.error("Connection could not be created.", e);
+            //LOGGER.error("Connection could not be created.", e);
             m_connection = null;
             m_oldConnection = null;
             m_sourceNode = null;
@@ -360,14 +373,36 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        WorkflowManager wm = getHostWFM();
-        wm.removeConnection(m_connection);
-        ConnectionContainer old = m_oldConnection;
-        if (old != null) {
-            ConnectionContainer newConn = wm.addConnection(
-                    old.getSource(), old.getSourcePort(),
-                    old.getDest(), old.getDestPort());
-            newConn.setUIInfo(old.getUIInfo());
+        WorkflowManagerUI wm = getHostWFMUI();
+        try {
+            removeConnection(wm, m_connection);
+            ConnectionContainerUI old = m_oldConnection;
+            if (old != null) {
+                createConnection(wm, old.getSource(), old.getSourcePort(), old.getDest(), old.getDestPort(),
+                    old.getUIInfo() != null ? old.getUIInfo().getAllBendpoints() : null);
+            }
+        } catch (OperationNotAllowedException e) {
+            MessageDialog.openError(Display.getDefault().getActiveShell(),
+                "Connection could not be restored",
+                "Connection couldn't be restored (undo) due to "
+                + "the following reason:\n " + e.getMessage());
         }
+    }
+
+    private static void removeConnection(final WorkflowManagerUI wfm, final ConnectionContainerUI cc)
+        throws OperationNotAllowedException {
+        ConnectionID[] connId = new ConnectionID[]{cc.getID()};
+        wfmAsyncSwitchRethrow(wm -> {
+            wm.remove(null, connId, null);
+            return null;
+        }, wm -> wm.removeAsync(null, connId, null), wfm, "Removing connection ...");
+    }
+
+    private static ConnectionContainerUI createConnection(final WorkflowManagerUI wfm, final NodeID source,
+        final int sourcePort, final NodeID dest, final int destPort, final int[]... bendpoints)
+        throws OperationNotAllowedException {
+        return wfmAsyncSwitchRethrow(wm -> wm.addConnection(source, sourcePort, dest, destPort, bendpoints),
+            wm -> wm.addConnectionAsync(source, sourcePort, dest, destPort, bendpoints), wfm,
+            "Creating connection ...");
     }
 }

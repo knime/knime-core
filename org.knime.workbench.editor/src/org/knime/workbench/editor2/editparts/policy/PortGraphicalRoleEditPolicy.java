@@ -111,12 +111,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
             return null;
         }
 
-        if (!Wrapper.wraps(wm, WorkflowManager.class)) {
-            // command for creating connections only works with WorkflowManager so far
-            // but not with any other WorkflowManagerUI implementation
-            return null;
-        }
-        CreateConnectionCommand cmd = new CreateConnectionCommand(Wrapper.unwrapWFM(wm));
+        CreateConnectionCommand cmd = new CreateConnectionCommand(wm);
 
         if (getHost() instanceof NodeOutPortEditPart
                 || getHost() instanceof WorkflowInPortEditPart

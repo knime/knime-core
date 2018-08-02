@@ -124,22 +124,28 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     public void remove(final NodeID[] nodeIDs, final ConnectionID[] connectionIDs,
         final WorkflowAnnotationID[] annotationIDs) {
         WorkflowManager wfm = unwrap();
-        for (NodeID id : nodeIDs) {
-            wfm.removeNode(id);
-        }
-        for (ConnectionID id : connectionIDs) {
-            try {
-                ConnectionContainer cc = wfm.getConnection(id);
-                if (cc != null) {
-                    wfm.removeConnection(wfm.getConnection(id));
-                }
-            } catch (IllegalArgumentException e) {
-                //fail silently -> nothing to remove
-                //TODO better add a respective method to workflow manager to check for existence
+        if (nodeIDs != null) {
+            for (NodeID id : nodeIDs) {
+                wfm.removeNode(id);
             }
         }
-        for (WorkflowAnnotation wa : wfm.getWorkflowAnnotations(annotationIDs)) {
-            wfm.removeAnnotation(wa);
+        if (connectionIDs != null) {
+            for (ConnectionID id : connectionIDs) {
+                try {
+                    ConnectionContainer cc = wfm.getConnection(id);
+                    if (cc != null) {
+                        wfm.removeConnection(wfm.getConnection(id));
+                    }
+                } catch (IllegalArgumentException e) {
+                    //fail silently -> nothing to remove
+                    //TODO better add a respective method to workflow manager to check for existence
+                }
+            }
+        }
+        if (annotationIDs != null) {
+            for (WorkflowAnnotation wa : wfm.getWorkflowAnnotations(annotationIDs)) {
+                wfm.removeAnnotation(wa);
+            }
         }
     }
 

@@ -287,7 +287,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
                     ConnectionContainerUI cc = m_connections[i];
                     CompletableFuture<ConnectionContainerUI> future =
                         wfm.addConnectionAsync(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort(),
-                            cc.getUIInfo() != null ? cc.getUIInfo().getAllBendpoints() : null);
+                            cc.getUIInfo() != null ? cc.getUIInfo().getAllBendpoints() : null).getUnderlyingFuture();
                     futures[i] = future;
                 }
                 //combine futures and refresh workflow when all are completed

@@ -114,10 +114,11 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
      * @param dest
      * @param destPort
      * @param bendpoints
-     * @return result as future
+     * @return result as future - throws a {@link OperationNotAllowedException} if operation couldn't be performed on
+     *         {@link CompletableFutureEx#getOrThrow()}
      */
-    CompletableFuture<ConnectionContainerUI> addConnectionAsync(final NodeID source, final int sourcePort,
-        final NodeID dest, final int destPort, int[]... bendpoints);
+    CompletableFutureEx<ConnectionContainerUI, OperationNotAllowedException> addConnectionAsync(final NodeID source,
+        final int sourcePort, final NodeID dest, final int destPort, int[]... bendpoints);
 
     /**
      * {@inheritDoc}

@@ -105,4 +105,11 @@ public final class CompletableFutureEx<T, E extends Exception> {
     public Class<E> getExceptionClass() {
         return m_exceptionClass;
     }
+
+    /**
+     * @return the underlying/wrapped future
+     */
+    public CompletableFuture<T> getUnderlyingFuture() {
+        return m_future;
+    }
 }

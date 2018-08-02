@@ -47,18 +47,15 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
-
 import java.util.Collections;
 
 import org.eclipse.gef.EditPart;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -101,7 +98,7 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
             final ConnectionContainerEditPart connection,
             final AbstractPortEditPart host,
             final AbstractPortEditPart target) {
-        super(unwrapWFM(connection.getWorkflowManager()));
+        super(connection.getWorkflowManager());
 
         m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
             .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
@@ -110,12 +107,12 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
         EditPart hostParent = host.getParent();
         ConnectableEditPart srcEP = (ConnectableEditPart)hostParent;
 
-        WorkflowManager hostWFM = unwrapWFM(connection.getWorkflowManager());
+        WorkflowManagerUI hostWFM = connection.getWorkflowManager();
         // create the delete command
         m_deleteCommand =
             new DeleteCommand(Collections.singleton(connection), hostWFM);
 
-        ConnectionContainer oldConnection = Wrapper.unwrapCC(connection.getModel());
+        ConnectionContainerUI oldConnection = connection.getModel();
         m_oldTarget = oldConnection.getDest();
 
         m_newTarget = target.getID();
@@ -167,9 +164,9 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
     public void execute() {
         // confirm replacement?
         // check if old target node was executed
-        WorkflowManager hostWFM = getHostWFM();
-        NodeContainer oldTarget = hostWFM.getNodeContainer(m_oldTarget);
-        NodeContainer newTarget = hostWFM.getNodeContainer(m_newTarget);
+        WorkflowManagerUI hostWFM = getHostWFMUI();
+        NodeContainerUI oldTarget = hostWFM.getNodeContainer(m_oldTarget);
+        NodeContainerUI newTarget = hostWFM.getNodeContainer(m_newTarget);
         if (oldTarget == null || newTarget == null) {
             // something is very wrong here
             return;

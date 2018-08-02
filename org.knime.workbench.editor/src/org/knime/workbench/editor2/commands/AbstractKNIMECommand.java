@@ -48,10 +48,8 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
-import org.eclipse.swt.SWT;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
@@ -124,12 +122,6 @@ public abstract class AbstractKNIMECommand extends Command {
      * @param message the actual message
      */
     protected static void openDialog(final String title, final String message) {
-        Display.getDefault().syncExec(() -> {
-            final Shell shell = Display.getDefault().getActiveShell();
-            MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
-            mb.setText(title);
-            mb.setMessage(message);
-            mb.open();
-        });
+        MessageDialog.openError(Display.getDefault().getActiveShell(), title, message);
     }
 }
