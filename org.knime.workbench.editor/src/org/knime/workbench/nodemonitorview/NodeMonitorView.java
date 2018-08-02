@@ -281,7 +281,7 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
             }
         });
         m_loadButton = new Button(infoPanel, SWT.PUSH);
-        m_loadButton.setText("   Show data   ");
+        m_loadButton.setText("Manually load data");
         m_loadButton.setToolTipText("Manual trigger to load and show the data.");
         m_loadButton.setEnabled(false);
         m_loadButton.addSelectionListener(new LoadButtonListener());
@@ -465,7 +465,7 @@ public class NodeMonitorView extends ViewPart implements ISelectionListener, Loc
 
     private void resetMonitorTable() {
         m_loadButton.setEnabled(false);
-        m_loadButton.setText("   Manually load data   ");
+        m_loadButton.setText("Manually load data");
 
         m_loadButtonPressedCount.set(0);
 
