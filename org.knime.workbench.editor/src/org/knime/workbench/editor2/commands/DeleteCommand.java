@@ -268,7 +268,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
             //add dangling connections
             for (ConnectionContainerUI cc : m_connections) {
                 wfm.addConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort(),
-                    cc.getUIInfo().getAllBendpoints());
+                    cc.getUIInfo() != null ? cc.getUIInfo().getAllBendpoints() : null);
             }
             return null;
         }, wfm -> {
@@ -287,10 +287,11 @@ public class DeleteCommand extends AbstractKNIMECommand {
                     ConnectionContainerUI cc = m_connections[i];
                     CompletableFuture<ConnectionContainerUI> future =
                         wfm.addConnectionAsync(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort(),
-                            cc.getUIInfo().getAllBendpoints());
+                            cc.getUIInfo() != null ? cc.getUIInfo().getAllBendpoints() : null);
                     futures[i] = future;
                 }
-                return CompletableFuture.allOf(futures);
+                //combine futures and refresh workflow when all are completed
+                return CompletableFuture.allOf(futures).thenCompose(f -> wfm.refresh(false));
             };
             if (pasteFuture != null) {
                 return pasteFuture.thenCompose(c -> addConnections.get());

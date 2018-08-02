@@ -73,6 +73,12 @@ public class WorkflowOutPortWrapper extends AbstractWrapper<WorkflowOutPort> imp
         super(delegate);
     }
 
+    /**
+     * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
+     *
+     * @param wop the object to be wrapped
+     * @return a new wrapper or a already existing one
+     */
     public static final WorkflowOutPortWrapper wrap(final WorkflowOutPort wop) {
         return (WorkflowOutPortWrapper)Wrapper.wrapOrGet(wop, o -> new WorkflowOutPortWrapper(o));
     }

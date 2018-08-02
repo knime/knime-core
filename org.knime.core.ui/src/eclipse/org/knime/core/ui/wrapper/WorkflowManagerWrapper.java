@@ -168,7 +168,9 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
         final int destPort, final int[]... bendpoints) {
         WorkflowManager wfm = unwrap();
         ConnectionContainer cc = wfm.addConnection(source, sourcePort, dest, destPort);
-        cc.setUIInfo(ConnectionUIInformation.builder().setBendpoints(bendpoints).build());
+        if (bendpoints != null) {
+            cc.setUIInfo(ConnectionUIInformation.builder().setBendpoints(bendpoints).build());
+        }
         return ConnectionContainerWrapper.wrap(cc);
     }
 

@@ -49,6 +49,7 @@ package org.knime.workbench.editor2;
 
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.ui.node.workflow.WorkflowCopyUI;
+import org.knime.core.ui.wrapper.WorkflowPersistorWrapper;
 
 
 /**
@@ -77,6 +78,7 @@ public class ClipboardObject {
     @Deprecated
     public ClipboardObject(final WorkflowPersistor copyPersistor) {
         m_copyPersistor = copyPersistor;
+        m_wfCopy = WorkflowPersistorWrapper.wrap(copyPersistor);
         m_retrievalCounter = 0;
     }
 
@@ -90,11 +92,10 @@ public class ClipboardObject {
     }
 
     /**
-     * @return the copy. Can be <code>null</code> if it has been initialized with
-     *         {@link #ClipboardObject(WorkflowPersistor)}.
+     * @return the copy
      */
     public WorkflowCopyUI getWorkflowCopy() {
-       return m_wfCopy;
+        return m_wfCopy;
     }
 
     /**

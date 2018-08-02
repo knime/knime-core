@@ -63,6 +63,12 @@ public class WorkflowPersistorWrapper extends AbstractWrapper<WorkflowPersistor>
         super(delegate);
     }
 
+    /**
+     * Wraps the given workflow persistor.
+     *
+     * @param wp object to wrap
+     * @return the wrapper
+     */
     public static final WorkflowPersistorWrapper wrap(final WorkflowPersistor wp) {
         return (WorkflowPersistorWrapper)Wrapper.wrapOrGet(wp, o -> new WorkflowPersistorWrapper(o));
     }

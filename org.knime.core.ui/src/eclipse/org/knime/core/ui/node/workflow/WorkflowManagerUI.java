@@ -259,7 +259,7 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * @param sourcePort port index at source node
      * @param dest destination node id
      * @param destPort port index at destination node
-     * @param bendpoints the connection's bendpoints, or empty if none
+     * @param bendpoints the connection's bendpoints, or empty or <code>null</code> if none
      * @return newly created Connection object
      * @throws IllegalArgumentException if connection already exists
      */

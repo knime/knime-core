@@ -117,19 +117,17 @@ public final class PasteFromWorkflowPersistorCommand
             return false;
         }
         WorkflowCopyUI wfCopy = m_clipboardObject.getWorkflowCopy();
-        if (wfCopy != null) {
-            if (wraps(wfCopy, WorkflowPersistor.class)) {
-                //persistor for local workflows
-                WorkflowPersistor copyPersistor = unwrap(wfCopy, WorkflowPersistor.class);
-                if (!copyPersistor.getNodeLoaderMap().isEmpty()) {
-                    return true;
-                }
-                if (!copyPersistor.getWorkflowAnnotations().isEmpty()) {
-                    return true;
-                }
-            } else {
+        if (wraps(wfCopy, WorkflowPersistor.class)) {
+            //persistor for local workflows
+            WorkflowPersistor copyPersistor = unwrap(wfCopy, WorkflowPersistor.class);
+            if (!copyPersistor.getNodeLoaderMap().isEmpty()) {
                 return true;
             }
+            if (!copyPersistor.getWorkflowAnnotations().isEmpty()) {
+                return true;
+            }
+        } else {
+            return true;
         }
         return false;
     }
