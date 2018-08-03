@@ -141,6 +141,44 @@ public class AsyncSwitch {
     }
 
     /**
+     * Almost the same as {@link #wfmAsyncSwitch(Function, Function, WorkflowManagerUI, String)} but for
+     * {@link NodeContainerUI}/{@link AsyncNodeContainerUI}.
+     *
+     *
+     * @param syncNc
+     * @param asyncNc
+     * @param nc
+     * @param waitingMessage
+     * @return the actual result, possibly after some waiting in the asynch case
+     */
+    public static <T> T ncAsyncSwitch(final Function<NodeContainerUI, T> syncNc,
+        final Function<AsyncNodeContainerUI, CompletableFuture<T>> asyncNc, final NodeContainerUI nc,
+        final String waitingMessage) {
+        if (nc instanceof AsyncNodeContainerUI) {
+            final AtomicReference<T> ref = new AtomicReference<T>();
+            final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
+            try {
+                PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
+                    monitor.beginTask(waitingMessage, 100);
+                    try {
+                        ref.set(asyncNc.apply((AsyncNodeContainerUI)nc).get());
+                    } catch (ExecutionException e) {
+                        exception.set(e.getCause());
+                    }
+                });
+            } catch (InterruptedException | InvocationTargetException ex) {
+                exception.set(ex);
+            }
+            if (exception.get() != null) {
+                openDialogAndLog(exception.get(), waitingMessage);
+            }
+            return ref.get();
+        } else {
+            return syncNc.apply(nc);
+        }
+    }
+
+    /**
      * Almost the same as {@link #wfmAsyncSwitch(Function, Function, WorkflowManagerUI, String)} but additionally
      * re-throws a specified exception caught from {@link CompletableFutureEx#getOrThrow()}.
      *

@@ -136,43 +136,43 @@ public interface NodeContainerUI extends NodeProgressListener, NodeContainerStat
 //
 
     /**
-        *
-        * @param listener listener to the node progress
-        * @return true if the listener was not already registered before, false
-        *         otherwise
-        */
+     *
+     * @param listener listener to the node progress
+     * @return true if the listener was not already registered before, false otherwise
+     */
     boolean addProgressListener(NodeProgressListener listener);
 
     /**
-        *
-        * @param listener existing listener to the node progress
-        * @return true if the listener was successfully removed, false if it was
-        *         not registered
-        */
+     *
+     * @param listener existing listener to the node progress
+     * @return true if the listener was successfully removed, false if it was not registered
+     */
     boolean removeNodeProgressListener(NodeProgressListener listener);
 
     /**
-        *
-        * @param listener listener to the node messages (warnings and errors)
-        * @return true if the listener was not already registered, false otherwise
-        */
+     *
+     * @param listener listener to the node messages (warnings and errors)
+     * @return true if the listener was not already registered, false otherwise
+     */
     boolean addNodeMessageListener(NodeMessageListener listener);
 
     /**
-        *
-        * @param listener listener to the node messages
-        * @return true if the listener was successfully removed, false if it was not
-        *         registered
-        */
+     *
+     * @param listener listener to the node messages
+     * @return true if the listener was successfully removed, false if it was not registered
+     */
     boolean removeNodeMessageListener(NodeMessageListener listener);
 
-    /** Get the message to be displayed to the user.
-        * @return the node message consisting of type and message, never null. */
+    /**
+     * Get the message to be displayed to the user.
+     *
+     * @return the node message consisting of type and message, never null.
+     */
     NodeMessage getNodeMessage();
 
     /**
-        * @param newMessage the nodeMessage to set
-        */
+     * @param newMessage the nodeMessage to set
+     */
     void setNodeMessage(NodeMessage newMessage);
 
     void addUIInformationListener(NodeUIInformationListener l);
@@ -180,18 +180,26 @@ public interface NodeContainerUI extends NodeProgressListener, NodeContainerStat
     void removeUIInformationListener(NodeUIInformationListener l);
 
     /**
-        * Returns the UI information.
-        *
-        * @return a the node information
-        */
+     * Returns the UI information.
+     *
+     * @return a the node information
+     */
     NodeUIInformation getUIInformation();
 
     /**
-        *
-        * @param uiInformation new user interface information of the node such as
-        *   coordinates on workbench.
-        */
+     * Used, e.g., when nodes are moved.
+     *
+     * @param uiInformation new user interface information of the node such as coordinates on workbench.
+     */
     void setUIInformation(NodeUIInformation uiInformation);
+
+    /**
+     * Updates the node's UI information only in order to correct it's bounding box and position. In that case there is
+     * no need, e.g., to send the info to the server.
+     *
+     * @param uiInfo
+     */
+    void setUIInformationForCorrection(NodeUIInformation uiInfo);
 
     /** {@inheritDoc} */
     @Override

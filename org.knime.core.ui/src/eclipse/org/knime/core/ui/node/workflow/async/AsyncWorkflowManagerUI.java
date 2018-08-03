@@ -173,6 +173,15 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
     CompletableFuture<WorkflowCopyContent> pasteAsync(WorkflowCopyWithOffsetUI workflowCopy);
 
 
+    /**
+     * {@inheritDoc}
+     *
+     * Narrow down return type to {@link AsyncNodeContainerUI}.
+     */
+    @Override
+    AsyncNodeContainerUI getNodeContainer(NodeID id);
+
+
     /* --------
      * New methods that don't replace an existing one in WorkflowManagerUI
      * but are specific to AsynchWorkflowManager

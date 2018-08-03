@@ -217,6 +217,14 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
         unwrap().setUIInformation(uiInformation);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUIInformationForCorrection(final NodeUIInformation uiInfo) {
+        unwrap().setUIInformation(uiInfo);
+    }
+
     @Override
     public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
         return unwrap().addNodeStateChangeListener(listener);

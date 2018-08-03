@@ -61,7 +61,6 @@ import org.eclipse.gef.editpolicies.XYLayoutEditPolicy;
 import org.eclipse.gef.handles.MoveHandle;
 import org.eclipse.gef.requests.CreateRequest;
 import org.eclipse.swt.graphics.Cursor;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
@@ -114,15 +113,9 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
         Rectangle rect = ((Rectangle)constraint).getCopy();
         if (child.getModel() instanceof NodeContainerUI) {
             NodeContainerUI container = (NodeContainerUI)child.getModel();
-
-            if (!Wrapper.wraps(container, NodeContainer.class)) {
-                //not supported for others than ordinary NodeContainers
-                return null;
-            }
-
             NodeContainerEditPart nodePart = (NodeContainerEditPart)child;
             command =
-                    new ChangeNodeBoundsCommand(Wrapper.unwrapNC(container),
+                    new ChangeNodeBoundsCommand(container,
                             (NodeContainerFigure)nodePart.getFigure(), rect);
         } else if (child instanceof AbstractWorkflowPortBarEditPart) {
             command =

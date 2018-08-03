@@ -51,6 +51,7 @@ import java.util.function.Supplier;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 
 /**
@@ -85,6 +86,31 @@ public interface AsyncNodeContainerUI extends NodeContainerUI {
      *         {@link CompletableFutureEx#getOrThrow()}
      */
     public CompletableFutureEx<NodeDialogPane, NotConfigurableException> getDialogPaneWithSettingsAsync();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default void setUIInformation(final NodeUIInformation uiInformation) {
+        throw new UnsupportedOperationException("Please use async method instead");
+    }
+
+    /**
+     * Async version of {@link #setUIInformation(NodeUIInformation)}.
+     *
+     * @param uiInformation
+     * @return result as future
+     */
+    public CompletableFuture<Void> setUIInformationAsync(NodeUIInformation uiInformation);
+
+    /**
+     * {@inheritDoc}
+     *
+     * Narrow down return type to {@link AsyncWorkflowManagerUI}.
+     */
+    @Override
+    AsyncWorkflowManagerUI getParent();
+
 
     /**
      * Creates a new {@link CompletableFuture}.
