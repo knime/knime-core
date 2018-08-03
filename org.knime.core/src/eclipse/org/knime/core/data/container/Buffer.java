@@ -349,6 +349,9 @@ public class Buffer implements KNIMEStreamConstants {
     /** the file to write to. */
     private File m_binFile;
 
+    /** a flag that determines whether this Buffer has its own temporary m_binFile to write to */
+    private boolean m_hasTempFile = true;
+
     /** The directory where blob cells are stored or null if none available. */
     private File m_blobDir;
 
@@ -638,15 +641,17 @@ public class Buffer implements KNIMEStreamConstants {
      */
     final int writeAllRowsFromListToFile() throws IOException {
         assert Thread.holdsLock(this);
-        ensureTempFileExists();
-        if (m_outputWriter == null) {
-            if (!m_binFile.getParentFile().isDirectory()) {
-                throw new FileNotFoundException("Directory " + m_binFile.getParentFile() + " for buffer " + m_bufferID
-                    + " does not exist");
-            }
+        if (m_hasTempFile) {
+            ensureTempFileExists();
+            if (m_outputWriter == null) {
+                if (!m_binFile.getParentFile().isDirectory()) {
+                    throw new FileNotFoundException("Directory " + m_binFile.getParentFile() + " for buffer " + m_bufferID
+                        + " does not exist");
+                }
 
-            initOutputWriter(m_binFile);
-            Buffer.onFileCreated(m_binFile);
+                initOutputWriter(m_binFile);
+                Buffer.onFileCreated(m_binFile);
+            }
         }
 
         if (m_list != null) {
@@ -1012,10 +1017,12 @@ public class Buffer implements KNIMEStreamConstants {
                 m_outputWriter.writeMetaInfoAfterWrite(formatSettings);
                 m_formatSettings = formatSettings;
                 m_list = null;
-                double sizeInMB = m_binFile.length() / (double)(1 << 20);
-                String size = NumberFormat.getInstance().format(sizeInMB);
-                LOGGER.debug("Buffer file (" + m_binFile.getAbsolutePath() + ") is " + size + "MB in size");
-                initOutputReader(formatSettings, IVERSION);
+                if (m_hasTempFile) {
+                    double sizeInMB = m_binFile.length() / (double)(1 << 20);
+                    String size = NumberFormat.getInstance().format(sizeInMB);
+                    LOGGER.debug("Buffer file (" + m_binFile.getAbsolutePath() + ") is " + size + "MB in size");
+                    initOutputReader(formatSettings, IVERSION);
+                }
             } catch (IOException ioe) {
                 throw new RuntimeException("Cannot close stream of file \"" + m_binFile.getName() + "\"", ioe);
             } catch (InvalidSettingsException ex) {
@@ -1580,6 +1587,7 @@ public class Buffer implements KNIMEStreamConstants {
             File tempFile = null;
             try {
                 copy.initOutputWriter(new NonClosableOutputStream.Zip(zipOut));
+                copy.m_hasTempFile = false;
             } catch (UnsupportedOperationException notSupported) {
                 tempFile = DataContainer.createTempFile(copy.m_outputFormat.getFilenameSuffix());
                 copy.m_binFile = tempFile;

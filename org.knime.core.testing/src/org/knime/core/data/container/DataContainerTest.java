@@ -45,13 +45,23 @@
  */
 package org.knime.core.data.container;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.core.runtime.Platform;
@@ -61,6 +71,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.MissingValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
@@ -69,8 +80,12 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.ObjectToDataCellConverter;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.DefaultNodeProgressMonitor;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.DuplicateKeyException;
+import org.knime.core.util.FileUtil;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -697,6 +712,81 @@ public class DataContainerTest extends TestCase {
         } finally {
             for (DataContainer c : containerList) {
                 c.close();
+            }
+        }
+    }
+
+    /**
+     * In this test, we write a table, check that no unnecessary temp files have been generated and left undeleted, read
+     * the file, and compare the read table to the written table.
+     *
+     * @throws IOException an exception that is thrown when something goes wrong while creating a temporary buffer file,
+     *             writing to it, or reading from it
+     * @throws CanceledExecutionException an exception that is thrown when writing data to a zip file is cancelled
+     */
+    public void testWriteRead() throws IOException, CanceledExecutionException {
+        // (1) create a spec and table
+        final DataContainer c = new DataContainer(SPEC_STR_INT_DBL, true);
+        IntStream
+            .range(0, 1000).mapToObj(i -> new DefaultRow(RowKey.createRowKey((long)i),
+                new StringCell(Integer.toString(i)), new IntCell(i), new DoubleCell(i + .5)))
+            .forEach(r -> c.addRowToTable(r));
+        c.close();
+        final ContainerTable writeTable = c.getBufferedTable();
+
+        // (2) create file to write to / read from and start monitoring file creation and deletion in temp dir
+        final File file = FileUtil.createTempFile("testWriteStream", ".zip");
+        file.deleteOnExit();
+        try (WatchService watcher = FileSystems.getDefault().newWatchService()) {
+            Path dir = FileUtil.getWorkflowTempDir().toPath();
+            WatchKey key =
+                dir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
+
+            // (3) write to file
+            final ExecutionMonitor exec = new ExecutionMonitor(new DefaultNodeProgressMonitor());
+            DataContainer.writeToZip(writeTable, file, exec);
+
+            // (4) make sure that no undeleted temp files have been created in the process (see AP-9727)
+            Set<String> undeletedFilenames = new HashSet<>();
+            for (WatchEvent<?> event : key.pollEvents()) {
+                WatchEvent.Kind<?> kind = event.kind();
+                String filename = ((Path)event.context()).toString();
+                if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
+                    undeletedFilenames.add(filename);
+                } else if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+                    undeletedFilenames.remove(filename);
+                }
+            }
+            org.junit.Assert.assertTrue(
+                "Unnecessary (and undeleted) temp files created: " + String.join(", ", undeletedFilenames),
+                undeletedFilenames.isEmpty());
+
+            // (5) read the file file and compare its content to the original table
+            final ContainerTable readTable = DataContainer.readFromZip(file);
+            try (final CloseableRowIterator writeIt = writeTable.iterator();
+                    final CloseableRowIterator readIt = readTable.iterator()) {
+                int i = 0;
+                while (writeIt.hasNext() && readIt.hasNext()) {
+                    i++;
+                    final DataRow refRow = writeIt.next();
+                    final DataRow dataRow = readIt.next();
+                    org.junit.Assert.assertEquals("Row key in row " + i, dataRow.getKey(), refRow.getKey());
+                    for (int j = 0; j < refRow.getNumCells(); j++) {
+                        final DataCell refCell = refRow.getCell(j);
+                        final DataCell dataCell = dataRow.getCell(j);
+                        if (refCell.isMissing()) {
+                            org.junit.Assert.assertTrue("Cell " + j + " in Row " + i + " is missing",
+                                dataCell.isMissing());
+                            org.junit.Assert.assertEquals("Error message of missing cell " + j + " in Row " + i,
+                                ((MissingValue)refCell).getError(), ((MissingValue)dataCell).getError());
+                        } else {
+                            org.junit.Assert.assertEquals("Cell " + j + " in Row " + i, refCell, dataCell);
+                        }
+                    }
+
+                }
+                org.junit.Assert.assertFalse("Read table has " + writeTable.size() + " rows",
+                    writeIt.hasNext() || readIt.hasNext());
             }
         }
     }
