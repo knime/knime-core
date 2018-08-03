@@ -5,12 +5,12 @@
     <shortDescription>Collects all timer information from nodes in this workflow.</shortDescription>
     <fullDescription>
         <intro>
-            <p>This node reports individual and aggregate timing/execution information for all nodes of the workflow (at
-                this level).
+            <p>This node reports individual and aggregate timing/execution information for all nodes of the workflow at
+                this level and for (nested) metanodes up until the specified depth.
             </p>
             <p>
-                The output table lists all nodes in the workflow that were executed since the last reset. Note, this
-                only includes nodes on the same level, so excluding content of meta nodes. The detailed statistics are:
+                The output table lists all nodes in the workflow that were executed since the last reset. This
+                also includes nodes in metanodes up to the specified nesting depth. The detailed statistics are:
                 <ul>
                     <li>Name: Name of the node</li>
                     <li>Execution Time: The execution time of the most recent execution.</li>
@@ -34,6 +34,7 @@
             <p> All times are reported in milliseconds.
             </p>
         </intro>
+        <option name="max depth">Controls depth of reporting of nodes in (nested) metanodes. 0 = no descent.</option>
     </fullDescription>
     <ports>
         <inPort index="0" name="Variable Input">Input Port - allows to make sure node is executed after others.</inPort>

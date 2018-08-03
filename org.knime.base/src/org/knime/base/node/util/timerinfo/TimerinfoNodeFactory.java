@@ -64,20 +64,8 @@ public class TimerinfoNodeFactory extends NodeFactory<TimerinfoNodeModel> {
 
     /** {@inheritDoc} */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public TimerinfoNodeModel createNodeModel() {
         return new TimerinfoNodeModel();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<TimerinfoNodeModel> createNodeView(final int index, final TimerinfoNodeModel model) {
-        return null;
     }
 
     /** {@inheritDoc} */
@@ -88,8 +76,20 @@ public class TimerinfoNodeFactory extends NodeFactory<TimerinfoNodeModel> {
 
     /** {@inheritDoc} */
     @Override
+    public NodeView<TimerinfoNodeModel> createNodeView(final int index, final TimerinfoNodeModel model) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new TimerinfoNodeDialog();
     }
 
 }
