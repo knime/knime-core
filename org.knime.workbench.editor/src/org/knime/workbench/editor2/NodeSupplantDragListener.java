@@ -214,6 +214,10 @@ public class NodeSupplantDragListener implements KeyListener, MouseListener, Mou
      */
     @Override
     public void mouseDown(final MouseEvent me) {
+        if (m_workflowEditor.getGraphicalViewer().getSelectedEditParts().size() != 1) {
+            return;
+        }
+
         m_dragPositionProcessor.processDragEventAtPoint(me.display.getCursorLocation(), false);
 
         m_nodeInDrag = m_dragPositionProcessor.getNode();
