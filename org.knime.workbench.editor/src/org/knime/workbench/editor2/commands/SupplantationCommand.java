@@ -166,7 +166,8 @@ public class SupplantationCommand extends AbstractKNIMECommand {
             final ConnectionContainer targetCC = wm.getConnection(m_edgeTargetId);
             final NodeID sourceNodeId = targetCC.getSource();
             final WorkflowManagerUI wmUI = getHostWFMUI();
-            final NodeContainerUI sourceNodeUI = wmUI.getNodeContainer(sourceNodeId);
+            final NodeContainerUI sourceNodeUI =
+                sourceNodeId.equals(wm.getID()) ? wmUI : wmUI.getNodeContainer(sourceNodeId);
             final PortType portType = sourceNodeUI.getOutPort(targetCC.getSourcePort()).getPortType();
             final ConnectionManifest inportManifest = m_supplantingNodeInportManifest.clone();
             final ConnectionManifest outportManifest = m_supplantingNodeOutportManifest.clone();
@@ -200,7 +201,9 @@ public class SupplantationCommand extends AbstractKNIMECommand {
             }
 
             final NodeContainerUI dragNodeUI = m_supplantingNode.getNodeContainer();
-            final NodeContainerUI destinationNodeUI = wmUI.getNodeContainer(targetCC.getDest());
+            final NodeID targetNodeId = targetCC.getDest();
+            final NodeContainerUI destinationNodeUI =
+                targetNodeId.equals(wm.getID()) ? wmUI : wmUI.getNodeContainer(targetCC.getDest());
 
             // If this is a first execute, and not a redo, grab the dragged node's end location so that
             //  we can set it on a redo as seen in the else block.
