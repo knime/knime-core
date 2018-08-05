@@ -143,6 +143,7 @@ import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
+import org.knime.workbench.ui.wrapper.AbstractWrappedDialog;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
@@ -761,7 +762,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             return;
         }
 
-        final Shell shell = Display.getCurrent().getActiveShell();
+        final Shell shell = AbstractWrappedDialog.getActiveShell();
         shell.setEnabled(false);
         try {
             if (container.hasDataAwareDialogPane() && !container.isAllInputDataAvailable()
