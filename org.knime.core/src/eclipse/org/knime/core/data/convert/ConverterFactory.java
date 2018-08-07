@@ -51,6 +51,7 @@ package org.knime.core.data.convert;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
+import org.knime.core.data.convert.util.SerializeUtil;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.ConfigBaseWO;
@@ -58,7 +59,9 @@ import org.knime.core.node.config.base.ConfigBaseWO;
 /**
  * Interface for all factory classes which create converters.
  *
- * @author Jonathan Hale
+ * Serializable via {@link SerializeUtil#storeConverterFactory(ConverterFactory, ConfigBaseWO, String)}.
+ *
+ * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @param <SourceType> Type that is converted
  * @param <DestType> Type that is converted to
  * @since 3.6
@@ -66,8 +69,8 @@ import org.knime.core.node.config.base.ConfigBaseWO;
 public interface ConverterFactory<SourceType, DestType> {
 
     /**
-     * Get the {@link DataType} (the type of {@link DataCell data cells}) which converters created by this factory are
-     * able to convert into
+     * Get the {@link DataType} (the type of {@link DataCell data cells}) which converters that were created by this
+     * factory are able to convert into.
      *
      * @return DataType of the {@link DataCell} created by the {@link JavaToDataCellConverter}s produced by this
      *         factory.
@@ -75,9 +78,9 @@ public interface ConverterFactory<SourceType, DestType> {
     public DestType getDestinationType();
 
     /**
-     * Get the type which converters created by this factory are able to convert
+     * Get the type which converters that were created by this factory are able to convert from.
      *
-     * @return type which the created {@link Converter}s can convert
+     * @return type which the created converters can convert
      */
     public SourceType getSourceType();
 
@@ -91,9 +94,11 @@ public interface ConverterFactory<SourceType, DestType> {
     }
 
     /**
-     * Get the identifier for this factory. The identifier is a unique string used to unambiguously reference this
-     * converter factory. Since this identifier is used for persistence, it is required that the identifier is the same
-     * every runtime. If the identifier is not unique, the factory may not be loaded from the extension point.
+     * Get the identifier for this factory.
+     *
+     * The identifier is a unique string used to unambiguously reference this converter factory. Since this identifier
+     * is used for persistence, it is required that the identifier is the same every runtime. If the identifier is not
+     * unique, the factory may not be loaded from the extension point.
      *
      * <p>
      * <b>Examples:</b>
@@ -107,8 +112,9 @@ public interface ConverterFactory<SourceType, DestType> {
     public String getIdentifier();
 
     /**
-     * Called when this factory is being serialized. Any additional configuration can be saved this way. E.g. formatting
-     * strings for a date time related converter.
+     * Called when this factory is being serialized.
+     *
+     * Any additional configuration can be saved this way. E.g. format strings for a date time related converter.
      *
      * @param factoryConfig Config to save to
      */
@@ -116,8 +122,9 @@ public interface ConverterFactory<SourceType, DestType> {
     }
 
     /**
-     * Called when this factory is being deserialized. Any additional configuration can be loaded this way. E.g.
-     * formatting strings for a date time related converter.
+     * Called when this factory is being deserialized.
+     *
+     * Any additional configuration can be loaded this way. E.g. format strings for a date time related converter.
      *
      * @param config Config to load from
      * @throws InvalidSettingsException If invalid settings were encountered

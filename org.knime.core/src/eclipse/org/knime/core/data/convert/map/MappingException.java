@@ -49,7 +49,7 @@
 package org.knime.core.data.convert.map;
 
 /**
- * Wrapps exceptions thrown during type mapping.
+ * Wraps exceptions thrown during type mapping.
  *
  * @author Jonathan Hale
  * @since 3.6

@@ -545,7 +545,7 @@ public class MappingFrameworkTest {
         }
     }
 
-    /** Test getting all availbale production paths from {@link ProducerRegistry} */
+    /** Test getting all available production paths from {@link ProducerRegistry} */
     @Test
     public void availableProductionPathsTest() {
         final ProducerRegistry<String, H2OSource> reg = MappingFramework.forSourceType(H2OSource.class);

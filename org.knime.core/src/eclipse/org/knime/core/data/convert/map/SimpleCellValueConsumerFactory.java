@@ -51,12 +51,13 @@ package org.knime.core.data.convert.map;
 import org.knime.core.data.convert.map.Destination.ConsumerParameters;
 
 /**
- * Simple implementation of {@link CellValueConsumer} that allows passing the consumption procedure as a lambda.
+ * Simple implementation of {@link CellValueConsumerFactory} that allows passing the consumption procedure as a lambda
+ * expression.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <D> Type of destination the consumer can write to.
+ * @param <D> Type of destination the consumer can write to
  * @param <T> Java type the created consumer is able to accept
- * @param <ET> Type of destination types
+ * @param <ET> Type of external types
  * @param <CP> Subclass of {@link ConsumerParameters} for given destination type
  *
  * @since 3.6
@@ -75,7 +76,7 @@ public class SimpleCellValueConsumerFactory<D extends Destination<ET>, T, ET, CP
      *
      * @param sourceType Class of the type the created consumer accepts
      * @param externalType Identifier of the external type this consumer writes as
-     * @param consumer The consumer function (e.g. a Lambda)
+     * @param consumer The consumer function (e.g. as lambda expression)
      */
     public SimpleCellValueConsumerFactory(final Class<?> sourceType, final ET externalType,
         final CellValueConsumer<D, T, CP> consumer) {

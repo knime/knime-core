@@ -1,12 +1,12 @@
 package org.knime.core.data.convert.map;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 
 /**
- * Interface for the destination for extracting and writing {@link DataCell}/{@link DataValue} contents.
+ * Interface for external data destinations to which to write KNIME {@link DataValue data values} using
+ * {@link CellValueConsumer cell value consumers}.
  *
- * May be implemented to represent an SQL Database, file, H2O frame and more.
+ * May be implemented to represent an SQL Database, file, H2O frame or any other external data source.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @param <ET> Type of external types (used for generic parameter deduction in
@@ -16,8 +16,8 @@ import org.knime.core.data.DataValue;
 public interface Destination<ET> {
 
     /**
-     * Parameters passed to a {@link CellValueConsumer}. Meant for very temporary parameters such as row specific
-     * configuration.
+     * Parameters further specifying how to write to a destination, e.g. to which SQL column or table to write to.
+     * Specific to the type of {@link Destination} and {@link CellValueConsumer} that are being used.
      *
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      * @param <D> type of destination

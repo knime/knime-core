@@ -57,9 +57,9 @@ import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
 
 /**
- * Per destination type consumer registry.
+ * Registry for {@link CellValueConsumerFactory}.
  *
- * Place to register consumers for a specific destination type.
+ * Place to register consumers for a specific destination type (i.e. implementor of {@link Destination}).
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @param <D> Type of {@link Destination} for which this registry holds consumers.
@@ -79,7 +79,7 @@ public class ConsumerRegistry<ET, D extends Destination<ET>> extends
      * Set parent destination type.
      *
      * Makes this registry inherit all consumers of the parent type. Will always priorize consumers of the more
-     * specialized type.
+     * specialized (child) type.
      *
      * @param parentType type of {@link Destination}, which should be this types parent.
      * @return reference to self (for method chaining)

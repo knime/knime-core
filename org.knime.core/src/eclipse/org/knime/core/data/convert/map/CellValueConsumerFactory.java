@@ -51,7 +51,7 @@ import org.knime.core.data.convert.ConverterFactory;
 import org.knime.core.data.convert.map.Destination.ConsumerParameters;
 
 /**
- * Factory to create {@link CellValueConsumer}.
+ * Factory to create {@link CellValueConsumer} instances.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @param <D> Type of destination

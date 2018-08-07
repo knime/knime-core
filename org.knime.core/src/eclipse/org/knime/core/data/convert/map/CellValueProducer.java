@@ -49,7 +49,8 @@
 package org.knime.core.data.convert.map;
 
 /**
- * A cell value producer fetches a value from a {@link Source} which then can be written to a KNIME DataCell.
+ * A cell value producer fetches a value with certain external type from a {@link Source} which then can be written to a
+ * KNIME DataCell.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @param <S> Type of {@link Source} this consumer writes to
@@ -64,7 +65,7 @@ public interface CellValueProducer<S extends Source<?>, T, CP extends Source.Pro
      * Reads the <code>value</code> to <code>destination</code> using given <code>destinationParams</code>.
      *
      * @param source The {@link Source}.
-     * @param params The parameters further specifying how to read from the {@link Source}, e.g. to which SQL column or
+     * @param params The parameters further specifying how to read from a {@link Source}, e.g. to which SQL column or
      *            table to read from. Specific to the type of {@link Source} and {@link CellValueProducer} that is being
      *            used.
      * @return The value which was read from source

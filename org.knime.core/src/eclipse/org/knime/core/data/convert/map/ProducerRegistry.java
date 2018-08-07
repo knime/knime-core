@@ -56,20 +56,18 @@ import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
 
 /**
- * Per source type producer registry.
- *
- * Place to register consumers for a specific destination type.
+ * Registry for {@link CellValueProducerFactory} per source type (i.e. implementor of {@link Source})
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @param <ET> Type of the external type
- * @param <ST> Type of {@link Destination} for which this registry holds consumers.
+ * @param <ST> Type of {@link Source} for which this registry holds consumers.
  * @since 3.6
  */
 public class ProducerRegistry<ET, ST extends Source<ET>> extends
     AbstractConverterFactoryRegistry<ET, Class<?>, CellValueProducerFactory<ST, ET, ?, ?>, ProducerRegistry<ET, ST>> {
 
     /**
-     * Constructor
+     * Constructor, hidden because should be created via {@link MappingFramework#createProducerRegistry}.
      */
     protected ProducerRegistry() {
     }
@@ -78,7 +76,7 @@ public class ProducerRegistry<ET, ST extends Source<ET>> extends
      * Set parent source type.
      *
      * Makes this registry inherit all producers of the parent type. Will always priorize producers of the more
-     * specialized type.
+     * specialized (child) type.
      *
      * @param parentType type of {@link Destination}, which should be this types parent.
      * @return reference to self (for method chaining)
@@ -112,7 +110,7 @@ public class ProducerRegistry<ET, ST extends Source<ET>> extends
     }
 
     /**
-     * Get production paths that can map the given external type to a DataCell.
+     * Get all production paths that can map the given external type to some DataCell.
      *
      * @param externalType The external type
      * @return All possible production paths
