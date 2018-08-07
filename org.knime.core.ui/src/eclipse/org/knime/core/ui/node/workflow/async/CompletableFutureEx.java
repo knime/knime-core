@@ -53,7 +53,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Wrapper for {@link CompletableFuture}s that additional re-throws a predefined exception on calling
+ * Wrapper for {@link CompletableFuture}s that additionally re-throws a predefined exception on calling
  * {@link #getOrThrow()}.
  *
  * The exception to be re-thrown needs to be wrapped into a {@link CompletionException} in the actual code that the

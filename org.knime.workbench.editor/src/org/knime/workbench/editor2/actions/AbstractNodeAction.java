@@ -125,7 +125,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
      *
      */
     protected final WorkflowManager getManager() {
-        if (canHandleWorklfowManagerUI()) {
+        if (canHandleWorkflowManagerUI()) {
             throw new IllegalStateException(
                 "This action can supposedly handle the WorkflowManagerUI but tries to retrieve the WorkflowManager.");
         }
@@ -134,7 +134,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
 
     /**
      * @return The manager that is edited by the current editor. Subclasses that can handle a {@link WorkflowManagerUI}
-     *         (see {@link #canHandleWorklfowManagerUI()}) may want to have a reference to this.
+     *         (see {@link #canHandleWorkflowManagerUI()}) may want to have a reference to this.
      *
      * Note that this value may be <code>null</code> if the editor has not
      * already been created completely !
@@ -317,7 +317,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
     @Override
     protected final boolean calculateEnabled() {
         if (getManagerUI() != null && !Wrapper.wraps(getManagerUI(), WorkflowManager.class)
-            && !canHandleWorklfowManagerUI()) {
+            && !canHandleWorkflowManagerUI()) {
             //if the WorkflowManagerUI is NOT just a wrapper the WorkflowManager
             //and the action cannot deal with the WorkflowManagerUI-interface itself, it is disabled
             return false;
@@ -337,7 +337,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * @return whether the action can handle the {@link WorkflowManagerUI}.
      *
      */
-    protected boolean canHandleWorklfowManagerUI() {
+    protected boolean canHandleWorkflowManagerUI() {
         return false;
     }
 

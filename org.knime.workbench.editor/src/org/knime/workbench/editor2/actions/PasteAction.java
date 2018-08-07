@@ -180,7 +180,7 @@ public class PasteAction extends AbstractClipboardAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean canHandleWorklfowManagerUI() {
+    protected boolean canHandleWorkflowManagerUI() {
         return true;
     }
 }

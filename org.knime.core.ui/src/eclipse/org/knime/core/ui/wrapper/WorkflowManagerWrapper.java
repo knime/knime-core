@@ -412,7 +412,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
             return unwrap().paste(((WorkflowPersistorWrapper)workflowCopy).unwrap());
         } else {
             throw new IllegalArgumentException(
-                "Only worklfow copies of type '" + WorkflowPersistorWrapper.class.getSimpleName() + "' allowed.");
+                "Only workflow copies of type '" + WorkflowPersistorWrapper.class.getSimpleName() + "' allowed.");
         }
     }
 

@@ -233,7 +233,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean canHandleWorklfowManagerUI() {
+    protected boolean canHandleWorkflowManagerUI() {
         return true;
     }
 }

@@ -180,7 +180,7 @@ public class CopyAction extends AbstractClipboardAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean canHandleWorklfowManagerUI() {
+    protected boolean canHandleWorkflowManagerUI() {
         return true;
     }
 

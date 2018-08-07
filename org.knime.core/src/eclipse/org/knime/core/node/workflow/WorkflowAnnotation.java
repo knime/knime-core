@@ -88,7 +88,7 @@ public class WorkflowAnnotation extends Annotation {
     }
 
     /**
-     * Sets the associated id to <code>null</code> such that {@link #setID(WorkflowAnnotationID)} cann be called again.
+     * Sets the associated id to <code>null</code> such that {@link #setID(WorkflowAnnotationID)} can be called again.
      * Is called when a workflow annotation is removed from its workflow manager
      * ({@link WorkflowManager#removeAnnotation(WorkflowAnnotation)}).
      */
@@ -97,7 +97,7 @@ public class WorkflowAnnotation extends Annotation {
     }
 
     /**
-     * Gives access to the workflow annotation id. Id is only available iff the workflow annotation is part of a
+     * Gives access to the workflow annotation id. Id is only available if the workflow annotation is part of a
      * workflow manager. I.e. when the annotation is added to a workflow manager the annotation id will be set by the
      * workflow manager (see {@link WorkflowManager#addWorkflowAnnotation(WorkflowAnnotation)}).
      *

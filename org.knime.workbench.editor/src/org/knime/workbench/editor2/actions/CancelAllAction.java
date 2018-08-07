@@ -174,7 +174,7 @@ public class CancelAllAction extends AbstractNodeAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean canHandleWorklfowManagerUI() {
+    protected boolean canHandleWorkflowManagerUI() {
         return true;
     }
 }
