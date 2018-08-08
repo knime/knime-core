@@ -55,12 +55,7 @@ import org.knime.core.node.NodeView;
 /**
  * @author Michael Berthold, University of Konstanz
  */
-public class TimerinfoNodeFactory extends NodeFactory<TimerinfoNodeModel> {
-
-    /** Create factory, that instantiates nodes.
-     */
-    public TimerinfoNodeFactory() {
-    }
+public final class TimerinfoNodeFactory extends NodeFactory<TimerinfoNodeModel> {
 
     /** {@inheritDoc} */
     @Override

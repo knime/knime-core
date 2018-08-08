@@ -68,7 +68,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -78,6 +77,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
@@ -92,17 +92,21 @@ import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
  *
  * @author Michael Berthold, University of Konstanz
  */
-public class TimerinfoNodeModel extends NodeModel implements InactiveBranchConsumer {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(TimerinfoNodeModel.class);
+final class TimerinfoNodeModel extends NodeModel implements InactiveBranchConsumer {
 
     /** the settings key for max depth */
    static final String CFGKEY_MAXDEPTH = "MaxDepth";
 
    /** the corresponding model */
-   private final SettingsModelIntegerBounded m_maxdepth =
-           new SettingsModelIntegerBounded(TimerinfoNodeModel.CFGKEY_MAXDEPTH,
-                       /* def */ 2, /* range */ 0, Integer.MAX_VALUE);
+   private final SettingsModelIntegerBounded m_maxdepth = createMaxDepthSettingsModel();
+
+   /**
+    * @return new model for the "max depth" parameter
+    */
+   static SettingsModelIntegerBounded createMaxDepthSettingsModel() {
+       return new SettingsModelIntegerBounded(TimerinfoNodeModel.CFGKEY_MAXDEPTH,
+           /* def */ 2, /* range */ 0, Integer.MAX_VALUE);
+   }
 
     /**
      * One optional variable input, one data output.
@@ -120,7 +124,7 @@ public class TimerinfoNodeModel extends NodeModel implements InactiveBranchConsu
         return new PortObjectSpec[] { createSpec() };
     }
 
-    private DataTableSpec createSpec() {
+    private static DataTableSpec createSpec() {
         DataTableSpecCreator dtsc = new DataTableSpecCreator();
         DataColumnSpec[] colSpecs = new DataColumnSpec[] {
             new DataColumnSpecCreator("Name", StringCell.TYPE).createSpec(),
@@ -152,18 +156,19 @@ public class TimerinfoNodeModel extends NodeModel implements InactiveBranchConsu
                     return nodeModel == myThis;
                 }},
             /*recurse metanodes*/true, /*recurse wrapped metanodes*/true);
-        if (m.size() > 0) {
-            // we should always find exactly one such node but in case we don't: be nice about it.
-            NodeID myID = m.entrySet().iterator().next().getKey();
-            NodeContainer myNC = wfm.findNodeContainer(myID);
-            WorkflowManager myWfm = myNC.getParent();
-            reportThisLayer(myWfm, result, m_maxdepth.getIntValue(), myWfm.getID());
-        }
+        // we should always find exactly one such node
+        CheckUtils.checkState(m.size() == 1,
+                "Expected to find 'this' node exactly once (result set has size %d)", m.size());
+        NodeID myID = m.entrySet().iterator().next().getKey();
+        NodeContainer myNC = wfm.findNodeContainer(myID);
+        WorkflowManager myWfm = myNC.getParent();
+        reportThisLayer(myWfm, result, m_maxdepth.getIntValue(), myWfm.getID());
+
         result.close();
         return new PortObject[] { result.getTable() };
     }
 
-    /* Internal method writing timer info into table for all nodes of a given WFM until
+    /** Internal method writing timer info into table for all nodes of a given WFM until
      * a certain depth in the provided BDT. Wrapped Metanodes are treated normally,
      * wrapped metanodes are not reported until depth 0.
      */
