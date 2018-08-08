@@ -500,7 +500,15 @@ public final class Node implements NodeModelWarningListener {
             if (m_internalHeldPortObjects != null) {
                 if (m_model instanceof PortObjectHolder) {
                     PortObject[] copy = Arrays.copyOf(m_internalHeldPortObjects, m_internalHeldPortObjects.length);
-                    ((PortObjectHolder)m_model).setInternalPortObjects(copy);
+                    try {
+                        ((PortObjectHolder)m_model).setInternalPortObjects(copy);
+                    } catch (Exception e) {
+                        String message = "Unable to load port objects into node instance "
+                                + m_model.getClass().getSimpleName() + ": " + e.getMessage();
+                        LOGGER.warn(message, e);
+                        loadResult.addError(message, true);
+                        loader.setNeedsResetAfterLoad();
+                    }
                 } else {
                     assert m_model instanceof BufferedDataTableHolder;
                     BufferedDataTable[] copy;
