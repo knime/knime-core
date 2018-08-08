@@ -126,7 +126,7 @@ public final class WorkflowCopyContent {
     }
 
     /** @return the annotation ids as a newly created array, never null
-     * @since 3.5*/
+     * @since 3.7*/
     public WorkflowAnnotationID[] getAnnotationIDs() {
     	return m_annotationIDs.toArray(new WorkflowAnnotationID[m_annotationIDs.size()]);
     }
