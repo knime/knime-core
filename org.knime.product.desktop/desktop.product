@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="KNIME Analytics Platform" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="3.6.0.qualifier" useFeatures="true" includeLaunchers="true">
+<product name="KNIME Analytics Platform" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="3.7.0.qualifier" useFeatures="true" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/org.knime.product/icons/png/knime_about.png"/>
@@ -63,7 +63,6 @@ openFile
    <launcher name="knime">
       <linux icon="/org.knime.product/icons/knime_linux_128.xpm"/>
       <macosx icon="/org.knime.product/icons/knime_mac.icns"/>
-      <solaris/>
       <win useIco="true">
          <ico path="/org.knime.product/icons/knime_windows_256.ico"/>
          <bmp/>
