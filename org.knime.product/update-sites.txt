@@ -5,13 +5,12 @@
 # state and name are not needed for "remove"
 #
 # Remove old update sites
-http://update.knime.com/analytics-platform/3.5,remove
-http://update.knime.com/store/3.5,remove
-http://update.knime.com/partner/3.5,remove
-http://update.knime.com/community-contributions/trusted/3.5,remove
-http://update.knime.com/community-contributions/3.5,remove
+http://update.knime.com/analytics-platform/3.6,remove
+http://update.knime.com/partner/3.6,remove
+http://update.knime.com/community-contributions/trusted/3.6,remove
+http://update.knime.com/community-contributions/3.6,remove
 
-http://update.knime.com/analytics-platform/3.6,add,enabled,KNIME Analytics Platform Update Site
-http://update.knime.com/partner/3.6,add,disabled,KNIME Partner Update Site
-http://update.knime.com/community-contributions/trusted/3.6,add,enabled,Trusted Community Contributions
-http://update.knime.com/community-contributions/3.6,add,disabled,Stable Community Contributions
+http://update.knime.com/analytics-platform/3.7,add,enabled,KNIME Analytics Platform Update Site
+http://update.knime.com/partner/3.7,add,disabled,KNIME Partner Update Site
+http://update.knime.com/community-contributions/trusted/3.7,add,enabled,Trusted Community Contributions
+http://update.knime.com/community-contributions/3.7,add,disabled,Stable Community Contributions
