@@ -7,6 +7,12 @@
                 <message_argument value="3.4.0"/>
             </message_arguments>
         </filter>
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="3.6.0"/>
+                <message_argument value="3.5.0"/>
+            </message_arguments>
+        </filter>
         <filter comment="Java-Snippet Changes (AP-6805)" id="924844039">
             <message_arguments>
                 <message_argument value="3.3.1"/>
@@ -541,6 +547,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ConnectionUIInformation.java" type="org.knime.core.node.workflow.ConnectionUIInformation$Builder">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setBendpoints(int[][])"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/EditorUIInformation.java" type="org.knime.core.node.workflow.EditorUIInformation">
         <filter id="337682486">
             <message_arguments>
@@ -812,11 +825,31 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowAnnotation.java" type="org.knime.core.node.workflow.WorkflowAnnotation">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getID()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowAnnotationID.java" type="org.knime.core.node.workflow.WorkflowAnnotationID">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowAnnotationID"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowCopyContent.java" type="org.knime.core.node.workflow.WorkflowCopyContent">
         <filter id="338722907">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowCopyContent"/>
                 <message_argument value="WorkflowCopyContent()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowCopyContent"/>
+                <message_argument value="getAnnotations()"/>
             </message_arguments>
         </filter>
         <filter id="338792546">
@@ -837,6 +870,26 @@
                 <message_argument value="setNodeIDs(NodeID[])"/>
             </message_arguments>
         </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="3.5"/>
+                <message_argument value="3.6"/>
+                <message_argument value="getAnnotationIDs()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowCopyContent.java" type="org.knime.core.node.workflow.WorkflowCopyContent$Builder">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowCopyContent.Builder"/>
+                <message_argument value="setAnnotation(WorkflowAnnotation[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setAnnotationIDs(WorkflowAnnotationID[])"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowLoadHelper.java" type="org.knime.core.node.workflow.WorkflowLoadHelper">
         <filter id="338792546">
@@ -852,6 +905,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="addWorkflowAnnotation(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
@@ -874,6 +933,21 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="setOutPortsBarUIInfo(UIInformation)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="addWorkflowAnnotation(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getWorkflowAnnotationIDs()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getWorkflowAnnotations(WorkflowAnnotationID[])"/>
             </message_arguments>
         </filter>
     </resource>
