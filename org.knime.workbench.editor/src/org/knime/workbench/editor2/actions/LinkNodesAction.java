@@ -67,8 +67,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
-import org.knime.core.ui.node.workflow.NodeInPortUI;
-import org.knime.core.ui.node.workflow.NodeOutPortUI;
+import org.knime.core.ui.node.workflow.NodePortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -145,6 +144,51 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
         }
 
         return null;
+    }
+
+    /**
+     * A good ol' fashioned node node-container has one way to get the incoming port count, but a WorkflowManagerWrapper
+     * by way of a workflow in-or-out port bar, has a different. This does the leg work and returns the right thing.
+     *
+     * @param cep the edit part for the node or object (e.g workflow bar) we're dealing with
+     * @param inPort if true, the count for the inport will be returned, else the outport
+     * @return the port count associated to the specified node
+     */
+    protected static int getPortCount (final ConnectableEditPart cep, final boolean inPort) {
+        final NodeContainerUI node = cep.getNodeContainer();
+
+        if ((cep instanceof WorkflowInPortBarEditPart) || (cep instanceof WorkflowOutPortBarEditPart)) {
+            final WorkflowManagerWrapper wmw = (WorkflowManagerWrapper)node;
+
+            return inPort ? wmw.getNrWorkflowOutgoingPorts() : wmw.getNrWorkflowIncomingPorts();
+        }
+
+        return inPort ? node.getNrInPorts() : node.getNrOutPorts();
+    }
+
+    /**
+     * If we want the Nth inport of NodeContainerUI that is actually a WorkflowManagerWrapper by way of a workflow
+     * in-or-out port bar then that is actually the Nth outport (because this is really the WMW gotten from a workflow
+     * out bar edit part...)
+     *
+     * @param cep the edit part for the node or object (e.g workflow bar) we're dealing with
+     * @param portIndex the N of the Nth port bit
+     * @param inPort if true, the type for the inport will be returned, else for the outport
+     * @return the port type associated to the specified node
+     */
+    protected static PortType getPortType (final ConnectableEditPart cep, final int portIndex, final boolean inPort) {
+        final NodeContainerUI node = cep.getNodeContainer();
+        final boolean reverse =
+            (cep instanceof WorkflowInPortBarEditPart) || (cep instanceof WorkflowOutPortBarEditPart);
+        final NodePortUI p;
+
+        if (inPort) {
+            p = reverse ? node.getOutPort(portIndex) : node.getInPort(portIndex);
+        } else {
+            p = reverse ? node.getInPort(portIndex) : node.getOutPort(portIndex);
+        }
+
+        return p.getPortType();
     }
 
 
@@ -261,15 +305,17 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
             final ConnectableEditPart source = orderedNodes.get(i);
             final NodeContainerUI sourceNode = source.getNodeContainer();
             final int sourcePortStart = (sourceNode instanceof WorkflowManagerUI) ? 0 : 1;
+            final int sourcePortCount = getPortCount(source, false);
             int currentIndex = i + 1;
 
-            if (sourceNode.getNrOutPorts() > sourcePortStart) {
+            if (sourcePortCount > sourcePortStart) {
                 while (currentIndex < orderedNodes.size()) {
                     final ConnectableEditPart destination = orderedNodes.get(currentIndex);
                     final NodeContainerUI destinationNode = destination.getNodeContainer();
                     final int destinationPortStart = (destinationNode instanceof WorkflowManagerUI) ? 0 : 1;
+                    final int inportCount = getPortCount(destination, true);
 
-                    if ((destinationNode.getNrInPorts() > destinationPortStart)
+                    if ((inportCount > destinationPortStart)
                         && (!nodesOverlapInXDomain(sourceNode, destinationNode)
                             && (!nodeHasConnectionWithinSet(destination, orderedNodes)))) {
                         final Optional<PlannedConnection> pc =
@@ -302,14 +348,15 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
             if (!hasIncomingPlanned[i - 1] && (destinationBounds.x > zereothBounds.x)) {
                 final NodeContainerUI destinationNode = destination.getNodeContainer();
                 final int destinationPortStart = (destinationNode instanceof WorkflowManagerUI) ? 0 : 1;
+                final int inportCount = getPortCount(destination, true);
 
-                if (destinationNode.getNrInPorts() > destinationPortStart) {
+                if (inportCount > destinationPortStart) {
                     for (int j = (i - 1); j >= 0; j--) {
                         final ConnectableEditPart source = orderedNodes.get(j);
                         final NodeContainerUI sourceNode = source.getNodeContainer();
                         final int sourcePortStart = (sourceNode instanceof WorkflowManagerUI) ? 0 : 1;
 
-                        if (sourceNode.getNrOutPorts() > sourcePortStart) {
+                        if (getPortCount(source, false) > sourcePortStart) {
                             final Optional<PlannedConnection> pc =
                                 createConnectionPlan(source, destination, plannedConnections);
 
@@ -350,21 +397,19 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
         final NodeContainerUI source = sourceEP.getNodeContainer();
         final NodeContainerUI destination = destinationEP.getNodeContainer();
         final int sourceStartIndex = (source instanceof WorkflowManagerUI) ? 0 : 1;
-        final int sourcePortCount = source.getNrOutPorts();
+        final int sourcePortCount = getPortCount(sourceEP, false);
         final int destinationStartIndex = (destination instanceof WorkflowManagerUI) ? 0 : 1;
-        final int destinationPortCount = destination.getNrInPorts();
+        final int destinationPortCount = getPortCount(destinationEP, true);
         final Set<ConnectionContainer> existingOutConnections = getConnectionsForConnectable(sourceEP, true, wm);
         final Set<ConnectionContainer> existingInConnections = getConnectionsForConnectable(destinationEP, false, wm);
 
         for (int i = sourceStartIndex; i < sourcePortCount; i++) {
             if (!portAlreadyHasConnection(source, i, false, existingPlan, existingOutConnections)) {
-                final NodeOutPortUI sourcePort = source.getOutPort(i);
-                final PortType sourcePortType = sourcePort.getPortType();
+                final PortType sourcePortType = getPortType(sourceEP, i, false);
 
                 for (int j = destinationStartIndex; j < destinationPortCount; j++) {
                     if (!portAlreadyHasConnection(destination, j, true, existingPlan, existingInConnections)) {
-                        final NodeInPortUI destinationPort = destination.getInPort(j);
-                        final PortType destinationPortType = destinationPort.getPortType();
+                        final PortType destinationPortType = getPortType(destinationEP, j, true);
 
                         if (sourcePortType.isSuperTypeOf(destinationPortType)
                             || destinationPortType.isSuperTypeOf(sourcePortType)) {
@@ -382,13 +427,11 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
          */
         for (int i = sourceStartIndex; i < sourcePortCount; i++) {
             if (!portAlreadyHasConnection(source, i, false, existingPlan, Collections.emptySet())) {
-                final NodeOutPortUI sourcePort = source.getOutPort(i);
-                final PortType sourcePortType = sourcePort.getPortType();
+                final PortType sourcePortType = getPortType(sourceEP, i, false);
 
                 for (int j = destinationStartIndex; j < destinationPortCount; j++) {
                     if (!portAlreadyHasConnection(destination, j, true, existingPlan, existingInConnections)) {
-                        final NodeInPortUI destinationPort = destination.getInPort(j);
-                        final PortType destinationPortType = destinationPort.getPortType();
+                        final PortType destinationPortType = getPortType(destinationEP, j, true);
 
                         if (sourcePortType.isSuperTypeOf(destinationPortType)
                             || destinationPortType.isSuperTypeOf(sourcePortType)) {
@@ -408,13 +451,11 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
          *  assignments as a last ditch effort.
          */
         for (int i = sourceStartIndex; i < sourcePortCount; i++) {
-            final NodeOutPortUI sourcePort = source.getOutPort(i);
-            final PortType sourcePortType = sourcePort.getPortType();
+            final PortType sourcePortType = getPortType(sourceEP, i, false);
 
             for (int j = destinationStartIndex; j < destinationPortCount; j++) {
                 if (!portAlreadyHasConnection(destination, j, true, existingPlan, Collections.emptySet())) {
-                    final NodeInPortUI destinationPort = destination.getInPort(j);
-                    final PortType destinationPortType = destinationPort.getPortType();
+                    final PortType destinationPortType = getPortType(destinationEP, j, true);
 
                     if (sourcePortType.isSuperTypeOf(destinationPortType)
                         || destinationPortType.isSuperTypeOf(sourcePortType)) {
@@ -535,16 +576,23 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
             }
 
             if (contains || usableMetaNode) {
-                final int portLowWaterMark = (node instanceof WorkflowManagerUI) ? 0 : 1;
-                final boolean canBeLeftMost = (node.getNrOutPorts() > portLowWaterMark);
-                final boolean canBeRightMost = (node.getNrInPorts() > portLowWaterMark);
-
-                if (canBeLeftMost) {
+                if (connectables[i] instanceof WorkflowInPortBarEditPart) {
                     validLeft.add(connectables[i]);
-                }
-
-                if (canBeRightMost) {
+                } else if (connectables[i] instanceof WorkflowOutPortBarEditPart) {
                     validRight.add(connectables[i]);
+                } else {
+                    final int portLowWaterMark = (node instanceof WorkflowManagerUI) ? 0 : 1;
+                    // We needn't call getPortCount(...) here because we know we're dealing with a node node-container
+                    final boolean canBeLeftMost = (node.getNrOutPorts() > portLowWaterMark);
+                    final boolean canBeRightMost = (node.getNrInPorts() > portLowWaterMark);
+
+                    if (canBeLeftMost) {
+                        validLeft.add(connectables[i]);
+                    }
+
+                    if (canBeRightMost) {
+                        validRight.add(connectables[i]);
+                    }
                 }
             }
         }
@@ -587,7 +635,7 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
             final NodeContainerUI node = cep.getNodeContainer();
             final int portLowWaterMark = (node instanceof WorkflowManagerUI) ? 0 : 1;
             // It's not clear whether there may ever be a node which doesn't have a flow output, <= to be sure
-            if (node.getNrOutPorts() <= portLowWaterMark) {
+            if (getPortCount(cep, false) <= portLowWaterMark) {
                 discards.add(cep);
             }
         }
@@ -609,7 +657,7 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
             final NodeContainerUI node = cep.getNodeContainer();
             final int portLowWaterMark = (node instanceof WorkflowManagerUI) ? 0 : 1;
             // It's not clear whether there may ever be a node which doesn't have a flow input, <= to be sure
-            if (node.getNrInPorts() <= portLowWaterMark) {
+            if (getPortCount(cep, true) <= portLowWaterMark) {
                 discards.add(cep);
             }
         }
@@ -622,11 +670,11 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
         for (final ConnectableEditPart left : validLeft) {
             final NodeContainerUI node = left.getNodeContainer();
             final int sourcePortStart = (node instanceof WorkflowManagerUI) ? 0 : 1;
+            final int sourcePortCount = getPortCount(left, false);
             final Rectangle leftBounds = getBoundsForConnectable(left);
 
-            for (int i = sourcePortStart; (i < node.getNrOutPorts()) && (!haveFoundALegalConnection); i++) {
-                final NodeOutPortUI sourcePort = node.getOutPort(i);
-                final PortType sourcePortType = sourcePort.getPortType();
+            for (int i = sourcePortStart; (i < sourcePortCount) && (!haveFoundALegalConnection); i++) {
+                final PortType sourcePortType = getPortType(left, i, false);
 
                 for (final ConnectableEditPart right : validRight) {
                     if (left != right) {
@@ -635,10 +683,10 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
                         if (leftBounds.x < rightBounds.x) {
                             final NodeContainerUI rightNode = right.getNodeContainer();
                             final int destinationPortStart = (rightNode instanceof WorkflowManagerUI) ? 0 : 1;
+                            final int destinationPortCount = getPortCount(right, true);
 
-                            for (int j = destinationPortStart; j < rightNode.getNrInPorts(); j++) {
-                                final NodeInPortUI destinationPort = rightNode.getInPort(j);
-                                final PortType destinationPortType = destinationPort.getPortType();
+                            for (int j = destinationPortStart; j < destinationPortCount; j++) {
+                                final PortType destinationPortType = getPortType(right, j, true);
 
                                 if (sourcePortType.isSuperTypeOf(destinationPortType)
                                     || destinationPortType.isSuperTypeOf(sourcePortType)) {
