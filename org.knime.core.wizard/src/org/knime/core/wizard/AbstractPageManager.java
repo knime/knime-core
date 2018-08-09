@@ -291,7 +291,7 @@ public abstract class AbstractPageManager {
      * Serializes a response for a view request into a JSON string.
      * @param response the response object to serialize
      * @return the serialized JSON string, or null if exception occurs.
-     * @since 3.6
+     * @since 3.7
      */
     protected String serializeViewResponse(final WebViewContent response) {
         if (response != null) {

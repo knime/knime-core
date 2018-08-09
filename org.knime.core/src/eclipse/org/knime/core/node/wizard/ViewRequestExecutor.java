@@ -56,7 +56,7 @@ import org.knime.core.node.interactive.ViewResponseMonitor;
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @param <T> the type of the serialized request and response objects
- * @since 3.6
+ * @since 3.7
  */
 public interface ViewRequestExecutor<T> {
 

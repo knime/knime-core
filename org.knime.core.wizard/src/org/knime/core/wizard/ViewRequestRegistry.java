@@ -32,7 +32,7 @@ import org.knime.core.node.wizard.WizardViewResponse;
  * Simple singleton registry utility class for view initiated requests.
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
- * @since 3.6
+ * @since 3.7
  */
 public class ViewRequestRegistry {
 

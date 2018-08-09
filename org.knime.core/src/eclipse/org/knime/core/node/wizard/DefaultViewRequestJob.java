@@ -69,7 +69,7 @@ import org.knime.core.node.workflow.NodeContext;
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @param <RES> the actual class of the response implementation to be generated
- * @since 3.6
+ * @since 3.7
  * @noreference This class is not intended to be referenced by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */

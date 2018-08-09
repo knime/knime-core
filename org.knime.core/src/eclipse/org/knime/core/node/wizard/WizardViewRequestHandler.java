@@ -58,7 +58,7 @@ import org.knime.core.node.interactive.ViewRequestHandler;
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @param <REQ> The concrete class of the request object.
  * @param <RES> The concrete class of the response object.
- * @since 3.6
+ * @since 3.7
  */
 public interface WizardViewRequestHandler<REQ extends WizardViewRequest, RES extends WizardViewResponse>
     extends ViewRequestHandler<REQ, RES> {

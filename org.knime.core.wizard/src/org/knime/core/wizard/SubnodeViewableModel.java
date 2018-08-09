@@ -483,7 +483,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
 
     /**
      * {@inheritDoc}
-     * @since 3.6
+     * @since 3.7
      */
     @Override
     public SubnodeViewResponse handleRequest(final SubnodeViewRequest request, final ExecutionMonitor exec)
@@ -515,7 +515,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
 
     /**
      * {@inheritDoc}
-     * @since 3.6
+     * @since 3.7
      */
     @Override
     public SubnodeViewRequest createEmptyViewRequest() {

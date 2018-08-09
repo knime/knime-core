@@ -54,7 +54,7 @@ import org.osgi.framework.BundleContext;
 /**
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
- * @since 3.6
+ * @since 3.7
  */
 public class WizardPlugin implements BundleActivator {
 

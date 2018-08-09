@@ -63,7 +63,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * Container class encapsulating a view response for a specific node inside a combined view.
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
- * @since 3.6
+ * @since 3.7
  */
 @JsonAutoDetect
 @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)

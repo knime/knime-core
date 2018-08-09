@@ -58,7 +58,7 @@ import org.knime.core.node.wizard.WizardViewResponse;
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @param <RES> The actual class of the response implementation to be generated
- * @since 3.6
+ * @since 3.7
  * @noreference This interface is not intended to be referenced by clients.
  * @noinstantiate This interface is not intended to be instantiated by clients.
  */

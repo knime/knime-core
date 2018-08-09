@@ -55,8 +55,7 @@ import org.knime.core.node.web.WebViewContent;
  * Interface of a request object that can be issued by an interactive view belonging to a {@link WizardNode}.
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
- * @param <RES> The concrete view content implementation acting as result value of a concrete class of this operation.
- * @since 3.6
+ * @since 3.7
  */
 public interface WizardViewRequest extends ViewRequest, WebViewContent {
 

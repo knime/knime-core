@@ -53,7 +53,7 @@ package org.knime.core.node.interactive;
  * during the handling of a request or if a response can not be rendered.
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
- * @since 3.6
+ * @since 3.7
  */
 public class ViewRequestHandlingException extends Exception {
 

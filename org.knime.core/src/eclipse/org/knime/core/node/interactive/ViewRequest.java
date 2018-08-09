@@ -53,7 +53,7 @@ package org.knime.core.node.interactive;
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz
 // * @param <RES> The concrete view content implementation acting as response value of a concrete class of this operation.
- * @since 3.6
+ * @since 3.7
  */
 public interface ViewRequest extends ViewContent {
 
