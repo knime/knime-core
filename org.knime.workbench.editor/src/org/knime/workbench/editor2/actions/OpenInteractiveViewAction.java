@@ -48,13 +48,13 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 
@@ -123,7 +123,7 @@ public class OpenInteractiveViewAction extends Action {
             final String title = m_nodeContainer.getInteractiveViewName();
             Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
         } catch (Throwable t) {
-            final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
+            final MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("Interactive View cannot be opened");
             mb.setMessage("The interactive view cannot be opened for the following reason:\n" + t.getMessage());
             mb.open();

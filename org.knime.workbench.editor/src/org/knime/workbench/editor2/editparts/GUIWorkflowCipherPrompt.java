@@ -48,9 +48,10 @@
 package org.knime.workbench.editor2.editparts;
 
 import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
+import org.knime.core.util.SWTUtilities;
 
 /**
  * Callback prompt to unlock metanode.
@@ -62,14 +63,14 @@ public final class GUIWorkflowCipherPrompt extends WorkflowCipherPrompt {
     @Override
     public String prompt(final String message,
             final String errorFromPrevious) throws PromptCancelled {
-        Shell shell = Display.getCurrent().getActiveShell();
+        Shell shell = SWTUtilities.getActiveShell();
         String msg = message;
         if (errorFromPrevious != null) {
             msg = msg.concat("\n\n").concat(errorFromPrevious);
         }
         InputDialog inputDialog = new InputDialog(shell,
                 "Metanode lock", msg, null, null);
-        if (inputDialog.open() == InputDialog.OK) {
+        if (inputDialog.open() == Window.OK) {
             return inputDialog.getValue();
         } else {
             throw new PromptCancelled();

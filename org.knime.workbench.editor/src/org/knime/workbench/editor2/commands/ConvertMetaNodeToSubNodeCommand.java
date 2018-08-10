@@ -47,11 +47,11 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
+import org.knime.core.util.SWTUtilities;
 
 /**
  * Command to wrap a metanode into a subnode/wrappednode.
@@ -91,7 +91,7 @@ public class ConvertMetaNodeToSubNodeCommand extends AbstractKNIMECommand {
         } catch (Exception e) {
             String error = "Converting Metanode failed: " + e.getMessage();
             LOGGER.error(error, e);
-            MessageDialog.openError(Display.getCurrent().getActiveShell(), "Convert failed", error);
+            MessageDialog.openError(SWTUtilities.getActiveShell(), "Convert failed", error);
         }
     }
 

@@ -60,7 +60,6 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
@@ -74,6 +73,7 @@ import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -204,7 +204,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
     @Override
     public void runInSWT() {
         List<NodeID> candidateList = getMetaNodesToCheck();
-        final Shell shell = Display.getCurrent().getActiveShell();
+        final Shell shell = SWTUtilities.getActiveShell();
         IWorkbench wb = PlatformUI.getWorkbench();
         IProgressService ps = wb.getProgressService();
         LOGGER.debug("Checking for updates for " + candidateList.size()
@@ -223,9 +223,8 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
         Status status = runner.getStatus();
         if (status.getSeverity() == IStatus.ERROR
                 || status.getSeverity() == IStatus.WARNING) {
-            ErrorDialog.openError(Display.getDefault().getActiveShell(),
-                    null, "Errors while checking for "
-                    + "updates on node links", status);
+            ErrorDialog.openError(SWTUtilities.getActiveShell(), null,
+                "Errors while checking for " + "updates on node links", status);
             if (candidateList.size() == 1) {
                 /* As only one node is selected and its update failed,
                  * there is nothing else to do. */

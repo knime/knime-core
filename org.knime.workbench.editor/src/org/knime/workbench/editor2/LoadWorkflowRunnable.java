@@ -81,6 +81,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.LockFailedException;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAllAction;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -286,7 +287,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                Shell shell = Display.getCurrent().getActiveShell();
+                Shell shell = SWTUtilities.getActiveShell();
                 if (result.getMissingNodes().isEmpty() && result.getMissingTableFormats().isEmpty()) {
                     // will not open if status is OK.
                     ErrorDialog.openError(shell, "Workflow Load", message, status);
@@ -357,7 +358,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             display.syncExec(new Runnable() {
                 @Override
                 public void run() {
-                    Shell activeShell = display.getActiveShell();
+                    Shell activeShell = SWTUtilities.getActiveShell(display);
                     MessageDialogWithToggle dlg =
                         MessageDialogWithToggle.openYesNoCancelQuestion(activeShell, "Metanode Link Update", message,
                             "Remember my decision", false, corePrefStore, pKey);

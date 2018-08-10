@@ -57,6 +57,7 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.knime.core.util.KnimeEncryption;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.core.EclipseEncryptionKeySupplier;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
@@ -292,9 +293,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             final String confirmMasterKey) {
         setErrorMessage(null);
         if (masterKey == null || masterKey.isEmpty()) {
-            MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_ERROR | SWT.OK);
+            MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("Empty master key...");
             mb.setMessage("Master Key must not be empty.");
             setErrorMessage(mb.getMessage());
@@ -302,9 +301,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             return null;
         }
         if (!masterKey.equals(confirmMasterKey)) {
-            MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_ERROR | SWT.OK);
+            MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setMessage("Make sure both master keys are the same.");
             setErrorMessage(mb.getMessage());
             mb.open();
@@ -315,9 +312,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
                     HeadlessPreferencesConstants.P_MASTER_KEY);
             return KnimeEncryption.encrypt(secretKey, masterKey.toCharArray());
         } catch (Exception e) {
-            MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_ERROR | SWT.OK);
+            MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("Master Key Encryption...");
             mb.setMessage("Master Key Encryption failed:\n" + e.getMessage());
             setErrorMessage(mb.getMessage());

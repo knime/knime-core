@@ -46,21 +46,22 @@ package org.knime.workbench.ui.navigator.actions;
 
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.ui.wfvars.WorkflowVariablesDialog;
 
 /**
- * Action which opens {@link WorkflowVariablesDialog} that let the user add, 
+ * Action which opens {@link WorkflowVariablesDialog} that let the user add,
  * edit or remove workflow variables.
- * 
+ *
  * @author Fabian Dill, KNIME.com AG
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
 public class OpenWorkflowVariablesDialogAction extends AbstractWorkflowAction {
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -70,20 +71,16 @@ public class OpenWorkflowVariablesDialogAction extends AbstractWorkflowAction {
         final WorkflowManager wf = getWorkflow();
         // open the dialog
         final Display d = Display.getDefault();
-        // run in UI thread 
-        d.asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                // and put it into the workflow variables dialog
-                WorkflowVariablesDialog dialog = new WorkflowVariablesDialog(
-                        d.getActiveShell(), wf);
-                dialog.open();
-            }
+        // run in UI thread
+        d.asyncExec(() -> {
+            // and put it into the workflow variables dialog
+            WorkflowVariablesDialog dialog = new WorkflowVariablesDialog(SWTUtilities.getActiveShell(d), wf);
+            dialog.open();
         });
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

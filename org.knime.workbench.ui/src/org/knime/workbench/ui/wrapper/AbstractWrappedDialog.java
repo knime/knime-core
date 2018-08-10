@@ -52,9 +52,9 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 
@@ -65,34 +65,6 @@ import org.knime.workbench.core.util.ImageRepository.SharedImages;
  * @author loki der quaeler
  */
 public abstract class AbstractWrappedDialog extends Dialog {
-    /**
-     * As discovered in AP-10122, when KNIME receives an action due to mouse event passthrough (a situation possible
-     * on macOS where mouse & scroll events can pass to a desktop-visible window even though the owning application is
-     * not the application in the foreground), Display.getCurrent().getActiveShell() returns null.
-     *
-     * This method will attempt to return the applicable Shell instance, by hook or by crook.
-     *
-     * If we have a "SWT Utility Methods" class lurking somewhere, this might be better suited to go there; it is
-     * presently in this class only because the source problem arose due attempting to open dialogs in a KNIME
-     * application which was in the background.
-     *
-     * @return a Shell instance which is the active shell for the application
-     */
-    public static Shell getActiveShell() {
-        final Display display = Display.getCurrent();
-        final Shell shell = display.getActiveShell();
-
-        if (shell == null) {
-            for (Shell s : display.getShells()) {
-                if (s.getShells().length == 0) {
-                    return s;
-                }
-            }
-        }
-
-        return shell;
-    }
-
 
     /**
      * This is the SWT-AWT bridge Composite instance.
@@ -200,7 +172,7 @@ public abstract class AbstractWrappedDialog extends Dialog {
      * stays executed).
      */
     protected void informNothingChanged() {
-        final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
+        final MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
         mb.setText("Settings were not changed.");
         mb.setMessage("The settings were not changed. The node(s) will not be reset.");
         mb.open();

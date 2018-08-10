@@ -49,6 +49,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
@@ -56,7 +57,7 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 /**
  *
  * @author Fabian Dill, KNIME.com AG
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -83,18 +84,15 @@ public class ConfigureWorkflowAction extends AbstractWorkflowAction {
             public void run() {
                 try {
                     WrappedNodeDialog dialog = new WrappedNodeDialog(
-                        Display.getDefault().getActiveShell(), WorkflowManagerWrapper.wrap(getWorkflow()));
+                        SWTUtilities.getActiveShell(), WorkflowManagerWrapper.wrap(getWorkflow()));
                     dialog.setBlockOnOpen(true);
                     dialog.open();
                 } catch (final NotConfigurableException nce) {
                     Display.getDefault().syncExec(new Runnable() {
                         @Override
                         public void run() {
-                            MessageDialog.openError(
-                                    Display.getDefault().getActiveShell(),
-                                    "Workflow Not Configurable",
-                                    "This workflow cannot be configured: "
-                                    + nce.getMessage());
+                            MessageDialog.openError(SWTUtilities.getActiveShell(), "Workflow Not Configurable",
+                                "This workflow cannot be configured: " + nce.getMessage());
                         }
                     });
                 }

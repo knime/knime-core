@@ -72,11 +72,12 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.dialogs.ExportWizard;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
+import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistor;
-import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.SWTUtilities;
 import org.knime.core.util.VMFileLocker;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
@@ -87,7 +88,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  *
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, KNIME AG, Zurich, Switzerland
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -338,13 +339,10 @@ public class WorkflowExportWizard extends ExportWizard
             final String error = "KNIME project could not be exported."
                 + "\n Reason: " + t.getMessage();
             NodeLogger.getLogger(getClass()).error(error, t);
-            Display.getDefault().syncExec(new Runnable() {
-                @Override
-                public void run() {
-                    MessageDialog.openError(
-                            Display.getDefault().getActiveShell(),
-                            "Export could not be completed...", error);
-                }
+            final Display display = Display.getDefault();
+            display.syncExec(() -> {
+                MessageDialog.openError(SWTUtilities.getActiveShell(display), "Export could not be completed...",
+                    error);
             });
         }
         monitor.worked(1);

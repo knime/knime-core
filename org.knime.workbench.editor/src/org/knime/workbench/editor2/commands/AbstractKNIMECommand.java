@@ -49,11 +49,11 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 
 /**
  * Abstract super class for KNIME related commands. It holds a reference to
@@ -122,6 +122,6 @@ public abstract class AbstractKNIMECommand extends Command {
      * @param message the actual message
      */
     protected static void openDialog(final String title, final String message) {
-        MessageDialog.openError(Display.getDefault().getActiveShell(), title, message);
+        MessageDialog.openError(SWTUtilities.getActiveShell(), title, message);
     }
 }

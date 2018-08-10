@@ -58,6 +58,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 
@@ -224,9 +225,7 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
     }
 
     private static void promptRestartWithMessage(final String message){
-        MessageBox mb =
-                new MessageBox(Display.getDefault().getActiveShell(),
-                        SWT.ICON_QUESTION | SWT.YES | SWT.NO);
+        MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_QUESTION | SWT.YES | SWT.NO);
         mb.setText("Restart workbench...");
         mb.setMessage(message);
         if (mb.open() != SWT.YES) {

@@ -49,17 +49,18 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.wizards.workflowgroup.NewWorkflowGroupProjectWizard;
 
 /**
  * Action to create a workflow group.
- * 
+ *
  * @author Fabian Dill, KNIME.com AG
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -74,7 +75,7 @@ public class CreateWorkflowGroupAction extends Action {
     @Override
     public ImageDescriptor getImageDescriptor() {
         if (icon == null) {
-            icon = KNIMEUIPlugin.imageDescriptorFromPlugin(
+            icon = AbstractUIPlugin.imageDescriptorFromPlugin(
                     KNIMEUIPlugin.PLUGIN_ID, "icons/wf_group_new.png");
         }
         return icon;
@@ -105,18 +106,16 @@ public class CreateWorkflowGroupAction extends Action {
      */
     @Override
     public void run() {
-        NewWorkflowGroupProjectWizard wizard 
+        NewWorkflowGroupProjectWizard wizard
             = new NewWorkflowGroupProjectWizard();
         IWorkbench workbench = PlatformUI.getWorkbench();
         ISelection selection = workbench.getActiveWorkbenchWindow()
             .getSelectionService().getSelection();
         if (selection instanceof IStructuredSelection) {
-            wizard.init(workbench,  
+            wizard.init(workbench,
                 (IStructuredSelection)selection);
         }
-        WizardDialog dialog = new WizardDialog(
-                Display.getDefault().getActiveShell(), 
-                wizard);
+        WizardDialog dialog = new WizardDialog(SWTUtilities.getActiveShell(), wizard);
         dialog.open();
     }
 

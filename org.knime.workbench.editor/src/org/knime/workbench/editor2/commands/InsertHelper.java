@@ -51,12 +51,12 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -103,7 +103,7 @@ public class InsertHelper {
                     || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
                 MessageDialogWithToggle dialog =
                     MessageDialogWithToggle.openOkCancelConfirm(
-                        Display.getDefault().getActiveShell(),
+                        SWTUtilities.getActiveShell(),
                         "Confirm reset...",
                         "Do you really want to reset all downstream node(s) ?",
                         "Do not ask again", false, null, null);

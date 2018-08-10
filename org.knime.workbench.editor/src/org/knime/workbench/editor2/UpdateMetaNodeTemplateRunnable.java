@@ -63,6 +63,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
+import org.knime.core.util.SWTUtilities;
 
 
 /**
@@ -172,9 +173,7 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
             @Override
             public void run() {
                 // will not open if status is OK.
-                ErrorDialog.openError(
-                        Display.getDefault().getActiveShell(),
-                        "Update Node Links", message, status);
+                ErrorDialog.openError(SWTUtilities.getActiveShell(), "Update Node Links", message, status);
             }
         });
     }

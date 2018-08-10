@@ -49,8 +49,8 @@ package org.knime.workbench.core;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.ErrorDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.knime.core.util.SWTUtilities;
 
 /**
  * JFace dialog presenting an (internal) error to the user.
@@ -106,8 +106,7 @@ public final class KNIMEErrorDialog {
      * @return <code>Window.OK</code> or <code>Window.CANCEL</code>
      */
     public static int openError(final String message, final IStatus status) {
-        return KNIMEErrorDialog.openError(
-                Display.getCurrent().getActiveShell(),
-                "KNIME Workbench: Error occurred", message, status);
+        return KNIMEErrorDialog.openError(SWTUtilities.getActiveShell(), "KNIME Workbench: Error occurred", message,
+            status);
     }
 }

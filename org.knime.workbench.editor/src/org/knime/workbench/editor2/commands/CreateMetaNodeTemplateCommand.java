@@ -52,7 +52,6 @@ import java.io.IOException;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
@@ -64,6 +63,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.editor2.LoadMetaNodeTemplateRunnable;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
@@ -159,28 +159,23 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             String error = "The selected node could not be created";
             if (cause instanceof FileNotFoundException) {
                 error += " because a file could not be found: " + cause.getMessage();
-                MessageDialog.openError(Display.getDefault().
-                        getActiveShell(), "Node cannot be created.", error);
+                MessageDialog.openError(SWTUtilities.getActiveShell(), "Node cannot be created.", error);
             } else if (cause instanceof IOException) {
                 error += " because of an I/O error: " + cause.getMessage();
-                MessageDialog.openError(Display.getDefault().
-                        getActiveShell(), "Node cannot be created.", error);
+                MessageDialog.openError(SWTUtilities.getActiveShell(), "Node cannot be created.", error);
             } else if (cause instanceof InvalidSettingsException) {
                 error += " because the metanode contains invalid settings: " + cause.getMessage();
-                MessageDialog.openError(Display.getDefault().
-                        getActiveShell(), "Node cannot be created.", error);
+                MessageDialog.openError(SWTUtilities.getActiveShell(), "Node cannot be created.", error);
             } else if (cause instanceof UnsupportedWorkflowVersionException) {
                 error += " because the metanode version is incompatible: " + cause.getMessage();
-                MessageDialog.openError(Display.getDefault().
-                        getActiveShell(), "Node cannot be created.", error);
+                MessageDialog.openError(SWTUtilities.getActiveShell(), "Node cannot be created.", error);
             } else if ((cause instanceof CanceledExecutionException) || (cause instanceof InterruptedException)) {
                 LOGGER.info("Metanode loading was canceled by the user", cause);
             } else {
                 LOGGER.error(String.format("Metanode loading failed with %s: %s",
                     cause.getClass().getSimpleName(), cause.getMessage()), cause);
                 error += ": " + cause.getMessage();
-                MessageDialog.openError(Display.getDefault().
-                        getActiveShell(), "Node cannot be created.", error);
+                MessageDialog.openError(SWTUtilities.getActiveShell(), "Node cannot be created.", error);
             }
         }
     }
@@ -203,7 +198,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
         if (canUndo()) {
             getHostWFM().removeNode(m_container.getID());
         } else {
-            MessageDialog.openInformation(Display.getDefault().getActiveShell(),
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(),
                     "Operation no allowed", "The node "
                     + m_container.getNameWithID()
                     + " can currently not be removed");

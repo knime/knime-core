@@ -59,6 +59,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.wrapper.NodeContainerWrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
@@ -137,10 +138,8 @@ public class DropNodeCommand extends AbstractKNIMECommand {
                     @Override
                     public void run() {
                         try {
-                            WrappedNodeDialog dlg =
-                                new WrappedNodeDialog(
-                                        Display.getCurrent().getActiveShell(),
-                                        NodeContainerWrapper.wrap(m_container));
+                            WrappedNodeDialog dlg = new WrappedNodeDialog(SWTUtilities.getActiveShell(),
+                                NodeContainerWrapper.wrap(m_container));
                             dlg.open();
                         } catch (Exception e) {
                             // they need to open it manually then
@@ -152,9 +151,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
         } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
-            MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_WARNING | SWT.OK);
+            MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_WARNING | SWT.OK);
             mb.setText("Node cannot be created.");
             mb.setMessage("The selected node could not be created "
                     + "due to the following reason:\n" + t.getMessage());
@@ -183,11 +180,8 @@ public class DropNodeCommand extends AbstractKNIMECommand {
             // TODO: save the nodes settings for a re-do. In case the dialog
             // was opened and settings adjusted.
         } else {
-            MessageDialog.openInformation(
-                    Display.getDefault().getActiveShell(),
-                    "Operation no allowed",
-                    "The node " + m_container.getNameWithID()
-                            + " can currently not be removed");
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(), "Operation no allowed",
+                "The node " + m_container.getNameWithID() + " can currently not be removed");
         }
     }
 

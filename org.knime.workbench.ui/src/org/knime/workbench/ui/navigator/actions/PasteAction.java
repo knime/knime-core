@@ -76,13 +76,14 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.SelectionListenerAction;
 import org.eclipse.ui.part.ResourceTransfer;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.SWTUtilities;
 import org.knime.core.util.VMFileLocker;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
  *
  * @author ohl, University of Konstanz
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -266,43 +267,31 @@ public class PasteAction extends SelectionListenerAction {
                 m_sources.length <= 1 ? "" : " of this resource";
         final String[] result = new String[1];
         final String newName = getDefaultReplacementName(sourceName);
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                InputDialog inpDlg =
-                        new InputDialog(Display.getDefault().getActiveShell(),
-                                "Name Conflict", "Please enter a new name for "
-                                        + sourceName + " in " + targetDir
-                                        + ".\n(or Cancel to skip copying"
-                                        + multiMsg + ".)", newName,
-                                new IInputValidator() {
-                                    @Override
-                                    public String isValid(final String newText) {
-                                        if (newText == null
-                                                || newText.trim().isEmpty()) {
-                                            return "Enter a valid new name (or click cancel).";
-                                        }
-                                        String newDest = newText.trim();
-                                        IStatus status =
-                                                ResourcesPlugin
-                                                        .getWorkspace()
-                                                        .validateName(
-                                                                newDest,
-                                                                m_sources[i]
-                                                                        .getType());
-                                        if (!status.isOK()) {
-                                            return status.getMessage();
-                                        }
-                                        return checkNameExistence(newDest);
-                                    }
-                                });
-                inpDlg.setBlockOnOpen(true);
-                if (inpDlg.open() == Window.OK) {
-                    result[0] = inpDlg.getValue();
-                } else {
-                    // user canceled.
-                    result[0] = null;
-                }
+        final Display display = Display.getDefault();
+        display.syncExec(() -> {
+            InputDialog inpDlg = new InputDialog(
+                SWTUtilities.getActiveShell(display), "Name Conflict", "Please enter a new name for " + sourceName
+                    + " in " + targetDir + ".\n(or Cancel to skip copying" + multiMsg + ".)",
+                newName, new IInputValidator() {
+                    @Override
+                    public String isValid(final String newText) {
+                        if (newText == null || newText.trim().isEmpty()) {
+                            return "Enter a valid new name (or click cancel).";
+                        }
+                        String newDest = newText.trim();
+                        IStatus status = ResourcesPlugin.getWorkspace().validateName(newDest, m_sources[i].getType());
+                        if (!status.isOK()) {
+                            return status.getMessage();
+                        }
+                        return checkNameExistence(newDest);
+                    }
+                });
+            inpDlg.setBlockOnOpen(true);
+            if (inpDlg.open() == Window.OK) {
+                result[0] = inpDlg.getValue();
+            } else {
+                // user canceled.
+                result[0] = null;
             }
         });
         return result[0];
@@ -389,15 +378,11 @@ public class PasteAction extends SelectionListenerAction {
 
 
     private void showSourceVanishedMessage() {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openWarning(
-                        Display.getDefault().getActiveShell(),
-                        "Resource doesn't exist",
-                        "One of the flows or groups to copy "
-                                + " doesn't exists (anymore).");
-            }
+        final Display display = Display.getDefault();
+
+        display.syncExec(() -> {
+            MessageDialog.openWarning(SWTUtilities.getActiveShell(display), "Resource doesn't exist",
+                "One of the flows or groups to copy doesn't exists (anymore).");
         });
     }
 

@@ -46,12 +46,12 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -152,8 +152,7 @@ public class OpenMultiDialogAction extends AbstractNodeAction {
             }
         }
         WrappedMultipleNodeDialog dlg =
-                new WrappedMultipleNodeDialog(Display.getCurrent().getActiveShell(), getManager(), splitType,
-                        nodes);
+            new WrappedMultipleNodeDialog(SWTUtilities.getActiveShell(), getManager(), splitType, nodes);
         dlg.open(); // the dialog applies new settings on OK
     }
 }

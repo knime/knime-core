@@ -99,6 +99,7 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -660,7 +661,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
             final MessageDialogWithToggle dialog =
                     MessageDialogWithToggle
                             .openOkCancelConfirm(
-                                    Display.getDefault().getActiveShell(),
+                                    SWTUtilities.getActiveShell(),
                                     "Confirm reset...",
                                     "Warning, reset node(s)!\n"
                                             + "New settings will be applied after resetting this "

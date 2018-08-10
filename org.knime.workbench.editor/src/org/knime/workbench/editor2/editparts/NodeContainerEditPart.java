@@ -130,6 +130,7 @@ import org.knime.core.ui.node.workflow.NodePortUI;
 import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -143,7 +144,6 @@ import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
-import org.knime.workbench.ui.wrapper.AbstractWrappedDialog;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
@@ -762,7 +762,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             return;
         }
 
-        final Shell shell = AbstractWrappedDialog.getActiveShell();
+        final Shell shell = SWTUtilities.getActiveShell();
         shell.setEnabled(false);
         try {
             if (container.hasDataAwareDialogPane() && !container.isAllInputDataAvailable()

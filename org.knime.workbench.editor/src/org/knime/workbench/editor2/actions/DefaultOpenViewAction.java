@@ -60,6 +60,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -187,9 +188,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
                             }
                             action.run();
                         } catch (Throwable t) {
-                            MessageBox mb = new MessageBox(
-                                    Display.getDefault().getActiveShell(),
-                                    SWT.ICON_ERROR | SWT.OK);
+                            MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_ERROR | SWT.OK);
                             mb.setText("View cannot be opened");
                             mb.setMessage("The view cannot be opened for the "
                                     + "following reason:\n" + t.getMessage());

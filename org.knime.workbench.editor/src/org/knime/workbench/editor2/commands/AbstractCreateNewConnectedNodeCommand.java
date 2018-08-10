@@ -55,7 +55,6 @@ import java.util.TreeMap;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainer;
@@ -66,6 +65,7 @@ import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.util.SWTUtilities;
 
 /**
  * Abstract super class for commands that insert new nodes into a workflow and potentially auto-connect them
@@ -252,9 +252,7 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
                     "Undo failed: Node " + m_newNode + " can't be removed: "
                             + e.getMessage();
             LOGGER.error(msg);
-            MessageDialog.openInformation(
-                    Display.getDefault().getActiveShell(),
-                    "Operation not allowed", msg);
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(), "Operation not allowed", msg);
         }
     }
 }

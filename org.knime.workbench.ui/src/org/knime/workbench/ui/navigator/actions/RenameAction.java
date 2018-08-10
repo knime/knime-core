@@ -63,6 +63,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.actions.SelectionListenerAction;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.SWTUtilities;
 import org.knime.core.util.VMFileLocker;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
@@ -72,7 +73,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 /**
  *
  * @author ohl, KNIME AG, Zurich, Switzerland
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -258,84 +259,59 @@ public class RenameAction extends SelectionListenerAction {
         }
     }
 
-    private void showUnsupportedCharacter(final String newInvalidName,
-            final boolean isGroup) {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openInformation(Display.getDefault()
-                        .getActiveShell(), "Illegal Characters in Name",
-                        "The entered name (" + newInvalidName
-                                + ") contains unsupported characters"
-                                + " ( / and \\ )."
-                                + "\nIf you wish to move the workflow "
-                                + (isGroup ? "group " : "")
-                                + "to a new location, "
-                                + "please use the Move command.");
-            }
+    private void showUnsupportedCharacter(final String newInvalidName, final boolean isGroup) {
+        final Display display = Display.getDefault();
+
+        display.syncExec(() -> {
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(display), "Illegal Characters in Name",
+                "The entered name (" + newInvalidName + ") contains unsupported characters ( / and \\ )."
+                    + "\nIf you wish to move the workflow " + (isGroup ? "group " : "") + "to a new location, "
+                    + "please use the Move command.");
         });
     }
 
-    private void showWorkflowIsOpenMessage(final boolean isGroup,
-            final String flowNames) {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                String msg = "";
-                if (isGroup) {
-                    msg =
-                            "Cannot rename workflow groups containing open "
-                                    + "workflows.\nPlease save and close the "
-                                    + "corresponding workflow editor ("
-                                    + flowNames + ").";
-                } else {
-                    msg =
-                            "Cannot rename open workflows.\nPlease save and "
-                                    + "close the corresponding workflow "
-                                    + "editor (" + flowNames + ").";
-                }
+    private void showWorkflowIsOpenMessage(final boolean isGroup, final String flowNames) {
+        final Display display = Display.getDefault();
 
-                MessageDialog.openInformation(Display.getDefault()
-                        .getActiveShell(), "Open Workflow", msg);
+        display.syncExec(() -> {
+            String msg = "";
+            if (isGroup) {
+                msg = "Cannot rename workflow groups containing open " + "workflows.\nPlease save and close the "
+                    + "corresponding workflow editor (" + flowNames + ").";
+            } else {
+                msg = "Cannot rename open workflows.\nPlease save and " + "close the corresponding workflow "
+                    + "editor (" + flowNames + ").";
             }
+
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(display), "Open Workflow", msg);
         });
     }
 
     private void showWorkflowInUseMessage() {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openInformation(Display.getDefault()
-                        .getActiveShell(), "Locked Workflow",
-                        "The selected workflow is locked by another "
-                                + "user/instance and can't be renamed.");
-            }
+        final Display display = Display.getDefault();
+
+        display.syncExec(() -> {
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(display), "Locked Workflow",
+                "The selected workflow is locked by another user/instance and can't be renamed.");
         });
     }
 
     private void showAlreadyExists(final String newName, final boolean isFlow) {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openInformation(Display.getDefault()
-                        .getActiveShell(), "Destination Already Exists",
-                        "Cannot rename workflow " + (isFlow ? "" : "group ")
-                                + "to \"" + newName
-                                + "\". An item with the same "
-                                + "name already exists.");
-            }
+        final Display display = Display.getDefault();
+
+        display.syncExec(() -> {
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(display), "Destination Already Exists",
+                "Cannot rename workflow " + (isFlow ? "" : "group ") + "to \"" + newName + "\". An item with the same "
+                    + "name already exists.");
         });
     }
 
     private void showRenameFailed(final boolean isGroup) {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openInformation(Display.getDefault()
-                        .getActiveShell(), "Rename Failed",
-                        "KNIME was unable to rename the workflow"
-                                + (isGroup ? " group" : "") + ".");
-            }
+        final Display display = Display.getDefault();
+
+        display.syncExec(() -> {
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(display), "Rename Failed",
+                "KNIME was unable to rename the workflow" + (isGroup ? " group" : "") + ".");
         });
     }
 

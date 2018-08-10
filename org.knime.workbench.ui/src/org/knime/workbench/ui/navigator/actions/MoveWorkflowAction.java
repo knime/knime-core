@@ -67,6 +67,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ISelectionValidator;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.SWTUtilities;
 import org.knime.core.util.VMFileLocker;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
@@ -77,7 +78,7 @@ import org.knime.workbench.ui.navigator.actions.selection.ResourceSelectDialog;
 /**
  *
  * @author Fabian Dill, KNIME.com AG
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -419,77 +420,54 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
     }
 
     private void showWorkflowIsOpenMessage() {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openInformation(Display.getDefault()
-                        .getActiveShell(), "Open Workflow",
-                        "Cannot move opened workflows. Please save and close "
-                                + "the open workflow editor.");
-            }
+        final Display display = Display.getDefault();
+
+        display.syncExec(() -> {
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(display), "Open Workflow",
+                "Cannot move opened workflows. Please save and close the open workflow editor.");
         });
     }
 
     private void showUnsupportedLinkedProject(final String name) {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openInformation(Display.getDefault()
-                        .getActiveShell(), "Unsupported Linked Project", "\""
-                        + name + "\" is a linked resource. "
-                        + "Linked resources are only linked to the workspace "
-                        + "but located elsewhere. They are not supported by "
-                        + "this operation.");
-            }
+        final Display display = Display.getDefault();
+
+        display.syncExec(() -> {
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(display), "Unsupported Linked Project",
+                "\"" + name + "\" is a linked resource. Linked resources are only linked to the workspace "
+                    + "but located elsewhere. They are not supported by this operation.");
         });
     }
 
     private void showWorkflowInUseMessage(final boolean isGroup) {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                if (isGroup) {
-                    MessageDialog.openInformation(Display.getDefault()
-                            .getActiveShell(), "Locked Workflow",
-                            "The selected workflow group contains a workflow "
-                                    + "that is locked by another "
-                                    + "user/instance and can't "
-                                    + "be moved/copied.");
-                } else {
-                    MessageDialog.openInformation(Display.getDefault()
-                            .getActiveShell(), "Locked Workflow",
-                            "The selected workflow is locked by another "
-                                    + "user/instance and can't "
-                                    + "be moved/copied.");
-                }
+        final Display display = Display.getDefault();
+
+        display.syncExec(() -> {
+            if (isGroup) {
+                MessageDialog.openInformation(SWTUtilities.getActiveShell(display), "Locked Workflow",
+                    "The selected workflow group contains a workflow that is locked by another "
+                        + "user/instance and can't be moved/copied.");
+            } else {
+                MessageDialog.openInformation(SWTUtilities.getActiveShell(display), "Locked Workflow",
+                    "The selected workflow is locked by another user/instance and can't be moved/copied.");
             }
         });
     }
 
     private void showAlreadyExists(final String name, final String target) {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openWarning(
-                        Display.getDefault().getActiveShell(),
-                        "Resource already exists", "A folder \"" + name
-                                + "\" already exists in \"" + target
-                                + "\".\nPlease rename before moving/copying.");
-            }
+        final Display display = Display.getDefault();
+
+        display.syncExec(() -> {
+            MessageDialog.openWarning(SWTUtilities.getActiveShell(display), "Resource already exists", "A folder \""
+                + name + "\" already exists in \"" + target + "\".\nPlease rename before moving/copying.");
         });
     }
 
     private void showIsParent(final String source, final String target) {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openWarning(
-                        Display.getDefault().getActiveShell(),
-                        "Cannot Move/Copy Resource",
-                        "Operation not allowed.\n\""
-                        + source + "\" is parent resource of target \""
-                        + target + "\"");
-            }
+        final Display display = Display.getDefault();
+
+        display.syncExec(() -> {
+            MessageDialog.openWarning(SWTUtilities.getActiveShell(display), "Cannot Move/Copy Resource",
+                "Operation not allowed.\n\"" + source + "\" is parent resource of target \"" + target + "\"");
         });
     }
 

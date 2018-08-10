@@ -51,7 +51,6 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
@@ -61,6 +60,7 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.core.wizard.SinglePageManager;
 import org.knime.core.wizard.SubnodeViewableModel;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -132,7 +132,7 @@ public final class OpenSubnodeWebViewAction extends Action {
             final String title = m_nodeContainer.getName();
             Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
         } catch (Throwable t) {
-            final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
+            final MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("Interactive View cannot be opened");
             mb.setMessage("The interactive view cannot be opened for the following reason:\n" + t.getMessage());
             mb.open();

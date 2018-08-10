@@ -51,7 +51,6 @@ import java.util.Arrays;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
@@ -60,6 +59,7 @@ import org.knime.core.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
@@ -132,8 +132,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
         } catch (Exception e) {
             String error = "Expanding Metanode failed: " + e.getMessage();
             LOGGER.error(error, e);
-            MessageDialog.openError(Display.getCurrent().getActiveShell(),
-                    "Expand failed", error);
+            MessageDialog.openError(SWTUtilities.getActiveShell(), "Expand failed", error);
         }
     }
 

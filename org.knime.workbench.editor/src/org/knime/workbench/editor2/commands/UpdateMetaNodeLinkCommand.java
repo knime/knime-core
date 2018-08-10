@@ -50,7 +50,6 @@ package org.knime.workbench.editor2.commands;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
@@ -60,6 +59,7 @@ import org.knime.core.node.workflow.NodeContainerTemplate;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.editor2.UpdateMetaNodeTemplateRunnable;
 
 /**
@@ -133,10 +133,8 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
         } catch (Exception ex) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", ex);
-            MessageDialog.openWarning(Display.getDefault().
-                    getActiveShell(), "Node cannot be created.",
-                    "The selected node could not be created "
-                    + "due to the following reason:\n" + ex.getMessage());
+            MessageDialog.openWarning(SWTUtilities.getActiveShell(), "Node cannot be created.",
+                "The selected node could not be created " + "due to the following reason:\n" + ex.getMessage());
             return;
         } finally {
             if (updateRunner != null) {

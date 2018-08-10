@@ -48,8 +48,8 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.knime.core.util.SWTUtilities;
 
 /**
  *
@@ -73,14 +73,10 @@ public final class MasterKeyDialog extends Dialog {
     }
 
     /**
-     * Opens a this dialog in  the currently active shell.
+     * Opens a this dialog in the currently active shell.
      */
     static void openDialogAndReadKey() {
-        Shell shell = Display.getDefault().getActiveShell();
-        if (shell == null) {
-            shell = new Shell();
-        }
-        new MasterKeyDialog(shell).open();
+        new MasterKeyDialog(SWTUtilities.getActiveShell()).open();
     }
 
     /**

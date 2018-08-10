@@ -52,10 +52,10 @@ import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -141,7 +141,7 @@ public class ResetAction extends AbstractNodeAction {
                 || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
             MessageDialogWithToggle dialog =
                 MessageDialogWithToggle.openOkCancelConfirm(
-                    Display.getDefault().getActiveShell(),
+                    SWTUtilities.getActiveShell(),
                     "Confirm reset...",
                     "Do you really want to reset the selected node(s) ?",
                     "Do not ask again", false, null, null);
@@ -164,9 +164,7 @@ public class ResetAction extends AbstractNodeAction {
 
         } catch (Exception ex) {
             LOGGER.warn("Reset not allowed", ex);
-            MessageBox mb = new MessageBox(
-                    Display.getDefault().getActiveShell(),
-                    SWT.ICON_INFORMATION | SWT.OK);
+            MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
             mb.setText("Reset not allowed");
             mb.setMessage("You cannot reset a node while the workflow is in"
                     + " execution. " + ex.getMessage());

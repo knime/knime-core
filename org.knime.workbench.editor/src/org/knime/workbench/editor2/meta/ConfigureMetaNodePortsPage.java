@@ -67,7 +67,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Text;
@@ -80,6 +79,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
@@ -629,7 +629,7 @@ public class ConfigureMetaNodePortsPage extends WizardPage {
     private void addPort(final boolean inPort) {
         java.util.List<MetaPortInfo> infoList = inPort ? m_inPortList : m_outPortList;
         List portList = inPort ? m_inPorts : m_outPorts;
-        MetaPortDialog dialog = new MetaPortDialog(Display.getDefault().getActiveShell());
+        MetaPortDialog dialog = new MetaPortDialog(SWTUtilities.getActiveShell());
         PortType port = dialog.open();
         if (port != null) {
             MetaPortInfo info = MetaPortInfo.builder().setPortType(port)

@@ -50,7 +50,6 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
@@ -58,6 +57,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.SWTUtilities;
 
 /**
  * Creates a new node - and may auto connect it to another one.
@@ -109,9 +109,7 @@ public class CreateNewConnectedNodeCommand extends AbstractCreateNewConnectedNod
         } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
-            MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_WARNING | SWT.OK);
+            MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_WARNING | SWT.OK);
             mb.setText("Node cannot be created.");
             mb.setMessage("The node could not be created "
                     + "due to the following reason:\n" + t.getMessage());

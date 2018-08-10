@@ -57,13 +57,13 @@ import java.util.Map;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.UI;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -180,7 +180,7 @@ public class SaveAsSubNodeTemplateAction extends AbstractNodeAction {
                     + "this is inconsistent with calculateEnabled()");
         }
         String[] validMountPoints = validMountPointList.toArray(new String[0]);
-        final Shell shell = Display.getCurrent().getActiveShell();
+        final Shell shell = SWTUtilities.getActiveShell();
         ContentObject defSel = getDefaultSaveLocation(wm);
         SpaceResourceSelectionDialog dialog = new SpaceResourceSelectionDialog(shell, validMountPoints, defSel);
         dialog.setTitle("Save As Wrapped Metanode Template");

@@ -78,6 +78,7 @@ import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.core.ui.wrapper.NodeContainerWrapper;
 import org.knime.core.ui.wrapper.SingleInteractiveWebViewResultWrapper;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.js.core.JSCorePlugin;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -210,7 +211,7 @@ public final class OpenInteractiveWebViewAction extends Action {
     }
 
     private static void showWarningDialog(final NodeContainerUI nc, final Throwable t) {
-        final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
+        final MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_ERROR | SWT.OK);
         mb.setText("Interactive View cannot be opened");
         mb.setMessage("The interactive view cannot be opened for the following reason:\n" + t.getMessage());
         mb.open();

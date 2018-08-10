@@ -61,6 +61,7 @@ import org.knime.core.node.workflow.TemplateNodeContainerPersistor;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
+import org.knime.core.util.SWTUtilities;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
@@ -152,9 +153,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
                 @Override
                 public void run() {
                     // will not open if status is OK.
-                    ErrorDialog.openError(
-                            Display.getDefault().getActiveShell(),
-                            "Workflow Load", message, status);
+                    ErrorDialog.openError(SWTUtilities.getActiveShell(), "Workflow Load", message, status);
                 }
             });
         } catch (Exception ex) {

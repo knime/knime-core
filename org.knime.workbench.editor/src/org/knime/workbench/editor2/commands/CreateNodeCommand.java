@@ -50,7 +50,6 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
@@ -60,6 +59,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.SWTUtilities;
 
 /**
  * GEF command for adding a <code>Node</code> to the
@@ -126,8 +126,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
         } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
-            MessageBox mb = new MessageBox(Display.getDefault().
-                    getActiveShell(), SWT.ICON_WARNING | SWT.OK);
+            MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_WARNING | SWT.OK);
             mb.setText("Node cannot be created.");
             mb.setMessage("The selected node could not be created "
                     + "due to the following reason:\n" + t.getMessage());
@@ -160,7 +159,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
         if (canUndo()) {
             getHostWFM().removeNode(m_container.getID());
         } else {
-            MessageDialog.openInformation(Display.getDefault().getActiveShell(),
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(),
                     "Operation no allowed", "The node "
                     + m_container.getNameWithID()
                     + " can currently not be removed");

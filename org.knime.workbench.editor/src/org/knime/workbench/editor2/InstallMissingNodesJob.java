@@ -84,6 +84,7 @@ import org.knime.core.data.container.storage.TableStoreFormatInformation;
 import org.knime.core.node.KNIMEComponentInformation;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.SWTUtilities;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -122,14 +123,14 @@ final class InstallMissingNodesJob extends Job {
             return status;
         } else if (featuresToInstall.isEmpty()) {
             Display.getDefault().asyncExec(() -> {
-                MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "No suitable extension found",
+                MessageDialog.openWarning(SWTUtilities.getActiveShell(), "No suitable extension found",
                     "Could not find any extension(s) that provides the missing component(s).");
             });
             return Status.OK_STATUS;
         } else {
             if (!missingComponents.isEmpty()) {
                 Display.getDefault().syncExec(() -> {
-                    MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Not all extensions found",
+                    MessageDialog.openWarning(SWTUtilities.getActiveShell(), "Not all extensions found",
                         "No extensions for the following components were found: " + missingComponents.stream()
                             .map(i -> i.getComponentName()).collect(Collectors.joining(", ")));
                 });

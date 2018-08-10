@@ -55,14 +55,13 @@ import java.util.Comparator;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -130,7 +129,7 @@ public class ReplaceHelper {
             if (!store.contains(PreferenceConstants.P_CONFIRM_RESET)
                 || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
                 MessageDialogWithToggle dialog =
-                    MessageDialogWithToggle.openOkCancelConfirm(Display.getDefault().getActiveShell(),
+                    MessageDialogWithToggle.openOkCancelConfirm(SWTUtilities.getActiveShell(),
                         "Confirm reset...", "Do you really want to reset all downstream node(s) ?", "Do not ask again",
                         false, null, null);
                 if (dialog.getReturnCode() != IDialogConstants.OK_ID) {

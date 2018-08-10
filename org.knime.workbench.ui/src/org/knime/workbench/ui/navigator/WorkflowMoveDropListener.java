@@ -62,9 +62,9 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.swt.dnd.TransferData;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ResourceTransfer;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.ui.navigator.actions.MoveWorkflowAction;
 
 /**
@@ -134,6 +134,7 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
             // (ResourceTransfer)
             // elements to move are in a sorted map to move short paths first
             TreeSet<IPath> moves = new TreeSet<IPath>(new Comparator<IPath>() {
+                @Override
                 public int compare(final IPath o1, final IPath o2) {
                     if (o1.segmentCount() < o2.segmentCount()) {
                         return -1;
@@ -163,17 +164,14 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
                 }
             }
             if (showOpenFlowError) {
-                MessageDialog.openInformation(Display.getDefault()
-                        .getActiveShell(), "Open Workflow(s)",
-                        "Workflows currently opened in an editor can't "
-                                + "be moved\nPlease save and close the open "
-                                + "workflow editor(s) and try again.");
+                MessageDialog.openInformation(SWTUtilities.getActiveShell(), "Open Workflow(s)",
+                    "Workflows currently opened in an editor can't be moved\nPlease save and close the open "
+                        + "workflow editor(s) and try again.");
                 return false;
             }
             if (selections.length > 0 && moves.size() == 0) {
-                MessageDialog.openInformation(Display.getDefault()
-                        .getActiveShell(), "Move Error",
-                        "Only workflows and workflow groups can be moved.");
+                MessageDialog.openInformation(SWTUtilities.getActiveShell(), "Move Error",
+                    "Only workflows and workflow groups can be moved.");
                 return false;
             }
 
@@ -251,11 +249,8 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
                                     + "the flow";
                     dlgType = MessageDialog.WARNING;
                 }
-                MessageDialog md =
-                        new MessageDialog(
-                                Display.getDefault().getActiveShell(),
-                                "Confirm Overwrite", null, msg, dlgType,
-                                labels, defaultIdx);
+                MessageDialog md = new MessageDialog(SWTUtilities.getActiveShell(), "Confirm Overwrite", null, msg,
+                    dlgType, labels, defaultIdx);
                 int result = md.open();
                 if (result != 0 && result != 1) {
                     // do not overwrite and do not save with new name: Cancel.
@@ -274,15 +269,12 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
                     RemoteFileTransfer.getInstance().requestFileContent(
                             (URI[])data);
             if (fileNames.length != 1) {
-                MessageDialog.openInformation(Display.getDefault()
-                        .getActiveShell(), "Drop Error",
-                        "Only one remote workflow can be dropped at a time.");
+                MessageDialog.openInformation(SWTUtilities.getActiveShell(), "Drop Error",
+                    "Only one remote workflow can be dropped at a time.");
                 return false;
             }
             IResource wf =
-                    KnimeResourceUtil.importZipFileAsWorkflow(Display
-                            .getDefault().getActiveShell(), newWF, new File(
-                            fileNames[0]));
+                KnimeResourceUtil.importZipFileAsWorkflow(SWTUtilities.getActiveShell(), newWF, new File(fileNames[0]));
             KnimeResourceUtil.revealInNavigator(wf, true);
             return true;
         }

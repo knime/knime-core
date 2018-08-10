@@ -65,10 +65,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.List;
 import org.knime.core.node.port.database.DatabaseDriverLoader;
+import org.knime.core.util.SWTUtilities;
 
 /**
  * {@link ListEditor} implementation that adds an add file button in addition to the add directory button.
@@ -150,7 +150,7 @@ public class DatabaseDriverListEditor extends ListEditor {
      * @return the {@link String} of the selected jar or <code>null</code>
      */
     protected String getNewJarFile() {
-        FileDialog dialog = new FileDialog(Display.getDefault().getActiveShell());
+        FileDialog dialog = new FileDialog(SWTUtilities.getActiveShell());
         dialog.setFilterExtensions(new String[]{"*.jar", "*.zip"});
         String fileName = dialog.open();
         if (fileName == null) {

@@ -55,7 +55,6 @@ import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
@@ -63,6 +62,7 @@ import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -121,8 +121,7 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
         } catch (Exception e) {
             String error = "Collapsing Metanode failed: " + e.getMessage();
             LOGGER.error(error, e);
-            MessageDialog.openError(Display.getCurrent().getActiveShell(),
-                    "Collapse failed", error);
+            MessageDialog.openError(SWTUtilities.getActiveShell(), "Collapse failed", error);
         }
 
     }
@@ -161,22 +160,21 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
      * @param nodeParts
      * @param annoParts
      * @param encapsulateAsSubnode TODO
-     * @return
+     * @return an Optional Command
      */
     public static Optional<CollapseMetaNodeCommand> create(final WorkflowManager manager,
         final NodeContainerEditPart[] nodeParts, final AnnotationEditPart[] annoParts,
         final boolean encapsulateAsSubnode) {
 
-        NodeID[] nodeIds = new NodeID[nodeParts.length];
+        final NodeID[] nodeIds = new NodeID[nodeParts.length];
         for (int i = 0; i < nodeParts.length; i++) {
             nodeIds[i] = nodeParts[i].getNodeContainer().getID();
         }
-        WorkflowAnnotation[] annos =
-            AnnotationEditPart.extractWorkflowAnnotations(annoParts);
+        final WorkflowAnnotation[] annos = AnnotationEditPart.extractWorkflowAnnotations(annoParts);
         try {
             // before testing anything, let's see if we should reset
             // the selected nodes:
-            List<NodeID> resetableIDs = new ArrayList<NodeID>();
+            final List<NodeID> resetableIDs = new ArrayList<NodeID>();
             for (NodeID id : nodeIds) {
                 if (manager.canResetNode(id)) {
                     resetableIDs.add(id);
@@ -184,11 +182,11 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
             }
             if (resetableIDs.size() > 0) {
                 // found some: ask if we can reset, otherwise bail
-                MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
-                        SWT.OK | SWT.CANCEL);
+                final MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.OK | SWT.CANCEL);
                 mb.setMessage("Executed Nodes will be reset - are you sure?");
                 mb.setText("Reset Executed Nodes");
-                int dialogreturn = mb.open();
+
+                final int dialogreturn = mb.open();
                 if (dialogreturn == SWT.CANCEL) {
                     return Optional.empty();
                 }
@@ -198,16 +196,17 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
                 // those nodes (which we don't want to do before we
                 // have not gathered all info - and allowed the user
                 // to cancel the operation!)
-                String res = manager.canCollapseNodesIntoMetaNode(nodeIds);
+                final String res = manager.canCollapseNodesIntoMetaNode(nodeIds);
                 if (res != null) {
                     throw new IllegalArgumentException(res);
                 }
             }
             // let the user enter a name
             String name = "Metanode";
-            InputDialog idia = new InputDialog(Display.getCurrent().getActiveShell(),
-                    "Enter Name of Metanode", "Enter name of Metanode:", name, null);
-            int dialogreturn = idia.open();
+            final InputDialog idia = new InputDialog(SWTUtilities.getActiveShell(), "Enter Name of Metanode",
+                "Enter name of Metanode:", name, null);
+
+            final int dialogreturn = idia.open();
             if (dialogreturn == Window.CANCEL) {
                 return Optional.empty();
             }
@@ -215,14 +214,14 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
                 if (resetableIDs.size() > 0) {
                     // do quick&dirty reset: just reset them in random order
                     // and skip the ones that were already reset in passing.
-                    for (NodeID id : resetableIDs) {
+                    for (final NodeID id : resetableIDs) {
                         if (manager.canResetNode(id)) {
                             manager.resetAndConfigureNode(id);
                         }
                     }
                 }
                 // check if there is another reason why we cannot collapse
-                String res = manager.canCollapseNodesIntoMetaNode(nodeIds);
+                final String res = manager.canCollapseNodesIntoMetaNode(nodeIds);
                 if (res != null) {
                     throw new IllegalArgumentException(res);
                 }
@@ -230,10 +229,8 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
                 return Optional.of(new CollapseMetaNodeCommand(manager, nodeIds, annos, name, encapsulateAsSubnode));
             }
         } catch (IllegalArgumentException e) {
-            MessageBox mb = new MessageBox(
-                    Display.getCurrent().getActiveShell(), SWT.ERROR);
-            final String error =
-                "Collapsing to metanode failed: " + e.getMessage();
+            final MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ERROR);
+            final String error = "Collapsing to metanode failed: " + e.getMessage();
             LOGGER.error(error, e);
             mb.setMessage(error);
             mb.setText("Collapse failed");

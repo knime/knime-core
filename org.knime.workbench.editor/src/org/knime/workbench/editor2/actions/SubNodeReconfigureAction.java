@@ -49,11 +49,11 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -117,11 +117,11 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        NodeContainerEditPart[] nodes = getSelectedParts(NodeContainerEditPart.class);
+        final NodeContainerEditPart[] nodes = getSelectedParts(NodeContainerEditPart.class);
         if (nodes.length != 1) {
             return false;
         }
-        NodeContainer nc = Wrapper.unwrapOptionalNC(nodes[0].getNodeContainer()).orElse(null);
+        final NodeContainer nc = Wrapper.unwrapOptionalNC(nodes[0].getNodeContainer()).orElse(null);
         if (nc instanceof SubNodeContainer) {
             return !((SubNodeContainer)nc).isWriteProtected();
         }
@@ -134,14 +134,15 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
         if (nodeParts.length < 1) {
             return;
         }
-        NodeContainerEditPart ep = nodeParts[0];
-        SubNodeContainerUI subnodeNC = (SubNodeContainerUI)ep.getModel();
+        final NodeContainerEditPart ep = nodeParts[0];
+        final SubNodeContainerUI subnodeNC = (SubNodeContainerUI)ep.getModel();
         if (!Wrapper.unwrap(subnodeNC, SubNodeContainer.class).getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
             return;
         }
 
-        SetupSubnodeWizard wizard = new SetupSubnodeWizard(ep.getViewer(), Wrapper.unwrap(subnodeNC, SubNodeContainer.class));
-        SubnodeWizardDialog dlg = new SubnodeWizardDialog(Display.getCurrent().getActiveShell(), wizard);
+        final SetupSubnodeWizard wizard =
+            new SetupSubnodeWizard(ep.getViewer(), Wrapper.unwrap(subnodeNC, SubNodeContainer.class));
+        final SubnodeWizardDialog dlg = new SubnodeWizardDialog(SWTUtilities.getActiveShell(), wizard);
         dlg.create();
         dlg.open();
     }

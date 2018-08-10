@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   20.10.2006 (sieb): created
  */
@@ -53,26 +53,26 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.wizards.imports.WorkflowImportWizard;
 
 /**
  * Action to invoke the KNIME import wizard.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, KNIME AG, Zurich, Switzerland
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
 public class ImportKnimeWorkflowAction extends Action {
-    
-    private static final ImageDescriptor ICON 
+
+    private static final ImageDescriptor ICON
         = KNIMEUIPlugin.imageDescriptorFromPlugin(
                 KNIMEUIPlugin.PLUGIN_ID, "icons/knime_import.png");
-    
+
     /**
      * The id for this action.
      */
@@ -86,7 +86,7 @@ public class ImportKnimeWorkflowAction extends Action {
 
     /**
      * Create a new instance of this class.
-     * 
+     *
      * @param window the window
      */
     public ImportKnimeWorkflowAction(final IWorkbenchWindow window) {
@@ -100,7 +100,7 @@ public class ImportKnimeWorkflowAction extends Action {
         setId(ID);
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
@@ -115,8 +115,7 @@ public class ImportKnimeWorkflowAction extends Action {
     @Override
     public void run() {
         WorkflowImportWizard wizard = new WorkflowImportWizard();
-        WizardDialog dialog = new WizardDialog(
-                Display.getDefault().getActiveShell(), wizard);
+        WizardDialog dialog = new WizardDialog(SWTUtilities.getActiveShell(), wizard);
         IStructuredSelection selectionToPass;
         // get the current workbench selection
         ISelection workbenchSelection = m_workbenchWindow.getSelectionService()

@@ -59,6 +59,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.part.ViewPart;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.startup.StartupMessage;
@@ -122,7 +123,8 @@ public class StartupMessagesView extends ViewPart {
                     TableItem tableCell = (TableItem)event.item;
                     if (tableCell.getData() instanceof StartupMessage) {
                         StartupMessage msg = (StartupMessage)tableCell.getData();
-                        StartupMessageDialog dlg = new StartupMessageDialog(event.display.getActiveShell(), msg);
+                        StartupMessageDialog dlg =
+                            new StartupMessageDialog(SWTUtilities.getActiveShell(event.display), msg);
                         dlg.open();
                     }
                 }

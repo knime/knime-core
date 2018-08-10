@@ -50,11 +50,11 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -117,13 +117,13 @@ public class MetaNodeReconfigureAction extends AbstractNodeAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        NodeContainerEditPart[] nodes = getSelectedParts(NodeContainerEditPart.class);
+        final NodeContainerEditPart[] nodes = getSelectedParts(NodeContainerEditPart.class);
         if (nodes.length != 1) {
             return false;
         }
-        NodeContainerUI nc = nodes[0].getNodeContainer();
+        final NodeContainerUI nc = nodes[0].getNodeContainer();
         if (nc instanceof WorkflowManagerUI) {
-            WorkflowManagerUI metaNode = (WorkflowManagerUI)nc;
+            final WorkflowManagerUI metaNode = (WorkflowManagerUI)nc;
             return !metaNode.isWriteProtected();
         }
         return false;
@@ -135,14 +135,14 @@ public class MetaNodeReconfigureAction extends AbstractNodeAction {
         if (nodeParts.length < 1) {
             return;
         }
-        NodeContainerEditPart ep = nodeParts[0];
-        WorkflowManager metanode = Wrapper.unwrapWFM(ep.getNodeContainer());
+        final NodeContainerEditPart ep = nodeParts[0];
+        final WorkflowManager metanode = Wrapper.unwrapWFM(ep.getNodeContainer());
         if (!metanode.unlock(new GUIWorkflowCipherPrompt())) {
             return;
         }
 
-        ReconfigureMetaNodeWizard wizard = new ReconfigureMetaNodeWizard(ep.getViewer(), metanode);
-        WizardDialog dlg = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
+        final ReconfigureMetaNodeWizard wizard = new ReconfigureMetaNodeWizard(ep.getViewer(), metanode);
+        final WizardDialog dlg = new WizardDialog(SWTUtilities.getActiveShell(), wizard);
         dlg.create();
         dlg.open();
     }

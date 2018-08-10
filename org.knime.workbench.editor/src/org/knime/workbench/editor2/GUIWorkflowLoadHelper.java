@@ -66,6 +66,7 @@ import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.core.util.Version;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
@@ -165,7 +166,7 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
                 @Override
                 public void run() {
                     CredentialVariablesDialog dialog = new CredentialVariablesDialog(
-                        m_display.getActiveShell(), credentialsToBePromptedList, m_workflowName);
+                        SWTUtilities.getActiveShell(m_display), credentialsToBePromptedList, m_workflowName);
                     if (dialog.open() == Window.OK) {
                         List<Credentials> updateCredentialsList = dialog.getCredentials();
                         newCredentialsList.addAll(updateCredentialsList);
@@ -220,7 +221,7 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
         m_display.syncExec(new Runnable() {
             @Override
             public void run() {
-                MessageDialog dialog = new MessageDialog(m_display.getActiveShell(),
+                MessageDialog dialog = new MessageDialog(SWTUtilities.getActiveShell(m_display),
                     "Workflow version not supported by KNIME Analytics Platform version",
                     null, e.toString(), MessageDialog.WARNING, labels, 0);
                 switch (dialog.open()) {
@@ -267,7 +268,7 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
         m_display.syncExec(new Runnable() {
             @Override
             public void run() {
-                MessageDialogWithToggle dialog = new MessageDialogWithToggle(m_display.getActiveShell(),
+                MessageDialogWithToggle dialog = new MessageDialogWithToggle(SWTUtilities.getActiveShell(m_display),
                     "Loading Workflow created by a Nightly Build",
                     null, e.toString(), MessageDialog.WARNING, labels, 0,
                     "Always load workflows created by a Nightly Build", false);

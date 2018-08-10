@@ -54,7 +54,6 @@ import static org.knime.workbench.ui.async.AsyncSwitch.wfmAsyncSwitchRethrow;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
@@ -64,6 +63,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.OperationNotAllowedException;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -347,7 +347,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
             m_targetNode = null;
             m_sourcePortID = -1;
             m_targetPortID = -1;
-            MessageDialog.openError(Display.getDefault().getActiveShell(),
+            MessageDialog.openError(SWTUtilities.getActiveShell(),
                     "Connection could not be created",
                     "The two nodes could not be connected due to "
                     + "the following reason:\n " + e.getMessage());
@@ -363,7 +363,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      */
     public static MessageDialogWithToggle openReconnectConfirmDialog(final boolean confirm, final String question) {
         final String questionText = (question != null) ? question : REPLACE_CONNECTION_MESSAGE;
-        return MessageDialogWithToggle.openYesNoQuestion(Display.getDefault().getActiveShell(), "Replace Connection?",
+        return MessageDialogWithToggle.openYesNoQuestion(SWTUtilities.getActiveShell(), "Replace Connection?",
             questionText, "Always replace without confirming.", !confirm,
             KNIMEUIPlugin.getDefault().getPreferenceStore(), PreferenceConstants.P_CONFIRM_RECONNECT);
     }
@@ -382,7 +382,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
                     old.getUIInfo() != null ? old.getUIInfo().getAllBendpoints() : null);
             }
         } catch (OperationNotAllowedException e) {
-            MessageDialog.openError(Display.getDefault().getActiveShell(),
+            MessageDialog.openError(SWTUtilities.getActiveShell(),
                 "Connection could not be restored",
                 "Connection couldn't be restored (undo) due to "
                 + "the following reason:\n " + e.getMessage());

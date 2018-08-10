@@ -53,13 +53,13 @@ import java.security.NoSuchAlgorithmException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.UI;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -156,7 +156,7 @@ public class LockSubNodeAction extends AbstractNodeAction {
             return;
         }
         WorkflowManager metaNodeWFM = Wrapper.unwrap((UI)model, SubNodeContainer.class).getWorkflowManager();
-        final Shell shell = Display.getCurrent().getActiveShell();
+        final Shell shell = SWTUtilities.getActiveShell();
         if (!metaNodeWFM.unlock(new GUIWorkflowCipherPrompt())) {
             return;
         }

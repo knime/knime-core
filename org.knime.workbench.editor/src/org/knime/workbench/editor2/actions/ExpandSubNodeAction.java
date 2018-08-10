@@ -47,7 +47,6 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -55,6 +54,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -158,7 +158,7 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
             // reset the metanode
             if (manager.canResetNode(subNode.getID())) {
                 // yes: ask if we can reset, otherwise bail
-                MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.OK | SWT.CANCEL);
+                MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.OK | SWT.CANCEL);
                 mb.setMessage("Executed Nodes inside Wrapped Metanode will be reset" + " - are you sure?");
                 mb.setText("Reset Executed Nodes");
                 int dialogreturn = mb.open();
@@ -177,7 +177,7 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
             ExpandSubNodeCommand emnc = new ExpandSubNodeCommand(manager, subNode.getID(), getEditor());
             execute(emnc);
         } catch (IllegalArgumentException e) {
-            MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.ERROR);
+            MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ERROR);
             mb.setMessage("Expanding Wrapped Metanode failed: " + e.getMessage());
             mb.setText("Expand failed");
             mb.open();

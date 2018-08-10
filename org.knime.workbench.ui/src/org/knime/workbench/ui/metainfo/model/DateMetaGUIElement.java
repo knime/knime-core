@@ -60,6 +60,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.knime.core.util.SWTUtilities;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -314,15 +315,11 @@ public class DateMetaGUIElement extends MetaGUIElement {
 
 
     private void showSelectPrompt(final String missingField) {
-        Display.getDefault().syncExec(new Runnable() {
+        final Display display = Display.getDefault();
 
-            @Override
-            public void run() {
-                MessageDialog.openWarning(Display.getDefault().getActiveShell(),
-                        "Please select...",
-                        missingField + " is empty. Please select");
-            }
-
+        display.syncExec(() -> {
+            MessageDialog.openWarning(SWTUtilities.getActiveShell(display), "Please select...",
+                missingField + " is empty. Please select");
         });
     }
 

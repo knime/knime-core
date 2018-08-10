@@ -47,7 +47,7 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Display;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.EditorGridSettingsDialog;
@@ -123,9 +123,8 @@ public class ChangeGridAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        EditorGridSettingsDialog dlg =
-                new EditorGridSettingsDialog(Display.getCurrent().getActiveShell(), getEditor()
-                        .getCurrentEditorSettings());
+        final EditorGridSettingsDialog dlg =
+            new EditorGridSettingsDialog(SWTUtilities.getActiveShell(), getEditor().getCurrentEditorSettings());
         if (dlg.open() == Window.OK) {
             getEditor().markDirty();
             getEditor().applyEditorSettings(dlg.getSettings());

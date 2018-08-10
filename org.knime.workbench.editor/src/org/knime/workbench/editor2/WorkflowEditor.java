@@ -192,6 +192,7 @@ import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.Pointer;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.core.nodeprovider.NodeProvider.EventListener;
@@ -1154,7 +1155,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                                     openErrorDialogAndCloseEditor(message);
                                     throw new OperationCanceledException(message);
                                 } else {
-                                    MessageDialog.openWarning(Display.getDefault().getActiveShell(),
+                                    MessageDialog.openWarning(SWTUtilities.getActiveShell(),
                                         "Auto-Save Rename Problem", message + "\nAuto-Save will be disabled.");
                                 }
                             }
@@ -1251,7 +1252,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         StringBuilder m = new StringBuilder("\"");
         m.append(workflowName).append("\" was not properly closed.\n\n");
         m.append("An auto-saved copy will be restored to \"").append(restoredPath).append("\".\n");
-        Shell sh = Display.getDefault().getActiveShell();
+        Shell sh = SWTUtilities.getActiveShell();
         MessageDialog d = new MessageDialog(sh, "Detected auto-save copy", null,
                         m.toString(), MessageDialog.QUESTION, buttons, 0);
         return d.open();
@@ -1563,7 +1564,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 NLS.bind(WorkbenchMessages.EditorManager_saveChangesQuestion,
                         getTitle());
         // Show a dialog.
-        Shell sh = Display.getDefault().getActiveShell();
+        Shell sh = SWTUtilities.getActiveShell();
         String[] buttons =
                 new String[]{IDialogConstants.YES_LABEL,
                         IDialogConstants.NO_LABEL,
@@ -1697,7 +1698,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 @Override
                 public void run() {
                     boolean abort = false;
-                    Shell sh = Display.getDefault().getActiveShell();
+                    Shell sh = SWTUtilities.getActiveShell();
                     String title = "Workflow in execution";
                     String message = "Executing nodes are not saved!";
                     if (m_isClosing) {
@@ -1766,8 +1767,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             return;
         }
         URI fileResource = m_fileResource;
-        Display display = Display.getDefault();
-        Shell activeShell = display.getActiveShell();
+        Shell activeShell = SWTUtilities.getActiveShell();
         if (fileResource == null) {
             MessageDialog.openError(activeShell, "Workflow file resource",
                 "Could not determine the save location to the workflow.");
@@ -3406,7 +3406,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (message != LoadWorkflowRunnable.INCOMPATIBLE_VERSION_MSG) { // string identiy is OK here
             final String errorTitle = "Workflow could not be opened";
             if (Display.getDefault().getThread() == Thread.currentThread()) {
-                MessageDialog.openError(Display.getDefault().getActiveShell(), errorTitle, message);
+                MessageDialog.openError(SWTUtilities.getActiveShell(), errorTitle, message);
             } else {
                 // 20140525 - dunno why we ever use Swing here - keep unmodified to be sure
                 SwingUtilities.invokeLater(new Runnable() {
@@ -3507,7 +3507,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         } catch (CoreException | InterruptedException e) {
             String msg = "Failed to upload the workflow to its remote location\n(" + e.getMessage() + ")";
             LOGGER.error(msg, e);
-            MessageDialog.openError(Display.getCurrent().getActiveShell(), "Upload failed.", msg);
+            MessageDialog.openError(SWTUtilities.getActiveShell(), "Upload failed.", msg);
         }
     }
 }

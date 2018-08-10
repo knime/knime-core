@@ -49,15 +49,14 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.ui.wrapper.AbstractWrappedDialog;
 
 /**
  * Action to set the custom description for a node.
@@ -144,43 +143,33 @@ public class SetNodeDescriptionAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         // if more than one node part is selected
         if (nodeParts.length != 1) {
-            LOGGER.debug("Execution denied as more than one node is "
-                    + "selected. Not allowed in 'Set description' action.");
+            LOGGER.debug(
+                "Execution denied as more than one node is " + "selected. Not allowed in 'Set description' action.");
             return;
         }
 
         final NodeContainerUI container = nodeParts[0].getNodeContainer();
 
         try {
-            Shell parent = AbstractWrappedDialog.getActiveShell();
+            final Shell parent = SWTUtilities.getActiveShell();
 
             String initialDescr = "";
             if (container.getCustomDescription() != null) {
                 initialDescr = container.getCustomDescription();
             }
-            String dialogTitle = container.getDisplayLabel();
+            final String dialogTitle = container.getDisplayLabel();
 
-            NodeDescriptionDialog dialog =
-                new NodeDescriptionDialog(parent, dialogTitle, initialDescr,
-                        // (bugfix 1402)
-                        container.getID());
+            final NodeDescriptionDialog dialog = new NodeDescriptionDialog(parent, dialogTitle, initialDescr,
+                // (bugfix 1402)
+                container.getID());
 
-            Point relativeLocation =  new Point(
-                    nodeParts[0].getFigure().getBounds().x,
-                    nodeParts[0].getFigure().getBounds().y);
-
-            relativeLocation = parent.toDisplay(relativeLocation);
-            dialog.create();
-            dialog.getShell().setLocation(relativeLocation);
-
-            int result = dialog.open();
+            final int result = dialog.open();
 
             // check if ok was pressed
             if (result == Window.OK) {
-                String description = dialog.getDescription();
-                container.setCustomDescription(description);
+                container.setCustomDescription(dialog.getDescription());
             }
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             LOGGER.error("Could not open node description editor: " + ex.getMessage(), ex);
         }
     }

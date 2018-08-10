@@ -51,12 +51,13 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 
 /**
  *
  * @author Thomas Gabriel, KNIME.com AG
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -74,21 +75,17 @@ public class OpenCredentialVariablesDialogAction
         // open the dialog
         final Display d = Display.getDefault();
         // run in UI thread
-        d.asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                CredentialsStore store = wf.getCredentialsStore();
-                CredentialVariablesDialog dialog =
-                    new CredentialVariablesDialog(d.getActiveShell(), store,
-                        wf.getName());
-                if (dialog.open() == Window.OK) {
-                    for (String name : store.listNames()) {
-                        store.remove(name);
-                    }
-                    List<Credentials> credentials = dialog.getCredentials();
-                    for (Credentials cred : credentials) {
-                        store.add(cred);
-                    }
+        d.asyncExec(() -> {
+            CredentialsStore store = wf.getCredentialsStore();
+            CredentialVariablesDialog dialog =
+                new CredentialVariablesDialog(SWTUtilities.getActiveShell(d), store, wf.getName());
+            if (dialog.open() == Window.OK) {
+                for (String name : store.listNames()) {
+                    store.remove(name);
+                }
+                List<Credentials> credentials = dialog.getCredentials();
+                for (Credentials cred : credentials) {
+                    store.add(cred);
                 }
             }
         });

@@ -55,8 +55,8 @@ import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -118,7 +118,7 @@ public class VerifyingCompoundCommand extends CompoundCommand {
             if (!store.contains(PreferenceConstants.P_CONFIRM_DELETE)
                 || store.getBoolean(PreferenceConstants.P_CONFIRM_DELETE)) {
                 MessageDialogWithToggle dialog =
-                    MessageDialogWithToggle.openOkCancelConfirm(Display.getDefault().getActiveShell(), "Confirm ...",
+                    MessageDialogWithToggle.openOkCancelConfirm(SWTUtilities.getActiveShell(), "Confirm ...",
                         m_dialogDisplayText, "Do not ask again", false, null, null);
                 if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
                     return;

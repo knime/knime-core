@@ -67,6 +67,7 @@ import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.AsyncNodeContainerUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.CompletableFutureEx;
+import org.knime.core.util.SWTUtilities;
 
 /**
  * Helper methods to switch between the synchronous and asynchronous implementations of an interface (such as
@@ -243,8 +244,9 @@ public class AsyncSwitch {
 
     private static void openDialogAndLog(final Throwable e, final String waitingMessage) {
         String message = "An unexpected problem occurred while '" + waitingMessage + "': " + e.getMessage();
-        Display.getDefault().syncExec(() -> {
-            final Shell shell = Display.getDefault().getActiveShell();
+        final Display display = Display.getDefault();
+        display.syncExec(() -> {
+            final Shell shell = SWTUtilities.getActiveShell(display);
             MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
             mb.setText("Unexpected Problem");
             mb.setMessage(message + "\nSee log for details.");

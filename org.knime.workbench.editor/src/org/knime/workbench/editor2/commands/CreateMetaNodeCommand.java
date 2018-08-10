@@ -50,7 +50,6 @@ import java.util.Arrays;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
@@ -60,6 +59,7 @@ import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.SWTUtilities;
 
 /**
  * GEF command for adding a metanode from the repository to the workflow.
@@ -138,8 +138,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
             // if fails notify the user
             String error = "Metanode cannot be created";
             LOGGER.debug(error + ": " + t.getMessage(), t);
-            MessageBox mb = new MessageBox(Display.getDefault().
-                    getActiveShell(), SWT.ICON_WARNING | SWT.OK);
+            MessageBox mb = new MessageBox(SWTUtilities.getActiveShell(), SWT.ICON_WARNING | SWT.OK);
             mb.setText(error);
             mb.setMessage("The metanode could not be created "
                     + "due to the following reason:\n" + t.getMessage());
@@ -188,7 +187,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
                 wm.removeAnnotation(anno);
             }
         } else {
-            MessageDialog.openInformation(Display.getDefault().getActiveShell(),
+            MessageDialog.openInformation(SWTUtilities.getActiveShell(),
                     "Operation no allowed", "The node(s) "
                     + Arrays.asList(ids) + " can currently not be removed");
         }

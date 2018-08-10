@@ -50,10 +50,10 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -146,7 +146,7 @@ public class SubnodeLayoutAction extends AbstractNodeAction {
         WorkflowManager manager = getManager();
         SubNodeContainer subnode = (SubNodeContainer)manager.getDirectNCParent();
         SubnodeLayoutWizard wizard = new SubnodeLayoutWizard(subnode);
-        WizardDialog dlg = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
+        WizardDialog dlg = new WizardDialog(SWTUtilities.getActiveShell(), wizard);
         dlg.create();
         dlg.open();
     }
