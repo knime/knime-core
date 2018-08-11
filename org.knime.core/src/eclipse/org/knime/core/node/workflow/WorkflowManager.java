@@ -1421,7 +1421,7 @@ public final class WorkflowManager extends NodeContainer
     public ConnectionContainer getIncomingConnectionFor(final NodeID id, final int portIdx) {
         try (WorkflowLock lock = lock()) {
             CheckUtils.checkArgument(id.equals(getID()) || containsNodeContainer(id),
-                "Node ID \"%s\" not contained in workflow, nor it's the workflow itself (ID of this workflow is \"%s\"",
+                "Node ID \"%s\" not contained in workflow, nor it's the workflow itself (ID of this workflow is \"%s\")",
                 id, getID());
             Set<ConnectionContainer> inConns = m_workflow.getConnectionsByDest(id);
             if (inConns != null) {

@@ -197,21 +197,28 @@ public class DeleteCommand extends AbstractKNIMECommand {
         if (!super.canExecute()) {
             return false;
         }
-        boolean foundValid = false;
-        WorkflowManagerUI hostWFM = getHostWFMUI();
+
+        final WorkflowManagerUI hostWFM = getHostWFMUI();
         for (NodeID id : m_nodeIDs) {
-            foundValid = true;
             if (!hostWFM.canRemoveNode(id)) {
                 return false;
             }
         }
+
+        final WorkflowManager wm = getHostWFM();
         for (ConnectionContainerUI cc : m_connections) {
-            foundValid = true;
-            if (!hostWFM.canRemoveConnection(cc.getID())) {
+            final ConnectionID ccId = cc.getID();
+
+            // hostWFM.canRemoveConnection(ccId) will throw an exception instead of returning false due to
+            //      it eventually calling WorkflowManager.getIncomingConnectionFor(NodeID, int); we pre-emptively
+            //      do the check it would do for containment
+            if (((wm != null) && (!wm.containsNodeContainer(ccId.getDestinationNode())))
+                || (!hostWFM.canRemoveConnection(ccId))) {
                 return false;
             }
         }
-        return foundValid || m_annotationIDs.length > 0;
+
+        return (m_nodeIDs.length > 0) || (m_connections.length > 0) || (m_annotationIDs.length > 0);
     }
 
     /** {@inheritDoc} */
