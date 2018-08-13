@@ -103,19 +103,7 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
-            WorkflowManagerUI wm = getHostWFMUI();
-            NodeUIInformation information = NodeUIInformation.builder()
-                .setNodeLocation(m_newBounds[0], m_newBounds[1], m_newBounds[2], m_newBounds[3]).build();
-            NodeContainerUI container = wm.getNodeContainer(m_nodeID);
-            // must set explicitly so that event is fired by container
-            AsyncSwitch.ncAsyncSwitch(nc -> {
-                nc.setUIInformation(information);
-                return null;
-            }, nc -> {
-                CompletableFuture<Void> f = nc.setUIInformationAsync(information);
-                f.thenCompose(s -> nc.getParent().refresh(false));
-                return f;
-            }, container, "Moving node ...");
+            moveNode(m_nodeID, m_newBounds, getHostWFMUI());
         }
     }
 
@@ -127,17 +115,22 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
     @Override
     public void undo() {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
-            NodeUIInformation information = NodeUIInformation.builder()
-                .setNodeLocation(m_oldBounds[0], m_oldBounds[1], m_oldBounds[2], m_oldBounds[3]).build();
-            NodeContainerUI container = getHostWFMUI().getNodeContainer(m_nodeID);
-            AsyncSwitch.ncAsyncSwitch(nc -> {
-                nc.setUIInformation(information);
-                return null;
-            }, nc -> {
-                CompletableFuture<Void> f = nc.setUIInformationAsync(information);
-                f.thenCompose(s -> nc.getParent().refresh(false));
-                return f;
-            }, container, "Moving node ...");
+            moveNode(m_nodeID, m_oldBounds, getHostWFMUI());
         }
+    }
+
+    private static void moveNode(final NodeID nodeID, final int[] bounds, final WorkflowManagerUI wfm) {
+        NodeUIInformation information =
+            NodeUIInformation.builder().setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3]).build();
+        NodeContainerUI container = wfm.getNodeContainer(nodeID);
+        // must set explicitly so that event is fired by container
+        AsyncSwitch.ncAsyncSwitch(nc -> {
+            nc.setUIInformation(information);
+            return null;
+        }, nc -> {
+            CompletableFuture<Void> f = nc.setUIInformationAsync(information);
+            f.thenCompose(s -> nc.getParent().refresh(false));
+            return f;
+        }, container, "Moving node ...");
     }
 }
