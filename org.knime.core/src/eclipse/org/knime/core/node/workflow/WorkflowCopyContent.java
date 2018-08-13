@@ -194,6 +194,7 @@ public final class WorkflowCopyContent {
         /** Sets annotation ids.
          * @param annotationIDs the annotation ids
          * @return this;
+         * @since 3.7
          */
         public Builder setAnnotationIDs(final WorkflowAnnotationID... annotationIDs) {
             m_annotationIDs = annotationIDs;

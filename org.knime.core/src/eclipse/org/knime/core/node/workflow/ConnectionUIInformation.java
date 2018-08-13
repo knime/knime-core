@@ -185,6 +185,7 @@ public class ConnectionUIInformation {
          *
          * @param bendpoints the bendpoints to set - will only be copied on {@link #build()}
          * @return this
+         * @since 3.7
          */
         public Builder setBendpoints(final int[]... bendpoints) {
             m_bendpoints.clear();

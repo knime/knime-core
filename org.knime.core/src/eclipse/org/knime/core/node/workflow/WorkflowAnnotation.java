@@ -102,6 +102,7 @@ public class WorkflowAnnotation extends Annotation {
      * workflow manager (see {@link WorkflowManager#addWorkflowAnnotation(WorkflowAnnotation)}).
      *
      * @return the id or <code>null</code> if the workflow annotation is not part of a workflow, yet
+     * @since 3.7
      */
     public WorkflowAnnotationID getID() {
         return m_id;
