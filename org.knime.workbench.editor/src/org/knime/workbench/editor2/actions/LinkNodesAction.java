@@ -720,17 +720,17 @@ public class LinkNodesAction extends AbstractLinkNodesAction {
         connectableEditParts.addAll(validLeft);
         connectableEditParts.addAll(validRight);
 
-        return new ScreenedSelectionSet(connectableEditParts, borderParts[0].getNodeContainer(), borderParts[1].getNodeContainer());
+        return new ScreenedSelectionSet(connectableEditParts, borderParts[0], borderParts[1]);
     }
 
 
     static class ScreenedSelectionSet {
         private final List<ConnectableEditPart> m_connectableNodes;
-        private final NodeContainerUI m_spatiallyLeftMostNode;
-        private final NodeContainerUI m_spatiallyRightMostNode;
+        private final ConnectableEditPart m_spatiallyLeftMostNode;
+        private final ConnectableEditPart m_spatiallyRightMostNode;
 
-        ScreenedSelectionSet(final Collection<ConnectableEditPart> connectables, final NodeContainerUI left,
-            final NodeContainerUI right) {
+        ScreenedSelectionSet(final Collection<ConnectableEditPart> connectables, final ConnectableEditPart left,
+            final ConnectableEditPart right) {
             m_spatiallyLeftMostNode = left;
             m_spatiallyRightMostNode = right;
 
