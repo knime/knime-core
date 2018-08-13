@@ -58,12 +58,7 @@ import org.knime.core.ui.node.workflow.WorkflowCopyWithOffsetUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 
 /**
- * UI-interface that provides asynchronous versions of some methods of {@link WorkflowManagerUI}.
- *
- * The methods that are overridden and provided with a asynchronous counterpart here are expected to return their result
- * with a delay (e.g. because it is requested from a server).
- *
- * All methods not overridden here are expected to return almost immediately.
+ * UI-interface that provides asynchronous versions of some methods of {@link WorkflowManagerUI} - see {@link AsyncUI}.
  *
  * The asynchronous workflow manager also adds methods to refresh the workflow, set a workflow disconnected, etc.
  *
