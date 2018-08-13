@@ -36,6 +36,7 @@ public class ConsumptionPath {
 
     /**
      * @return The converter factory used in this path.
+     * @since 3.7
      */
     public DataCellToJavaConverterFactory<?, ?> getConverterFactory() {
         return m_converterFactory;
@@ -43,6 +44,7 @@ public class ConsumptionPath {
 
     /**
      * @return The consumer factory used in this path.
+     * @since 3.7
      */
     public CellValueConsumerFactory<?, ?, ?, ?> getConsumerFactory() {
         return m_consumerFactory;

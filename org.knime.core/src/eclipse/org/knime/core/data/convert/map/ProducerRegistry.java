@@ -91,6 +91,7 @@ public class ProducerRegistry<ET, ST extends Source<ET>> extends
      * Get all available production paths
      *
      * @return All possible production paths
+     * @since 3.7
      */
     public List<ProductionPath> getAvailableProductionPaths() {
         final ArrayList<ProductionPath> productionPaths = new ArrayList<>();

@@ -38,6 +38,7 @@ public class ProductionPath {
 
     /**
      * @return The cell value producer factory used in this path.
+     * @since 3.7
      */
     public CellValueProducerFactory<?, ?, ?, ?> getProducerFactory() {
         return m_producerFactory;
@@ -45,6 +46,7 @@ public class ProductionPath {
 
     /**
      * @return The converter factory used in this path.
+     * @since 3.7
      */
     public JavaToDataCellConverterFactory<?> getConverterFactory() {
         return m_converterFactory;
