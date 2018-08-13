@@ -228,7 +228,7 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
                 AnnotationEditPart anno = (AnnotationEditPart)epart;
                 Rectangle bounds = anno.getFigure().getBounds().getCopy();
                 bounds.translate(offset);
-                ChangeAnnotationBoundsCommand cmd = new ChangeAnnotationBoundsCommand(getManager(), anno, bounds);
+                ChangeAnnotationBoundsCommand cmd = new ChangeAnnotationBoundsCommand(getManagerUI(), anno, bounds);
                 compoundCommand.add(cmd);
             }
         }

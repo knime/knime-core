@@ -66,6 +66,7 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.SelectionHandlesEditPolicy;
 import org.eclipse.gef.requests.BendpointRequest;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.commands.NewBendpointCreateCommand;
 import org.knime.workbench.editor2.commands.NewBendpointDeleteCommand;
@@ -463,14 +464,17 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
         }
     }
 
-    /** @return The workflow manager associated with the host. */
+    /**
+     * @return The workflow manager associated with the host. <code>null</code> if there is no WorkflowManager but
+     *         another {@link WorkflowManagerUI}-implementation
+     */
     public WorkflowManager getWorkflowManager() {
         // we need the workflow manager
         // This is a bit tricky here, as the parent of the connection's edit
         // part is the ScalableFreefromEditPart. We need to get the first (and
         // only) child to get a reference to "our" root (WorkflowRootEditPart)
-        return Wrapper.unwrapWFM(((WorkflowRootEditPart) getHost().getRoot().getChildren().get(0))
-            .getWorkflowManager());
+        return Wrapper.unwrapWFMOptional(((WorkflowRootEditPart) getHost().getRoot().getChildren().get(0))
+            .getWorkflowManager()).orElse(null);
     }
 
     /**
@@ -485,8 +489,13 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
         ZoomManager zoomManager = (ZoomManager)getHost().getRoot().getViewer()
                 .getProperty(ZoomManager.class.toString());
 
-        return new NewBendpointCreateCommand(editPart, getWorkflowManager(),
-                index, loc, zoomManager);
+        WorkflowManager wfm = getWorkflowManager();
+        //TODO as soon as this command supports to work with WorkflowManagerUI
+        //this check is not needed anymore
+        if (wfm == null) {
+            return null;
+        }
+        return new NewBendpointCreateCommand(editPart, getWorkflowManager(), index, loc, zoomManager);
     }
 
     /**

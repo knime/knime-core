@@ -62,9 +62,11 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.AsyncNodeContainerUI;
+import org.knime.core.ui.node.workflow.async.AsyncWorkflowAnnotationUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.CompletableFutureEx;
 import org.knime.core.util.SWTUtilities;
@@ -149,7 +151,7 @@ public class AsyncSwitch {
      * @param asyncNc
      * @param nc
      * @param waitingMessage
-     * @return the actual result, possibly after some waiting in the asynch case
+     * @return the actual result, possibly after some waiting in the async case
      */
     public static <T> T ncAsyncSwitch(final Function<NodeContainerUI, T> syncNc,
         final Function<AsyncNodeContainerUI, CompletableFuture<T>> asyncNc, final NodeContainerUI nc,
@@ -186,7 +188,7 @@ public class AsyncSwitch {
      * @param asyncWfm
      * @param wfm
      * @param waitingMessage
-     * @return the actual result, possibly after some waiting in the asynch case
+     * @return the actual result, possibly after some waiting in the async case
      * @throws E the expected exception
      */
     public static <T, E extends Exception> T wfmAsyncSwitchRethrow(
@@ -234,7 +236,7 @@ public class AsyncSwitch {
      * @param asyncNc
      * @param nc
      * @param waitingMessage
-     * @return the actual result, possibly after some waiting in the asynch case
+     * @return the actual result, possibly after some waiting in the async case
      * @throws E the expected exception
      */
     public static <T, E extends Exception> T ncAsyncSwitchRethrow(final RethrowFunction<NodeContainerUI, T, E> syncNc,
@@ -269,6 +271,43 @@ public class AsyncSwitch {
             return ref.get();
         } else {
             return syncNc.apply(nc);
+        }
+    }
+
+    /**
+     * Almost the same as {@link #wfmAsyncSwitch(Function, Function, WorkflowManagerUI, String)} but for
+     * {@link WorkflowAnnotation}/{@link AsyncWorkflowAnnotationUI}.
+     *
+     * @param syncWa
+     * @param asyncWa
+     * @param wa
+     * @param waitingMessage
+     * @return the actual result, possibly after some waiting in the async case
+     */
+    public static <T> T waAsyncSwitch(final Function<WorkflowAnnotation, T> syncWa,
+        final Function<AsyncWorkflowAnnotationUI, CompletableFuture<T>> asyncWa, final WorkflowAnnotation wa,
+        final String waitingMessage) {
+        if (wa instanceof AsyncWorkflowAnnotationUI) {
+            final AtomicReference<T> ref = new AtomicReference<T>();
+            final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
+            try {
+                PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
+                    monitor.beginTask(waitingMessage, 100);
+                    try {
+                        ref.set(asyncWa.apply((AsyncWorkflowAnnotationUI)wa).get());
+                    } catch (ExecutionException e) {
+                        exception.set(e.getCause());
+                    }
+                });
+            } catch (InterruptedException | InvocationTargetException ex) {
+                exception.set(ex);
+            }
+            if (exception.get() != null) {
+                openDialogAndLog(exception.get(), waitingMessage);
+            }
+            return ref.get();
+        } else {
+            return syncWa.apply(wa);
         }
     }
 

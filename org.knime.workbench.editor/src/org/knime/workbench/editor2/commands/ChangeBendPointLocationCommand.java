@@ -49,10 +49,9 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
@@ -86,18 +85,19 @@ public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
     public ChangeBendPointLocationCommand(
             final ConnectionContainerEditPart container,
             final Point locationShift, final ZoomManager zoomManager) {
-        super(Wrapper.unwrapWFM(container.getWorkflowManager()));
+        super(container.getWorkflowManager());
         m_zoomManager = zoomManager;
         m_locationShift = locationShift;
         m_destNodeID = container.getModel().getDest();
         m_destPort = container.getModel().getDestPort();
     }
 
-    private ConnectionContainer getConnectionContainer() {
+    private ConnectionContainerUI getConnectionContainer() {
         if (m_destNodeID == null) {
             return null;
         }
-        return getHostWFM().getIncomingConnectionFor(m_destNodeID, m_destPort);
+
+        return getHostWFMUI().getIncomingConnectionFor(m_destNodeID, m_destPort);
     }
 
     /** {@inheritDoc} */
@@ -134,7 +134,7 @@ public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
 
     private void changeBendpointsUIInfo(final boolean shiftBack) {
 
-        ConnectionContainer cc = getConnectionContainer();
+        ConnectionContainerUI cc = getConnectionContainer();
         ConnectionUIInformation ui = cc.getUIInfo();
         if (ui == null) {
             return;
