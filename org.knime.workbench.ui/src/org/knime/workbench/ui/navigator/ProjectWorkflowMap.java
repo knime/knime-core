@@ -497,7 +497,7 @@ public final class ProjectWorkflowMap {
      * if the workflow manager is not registered with the passed URI
      */
     public static NodeContainer getWorkflow(final URI path) {
-        return Wrapper.unwrapOptionalNC(getWorkflowUI(path)).orElse(null);
+        return Wrapper.unwrapNCOptional(getWorkflowUI(path)).orElse(null);
     }
 
     /**

@@ -196,16 +196,6 @@ public interface Wrapper<W> {
     }
 
     /**
-     * Shortcut for unwrapOptional(wrapper, NodeContainer.class).
-     *
-     * @param wrapper the supposed wrapper
-     * @return the unwrapped node container or an empty optional if it couldn't be unwrapped
-     */
-    public static Optional<NodeContainer> unwrapOptionalNC(final UI wrapper) {
-        return unwrapOptional(wrapper, NodeContainer.class);
-    }
-
-    /**
      * Checks whether a object wraps a certain object of a given class.
      *
      * @param wrapper the supposed wrapper
