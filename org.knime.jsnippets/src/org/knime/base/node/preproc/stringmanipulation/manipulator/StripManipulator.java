@@ -121,7 +121,7 @@ public class StripManipulator implements Manipulator {
      */
     @Override
     public String getDescription() {
-        return "Strips any whitespace characters from the end of given "
+        return "Strips any whitespace characters from the beginning and end of given "
             + "strings. "
             + ""
             + "<br/>"
