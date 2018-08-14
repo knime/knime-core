@@ -24,8 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.knime.core.node.interactive.ViewResponseMonitor;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.wizard.DefaultViewRequestJob;
 import org.knime.core.node.wizard.WizardViewResponse;
 
 /**
@@ -34,11 +34,11 @@ import org.knime.core.node.wizard.WizardViewResponse;
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @since 3.7
  */
-public class ViewRequestRegistry {
+public final class ViewRequestRegistry {
 
-    private static ViewRequestRegistry m_instance;
+    private static ViewRequestRegistry instance;
 
-    private final Map<String, DefaultViewRequestJob<? extends WizardViewResponse>> m_requestMap;
+    private final Map<String, ViewResponseMonitor<? extends WizardViewResponse>> m_requestMap;
 
     /**
      * Singleton accessor, returns the instance for this class.
@@ -46,32 +46,33 @@ public class ViewRequestRegistry {
      * @return the instance for this class
      */
     public static ViewRequestRegistry getInstance() {
-        if (m_instance == null) {
-            m_instance = new ViewRequestRegistry();
+        if (instance == null) {
+            instance = new ViewRequestRegistry();
         }
-        return m_instance;
+        return instance;
     }
 
     /**
      * @return true if the registry was previously initialized, false otherwise
      */
     public static boolean isRunning() {
-        return m_instance != null;
+        return instance != null;
     }
 
     private ViewRequestRegistry() {
-        m_requestMap = new HashMap<String, DefaultViewRequestJob<? extends WizardViewResponse>>();
+        m_requestMap = new HashMap<String, ViewResponseMonitor<? extends WizardViewResponse>>();
     }
 
     /**
-     * Adds a job to the registry if the job with the current id does not exist yet. Otherwise updates an already
-     * registered job under that same id.
+     * Adds a job to the registry if the job with the current id does not exist yet. Otherwise updates an
+     * already registered job under that same id.
      *
      * @param requestJob the job to add or update, not null
-     * @return the previous job associated with the same id, or <tt>null</tt> if there was no mapping for the id.
+     * @return the previous job associated with the same id, or <tt>null</tt> if there was no mapping for the
+     * id.
      */
-    public synchronized DefaultViewRequestJob<? extends WizardViewResponse>
-        addOrUpdateJob(final DefaultViewRequestJob<?> requestJob) {
+    public synchronized ViewResponseMonitor<? extends WizardViewResponse>
+        addOrUpdateJob(final ViewResponseMonitor<? extends WizardViewResponse> requestJob) {
         CheckUtils.checkNotNull(requestJob);
         CheckUtils.checkNotNull(requestJob.getId());
         return m_requestMap.put(requestJob.getId(), requestJob);
@@ -82,7 +83,7 @@ public class ViewRequestRegistry {
      * @param jobID the id to get the request job for
      * @return the registered view request job, or null if no job is registered with the given id
      */
-    public synchronized DefaultViewRequestJob<? extends WizardViewResponse> getJob(final String jobID) {
+    public synchronized ViewResponseMonitor<? extends WizardViewResponse> getJob(final String jobID) {
         return m_requestMap.get(jobID);
     }
 
@@ -91,7 +92,7 @@ public class ViewRequestRegistry {
      * @param jobID the job id of the job to remove
      * @return the removed job, or null if no job was registered with the given id
      */
-    public synchronized DefaultViewRequestJob<? extends WizardViewResponse> removeJob(final String jobID) {
+    public synchronized ViewResponseMonitor<? extends WizardViewResponse> removeJob(final String jobID) {
         return m_requestMap.remove(jobID);
     }
 
@@ -99,7 +100,7 @@ public class ViewRequestRegistry {
      * Creates a {@link Stream} for all currently registered view request jobs.
      * @return a stream from all registered jobs
      */
-    public synchronized Stream<DefaultViewRequestJob<? extends WizardViewResponse>> streamJobs() {
+    public synchronized Stream<ViewResponseMonitor<? extends WizardViewResponse>> streamJobs() {
         return m_requestMap.values().stream();
     }
 
@@ -120,13 +121,13 @@ public class ViewRequestRegistry {
     }
 
     /**
-     * Call this method when the registry is not needed anymore. Cancels all running jobs and cleans up allocated
-     * resources.
+     * Call this method when the registry is not needed anymore. Cancels all running jobs and cleans up
+     * allocated resources.
      */
     public void teardown() {
         m_requestMap.values().forEach(job -> job.cancel());
         m_requestMap.clear();
-        m_instance = null;
+        instance = null;
     }
 
 }

@@ -8,6 +8,26 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/AbstractWizardNodeView.java" type="org.knime.core.node.wizard.AbstractWizardNodeView">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="pushRequestUpdate(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="respondToViewRequest(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="InteractiveView&lt;T, REP, VAL&gt;"/>
+                <message_argument value="AbstractWizardNodeView&lt;T, REP, VAL&gt;"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/ConnectionUIInformation.java" type="org.knime.core.node.workflow.ConnectionUIInformation$Builder">
         <filter id="1143996420">
             <message_arguments>

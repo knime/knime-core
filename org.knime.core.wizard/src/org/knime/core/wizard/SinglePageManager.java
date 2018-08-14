@@ -54,12 +54,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.CompletableFuture;
 
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.interactive.ViewRequestHandlingException;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebViewContent;
+import org.knime.core.node.wizard.WizardViewResponse;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SinglePageWebResourceController;
@@ -201,11 +202,29 @@ public class SinglePageManager extends AbstractPageManager {
         }
     }
 
-    CompletableFuture<String> processViewRequest(final String nodeID, final String jsonRequest,
-            final NodeID containerNodeId, final ExecutionMonitor exec) throws ViewRequestHandlingException {
+    /**
+     * Processes a JSON serialized request issued by a view and returns the corresponding JSON serialized
+     * response.
+     *
+     * @param nodeID The node id of the node that the request belongs to.
+     * @param jsonRequest The JSON serialized view request
+     * @param containerNodeId the {@link NodeID} of the containing subnode
+     * @param exec The execution monitor to set progress and check possible cancellation.
+     * @return A JSON serialized {@link WizardViewResponse} object.
+     * @throws ViewRequestHandlingException If the request handling or response generation fails for any
+     * reason.
+     * @throws InterruptedException If the thread handling the request is interrupted.
+     * @throws CanceledExecutionException If the handling of the request was canceled e.g. by user
+     * intervention.
+     * @since 3.7
+     */
+    String processViewRequest(final String nodeID, final String jsonRequest, final NodeID containerNodeId,
+        final ExecutionMonitor exec)
+        throws ViewRequestHandlingException, InterruptedException, CanceledExecutionException {
         try (WorkflowLock lock = getWorkflowManager().lock()) {
             SinglePageWebResourceController sec = getController(containerNodeId);
-            return sec.processViewRequest(nodeID, jsonRequest, exec).thenApply(response -> serializeViewResponse(response));
+            WizardViewResponse response = sec.processViewRequest(nodeID, jsonRequest, exec);
+            return serializeViewResponse(response);
         }
     }
 

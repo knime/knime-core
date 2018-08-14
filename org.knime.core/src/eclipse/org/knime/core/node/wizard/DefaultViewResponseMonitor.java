@@ -49,20 +49,17 @@
 package org.knime.core.node.wizard;
 
 import java.util.ArrayList;
-import java.util.EventListener;
-import java.util.EventObject;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.interactive.ViewRequestHandlingException;
-import org.knime.core.node.interactive.ViewRequestJob;
-import org.knime.core.node.interactive.ViewResponse;
 import org.knime.core.node.interactive.ViewResponseMonitor;
-import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.interactive.ViewResponseMonitorUpdateEvent;
+import org.knime.core.node.interactive.ViewResponseMonitorUpdateEvent.ViewResponseMonitorUpdateEventType;
+import org.knime.core.node.interactive.ViewResponseMonitorUpdateEvent.ViewResponseMonitorUpdateListener;
 
 /**
  * Default implementation of a job which represents the processing of a view request in an asynchronous fashion.
@@ -73,8 +70,7 @@ import org.knime.core.node.workflow.NodeContext;
  * @noreference This class is not intended to be referenced by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public class DefaultViewRequestJob<RES extends WizardViewResponse> implements ViewResponseMonitor<RES>,
-    ViewRequestJob<RES> {
+class DefaultViewResponseMonitor<RES extends WizardViewResponse> implements ViewResponseMonitor<RES> {
 
     private String m_id;
     private int m_requestSequence;
@@ -87,8 +83,7 @@ public class DefaultViewRequestJob<RES extends WizardViewResponse> implements Vi
 
     private final ExecutionMonitor m_monitor;
     private final List<ViewResponseMonitorUpdateListener> m_listeners;
-    private final DefaultViewRequestJob<RES> m_job;
-    private final NodeContext m_context;
+    private final ViewResponseMonitor<RES> m_job;
     private final Object m_block = new Object();
 
     /**
@@ -98,76 +93,76 @@ public class DefaultViewRequestJob<RES extends WizardViewResponse> implements Vi
      *            ordering
      * @param exec an execution monitor used to query progress and possible cancellation
      */
-    public DefaultViewRequestJob(final int sequence, final ExecutionMonitor exec) {
+    DefaultViewResponseMonitor(final int sequence, final ExecutionMonitor exec) {
         m_id = UUID.randomUUID().toString();
         m_requestSequence = sequence;
         m_monitor = exec;
         m_listeners = new ArrayList<ViewResponseMonitorUpdateListener>(1);
         m_job = this;
-        m_context = NodeContext.getContext();
+
+        ViewResponseMonitorUpdateEvent pEvent =
+                new ViewResponseMonitorUpdateEvent(m_job, ViewResponseMonitorUpdateEventType.PROGRESS_UPDATE);
+        m_monitor.getProgressMonitor().addProgressListener((event) -> {
+            m_listeners.forEach((listener) -> listener.monitorUpdate(pEvent));
+        });
     }
 
-    /**
-     * Adds a listener to be notified about changes to the processing status of this job.
-     * @param listener the listener to add
-     */
-    public void addUpdateListener(final ViewResponseMonitorUpdateListener listener) {
-        m_listeners.add(listener);
+    void setFuture(final CompletableFuture<RES> future) {
+        m_future = future;
     }
 
-    /**
-     * Removes a listener so that it receives no more update events.
-     * @param listener the listener to remove
-     */
-    public void removeUpdateListener(final ViewResponseMonitorUpdateListener listener) {
-        m_listeners.remove(listener);
+    void setExecutionStarted() {
+        synchronized (m_block) {
+            m_executionStarted = true;
+        }
     }
 
-    /**
-     * Removes all registered listeners so that they do not receive any more update events.
-     */
-    public void removeAllUpdateListeners() {
-        m_listeners.clear();
+    void setExecutionFailed(final Exception ex) {
+        synchronized (m_block) {
+            m_executionFailed = true;
+            m_errorMessage = ex.getMessage();
+        }
+        updateStatusListeners();
+    }
+
+    void setResponse(final RES response) {
+        synchronized (m_block) {
+            boolean success = response != null;
+            m_response = response;
+            m_executionFinished = success;
+            m_executionFailed = !success;
+        }
+        updateStatusListeners();
+    }
+
+    private void updateStatusListeners() {
+        ViewResponseMonitorUpdateEvent sEvent =
+                new ViewResponseMonitorUpdateEvent(m_job, ViewResponseMonitorUpdateEventType.STATUS_UPDATE);
+            m_listeners.forEach((listener) -> listener.monitorUpdate(sEvent));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public <REQ extends WizardViewRequest> void start(final WizardViewRequestHandler<REQ, RES> handler,
-        final REQ request) {
-        m_requestSequence = request.getSequence();
-        ViewResponseMonitorUpdateEvent pEvent =
-                new ViewResponseMonitorUpdateEvent(m_job, ViewResponseMonitorUpdateEventType.PROGRESS_UPDATE);
-        m_monitor.getProgressMonitor().addProgressListener((event) -> {
-            m_listeners.forEach((listener) -> listener.monitorUpdate(pEvent));
-        });
-        m_future = CompletableFuture.supplyAsync(() -> {
-            try {
-                NodeContext.pushContext(m_context);
-                m_executionStarted = true;
-                return handler.handleRequest(request, m_monitor);
-            } catch (ViewRequestHandlingException | InterruptedException | CanceledExecutionException ex) {
-                synchronized (m_block) {
-                    m_executionFailed = true;
-                    m_errorMessage = ex.getMessage();
-                    return null;
-                }
-            } finally {
-                NodeContext.removeLastContext();
-            }
-        });
-        m_future.thenAccept((response) -> {
-            synchronized (m_block) {
-                boolean success = response != null;
-                m_response = response;
-                m_executionFinished = success;
-                m_executionFailed = !success;
-            }
-            ViewResponseMonitorUpdateEvent sEvent =
-                new ViewResponseMonitorUpdateEvent(m_job, ViewResponseMonitorUpdateEventType.STATUS_UPDATE);
-            m_listeners.forEach((listener) -> listener.monitorUpdate(sEvent));
-        });
+    public void addUpdateListener(final ViewResponseMonitorUpdateListener listener) {
+        m_listeners.add(listener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeUpdateListener(final ViewResponseMonitorUpdateListener listener) {
+        m_listeners.remove(listener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeAllUpdateListeners() {
+        m_listeners.clear();
     }
 
     /**
@@ -200,8 +195,9 @@ public class DefaultViewRequestJob<RES extends WizardViewResponse> implements Vi
      * {@inheritDoc}
      */
     @Override
-    public Optional<Double> getProgress() {
-        return Optional.ofNullable(m_monitor.getProgressMonitor().getProgress());
+    public OptionalDouble getProgress() {
+        Double progress = m_monitor.getProgressMonitor().getProgress();
+        return progress == null ? OptionalDouble.empty() : OptionalDouble.of(progress);
     }
 
     /**
@@ -217,7 +213,10 @@ public class DefaultViewRequestJob<RES extends WizardViewResponse> implements Vi
      */
     @Override
     public boolean isCancelled() {
-        return m_future.isCancelled();
+        if (m_future != null) {
+            return m_future.isCancelled();
+        }
+        return false;
     }
 
     /**
@@ -278,79 +277,5 @@ public class DefaultViewRequestJob<RES extends WizardViewResponse> implements Vi
         return Optional.ofNullable(m_errorMessage);
     }
 
-    /**
-     * Interface for listeners wanting to be informed about changes to the execution status of view
-     * request jobs.
-     *
-     * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
-     */
-    public static interface ViewResponseMonitorUpdateListener extends EventListener {
 
-        /**
-         * Triggered when a status change is registered in the request job.
-         * @param event an event object yielding additional information
-         */
-        public void monitorUpdate(ViewResponseMonitorUpdateEvent event);
-
-    }
-
-    /**
-     * Enum listing the types of view response monitor update events.
-     *
-     * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
-     */
-    public enum ViewResponseMonitorUpdateEventType {
-
-            /**
-             * Update events of this type indicate that only the progress or progress message of a running request job
-             * has changed. Query the source job object for the actual changes.
-             */
-            PROGRESS_UPDATE,
-
-            /**
-             * Update events of this type indicate that the status of the request job has changed. Query the source
-             * job object for the actual changes.
-             */
-            STATUS_UPDATE
-
-    }
-
-    /**
-     *
-     * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
-     */
-    @SuppressWarnings("serial")
-    public static class ViewResponseMonitorUpdateEvent extends EventObject {
-
-        private ViewResponseMonitorUpdateEventType m_type;
-
-        /**
-         * @param sourceMonitor the source of this update event
-         * @param type the type of update event
-         *
-         */
-        public ViewResponseMonitorUpdateEvent(final ViewResponseMonitor<? extends ViewResponse> sourceMonitor,
-            final ViewResponseMonitorUpdateEventType type) {
-            super(sourceMonitor);
-            m_type = type;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @SuppressWarnings("unchecked")
-        @Override
-        public ViewResponseMonitor<? extends ViewResponse> getSource() {
-            return (ViewResponseMonitor<? extends ViewResponse>)super.getSource();
-        }
-
-        /**
-         * @return the type of update event
-         */
-        public ViewResponseMonitorUpdateEventType getType() {
-            return m_type;
-        }
-
-
-    }
 }

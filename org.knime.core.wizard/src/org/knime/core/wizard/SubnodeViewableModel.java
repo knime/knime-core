@@ -55,10 +55,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.FileUtils;
@@ -393,7 +389,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             setWebTemplate(createSubnodeWebTemplate());
         }
 
-        private WebTemplate createSubnodeWebTemplate() {
+        private static WebTemplate createSubnodeWebTemplate() {
             List<WebResourceLocator> locators = new ArrayList<WebResourceLocator>();
             String pluginName = "org.knime.js.core";
             boolean isDebug = isDebug();
@@ -488,28 +484,8 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     @Override
     public SubnodeViewResponse handleRequest(final SubnodeViewRequest request, final ExecutionMonitor exec)
         throws ViewRequestHandlingException, InterruptedException, CanceledExecutionException {
-        CompletableFuture<String> serializationResult =
-            m_spm.processViewRequest(request.getNodeID(), request.getJsonRequest(), m_container.getID(), exec);
-        try {
-            return serializationResult.thenApply(response -> buildSubnodeViewResponse(request, response)).get();
-        } catch (CompletionException ex1) {
-            Throwable cause = ex1.getCause();
-            if (cause != null) {
-                if (cause instanceof InterruptedException) {
-                    throw (InterruptedException)cause;
-                } else if (cause instanceof ViewRequestHandlingException) {
-                    throw (ViewRequestHandlingException)cause;
-                }
-            }
-            throw new ViewRequestHandlingException(ex1.getMessage(), ex1);
-        } catch (CancellationException ex2) {
-            throw new CanceledExecutionException(ex2.getMessage());
-        } catch (ExecutionException ex3) {
-            throw new ViewRequestHandlingException(ex3.getMessage(), ex3);
-        }
-    }
-
-    private SubnodeViewResponse buildSubnodeViewResponse(final SubnodeViewRequest request, final String jsonResponse) {
+        String jsonResponse = m_spm.processViewRequest(request.getNodeID(), request.getJsonRequest(),
+            m_container.getID(), exec);
         return new SubnodeViewResponse(request, request.getNodeID(), jsonResponse);
     }
 

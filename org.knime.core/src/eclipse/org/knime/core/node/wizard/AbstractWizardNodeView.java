@@ -76,13 +76,12 @@ import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.InteractiveViewDelegate;
 import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.interactive.SimpleErrorViewResponse;
-import org.knime.core.node.interactive.ViewRequestJob;
 import org.knime.core.node.interactive.ViewResponseMonitor;
+import org.knime.core.node.interactive.ViewResponseMonitorUpdateEvent;
+import org.knime.core.node.interactive.ViewResponseMonitorUpdateEvent.ViewResponseMonitorUpdateEventType;
+import org.knime.core.node.interactive.ViewResponseMonitorUpdateEvent.ViewResponseMonitorUpdateListener;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebViewContent;
-import org.knime.core.node.wizard.DefaultViewRequestJob.ViewResponseMonitorUpdateEvent;
-import org.knime.core.node.wizard.DefaultViewRequestJob.ViewResponseMonitorUpdateEventType;
-import org.knime.core.node.wizard.DefaultViewRequestJob.ViewResponseMonitorUpdateListener;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -111,7 +110,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     private AtomicReference<VAL> m_lastRetrievedValue = new AtomicReference<VAL>();
 
-    private Map<String, DefaultViewRequestJob<? extends WizardViewResponse>> m_viewRequestMap;
+    private Map<String, ViewResponseMonitor<? extends WizardViewResponse>> m_viewRequestMap;
 
     /**
      * Label for discard option.
@@ -167,7 +166,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     protected AbstractWizardNodeView(final T nodeModel) {
         super(nodeModel, true);
         m_delegate = new InteractiveViewDelegate<VAL>();
-        m_viewRequestMap = new HashMap<String, DefaultViewRequestJob<? extends WizardViewResponse>>();
+        m_viewRequestMap = new HashMap<String, ViewResponseMonitor<? extends WizardViewResponse>>();
     }
 
     @Override
@@ -225,9 +224,9 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * @return a map of all currently active view requests, never null
-     * @since 3.6
+     * @since 3.7
      */
-    protected Map<String, DefaultViewRequestJob<? extends WizardViewResponse>> getViewRequestMap() {
+    protected Map<String, ViewResponseMonitor<? extends WizardViewResponse>> getViewRequestMap() {
         return m_viewRequestMap;
     }
 
@@ -411,12 +410,11 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
      *
      * @param jsonRequest the json serialized request object string
      * @return true, if the request could be processed correctly, false otherwise
-     * @since 3.6
+     * @since 3.7
      */
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
     public final String handleViewRequest(final String jsonRequest) {
-        //TODO: is the simple creation of the monitor correct here?
         ExecutionMonitor overallExec = new ExecutionMonitor();
         WizardNode<REP, VAL> model = getModel();
         int requestSequence = -1;
@@ -430,15 +428,16 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
         LOGGER.debug("Received request from view: " + jsonRequest);
         WizardViewRequest req = ((WizardViewRequestHandler)model).createEmptyViewRequest();
         final String errorString = "View request failed: ";
-        DefaultViewRequestJob<? extends WizardViewResponse> requestJob = null;
+        ViewResponseMonitor<? extends WizardViewResponse> responseMonitor = null;
         try {
             req.loadFromStream(new ByteArrayInputStream(jsonRequest.getBytes(Charset.forName("UTF-8"))));
             requestSequence = req.getSequence();
 
-            requestJob = new DefaultViewRequestJob(requestSequence, overallExec);
-            final String requestID = requestJob.getId();
-            final ViewResponseMonitor<? extends WizardViewResponse> monitor = requestJob;
-            requestJob.addUpdateListener(new ViewResponseMonitorUpdateListener() {
+            responseMonitor = WizardViewRequestRunner.run((WizardViewRequestHandler)model, req, overallExec);
+            final String requestID = responseMonitor.getId();
+            m_viewRequestMap.put(requestID, responseMonitor);
+            final ViewResponseMonitor<? extends WizardViewResponse> monitor = responseMonitor;
+            responseMonitor.addUpdateListener(new ViewResponseMonitorUpdateListener() {
 
                 @Override
                 public void monitorUpdate(final ViewResponseMonitorUpdateEvent event) {
@@ -459,14 +458,11 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
                     }
                 }
             });
-
-            m_viewRequestMap.put(requestID, requestJob);
-            requestJob.start((WizardViewRequestHandler)model, req);
-            return serializeResponseMonitor(requestJob);
+            return serializeResponseMonitor(responseMonitor);
         } catch (Exception ex) {
             LOGGER.error(errorString + ex, ex);
-            if (requestJob != null) {
-                m_viewRequestMap.remove(requestJob.getId());
+            if (responseMonitor != null) {
+                m_viewRequestMap.remove(responseMonitor.getId());
             }
             if (requestSequence == -1) {
                 try {
@@ -493,7 +489,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * {@inheritDoc}
-     * @since 3.6
+     * @since 3.7
      */
     @Override
     public String updateRequestStatus(final String monitorID) {
@@ -510,26 +506,27 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * {@inheritDoc}
-     * @since 3.6
+     * @since 3.7
      */
     @Override
     public void cancelRequest(final String monitorID) {
         //try to get by id
-        ViewRequestJob<? extends WizardViewResponse> future = m_viewRequestMap.get(monitorID);
-        if (future == null) {
+        ViewResponseMonitor<? extends WizardViewResponse> monitor = m_viewRequestMap.get(monitorID);
+        if (monitor == null) {
             //try to get by request sequence, this might happen when the view can only push but not return
             //the id on an initial polling request
-            List<DefaultViewRequestJob<? extends WizardViewResponse>> jobList = m_viewRequestMap.entrySet().stream()
+            List<ViewResponseMonitor<? extends WizardViewResponse>> jobList = m_viewRequestMap.entrySet()
+                .stream()
                 .filter(e -> monitorID.equals(Integer.toString(e.getValue().getRequestSequence())))
                 .map(e -> e.getValue())
                 .collect(Collectors.toList());
             if (jobList.size() > 0) {
-                future = jobList.get(0);
+                monitor = jobList.get(0);
             }
         }
-        if (future != null) {
-            LOGGER.debug("Cancelling view request " + future.getId());
-            future.cancel();
+        if (monitor != null) {
+            LOGGER.debug("Cancelling view request " + monitor.getId());
+            monitor.cancel();
             m_viewRequestMap.remove(monitorID);
         }
     }
@@ -560,14 +557,14 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * {@inheritDoc}
-     * @since 3.6
+     * @since 3.7
      */
     @Override
     public abstract void respondToViewRequest(final String response);
 
     /**
      * {@inheritDoc}
-     * @since 3.6
+     * @since 3.7
      */
     @Override
     public abstract void pushRequestUpdate(final String monitor);

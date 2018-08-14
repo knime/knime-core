@@ -44,62 +44,60 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   6 Apr 2018 (albrecht): created
+ *   14 Aug 2018 (albrecht): created
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.wizard;
+
+import java.util.concurrent.CompletableFuture;
+
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.interactive.ViewRequestHandler;
+import org.knime.core.node.interactive.ViewRequestHandlingException;
+import org.knime.core.node.interactive.ViewResponseMonitor;
+import org.knime.core.node.workflow.NodeContext;
 
 /**
- * This exception is used in {@link ViewRequestHandler} when an exception occurs
- * during the handling of a request or if a response can not be rendered.
+ * Utility class to run view requests.
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @since 3.7
+ * @noreference This class is not intended to be referenced by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
  */
-@SuppressWarnings("serial")
-public class ViewRequestHandlingException extends Exception {
+public final class WizardViewRequestRunner {
 
     /**
-     * Constructs a new exception of this type with null as its detail message.
-     * The cause is not initialized, and may subsequently be initialized by a call to {@link #initCause}.
-     */
-    public ViewRequestHandlingException() {
-        super();
-    }
-
-    /**
-     * Constructs a new exception of this type with the specified detail message.
-     * The cause is not initialized, and may subsequently be initialized by a call to {@link #initCause}.
-     * @param message the detail message. The detail message is saved for later retrieval by
-     * the {@link #getMessage()} method.
-     */
-    public ViewRequestHandlingException(final String message) {
-        super(message);
-    }
-
-    /**
-     * Constructs a new exception of this type with the specified cause and a detail message of
-     * <tt>(cause==null ? null : cause.toString())</tt> (which typically contains the class and detail message of
-     * <tt>cause</tt>). This constructor is useful for exceptions that are little more than
-     * wrappers for other throwables (for example, {@link java.security.PrivilegedActionException}).
+     * Starts running a view request on the specified {@link ViewRequestHandler}.
      *
-     * @param  cause the cause (which is saved for later retrieval by the {@link #getCause()} method).
-     * (A <tt>null</tt> value is permitted, and indicates that the cause is nonexistent or unknown.)
+     * @param <REQ> the actual view request implementation
+     * @param <RES> the actual view response implementation
+     * @param handler the {@link ViewRequestHandler} which can handle the given view request
+     * @param request the {@link WizardViewRequest} to run
+     * @param exec an {@link ExecutionMonitor} to set progress and check for possible cancellation
+     * @return a {@link ViewResponseMonitor} which contains status information about the execution of the
+     * view request
      */
-    public ViewRequestHandlingException(final Throwable cause) {
-        super(cause);
-    }
-
-    /**
-     * Constructs a new exception of this type with the specified detail message and cause.
-     * <p>Note that the detail message associated with {@code cause} is <i>not</i> automatically incorporated in
-     * this exception's detail message.
-     *
-     * @param  message the detail message (which is saved for later retrieval by the {@link #getMessage()} method).
-     * @param  cause the cause (which is saved for later retrieval by the {@link #getCause()} method).
-     * (A <tt>null</tt> value is permitted, and indicates that the cause is nonexistent or unknown.)
-     */
-    public ViewRequestHandlingException(final String message, final Throwable cause) {
-        super(message, cause);
+    public static <REQ extends WizardViewRequest, RES extends WizardViewResponse> ViewResponseMonitor<RES>
+        run(final ViewRequestHandler<REQ, RES> handler, final REQ request, final ExecutionMonitor exec) {
+        DefaultViewResponseMonitor<RES> monitor = new DefaultViewResponseMonitor<RES>(request.getSequence(), exec);
+        CompletableFuture<RES> future = CompletableFuture.supplyAsync(() -> {
+            NodeContext.pushContext(NodeContext.getContext());
+            try {
+                monitor.setExecutionStarted();
+                return handler.handleRequest(request, exec);
+            } catch (ViewRequestHandlingException | InterruptedException | CanceledExecutionException ex) {
+                monitor.setExecutionFailed(ex);
+                return null;
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        });
+        monitor.setFuture(future);
+        future.thenAccept((response) -> {
+            monitor.setResponse(response);
+        });
+        return monitor;
     }
 
 }

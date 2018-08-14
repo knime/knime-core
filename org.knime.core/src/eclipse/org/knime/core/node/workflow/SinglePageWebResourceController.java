@@ -51,6 +51,7 @@ package org.knime.core.node.workflow;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.interactive.ViewRequestHandlingException;
 import org.knime.core.node.util.CheckUtils;
@@ -141,17 +142,23 @@ public class SinglePageWebResourceController extends WebResourceController {
     }
 
     /**
-     * Processes a request issued by a view by calling the appropriate methods on the corresponding node model and
-     * returns a future which can resolve a response object.
+     * Processes a request issued by a view by calling the appropriate methods on the corresponding node
+     * model and returns the rendered response.
+     *
      * @param nodeID The node id of the node that the request belongs to.
      * @param viewRequest The JSON serialized view request
      * @param exec the execution monitor to set progress and check possible cancellation
      * @return a {@link CompletableFuture} object, which can resolve a {@link WizardViewResponse}.
-     * @throws ViewRequestHandlingException on processing error
-     * @since 3.6
+     * @throws ViewRequestHandlingException If the request handling or response generation fails for any
+     * reason.
+     * @throws InterruptedException If the thread handling the request is interrupted.
+     * @throws CanceledExecutionException If the handling of the request was canceled e.g. by user
+     * intervention.
+     * @since 3.7
      */
-    public CompletableFuture<WizardViewResponse> processViewRequest(final String nodeID, final String viewRequest,
-        final ExecutionMonitor exec) throws ViewRequestHandlingException {
+    public WizardViewResponse processViewRequest(final String nodeID, final String viewRequest,
+        final ExecutionMonitor exec)
+        throws ViewRequestHandlingException, InterruptedException, CanceledExecutionException {
         WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
             checkDiscard();

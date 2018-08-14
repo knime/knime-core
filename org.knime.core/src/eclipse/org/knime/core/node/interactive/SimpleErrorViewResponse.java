@@ -49,7 +49,11 @@
 package org.knime.core.node.interactive;
 
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.UUID;
+
+import org.knime.core.node.interactive.ViewResponseMonitorUpdateEvent.ViewResponseMonitorUpdateListener;
+
 
 /**
  * A simple implementation of a {@link ViewResponseMonitor} which notifies the view of a failure in the execution
@@ -57,7 +61,7 @@ import java.util.UUID;
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @param <RES> the expected {@link ViewResponse} implementation corresponding to the issued {@link ViewRequest}
- * @since 3.6
+ * @since 3.7
  */
 public class SimpleErrorViewResponse<RES extends ViewResponse> implements ViewResponseMonitor<RES> {
 
@@ -98,8 +102,8 @@ public class SimpleErrorViewResponse<RES extends ViewResponse> implements ViewRe
      * {@inheritDoc}
      */
     @Override
-    public Optional<Double> getProgress() {
-        return Optional.empty();
+    public OptionalDouble getProgress() {
+        return OptionalDouble.empty();
     }
 
     /**
@@ -164,6 +168,38 @@ public class SimpleErrorViewResponse<RES extends ViewResponse> implements ViewRe
     @Override
     public Optional<String> getErrorMessage() {
         return Optional.ofNullable(m_errorMessage);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cancel() {
+        /* nothing to do */
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addUpdateListener(final ViewResponseMonitorUpdateListener listener) {
+        /* no listeners supported */
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeAllUpdateListeners() {
+        /* no listeners supported */
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeUpdateListener(final ViewResponseMonitorUpdateListener listener) {
+        /* no listeners supported */
     }
 
 }

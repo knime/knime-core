@@ -44,62 +44,85 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   6 Apr 2018 (albrecht): created
+ *   14 Aug 2018 (albrecht): created
  */
 package org.knime.core.node.interactive;
 
+import java.util.EventListener;
+import java.util.EventObject;
+
 /**
- * This exception is used in {@link ViewRequestHandler} when an exception occurs
- * during the handling of a request or if a response can not be rendered.
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @since 3.7
  */
 @SuppressWarnings("serial")
-public class ViewRequestHandlingException extends Exception {
+public class ViewResponseMonitorUpdateEvent extends EventObject {
+
+    private ViewResponseMonitorUpdateEventType m_type;
 
     /**
-     * Constructs a new exception of this type with null as its detail message.
-     * The cause is not initialized, and may subsequently be initialized by a call to {@link #initCause}.
-     */
-    public ViewRequestHandlingException() {
-        super();
-    }
-
-    /**
-     * Constructs a new exception of this type with the specified detail message.
-     * The cause is not initialized, and may subsequently be initialized by a call to {@link #initCause}.
-     * @param message the detail message. The detail message is saved for later retrieval by
-     * the {@link #getMessage()} method.
-     */
-    public ViewRequestHandlingException(final String message) {
-        super(message);
-    }
-
-    /**
-     * Constructs a new exception of this type with the specified cause and a detail message of
-     * <tt>(cause==null ? null : cause.toString())</tt> (which typically contains the class and detail message of
-     * <tt>cause</tt>). This constructor is useful for exceptions that are little more than
-     * wrappers for other throwables (for example, {@link java.security.PrivilegedActionException}).
+     * @param sourceMonitor the source of this update event
+     * @param type the type of update event
      *
-     * @param  cause the cause (which is saved for later retrieval by the {@link #getCause()} method).
-     * (A <tt>null</tt> value is permitted, and indicates that the cause is nonexistent or unknown.)
      */
-    public ViewRequestHandlingException(final Throwable cause) {
-        super(cause);
+    public ViewResponseMonitorUpdateEvent(final ViewResponseMonitor<? extends ViewResponse> sourceMonitor,
+        final ViewResponseMonitorUpdateEventType type) {
+        super(sourceMonitor);
+        m_type = type;
     }
 
     /**
-     * Constructs a new exception of this type with the specified detail message and cause.
-     * <p>Note that the detail message associated with {@code cause} is <i>not</i> automatically incorporated in
-     * this exception's detail message.
-     *
-     * @param  message the detail message (which is saved for later retrieval by the {@link #getMessage()} method).
-     * @param  cause the cause (which is saved for later retrieval by the {@link #getCause()} method).
-     * (A <tt>null</tt> value is permitted, and indicates that the cause is nonexistent or unknown.)
+     * {@inheritDoc}
      */
-    public ViewRequestHandlingException(final String message, final Throwable cause) {
-        super(message, cause);
+    @SuppressWarnings("unchecked")
+    @Override
+    public ViewResponseMonitor<? extends ViewResponse> getSource() {
+        return (ViewResponseMonitor<? extends ViewResponse>)super.getSource();
+    }
+
+    /**
+     * @return the type of update event
+     */
+    public ViewResponseMonitorUpdateEventType getType() {
+        return m_type;
+    }
+
+    /**
+     * Interface for listeners wanting to be informed about changes to the execution status of view
+     * request jobs.
+     *
+     * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
+     */
+    public static interface ViewResponseMonitorUpdateListener extends EventListener {
+
+        /**
+         * Triggered when a status change is registered in the request job.
+         * @param event an event object yielding additional information
+         */
+        public void monitorUpdate(ViewResponseMonitorUpdateEvent event);
+
+    }
+
+    /**
+     * Enum listing the types of view response monitor update events.
+     *
+     * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
+     */
+    public enum ViewResponseMonitorUpdateEventType {
+
+            /**
+             * Update events of this type indicate that only the progress or progress message of a running request job
+             * has changed. Query the source job object for the actual changes.
+             */
+            PROGRESS_UPDATE,
+
+            /**
+             * Update events of this type indicate that the status of the request job has changed. Query the source
+             * job object for the actual changes.
+             */
+            STATUS_UPDATE
+
     }
 
 }

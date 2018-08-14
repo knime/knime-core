@@ -49,6 +49,9 @@
 package org.knime.core.node.interactive;
 
 import java.util.Optional;
+import java.util.OptionalDouble;
+
+import org.knime.core.node.interactive.ViewResponseMonitorUpdateEvent.ViewResponseMonitorUpdateListener;
 
 /**
  * Interface for objects holding information about the execution status of a view request and
@@ -77,7 +80,7 @@ public interface ViewResponseMonitor<RES extends ViewResponse> {
      * The current progress value or if progress available.
      * @return Optional progress value between 0 and 1.
      */
-    public Optional<Double> getProgress();
+    public OptionalDouble getProgress();
 
     /**
      * The current progress message if message available.
@@ -125,4 +128,27 @@ public interface ViewResponseMonitor<RES extends ViewResponse> {
      * @return an optional error message
      */
     public Optional<String> getErrorMessage();
+
+    /**
+     * Cancels the view request processing. This method has no effect on already completed or not started
+     * jobs.
+     */
+    public void cancel();
+
+    /**
+     * Adds a listener to be notified about changes to the processing status of this job.
+     * @param listener the listener to add
+     */
+    public void addUpdateListener(final ViewResponseMonitorUpdateListener listener);
+
+    /**
+     * Removes a listener so that it receives no more update events.
+     * @param listener the listener to remove
+     */
+    public void removeUpdateListener(final ViewResponseMonitorUpdateListener listener);
+
+    /**
+     * Removes all registered listeners so that they do not receive any more update events.
+     */
+    public void removeAllUpdateListeners();
 }
