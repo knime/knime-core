@@ -52,9 +52,12 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Panel;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,8 +73,10 @@ import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.PixelConverter;
@@ -79,6 +84,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -100,6 +106,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
@@ -155,6 +162,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private NodeUsageComposite m_nodeUsageComposite;
 
+    private File m_tempDir;
+
     /**
      * Crates a new page instance with a given page name
      * @param pageName the page name
@@ -165,7 +174,6 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         m_jsonDocument = "";
         m_basicMap = new LinkedHashMap<NodeIDSuffix, BasicLayoutInfo>();
         m_layoutCreator = new DefaultLayoutCreatorImpl();
-
     }
 
     /**
@@ -174,6 +182,10 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     @Override
     public void createControl(final Composite parent) {
         TabFolder tabs = new TabFolder(parent, SWT.BORDER);
+
+        TabItem visualTab = new TabItem(tabs, SWT.NONE);
+        visualTab.setText("Visual Layout");
+        visualTab.setControl(createVisualLayoutComposite(tabs));
 
         TabItem usageTab = new TabItem(tabs, SWT.NONE);
         usageTab.setText("Node Usage");
@@ -224,6 +236,132 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         }
 
         return true;
+    }
+
+    private Composite createVisualLayoutComposite(final Composite parent) {
+        final Composite composite = new Composite(parent, SWT.NONE);
+        composite.setLayout(new GridLayout(1, false));
+        composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+        // Create temporary directory if necessary
+        if (!tempDirExists()) {
+            File td = null;
+            try {
+                td = WebResourceUtil.createTempDirectory("knimeLayoutEditor");
+            } catch(final IOException ex) {
+                LOGGER.error("Cannot create temp directory: " + ex.getMessage(), ex);
+            }
+            m_tempDir = td;
+        }
+
+        // Copy files to temp location
+        final IConfigurationElement i = WebResourceUtil.getConfigurationFromID(WebResourceUtil.ID_WEB_RES,
+            WebResourceUtil.ATTR_RES_BUNDLE_ID, "knimeLayoutEditor_1.0.0");
+        final Map<File, String> files = WebResourceUtil.getWebResourceAndDependencies(i);
+        final Map<File, String> fixedLocations = changeLocations(files);
+        try {
+            WebResourceUtil.copyWebResourcesToTemp(m_tempDir, fixedLocations);
+        } catch (IOException ex) {
+            LOGGER.error("Cannot copy files to temp directory" + ex.getMessage(), ex);
+        }
+
+        // Create browser
+        final Browser browse = new Browser(composite, SWT.FILL);
+        try {
+            final String location = m_tempDir.getAbsolutePath() + "/layoutEditor/index.html";
+            browse.setUrl(new File(location).toURI().toURL().toString());
+        } catch (MalformedURLException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        browse.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+        // Create buttons
+        final Composite buttonComposite = new Composite(composite, SWT.NONE);
+        buttonComposite.setLayout(new GridLayout(4, true));
+        buttonComposite.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, true, false));
+
+        final GridData d = new GridData(SWT.RIGHT, SWT.BOTTOM, false, false);
+        d.widthHint = 110;
+
+        final Button resizeButton = new Button(buttonComposite, SWT.PUSH);
+        resizeButton.setText("Resize");
+        resizeButton.setLayoutData(d);
+        resizeButton.addSelectionListener(new SelectionAdapter() {
+
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                final Shell s = Display.getCurrent().getActiveShell();
+                final boolean fullScreen = s.getFullScreen();
+                s.setFullScreen(!fullScreen);
+            }
+        });
+
+        final Button clearButton = new Button(buttonComposite, SWT.PUSH);
+        clearButton.setText("Clear");
+        clearButton.setLayoutData(d);
+
+        final Button resetButton = new Button(buttonComposite, SWT.PUSH);
+        resetButton.setText("Reset");
+        resetButton.setLayoutData(d);
+
+        final Button applyButton = new Button(buttonComposite, SWT.PUSH);
+        applyButton.setText("Apply");
+        applyButton.setLayoutData(d);
+
+        // Create JSON Objects
+        final JSONVisualLayoutEditorNodes nodes =
+            new JSONVisualLayoutEditorNodes(m_viewNodes, m_subNodeContainer, m_wfManager);
+        final ObjectMapper mapper = new ObjectMapper();
+        String JSONNodes = null;
+        try {
+            JSONNodes = mapper.writeValueAsString(nodes);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Cannot write JSON: " + e.getMessage(), e);
+        }
+        final String JSONLayout = getJsonDocument();
+
+        return composite;
+    }
+
+    private boolean tempDirExists() {
+        return m_tempDir != null && m_tempDir.exists() && m_tempDir.isDirectory();
+    }
+
+    private static Map<File, String> changeLocations(final Map<File, String> files) {
+        final Map<File, String> updateLocations = new HashMap<>();
+        for (File f : files.keySet()) {
+            setLocation(updateLocations, f);
+        }
+        return updateLocations;
+    }
+
+    private static void setLocation(final Map<File, String> files, final File f) {
+        if (f.isFile()) {
+            final String fileName = f.toPath().getFileName().toString();
+            final String base = "layoutEditor/";
+            switch (FilenameUtils.getExtension(fileName.toLowerCase())) {
+                case "css":
+                    files.put(f, base + "css/" + fileName);
+                    break;
+                case "map" :
+                    files.put(f, base + "css/" + fileName);
+                    break;
+                case "js":
+                    files.put(f, base + "js/" + fileName);
+                    break;
+                case "html":
+                    files.put(f, base + fileName);
+                    break;
+                default:
+                    files.put(f, base + "fonts/" + fileName);
+            }
+        }
+        else {
+            File[] subFiles = f.listFiles();
+            for(final File subFile : subFiles) {
+                setLocation(files, subFile);
+            }
+        }
     }
 
     private Composite createBasicComposite(final Composite parent) {
