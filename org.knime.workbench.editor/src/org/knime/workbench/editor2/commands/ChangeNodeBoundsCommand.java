@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.workbench.ui.async.AsyncUtil.waitForTermination;
+
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
@@ -123,13 +125,17 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand implements Asy
      */
     @Override
     public void execute() {
-        if (!Arrays.equals(m_oldBounds, m_newBounds)) {
-            WorkflowManagerUI wm = getHostWFMUI();
-            NodeUIInformation information = NodeUIInformation.builder()
-                .setNodeLocation(m_newBounds[0], m_newBounds[1], m_newBounds[2], m_newBounds[3]).build();
-            NodeContainerUI container = wm.getNodeContainer(m_nodeID);
-            // must set explicitly so that event is fired by container
-            container.setUIInformation(information);
+        if (shallExecuteAsync()) {
+            waitForTermination(executeAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)), "Moving node ...");
+        } else {
+            if (!Arrays.equals(m_oldBounds, m_newBounds)) {
+                WorkflowManagerUI wm = getHostWFMUI();
+                NodeUIInformation information = NodeUIInformation.builder()
+                    .setNodeLocation(m_newBounds[0], m_newBounds[1], m_newBounds[2], m_newBounds[3]).build();
+                NodeContainerUI container = wm.getNodeContainer(m_nodeID);
+                // must set explicitly so that event is fired by container
+                container.setUIInformation(information);
+            }
         }
     }
 
@@ -157,13 +163,17 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand implements Asy
      */
     @Override
     public void undo() {
-        if (!Arrays.equals(m_oldBounds, m_newBounds)) {
-            NodeUIInformation information = NodeUIInformation.builder()
-                .setNodeLocation(m_oldBounds[0], m_oldBounds[1], m_oldBounds[2], m_oldBounds[3]).build();
-            NodeContainerUI container = getHostWFMUI().getNodeContainer(m_nodeID);
-            container.setUIInformation(information);
+        if (shallExecuteAsync()) {
+            waitForTermination(undoAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)), "Undo moving node ...");
+        } else {
+            if (!Arrays.equals(m_oldBounds, m_newBounds)) {
+                NodeUIInformation information = NodeUIInformation.builder()
+                    .setNodeLocation(m_oldBounds[0], m_oldBounds[1], m_oldBounds[2], m_oldBounds[3]).build();
+                NodeContainerUI container = getHostWFMUI().getNodeContainer(m_nodeID);
+                container.setUIInformation(information);
+            }
         }
-   }
+    }
 
     /**
      * {@inheritDoc}
