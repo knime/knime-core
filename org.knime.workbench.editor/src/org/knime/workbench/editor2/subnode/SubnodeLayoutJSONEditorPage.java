@@ -163,6 +163,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     private NodeUsageComposite m_nodeUsageComposite;
 
     private File m_tempDir;
+    private final static String EMPTY_JSON = "{}";
 
     /**
      * Crates a new page instance with a given page name
@@ -377,7 +378,6 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         scrollPane.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
 
         fillBasicComposite();
-        scrollPane.setMinSize(m_basicComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
         return composite;
     }
 
@@ -565,6 +565,9 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 updateModelFromJson();
             }
         });
+        // Ensure scroll bar appears when composite data changes
+        ((ScrolledComposite)m_basicComposite.getParent())
+            .setMinSize(m_basicComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT, true));
     }
 
     private Composite createNodeLabelComposite(final Composite parent, final NodeID nodeID, final NodeContainer nodeContainer) {
@@ -768,19 +771,21 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         m_viewNodes = viewNodes;
         JSONLayoutPage page = null;
         String layout = m_subNodeContainer.getLayoutJSONString();
-        if (StringUtils.isNotEmpty(layout)) {
-            try {
-                ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
-                page = mapper.readValue(layout, JSONLayoutPage.class);
-                if (page.getRows() == null) {
-                    page = null;
-                } else {
-                    m_jsonDocument = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
-                }
-            } catch (IOException e) {
-                LOGGER.error("Error parsing layout. Pretty printing not possible: " + e.getMessage(), e);
-                m_jsonDocument = layout;
+        if (layout == null || layout.isEmpty() || layout.equals(EMPTY_JSON)) {
+            m_jsonDocument = EMPTY_JSON;
+            return;
+        }
+        try {
+            ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
+            page = mapper.readValue(layout, JSONLayoutPage.class);
+            if (page.getRows() == null) {
+                page = null;
+            } else {
+                m_jsonDocument = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
             }
+        } catch (IOException e) {
+            LOGGER.error("Error parsing layout. Pretty printing not possible: " + e.getMessage(), e);
+            m_jsonDocument = layout;
         }
         if (page == null) {
             page = resetLayout();
@@ -1081,16 +1086,19 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     public String getJsonDocument() {
         ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
         ObjectReader reader = mapper.readerForUpdating(new JSONLayoutPage());
-        try {
-            String json = isWindows() ? m_textArea.getText() : m_jsonDocument;
-            JSONLayoutPage page = reader.readValue(json);
-            String layoutString = mapper.writeValueAsString(page);
-            return layoutString;
-        } catch (IOException e) {
-            LOGGER.error("Failed to retrieve JSON string from layout:" + e.getMessage(), e);
+        String layoutString = "";
+        String json = isWindows() ? m_textArea.getText() : m_jsonDocument;
+        if (json != null && !json.isEmpty()) {
+            try {
+                JSONLayoutPage page = reader.readValue(json);
+                layoutString = mapper.writeValueAsString(page);
+            } catch (IOException e) {
+                LOGGER.error("Failed to retrieve JSON string from layout:" + e.getMessage(), e);
+                layoutString = "";
+            }
         }
 
-        return "";
+        return layoutString;
     }
 
     private boolean isWindows() {
