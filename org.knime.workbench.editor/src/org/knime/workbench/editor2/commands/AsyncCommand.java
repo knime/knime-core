@@ -48,7 +48,7 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.workbench.ui.async.AsyncSwitch.waitForTermination;
+import static org.knime.workbench.ui.async.AsyncUtil.waitForTermination;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

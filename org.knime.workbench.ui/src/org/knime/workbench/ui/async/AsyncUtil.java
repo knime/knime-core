@@ -66,13 +66,16 @@ import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.AsyncNodeContainerUI;
+import org.knime.core.ui.node.workflow.async.AsyncUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowAnnotationUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.CompletableFutureEx;
 import org.knime.core.util.SWTUtilities;
 
 /**
- * Helper methods to switch between the synchronous and asynchronous implementations of an interface (such as
+ * Provides helper methods to deal with asynchronous methods as provided by subclasses of the {@link AsyncUI}-interface.
+ *
+ * There are, e.g. helper methods to switch between the synchronous and asynchronous implementations of an interface (such as
  * {@link WorkflowManagerUI} and {@link AsyncWorkflowManagerUI}).
  *
  * In case of asynchronous methods, the provided helper methods will block till the result is available (i.e. the future
@@ -94,11 +97,11 @@ import org.knime.core.util.SWTUtilities;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class AsyncSwitch {
+public class AsyncUtil {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(AsyncSwitch.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AsyncUtil.class);
 
-    private AsyncSwitch() {
+    private AsyncUtil() {
         //utility class
     }
 

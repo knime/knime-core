@@ -49,7 +49,7 @@ package org.knime.workbench.ui.wrapper;
 
 import static org.knime.core.ui.wrapper.Wrapper.unwrapNCOptional;
 import static org.knime.core.ui.wrapper.Wrapper.wraps;
-import static org.knime.workbench.ui.async.AsyncSwitch.ncAsyncSwitchRethrow;
+import static org.knime.workbench.ui.async.AsyncUtil.ncAsyncSwitchRethrow;
 
 import java.awt.Dimension;
 import java.awt.event.InputEvent;

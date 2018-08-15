@@ -47,8 +47,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.workbench.ui.async.AsyncSwitch.wfmAsyncSwitch;
-import static org.knime.workbench.ui.async.AsyncSwitch.wfmAsyncSwitchRethrow;
+import static org.knime.workbench.ui.async.AsyncUtil.wfmAsyncSwitch;
+import static org.knime.workbench.ui.async.AsyncUtil.wfmAsyncSwitchRethrow;
 
 import java.util.Arrays;
 import java.util.Collection;

@@ -49,7 +49,7 @@ package org.knime.workbench.editor2.commands;
 
 import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
 import static org.knime.core.ui.wrapper.Wrapper.wraps;
-import static org.knime.workbench.ui.async.AsyncSwitch.wfmAsyncSwitchRethrow;
+import static org.knime.workbench.ui.async.AsyncUtil.wfmAsyncSwitchRethrow;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;

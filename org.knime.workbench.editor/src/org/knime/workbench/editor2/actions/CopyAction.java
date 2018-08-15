@@ -62,7 +62,7 @@ import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.ui.async.AsyncSwitch;
+import org.knime.workbench.ui.async.AsyncUtil;
 
 /**
  * Implements the clipboard copy action to copy nodes and connections into the
@@ -144,7 +144,7 @@ public class CopyAction extends AbstractClipboardAction {
         WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
         content.setNodeIDs(ids);
         content.setAnnotationIDs(annotationIDs);
-        WorkflowCopyUI wfCopy = AsyncSwitch.wfmAsyncSwitch(wfm -> wfm.copy(content.build()),
+        WorkflowCopyUI wfCopy = AsyncUtil.wfmAsyncSwitch(wfm -> wfm.copy(content.build()),
             wfm -> wfm.copyAsync(content.build()), super.getManagerUI(), "Copying workflow parts ...");
 
         // the information about the nodes is stored in the config XML format

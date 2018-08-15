@@ -74,7 +74,7 @@ import org.knime.core.ui.node.workflow.async.OperationNotAllowedException;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
-import org.knime.workbench.ui.async.AsyncSwitch;
+import org.knime.workbench.ui.async.AsyncUtil;
 
 /**
  * Pasts the current clipboard object (containing workflow persistor) into
@@ -137,7 +137,7 @@ public final class PasteFromWorkflowPersistorCommand
     public void execute() {
         WorkflowManagerUI manager = m_editor.getWorkflowManagerUI();
         WorkflowCopyUI wfCopy = m_clipboardObject.getWorkflowCopy();
-        m_pastedContent = AsyncSwitch.wfmAsyncSwitch(wfm -> {
+        m_pastedContent = AsyncUtil.wfmAsyncSwitch(wfm -> {
             //in case of a sync workflow managewr:
             //paste the content, calculate the shift and then move the pasted objects accordingly
             WorkflowCopyContent pastedContent = wfm.paste(wfCopy);
@@ -248,7 +248,7 @@ public final class PasteFromWorkflowPersistorCommand
         ConnectionID[] connIDs = new ConnectionID[0];
         WorkflowAnnotationID[] annoIDs = m_pastedContent.getAnnotationIDs();
         try {
-            AsyncSwitch.wfmAsyncSwitchRethrow(wfm -> {
+            AsyncUtil.wfmAsyncSwitchRethrow(wfm -> {
                 wfm.remove(nodeIDs, connIDs, annoIDs);
                 return null;
             }, wfm -> wfm.removeAsync(nodeIDs, connIDs, annoIDs), manager, "Removing workflow parts ...");
