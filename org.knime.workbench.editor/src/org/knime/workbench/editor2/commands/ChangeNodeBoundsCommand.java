@@ -56,8 +56,9 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.AsyncNodeContainerUI;
+import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
-import org.knime.workbench.ui.async.AsyncSwitch;
 
 /**
  * GEF Command for changing the bounds of a <code>NodeContainer</code> in the
@@ -66,7 +67,7 @@ import org.knime.workbench.ui.async.AsyncSwitch;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
+public class ChangeNodeBoundsCommand extends AbstractKNIMECommand implements AsyncCommand {
 
     private final int[] m_oldBounds;
     private final int[] m_newBounds;
@@ -96,6 +97,26 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean shallExecuteAsync() {
+        return getHostWFMUI() instanceof AsyncWorkflowManagerUI;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AsyncWorkflowManagerUI getAsyncHostWFM() {
+        if (getHostWFMUI() instanceof AsyncWorkflowManagerUI) {
+            return (AsyncWorkflowManagerUI)getHostWFMUI();
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Sets the new bounds.
      *
      * @see org.eclipse.gef.commands.Command#execute()
@@ -103,7 +124,29 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
-            moveNode(m_nodeID, m_newBounds, getHostWFMUI());
+            WorkflowManagerUI wm = getHostWFMUI();
+            NodeUIInformation information = NodeUIInformation.builder()
+                .setNodeLocation(m_newBounds[0], m_newBounds[1], m_newBounds[2], m_newBounds[3]).build();
+            NodeContainerUI container = wm.getNodeContainer(m_nodeID);
+            // must set explicitly so that event is fired by container
+            container.setUIInformation(information);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CompletableFuture<Void> executeAsync() {
+        if (!Arrays.equals(m_oldBounds, m_newBounds)) {
+            AsyncWorkflowManagerUI wfm = getAsyncHostWFM();
+            NodeUIInformation information = NodeUIInformation.builder()
+                .setNodeLocation(m_newBounds[0], m_newBounds[1], m_newBounds[2], m_newBounds[3]).build();
+            AsyncNodeContainerUI container = wfm.getNodeContainer(m_nodeID);
+            return container.setUIInformationAsync(information);
+        } else {
+            return CompletableFuture.runAsync(() -> {
+            });
         }
     }
 
@@ -115,22 +158,28 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
     @Override
     public void undo() {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
-            moveNode(m_nodeID, m_oldBounds, getHostWFMUI());
+            NodeUIInformation information = NodeUIInformation.builder()
+                .setNodeLocation(m_oldBounds[0], m_oldBounds[1], m_oldBounds[2], m_oldBounds[3]).build();
+            NodeContainerUI container = getHostWFMUI().getNodeContainer(m_nodeID);
+            container.setUIInformation(information);
         }
-    }
+   }
 
-    private static void moveNode(final NodeID nodeID, final int[] bounds, final WorkflowManagerUI wfm) {
-        NodeUIInformation information =
-            NodeUIInformation.builder().setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3]).build();
-        NodeContainerUI container = wfm.getNodeContainer(nodeID);
-        // must set explicitly so that event is fired by container
-        AsyncSwitch.ncAsyncSwitch(nc -> {
-            nc.setUIInformation(information);
-            return null;
-        }, nc -> {
-            CompletableFuture<Void> f = nc.setUIInformationAsync(information);
-            f.thenCompose(s -> nc.getParent().refresh(false));
-            return f;
-        }, container, "Moving node ...");
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CompletableFuture<Void> undoAsync() {
+        if (!Arrays.equals(m_oldBounds, m_newBounds)) {
+            assert getHostWFMUI() instanceof AsyncWorkflowManagerUI;
+            AsyncWorkflowManagerUI wfm = getAsyncHostWFM();
+            NodeUIInformation information = NodeUIInformation.builder()
+                .setNodeLocation(m_oldBounds[0], m_oldBounds[1], m_oldBounds[2], m_oldBounds[3]).build();
+            AsyncNodeContainerUI container = wfm.getNodeContainer(m_nodeID);
+            return container.setUIInformationAsync(information);
+        } else {
+            return CompletableFuture.runAsync(() -> {
+            });
+        }
     }
 }

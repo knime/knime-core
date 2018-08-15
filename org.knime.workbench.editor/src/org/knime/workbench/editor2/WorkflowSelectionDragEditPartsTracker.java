@@ -60,6 +60,7 @@ import org.eclipse.gef.tools.DragEditPartsTracker;
 import org.eclipse.swt.SWT;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.SubNodeContainerUI;
+import org.knime.workbench.editor2.commands.AsyncCommand;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -152,10 +153,14 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
             request.setType(REQ_ORPHAN);
         }
 
+        List<AsyncCommand> asyncCommands = new ArrayList<AsyncCommand>();
         if (!isCloneActive()) {
             while (iter.hasNext()) {
                 EditPart editPart = (EditPart)iter.next();
-                command.add(editPart.getCommand(request));
+                Command c = editPart.getCommand(request);
+                if(!collectIfAsync(c, asyncCommands)) {
+                    command.add(c);
+                }
             }
         }
 
@@ -163,8 +168,16 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         ConnectionContainerEditPart[] connectionsToAdapt =
                 getEmbracedConnections(getOperationSet());
         for (ConnectionContainerEditPart connectionPart : connectionsToAdapt) {
+            Command c = connectionPart.getBendpointAdaptionCommand(request);
+            if (!collectIfAsync(c, asyncCommands)) {
+                command.add(c);
+            }
+        }
 
-            command.add(connectionPart.getBendpointAdaptionCommand(request));
+        //create one single command from the async commands such that they are executed as one
+        if (!asyncCommands.isEmpty()) {
+            command.add(AsyncCommand.combineWithRefresh(asyncCommands,
+                "Waiting to complete operations on selected nodes and connections ..."));
         }
 
         if (!isMove() || isCloneActive()) {
@@ -181,6 +194,15 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         }
 
         return command;
+    }
+
+    private static boolean collectIfAsync(final Command c, final List<AsyncCommand> asyncCommands) {
+        if (c instanceof AsyncCommand && ((AsyncCommand)c).shallExecuteAsync()) {
+            asyncCommands.add((AsyncCommand)c);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

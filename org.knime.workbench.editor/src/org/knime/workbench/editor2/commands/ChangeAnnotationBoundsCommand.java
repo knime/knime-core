@@ -50,18 +50,18 @@ package org.knime.workbench.editor2.commands;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Annotation;
-import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.AsyncWorkflowAnnotationUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
-import org.knime.workbench.ui.async.AsyncSwitch;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
-public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand {
+public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand implements AsyncCommand {
 
     private final Rectangle m_oldBounds;
 
@@ -88,6 +88,26 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean shallExecuteAsync() {
+        return m_annotationEditPart.getModel() instanceof AsyncWorkflowAnnotationUI;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AsyncWorkflowManagerUI getAsyncHostWFM() {
+        if (getHostWFMUI() instanceof AsyncWorkflowManagerUI) {
+            return (AsyncWorkflowManagerUI)getHostWFMUI();
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Sets the new bounds.
      *
      * @see org.eclipse.gef.commands.Command#execute()
@@ -95,9 +115,26 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         Annotation annotation = m_annotationEditPart.getModel();
-        setBounds(annotation, m_newBounds, getHostWFMUI());
+        annotation.setDimension(m_newBounds.x, m_newBounds.y, m_newBounds.width, m_newBounds.height);
         m_annotationEditPart.getFigure().setBounds(m_newBounds);
         m_annotationEditPart.getFigure().getLayoutManager().layout(m_annotationEditPart.getFigure());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CompletableFuture<Void> executeAsync() {
+        Annotation annotation = m_annotationEditPart.getModel();
+        assert annotation instanceof AsyncWorkflowAnnotationUI;
+        AsyncWorkflowAnnotationUI asyncAnno = (AsyncWorkflowAnnotationUI)annotation;
+        return asyncAnno.setDimensionAsync(m_newBounds.x, m_newBounds.y, m_newBounds.width, m_newBounds.height)
+            .thenRun(() -> {
+                Display.getDefault().syncExec(() -> {
+                    m_annotationEditPart.getFigure().setBounds(m_newBounds);
+                    m_annotationEditPart.getFigure().getLayoutManager().layout(m_annotationEditPart.getFigure());
+                });
+            });
     }
 
     /**
@@ -108,26 +145,26 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand {
     @Override
     public void undo() {
         Annotation annotation = m_annotationEditPart.getModel();
-        setBounds(annotation, m_oldBounds, getHostWFMUI());
+        annotation.setDimension(m_oldBounds.x, m_oldBounds.y, m_oldBounds.width, m_oldBounds.height);
         // must set explicitly so that event is fired by container
         m_annotationEditPart.getFigure().setBounds(m_oldBounds);
         m_annotationEditPart.getFigure().getLayoutManager().layout(m_annotationEditPart.getFigure());
     }
 
-    private static void setBounds(final Annotation annotation, final Rectangle bounds, final WorkflowManagerUI wfm) {
-        if (annotation instanceof WorkflowAnnotation) {
-            AsyncSwitch.waAsyncSwitch(wa -> {
-                annotation.setDimension(bounds.x, bounds.y, bounds.width, bounds.height);
-                return null;
-            }, wa -> {
-                CompletableFuture<Void> f = wa.setDimensionAsync(bounds.x, bounds.y, bounds.width, bounds.height);
-                assert wfm instanceof AsyncWorkflowManagerUI;
-                f.thenCompose(s -> ((AsyncWorkflowManagerUI)wfm).refresh(false));
-                return f;
-            }, (WorkflowAnnotation)annotation, "Setting workflow annotation bounds ...");
-        } else {
-            annotation.setDimension(bounds.x, bounds.y, bounds.width, bounds.height);
-        }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CompletableFuture<Void> undoAsync() {
+        Annotation annotation = m_annotationEditPart.getModel();
+        assert annotation instanceof AsyncWorkflowAnnotationUI;
+        AsyncWorkflowAnnotationUI asyncAnno = (AsyncWorkflowAnnotationUI)annotation;
+        return asyncAnno.setDimensionAsync(m_oldBounds.x, m_oldBounds.y, m_oldBounds.width, m_oldBounds.height)
+            .thenRun(() -> {
+                Display.getDefault().syncExec(() -> {
+                    m_annotationEditPart.getFigure().setBounds(m_oldBounds);
+                    m_annotationEditPart.getFigure().getLayoutManager().layout(m_annotationEditPart.getFigure());
+                });
+            });
     }
-
 }

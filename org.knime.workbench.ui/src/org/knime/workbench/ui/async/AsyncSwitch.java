@@ -119,24 +119,7 @@ public class AsyncSwitch {
         final Function<AsyncWorkflowManagerUI, CompletableFuture<? extends T>> asyncWfm, final WorkflowManagerUI wfm,
         final String waitingMessage) {
         if (wfm instanceof AsyncWorkflowManagerUI) {
-            final AtomicReference<T> ref = new AtomicReference<T>();
-            final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
-            try {
-                PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
-                    monitor.beginTask(waitingMessage, 100);
-                    try {
-                        ref.set(asyncWfm.apply((AsyncWorkflowManagerUI)wfm).get());
-                    } catch (ExecutionException e) {
-                        exception.set(e.getCause());
-                    }
-                });
-            } catch (InterruptedException | InvocationTargetException ex) {
-                exception.set(ex);
-            }
-            if (exception.get() != null) {
-                openDialogAndLog(exception.get(), waitingMessage);
-            }
-            return ref.get();
+            return waitForTermination(asyncWfm.apply((AsyncWorkflowManagerUI)wfm), waitingMessage);
         } else {
             return syncWfm.apply(wfm);
         }
@@ -157,24 +140,7 @@ public class AsyncSwitch {
         final Function<AsyncNodeContainerUI, CompletableFuture<T>> asyncNc, final NodeContainerUI nc,
         final String waitingMessage) {
         if (nc instanceof AsyncNodeContainerUI) {
-            final AtomicReference<T> ref = new AtomicReference<T>();
-            final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
-            try {
-                PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
-                    monitor.beginTask(waitingMessage, 100);
-                    try {
-                        ref.set(asyncNc.apply((AsyncNodeContainerUI)nc).get());
-                    } catch (ExecutionException e) {
-                        exception.set(e.getCause());
-                    }
-                });
-            } catch (InterruptedException | InvocationTargetException ex) {
-                exception.set(ex);
-            }
-            if (exception.get() != null) {
-                openDialogAndLog(exception.get(), waitingMessage);
-            }
-            return ref.get();
+            return waitForTermination(asyncNc.apply((AsyncNodeContainerUI)nc), waitingMessage);
         } else {
             return syncNc.apply(nc);
         }
@@ -288,27 +254,38 @@ public class AsyncSwitch {
         final Function<AsyncWorkflowAnnotationUI, CompletableFuture<T>> asyncWa, final WorkflowAnnotation wa,
         final String waitingMessage) {
         if (wa instanceof AsyncWorkflowAnnotationUI) {
-            final AtomicReference<T> ref = new AtomicReference<T>();
-            final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
-            try {
-                PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
-                    monitor.beginTask(waitingMessage, 100);
-                    try {
-                        ref.set(asyncWa.apply((AsyncWorkflowAnnotationUI)wa).get());
-                    } catch (ExecutionException e) {
-                        exception.set(e.getCause());
-                    }
-                });
-            } catch (InterruptedException | InvocationTargetException ex) {
-                exception.set(ex);
-            }
-            if (exception.get() != null) {
-                openDialogAndLog(exception.get(), waitingMessage);
-            }
-            return ref.get();
+            return waitForTermination(asyncWa.apply((AsyncWorkflowAnnotationUI)wa), waitingMessage);
         } else {
             return syncWa.apply(wa);
         }
+    }
+
+    /**
+     * Waits for the provided future to complete while showing a busy cursor and later a 'waiting'-dialog.
+     *
+     * @param future future to wait to be completed
+     * @param waitingMessage the message to be displayed in the waiting dialog
+     * @return the future's result when done
+     */
+    public static <T> T waitForTermination(final CompletableFuture<T> future, final String waitingMessage) {
+        final AtomicReference<T> ref = new AtomicReference<T>();
+        final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
+        try {
+            PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
+                monitor.beginTask(waitingMessage, 100);
+                try {
+                    ref.set(future.get());
+                } catch (ExecutionException e) {
+                    exception.set(e.getCause());
+                }
+            });
+        } catch (InterruptedException | InvocationTargetException ex) {
+            exception.set(ex);
+        }
+        if (exception.get() != null) {
+            openDialogAndLog(exception.get(), waitingMessage);
+        }
+        return ref.get();
     }
 
     /**
