@@ -121,7 +121,7 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        NodeContainer nc = Wrapper.unwrapNCOptional(nodes[0].getNodeContainer()).orElse(null);
+        final NodeContainer nc = Wrapper.unwrapNCOptional(nodes[0].getNodeContainer()).orElse(null);
         if (nc instanceof SubNodeContainer) {
             return !((SubNodeContainer)nc).isWriteProtected();
         }
