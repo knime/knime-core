@@ -8,6 +8,22 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/Buffer.java" type="org.knime.core.data.container.Buffer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.Buffer"/>
+                <message_argument value="clearIteratorInstance(AbstractTableStoreReader.TableStoreCloseableRowIterator, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/storage/AbstractTableStoreReader.java" type="org.knime.core.data.container.storage.AbstractTableStoreReader$TableStoreCloseableRowIterator">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.storage.AbstractTableStoreReader.TableStoreCloseableRowIterator"/>
+                <message_argument value="setBuffer(Buffer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/wizard/AbstractWizardNodeView.java" type="org.knime.core.node.wizard.AbstractWizardNodeView">
         <filter id="336695337">
             <message_arguments>

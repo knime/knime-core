@@ -44,8 +44,7 @@
  */
 package org.knime.core.data;
 
-import org.knime.core.data.RowIterator.DefaultRowIteratorBuilder;
-import org.knime.core.data.RowIterator.RowIteratorBuilder;
+import org.knime.core.data.RowIteratorBuilder.DefaultRowIteratorBuilder;
 
 /**
  * Most general data interface in table structure with a fixed number of columns

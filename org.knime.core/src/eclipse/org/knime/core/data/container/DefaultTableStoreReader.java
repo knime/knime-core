@@ -104,7 +104,7 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
             StringBuilder b = new StringBuilder("Cannot read file \"");
             b.append(m_binFile != null ? m_binFile.getName() : "<unknown>");
             b.append("\"");
-            Buffer.checkAndReportOpenFiles(ioe);
+            checkAndReportOpenFiles(ioe);
             throw new RuntimeException(b.toString(), ioe);
         }
     }

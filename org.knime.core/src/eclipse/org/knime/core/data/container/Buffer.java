@@ -56,11 +56,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.management.ManagementFactory;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,7 +74,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.WeakHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -88,14 +85,13 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.RowIterator.DefaultRowIteratorBuilder;
-import org.knime.core.data.RowIterator.RowIteratorBuilder;
+import org.knime.core.data.RowIteratorBuilder;
+import org.knime.core.data.RowIteratorBuilder.DefaultRowIteratorBuilder;
 import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.CollectionDataValue;
@@ -128,7 +124,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.FileUtil;
-import org.knime.core.util.PathUtils;
 import org.knime.core.util.ThreadUtils;
 
 /**
@@ -263,9 +258,6 @@ public class Buffer implements KNIMEStreamConstants {
      */
     private static boolean isExecutingShutdownHook = false;
 
-    /** Dummy object for the file iterator map. */
-    private static final Object DUMMY = new Object();
-
     /**
      * Adds a shutdown hook to the runtime that closes all open input streams
      *
@@ -387,10 +379,6 @@ public class Buffer implements KNIMEStreamConstants {
     /** {@link #getFileStoreHandler()}. */
     private IFileStoreHandler m_fileStoreHandler;
 
-    /** Number of open file input streams on m_binFile. */
-    // TODO move to AbstractTableStoreReader (and also the other one... whose name I forgot)
-    private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
-
     private TableStoreFormat m_outputFormat;
     private AbstractTableStoreWriter m_outputWriter;
     private AbstractTableStoreReader m_outputReader;
@@ -417,12 +405,6 @@ public class Buffer implements KNIMEStreamConstants {
 
     /** the spec the rows comply with, no checking is done, however. */
     private DataTableSpec m_spec;
-
-    /**
-     * List of file iterators that look at this buffer. Need to close them when the node is reset and the file shall be
-     * deleted.
-     */
-    private final WeakHashMap<TableStoreCloseableRowIterator, Object> m_openIteratorSet;
 
     /**
      * The iterator that is used to read the content back into memory. This instance is used after the workflow is
@@ -473,7 +455,6 @@ public class Buffer implements KNIMEStreamConstants {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
         m_list = new ArrayList<BlobSupportDataRow>();
-        m_openIteratorSet = new WeakHashMap<>();
         m_size = 0;
         m_bufferID = bufferID;
         m_globalRepository = globalRep;
@@ -527,7 +508,6 @@ public class Buffer implements KNIMEStreamConstants {
         } else {
             m_fileStoreHandlerRepository = fileStoreHandlerRepository;
         }
-        m_openIteratorSet = new WeakHashMap<>();
         if (metaIn == null) {
             throw new IOException("No meta information given (null)");
         }
@@ -1428,37 +1408,12 @@ public class Buffer implements KNIMEStreamConstants {
         return new String(c);
     }
 
-    /**
-     * Get a new <code>RowIterator</code>, traversing all rows that have been added. Calling this method makes only
-     * sense when the buffer has been closed. However, no check is done (as it is available to package classes only).
-     *
-     * @return a new Iterator over all rows.
-     */
-    // TODO retire
-    synchronized CloseableRowIterator iterator() {
-        if (usesOutFile()) {
-            if (m_useBackIntoMemoryIterator) {
-                // the order of the following lines is very important!
-                m_useBackIntoMemoryIterator = false;
-                m_backIntoMemoryIterator = iterator();
-                // we never store more than 2^31 rows in memory, therefore it's safe to cast to int
-                m_list = new ArrayList<BlobSupportDataRow>((int) size());
-                return new FromListIterator();
-            }
-            TableStoreCloseableRowIterator iterator = m_outputReader.iterator();
-            registerNewIteratorInstance(iterator);
-            return iterator;
-        } else {
-            return new FromListIterator();
-        }
-    }
-
     synchronized RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder() {
         if (usesOutFile()) {
             if (m_useBackIntoMemoryIterator) {
                 // the order of the following lines is very important!
                 m_useBackIntoMemoryIterator = false;
-                m_backIntoMemoryIterator = iterator();
+                m_backIntoMemoryIterator = iteratorBuilder().build();
                 // we never store more than 2^31 rows in memory, therefore it's safe to cast to int
                 m_list = new ArrayList<BlobSupportDataRow>((int) size());
                 return new DefaultRowIteratorBuilder<>(() -> new FromListIterator(), getTableSpec());
@@ -1468,46 +1423,6 @@ public class Buffer implements KNIMEStreamConstants {
             return iteratorBuilder;
         } else {
             return new DefaultRowIteratorBuilder<>(() -> new FromListIterator(), getTableSpec());
-        }
-    }
-
-    private static List<OutputStream> DEBUG_STREAMS = new ArrayList<>();
-
-    static {
-        if (KNIMEConstants.ASSERTIONS_ENABLED && Platform.OS_LINUX.equals(Platform.getOS())) {
-            for (int i = 0; i < 10; i++) {
-                try {
-                    DEBUG_STREAMS.add(Files.newOutputStream(PathUtils.createTempFile("test", ".txt")));
-                } catch (IOException ex) {
-                    LOGGER.debug(ex.getMessage(), ex);
-                }
-            }
-        }
-    }
-
-
-    /** prints debug output to catch random failures on test system, see AP-7978. */
-    // TODO move to ATableStoreReader?
-    public static void checkAndReportOpenFiles(final IOException ex) {
-        if (KNIMEConstants.ASSERTIONS_ENABLED && Platform.OS_LINUX.equals(Platform.getOS())) {
-            if (ex.getMessage().contains("Too many") || ex.getMessage().contains("Zu viele")) {
-                try {
-                    for (OutputStream os : DEBUG_STREAMS) {
-                        os.close();
-                    }
-                    DEBUG_STREAMS.clear();
-
-                    String pid = ManagementFactory.getRuntimeMXBean().getName();
-                    pid = pid.substring(0, pid.indexOf('@'));
-                    ProcessBuilder pb = new ProcessBuilder("lsof", "-p", pid);
-                    Process lsof = pb.start();
-                    try (InputStream is = lsof.getInputStream()) {
-                        LOGGER.debug("Currently open files: " + IOUtils.toString(is, "US-ASCII"));
-                    }
-                } catch (IOException e) {
-                    LOGGER.debug("Could not list open files: " + e.getMessage(), e);
-                }
-            }
         }
     }
 
@@ -1601,7 +1516,7 @@ public class Buffer implements KNIMEStreamConstants {
                 copy.initOutputWriter(tempFile);
             }
             int count = 1;
-            for (RowIterator it = iterator(); it.hasNext();) {
+            for (RowIterator it = iteratorBuilder().build(); it.hasNext();) {
                 final BlobSupportDataRow row = (BlobSupportDataRow)it.next();
                 final int countCurrent = count;
                 exec.setProgress(count / (double)size(),
@@ -1711,56 +1626,13 @@ public class Buffer implements KNIMEStreamConstants {
         return m_bufferID;
     }
 
-    /**
-     * Register a new iterator with this buffer.
-     *
-     * @param it The iterator
-     */
-    public synchronized void registerNewIteratorInstance (final TableStoreCloseableRowIterator it) {
-        LOGGER.debug("Opening input stream on file \"" + m_binFile.getAbsolutePath() + "\", "
-                + m_nrOpenInputStreams + " open streams");
-        it.setBuffer(this);
-        m_nrOpenInputStreams.incrementAndGet();
-        synchronized (m_openIteratorSet) {
-            m_openIteratorSet.put(it, DUMMY);
-        }
-    }
-
-    /**
-     * Clear the argument iterator (free the allocated resources).
-     *
-     * @param it The iterator
-     * @param removeFromHash Whether to remove from global hash.
-     */
-    public synchronized void clearIteratorInstance(final TableStoreCloseableRowIterator it, final boolean removeFromHash) {
-        String closeMes =
-                (m_binFile != null) ? "Closing input stream on \"" + m_binFile.getAbsolutePath() + "\", " : "";
-        try {
-            if (it.performClose()) {
-                m_nrOpenInputStreams.decrementAndGet();
-                logDebug(closeMes + m_nrOpenInputStreams + " remaining", null);
-                if (removeFromHash) {
-                    synchronized (m_openIteratorSet) {
-                        m_openIteratorSet.remove(it);
-                    }
-                }
-            }
-        } catch (IOException ioe) {
-            logDebug(closeMes + "failed!", ioe);
-        }
-    }
-
     /** Clears the temp file. Any subsequent iteration will fail! */
     synchronized void clear() {
         BufferTracker.getInstance().bufferCleared(this);
         m_list = null;
         unregisterMemoryAlertListener();
         if (m_binFile != null) {
-            synchronized (m_openIteratorSet) {
-                m_openIteratorSet.keySet().stream().filter(f -> f != null)
-                .forEach(f -> clearIteratorInstance(f, false));
-                m_openIteratorSet.clear();
-            }
+            m_outputReader.clearIteratorInstances();
             if (m_blobDir != null) {
                 DeleteInBackgroundThread.delete(m_binFile, m_blobDir);
             } else {
