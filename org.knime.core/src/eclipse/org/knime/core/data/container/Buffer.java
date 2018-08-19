@@ -1632,7 +1632,10 @@ public class Buffer implements KNIMEStreamConstants {
         m_list = null;
         unregisterMemoryAlertListener();
         if (m_binFile != null) {
-            m_outputReader.clearIteratorInstances();
+            if (m_outputReader != null) {
+                // output reader might be null if Buffer was created but never read -- no iterators to clear
+                m_outputReader.clearIteratorInstances();
+            }
             if (m_blobDir != null) {
                 DeleteInBackgroundThread.delete(m_binFile, m_blobDir);
             } else {
