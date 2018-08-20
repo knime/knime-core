@@ -62,8 +62,6 @@ import java.util.Vector;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
-import javax.xml.bind.DatatypeConverter;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellTypeConverter;
 import org.knime.core.data.DataColumnSpec;
@@ -794,12 +792,12 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
             return m_converterToIndexMap;
         }
 
-        /** @return the number of unique factories (mostly 0 or 1), excluding {@link DatatypeConverter}. */
+        /** @return the number of unique factories (mostly 0 or 1), excluding {@link DataCellTypeConverter}. */
         int getFactoryCount() {
             return m_uniqueCellFactoryMap.size();
         }
 
-        /** @return The number of new columns (replaced, appended). Includes {@link DatatypeConverter}. */
+        /** @return The number of new columns (replaced, appended). Includes {@link DataCellTypeConverter}. */
         int getNewColumnCount() {
             return m_allNewColumnsList.size();
         }
