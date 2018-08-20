@@ -128,8 +128,12 @@ public enum SharedIcons {
     DELETE_DASH("icons/delete_dash.png"),
     /** Delete trash can **/
     DELETE_TRASH("icons/delete_trash.png"),
-    /** Reset round arrow **/
+    /** Reset round arrow counterclockwise **/
     RESET("icons/reset.png"),
+    /** Refresh round arrow clockwise **/
+    REFRESH("icons/refresh.png"),
+    /** Sync dual round arrows clockwise **/
+    SYNC("icons/sync.png"),
     /** Search magnifier **/
     SEARCH("icons/search.png"),
     /** Sort a z with arrow **/
@@ -143,7 +147,7 @@ public enum SharedIcons {
     TYPE_BLOB("icons/binary_object.png"),
     /** Boolean type icon **/
     TYPE_BOOLEAN("icons/boolean.png"),
-    /** Bitvector type icon FIXME currently same icon as boolean**/
+    /** Bitvector type icon FIXME currently same icon as boolean **/
     TYPE_BITVECTOR("icons/boolean.png"),
     /** Bytevector type icon **/
     TYPE_BYTEVECTOR("icons/bytevectoricon.png"),
@@ -185,9 +189,19 @@ public enum SharedIcons {
     TYPE_XML("icons/xml.png"),
     /** PNG image type icon **/
     TYPE_PNG("icons/png.png"),
+    /** URI input type icon **/
+    TYPE_URI_INPUT("icons/uri_input.png"),
+    /** literal input type icon **/
+    TYPE_LITERAL("icons/literal.png"),
+    /** credentials username input type icon **/
+    TYPE_USERNAME("icons/credentials_username.png"),
+    /** credentials password input type icon **/
+    TYPE_PASSWORD("icons/credentials_password.png"),
     /**
      * Flow variables
      */
+    /** Flow variable boolean **/
+    FLOWVAR_GENERAL("icons/flowvar_general.png"),
     /** Flow variable boolean **/
     FLOWVAR_BOOLEAN("icons/flowvar_boolean.png"),
     /** Flow variable default **/
