@@ -47,12 +47,12 @@
  */
 package org.knime.base.node.jsnippet;
 
-import java.io.Closeable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.knime.base.node.jsnippet.expression.Abort;
@@ -61,6 +61,7 @@ import org.knime.base.node.jsnippet.expression.Cell;
 import org.knime.base.node.jsnippet.expression.TypeException;
 import org.knime.base.node.jsnippet.type.ConverterUtil;
 import org.knime.base.node.jsnippet.util.FlowVariableRepository;
+import org.knime.base.node.jsnippet.util.JavaFieldList.InColList;
 import org.knime.base.node.jsnippet.util.JavaFieldList.OutColList;
 import org.knime.base.node.jsnippet.util.JavaFieldList.OutVarList;
 import org.knime.base.node.jsnippet.util.field.InCol;
@@ -75,7 +76,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.AbstractCellFactory;
+import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
+import org.knime.core.data.convert.java.DataCellToJavaConverter;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -107,6 +110,12 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
 
     private ExecutionContext m_context;
 
+    private final LinkedHashMap<String, Cell> m_cellsMap;
+
+    private ArrayList<DataCellToJavaConverter<?, ?>> m_inConverters = new ArrayList<>();
+
+    private ArrayList<JavaToDataCellConverter<?>> m_outConverters = new ArrayList<>();
+
     /**
      * Create a new cell factory.
      *
@@ -124,14 +133,8 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         m_rowIndex = 0;
         m_rowCount = rowCount;
         m_context = context;
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public DataCell[] getCells(final DataRow row) {
+        /* One time snippet instance preparation */
         try {
             if (null == m_jsnippet) {
                 m_jsnippet = m_snippet.createSnippetInstance();
@@ -150,44 +153,77 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
                 }
             }
             // populate data structure with the input cells
-            Map<String, Cell> cellsMap = createCellsMap(row);
-            if (null == m_columns) {
-                m_columns = new ArrayList<>();
-                m_columns.addAll(cellsMap.keySet());
+            m_cellsMap = new LinkedHashMap<>(spec.getNumColumns());
+            m_columns = new ArrayList<>(m_cellsMap.keySet());
+
+            Field field = m_jsnippet.getClass().getSuperclass().getDeclaredField("m_cellsMap");
+            field.setAccessible(true);
+            /* The map is private and never modified by AbstractJSnippet,
+             * Making it unmodifiable ensures that stays that way. */
+            field.set(m_jsnippet, Collections.unmodifiableMap(m_cellsMap));
+
+            field = m_jsnippet.getClass().getSuperclass().getDeclaredField("m_columns");
+            field.setAccessible(true);
+            field.set(m_jsnippet, m_columns);
+
+            field = m_jsnippet.getClass().getSuperclass().getDeclaredField("m_inSpec");
+            field.setAccessible(true);
+            field.set(m_jsnippet, m_spec);
+
+        } catch (Exception e) {
+            // all reflection exceptions which will never happen, but in case
+            // re-throw exception
+            throw new RuntimeException(e);
+        }
+
+        for (final InCol inCol : m_snippet.getSystemFields().getInColFields()) {
+            // Get the converter factory for this column
+            final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
+                ConverterUtil.getDataCellToJavaConverterFactory(inCol.getConverterFactoryId());
+            if (!factory.isPresent()) {
+                throw new RuntimeException("Missing converter factory with ID: " + inCol.getConverterFactoryId());
             }
-            Field[] fs = m_jsnippet.getClass().getSuperclass().getDeclaredFields();
-            for (Field field : fs) {
-                if (field.getName().equals("m_cellsMap")) {
-                    field.setAccessible(true);
-                    field.set(m_jsnippet, cellsMap);
-                }
-                if (field.getName().equals("m_cells")) {
-                    field.setAccessible(true);
-                    List<Cell> cells = new ArrayList<>();
-                    cells.addAll(cellsMap.values());
-                    field.set(m_jsnippet, cells);
-                }
-                if (field.getName().equals("m_columns")) {
-                    field.setAccessible(true);
-                    field.set(m_jsnippet, m_columns);
-                }
-                if (field.getName().equals("m_inSpec")) {
-                    field.setAccessible(true);
-                    field.set(m_jsnippet, m_spec);
-                }
-                if (field.getName().equals(JavaSnippet.ROWID)) {
-                    field.setAccessible(true);
-                    field.set(m_jsnippet, row.getKey().getString());
-                }
-                if (field.getName().equals(JavaSnippet.ROWINDEX)) {
-                    field.setAccessible(true);
-                    field.set(m_jsnippet, m_rowIndex);
-                }
+
+            m_inConverters.add(factory.get().create());
+        }
+
+        for (final OutCol outField : m_snippet.getSystemFields().getOutColFields()) {
+            final String id = outField.getConverterFactoryId();
+
+            final Optional<JavaToDataCellConverterFactory<?>> factory =
+                ConverterUtil.getJavaToDataCellConverterFactory(id);
+            if (!factory.isPresent()) {
+                throw new RuntimeException("Missing converter factory with ID: " + id);
+            }
+            m_outConverters.add(((JavaToDataCellConverterFactory<?>)factory.get()).create(m_context));
+        }
+    }
+
+    @Override
+    public DataCell[] getCells(final DataRow row) {
+        try {
+            fillCellsMap(row);
+            {
+                final Field field = m_jsnippet.getClass().getSuperclass().getDeclaredField("m_cells");
+                field.setAccessible(true);
+                field.set(m_jsnippet, new ArrayList<>(m_cellsMap.values()));
+            }
+            {
+                final Field field = m_jsnippet.getClass().getSuperclass().getDeclaredField(JavaSnippet.ROWID);
+                field.setAccessible(true);
+                field.set(m_jsnippet, row.getKey().getString());
+            }
+            {
+                final Field field = m_jsnippet.getClass().getSuperclass().getDeclaredField(JavaSnippet.ROWINDEX);
+                field.setAccessible(true);
+                field.set(m_jsnippet, m_rowIndex);
             }
 
             // populate the system input column fields with data
-            for (InCol inCol : m_snippet.getSystemFields().getInColFields()) {
-                Field field = m_jsnippet.getClass().getField(inCol.getJavaName());
+            final InColList inFields = m_snippet.getSystemFields().getInColFields();
+            for (int i = 0; i < inFields.size(); ++i) {
+                final InCol inCol = inFields.get(i);
+                final Field field = m_jsnippet.getClass().getField(inCol.getJavaName());
 
                 final DataCell cell = row.getCell(m_spec.findColumnIndex(inCol.getKnimeName()));
                 if (cell.isMissing()) {
@@ -196,24 +232,20 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
                 }
 
                 // Get the converter factory for this column
-                final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
-                    ConverterUtil.getDataCellToJavaConverterFactory(inCol.getConverterFactoryId());
-                if (!factory.isPresent()) {
-                    throw new RuntimeException("Missing converter factory with ID: " + inCol.getConverterFactoryId());
-                }
-
-                final Object converted = factory.get().create().convertUnsafe(cell);
+                final Object converted = m_inConverters.get(i).convertUnsafe(cell);
                 field.set(m_jsnippet, converted);
             }
+
             // reset the system output fields to null (see also bug 3781)
-            for (OutCol outCol : m_snippet.getSystemFields().getOutColFields()) {
-                Field field = m_jsnippet.getClass().getField(outCol.getJavaName());
+            for (final OutCol outCol : m_snippet.getSystemFields().getOutColFields()) {
+                final Field field = m_jsnippet.getClass().getField(outCol.getJavaName());
                 field.set(m_jsnippet, null);
             }
+
             // populate the system input flow variable fields with data
-            for (InVar inCol : m_snippet.getSystemFields().getInVarFields()) {
-                Field field = m_jsnippet.getClass().getField(inCol.getJavaName());
-                Object v = m_flowVars.getValueOfType(inCol.getKnimeName(), inCol.getJavaType());
+            for (final InVar inCol : m_snippet.getSystemFields().getInVarFields()) {
+                final Field field = m_jsnippet.getClass().getField(inCol.getJavaName());
+                final Object v = m_flowVars.getValueOfType(inCol.getKnimeName(), inCol.getJavaType());
                 field.set(m_jsnippet, v);
             }
         } catch (Exception e) {
@@ -225,46 +257,36 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         try {
             // evaluate user script
             m_jsnippet.snippet();
-        } catch (Throwable thr) {
+        } catch (final Throwable thr) {
             if (thr instanceof Abort) {
-                StringBuilder builder = new StringBuilder("Calculation aborted: ");
-                String message = thr.getMessage();
-                builder.append(message == null ? "<no details>" : message);
-                throw new RuntimeException(builder.toString(), thr);
+                final String message = thr.getMessage();
+                throw new RuntimeException(
+                    String.format("Calculation aborted: %s", message == null ? "<no details>" : message), thr);
             } else {
+                final StringBuilder msg = new StringBuilder();
+                msg.append(String.format("Evaluation of java snippet failed for row \"%s\".", row.getKey()));
 
-                Integer lineNumber = null;
-                for (StackTraceElement ste : thr.getStackTrace()) {
-                    if (ste.getClassName().equals("JSnippet")) {
-                        lineNumber = ste.getLineNumber();
-                    }
-                }
-                StringBuilder msg = new StringBuilder();
-                msg.append("Evaluation of java snippet failed for row \"");
-                msg.append(row.getKey());
-                msg.append("\". ");
+                final Integer lineNumber = findLineNumberInStackTrace(thr);
                 if (lineNumber != null) {
-                    msg.append("The exception is caused by line ");
-                    msg.append(lineNumber);
-                    msg.append(" of the snippet. ");
+                    msg.append(String.format("The exception is caused by line %d of the snippet. ", lineNumber));
                 }
+
                 if (thr.getMessage() != null) {
-                    msg.append("Exception message:");
-                    msg.append(thr.getMessage());
+                    msg.append(String.format("Exception message:", thr.getMessage()));
                 }
+
                 LOGGER.warn(msg.toString(), thr);
-                OutVarList outVars = m_snippet.getSystemFields().getOutVarFields();
+                final OutVarList outVars = m_snippet.getSystemFields().getOutVarFields();
                 if (outVars.size() > 0) {
                     // Abort if flow variables are defined
-                    throw new RuntimeException("An error occured in an " + "expression with output flow variables.",
-                        thr);
+                    throw new RuntimeException("An error occured in an expression with output flow variables.", thr);
                 }
-                OutColList outFields = m_snippet.getSystemFields().getOutColFields();
-                DataCell[] out = new DataCell[outFields.size()];
-                for (int i = 0; i < out.length; i++) {
-                    // Return missing values for output fields
-                    out[i] = DataType.getMissingCell();
-                }
+
+                final OutColList outFields = m_snippet.getSystemFields().getOutColFields();
+                final DataCell[] out = new DataCell[outFields.size()];
+                // Return missing values for output fields
+                Arrays.fill(out, DataType.getMissingCell());
+
                 m_rowIndex++;
                 return out;
             }
@@ -272,9 +294,9 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
 
         try {
             // update m_flowVars with output flow variable fields.
-            for (OutVar var : m_snippet.getSystemFields().getOutVarFields()) {
-                Field field = m_jsnippet.getClass().getField(var.getJavaName());
-                Object value = field.get(m_jsnippet);
+            for (final OutVar var : m_snippet.getSystemFields().getOutVarFields()) {
+                final Field field = m_jsnippet.getClass().getField(var.getJavaName());
+                final Object value = field.get(m_jsnippet);
                 if (null != value) {
                     Type type = var.getFlowVarType();
                     FlowVariable flowVar = null;
@@ -289,36 +311,19 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
                 } else {
                     throw new RuntimeException("Flow variable \"" + var.getKnimeName() + "\" has no value.");
                 }
-
             }
+
             // get output column fields
-            OutColList outFields = m_snippet.getSystemFields().getOutColFields();
-            DataCell[] out = new DataCell[outFields.size()];
+            final OutColList outFields = m_snippet.getSystemFields().getOutColFields();
+            final DataCell[] out = new DataCell[outFields.size()];
             for (int i = 0; i < out.length; i++) {
-                OutCol outField = outFields.get(i);
+                final OutCol outField = outFields.get(i);
+                final Field field = m_jsnippet.getClass().getField(outField.getJavaName());
 
-                Field field = m_jsnippet.getClass().getField(outField.getJavaName());
-                Object value = field.get(m_jsnippet);
-                if (null == value) {
-                    out[i] = DataType.getMissingCell();
-                } else {
-                    final String id = outField.getConverterFactoryId();
-                    Optional<JavaToDataCellConverterFactory<?>> factory =
-                        ConverterUtil.getJavaToDataCellConverterFactory(id);
-                    if (!factory.isPresent()) {
-                        throw new RuntimeException("Missing converter factory with ID: " + id);
-                    }
-                    out[i] = ((JavaToDataCellConverterFactory<Object>)factory.get()).create(m_context).convert(value);
-                }
-            }
-            // Cleanup Closeable inputs
-            for (final OutCol outCol : m_snippet.getSystemFields().getOutColFields()) {
-                final Field field = m_jsnippet.getClass().getField(outCol.getJavaName());
                 final Object value = field.get(m_jsnippet);
+                out[i] = (null == value) ? DataType.getMissingCell() : m_outConverters.get(i).convertUnsafe(value);
 
-                if (value instanceof Closeable) {
-                    ((Closeable)value).close();
-                }
+                // Cleanup Closeable and AutoCloeable inputs
                 if (value instanceof AutoCloseable) {
                     // From the doc: Calling close more than once *can* have visible side effects!
                     ((AutoCloseable)value).close();
@@ -335,22 +340,39 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
 
     }
 
+    /**
+     * Find line number of last JSnippet stack trace element.
+     *
+     * @param thr Throwable containing the stack trace
+     * @return The line number or <code>null</code> if no element in the stack trace originated from the JSnippet class.
+     */
+    private static Integer findLineNumberInStackTrace(final Throwable thr) {
+        Integer lineNumber = null;
+        for (final StackTraceElement ste : thr.getStackTrace()) {
+            if (ste.getClassName().equals("JSnippet")) {
+                lineNumber = ste.getLineNumber();
+            }
+        }
+
+        return lineNumber;
+    }
+
     @Override
     public void afterProcessing() {
         m_snippet.close();
     }
 
-    /** Create a map from column name to table Cell proxy
+    /**
+     * Fill m_cellsMap with {@link DataCellProxy} of the given rows.
+     *
      * @param row Example row to create the map for.
-     * @return the map
      */
-    private Map<String, Cell> createCellsMap(final DataRow row) {
-        Map<String, Cell> cells = new LinkedHashMap<>(row.getNumCells());
+    private void fillCellsMap(final DataRow row) {
+        m_cellsMap.clear();
         for (int i = 0; i < row.getNumCells(); i++) {
             String name = m_spec.getColumnSpec(i).getName();
-            cells.put(name, new DataCellProxy(row, i));
+            m_cellsMap.put(name, new DataCellProxy(row, i));
         }
-        return cells;
     }
 
     @Override
@@ -364,6 +386,7 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         return cols;
     }
 
+    @Deprecated
     @Override
     public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress(curRowNr / (double)rowCount, () -> "Processed row " + curRowNr + " (\"" + lastKey + "\")");
@@ -378,11 +401,11 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
     /**
      * Class that wraps a DataRow for access from inside the Java Snippet.
      *
-     * This allows cell access while keeping the DataCell API safe from having to provide
-     * workflow level backwards compatibility.
+     * This allows cell access while keeping the DataCell API safe from having to provide workflow level backwards
+     * compatibility.
      *
-     * DataCellProxy stores a reference to a row and a column index and can be updated to point to a new row.
-     * Accessing the value stored inside the cell happens on demand.
+     * DataCellProxy stores a reference to a row and a column index and can be updated to point to a new row. Accessing
+     * the value stored inside the cell happens on demand.
      */
     private static class DataCellProxy implements Cell {
         private DataRow m_row;
@@ -407,7 +430,7 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
             return getValueOfType(t);
         }
 
-        @SuppressWarnings("rawtypes")
+        @SuppressWarnings({"rawtypes", "unchecked"})
         @Override
         public Object getValueOfType(final Class c) throws TypeException {
             DataCell cell = m_row.getCell(m_index);
