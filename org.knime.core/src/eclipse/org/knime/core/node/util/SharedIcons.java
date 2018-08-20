@@ -130,9 +130,11 @@ public enum SharedIcons {
     DELETE_TRASH("icons/delete_trash.png"),
     /** Reset round arrow counterclockwise **/
     RESET("icons/reset.png"),
-    /** Refresh round arrow clockwise **/
+    /** Refresh round arrow clockwise
+     * @since 3.7 **/
     REFRESH("icons/refresh.png"),
-    /** Sync dual round arrows clockwise **/
+    /** Sync dual round arrows clockwise
+     * @since 3.7 **/
     SYNC("icons/sync.png"),
     /** Search magnifier **/
     SEARCH("icons/search.png"),
@@ -189,18 +191,23 @@ public enum SharedIcons {
     TYPE_XML("icons/xml.png"),
     /** PNG image type icon **/
     TYPE_PNG("icons/png.png"),
-    /** URI input type icon **/
+    /** URI input type icon
+     * @since 3.7 **/
     TYPE_URI_INPUT("icons/uri_input.png"),
-    /** literal input type icon **/
+    /** literal input type icon
+     * @since 3.7 **/
     TYPE_LITERAL("icons/literal.png"),
-    /** credentials username input type icon **/
+    /** credentials username input type icon
+     * @since 3.7 **/
     TYPE_USERNAME("icons/credentials_username.png"),
-    /** credentials password input type icon **/
+    /** credentials password input type icon
+     * @since 3.7 **/
     TYPE_PASSWORD("icons/credentials_password.png"),
     /**
      * Flow variables
      */
-    /** Flow variable boolean **/
+    /** Flow variable boolean
+     * @since 3.7 **/
     FLOWVAR_GENERAL("icons/flowvar_general.png"),
     /** Flow variable boolean **/
     FLOWVAR_BOOLEAN("icons/flowvar_boolean.png"),
