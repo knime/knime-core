@@ -306,12 +306,12 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      *
      * @param it The iterator
      */
-    protected synchronized void registerNewIteratorInstance (final TableStoreCloseableRowIterator it) {
+    protected void registerNewIteratorInstance (final TableStoreCloseableRowIterator it) {
         LOGGER.debug("Opening input stream on file \"" + m_file.getAbsolutePath() + "\", "
                 + m_nrOpenInputStreams + " open streams");
         it.setReader(this);
-        m_nrOpenInputStreams.incrementAndGet();
         synchronized (m_openIteratorSet) {
+            m_nrOpenInputStreams.incrementAndGet();
             m_openIteratorSet.put(it, DUMMY);
         }
     }
@@ -321,6 +321,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      */
     public void clearIteratorInstances() {
         synchronized (m_openIteratorSet) {
+            // removeFromHash is false here, since clearing iterators would lead to a ConcurrentModificationException
             m_openIteratorSet.keySet().stream().filter(f -> f != null).forEach(f -> clearIteratorInstance(f, false));
             m_openIteratorSet.clear();
         }
@@ -332,15 +333,14 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      * @param it The iterator
      * @param removeFromHash Whether to remove from global hash.
      */
-    private synchronized void clearIteratorInstance(final TableStoreCloseableRowIterator it, final boolean removeFromHash) {
-        String closeMes =
-                (m_file != null) ? "Closing input stream on \"" + m_file.getAbsolutePath() + "\", " : "";
+    private void clearIteratorInstance(final TableStoreCloseableRowIterator it, final boolean removeFromHash) {
+        String closeMes = (m_file != null) ? "Closing input stream on \"" + m_file.getAbsolutePath() + "\", " : "";
         try {
             if (it.performClose()) {
-                m_nrOpenInputStreams.decrementAndGet();
-                LOGGER.debug(closeMes + m_nrOpenInputStreams + " remaining", null);
-                if (removeFromHash) {
-                    synchronized (m_openIteratorSet) {
+                synchronized (m_openIteratorSet) {
+                    m_nrOpenInputStreams.decrementAndGet();
+                    LOGGER.debug(closeMes + m_nrOpenInputStreams + " remaining", null);
+                    if (removeFromHash) {
                         m_openIteratorSet.remove(it);
                     }
                 }
