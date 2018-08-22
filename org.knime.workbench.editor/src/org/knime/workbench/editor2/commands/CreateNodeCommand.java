@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -58,8 +60,14 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.NodeUIInformation.Builder;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.OperationNotAllowedException;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.SWTUtilities;
+import org.knime.workbench.ui.async.AsyncSwitch;
 
 /**
  * GEF command for adding a <code>Node</code> to the
@@ -74,10 +82,21 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
     private final NodeFactory<? extends NodeModel> m_factory;
 
     /**
-     * Location of the new node.
+     * Relative location of the new node. Maybe <code>null</code> if the host manager is _not_ of type
+     * {@link WorkflowManager}.
+     *
      * @since 2.12
      */
+    @Deprecated
     protected final Point m_location;
+
+    /**
+     * Absolute location of the new node. Maybe <code>null</code> if the host manager is of type
+     * {@link WorkflowManager}.
+     *
+     * @since 3.7
+     */
+    protected final Point m_absoluteLocation;
 
     /**
      * Snap node to grid.
@@ -89,21 +108,43 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
      * Container of the new node.
      * @since 2.12
      */
-    protected NodeContainer m_container;
+    protected NodeContainerUI m_container;
 
     /**
      * Creates a new command.
      *
      * @param manager The workflow manager that should host the new node
      * @param factory The factory of the Node that should be added
-     * @param location Initial visual location in the
+     * @param relativeLocation Initial visual location in the workflow (i.e. relative to the visible workflow part not
+     *            taking the scrolling into account)
      * @param snapToGrid snap new node to grid
+     * @deprecated use {@link #CreateNodeCommand(WorkflowManagerUI, NodeFactory, Point, boolean)} instead with absolute
+     *             coordinates
      */
-    public CreateNodeCommand(final WorkflowManager manager,
-            final NodeFactory<? extends NodeModel> factory, final Point location, final boolean snapToGrid) {
+    @Deprecated
+    public CreateNodeCommand(final WorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
+        final Point relativeLocation, final boolean snapToGrid) {
         super(manager);
         m_factory = factory;
-        m_location = location;
+        m_location = relativeLocation;
+        m_absoluteLocation = null;
+        m_snapToGrid = snapToGrid;
+    }
+
+    /**
+     * Creates a new command.
+     *
+     * @param manager The workflow manager that should host the new node
+     * @param factory The factory of the Node that should be added
+     * @param absoluteLocation the absolute coordinates
+     * @param snapToGrid snap new node to grid
+     */
+    public CreateNodeCommand(final WorkflowManagerUI manager, final NodeFactory<? extends NodeModel> factory,
+        final Point absoluteLocation, final boolean snapToGrid) {
+        super(manager);
+        m_factory = factory;
+        m_location = null;
+        m_absoluteLocation = absoluteLocation;
         m_snapToGrid = snapToGrid;
     }
 
@@ -111,18 +152,39 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
      * {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        return m_factory != null && m_location != null && super.canExecute();
+        return m_factory != null && (m_location != null || m_absoluteLocation != null) && super.canExecute();
     }
 
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        WorkflowManager hostWFM = getHostWFM();
+        WorkflowManagerUI hostWFM = getHostWFMUI();
+
+        // create extra info
+        Builder infoBuilder = NodeUIInformation.builder()
+                .setSnapToGrid(m_snapToGrid)
+                .setIsDropLocation(true);
+        if(m_location != null) {
+            //relative coords
+            infoBuilder.setHasAbsoluteCoordinates(false)
+                .setNodeLocation(m_location.x, m_location.y, -1, -1);
+        } else {
+            assert m_absoluteLocation != null;
+            infoBuilder.setHasAbsoluteCoordinates(true)
+                .setNodeLocation(m_absoluteLocation.x, m_absoluteLocation.y, -1, -1);
+        }
+
         // Add node to workflow and get the container
         try {
-            NodeID id = hostWFM.createAndAddNode(m_factory);
+            NodeID id = AsyncSwitch.wfmAsyncSwitch(wfm -> {
+                return wfm.createAndAddNode(m_factory, infoBuilder.build());
+            }, wfm -> {
+                return wfm.createAndAddNodeAsync(m_factory, infoBuilder.build());
+            }, hostWFM, "Adding new node ...");
             m_container = hostWFM.getNodeContainer(id);
-            NodeTimer.GLOBAL_TIMER.addNodeCreation(m_container);
+            if (wraps(m_container, NodeContainer.class)) {
+                NodeTimer.GLOBAL_TIMER.addNodeCreation(Wrapper.unwrapNC(m_container));
+            }
         } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
@@ -133,21 +195,13 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
             mb.open();
             return;
         }
-        // create extra info and set it
-        NodeUIInformation info = NodeUIInformation.builder()
-                .setNodeLocation(m_location.x, m_location.y, -1, -1)
-                .setHasAbsoluteCoordinates(false)
-                .setSnapToGrid(m_snapToGrid)
-                .setIsDropLocation(true).build();
-        m_container.setUIInformation(info);
-
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
         return m_container != null
-            && getHostWFM().canRemoveNode(m_container.getID());
+            && getHostWFMUI().canRemoveNode(m_container.getID());
     }
 
     /**
@@ -157,7 +211,17 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
     public void undo() {
         LOGGER.debug("Undo: Removing node #" + m_container.getID());
         if (canUndo()) {
-            getHostWFM().removeNode(m_container.getID());
+            getHostWFMUI().remove(new NodeID[]{m_container.getID()}, null, null);
+            try {
+                AsyncSwitch.wfmAsyncSwitchRethrow(wfm -> {
+                    wfm.remove(new NodeID[]{m_container.getID()}, null, null);
+                    return null;
+                }, wfm -> {
+                    return wfm.removeAsync(new NodeID[]{m_container.getID()}, null, null);
+                }, getHostWFMUI(), "Removing node ...");
+            } catch (OperationNotAllowedException e) {
+                //should never happen
+            }
         } else {
             MessageDialog.openInformation(SWTUtilities.getActiveShell(),
                     "Operation no allowed", "The node "
@@ -165,5 +229,4 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
                     + " can currently not be removed");
         }
     }
-
 }

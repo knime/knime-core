@@ -50,8 +50,12 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 
 /**
  * Creates a new metanode - and may auto connect it to another one.
@@ -61,7 +65,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 public class CreateNewConnectedMetaNodeCommand extends
         AbstractCreateNewConnectedNodeCommand {
 
-    private final WorkflowManager m_source;
+    private final WorkflowManagerUI m_source;
 
     private final NodeID m_sourceID;
 
@@ -77,7 +81,7 @@ public class CreateNewConnectedMetaNodeCommand extends
      * @param connectTo the node to which the new node should be connected
      */
     public CreateNewConnectedMetaNodeCommand(final EditPartViewer viewer,
-            final WorkflowManager hostWfm, final WorkflowManager sourceWfm,
+            final WorkflowManagerUI hostWfm, final WorkflowManagerUI sourceWfm,
             final NodeID sourceID, final Point location, final NodeID connectTo) {
         super(viewer, hostWfm, location, connectTo);
         m_source = sourceWfm;
@@ -89,6 +93,10 @@ public class CreateNewConnectedMetaNodeCommand extends
      */
     @Override
     public boolean canExecute() {
+        if (!Wrapper.wraps(m_source, WorkflowManager.class)) {
+            //operation not yet supported for WorkflowManagerUI-implementations
+            return false;
+        }
         return super.canExecute() && m_source != null && m_sourceID != null;
 
     }
@@ -97,13 +105,14 @@ public class CreateNewConnectedMetaNodeCommand extends
      * {@inheritDoc}
      */
     @Override
-    protected NodeID createNewNode() {
+    protected NodeID createNewNode(final NodeUIInformation uiInfo) {
         WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
         content.setNodeIDs(m_sourceID);
         WorkflowManager hostWFM = getHostWFM();
-        NodeID[] copied =
-                hostWFM.copyFromAndPasteHere(m_source, content.build()).getNodeIDs();
+        NodeID[] copied = hostWFM.copyFromAndPasteHere(Wrapper.unwrapWFM(m_source), content.build()).getNodeIDs();
         assert copied.length == 1;
+        NodeContainerUI newNode = getHostWFMUI().getNodeContainer(copied[0]);
+        newNode.setUIInformation(uiInfo);
         return copied[0];
     }
 }

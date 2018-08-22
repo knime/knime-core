@@ -47,6 +47,9 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -59,13 +62,14 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeInPort;
-import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodeInPortUI;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.util.SWTUtilities;
+import org.knime.workbench.ui.async.AsyncSwitch;
 
 /**
  * Abstract super class for commands that insert new nodes into a workflow and potentially auto-connect them
@@ -100,7 +104,7 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
      * @param connectTo node to which the new node should be connected to
      */
     public AbstractCreateNewConnectedNodeCommand(final EditPartViewer viewer,
-            final WorkflowManager manager, final Point location,
+            final WorkflowManagerUI manager, final Point location,
             final NodeID connectTo) {
         super(manager);
         m_viewer = viewer;
@@ -121,22 +125,14 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        m_newNode = createNewNode();
+        // create extra info and pass it
+        NodeUIInformation uiInfo =
+            NodeUIInformation.builder().setNodeLocation(m_location.x, m_location.y, -1, -1).build();
+        m_newNode = createNewNode(uiInfo);
         if (m_newNode != null) {
             if (m_connectTo != null) {
                 autoConnectNewNode();
             }
-
-            NodeContainer newNode = getHostWFM().getNodeContainer(m_newNode);
-            NodeUIInformation uiInfo = newNode.getUIInformation();
-            // create extra info and set it
-            if (uiInfo == null) {
-                uiInfo = NodeUIInformation.builder().setNodeLocation(m_location.x, m_location.y, -1, -1).build();
-            } else {
-                uiInfo = NodeUIInformation.builder(uiInfo)
-                    .setNodeLocation(m_location.x, m_location.y, uiInfo.getBounds()[2], uiInfo.getBounds()[3]).build();
-            }
-            newNode.setUIInformation(uiInfo);
         }
         // make sure the new node is selected and visible
         m_viewer.deselectAll();
@@ -145,10 +141,11 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
     /**
      * Creates a new node in the current workflow manager (which can be
      * retrieved with {@link #getHostWFM()}) and returns its node id.
+     * @param uiInfo the ui info to be passed to the new node
      *
      * @return the node id of the new node
      */
-    protected abstract NodeID createNewNode();
+    protected abstract NodeID createNewNode(NodeUIInformation uiInfo);
 
     private void autoConnectNewNode() {
         if (m_newNode == null) {
@@ -157,9 +154,9 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
         if (m_connectTo == null) {
             return;
         }
-        WorkflowManager hostWFM = getHostWFM();
-        NodeContainer sourceNode = hostWFM.getNodeContainer(m_connectTo);
-        NodeContainer nc = hostWFM.getNodeContainer(m_newNode);
+        WorkflowManagerUI hostWFM = getHostWFMUI();
+        NodeContainerUI sourceNode = hostWFM.getNodeContainer(m_connectTo);
+        NodeContainerUI nc = hostWFM.getNodeContainer(m_newNode);
         Map<Integer, Integer> matchingPorts = getMatchingPorts(sourceNode, nc);
         if (matchingPorts.size() == 0) {
             LOGGER.info("Can't auto-connect new node (" + m_newNode + "): "
@@ -174,9 +171,15 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
                     + " port " + rightPort + " with existing node "
                     + sourceNode + " port " + leftPort);
             try {
-                hostWFM.addConnection(m_connectTo, leftPort, m_newNode,
-                        rightPort).getID();
-                NodeTimer.GLOBAL_TIMER.addConnectionCreation(sourceNode, nc);
+                AsyncSwitch.wfmAsyncSwitchRethrow(wfm -> {
+                    return wfm.addConnection(m_connectTo, leftPort, m_newNode, rightPort);
+                }, wfm -> {
+                    //TODO do parallel not sequential
+                    return wfm.addConnectionAsync(m_connectTo, leftPort, m_newNode, rightPort);
+                }, hostWFM, "Creating connection ...");
+                if (wraps(sourceNode, NodeContainer.class)) {
+                    NodeTimer.GLOBAL_TIMER.addConnectionCreation(unwrapNC(sourceNode), unwrapNC(nc));
+                }
             } catch (Exception e) {
                 String from = sourceNode.getNameWithID();
                 String to = nc.getNameWithID();
@@ -189,8 +192,8 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
         }
     }
 
-    private Map<Integer, Integer> getMatchingPorts(final NodeContainer left,
-            final NodeContainer right) {
+    private Map<Integer, Integer> getMatchingPorts(final NodeContainerUI left,
+            final NodeContainerUI right) {
         // don't auto connect to flow var ports - start with port index 1
         int leftFirst = (left instanceof WorkflowManagerUI) ? 0 : 1;
         int rightFirst = (right instanceof WorkflowManagerUI) ? 0 : 1;
@@ -199,12 +202,12 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
         Set<Integer> assignedRight = new HashSet<Integer>();
         for (int rightPidx = rightFirst; rightPidx < right.getNrInPorts(); rightPidx++) {
             for (int leftPidx = leftFirst; leftPidx < left.getNrOutPorts(); leftPidx++) {
-                NodeOutPort leftPort = left.getOutPort(leftPidx);
-                NodeInPort rightPort = right.getInPort(rightPidx);
+                NodeOutPortUI leftPort = left.getOutPort(leftPidx);
+                NodeInPortUI rightPort = right.getInPort(rightPidx);
                 PortType leftPortType = leftPort.getPortType();
                 PortType rightPortType = rightPort.getPortType();
                 if (leftPortType.isSuperTypeOf(rightPortType)) {
-                    if (getHostWFM().getOutgoingConnectionsFor(left.getID(),
+                    if (getHostWFMUI().getOutgoingConnectionsFor(left.getID(),
                             leftPidx).size() == 0) {
                         if (!matchingPorts.containsKey(leftPidx)
                                 && !assignedRight.contains(rightPidx)) {
@@ -236,7 +239,7 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
-        return m_newNode != null && getHostWFM().canRemoveNode(m_newNode);
+        return m_newNode != null && getHostWFMUI().canRemoveNode(m_newNode);
     }
 
     /**
@@ -246,6 +249,12 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
     public void undo() {
         try {
             // blows away the connection as well.
+            AsyncSwitch.wfmAsyncSwitchRethrow(wfm -> {
+                wfm.remove(new NodeID[]{m_newNode}, null, null);
+                return null;
+            }, wfm -> {
+                return wfm.removeAsync(new NodeID[]{m_newNode}, null, null);
+            }, getHostWFMUI(), "Removing node ...");
             getHostWFM().removeNode(m_newNode);
         } catch (Exception e) {
             String msg =

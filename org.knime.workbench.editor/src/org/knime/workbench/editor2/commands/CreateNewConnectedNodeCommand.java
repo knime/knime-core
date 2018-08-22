@@ -56,8 +56,12 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.SWTUtilities;
+import org.knime.workbench.ui.async.AsyncSwitch;
 
 /**
  * Creates a new node - and may auto connect it to another one.
@@ -79,7 +83,7 @@ public class CreateNewConnectedNodeCommand extends AbstractCreateNewConnectedNod
      * @param connectTo node to which the new node should be connected to
      */
     public CreateNewConnectedNodeCommand(final EditPartViewer viewer,
-            final WorkflowManager manager,
+            final WorkflowManagerUI manager,
             final NodeFactory<? extends NodeModel> factory,
             final Point location, final NodeID connectTo) {
         super(viewer, manager, location, connectTo);
@@ -99,13 +103,19 @@ public class CreateNewConnectedNodeCommand extends AbstractCreateNewConnectedNod
      * {@inheritDoc}
      */
     @Override
-    protected NodeID createNewNode() {
+    protected NodeID createNewNode(final NodeUIInformation uiInfo) {
         // Add node to workflow and get the container
         NodeID newID = null;
-        WorkflowManager hostWFM = getHostWFM();
+        WorkflowManagerUI hostWFM = getHostWFMUI();
         try {
-            newID = hostWFM.createAndAddNode(m_factory);
-            NodeTimer.GLOBAL_TIMER.addNodeCreation(hostWFM.getNodeContainer(newID));
+            newID = AsyncSwitch.wfmAsyncSwitch(wfm -> {
+                return wfm.createAndAddNode(m_factory, uiInfo);
+            }, wfm -> {
+                return wfm.createAndAddNodeAsync(m_factory, uiInfo);
+            }, hostWFM, "Create new node ...");
+            if (Wrapper.wraps(hostWFM, WorkflowManager.class)) {
+                NodeTimer.GLOBAL_TIMER.addNodeCreation(Wrapper.unwrapWFM(hostWFM).getNodeContainer(newID));
+            }
         } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);

@@ -45,7 +45,6 @@
  */
 package org.knime.workbench.editor2;
 
-import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
 import static org.knime.core.ui.wrapper.Wrapper.wrap;
 
 import java.io.File;
@@ -2459,7 +2458,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         Point nodeLoc = null;
         if (preNode == null) {
             nodeLoc = getViewportCenterLocation();
-            nodeLoc = toAbsolute(nodeLoc);
         } else {
             nodeLoc = getLocationRightOf(preNode);
             preID = preNode.getNodeContainer().getID();
@@ -2468,8 +2466,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             nodeLoc = getClosestGridLocation(nodeLoc);
         }
         Command newNodeCmd =
-                new CreateNewConnectedMetaNodeCommand(getViewer(), unwrapWFM(m_manager),
-                        sourceManager, id, nodeLoc, preID);
+            new CreateNewConnectedMetaNodeCommand(getViewer(), m_manager, WorkflowManagerWrapper.wrap(sourceManager),
+                id, nodeLoc, preID);
         getCommandStack().execute(newNodeCmd);
         // after adding a node the editor should get the focus
         setFocus();
@@ -2490,21 +2488,17 @@ public class WorkflowEditor extends GraphicalEditor implements
             return false;
         }
 
-        if(!getWorkflowManager().isPresent()) {
-            return false;
-        }
-
         NodeContainerEditPart preNode = getTheOneSelectedNode();
         Point nodeLoc = null;
         Command newNodeCmd = null;
         if (preNode == null) {
             nodeLoc = getViewportCenterLocation();
             // this command accepts/requires relative coordinates
-            newNodeCmd = new CreateNodeCommand(unwrapWFM(m_manager), nodeFactory, nodeLoc, getEditorSnapToGrid());
+            newNodeCmd = new CreateNodeCommand(m_manager, nodeFactory, nodeLoc, getEditorSnapToGrid());
         } else {
             nodeLoc = getLocationRightOf(preNode);
             newNodeCmd =
-                    new CreateNewConnectedNodeCommand(getViewer(), unwrapWFM(m_manager),
+                    new CreateNewConnectedNodeCommand(getViewer(), m_manager,
                             nodeFactory, nodeLoc, preNode.getNodeContainer()
                                     .getID());
         }
@@ -2555,7 +2549,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * @return a location in the middle of the visible part of the editor. These
-     *         are relative coordinates (to the current scrolling position)
+     *         are absolute coordinates.
      */
     private Point getViewportCenterLocation() {
         FigureCanvas ctrl = ((FigureCanvas)getViewer().getControl());
@@ -2572,7 +2566,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             nodeLoc.x += stepX;
             nodeLoc.y += stepY;
         }
-        return nodeLoc;
+        return toAbsolute(nodeLoc);
 
 
     }

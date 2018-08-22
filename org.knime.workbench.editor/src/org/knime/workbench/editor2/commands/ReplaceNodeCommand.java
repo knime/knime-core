@@ -104,7 +104,7 @@ public class ReplaceNodeCommand extends CreateNodeCommand {
     public void execute() {
         m_delete.execute();
         super.execute();
-        m_rh.reconnect(m_container);
+        m_rh.reconnect(Wrapper.unwrapNC(m_container));
         // the connections are not always properly re-drawn after "unmark". (Eclipse bug.) Repaint here.
         m_root.refresh();
 

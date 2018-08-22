@@ -47,6 +47,10 @@
  */
 package org.knime.workbench.editor2.editparts.policy;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
+
+import java.util.Optional;
+
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.Request;
@@ -61,6 +65,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.CreateDropRequest;
 import org.knime.workbench.editor2.CreateDropRequest.RequestType;
@@ -108,30 +113,24 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
 
         WorkflowRootEditPart workflowPart = (WorkflowRootEditPart)this.getHost();
 
-        if(!Wrapper.wraps(workflowPart.getWorkflowManager(), WorkflowManager.class)) {
-            //adding new nodes not supported yet by UI-interfaces and implemenations
-            LOGGER.error("Adding new nodes not supported by '"
-                + workflowPart.getWorkflowManager().getClass().getSimpleName() + "'.");
-            return null;
-        }
-
-        WorkflowManager manager = Wrapper.unwrapWFM(workflowPart.getWorkflowManager());
+        WorkflowManagerUI managerUI = workflowPart.getWorkflowManager();
+        Optional<WorkflowManager> manager = Wrapper.unwrapWFMOptional(managerUI);
 
         if (request instanceof CreateDropRequest) {
             Object obj = request.getNewObject();
             CreateDropRequest cdr = (CreateDropRequest)request;
             if (obj instanceof NodeFactory) {
-                return handleNodeDrop(manager, (NodeFactory<? extends NodeModel>)obj, cdr);
+                return handleNodeDrop(managerUI, (NodeFactory<? extends NodeModel>)obj, cdr);
             } else if (obj instanceof AbstractExplorerFileStore) {
                 AbstractExplorerFileStore fs = (AbstractExplorerFileStore)obj;
                 if (AbstractExplorerFileStore.isWorkflowTemplate(fs)) {
-                    return handleMetaNodeTemplateDrop(manager, cdr, fs);
+                    return handleMetaNodeTemplateDrop(manager.get(), cdr, fs);
                 }
             } else if (obj instanceof WorkflowPersistor) {
-                return handleMetaNodeDrop(manager, (WorkflowPersistor)obj, cdr);
+                return handleMetaNodeDrop(manager.get(), (WorkflowPersistor)obj, cdr);
             } else if (obj instanceof ReaderNodeSettings) {
                     ReaderNodeSettings settings = (ReaderNodeSettings)obj;
-                    return new DropNodeCommand(manager, settings.getFactory(), new NodeCreationContext(settings.getUrl()),
+                    return new DropNodeCommand(manager.get(), settings.getFactory(), new NodeCreationContext(settings.getUrl()),
                         request.getLocation(), snapToGrid);
             }else {
                 LOGGER.error("Illegal drop object: " + obj);
@@ -220,20 +219,27 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
      * @param factory the ndoe factory
      * @param request the drop request
      */
-    private Command handleNodeDrop( final WorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
+    private Command handleNodeDrop(final WorkflowManagerUI manager, final NodeFactory<? extends NodeModel> factory,
         final CreateDropRequest request) {
         RequestType requestType = request.getRequestType();
         Point location = request.getLocation();
+        Point absoluteLocation = location.getCopy();
+        WorkflowRootEditPart rootEditPart = (WorkflowRootEditPart) super.getHost();
+        rootEditPart.getFigure().translateToRelative(absoluteLocation);
         boolean snapToGrid = WorkflowEditor.getActiveEditorSnapToGrid();
         if (requestType.equals(RequestType.CREATE)) {
             // create a new node
-            return new CreateNodeCommand(manager, factory, location, snapToGrid);
+            return new CreateNodeCommand(manager, factory, absoluteLocation, snapToGrid);
         } else {
+            if (!Wrapper.wraps(manager, WorkflowManager.class)) {
+                //node insertion and replacement not yet supported for non-standard workflow managers
+                return null;
+            }
             AbstractEditPart editPart = request.getEditPart();
             if (requestType.equals(RequestType.INSERT)) {
                 // insert new node into connection
                 InsertNodeCommand insertCommand =
-                        new InsertNodeCommand(manager, factory, location, snapToGrid,
+                        new InsertNodeCommand(unwrapWFM(manager), factory, location, snapToGrid,
                             (ConnectionContainerEditPart)editPart);
 
                 if (request.createSpace()) {
@@ -246,7 +252,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
                 }
             } else if (requestType.equals(RequestType.REPLACE)) {
                 // replace node with a node
-                return new ReplaceNodeCommand(manager, factory, location, snapToGrid,
+                return new ReplaceNodeCommand(unwrapWFM(manager), factory, location, snapToGrid,
                     (NodeContainerEditPart)editPart);
             } else {
                 return null;

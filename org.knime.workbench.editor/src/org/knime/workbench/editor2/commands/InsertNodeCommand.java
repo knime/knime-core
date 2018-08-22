@@ -115,7 +115,7 @@ public class InsertNodeCommand extends CreateNodeCommand {
     public void execute() {
         m_delete.execute();
         super.execute();
-        m_ih.reconnect(m_container, m_snapToGrid, m_location.x, m_location.y);
+        m_ih.reconnect(Wrapper.unwrapNC(m_container), m_snapToGrid, m_location.x, m_location.y);
         // the connections are not always properly re-drawn after "unmark". (Eclipse bug.) Repaint here.
         m_root.refresh();
     }
