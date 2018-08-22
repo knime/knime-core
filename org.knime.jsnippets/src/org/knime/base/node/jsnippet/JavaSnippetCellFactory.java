@@ -112,9 +112,38 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
 
     private final LinkedHashMap<String, Cell> m_cellsMap;
 
-    private ArrayList<DataCellToJavaConverter<?, ?>> m_inConverters = new ArrayList<>();
+    private final ArrayList<DataCellToJavaConverter<?, ?>> m_inConverters = new ArrayList<>();
 
-    private ArrayList<JavaToDataCellConverter<?>> m_outConverters = new ArrayList<>();
+    private final ArrayList<JavaToDataCellConverter<?>> m_outConverters = new ArrayList<>();
+
+    private final ArrayList<Field> m_inJavaFields = new ArrayList<>();
+    private final ArrayList<Field> m_outJavaFields = new ArrayList<>();
+    private final ArrayList<Integer> m_inColIndices = new ArrayList<>();
+    private final int m_numInFields;
+    private final int m_numOutFields;
+
+    private static final Field FIELD_CELLS;
+    private static final Field FIELD_ROWID;
+    private static final Field FIELD_ROWINDEX;
+
+    static {
+        try {
+            FIELD_CELLS = AbstractJSnippet.class.getDeclaredField("m_cells");
+            FIELD_CELLS.setAccessible(true);
+
+            FIELD_ROWID = AbstractJSnippet.class.getDeclaredField(JavaSnippet.ROWID);
+            FIELD_ROWID.setAccessible(true);
+
+            FIELD_ROWINDEX = AbstractJSnippet.class.getDeclaredField(JavaSnippet.ROWINDEX);
+            FIELD_ROWINDEX.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            // Will never happen.
+            throw new IllegalStateException(e);
+        } catch (SecurityException e) {
+            // Will never happen.
+            throw new IllegalStateException(e);
+        }
+    }
 
     /**
      * Create a new cell factory.
@@ -176,18 +205,36 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
             throw new RuntimeException(e);
         }
 
-        for (final InCol inCol : m_snippet.getSystemFields().getInColFields()) {
-            // Get the converter factory for this column
+        final InColList inFields = m_snippet.getSystemFields().getInColFields();
+        m_numInFields = inFields.size();
+        for (final InCol inCol : inFields) {
+            // Cache the column index
+            int columnIndex = m_spec.findColumnIndex(inCol.getKnimeName());
+            m_inColIndices.add(columnIndex);
+
+            // Get the converter factory for this column, create and cache the converter
             final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
                 ConverterUtil.getDataCellToJavaConverterFactory(inCol.getConverterFactoryId());
             if (!factory.isPresent()) {
                 throw new RuntimeException("Missing converter factory with ID: " + inCol.getConverterFactoryId());
             }
-
             m_inConverters.add(factory.get().create());
+
+            // Get the java field for this column and cache it
+            try {
+                m_inJavaFields.add(m_jsnippet.getClass().getField(inCol.getJavaName()));
+            } catch (NoSuchFieldException e) {
+                // Field was generated from inCol, this should never happen.
+                throw new IllegalStateException(e);
+            } catch (SecurityException e) {
+                // Field was generated as public, this should never happen.
+                throw new IllegalStateException(e);
+            }
         }
 
-        for (final OutCol outField : m_snippet.getSystemFields().getOutColFields()) {
+        final OutColList outFields = m_snippet.getSystemFields().getOutColFields();
+        m_numOutFields = outFields.size();
+        for (final OutCol outField : outFields) {
             final String id = outField.getConverterFactoryId();
 
             final Optional<JavaToDataCellConverterFactory<?>> factory =
@@ -196,6 +243,15 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
                 throw new RuntimeException("Missing converter factory with ID: " + id);
             }
             m_outConverters.add(((JavaToDataCellConverterFactory<?>)factory.get()).create(m_context));
+            try {
+                m_outJavaFields.add(m_jsnippet.getClass().getField(outField.getJavaName()));
+            } catch (NoSuchFieldException e) {
+                // Field was generated from inCol, this should never happen.
+                throw new IllegalStateException(e);
+            } catch (SecurityException e) {
+                // Field was generated as public, this should never happen.
+                throw new IllegalStateException(e);
+            }
         }
     }
 
@@ -203,29 +259,15 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
     public DataCell[] getCells(final DataRow row) {
         try {
             fillCellsMap(row);
-            {
-                final Field field = m_jsnippet.getClass().getSuperclass().getDeclaredField("m_cells");
-                field.setAccessible(true);
-                field.set(m_jsnippet, new ArrayList<>(m_cellsMap.values()));
-            }
-            {
-                final Field field = m_jsnippet.getClass().getSuperclass().getDeclaredField(JavaSnippet.ROWID);
-                field.setAccessible(true);
-                field.set(m_jsnippet, row.getKey().getString());
-            }
-            {
-                final Field field = m_jsnippet.getClass().getSuperclass().getDeclaredField(JavaSnippet.ROWINDEX);
-                field.setAccessible(true);
-                field.set(m_jsnippet, m_rowIndex);
-            }
+            FIELD_CELLS.set(m_jsnippet, new ArrayList<>(m_cellsMap.values()));
+            FIELD_ROWID.set(m_jsnippet, row.getKey().getString());
+            FIELD_ROWINDEX.set(m_jsnippet, m_rowIndex);
 
             // populate the system input column fields with data
-            final InColList inFields = m_snippet.getSystemFields().getInColFields();
-            for (int i = 0; i < inFields.size(); ++i) {
-                final InCol inCol = inFields.get(i);
-                final Field field = m_jsnippet.getClass().getField(inCol.getJavaName());
+            for (int i = 0; i < m_numInFields; ++i) {
+                final Field field = m_inJavaFields.get(i);
 
-                final DataCell cell = row.getCell(m_spec.findColumnIndex(inCol.getKnimeName()));
+                final DataCell cell = row.getCell(m_inColIndices.get(i));
                 if (cell.isMissing()) {
                     field.set(m_jsnippet, null);
                     continue;
@@ -237,8 +279,7 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
             }
 
             // reset the system output fields to null (see also bug 3781)
-            for (final OutCol outCol : m_snippet.getSystemFields().getOutColFields()) {
-                final Field field = m_jsnippet.getClass().getField(outCol.getJavaName());
+            for (final Field field : m_outJavaFields) {
                 field.set(m_jsnippet, null);
             }
 
@@ -282,8 +323,7 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
                     throw new RuntimeException("An error occured in an expression with output flow variables.", thr);
                 }
 
-                final OutColList outFields = m_snippet.getSystemFields().getOutColFields();
-                final DataCell[] out = new DataCell[outFields.size()];
+                final DataCell[] out = new DataCell[m_numOutFields];
                 // Return missing values for output fields
                 Arrays.fill(out, DataType.getMissingCell());
 
@@ -314,16 +354,14 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
             }
 
             // get output column fields
-            final OutColList outFields = m_snippet.getSystemFields().getOutColFields();
-            final DataCell[] out = new DataCell[outFields.size()];
+            final DataCell[] out = new DataCell[m_numOutFields];
             for (int i = 0; i < out.length; i++) {
-                final OutCol outField = outFields.get(i);
-                final Field field = m_jsnippet.getClass().getField(outField.getJavaName());
+                final Field field = m_outJavaFields.get(i);
 
                 final Object value = field.get(m_jsnippet);
                 out[i] = (null == value) ? DataType.getMissingCell() : m_outConverters.get(i).convertUnsafe(value);
 
-                // Cleanup Closeable and AutoCloeable inputs
+                // Cleanup Closeable and AutoCloseable inputs
                 if (value instanceof AutoCloseable) {
                     // From the doc: Calling close more than once *can* have visible side effects!
                     ((AutoCloseable)value).close();
@@ -433,11 +471,11 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         @SuppressWarnings({"rawtypes", "unchecked"})
         @Override
         public Object getValueOfType(final Class c) throws TypeException {
-            DataCell cell = m_row.getCell(m_index);
+            final DataCell cell = m_row.getCell(m_index);
             if (cell.isMissing()) {
                 return null;
             }
-            DataType type = cell.getType();
+            final DataType type = cell.getType();
 
             final Optional<?> factory = ConverterUtil.getConverterFactory(type, c);
             if (!factory.isPresent()) {
@@ -453,7 +491,7 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
 
         @Override
         public boolean isMissing() {
-            DataCell cell = m_row.getCell(m_index);
+            final DataCell cell = m_row.getCell(m_index);
             return cell.isMissing();
         }
 
