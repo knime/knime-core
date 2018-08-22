@@ -48,12 +48,16 @@
  */
 package org.knime.workbench.editor2;
 
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import java.util.ArrayList;
 
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
@@ -150,14 +154,18 @@ class DragPositionProcessor {
         if (ep instanceof NodeContainerEditPart) {
             final NodeContainerEditPart hit = (NodeContainerEditPart)ep;
 
-            if ((!hit.equals(m_avoidMarkingNode)) && (hit.equals(priorNodeSelection) || (!consultVetoers(hit, null)))) {
+            //doesn't work for NodeContainerUI, yet
+            if (wraps(hit.getModel(), NodeContainer.class) && (!hit.equals(m_avoidMarkingNode))
+                && (hit.equals(priorNodeSelection) || (!consultVetoers(hit, null)))) {
                 m_node = hit;
                 m_nodeCount++;
             }
         } else if (ep instanceof ConnectionContainerEditPart) {
             final ConnectionContainerEditPart hit = (ConnectionContainerEditPart)ep;
 
-            if ((!hit.equals(m_avoidMarkingEdge)) && (hit.equals(priorEdgeSelection) || (!consultVetoers(null, hit)))) {
+            //doesn't work for ConnectionContainerUI, yet
+            if (wraps(hit.getModel(), ConnectionContainer.class) && (!hit.equals(m_avoidMarkingEdge))
+                && (hit.equals(priorEdgeSelection) || (!consultVetoers(null, hit)))) {
                 m_edge = hit;
                 m_edgeCount++;
             }

@@ -233,6 +233,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         } else {
             if (!Wrapper.wraps(manager, WorkflowManager.class)) {
                 //node insertion and replacement not yet supported for non-standard workflow managers
+                //TODO: in order to enable the support, lines 158 and 167 of DragPositionProcessor need to be adopted, too
                 return null;
             }
             AbstractEditPart editPart = request.getEditPart();
