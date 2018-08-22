@@ -64,6 +64,7 @@ import org.eclipse.osgi.internal.loader.ModuleClassLoader;
 import org.eclipse.osgi.internal.loader.classpath.ClasspathManager;
 import org.eclipse.osgi.storage.bundlefile.BundleEntry;
 import org.junit.Test;
+import org.knime.core.node.NodeLogger;
 
 import junit.framework.TestCase;
 
@@ -172,6 +173,10 @@ public abstract class AbstractTestcaseCollector {
                             it.remove();
                         }
                     }
+                } catch (ExceptionInInitializerError ex) {
+                    it.remove();
+                    NodeLogger.getLogger(getClass()).error("Could not load class " + className + ": " + ex.getMessage(),
+                        ex);
                 } catch (ClassNotFoundException ex) {
                     // strange?!
                     it.remove();
