@@ -89,6 +89,8 @@ public class CellSplitterUserSettings {
     
     private static final String CFG_TRIM = "removeWhitespaces";
 
+    private static final String CFG_SPLIT_COLUMN_NAMES = "splitColumnNames";
+
     private String m_columnName = null;
 
     private String m_delimiter = null;
@@ -124,6 +126,12 @@ public class CellSplitterUserSettings {
      * @since 2.6
      */    
     private boolean m_trim = true;
+
+    /**
+     * @since 3.7
+     */
+    private boolean m_splitColumnNames = false;
+
     
     /**
      * Creates a new settings object with no (or default) settings.
@@ -164,6 +172,9 @@ public class CellSplitterUserSettings {
         m_outputAsSet = settings.getBoolean(CFG_OUTPUTASSET, false);
         m_outputAsCols = settings.getBoolean(CFG_OUTPUTASCOLS, true);
         m_trim = settings.getBoolean(CFG_TRIM, true);
+
+        /** @since 3.7 */
+        m_splitColumnNames = settings.getBoolean(CFG_SPLIT_COLUMN_NAMES, false);
     }
 
     /**
@@ -184,6 +195,7 @@ public class CellSplitterUserSettings {
         settings.addBoolean(CFG_OUTPUTASSET, m_outputAsSet);
         settings.addBoolean(CFG_OUTPUTASCOLS, m_outputAsCols);
         settings.addBoolean(CFG_TRIM, m_trim);
+        settings.addBoolean(CFG_SPLIT_COLUMN_NAMES, m_splitColumnNames);
     }
 
     /**
@@ -413,5 +425,23 @@ public class CellSplitterUserSettings {
      */
     void setTrim(final boolean trim) {
         m_trim = trim;
+    }
+
+    /**
+     * @return <code>true</code> if the input column name should be split with the same pattern as the columns contents
+     *         and be used as column names.
+     * @since 3.7
+     */
+    boolean splitColumnNames() {
+        return m_splitColumnNames;
+    }
+
+    /**
+     * Set whether to split the input column's name for use as output column names.
+     *
+     * @param split Whether to split
+     */
+    void setSplitColumnNames(final boolean split) {
+        m_splitColumnNames = split;
     }
 }
