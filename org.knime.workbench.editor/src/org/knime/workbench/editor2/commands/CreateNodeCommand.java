@@ -67,7 +67,7 @@ import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.OperationNotAllowedException;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.SWTUtilities;
-import org.knime.workbench.ui.async.AsyncSwitch;
+import org.knime.workbench.ui.async.AsyncUtil;
 
 /**
  * GEF command for adding a <code>Node</code> to the
@@ -176,7 +176,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
 
         // Add node to workflow and get the container
         try {
-            NodeID id = AsyncSwitch.wfmAsyncSwitch(wfm -> {
+            NodeID id = AsyncUtil.wfmAsyncSwitch(wfm -> {
                 return wfm.createAndAddNode(m_factory, infoBuilder.build());
             }, wfm -> {
                 return wfm.createAndAddNodeAsync(m_factory, infoBuilder.build());
@@ -213,7 +213,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
         if (canUndo()) {
             getHostWFMUI().remove(new NodeID[]{m_container.getID()}, null, null);
             try {
-                AsyncSwitch.wfmAsyncSwitchRethrow(wfm -> {
+                AsyncUtil.wfmAsyncSwitchRethrow(wfm -> {
                     wfm.remove(new NodeID[]{m_container.getID()}, null, null);
                     return null;
                 }, wfm -> {

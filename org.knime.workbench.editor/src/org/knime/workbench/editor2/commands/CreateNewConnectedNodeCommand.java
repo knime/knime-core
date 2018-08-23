@@ -61,7 +61,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.SWTUtilities;
-import org.knime.workbench.ui.async.AsyncSwitch;
+import org.knime.workbench.ui.async.AsyncUtil;
 
 /**
  * Creates a new node - and may auto connect it to another one.
@@ -108,7 +108,7 @@ public class CreateNewConnectedNodeCommand extends AbstractCreateNewConnectedNod
         NodeID newID = null;
         WorkflowManagerUI hostWFM = getHostWFMUI();
         try {
-            newID = AsyncSwitch.wfmAsyncSwitch(wfm -> {
+            newID = AsyncUtil.wfmAsyncSwitch(wfm -> {
                 return wfm.createAndAddNode(m_factory, uiInfo);
             }, wfm -> {
                 return wfm.createAndAddNodeAsync(m_factory, uiInfo);

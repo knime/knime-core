@@ -69,7 +69,7 @@ import org.knime.core.ui.node.workflow.NodeInPortUI;
 import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.util.SWTUtilities;
-import org.knime.workbench.ui.async.AsyncSwitch;
+import org.knime.workbench.ui.async.AsyncUtil;
 
 /**
  * Abstract super class for commands that insert new nodes into a workflow and potentially auto-connect them
@@ -171,7 +171,7 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
                     + " port " + rightPort + " with existing node "
                     + sourceNode + " port " + leftPort);
             try {
-                AsyncSwitch.wfmAsyncSwitchRethrow(wfm -> {
+                AsyncUtil.wfmAsyncSwitchRethrow(wfm -> {
                     return wfm.addConnection(m_connectTo, leftPort, m_newNode, rightPort);
                 }, wfm -> {
                     //TODO do parallel not sequential
@@ -249,7 +249,7 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
     public void undo() {
         try {
             // blows away the connection as well.
-            AsyncSwitch.wfmAsyncSwitchRethrow(wfm -> {
+            AsyncUtil.wfmAsyncSwitchRethrow(wfm -> {
                 wfm.remove(new NodeID[]{m_newNode}, null, null);
                 return null;
             }, wfm -> {
