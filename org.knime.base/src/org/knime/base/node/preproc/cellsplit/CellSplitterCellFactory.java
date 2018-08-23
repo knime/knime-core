@@ -54,7 +54,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -76,6 +75,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.tokenizer.Tokenizer;
 import org.knime.core.util.tokenizer.TokenizerSettings;
 
@@ -106,6 +106,8 @@ class CellSplitterCellFactory implements CellFactory {
      */
     public CellSplitterCellFactory(final DataTableSpec inSpec,
             final CellSplitterSettings settings) {
+        CheckUtils.checkArgumentNotNull(settings);
+
         m_settings = settings;
         m_inSpec = inSpec;
 
@@ -115,39 +117,7 @@ class CellSplitterCellFactory implements CellFactory {
             m_colIdx = -1;
         }
 
-        m_tokenizerSettings =
-                CellSplitterCellFactory.createTokenizerSettings(m_settings);
-    }
-
-    private static TokenizerSettings createTokenizerSettings(
-            final CellSplitterUserSettings userSettings) {
-
-        if (userSettings == null) {
-            return null;
-        }
-        if ((userSettings.getDelimiter() == null)
-                || (userSettings.getDelimiter().length() == 0)) {
-            return null;
-        }
-
-        TokenizerSettings result = new TokenizerSettings();
-
-        String delim = userSettings.getDelimiter();
-        if (userSettings.isUseEscapeCharacter()) {
-            delim = StringEscapeUtils.unescapeJava(delim);
-        }
-        result.addDelimiterPattern(delim,
-        /* combineConsecutive */false,
-        /* returnAsSeperateToken */false,
-        /* includeInToken */false);
-
-        String quote = userSettings.getQuotePattern();
-        if ((quote != null) && (quote.length() > 0)) {
-            result.addQuotePattern(quote, quote, '\\', userSettings
-                    .isRemoveQuotes());
-        }
-
-        return result;
+        m_tokenizerSettings = m_settings.createTokenizerSettings();
     }
 
     @Override
@@ -570,6 +540,7 @@ class CellSplitterCellFactory implements CellFactory {
             final BufferedDataTable table,
             final CellSplitterUserSettings userSettings,
             final ExecutionContext exec) throws CanceledExecutionException {
+        CheckUtils.checkArgumentNotNull(userSettings);
 
         // make sure we have settings we can deal with
         DataTableSpec spec = null;
@@ -635,8 +606,7 @@ class CellSplitterCellFactory implements CellFactory {
             throw new IllegalStateException(
                     "Input table doesn't contain selected column");
         }
-        TokenizerSettings tokenizerSettings =
-                createTokenizerSettings(userSettings);
+        TokenizerSettings tokenizerSettings = userSettings.createTokenizerSettings();
         if (tokenizerSettings == null) {
             throw new IllegalStateException("Incorrect user settings");
         }

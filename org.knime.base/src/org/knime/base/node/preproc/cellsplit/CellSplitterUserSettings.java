@@ -48,11 +48,13 @@
  */
 package org.knime.base.node.preproc.cellsplit;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.tokenizer.TokenizerSettings;
 
 /**
  * Holds all user settings needed for the cell splitter. Provides methods for
@@ -443,5 +445,32 @@ public class CellSplitterUserSettings {
      */
     void setSplitColumnNames(final boolean split) {
         m_splitColumnNames = split;
+    }
+
+    /**
+     * Create TokenizerSettings from these CellSpliterUserSettings.
+     *
+     * @return the tokenizer settings.
+     */
+    TokenizerSettings createTokenizerSettings() {
+        if ((getDelimiter() == null) || (getDelimiter().length() == 0)) {
+            return null;
+        }
+
+        final TokenizerSettings result = new TokenizerSettings();
+
+        String delim = getDelimiter();
+        if (isUseEscapeCharacter()) {
+            delim = StringEscapeUtils.unescapeJava(delim);
+        }
+        result.addDelimiterPattern(delim, /* combineConsecutive */false, /* returnAsSeperateToken */false,
+            /* includeInToken */false);
+
+        final String quote = getQuotePattern();
+        if ((quote != null) && (quote.length() > 0)) {
+            result.addQuotePattern(quote, quote, '\\', isRemoveQuotes());
+        }
+
+        return result;
     }
 }
