@@ -75,6 +75,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.AbstractCellFactory;
+import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.node.ExecutionContext;
@@ -106,6 +107,8 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
     private List<String> m_columns;
 
     private ExecutionContext m_context;
+
+    private final ArrayList<JavaToDataCellConverter<?>> m_outConverters = new ArrayList<>();
 
     /**
      * Create a new cell factory.
@@ -302,13 +305,17 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
                 if (null == value) {
                     out[i] = DataType.getMissingCell();
                 } else {
-                    final String id = outField.getConverterFactoryId();
-                    Optional<JavaToDataCellConverterFactory<?>> factory =
-                        ConverterUtil.getJavaToDataCellConverterFactory(id);
-                    if (!factory.isPresent()) {
-                        throw new RuntimeException("Missing converter factory with ID: " + id);
+                    if (i <= m_outConverters.size()) {
+                        /* Cache converter before first conversion */
+                        final String id = outField.getConverterFactoryId();
+                        Optional<JavaToDataCellConverterFactory<?>> factory =
+                            ConverterUtil.getJavaToDataCellConverterFactory(id);
+                        if (!factory.isPresent()) {
+                            throw new RuntimeException("Missing converter factory with ID: " + id);
+                        }
+                        m_outConverters.add(((JavaToDataCellConverterFactory<Object>)factory.get()).create(m_context));
                     }
-                    out[i] = ((JavaToDataCellConverterFactory<Object>)factory.get()).create(m_context).convert(value);
+                    out[i] = m_outConverters.get(i).convertUnsafe(value);
                 }
             }
             // Cleanup Closeable inputs
