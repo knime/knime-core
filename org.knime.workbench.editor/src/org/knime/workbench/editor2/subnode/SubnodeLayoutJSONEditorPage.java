@@ -802,21 +802,25 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      * @param subnodeContainer the wrapped metanode container
      * @param viewNodes a map of all available view nodes
      */
-    public void setNodes(final WorkflowManager manager, final SubNodeContainer subnodeContainer, @SuppressWarnings("rawtypes") final Map<NodeIDSuffix, WizardNode> viewNodes) {
+    public void setNodes(final WorkflowManager manager, final SubNodeContainer subnodeContainer,
+        @SuppressWarnings("rawtypes") final Map<NodeIDSuffix, WizardNode> viewNodes) {
         m_wfManager = manager;
         m_subNodeContainer = subnodeContainer;
         m_viewNodes = viewNodes;
         String layout = m_subNodeContainer.getLayoutJSONString();
-        if (layout == null || layout.isEmpty() || layout.equals(EMPTY_JSON)) {
+        if (layout == null || layout.isEmpty() || layout.equals(EMPTY_JSON) || layout.equals("{}")
+            || layout.equals("{ }")) {
             m_jsonDocument = EMPTY_JSON;
             return;
         }
         JSONLayoutPage page = updateJsonDocument(layout);
         List<JSONLayoutRow> rows = page.getRows();
-        for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
-            JSONLayoutRow row = rows.get(rowIndex);
-            populateDocumentNodeIDs(row);
-            processBasicLayoutRow(row, rowIndex);
+        if (rows != null) {
+            for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
+                JSONLayoutRow row = rows.get(rowIndex);
+                populateDocumentNodeIDs(row);
+                processBasicLayoutRow(row, rowIndex);
+            }
         }
     }
 
