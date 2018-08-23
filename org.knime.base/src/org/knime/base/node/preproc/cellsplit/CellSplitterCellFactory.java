@@ -150,15 +150,8 @@ class CellSplitterCellFactory implements CellFactory {
         return result;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataCell[] getCells(final DataRow row) {
-        String msg = m_settings.getStatus(m_inSpec);
-        if (msg != null) {
-            throw new IllegalStateException(msg);
-        }
         if (m_settings.isGuessNumOfCols()
                 && m_settings.getNumOfColsGuessed() < 1
                 && m_settings.isOutputAsCols()) {
