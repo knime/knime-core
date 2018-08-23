@@ -69,6 +69,7 @@ final class LineReaderConfig {
     private String m_url;
     private String m_rowPrefix;
     private String m_columnHeader;
+    private boolean m_readColHeader;
     private boolean m_skipEmptyLines;
     private int m_limitRowCount;
     private String m_regex;
@@ -140,6 +141,16 @@ final class LineReaderConfig {
         m_columnHeader = columnHeader;
     }
 
+    /** @return whether to use the first line as column header */
+    boolean isReadColumnHeader() {
+        return m_readColHeader;
+    }
+
+    /** @param readColHeader read the first line as column header */
+    void setReadColumnHeader(final boolean readColHeader) {
+        m_readColHeader = readColHeader;
+    }
+
     /** @return the limitRowCount */
     int getLimitRowCount() {
         return m_limitRowCount;
@@ -176,6 +187,7 @@ final class LineReaderConfig {
         settings.addString(CFG_URL, m_url);
         settings.addString("rowPrefix", m_rowPrefix);
         settings.addString("columnHeader", m_columnHeader);
+        settings.addBoolean("readColumnHeader", m_readColHeader);
         settings.addBoolean("skipEmptyLines", m_skipEmptyLines);
         settings.addInt("limitRowCount", m_limitRowCount);
         settings.addString("regex", m_regex);
@@ -192,7 +204,8 @@ final class LineReaderConfig {
             throw new InvalidSettingsException("Invalid (null) row prefix");
         }
         m_columnHeader = settings.getString("columnHeader");
-        if (m_columnHeader == null || m_columnHeader.length() == 0) {
+        m_readColHeader = settings.getBoolean("readColumnHeader", false);
+        if (!m_readColHeader && (m_columnHeader == null || m_columnHeader.length() == 0)) {
             throw new InvalidSettingsException(
                     "Invalid (empty) column header");
         }
@@ -214,6 +227,7 @@ final class LineReaderConfig {
         m_url = settings.getString(CFG_URL, "");
         m_rowPrefix = settings.getString("rowPrefix", "Row");
         m_columnHeader = settings.getString("columnHeader", "Column");
+        m_readColHeader = settings.getBoolean("readColumnHeader", false);
         m_skipEmptyLines = settings.getBoolean("skipEmptyLines", false);
         m_limitRowCount = settings.getInt("limitRowCount", -1);
         m_regex = settings.getString("regex", "");

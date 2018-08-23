@@ -88,66 +88,89 @@ final class LineReaderNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTableSpec spec = createOutputSpec();
         URL url = m_config.getURL();
-        BufferedDataContainer container = exec.createDataContainer(spec);
-        BufferedFileReader fileReader = BufferedFileReader.createNewReader(url);
-        long fileSize = fileReader.getFileSize();
-        int currentRow = 0;
-        final int limitRows = m_config.getLimitRowCount();
-        final boolean isSkipEmpty = m_config.isSkipEmptyLines();
-        final boolean matchRegex = !"".equals(m_config.getRegex());
-        String line;
-        String rowPrefix = m_config.getRowPrefix();
-        try {
-            while ((line = fileReader.readLine()) != null) {
-                String progMessage = "Reading row " + (currentRow + 1);
-                if (fileSize > 0) {
-                    long numberOfBytesRead = fileReader.getNumberOfBytesRead();
-                    double prog = (double)numberOfBytesRead / fileSize;
-                    exec.setProgress(prog, progMessage);
-                } else {
-                    exec.setMessage(progMessage);
-                }
-                exec.checkCanceled();
-                if (isSkipEmpty && line.trim().length() == 0) {
-                    // do not increment currentRow
-                    continue;
-                }
-                if (matchRegex && !line.matches(m_config.getRegex())) {
-                    //do not increment currentRow
-                    continue;
-                }
-                if (limitRows > 0 && currentRow >= limitRows) {
-                    setWarningMessage("Read only " + limitRows
-                            + " row(s) due to user settings.");
-                    break;
-                }
-                RowKey key = new RowKey(rowPrefix + (currentRow++));
-                DefaultRow row = new DefaultRow(key, new StringCell(line));
-                container.addRowToTable(row);
-            }
-        } finally {
-            container.close();
+        BufferedDataContainer container;
+        try (BufferedFileReader fileReader = BufferedFileReader.createNewReader(url)) {
+            DataTableSpec spec;
             try {
-                fileReader.close();
-            } catch (IOException ioe2) {
-                // ignore
+                if (m_config.isReadColumnHeader()) {
+                    spec = createOutputSpec(fileReader);
+                } else {
+                    spec = createOutputSpec();
+                }
+            } catch (Exception e) {
+                try {
+                    fileReader.close();
+                } catch (IOException ioe2) {
+                    // ignore
+                }
+                throw e;
+            }
+            container = exec.createDataContainer(spec);
+            try {
+                long fileSize = fileReader.getFileSize();
+                int currentRow = 0;
+                final int limitRows = m_config.getLimitRowCount();
+                final boolean isSkipEmpty = m_config.isSkipEmptyLines();
+                final boolean matchRegex = !"".equals(m_config.getRegex());
+                String line;
+                String rowPrefix = m_config.getRowPrefix();
+                while ((line = fileReader.readLine()) != null) {
+                    String progMessage = "Reading row " + (currentRow + 1);
+                    if (fileSize > 0) {
+                        long numberOfBytesRead = fileReader.getNumberOfBytesRead();
+                        double prog = (double)numberOfBytesRead / fileSize;
+                        exec.setProgress(prog, progMessage);
+                    } else {
+                        exec.setMessage(progMessage);
+                    }
+                    exec.checkCanceled();
+                    if (isSkipEmpty && line.trim().length() == 0) {
+                        // do not increment currentRow
+                        continue;
+                    }
+                    if (matchRegex && !line.matches(m_config.getRegex())) {
+                        //do not increment currentRow
+                        continue;
+                    }
+                    if (limitRows > 0 && currentRow >= limitRows) {
+                        setWarningMessage("Read only " + limitRows + " row(s) due to user settings.");
+                        break;
+                    }
+                    RowKey key = new RowKey(rowPrefix + (currentRow++));
+                    DefaultRow row = new DefaultRow(key, new StringCell(line));
+                    container.addRowToTable(row);
+                }
+            } finally {
+                container.close();
             }
         }
         return new BufferedDataTable[] {container.getTable()};
     }
 
-    private DataTableSpec createOutputSpec() throws InvalidSettingsException {
+    private DataTableSpec createOutputSpec(final BufferedFileReader fileReader) throws InvalidSettingsException {
         CheckUtils.checkSettingNotNull(m_config, "No source location provided! Please enter a valid location.");
         final URL url = m_config.getURL();
         String warning = CheckUtils.checkSourceFile(url.toString());
         if (warning != null) {
             setWarningMessage(warning);
         }
-
-        String colName = m_config.getColumnHeader();
-        CheckUtils.checkNotNull(colName, "No output column name provided");
+        String colName;
+        if (fileReader == null) {
+            if (m_config.isReadColumnHeader()) {
+                return null;
+            }
+            colName = m_config.getColumnHeader();
+        } else {
+            final boolean isSkipEmpty = m_config.isSkipEmptyLines();
+            try {
+                while ((colName = fileReader.readLine()) != null && isSkipEmpty && colName.trim().length() == 0) {
+                }
+            } catch (IOException e) {
+                throw new InvalidSettingsException(e);
+            }
+        }
+        CheckUtils.checkNotNull(colName, "Error reading column name");
 
         DataColumnSpecCreator creator = new DataColumnSpecCreator(colName, StringCell.TYPE);
         String path = url.getPath();
@@ -159,6 +182,10 @@ final class LineReaderNodeModel extends NodeModel {
             }
         }
         return new DataTableSpec(name, creator.createSpec());
+    }
+
+    private DataTableSpec createOutputSpec() throws InvalidSettingsException {
+        return createOutputSpec(null);
     }
 
     /** {@inheritDoc} */
