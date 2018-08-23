@@ -562,7 +562,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         if (newBounds) {
             // don't trigger another event here, when updating ui info
             m_uiListenerActive = false;
-            getNodeContainer().setUIInformation(
+            getNodeContainer().setUIInformationForCorrection(
                 NodeUIInformation.builder().setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3]).build());
             m_uiListenerActive = true;
         }

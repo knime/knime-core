@@ -211,7 +211,6 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
     public void undo() {
         LOGGER.debug("Undo: Removing node #" + m_container.getID());
         if (canUndo()) {
-            getHostWFMUI().remove(new NodeID[]{m_container.getID()}, null, null);
             try {
                 AsyncUtil.wfmAsyncSwitchRethrow(wfm -> {
                     wfm.remove(new NodeID[]{m_container.getID()}, null, null);
