@@ -95,31 +95,31 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
      * @since 2.6
      */
     private final JRadioButton m_outputAsList = new JRadioButton(
-            "as list");
+            "As list");
 
     /**
      * @since 2.6
      */
     private final JRadioButton m_outputAsSet = new JRadioButton(
-            "as set (remove duplicates)");
+            "As set (remove duplicates)");
 
     /**
      * @since 2.6
      */
     private final JRadioButton m_outputAsColumns = new JRadioButton(
-            "as new columns");
+            "As new columns");
 
     /**
      * @since 2.6
      */
     private final JCheckBox m_trim = new JCheckBox(
-            "remove leading and trailing white space chars (trim)");
+            "Remove leading and trailing white space chars (trim)");
 
-    private final JRadioButton m_fixedSize = new JRadioButton("set array size");
+    private final JRadioButton m_fixedSize = new JRadioButton("Set array size");
 
     private final JRadioButton m_guessSize =
             new JRadioButton(
-                    "guess size and column types (requires additional "
+                    "Guess size and column types (requires additional "
                             + "data table scan)");
 
     private final JCheckBox m_useEmptyString =

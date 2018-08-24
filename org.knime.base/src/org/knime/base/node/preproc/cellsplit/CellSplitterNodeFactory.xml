@@ -45,7 +45,7 @@
 	    quotes is always the backslash.) If no quotation character
 	    is needed leave it empty.
 		</option>
-        <option name="remove leading and trailing white space chars (trim)">
+        <option name="Remove leading and trailing white space chars (trim)">
         If checked, leading and trailing white spaces of each part (token) will 
         be deleted.
         </option>		
