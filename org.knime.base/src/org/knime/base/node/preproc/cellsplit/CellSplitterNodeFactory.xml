@@ -63,6 +63,14 @@
         If selected, the output will consist of one or more columns, each 
         containing a split part.
         </option>
+        <option name="Split input column name for output column names">
+        If the output is set to be new columns, this option allows splitting the
+        name of the selected input column in the same manner as the cell content
+        to obtain the names for the output columns.
+
+        Should input tokens not suffice for the amount of output columns, the
+        usual generated output names will be used for the excess columns.
+        </option>
 		<option name="Set Array Size">Check this and specify the number of columns
 		to append. All created columns will be of type String. (See above for 
 		what happens if the split produces a different number of parts.)
