@@ -47,10 +47,15 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.WorkflowCopyUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -114,7 +119,15 @@ public class PasteAction extends AbstractClipboardAction {
         if (getManagerUI().isWriteProtected()) {
             return false;
         }
-        return getEditor().getClipboardContent() != null;
+        if(getEditor().getClipboardContent() == null) {
+            return false;
+        }
+        WorkflowCopyUI copy = getEditor().getClipboardContent().getWorkflowCopy();
+        if (wraps(copy, WorkflowPersistor.class) ^ wraps(getManagerUI(), WorkflowManager.class)) {
+            //cross-copies between WorkflowManager and WorkflowManagerUI are not possible, yet
+            return false;
+        }
+        return true;
     }
 
     /**

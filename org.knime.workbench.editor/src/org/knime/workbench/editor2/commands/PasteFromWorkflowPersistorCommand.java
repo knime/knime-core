@@ -66,6 +66,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.WorkflowCopyContent;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
@@ -120,6 +121,10 @@ public final class PasteFromWorkflowPersistorCommand
         }
         WorkflowCopyUI wfCopy = m_clipboardObject.getWorkflowCopy();
         if (wraps(wfCopy, WorkflowPersistor.class)) {
+            if (!wraps(getHostWFMUI(), WorkflowManager.class)) {
+                //cross copies from WorkflowManager to WorkflowManagerUI not possible, yet
+                return false;
+            }
             //persistor for local workflows
             WorkflowPersistor copyPersistor = unwrap(wfCopy, WorkflowPersistor.class);
             if (!copyPersistor.getNodeLoaderMap().isEmpty()) {
@@ -129,6 +134,10 @@ public final class PasteFromWorkflowPersistorCommand
                 return true;
             }
         } else {
+            if (wraps(getHostWFMUI(), WorkflowManager.class)) {
+                //cross copies from WorkflowManager to WorkflowManagerUI not possible, yet
+                return false;
+            }
             return true;
         }
         return false;
