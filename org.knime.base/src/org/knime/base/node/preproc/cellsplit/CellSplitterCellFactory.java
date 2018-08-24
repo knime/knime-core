@@ -439,8 +439,24 @@ class CellSplitterCellFactory implements CellFactory {
                 m_outSpecs = new DataColumnSpec[colNum];
                 String selColName = m_settings.getColumnName();
 
+                Tokenizer tokenizer = null;
+                StringReader inputReader = null;
+                if (m_settings.splitColumnNames()) {
+                    /* If split column names is set, we need to split the selected column name with the same tokenizer as used later for the cell data. */
+                    inputReader = new StringReader(selColName);
+                    tokenizer = prepareTokenizer(inputReader, m_settings.createTokenizerSettings());
+                }
+
                 for (int col = 0; col < colNum; col++) {
-                    String colName = selColName + "_Arr[" + col + "]";
+                    String colName = null;
+                    if (tokenizer != null) {
+                        /* nextToken() is null if there is no next Token */
+                        colName = tokenizer.nextToken();
+                    }
+                    if (colName == null) {
+                        colName = selColName + "_Arr[" + col + "]";
+                    }
+
                     colName = uniquifyName(colName, m_inSpec);
                     DataType colType = m_settings.getTypeOfColumn(col);
 
