@@ -324,8 +324,7 @@ class CellSplitterCellFactory implements CellFactory {
         return result;
     }
 
-    private DataCell createDataCell(final String token, final DataType type) {
-
+    private static DataCell createDataCell(final String token, final DataType type) {
         if (type.equals(StringCell.TYPE)) {
             return new StringCell(token);
 
@@ -365,8 +364,7 @@ class CellSplitterCellFactory implements CellFactory {
      * Always instantiates a StringBuilder. Call only with chars left in the
      * stream (otherwise rewrite it).
      */
-    private String readAll(final Reader src) {
-
+    private static String readAll(final Reader src) {
         StringBuilder temp = new StringBuilder();
 
         try {
@@ -506,7 +504,7 @@ class CellSplitterCellFactory implements CellFactory {
      *         <code>colName</code>, or <code>colName</code> with a suffix
      *         added to make it unique (e.g. (2)).
      */
-    private String uniquifyName(final String colName,
+    private static String uniquifyName(final String colName,
             final DataTableSpec tableSpec) {
 
         String result = colName;
@@ -521,7 +519,9 @@ class CellSplitterCellFactory implements CellFactory {
 
     /**
      * {@inheritDoc}
+     * @deprecated
      */
+    @Deprecated
     @Override
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
