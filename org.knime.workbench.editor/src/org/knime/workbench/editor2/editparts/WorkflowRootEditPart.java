@@ -108,6 +108,17 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         WorkflowListener, CommandStackListener, ConnectableEditPart,
         // since annotations fire ui events:
         NodeUIInformationListener {
+    /**
+     * If passed to {@link #setFutureSelection(NodeID[])}, all newly created nodes will be selected after their
+     * respective edit-parts have been created.
+     */
+    public static final NodeID[] ALL_NEW_NODES = new NodeID[0];
+
+    /**
+     * Same as for {@link #ALL_NEW_NODES} but for workflow annotations.
+     */
+    public static final Collection<WorkflowAnnotation> ALL_NEW_ANNOTATIONS = new ArrayList<WorkflowAnnotation>();
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowRootEditPart.class);
 
@@ -127,6 +138,9 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     private final Set<NodeID> m_futureSelection = new LinkedHashSet<NodeID>();
 
+    private boolean m_futureSelectionAllNewNodes = false;
+    private boolean m_futureSelectionAllNewAnnotations = false;
+
     /* same deal for added annotations */
     private final Set<WorkflowAnnotation> m_annotationSelection =
             new LinkedHashSet<WorkflowAnnotation>();
@@ -143,14 +157,21 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * Sets the NodeIDs from a set of nodes that are added to the editor and
      * should be selected as soon as they appear.
      *
+     * If {@link #ALL_NEW_NODES} is passed, all newly added nodes are selected.
+     *
      * @param ids node ids of the {@link NodeContainerEditPart}s that should be
      *            selected as soon as their {@link NodeContainerEditPart}s are
      *            created.
      */
     public void setFutureSelection(final NodeID[] ids) {
         m_futureSelection.clear();
-        for (NodeID id : ids) {
-            m_futureSelection.add(id);
+        if (ids == ALL_NEW_NODES) {
+            m_futureSelectionAllNewNodes = true;
+        } else {
+            m_futureSelectionAllNewNodes = false;
+            for (NodeID id : ids) {
+                m_futureSelection.add(id);
+            }
         }
     }
 
@@ -158,13 +179,20 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * Sets the annotations that are added to the editor and that should be
      * selected as soon as they appear.
      *
+     * If {@link #ALL_NEW_ANNOTATIONS} is passed, all newly created annotations are selected.
+     *
      * @param annos the workflow annotations to be selected after they have been
      *            created
      */
     public void setFutureAnnotationSelection(
             final Collection<WorkflowAnnotation> annos) {
         m_annotationSelection.clear();
-        m_annotationSelection.addAll(annos);
+        if (annos == ALL_NEW_ANNOTATIONS) {
+            m_futureSelectionAllNewAnnotations = true;
+        } else {
+            m_futureSelectionAllNewAnnotations = false;
+            m_annotationSelection.addAll(annos);
+        }
     }
 
     /**
@@ -477,7 +505,10 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             getViewer().deselect(this);
             NodeID id =
                     ((NodeContainerEditPart)part).getNodeContainer().getID();
-            if (m_futureSelection.isEmpty()) {
+            if (m_futureSelectionAllNewNodes) {
+                getViewer().appendSelection(part);
+                revealPart(part);
+            } else if (m_futureSelection.isEmpty()) {
                 // select only this element
                 getViewer().deselectAll();
                 getViewer().select(part);
@@ -486,31 +517,33 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 getViewer().appendSelection(part);
                 m_futureSelection.remove(id);
                 // reveal the editpart after it has been created completely
-                Display.getCurrent().asyncExec(new Runnable() {
-                    @Override
-                    public void run() {
-                        getViewer().reveal(part);
-                    }
-                });
+                revealPart(part);
             }
         }
-        if (model instanceof Annotation) {
+        if (model instanceof WorkflowAnnotation) {
             // newly created annotations are only selected if done explicitly
             getViewer().deselect(this);
-            if (m_annotationSelection.contains(model)) {
+            if (m_futureSelectionAllNewAnnotations) {
+                getViewer().appendSelection(part);
+                revealPart(part);
+            } else if (m_annotationSelection.contains(model)) {
                 getViewer().appendSelection(part);
                 m_annotationSelection.remove(model);
                 // reveal the editpart after it has been created completely
-                Display.getCurrent().asyncExec(new Runnable() {
-                    @Override
-                    public void run() {
-                        getViewer().reveal(part);
-                    }
-                });
+                revealPart(part);
             }
         }
         // connections are selected in workflowChanged
         return part;
+    }
+
+    private void revealPart(final EditPart part) {
+        Display.getCurrent().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                getViewer().reveal(part);
+            }
+        });
     }
 
     /** true, if node names are hidden, otherwise false - default. */
