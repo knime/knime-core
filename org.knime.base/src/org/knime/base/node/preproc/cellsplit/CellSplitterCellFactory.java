@@ -339,7 +339,7 @@ class CellSplitterCellFactory implements CellFactory {
             } catch (NumberFormatException nfe) {
                 throw new IllegalStateException(
                         "Guessed the wrong type guessed " + "(got '" + token
-                                + "' for a double.");
+                                + "' for a double.)");
             }
 
         } else if (type.equals(IntCell.TYPE)) {
@@ -352,7 +352,7 @@ class CellSplitterCellFactory implements CellFactory {
             } catch (NumberFormatException nfe) {
                 throw new IllegalStateException(
                         "Guessed the wrong type guessed " + "(got '" + token
-                                + "' for an integer.");
+                                + "' for an integer.)");
             }
         } else {
             throw new IllegalStateException("Guessed an unsupported type ...");
