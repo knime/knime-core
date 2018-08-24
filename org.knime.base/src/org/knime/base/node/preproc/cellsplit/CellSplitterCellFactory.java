@@ -176,13 +176,14 @@ class CellSplitterCellFactory implements CellFactory {
      * specific settings.
      * and returns it.
      * @param inputReader The string reader to create a tokenizer on.
+     * @param settings Tokenizer settings.
      * @return The tokenizer created on the string reader.
      * @since 2.6
      */
-    private Tokenizer prepareTokenizer(final StringReader inputReader) {
+    private static Tokenizer prepareTokenizer(final StringReader inputReader, final TokenizerSettings settings) {
         assert inputReader.markSupported();
-        Tokenizer tokenizer = new Tokenizer(inputReader);
-        tokenizer.setSettings(m_tokenizerSettings);
+        final Tokenizer tokenizer = new Tokenizer(inputReader);
+        tokenizer.setSettings(settings);
         return tokenizer;
     }
 
@@ -217,7 +218,7 @@ class CellSplitterCellFactory implements CellFactory {
 
         // init the tokenizer
         StringReader inputReader = new StringReader(inputString);
-        Tokenizer tokenizer = prepareTokenizer(inputReader);
+        final Tokenizer tokenizer = prepareTokenizer(inputReader, m_tokenizerSettings);
 
         Collection<DataCell> strColl = new ArrayList<DataCell>();
         String token = null;
@@ -269,7 +270,7 @@ class CellSplitterCellFactory implements CellFactory {
 
         // init the tokenizer
         StringReader inputReader = new StringReader(inputString);
-        Tokenizer tokenizer = prepareTokenizer(inputReader);
+        final Tokenizer tokenizer = prepareTokenizer(inputReader, m_tokenizerSettings);
 
         // tokenize the column value and create new output cells
         for (int col = 0; col < result.length; col++) {
