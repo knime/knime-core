@@ -130,6 +130,11 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
             new JCheckBox("Use \\ as escape character");
 
     /**
+     * @since 3.7
+     */
+    private final JCheckBox m_splitColumnNames = new JCheckBox("Split input column name for output column names");
+
+    /**
      * Creates a new panel for the dialog and inits all components.
      */
     public CellSplitterNodeDialogPane() {
@@ -204,6 +209,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
                 m_fixedSize.setEnabled(m_outputAsColumns.isSelected());
                 m_guessSize.setEnabled(m_outputAsColumns.isSelected());
                 m_columnNumber.setEnabled(m_outputAsColumns.isSelected());
+                m_splitColumnNames.setEnabled(m_outputAsColumns.isSelected());
             }
         });
         Box outputColBox = Box.createHorizontalBox();
@@ -215,7 +221,12 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         outputColBox.add(m_outputAsColumns);
         outputColBox.add(Box.createHorizontalGlue());
         outputBox.add(outputColBox);
-        outputBox.add(Box.createVerticalGlue());
+
+        // - the split column names checkbox
+        Box splitBox = Box.createHorizontalBox();
+        splitBox.add(m_splitColumnNames);
+        splitBox.add(Box.createHorizontalGlue());
+        outputBox.add(splitBox);
 
         // - the size group
         ButtonGroup bg = new ButtonGroup();
@@ -349,6 +360,8 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         }
 
         m_trim.setSelected(csSettings.isTrim());
+
+        m_splitColumnNames.setSelected(csSettings.splitColumnNames());
     }
 
     /**
@@ -393,6 +406,8 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         csSettings.setOutputAsSet(m_outputAsSet.isSelected());
         csSettings.setOutputAsCols(m_outputAsColumns.isSelected());
         csSettings.setTrim(m_trim.isSelected());
+
+        csSettings.setSplitColumnNames(m_splitColumnNames.isSelected());
 
         csSettings.saveSettingsTo(settings);
 
