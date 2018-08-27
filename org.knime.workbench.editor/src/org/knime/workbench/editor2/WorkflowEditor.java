@@ -1847,6 +1847,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         .setCurrentLocation(localNewWorkflowDir)
                         .setMountpointRoot(mountPointRoot)
                         .setMountpointURI(newWorkflowDir.toURI())
+                        .setTemporaryCopy(false)
                         .createContext();
 
             saveTo(localNewWorkflowDir.toURI(), new NullProgressMonitor(), true, context);
