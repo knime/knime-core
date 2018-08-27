@@ -139,19 +139,20 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
     @Override
     protected void modelChanged() {
         ExtendedStatisticsNodeModel model = getNodeModel();
-        if (model.getStatTable() == null) {
+        final Statistics3Table statTable = model.getStatTable();
+        if (statTable == null) {
             m_numeric.setText("");
             m_nominal.setText("");
             m_topBottom.setText("");
         } else {
             //            m_numeric.setEditorKitForContentType("text/html", new NumericEditorKit(model));
-            m_numeric.setEditorKit(new NumericEditorKit(model));
+            m_numeric.setEditorKit(new NumericEditorKit(model, statTable));
             m_numeric.setEditable(false);
-            m_numeric.setText(createTable(model));
-            m_nominal.setEditorKit(new NominalEditorKit(model));
+            m_numeric.setText(createTable(statTable));
+            m_nominal.setEditorKit(new NominalEditorKit(model, statTable));
             m_nominal.setEditable(false);
-            m_nominal.setText(createNominal(model));
-            m_topBottom.setText(createTopBottom(model));
+            m_nominal.setText(createNominal(statTable));
+            m_topBottom.setText(createTopBottom(statTable));
         }
         m_numeric.revalidate();
         m_nominal.revalidate();
@@ -159,17 +160,16 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
     }
 
     /**
-     * @param model
+     * @param statTable
      * @return
      */
-    private String createTopBottom(final ExtendedStatisticsNodeModel model) {
+    private String createTopBottom(final Statistics3Table statTable) {
         final List<String> columnNames = new ArrayList<>();
         final List<Map<DataCell, Integer>> nominals = new ArrayList<>();
-        Statistics3Table statTable = model.getStatTable();
         if (statTable != null) {
             int colIdx = 0;
             for (DataColumnSpec spec : statTable.getSpec()) {
-                if (model.getStatTable().getNominalValues(colIdx) != null) {
+                if (statTable.getNominalValues(colIdx) != null) {
                     columnNames.add(spec.getName());
                     nominals.add(statTable.getNominalValues(colIdx));
                 }
@@ -195,7 +195,7 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
         }
 
         buffer.append("<tr valign=\"top\">");
-        int[] missings = model.getStatTable().getNumberMissingValues();
+        int[] missings = statTable.getNumberMissingValues();
         for (int i = 0; i < columnNames.size(); i++) {
             if (nominals.get(i) != null) {
                 buffer.append("<td style=\"white-space: nowrap\"><strong>"
@@ -206,7 +206,7 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
 
         buffer.append("</tr><tr valign=\"top\">");
 
-            final int numNomValues = model.numOfNominalValues();
+            final int numNomValues = getNodeModel().numOfNominalValues();
             for (Map<DataCell, Integer> map: nominals) {
                 if (map != null) {
                     buffer.append("<td nowrap=\"nowrap\">");
@@ -262,19 +262,19 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
     }
 
     /**
-     * @param model An {@link ExtendedStatisticsNodeModel}.
+     * @param statTable non null table from the model
      * @return The HTML version for nominal statistics.
      * @see NominalEditorKit
      */
-    private String createNominal(final ExtendedStatisticsNodeModel model) {
-        return renderNominal(model).toString();
+    private String createNominal(final Statistics3Table statTable) {
+        return renderNominal(statTable).toString();
     }
 
     /**
-     * @param model An {@link ExtendedStatisticsNodeModel}.
+     * @param statTable non-null table to render
      * @return A {@link StringBuilder} with all the stats added for nominal HTML table.
      */
-    private StringBuilder renderNominal(final ExtendedStatisticsNodeModel model) {
+    private StringBuilder renderNominal(final Statistics3Table statTable) {
         StringBuilder ret = createHtmlHeader();
         ret.append("<body>\n");
 
@@ -291,13 +291,12 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
             ret.append("</tr>");
 
             int i = 0, colIdx = 0;
-            Statistics3Table statTable = model.getStatTable();
             if (statTable != null) {
                 for (DataColumnSpec spec : statTable.getSpec()) {
-                    if (model.getStatTable().getNominalValues(colIdx) != null) {
+                    if (statTable.getNominalValues(colIdx) != null) {
                         String cssClass = i % 2 == 0 ? "even" : "odd";
-                        int columnIndex = model.getStatTable().getSpec().findColumnIndex(spec.getName());
-                        renderNominalRow(columnIndex, ret, cssClass);
+                        int columnIndex = statTable.getSpec().findColumnIndex(spec.getName());
+                        renderNominalRow(statTable, columnIndex, ret, cssClass);
                         i++;
                     }
                     ++colIdx;
@@ -315,12 +314,12 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
     }
 
     /**
-     * @param model An {@link ExtendedStatisticsNodeModel}.
+     * @param Statistics3Table Table created in {@link ExtendedStatisticsNodeModel}.
      * @return The HTML version for numeric statistics.
      * @see NumericEditorKit
      */
-    private String createTable(final ExtendedStatisticsNodeModel model) {
-        return renderTable(model).toString();
+    private String createTable(final Statistics3Table statTable) {
+        return renderTable(statTable).toString();
     }
 
     /** Convenient method to create HTML Header. */
@@ -360,9 +359,9 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
     /**
      * Create HTML of the cross tabulation.
      *
-     * @param model The {@link ExtendedStatisticsNodeModel} to use.
+     * @param statTable The non-null table created in {@link ExtendedStatisticsNodeModel}.
      */
-    private String renderTable(final ExtendedStatisticsNodeModel model) {
+    private String renderTable(final Statistics3Table statTable) {
         List<String> props =
             Arrays.asList("Column", "Min", "Mean", "Median", "Max", "Std. Dev.", "Skewness", "Kurtosis", "No. Missing",
                 "No. +\u221E", "No. -\u221E", "Histogram");
@@ -381,11 +380,11 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
             buffer.append("</tr>");
 
             int i = 0;
-            for (DataColumnSpec spec : model.getStatTable().getSpec()) {
+            for (DataColumnSpec spec : statTable.getSpec()) {
                 if (spec.getType().isCompatible(DoubleValue.class)) {
                     String cssClass = i % 2 == 0 ? "even" : "odd";
-                    int columnIndex = model.getStatTable().getSpec().findColumnIndex(spec.getName());
-                    renderRow(columnIndex, buffer, cssClass);
+                    int columnIndex = statTable.getSpec().findColumnIndex(spec.getName());
+                    renderRow(statTable, columnIndex, buffer, cssClass);
                 }
                 i++;
             }
@@ -401,14 +400,14 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
     }
 
     /** Create HTML for the given row. */
-    private void renderNominalRow(final int row, final StringBuilder buffer, final String cssClass) {
-        Statistics3Table model = getNodeModel().getStatTable();
+    private void renderNominalRow(final Statistics3Table statTable, final int row, final StringBuilder buffer,
+        final String cssClass) {
         buffer.append("<tr class=\"" + cssClass + "\">\n");
         buffer.append("<td valign=\"" + ROW_VERTICAL_ALIGN + "\">");
-        buffer.append(escapeHtml(model.getSpec().getColumnSpec(row).getName()));
+        buffer.append(escapeHtml(statTable.getSpec().getColumnSpec(row).getName()));
         buffer.append("</td>");
         buffer.append("<td class=\"numeric\" valign=\"" + ROW_VERTICAL_ALIGN + "\">");
-        buffer.append(NumberFormat.getInstance().format((long)model.getNumberMissingValues(row)));
+        buffer.append(NumberFormat.getInstance().format((long)statTable.getNumberMissingValues(row)));
         buffer.append("</td>\n");
         buffer
             .append(
@@ -419,22 +418,22 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
     }
 
     /** Create HTML for the given row. */
-    private void renderRow(final int row, final StringBuilder buffer, final String cssClass) {
+    private void renderRow(final Statistics3Table statTable, final int row, final StringBuilder buffer,
+        final String cssClass) {
         //        boolean first = true;
-        Statistics3Table model = getNodeModel().getStatTable();
         buffer.append("<tr class=\"" + cssClass + "\">\n");
         buffer.append("<td valign=\"" + ROW_VERTICAL_ALIGN + "\">");
-        buffer.append(escapeHtml(model.getSpec().getColumnSpec(row).getName()));
+        buffer.append(escapeHtml(statTable.getSpec().getColumnSpec(row).getName()));
         buffer.append("</td>");
-        for (double v : new double[]{model.getMin()[row], model.getMean(row), model.getMedian(row),
-            model.getMax()[row], model.getStandardDeviation(row), model.getSkewness(row), model.getKurtosis(row),}) {
+        for (double v : new double[]{statTable.getMin()[row], statTable.getMean(row), statTable.getMedian(row),
+            statTable.getMax()[row], statTable.getStandardDeviation(row), statTable.getSkewness(row), statTable.getKurtosis(row),}) {
             buffer.append("<td class=\"numeric\" valign=\"" + ROW_VERTICAL_ALIGN + "\">");
             buffer.append(Double.isNaN(v) ? "?" : DoubleFormat.formatDouble(v));
             buffer.append("</td>\n");
         }
         NumberFormat nf = NumberFormat.getInstance();
-        for (int v : new int[]{model.getNumberMissingValues()[row], model.getNumberPositiveInfiniteValues(row),
-            model.getNumberNegativeInfiniteValues(row),}) {
+        for (int v : new int[]{statTable.getNumberMissingValues()[row], statTable.getNumberPositiveInfiniteValues(row),
+            statTable.getNumberNegativeInfiniteValues(row),}) {
             buffer.append("<td class=\"numeric\" valign=\"" + ROW_VERTICAL_ALIGN + "\">");
             buffer.append(nf.format(v));
             buffer.append("</td>\n");
@@ -476,11 +475,15 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
 
         private final ExtendedStatisticsNodeModel m_model;
 
+        private final Statistics3Table m_statTable;
+
         /**
          * @param model The {@link ExtendedStatisticsNodeModel} to use.
+         * @param statTable TODO
          */
-        public NumericEditorKit(final ExtendedStatisticsNodeModel model) {
-            this.m_model = model;
+        public NumericEditorKit(final ExtendedStatisticsNodeModel model, final Statistics3Table statTable) {
+            m_model = model;
+            m_statTable = statTable;
         }
 
         /**
@@ -488,7 +491,7 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
          */
         @Override
         public ViewFactory getViewFactory() {
-            return new NumericViewFactory(m_model);
+            return new NumericViewFactory(m_model, m_statTable);
         }
     }
 
@@ -501,13 +504,15 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
         private static final long serialVersionUID = -2348172161574057315L;
 
         private final ExtendedStatisticsNodeModel m_model;
+        private final Statistics3Table m_statTable;
 
         /**
          * @param model The {@link ExtendedStatisticsNodeModel} to use.
+         * @param statTable Non-null table from model
          */
-        public NominalEditorKit(final ExtendedStatisticsNodeModel model) {
-            super();
+        public NominalEditorKit(final ExtendedStatisticsNodeModel model, final Statistics3Table statTable) {
             m_model = model;
+            m_statTable = statTable;
         }
 
         /**
@@ -515,7 +520,7 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
          */
         @Override
         public ViewFactory getViewFactory() {
-            return new NominalViewFactory(m_model);
+            return new NominalViewFactory(m_model, m_statTable);
         }
     }
 
@@ -524,12 +529,15 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
      */
     private static abstract class AbstractViewFactory extends HTMLFactory {
         private final ExtendedStatisticsNodeModel m_model;
+        private final Statistics3Table m_statTable;
 
         /**
          * @param model
+         * @param statTable TODO
          */
-        public AbstractViewFactory(final ExtendedStatisticsNodeModel model) {
+        public AbstractViewFactory(final ExtendedStatisticsNodeModel model, final Statistics3Table statTable) {
             this.m_model = model;
+            m_statTable = statTable;
         }
 
         /**
@@ -537,6 +545,13 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
          */
         protected ExtendedStatisticsNodeModel getModel() {
             return m_model;
+        }
+
+        /**
+         * @return the statTable
+         */
+        Statistics3Table getStatTable() {
+            return m_statTable;
         }
 
         /**
@@ -588,9 +603,10 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
     private static class NumericViewFactory extends AbstractViewFactory {
         /**
          * @param model {@link ExtendedStatisticsNodeModel} to use.
+         * @param statTable Non-null stats table
          */
-        public NumericViewFactory(final ExtendedStatisticsNodeModel model) {
-            super(model);
+        public NumericViewFactory(final ExtendedStatisticsNodeModel model, final Statistics3Table statTable) {
+            super(model, statTable);
         }
 
         /**
@@ -620,9 +636,10 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
     private static class NominalViewFactory extends AbstractViewFactory {
         /**
          * @param model {@link ExtendedStatisticsNodeModel} to use.
+         * @param statTable Non-null stats table from model
          */
-        public NominalViewFactory(final ExtendedStatisticsNodeModel model) {
-            super(model);
+        public NominalViewFactory(final ExtendedStatisticsNodeModel model, final Statistics3Table statTable) {
+            super(model, statTable);
         }
 
         /**
@@ -632,9 +649,9 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
         protected Component createComponent(final int colId, final HistogramColumn hc) {
             ExtendedStatisticsNodeModel model = getModel();
             final HistogramModel<?> nominalModel =
-                hc.fromNominalModel(model.getStatTable().getNominalValues(colId), colId, model.getStatTable().getSpec()
+                hc.fromNominalModel(getStatTable().getNominalValues(colId), colId, getStatTable().getSpec()
                     .getColumnSpec(colId).getName());
-            nominalModel.setRowCount(getModel().getStatTable().getRowCount());
+            nominalModel.setRowCount(getStatTable().getRowCount());
             Map<DataValue, Set<RowKey>> values = model.getNominalKeys().get(colId);
             if (values == null) {
                 values = Collections.emptyMap();
