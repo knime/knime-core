@@ -348,7 +348,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         }
         // variables in progress listener must be final
         final String JSONLayout = getJsonDocument();
-        final String jsonNodes = JSONNodes;
+        final String jsonNodes =
+            new StringBuilder(JSONNodes).insert(JSONNodes.length() - 2, ", length:" + nodes.getLength()).toString();
         m_browser.addProgressListener(new ProgressListener() {
 
             @Override

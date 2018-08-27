@@ -66,6 +66,7 @@ import org.knime.js.core.layout.LayoutTemplateProvider;
 import org.knime.js.core.layout.bs.JSONLayoutViewContent;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * A JSON representation of the nodes for the visual layout editor.
@@ -77,6 +78,8 @@ public class JSONVisualLayoutEditorNodes {
 
     // Map node ID index (as a String for Jackson JSON translation) to JSONNode representation
     private Map<String, JSONNode> m_nodes;
+
+    private long m_length;
 
     /**
      * @param viewNodes a {@code Map} of {@link NodeIDSuffix} to available {@link WizardNode}s
@@ -90,15 +93,24 @@ public class JSONVisualLayoutEditorNodes {
             return;
         }
 
+        long maxId = Long.MIN_VALUE;
         m_nodes = new HashMap<>();
         for (final Entry<NodeIDSuffix, WizardNode> viewNode : viewNodes.entrySet()) {
             final WizardNode<?, ?> node = viewNode.getValue();
             final NodeID nodeID = viewNode.getKey().prependParent(subNodeContainer.getWorkflowManager().getID());
             final NodeContainer nodeContainer = wfManager.getNodeContainer(nodeID);
+
+            final int nodeIdIndex = nodeContainer.getID().getIndex();
+            final String nodeIdIndexString = nodeIdIndex + "";
             final JSONNode jsonNode = new JSONNode(nodeContainer.getName(), nodeContainer.getCustomDescription(),
                 getTemplate(node), getIcon(nodeContainer), node.isHideInWizard());
-            m_nodes.put(nodeContainer.getID().getIndex() + "", jsonNode);
+            m_nodes.put(nodeIdIndexString, jsonNode);
+
+            if (nodeIdIndex > maxId) {
+                maxId = nodeIdIndex;
+            }
         }
+        m_length = maxId + 1;
     }
 
     /**
@@ -113,6 +125,24 @@ public class JSONVisualLayoutEditorNodes {
      */
     public void setNodes(final Map<String, JSONNode> nodes) {
         m_nodes = nodes;
+    }
+
+    /**
+     * The largest nodeID index + 1. This is needed by the javascript to convert the map into a keyed array.
+     *
+     * @return the length
+     */
+    @JsonIgnore
+    public long getLength() {
+        return m_length;
+    }
+
+    /**
+     * @param length the length to set
+     */
+    @JsonIgnore
+    public void setLength(final long length) {
+        m_length = length;
     }
 
     // -- Helper methods--
