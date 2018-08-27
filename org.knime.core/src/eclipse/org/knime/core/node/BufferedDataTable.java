@@ -151,7 +151,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
         // update the lastID counter!
         assert result.m_tableID == tableID;
-        LAST_ID.set(Math.max(tableID, LAST_ID.get()));
+        setLastIdToUnsignedMax(tableID, LAST_ID.get());
         return result;
     }
 
@@ -171,7 +171,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @return Table identifier.
      */
     static int generateNewID() {
-        return LAST_ID.incrementAndGet();
+        // see AP-10195: we accept a buffer overflow: 2147483647 -> -2147483648(neg)-> -2147483647 -> ... -> -2
+        int id = LAST_ID.incrementAndGet();
+        CheckUtils.checkArgument(id != -1, "Range of table IDs exhausted (integer max)");
+        return id;
     }
 
     /** Throws <code>IllegalStateException</code> as this method is not
@@ -255,7 +258,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
 
     private BufferedDataTable(final KnowsRowCountTable table, final int id) {
         m_delegate = table;
-        assert id <= LAST_ID.get() : "Table identifiers not unique";
+        assert Integer.toUnsignedLong(id) <= Integer.toUnsignedLong(LAST_ID.get()) : "Table identifiers not unique";
         m_tableID = id;
     }
 
@@ -652,7 +655,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
             isVersion11x = true;
         }
         int id = s.getInt(CFG_TABLE_ID);
-        LAST_ID.set(Math.max(LAST_ID.get(), id + 1));
+        setLastIdToUnsignedMax(LAST_ID.get(), id + 1);
         String fileName = s.getString(CFG_TABLE_FILE_NAME);
         ReferencedFile fileRef;
         if (fileName != null) {
@@ -754,6 +757,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
         t.m_tableID = id;
         tblRep.put(id, t);
         return t;
+    }
+
+    private static void setLastIdToUnsignedMax(final int i, final int j) {
+        LAST_ID.set((Integer.toUnsignedLong(i) >= Integer.toUnsignedLong(j)) ? i : j);
     }
 
     /**
