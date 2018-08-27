@@ -44,6 +44,8 @@
  */
 package org.knime.core.ui.node.workflow;
 
+import java.awt.Rectangle;
+
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.FlowObjectStack;
@@ -136,17 +138,17 @@ public interface NodeOutPortUI extends NodePortUI, NodeStateChangeListener, Node
 //    // TODO: return component with convenience method for Frame construction.
 //    public void openPortView(final String name);
 
-//    /**
-//     * Opens the port view for this port with the given name.
-//     *
-//     * @param name The name of the port view.
-//     * @param knimeWindowBounds Bounds of the KNIME window, used to calculate
-//     * the center which will also be the center of the opened view. If null the
-//     * center of the primary monitor is used.
-//     * @since 2.12
-//     */
-//    // TODO: return component with convenience method for Frame construction.
-//    public void openPortView(final String name, final Rectangle knimeWindowBounds);
+    /**
+     * Opens the port view for this port with the given name.
+     *
+     * @param name The name of the port view.
+     * @param knimeWindowBounds Bounds of the KNIME window, used to calculate
+     * the center which will also be the center of the opened view. If null the
+     * center of the primary monitor is used.
+     * @since 2.12
+     */
+    // TODO: return component with convenience method for Frame construction.
+    public void openPortView(final String name, final Rectangle knimeWindowBounds);
 
 //    /** Dispose the view (if any) associated with this port. */
 //    public void disposePortView();

@@ -48,6 +48,8 @@
  */
 package org.knime.core.ui.wrapper;
 
+import java.awt.Rectangle;
+
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -130,6 +132,11 @@ public class NodeOutPortWrapper extends AbstractWrapper<NodeOutPort> implements 
     @Override
     public void setPortName(final String portName) {
         unwrap().setPortName(portName);
+    }
+
+    @Override
+    public void openPortView(final String name, final Rectangle knimeWindowBounds) {
+        unwrap().openPortView(name, knimeWindowBounds);
     }
 
     @Override

@@ -83,6 +83,9 @@ import org.knime.core.node.util.ViewUtils;
 
 /**
  *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noextend This class is not intended to be subclassed by clients.
  *
  * @author Fabian Dill, University of Konstanz
  */
@@ -117,7 +120,7 @@ public class OutPortView extends JFrame {
      * @param nodeNameWithID The name of the node the inspected port belongs to
      * @param portName name of the port which is also displayed in the title
      */
-    OutPortView(final String nodeNameWithID, final String portName) {
+    public OutPortView(final String nodeNameWithID, final String portName) {
         super(portName + " - " + nodeNameWithID);
         // init frame
         super.setName(getTitle());
@@ -150,8 +153,9 @@ public class OutPortView extends JFrame {
 
     /**
      * shows this view and brings it to front.
+     * @noreference This method is not intended to be referenced by clients.
      */
-    void openView(final Rectangle knimeWindowBounds) {
+    public void openView(final Rectangle knimeWindowBounds) {
         if (!m_wasOpened) {
             m_wasOpened = true;
             updatePortView();
@@ -215,8 +219,10 @@ public class OutPortView extends JFrame {
      * @param stack The {@link FlowObjectStack} of the node.
      * @param credentials the CredenialsProvider used in out-port view
      * @param hiliteHandler the hilite handler active at the port
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 3.7
      */
-    void update(final PortObject portObject, final PortObjectSpec portObjectSpec, final FlowObjectStack stack,
+    public void update(final PortObject portObject, final PortObjectSpec portObjectSpec, final FlowObjectStack stack,
         final CredentialsProvider credentials, final HiLiteHandler hiliteHandler) {
         UpdateObject updateObject = new UpdateObject(portObject, portObjectSpec, stack, credentials, hiliteHandler);
 

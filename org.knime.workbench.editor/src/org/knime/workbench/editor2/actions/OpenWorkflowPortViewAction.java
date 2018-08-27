@@ -51,9 +51,9 @@ package org.knime.workbench.editor2.actions;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObject;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeOutPort;
-import org.knime.core.node.workflow.WorkflowInPort;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
+import org.knime.core.ui.node.workflow.WorkflowInPortUI;
 
 /**
  *
@@ -64,17 +64,17 @@ public class OpenWorkflowPortViewAction extends OpenPortViewAction {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             OpenWorkflowPortViewAction.class);
 
-    private final NodeOutPort m_port;
+    private final NodeOutPortUI m_port;
 
     /**
      * @param nodeContainer
      * @param portIndex
      * @param totalPortCount
      */
-    public OpenWorkflowPortViewAction(final NodeContainer nodeContainer,
+    public OpenWorkflowPortViewAction(final NodeContainerUI nodeContainer,
             final int portIndex, final int totalPortCount) {
         super(nodeContainer, portIndex, totalPortCount);
-        m_port = ((WorkflowInPort)getNodeContainer().getInPort(getPortIndex()))
+        m_port = ((WorkflowInPortUI)getNodeContainer().getInPort(getPortIndex()))
             .getUnderlyingPort();
     }
 

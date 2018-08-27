@@ -48,9 +48,9 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodePort;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodePortUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 
@@ -60,7 +60,7 @@ import org.knime.workbench.core.util.ImageRepository;
  * @author Florian Georg, University of Konstanz
  */
 public class OpenPortViewAction extends Action {
-    private final NodeContainer m_nodeContainer;
+    private final NodeContainerUI m_nodeContainer;
 
     private final int m_index;
 
@@ -78,7 +78,7 @@ public class OpenPortViewAction extends Action {
      * @param portIndex The index of the out-port
      * @param totalPortCount The total number of ports
      */
-    public OpenPortViewAction(final NodeContainer nodeContainer,
+    public OpenPortViewAction(final NodeContainerUI nodeContainer,
             final int portIndex, final int totalPortCount) {
         m_nodeContainer = nodeContainer;
         m_index = portIndex;
@@ -86,7 +86,7 @@ public class OpenPortViewAction extends Action {
          * implicit flow variable port). The index for the user is still the
          * old index though (w/o implicit port)
          */
-        if (!(nodeContainer instanceof WorkflowManager)) {
+        if (!(nodeContainer instanceof WorkflowManagerUI)) {
             m_userIndex = m_index - 1;
             m_totalPortCount = totalPortCount - 1;
         } else {
@@ -100,7 +100,7 @@ public class OpenPortViewAction extends Action {
         return m_index;
     }
 
-    protected NodeContainer getNodeContainer() {
+    protected NodeContainerUI getNodeContainer() {
         return m_nodeContainer;
     }
 
@@ -140,7 +140,7 @@ public class OpenPortViewAction extends Action {
     public void run() {
         LOGGER.debug("Open Port View " + m_nodeContainer.getName() + " (#"
                 + m_index + ")");
-        NodePort port = m_nodeContainer.getOutPort(m_index);
+        NodePortUI port = m_nodeContainer.getOutPort(m_index);
         m_nodeContainer.getOutPort(m_index).openPortView(port.getPortName(), OpenViewAction.getAppBoundsAsAWTRec());
     }
 }

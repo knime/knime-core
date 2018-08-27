@@ -48,6 +48,8 @@
  */
 package org.knime.core.ui.wrapper;
 
+import java.awt.Rectangle;
+
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -176,5 +178,10 @@ public class WorkflowOutPortWrapper extends AbstractWrapper<WorkflowOutPort> imp
     @Override
     public void stateChanged(final NodeStateEvent state) {
         unwrap().stateChanged(state);
+    }
+
+    @Override
+    public void openPortView(final String name, final Rectangle knimeWindowBounds) {
+        unwrap().openPortView(name, knimeWindowBounds);
     }
 }
