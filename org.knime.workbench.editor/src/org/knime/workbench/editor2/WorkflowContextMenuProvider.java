@@ -66,12 +66,13 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.ui.node.workflow.InteractiveWebViewsResultUI;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
@@ -455,6 +456,11 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 for (int i = 0; i < numOutPorts; i++) {
                     if (i == 0 && !(container instanceof WorkflowManagerUI)) {
                         // skip the implicit flow var ports on "normal" nodes
+                        continue;
+                    }
+                    if (!wraps(container, WorkflowManager.class)
+                        && !container.getOutPort(i).getPortType().equals(BufferedDataTable.TYPE)) {
+                        // only view on data tables are currently supported for WorkflowManagerUI and Co.
                         continue;
                     }
                     action = new OpenPortViewAction(container, i, numOutPorts);
