@@ -48,7 +48,6 @@
 package org.knime.base.node.preproc.cellsplit;
 
 import java.awt.Dimension;
-import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.text.ParseException;
 
@@ -129,6 +128,10 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
     private final JCheckBox m_useEscapeCharacter =
             new JCheckBox("Use \\ as escape character");
 
+    private final JCheckBox m_hasScanLimit = new JCheckBox("Scan limit (number of lines to guess on) ");
+
+    private final JSpinner m_scanLimit = new JSpinner(new SpinnerNumberModel(25, 1, Integer.MAX_VALUE, 50));
+
     /**
      * @since 3.7
      */
@@ -203,14 +206,15 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         obg.add(m_outputAsSet);
         obg.add(m_outputAsColumns);
         m_outputAsColumns.setSelected(true);
-        m_outputAsColumns.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                m_fixedSize.setEnabled(m_outputAsColumns.isSelected());
-                m_guessSize.setEnabled(m_outputAsColumns.isSelected());
-                m_columnNumber.setEnabled(m_outputAsColumns.isSelected());
-                m_splitColumnNames.setEnabled(m_outputAsColumns.isSelected());
-            }
+        m_outputAsColumns.addItemListener(e -> {
+            m_fixedSize.setEnabled(m_outputAsColumns.isSelected());
+            m_guessSize.setEnabled(m_outputAsColumns.isSelected());
+            m_columnNumber.setEnabled(m_outputAsColumns.isSelected() && m_fixedSize.isSelected());
+            m_splitColumnNames.setEnabled(m_outputAsColumns.isSelected());
+
+            final boolean enableScanLimit = m_outputAsColumns.isSelected() && m_guessSize.isSelected();
+            m_hasScanLimit.setEnabled(enableScanLimit);
+            m_scanLimit.setEnabled(enableScanLimit && m_hasScanLimit.isSelected());
         });
         Box outputColBox = Box.createHorizontalBox();
         outputColBox.add(Box.createVerticalStrut(10));
@@ -234,12 +238,16 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         bg.add(m_guessSize);
         m_fixedSize.setSelected(true);
         m_columnNumber.setEnabled(true);
-        m_fixedSize.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                m_columnNumber.setEnabled(m_fixedSize.isSelected());
-            }
-        });
+        final ItemListener listener = e -> {
+            m_columnNumber.setEnabled(m_fixedSize.isSelected());
+
+            final boolean enableScanLimit = m_outputAsColumns.isSelected() && m_guessSize.isSelected();
+            m_hasScanLimit.setEnabled(enableScanLimit);
+            m_scanLimit.setEnabled(enableScanLimit && m_hasScanLimit.isSelected());
+        };
+        m_fixedSize.addItemListener(listener);
+        m_guessSize.addItemListener(listener);
+
         // the size spinner
         m_columnNumber.setModel(new SpinnerNumberModel(1000, 1,
                 Integer.MAX_VALUE, 1));
@@ -259,9 +267,19 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         Box guessSizeBox = Box.createHorizontalBox();
         guessSizeBox.add(m_guessSize);
         guessSizeBox.add(Box.createHorizontalGlue());
+
+        final Box scanLimitBox = Box.createHorizontalBox();
+        scanLimitBox.add(m_hasScanLimit);
+        scanLimitBox.add(m_scanLimit);
+        m_scanLimit.setEnabled(m_hasScanLimit.isSelected());
+        m_hasScanLimit.addItemListener(e -> {
+            m_scanLimit.setEnabled(m_hasScanLimit.isSelected());
+        });
+
         sizeBox.add(fixSizeBox);
         sizeBox.add(Box.createVerticalStrut(3));
         sizeBox.add(guessSizeBox);
+        sizeBox.add(scanLimitBox);
 
         outputBox.add(Box.createVerticalStrut(7));
         outputBox.add(sizeBox);
@@ -362,6 +380,9 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         m_trim.setSelected(csSettings.isTrim());
 
         m_splitColumnNames.setSelected(csSettings.splitColumnNames());
+
+        m_hasScanLimit.setSelected(csSettings.hasScanLimit());
+        m_scanLimit.setValue(csSettings.scanLimit());
     }
 
     /**
@@ -379,9 +400,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         // commit the spinner
         try {
             m_columnNumber.commitEdit();
-            Integer numOfCols =
-                    (Integer)((SpinnerNumberModel)m_columnNumber.getModel())
-                            .getValue();
+            final Integer numOfCols = ((SpinnerNumberModel)m_columnNumber.getModel()).getNumber().intValue();
             csSettings.setNumOfCols(numOfCols);
         } catch (ParseException pe) {
             if (m_columnNumber.isEnabled()) {
@@ -408,6 +427,9 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         csSettings.setTrim(m_trim.isSelected());
 
         csSettings.setSplitColumnNames(m_splitColumnNames.isSelected());
+
+        csSettings.setHasScanLimit(m_hasScanLimit.isSelected());
+        csSettings.setScanLimit(((SpinnerNumberModel)m_scanLimit.getModel()).getNumber().intValue());
 
         csSettings.saveSettingsTo(settings);
 

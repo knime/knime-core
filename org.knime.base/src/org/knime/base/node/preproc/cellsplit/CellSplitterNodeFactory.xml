@@ -76,12 +76,16 @@
 		what happens if the split produces a different number of parts.)
 		</option>
 		<option name="Guess Size and Column Types">If this is checked, the node
-		performs an additional scan through the entire data table and computes 
-		the number of columns needed to hold all parts of the split. In addition
-		it determines the column type of the new columns. 
+		performs an additional scan through the entire data table (or first n rows if
+		a scan limit is set) and computes the number of columns needed to hold all
+		parts of the split. In addition it determines the column type of the new columns.
 		</option>
-		<option name="Missing Value Handling">If select, the node creates 
-		empty string cell instead of missing value cells. 
+		<option name="Scan Limit">If this is checked, the scan through the table for
+		guessing the number of output rows and column types will stop after given amount
+		of rows. Use this for large tables to speed up node configure duration.
+		</option>
+		<option name="Missing Value Handling">If select, the node creates
+		empty string cell instead of missing value cells.
         </option>
 	</fullDescription>
 	

@@ -629,13 +629,16 @@ class CellSplitterCellFactory implements CellFactory {
         }
 
         long rowCnt = 0;
-        long numOfRows = table.size();
+        final long numOfRows = userSettings.hasScanLimit() ? Math.min(userSettings.scanLimit(), table.size()) : table.size();
 
-        for (DataRow row : table) {
+        for (final DataRow row : table) {
             rowCnt++;
+            if(userSettings.hasScanLimit() && rowCnt >= userSettings.scanLimit()) {
+                break;
+            }
 
             String inputString = "";
-            DataCell inputCell = row.getCell(colIdx);
+            final DataCell inputCell = row.getCell(colIdx);
 
             if (inputCell.isMissing()) {
                 // missing cells don't help determining the target types
@@ -649,7 +652,7 @@ class CellSplitterCellFactory implements CellFactory {
             }
 
             // init the tokenizer
-            StringReader inputReader = new StringReader(inputString);
+            final StringReader inputReader = new StringReader(inputString);
             // the reader is no good if it doesn't support the mark operation
             assert inputReader.markSupported();
 
