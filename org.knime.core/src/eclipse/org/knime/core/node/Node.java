@@ -520,6 +520,10 @@ public final class Node implements NodeModelWarningListener {
                         ((BufferedDataTableHolder)m_model).setInternalTables(copy);
                     } catch (IOException e) {
                         loadResult.addError(e.getMessage(), true);
+                    } catch (Exception e) {
+                        LOGGER.coding(String.format("Undeclared %s: %s", e.getClass().getSimpleName(), e.getMessage()),
+                            e);
+                        loadResult.addError(e.getMessage(), true);
                     }
                 }
             }
