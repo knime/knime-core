@@ -127,6 +127,19 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         m_rowIndex = 0;
         m_rowCount = rowCount;
         m_context = context;
+
+        final OutColList outFields = m_snippet.getSystemFields().getOutColFields();
+        for (int i = 0; i < outFields.size(); i++) {
+            final OutCol outField = outFields.get(i);
+
+            /* Cache converter before first conversion */
+            final String id = outField.getConverterFactoryId();
+            Optional<JavaToDataCellConverterFactory<?>> factory = ConverterUtil.getJavaToDataCellConverterFactory(id);
+            if (!factory.isPresent()) {
+                throw new RuntimeException("Missing converter factory with ID: " + id);
+            }
+            m_outConverters.add(((JavaToDataCellConverterFactory<Object>)factory.get()).create(m_context));
+        }
     }
 
     /**
@@ -305,16 +318,6 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
                 if (null == value) {
                     out[i] = DataType.getMissingCell();
                 } else {
-                    if (i <= m_outConverters.size()) {
-                        /* Cache converter before first conversion */
-                        final String id = outField.getConverterFactoryId();
-                        Optional<JavaToDataCellConverterFactory<?>> factory =
-                            ConverterUtil.getJavaToDataCellConverterFactory(id);
-                        if (!factory.isPresent()) {
-                            throw new RuntimeException("Missing converter factory with ID: " + id);
-                        }
-                        m_outConverters.add(((JavaToDataCellConverterFactory<Object>)factory.get()).create(m_context));
-                    }
                     out[i] = m_outConverters.get(i).convertUnsafe(value);
                 }
             }
