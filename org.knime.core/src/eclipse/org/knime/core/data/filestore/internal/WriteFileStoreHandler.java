@@ -319,13 +319,16 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     private void ensureInitBaseDirectory() throws IOException {
         assert Thread.holdsLock(this);
         if (m_baseDir == null) {
-            StringBuilder baseDirName = new StringBuilder("knime_fs-");
+            StringBuilder baseDirName = new StringBuilder("fs-");
             String nodeName = m_name;
             // delete special chars
             nodeName = nodeName.replaceAll("[()-]", "");
             nodeName = nodeName.replaceAll(":", "-");
             // non-word chars by '_'
-            nodeName = nodeName.replaceAll("\\W", "_");
+            nodeName = nodeName.replaceAll("[^\\w-]", "_");
+            // make the name shorter -- see AP-10260 (long path issue on Windows)
+            // this will cut "Create FileStore Column 0-6-4" to "Creat0-6-4" ("0-6-4" is the node id)
+            nodeName = nodeName.replaceAll("^(.{5}).*?(\\d+(?:-\\d+)+)", "$1_$2");
             baseDirName.append(nodeName).append("-");
             m_baseDir = FileUtil.createTempDir(baseDirName.toString());
             LOGGER.debug("Assigning temp directory to file store \"" + toString() + "\"");
