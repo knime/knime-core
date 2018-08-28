@@ -408,6 +408,13 @@ public class TableContentModel extends AbstractTableModel
                     m_isRowCountOfInterestFinal = true;
                 }
             }
+
+            if (data instanceof AsyncDataTable) {
+                ((AsyncDataTable)data).setRowsAvailableCallback((fromto) -> {
+                    fireTableRowsUpdated((int)fromto[0], (int)fromto[1]);
+                });
+            }
+
             int cacheSize = getCacheSize();
             m_cachedRows = new DataRow[cacheSize];
             m_hilitSet = new BitSet(cacheSize);
