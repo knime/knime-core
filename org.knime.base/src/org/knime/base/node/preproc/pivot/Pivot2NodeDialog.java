@@ -92,7 +92,7 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
     /** Constructor for class Pivot2NodeDialog. */
     @SuppressWarnings("unchecked")
     public Pivot2NodeDialog() {
-//pivot column box
+        //pivot column box
         m_pivotCol = new DialogComponentColumnFilter(m_pivotCols, 0, false,
             new ColumnFilterPanel.ValueClassFilter(DataValue.class), false);
         //we are only interested in showing the invalid include columns
@@ -108,29 +108,24 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
         });
         final JPanel pivotColPanel = m_pivotCol.getComponentPanel();
         pivotColPanel.setLayout(new GridLayout(1, 1));
-        pivotColPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), " Pivot settings "));
+        pivotColPanel
+            .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Pivot settings "));
 
-//create missing value option
-        m_missComponent = new DialogComponentBoolean(
-                createSettingsMissingValues(), "Ignore missing values");
-        m_missComponent.setToolTipText("Ignore rows "
-            + "containing missing values in pivot column.");
+        //create missing value option
+        m_missComponent = new DialogComponentBoolean(createSettingsMissingValues(), "Ignore missing values");
+        m_missComponent.setToolTipText("Ignore rows " + "containing missing values in pivot column.");
 
-//create total aggregation option
-        m_totalComponent = new DialogComponentBoolean(
-                createSettingsTotal(), "Append overall totals");
+        //create total aggregation option
+        m_totalComponent = new DialogComponentBoolean(createSettingsTotal(), "Append overall totals");
         m_missComponent.setToolTipText("Appends the overall pivot totals with "
-                + "each aggregation performed together on all selected pivot "
-                + "columns.");
+            + "each aggregation performed together on all selected pivot " + "columns.");
 
-//create domain option
-        m_domainComponent = new DialogComponentBoolean(
-                createSettingsIgnoreDomain(), "Ignore domain");
-        m_domainComponent.setToolTipText("Ignore domain and use only the "
-            + "possible values available in the input data.");
+        //create domain option
+        m_domainComponent = new DialogComponentBoolean(createSettingsIgnoreDomain(), "Ignore domain");
+        m_domainComponent
+            .setToolTipText("Ignore domain and use only the " + "possible values available in the input data.");
 
-//build pivot column filter and missing value panel
+        //build pivot column filter and missing value panel
         JPanel pivotAllPanel = new JPanel(new BorderLayout());
         pivotAllPanel.add(pivotColPanel, BorderLayout.CENTER);
         JPanel pivotOptions = new JPanel(new FlowLayout());
@@ -166,10 +161,10 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
 
     /** {@inheritDoc} */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+        throws NotConfigurableException {
         final DataTableSpec spec = (DataTableSpec)specs[0];
-        m_pivotCol.loadSettingsFrom(settings, new DataTableSpec[] {spec});
+        m_pivotCol.loadSettingsFrom(settings, new DataTableSpec[]{spec});
         m_missComponent.loadSettingsFrom(settings, specs);
         m_totalComponent.loadSettingsFrom(settings, specs);
         m_domainComponent.loadSettingsFrom(settings, specs);
@@ -178,8 +173,7 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
 
     /** {@inheritDoc} */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         super.saveSettingsTo(settings);
         //check if the dialog contains invalid pivot columns
         final Set<String> invalidInclCols = m_pivotCol.getInvalidIncludeColumns();

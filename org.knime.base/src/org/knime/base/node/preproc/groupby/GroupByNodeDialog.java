@@ -95,7 +95,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
  */
 public class GroupByNodeDialog extends NodeDialogPane {
 
-    /**The height of the default component.*/
+    /** The height of the default component. */
     public static final int DEFAULT_HEIGHT = 370;
 
     private final JTabbedPane m_tabs;
@@ -103,17 +103,20 @@ public class GroupByNodeDialog extends NodeDialogPane {
     private final SettingsModelFilterString m_groupByCols =
         new SettingsModelFilterString(GroupByNodeModel.CFG_GROUP_BY_COLUMNS);
 
-    private final SettingsModelIntegerBounded m_maxUniqueValues = new SettingsModelIntegerBounded(
-                GroupByNodeModel.CFG_MAX_UNIQUE_VALUES, 10000, 1, Integer.MAX_VALUE);
+    private final SettingsModelIntegerBounded m_maxUniqueValues =
+        new SettingsModelIntegerBounded(GroupByNodeModel.CFG_MAX_UNIQUE_VALUES, 10000, 1, Integer.MAX_VALUE);
 
     private final SettingsModelBoolean m_enableHilite =
-            new SettingsModelBoolean(GroupByNodeModel.CFG_ENABLE_HILITE, false);
+        new SettingsModelBoolean(GroupByNodeModel.CFG_ENABLE_HILITE, false);
 
     private final SettingsModelString m_valueDelimiter =
         new SettingsModelString(GroupByNodeModel.CFG_VALUE_DELIMITER, GlobalSettings.STANDARD_DELIMITER);
 
-    /** This setting was used prior KNIME 2.6.
-     * @deprecated */
+    /**
+     * This setting was used prior KNIME 2.6.
+     *
+     * @deprecated
+     */
     @Deprecated
     private final SettingsModelBoolean m_sortInMemory =
         new SettingsModelBoolean(GroupByNodeModel.CFG_SORT_IN_MEMORY, false);
@@ -121,45 +124,46 @@ public class GroupByNodeDialog extends NodeDialogPane {
     private final SettingsModelBoolean m_retainOrder =
         new SettingsModelBoolean(GroupByNodeModel.CFG_RETAIN_ORDER, false);
 
-    private final SettingsModelBoolean m_inMemory =
-        new SettingsModelBoolean(GroupByNodeModel.CFG_IN_MEMORY, false);
+    private final SettingsModelBoolean m_inMemory = new SettingsModelBoolean(GroupByNodeModel.CFG_IN_MEMORY, false);
 
     private final SettingsModelString m_columnNamePolicy =
-        new SettingsModelString(GroupByNodeModel.CFG_COLUMN_NAME_POLICY,
-                ColumnNamePolicy.getDefault().getLabel());
+        new SettingsModelString(GroupByNodeModel.CFG_COLUMN_NAME_POLICY, ColumnNamePolicy.getDefault().getLabel());
 
     private final DialogComponentColumnFilter m_groupCol;
 
     private final AggregationColumnPanel m_aggrColPanel = new AggregationColumnPanel();
 
     private final DataTypeAggregationPanel m_dataTypeAggrPanel =
-            new DataTypeAggregationPanel(GroupByNodeModel.CFG_DATA_TYPE_AGGREGATORS);
+        new DataTypeAggregationPanel(GroupByNodeModel.CFG_DATA_TYPE_AGGREGATORS);
 
     private final PatternAggregationPanel m_patternAggrPanel =
-            new PatternAggregationPanel(GroupByNodeModel.CFG_PATTERN_AGGREGATORS);
+        new PatternAggregationPanel(GroupByNodeModel.CFG_PATTERN_AGGREGATORS);
 
     //used to now the implementation version of the node
     private final SettingsModelInteger m_version = GroupByNodeModel.createVersionModel();
-    /**Constructor for class GroupByNodeDialog. */
+
+    /** Constructor for class GroupByNodeDialog. */
     public GroupByNodeDialog() {
         this(false, false);
     }
 
-    /**Constructor for class GroupByNodeDialog.
+    /**
+     * Constructor for class GroupByNodeDialog.
+     *
      * @param showPattern <code>true</code> if the pattern based aggregation selection should be displayed
      * @param showType <code>true</code> if the type based aggregation selection should be displayed
      * @since 2.11
      */
     @SuppressWarnings("unchecked")
     public GroupByNodeDialog(final boolean showPattern, final boolean showType) {
-//create the root tab
+        //create the root tab
         m_tabs = new JTabbedPane();
         m_tabs.setBorder(BorderFactory.createTitledBorder(""));
         m_tabs.setOpaque(true);
 
-//The group column box
+        //The group column box
         m_groupCol = new DialogComponentColumnFilter(m_groupByCols, 0, false,
-                new ColumnFilterPanel.ValueClassFilter(DataValue.class), false);
+            new ColumnFilterPanel.ValueClassFilter(DataValue.class), false);
         m_groupCol.setIncludeTitle(" Group column(s) ");
         m_groupCol.setExcludeTitle(" Available column(s) ");
         //we are only interested in showing the invalid include columns
@@ -182,8 +186,8 @@ public class GroupByNodeDialog extends NodeDialogPane {
         c.weighty = 1;
         final JPanel groupColFilterPanel = m_groupCol.getComponentPanel();
         groupColFilterPanel.setLayout(new GridLayout(1, 1));
-        groupColFilterPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), " Group settings "));
+        groupColFilterPanel
+            .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Group settings "));
         groupColPanel.add(groupColFilterPanel, c);
         m_tabs.addTab("Groups", groupColPanel);
 
@@ -205,7 +209,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
             m_tabs.addTab(DataTypeAggregationPanel.DEFAULT_TITLE, typeBasedPanel);
         }
 
-//calculate the component size
+        //calculate the component size
         final int width = (int)m_tabs.getMinimumSize().getWidth();
         final Dimension dimension = new Dimension(width, DEFAULT_HEIGHT);
         m_tabs.setMinimumSize(dimension);
@@ -234,7 +238,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
             }
         });
 
-//add description tab
+        //add description tab
         final Component descriptionTab = AggregationMethods.createDescriptionPane();
         descriptionTab.setMinimumSize(dimension);
         descriptionTab.setMaximumSize(dimension);
@@ -244,6 +248,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
 
     /**
      * Add additional panel (for example for pivoting) to this dialog.
+     *
      * @param p the panel to add to tabs
      * @param title the title for the new tab
      */
@@ -254,6 +259,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
 
     /**
      * Add additional panel (for example for pivoting) to this dialog.
+     *
      * @param p the panel to add to tabs
      * @param title the title for the new tab
      * @param index the index the {@link JPanel} should be added
@@ -271,23 +277,23 @@ public class GroupByNodeDialog extends NodeDialogPane {
     }
 
     private JComponent createAdvancedOptionsBox() {
-        final DialogComponent maxNoneNumericVals = new DialogComponentNumber(m_maxUniqueValues,
-                    "Maximum unique values per group", new Integer(1000), 5);
-        maxNoneNumericVals.setToolTipText("All groups with more unique values "
-                + "will be skipped and replaced by a missing value");
+        final DialogComponent maxNoneNumericVals =
+            new DialogComponentNumber(m_maxUniqueValues, "Maximum unique values per group", new Integer(1000), 5);
+        maxNoneNumericVals
+            .setToolTipText("All groups with more unique values " + "will be skipped and replaced by a missing value");
         final DialogComponentStringSelection colNamePolicy = new DialogComponentStringSelection(m_columnNamePolicy,
-                    "Column naming:", ColumnNamePolicy.getPolicyLabels());
+            "Column naming:", ColumnNamePolicy.getPolicyLabels());
         final DialogComponent enableHilite = new DialogComponentBoolean(m_enableHilite, "Enable hiliting");
         final DialogComponentString valueDelimiter =
-                new DialogComponentString(m_valueDelimiter, "Value delimiter", false, 2);
+            new DialogComponentString(m_valueDelimiter, "Value delimiter", false, 2);
         final DialogComponent inMemory = new DialogComponentBoolean(m_inMemory, "Process in memory");
         inMemory.setToolTipText("Processes all data in memory.");
         final DialogComponent retainOrder = new DialogComponentBoolean(m_retainOrder, "Retain row order");
         retainOrder.setToolTipText("Retains the original row order of the input table.");
 
         final JPanel rootPanel = new JPanel(new GridBagLayout());
-        rootPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
-            " Advanced settings "));
+        rootPanel
+            .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Advanced settings "));
         final GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.LINE_START;
         c.weightx = 0;
@@ -328,18 +334,16 @@ public class GroupByNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * Synchronizes the available aggregation column list and the
-     * selected group columns.
+     * Synchronizes the available aggregation column list and the selected group columns.
      */
     protected final void columnsChanged() {
         excludeColumns(m_groupByCols.getIncludeList());
     }
 
     /**
-     * Synchronizes the available aggregation column list and the
-     * selected columns.
-     * @param columns the column that are changed and need to be excluded
-     *        from the aggregation list
+     * Synchronizes the available aggregation column list and the selected columns.
+     *
+     * @param columns the column that are changed and need to be excluded from the aggregation list
      */
     protected void excludeColumns(final List<String> columns) {
         m_aggrColPanel.excludeColsChange(columns);
@@ -347,8 +351,8 @@ public class GroupByNodeDialog extends NodeDialogPane {
 
     /** {@inheritDoc} */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+        throws NotConfigurableException {
         assert (specs.length == 1);
         final DataTableSpec spec = (DataTableSpec)specs[0];
         try {
@@ -363,8 +367,8 @@ public class GroupByNodeDialog extends NodeDialogPane {
             //this option was introduced in Knime 2.0
             m_aggrColPanel.loadSettingsFrom(settings, spec);
         } catch (final InvalidSettingsException e) {
-            final List<ColumnAggregator> columnMethods = GroupByNodeModel.compGetColumnMethods(spec,
-                        m_groupByCols.getIncludeList(), settings);
+            final List<ColumnAggregator> columnMethods =
+                GroupByNodeModel.compGetColumnMethods(spec, m_groupByCols.getIncludeList(), settings);
             m_aggrColPanel.initialize(spec, columnMethods);
         }
         try {
@@ -391,7 +395,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         } catch (final InvalidSettingsException e) {
             m_valueDelimiter.setStringValue(GlobalSettings.STANDARD_DELIMITER);
         }
-        m_groupCol.loadSettingsFrom(settings, new DataTableSpec[] {spec});
+        m_groupCol.loadSettingsFrom(settings, new DataTableSpec[]{spec});
         columnsChanged();
         try {
             m_version.loadSettingsFrom(settings);
@@ -404,8 +408,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         validateSettings(settings);
         m_groupCol.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
@@ -424,13 +427,12 @@ public class GroupByNodeDialog extends NodeDialogPane {
     }
 
     private void validateSettings(final NodeSettingsWO settings) throws InvalidSettingsException {
-      //check if the dialog contains invalid group columns
+        //check if the dialog contains invalid group columns
         final Set<String> invalidInclCols = m_groupCol.getInvalidIncludeColumns();
         if (invalidInclCols != null && !invalidInclCols.isEmpty()) {
-            throw new InvalidSettingsException(invalidInclCols.size()  + " invalid group columns found.");
+            throw new InvalidSettingsException(invalidInclCols.size() + " invalid group columns found.");
         }
-        final ColumnNamePolicy columnNamePolicy =
-                ColumnNamePolicy.getPolicy4Label(m_columnNamePolicy.getStringValue());
+        final ColumnNamePolicy columnNamePolicy = ColumnNamePolicy.getPolicy4Label(m_columnNamePolicy.getStringValue());
         if (columnNamePolicy == null) {
             throw new InvalidSettingsException("Invalid column name policy");
         }

@@ -91,9 +91,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
- * The {@link NodeModel} implementation of the pivot node which uses
- * the {@link GroupByNodeModel} class implementations to create an intermediate
- * group-by table from which the pivoting table is extracted.
+ * The {@link NodeModel} implementation of the pivot node which uses the {@link GroupByNodeModel} class implementations
+ * to create an intermediate group-by table from which the pivoting table is extracted.
  *
  * @author Thomas Gabriel, KNIME.com AG, Switzerland
  */
@@ -114,7 +113,6 @@ public class Pivot2NodeModel extends GroupByNodeModel {
          * constructor time to reduce number of DataType accesses during compare() call
          */
         private final DataValueComparator[] m_colComparators;
-
 
         /**
          * @param colNames column names to sort
@@ -179,22 +177,19 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         }
     }
 
-    /** Configuration key of the selected group by columns.*/
+    /** Configuration key of the selected group by columns. */
     protected static final String CFG_PIVOT_COLUMNS = "pivotColumns";
 
-    private final SettingsModelFilterString m_pivotCols =
-        new SettingsModelFilterString(CFG_PIVOT_COLUMNS);
+    private final SettingsModelFilterString m_pivotCols = new SettingsModelFilterString(CFG_PIVOT_COLUMNS);
 
-    private final SettingsModelBoolean m_ignoreMissValues =
-        Pivot2NodeDialog.createSettingsMissingValues();
+    private final SettingsModelBoolean m_ignoreMissValues = Pivot2NodeDialog.createSettingsMissingValues();
 
-    private final SettingsModelBoolean m_totalAggregation =
-        Pivot2NodeDialog.createSettingsTotal();
+    private final SettingsModelBoolean m_totalAggregation = Pivot2NodeDialog.createSettingsTotal();
 
-    private final SettingsModelBoolean m_ignoreDomain =
-        Pivot2NodeDialog.createSettingsIgnoreDomain();
+    private final SettingsModelBoolean m_ignoreDomain = Pivot2NodeDialog.createSettingsIgnoreDomain();
 
     private static final String PIVOT_COLUMN_DELIMITER = "_";
+
     private static final String PIVOT_AGGREGATION_DELIMITER = "+";
 
     private final HiLiteHandler m_totalGroupsHilite = new HiLiteHandler();
@@ -210,7 +205,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         // we have to explicitly set all not pivot columns in the exclude list of the SettingsModelFilterString. The
         // DialogComponentColumnFilter component always uses the exclude/ list to update the component if we don't set
         // the exclude list all columns are added as group by columns.
-        final DataTableSpec origSpec = (DataTableSpec) inSpecs[0];
+        final DataTableSpec origSpec = (DataTableSpec)inSpecs[0];
         final Collection<String> exclList = getExcludeList(origSpec, m_pivotCols.getIncludeList());
         m_pivotCols.setExcludeList(exclList);
         final List<String> pivotCols = m_pivotCols.getIncludeList();
@@ -232,50 +227,41 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             throw new InvalidSettingsException("No aggregation columns selected.");
         }
 
-        final DataTableSpec groupRowsSpec =
-            createGroupBySpec(origSpec, groupCols);
+        final DataTableSpec groupRowsSpec = createGroupBySpec(origSpec, groupCols);
         if (m_ignoreMissValues.getBooleanValue()) {
-            final Set<String>[] combPivots = createCombinedPivots(groupSpec,
-                    pivotCols);
+            final Set<String>[] combPivots = createCombinedPivots(groupSpec, pivotCols);
             for (final Set<String> combPivot : combPivots) {
                 if (combPivot == null) {
-                    return new DataTableSpec[] {null, groupRowsSpec, null};
+                    return new DataTableSpec[]{null, groupRowsSpec, null};
                 }
             }
-            final DataTableSpec outSpec = createOutSpec(groupSpec, combPivots,
-                /* ignored */ new HashMap<String, Integer>(), null);
+            final DataTableSpec outSpec =
+                createOutSpec(groupSpec, combPivots, /* ignored */ new HashMap<String, Integer>(), null);
             if (m_totalAggregation.getBooleanValue()) {
                 @SuppressWarnings("unchecked")
-                final
-                DataTableSpec totalGroupSpec = createGroupBySpec(origSpec,
-                        Collections.EMPTY_LIST);
+                final DataTableSpec totalGroupSpec = createGroupBySpec(origSpec, Collections.EMPTY_LIST);
                 final DataColumnSpec[] pivotRowsSpec =
-                    new DataColumnSpec[outSpec.getNumColumns()
-                                       + totalGroupSpec.getNumColumns()];
+                    new DataColumnSpec[outSpec.getNumColumns() + totalGroupSpec.getNumColumns()];
                 for (int i = 0; i < outSpec.getNumColumns(); i++) {
                     pivotRowsSpec[i] = outSpec.getColumnSpec(i);
                 }
                 final int totalOffset = outSpec.getNumColumns();
                 for (int i = 0; i < totalGroupSpec.getNumColumns(); i++) {
-                    pivotRowsSpec[i + totalOffset] =
-                        totalGroupSpec.getColumnSpec(i);
+                    pivotRowsSpec[i + totalOffset] = totalGroupSpec.getColumnSpec(i);
                 }
-                return new DataTableSpec[] {outSpec, groupRowsSpec,
-                        new DataTableSpec(pivotRowsSpec)};
+                return new DataTableSpec[]{outSpec, groupRowsSpec, new DataTableSpec(pivotRowsSpec)};
             } else {
-                return new DataTableSpec[] {outSpec, groupRowsSpec, outSpec};
+                return new DataTableSpec[]{outSpec, groupRowsSpec, outSpec};
             }
         } else {
-            return new DataTableSpec[] {null, groupRowsSpec, null};
+            return new DataTableSpec[]{null, groupRowsSpec, null};
         }
     }
 
-    private Set<String>[] createCombinedPivots(final DataTableSpec groupSpec,
-            final List<String> pivotCols) {
+    private Set<String>[] createCombinedPivots(final DataTableSpec groupSpec, final List<String> pivotCols) {
         final int[] pivotIdx = new int[pivotCols.size()];
         @SuppressWarnings("unchecked")
-        final
-        Set<String>[] combPivots = new Set[pivotIdx.length];
+        final Set<String>[] combPivots = new Set[pivotIdx.length];
         for (int i = 0; i < pivotIdx.length; i++) {
             pivotIdx[i] = groupSpec.findColumnIndex(pivotCols.get(i));
         }
@@ -306,21 +292,18 @@ public class Pivot2NodeModel extends GroupByNodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws Exception {
-        final BufferedDataTable table = (BufferedDataTable) inData[0];
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
+        final BufferedDataTable table = (BufferedDataTable)inData[0];
         final List<String> groupAndPivotCols = createAllColumns();
         final BufferedDataTable groupTable;
         final String orderPivotColumnName;
 
-        ExecutionContext groupAndPivotExec =
-            exec.createSubExecutionContext(0.5);
+        ExecutionContext groupAndPivotExec = exec.createSubExecutionContext(0.5);
         ExecutionContext groupExec = exec.createSubExecutionContext(0.25);
         ExecutionContext pivotExec = exec.createSubExecutionContext(0.25);
 
         double progMainTotal = 0.0;
-        double progMainTableAppendIndexForSort =
-            isProcessInMemory() || isRetainOrder() ? 1.0 : 0.0;
+        double progMainTableAppendIndexForSort = isProcessInMemory() || isRetainOrder() ? 1.0 : 0.0;
         progMainTotal += progMainTableAppendIndexForSort;
         double progMainTableGroup = 5.0;
         progMainTotal += progMainTableGroup;
@@ -330,20 +313,16 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         progMainTotal += progMainTableGetPivots;
         double progMainTableFillPivots = 1.0;
         progMainTotal += progMainTableFillPivots;
-        double progMainTableRestoreSort =
-            isProcessInMemory() || isRetainOrder() ? 1.0 : 0.0;
+        double progMainTableRestoreSort = isProcessInMemory() || isRetainOrder() ? 1.0 : 0.0;
         progMainTotal += progMainTableRestoreSort;
-        double progMainTableReplaceRowKey =
-            isProcessInMemory() ? 1.0 : 0.0;
+        double progMainTableReplaceRowKey = isProcessInMemory() ? 1.0 : 0.0;
         progMainTotal += progMainTableReplaceRowKey;
 
         if (isProcessInMemory() || isRetainOrder()) {
             exec.setMessage("Keeping row order");
-            final String retainOrderCol = DataTableSpec.getUniqueColumnName(
-                    table.getDataTableSpec(), "#pivot_order#");
+            final String retainOrderCol = DataTableSpec.getUniqueColumnName(table.getDataTableSpec(), "#pivot_order#");
             // append temp. id column with minimum-aggregation method
-            final ColumnAggregator[] colAggregators =
-                getColumnAggregators().toArray(new ColumnAggregator[0]);
+            final ColumnAggregator[] colAggregators = getColumnAggregators().toArray(new ColumnAggregator[0]);
             final Set<String> workingCols = new LinkedHashSet<String>();
             workingCols.addAll(groupAndPivotCols);
             for (final ColumnAggregator ca : colAggregators) {
@@ -351,61 +330,49 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             }
             workingCols.add(retainOrderCol);
             final BufferedDataTable appTable = GroupByTable.appendOrderColumn(
-                    groupAndPivotExec.createSubExecutionContext(
-                            progMainTableAppendIndexForSort / progMainTotal),
-                    table, workingCols, retainOrderCol);
-            final DataColumnSpec retainOrderColSpec =
-                    appTable.getSpec().getColumnSpec(retainOrderCol);
-            final ColumnAggregator[] aggrs =
-                    new ColumnAggregator[colAggregators.length + 1];
-            System.arraycopy(colAggregators, 0, aggrs,
-                    0, colAggregators.length);
-            aggrs[colAggregators.length] = new ColumnAggregator(
-                    retainOrderColSpec,
-                    AggregationMethods.getRowOrderMethod(), true);
-            orderPivotColumnName = getColumnNamePolicy().createColumName(
-                    aggrs[colAggregators.length]);
+                groupAndPivotExec.createSubExecutionContext(progMainTableAppendIndexForSort / progMainTotal), table,
+                workingCols, retainOrderCol);
+            final DataColumnSpec retainOrderColSpec = appTable.getSpec().getColumnSpec(retainOrderCol);
+            final ColumnAggregator[] aggrs = new ColumnAggregator[colAggregators.length + 1];
+            System.arraycopy(colAggregators, 0, aggrs, 0, colAggregators.length);
+            aggrs[colAggregators.length] =
+                new ColumnAggregator(retainOrderColSpec, AggregationMethods.getRowOrderMethod(), true);
+            orderPivotColumnName = getColumnNamePolicy().createColumName(aggrs[colAggregators.length]);
             exec.setMessage("Grouping main table");
-            final GroupByTable groupByTable = createGroupByTable(
-                    groupAndPivotExec.createSubExecutionContext(
-                            progMainTableGroup / progMainTotal),
+            final GroupByTable groupByTable =
+                createGroupByTable(groupAndPivotExec.createSubExecutionContext(progMainTableGroup / progMainTotal),
                     appTable, groupAndPivotCols, isProcessInMemory(),
-                    false /* retain order always false; handled by pivoting */,
-                    Arrays.asList(aggrs));
+                    false /* retain order always false; handled by pivoting */, Arrays.asList(aggrs));
             // table is not sorted by group&pivot columns; if process in memory
             // true then sort table by group&pivot columns
             final BufferedDataTable origGroupByTable = groupByTable.getBufferedTable();
             if (isProcessInMemory()) {
                 exec.setMessage("Sorting group table");
                 //ensure that missing values are at the end by setting the boolean flag
-                final BufferedDataTableSorter sortedGroupByTable = new BufferedDataTableSorter(
-                    origGroupByTable, new InMemoryRowComparator(groupAndPivotCols, origGroupByTable.getSpec()));
-                groupTable = sortedGroupByTable.sort(
-                    groupAndPivotExec.createSubExecutionContext(progMainTableInMemSort / progMainTotal));
+                final BufferedDataTableSorter sortedGroupByTable = new BufferedDataTableSorter(origGroupByTable,
+                    new InMemoryRowComparator(groupAndPivotCols, origGroupByTable.getSpec()));
+                groupTable = sortedGroupByTable
+                    .sort(groupAndPivotExec.createSubExecutionContext(progMainTableInMemSort / progMainTotal));
             } else {
                 groupTable = origGroupByTable;
             }
         } else {
             exec.setMessage("Grouping main table");
-            final GroupByTable groupByTable = createGroupByTable(
-                    groupAndPivotExec.createSubExecutionContext(
-                            progMainTableGroup / progMainTotal),
-                    table, groupAndPivotCols,
-                    isProcessInMemory(), false, getColumnAggregators());
+            final GroupByTable groupByTable =
+                createGroupByTable(groupAndPivotExec.createSubExecutionContext(progMainTableGroup / progMainTotal),
+                    table, groupAndPivotCols, isProcessInMemory(), false, getColumnAggregators());
             groupTable = groupByTable.getBufferedTable();
             orderPivotColumnName = null;
         }
         final List<String> pivotCols = m_pivotCols.getIncludeList();
         final int[] pivotIdx = new int[pivotCols.size()];
         final DataTableSpec groupSpec = groupTable.getSpec();
-        final Set<String>[] combPivots =
-            createCombinedPivots(groupSpec, pivotCols);
+        final Set<String>[] combPivots = createCombinedPivots(groupSpec, pivotCols);
         for (int i = 0; i < pivotIdx.length; i++) {
             pivotIdx[i] = groupSpec.findColumnIndex(pivotCols.get(i));
         }
         exec.setProgress("Determining pivots...");
-        ExecutionContext fillExec = groupAndPivotExec.createSubExecutionContext(
-                progMainTableGetPivots / progMainTotal);
+        ExecutionContext fillExec = groupAndPivotExec.createSubExecutionContext(progMainTableGetPivots / progMainTotal);
         final long groupTableSize = groupTable.size();
         long groupIndex = 0;
         for (final DataRow row : groupTable) {
@@ -422,48 +389,36 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                     combPivots[i].add(cell.toString());
                 }
             }
-            fillExec.setProgress(
-                    groupIndex++ / (double)groupTableSize,
-                    String.format("Group \"%s\" (%d/%d)" ,
-                            row.getKey(), groupIndex, groupTableSize));
+            fillExec.setProgress(groupIndex++ / (double)groupTableSize,
+                String.format("Group \"%s\" (%d/%d)", row.getKey(), groupIndex, groupTableSize));
             fillExec.checkCanceled();
         }
 
-        final Map<String, Integer> pivotStarts =
-            new LinkedHashMap<String, Integer>();
-        final DataTableSpec outSpec = createOutSpec(groupSpec, combPivots,
-                pivotStarts, orderPivotColumnName);
+        final Map<String, Integer> pivotStarts = new LinkedHashMap<String, Integer>();
+        final DataTableSpec outSpec = createOutSpec(groupSpec, combPivots, pivotStarts, orderPivotColumnName);
         exec.setProgress("Filling pivot table");
-        BufferedDataTable pivotTable = fillPivotTable(
-                groupTable, outSpec, pivotStarts,
-                groupAndPivotExec.createSubExecutionContext(
-                        progMainTableFillPivots / progMainTotal),
-                        orderPivotColumnName);
+        BufferedDataTable pivotTable = fillPivotTable(groupTable, outSpec, pivotStarts,
+            groupAndPivotExec.createSubExecutionContext(progMainTableFillPivots / progMainTotal), orderPivotColumnName);
 
         if (orderPivotColumnName != null) {
             exec.setMessage("Restoring row order");
-            final SortedTable sortedPivotTable = new SortedTable(pivotTable,
-               Arrays.asList(new String[]{orderPivotColumnName}),
-               new boolean[]{true}, groupAndPivotExec.createSubExecutionContext(
-                       progMainTableRestoreSort / progMainTotal));
+            final SortedTable sortedPivotTable =
+                new SortedTable(pivotTable, Arrays.asList(new String[]{orderPivotColumnName}), new boolean[]{true},
+                    groupAndPivotExec.createSubExecutionContext(progMainTableRestoreSort / progMainTotal));
             pivotTable = sortedPivotTable.getBufferedDataTable();
-            final ColumnRearranger colre =
-                new ColumnRearranger(pivotTable.getSpec());
+            final ColumnRearranger colre = new ColumnRearranger(pivotTable.getSpec());
             colre.remove(orderPivotColumnName);
-            pivotTable = exec.createColumnRearrangeTable(pivotTable, colre,
-                    exec.createSilentSubProgress(0.0));
+            pivotTable = exec.createColumnRearrangeTable(pivotTable, colre, exec.createSilentSubProgress(0.0));
         }
         // temp fix for bug 3286
         if (isProcessInMemory()) {
             // if process in memory is true, RowKey's needs to be re-computed
             final BufferedDataContainer rowkeyBuf =
-                groupAndPivotExec.createSubExecutionContext(
-                        progMainTableReplaceRowKey / progMainTotal).
-                        createDataContainer(pivotTable.getSpec());
+                groupAndPivotExec.createSubExecutionContext(progMainTableReplaceRowKey / progMainTotal)
+                    .createDataContainer(pivotTable.getSpec());
             long rowIndex = 0;
             for (DataRow row : pivotTable) {
-                rowkeyBuf.addRowToTable(new DefaultRow(
-                        RowKey.createRowKey(rowIndex++), row));
+                rowkeyBuf.addRowToTable(new DefaultRow(RowKey.createRowKey(rowIndex++), row));
             }
             rowkeyBuf.close();
             pivotTable = rowkeyBuf.getTable();
@@ -479,21 +434,17 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         progPivotTotal += progPivotFillMissing;
         double progPivotFillPivots = 1.0;
         progPivotTotal += progPivotFillPivots;
-        double progPivotOverallTotals =
-            m_totalAggregation.getBooleanValue() ? 5.0 : 0.0;
+        double progPivotOverallTotals = m_totalAggregation.getBooleanValue() ? 5.0 : 0.0;
         progPivotTotal += progPivotOverallTotals;
 
         // create pivot table only on pivot columns (for grouping)
         // perform pivoting: result in single line
-        final GroupByTable rowGroup = createGroupByTable(
-                pivotExec.createSubExecutionContext(
-                        progPivotGroup / progPivotTotal), table,
-                m_pivotCols.getIncludeList(), isProcessInMemory(),
-                isRetainOrder(), getColumnAggregators());
+        final GroupByTable rowGroup =
+            createGroupByTable(pivotExec.createSubExecutionContext(progPivotGroup / progPivotTotal), table,
+                m_pivotCols.getIncludeList(), isProcessInMemory(), isRetainOrder(), getColumnAggregators());
         final BufferedDataTable rowGroupTable = rowGroup.getBufferedTable();
         // fill group columns with missing cells
-        final ColumnRearranger colre = new ColumnRearranger(
-                rowGroupTable.getDataTableSpec());
+        final ColumnRearranger colre = new ColumnRearranger(rowGroupTable.getDataTableSpec());
         for (int i = 0; i < getGroupByColumns().size(); i++) {
             final DataColumnSpec cspec = outSpec.getColumnSpec(i);
             final CellFactory factory = new SingleCellFactory(cspec) {
@@ -505,41 +456,30 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             };
             colre.insertAt(i, factory);
         }
-        final BufferedDataTable groupedRowTable =
-            exec.createColumnRearrangeTable(rowGroupTable, colre,
-                    pivotExec.createSubExecutionContext(
-                            progPivotFillMissing / progPivotTotal));
-        BufferedDataTable pivotRowsTable = fillPivotTable(groupedRowTable,
-                outSpec, pivotStarts, pivotExec.createSubExecutionContext(
-                        progPivotFillPivots / progPivotTotal), null);
+        final BufferedDataTable groupedRowTable = exec.createColumnRearrangeTable(rowGroupTable, colre,
+            pivotExec.createSubExecutionContext(progPivotFillMissing / progPivotTotal));
+        BufferedDataTable pivotRowsTable = fillPivotTable(groupedRowTable, outSpec, pivotStarts,
+            pivotExec.createSubExecutionContext(progPivotFillPivots / progPivotTotal), null);
         if (orderPivotColumnName != null) {
-            final ColumnRearranger colre2 = new ColumnRearranger(
-                    pivotRowsTable.getSpec());
+            final ColumnRearranger colre2 = new ColumnRearranger(pivotRowsTable.getSpec());
             colre2.remove(orderPivotColumnName);
-            pivotRowsTable = exec.createColumnRearrangeTable(pivotRowsTable,
-                    colre2, exec.createSilentSubProgress(0.0));
+            pivotRowsTable = exec.createColumnRearrangeTable(pivotRowsTable, colre2, exec.createSilentSubProgress(0.0));
         }
 
         // total aggregation without grouping
         if (m_totalAggregation.getBooleanValue()) {
             @SuppressWarnings("unchecked")
-            final GroupByTable totalGroup = createGroupByTable(
-                    pivotExec.createSubExecutionContext(
-                            progPivotOverallTotals / progPivotTotal), table,
-                    Collections.EMPTY_LIST, isProcessInMemory(),
-                    isRetainOrder(), getColumnAggregators());
-            final BufferedDataTable totalGroupTable =
-                totalGroup.getBufferedTable();
+            final GroupByTable totalGroup =
+                createGroupByTable(pivotExec.createSubExecutionContext(progPivotOverallTotals / progPivotTotal), table,
+                    Collections.EMPTY_LIST, isProcessInMemory(), isRetainOrder(), getColumnAggregators());
+            final BufferedDataTable totalGroupTable = totalGroup.getBufferedTable();
 
             final DataTableSpec pivotsRowsSpec = pivotRowsTable.getSpec();
             final DataTableSpec totalGroupSpec = totalGroupTable.getSpec();
-            final DataTableSpec overallTotalSpec =
-                    new DataTableSpec(pivotsRowsSpec, totalGroupSpec);
-            final BufferedDataContainer buf = exec.createDataContainer(
-                    overallTotalSpec);
+            final DataTableSpec overallTotalSpec = new DataTableSpec(pivotsRowsSpec, totalGroupSpec);
+            final BufferedDataContainer buf = exec.createDataContainer(overallTotalSpec);
             if (pivotRowsTable.size() > 0) {
-                final List<DataCell> pivotTotalsCells =
-                    new ArrayList<DataCell>();
+                final List<DataCell> pivotTotalsCells = new ArrayList<DataCell>();
                 final DataRow pivotsRow = pivotRowsTable.iterator().next();
                 for (final DataCell cell : pivotsRow) {
                     pivotTotalsCells.add(cell);
@@ -548,8 +488,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                 for (final DataCell cell : totalGroupRow) {
                     pivotTotalsCells.add(cell);
                 }
-                buf.addRowToTable(new DefaultRow(new RowKey("Totals"),
-                        pivotTotalsCells));
+                buf.addRowToTable(new DefaultRow(new RowKey("Totals"), pivotTotalsCells));
             }
             buf.close();
             pivotRowsTable = buf.getTable();
@@ -560,23 +499,20 @@ public class Pivot2NodeModel extends GroupByNodeModel {
          * the final hilite handler (mapping) for port #1 AND #2 (bug 3270) */
         exec.setMessage("Creating group totals");
         // create group table only on group columns; no pivoting
-        final BufferedDataTable columnGroupTable = createGroupByTable(
-                groupExec, table,
-                getGroupByColumns()).getBufferedTable();
+        final BufferedDataTable columnGroupTable =
+            createGroupByTable(groupExec, table, getGroupByColumns()).getBufferedTable();
 
-        return new PortObject[] {
-                // pivot table
-                pivotTable,
-                // group totals
-                columnGroupTable,
-                // pivot and overall totals
-                pivotRowsTable};
+        return new PortObject[]{
+            // pivot table
+            pivotTable,
+            // group totals
+            columnGroupTable,
+            // pivot and overall totals
+            pivotRowsTable};
     }
 
-    private DataTableSpec createOutSpec(final DataTableSpec groupSpec,
-            final Set<String>[] combPivots,
-            final Map<String, Integer> pivotStarts,
-            final String orderPivotColumnName) {
+    private DataTableSpec createOutSpec(final DataTableSpec groupSpec, final Set<String>[] combPivots,
+        final Map<String, Integer> pivotStarts, final String orderPivotColumnName) {
         final List<String> groupCols = getGroupByColumns();
         final List<String> groupAndPivotCols = createAllColumns();
         final List<String> pivots = new ArrayList<String>();
@@ -597,9 +533,8 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                 }
                 final String name = cspec.getName();
                 if (!groupAndPivotCols.contains(name)) {
-                    final DataColumnSpec pivotCSpec = new DataColumnSpecCreator(
-                            p + PIVOT_AGGREGATION_DELIMITER + name,
-                            cspec.getType()).createSpec();
+                    final DataColumnSpec pivotCSpec =
+                        new DataColumnSpecCreator(p + PIVOT_AGGREGATION_DELIMITER + name, cspec.getType()).createSpec();
                     cspecs.add(pivotCSpec);
                 }
             }
@@ -612,17 +547,13 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         return new DataTableSpec(cspecs.toArray(new DataColumnSpec[0]));
     }
 
-    private BufferedDataTable fillPivotTable(final BufferedDataTable groupTable,
-            final DataTableSpec pivotSpec,
-            final Map<String, Integer> pivotStarts,
-            final ExecutionContext exec,
-            final String orderPivotColumnName)
+    private BufferedDataTable fillPivotTable(final BufferedDataTable groupTable, final DataTableSpec pivotSpec,
+        final Map<String, Integer> pivotStarts, final ExecutionContext exec, final String orderPivotColumnName)
         throws CanceledExecutionException {
         final BufferedDataContainer buf = exec.createDataContainer(pivotSpec);
         final List<String> pivotCols = m_pivotCols.getIncludeList();
         final int pivotCount = pivotCols.size();
-        final List<String> groupCols =
-            new ArrayList<String>(getGroupByColumns());
+        final List<String> groupCols = new ArrayList<String>(getGroupByColumns());
         groupCols.removeAll(pivotCols);
         final int groupCount = groupCols.size();
         final DataTableSpec groupSpec = groupTable.getSpec();
@@ -648,11 +579,10 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                         }
                     }
                     outcells[i] = cell;
-                // is pivot column
+                    // is pivot column
                 } else if (i < (groupCount + pivotCount)) {
                     // check for missing pivots
-                    if (m_ignoreMissValues.getBooleanValue()
-                            && cell.isMissing()) {
+                    if (m_ignoreMissValues.getBooleanValue() && cell.isMissing()) {
                         for (int j = 0; j < outcells.length; j++) {
                             outcells[j] = null;
                         }
@@ -664,14 +594,13 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                     } else {
                         pivotColumn += PIVOT_COLUMN_DELIMITER + cell.toString();
                     }
-                // is a aggregation column
+                    // is a aggregation column
                 } else {
                     final int idx = pivotStarts.get(pivotColumn);
                     final int pivotIndex = i - pivotCount - groupCount;
                     final int pivotCellIndex = idx + pivotIndex;
                     if (orderPivotColumnName == null // if retain order is off
-                            || !groupSpec.getColumnSpec(i).getName().equals(
-                                    orderPivotColumnName)) {
+                        || !groupSpec.getColumnSpec(i).getName().equals(orderPivotColumnName)) {
                         outcells[pivotCellIndex] = cell;
                     } else { // temp retain column (type:IntCell)
                         final int retainIndex = outcells.length - 1;
@@ -679,8 +608,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                             outcells[retainIndex] = cell;
                         } else {
                             final DataValueComparator comp =
-                                pivotSpec.getColumnSpec(
-                                    retainIndex).getType().getComparator();
+                                pivotSpec.getColumnSpec(retainIndex).getType().getComparator();
                             if (comp.compare(outcells[retainIndex], cell) > 0) {
                                 outcells[retainIndex] = cell;
                             }
@@ -689,8 +617,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                 }
             }
             exec.setProgress(rowIndex++ / (double)totalRowCount,
-                    String.format("Group \"%s\" (%d/%d)" ,
-                            origRowKey, rowIndex, totalRowCount));
+                String.format("Group \"%s\" (%d/%d)", origRowKey, rowIndex, totalRowCount));
             exec.checkCanceled();
         }
         // write last group - if any.
@@ -701,8 +628,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         return buf.getTable();
     }
 
-    private void write(final BufferedDataContainer buf,
-            final DataCell[] outcells) {
+    private void write(final BufferedDataContainer buf, final DataCell[] outcells) {
         for (int j = 0; j < outcells.length; j++) {
             if (outcells[j] == null) {
                 outcells[j] = DataType.getMissingCell();
@@ -713,8 +639,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         buf.addRowToTable(outrow);
     }
 
-    private void createPivotColumns(final Set<String>[] combs,
-            final List<String> pivots, final int index) {
+    private void createPivotColumns(final Set<String>[] combs, final List<String> pivots, final int index) {
         if (index == combs.length || combs[index] == null) {
             return;
         }
@@ -744,8 +669,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         super.validateSettings(settings);
         m_pivotCols.validateSettings(settings);
         m_ignoreMissValues.validateSettings(settings);
@@ -755,8 +679,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         super.loadValidatedSettingsFrom(settings);
         m_pivotCols.loadSettingsFrom(settings);
         m_ignoreMissValues.loadSettingsFrom(settings);
