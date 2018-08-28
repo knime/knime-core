@@ -64,8 +64,10 @@ import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.AsyncNodeContainerUI;
+import org.knime.core.ui.node.workflow.async.AsyncNodeOutPortUI;
 import org.knime.core.ui.node.workflow.async.AsyncUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowAnnotationUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
@@ -260,6 +262,27 @@ public class AsyncUtil {
             return waitForTermination(asyncWa.apply((AsyncWorkflowAnnotationUI)wa), waitingMessage);
         } else {
             return syncWa.apply(wa);
+        }
+    }
+
+    /**
+     * Almost the same as {@link #wfmAsyncSwitch(Function, Function, WorkflowManagerUI, String)} but for
+     * {@link NodeOutPortUI}/{@link AsyncNodeOutPortUI}.
+     *
+     *
+     * @param syncNop
+     * @param asyncNop
+     * @param nop
+     * @param waitingMessage
+     * @return the actual result, possibly after some waiting in the async case
+     */
+    public static <T> T nopAsyncSwitch(final Function<NodeOutPortUI, T> syncNop,
+        final Function<AsyncNodeOutPortUI, CompletableFuture<T>> asyncNop, final NodeOutPortUI nop,
+        final String waitingMessage) {
+        if (nop instanceof AsyncNodeOutPortUI) {
+            return waitForTermination(asyncNop.apply((AsyncNodeOutPortUI)nop), waitingMessage);
+        } else {
+            return syncNop.apply(nop);
         }
     }
 

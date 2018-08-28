@@ -48,6 +48,8 @@
  */
 package org.knime.workbench.nodemonitorview;
 
+import java.util.concurrent.ExecutionException;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
@@ -70,6 +72,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
+import org.knime.core.ui.node.workflow.async.AsyncNodeOutPortUI;
 
 /**
  * Puts (simple, i.e. as string) content of one output port table into the table.
@@ -140,7 +143,18 @@ public class MonitorDataTable implements NodeMonitorTable {
                 throw new LoadingFailedException("Node not executed");
             }
             NodeOutPortUI nop = ncUI.getOutPort(index);
-            PortObject po = nop.getPortObject();
+
+
+            PortObject po;
+            if (nop instanceof AsyncNodeOutPortUI) {
+                try {
+                    po = ((AsyncNodeOutPortUI)nop).getPortObjectAsync().get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new LoadingFailedException("Problem retrieving the port object: " + e.getMessage());
+                }
+            } else {
+                po = nop.getPortObject();
+            }
             if (!((po instanceof BufferedDataTable) || (po instanceof KnowsRowCountTable))) {
                 // no table in port - ignore.
                 throw new LoadingFailedException("Unknown or no PortObject");
