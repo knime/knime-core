@@ -58,6 +58,8 @@ import org.knime.core.node.util.CheckUtils;
  */
 public final class BitVectorUtil {
 
+    private static final String NPE_MESSAGE = "Given BitVectorValues may not be null!";
+
     private BitVectorUtil() { /*empty*/
     }
 
@@ -79,7 +81,7 @@ public final class BitVectorUtil {
      */
     public static BitVectorValue and(final BitVectorValue bv1, final BitVectorValue bv2) {
         if (bv1 == null || bv2 == null) {
-            throw new NullPointerException("Given BitVectorValues may not be null!");
+            throw new NullPointerException(NPE_MESSAGE);
         }
 
         int noSparseBVC = sparseBitVectorCellCount(bv1, bv2);
@@ -107,7 +109,7 @@ public final class BitVectorUtil {
      */
     public static BitVectorValue or(final BitVectorValue bv1, final BitVectorValue bv2) {
         if (bv1 == null || bv2 == null) {
-            throw new NullPointerException("Given BitVectorValues may not be null!");
+            throw new NullPointerException(NPE_MESSAGE);
         }
 
         int noSparseBVC = sparseBitVectorCellCount(bv1, bv2);
@@ -135,7 +137,7 @@ public final class BitVectorUtil {
      */
     public static BitVectorValue xor(final BitVectorValue bv1, final BitVectorValue bv2) {
         if (bv1 == null || bv2 == null) {
-            throw new NullPointerException("Given BitVectorValues may not be null!");
+            throw new NullPointerException(NPE_MESSAGE);
         }
 
         int noSparseBVC = sparseBitVectorCellCount(bv1, bv2);
@@ -160,8 +162,8 @@ public final class BitVectorUtil {
      * @since 2.10
      */
     public static long cardinalityOfIntersection(final BitVectorValue bv1, final BitVectorValue bv2) {
-        CheckUtils.checkNotNull(bv1, "Given BitVectorValues may not be null!");
-        CheckUtils.checkNotNull(bv2, "Given BitVectorValues may not be null!");
+        CheckUtils.checkNotNull(bv1, NPE_MESSAGE);
+        CheckUtils.checkNotNull(bv2, NPE_MESSAGE);
 
         if (bv1 instanceof DenseBitVectorCell && bv2 instanceof DenseBitVectorCell) {
             return ((DenseBitVectorCell)bv1).cardinalityOfIntersection((DenseBitVectorCell)bv2);
@@ -194,8 +196,8 @@ public final class BitVectorUtil {
      * @since 2.10
      */
     public static long cardinalityOfRelativeComplement(final BitVectorValue bv1, final BitVectorValue bv2) {
-        CheckUtils.checkNotNull(bv1, "Given BitVectorValues may not be null!");
-        CheckUtils.checkNotNull(bv2, "Given BitVectorValues may not be null!");
+        CheckUtils.checkNotNull(bv1, NPE_MESSAGE);
+        CheckUtils.checkNotNull(bv2, NPE_MESSAGE);
 
         if (bv1 instanceof DenseBitVectorCell && bv2 instanceof DenseBitVectorCell) {
             return ((DenseBitVectorCell)bv1).cardinalityOfRelativeComplement((DenseBitVectorCell)bv2);
