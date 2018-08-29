@@ -128,14 +128,16 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
         // create extra info and pass it
         NodeUIInformation uiInfo =
             NodeUIInformation.builder().setNodeLocation(m_location.x, m_location.y, -1, -1).build();
+
+        // make sure the new node is selected and visible
+        m_viewer.deselectAll();
+
         m_newNode = createNewNode(uiInfo);
         if (m_newNode != null) {
             if (m_connectTo != null) {
                 autoConnectNewNode();
             }
         }
-        // make sure the new node is selected and visible
-        m_viewer.deselectAll();
     }
 
     /**
