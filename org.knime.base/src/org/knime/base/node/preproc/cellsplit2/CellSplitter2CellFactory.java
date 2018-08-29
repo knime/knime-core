@@ -104,8 +104,7 @@ class CellSplitter2CellFactory implements CellFactory {
      * @param inSpec the spec from the underlying input table
      * @param settings the settings object containing the user settings.
      */
-    public CellSplitter2CellFactory(final DataTableSpec inSpec,
-            final CellSplitter2Settings settings) {
+    public CellSplitter2CellFactory(final DataTableSpec inSpec, final CellSplitter2Settings settings) {
         CheckUtils.checkArgumentNotNull(settings);
 
         m_settings = settings;
@@ -122,9 +121,7 @@ class CellSplitter2CellFactory implements CellFactory {
 
     @Override
     public DataCell[] getCells(final DataRow row) {
-        if (m_settings.isGuessNumOfCols()
-                && m_settings.getNumOfColsGuessed() < 1
-                && m_settings.isOutputAsCols()) {
+        if (m_settings.isGuessNumOfCols() && m_settings.getNumOfColsGuessed() < 1 && m_settings.isOutputAsCols()) {
             // guess the number of columns before creating the table
             assert false;
             throw new IllegalStateException("Number of new columns is not set");
@@ -132,8 +129,7 @@ class CellSplitter2CellFactory implements CellFactory {
         if (m_colIdx < 0) {
             // the status should have checked this!
             assert false;
-            throw new IllegalStateException(
-                    "Input table doesn't contain selected column");
+            throw new IllegalStateException("Input table doesn't contain selected column");
         }
         if (m_tokenizerSettings == null) {
             throw new IllegalStateException("Incorrect user settings");
@@ -157,6 +153,7 @@ class CellSplitter2CellFactory implements CellFactory {
 
     /**
      * Extracts the string representation of the given cell and returns it.
+     * 
      * @param inputCell The cell to extract the string representation from.
      * @return The string representation of the given cell.
      * @since 2.6
@@ -172,9 +169,8 @@ class CellSplitter2CellFactory implements CellFactory {
     }
 
     /**
-     * Creates a tokenizer on the given string reader and prepares it with
-     * specific settings.
-     * and returns it.
+     * Creates a tokenizer on the given string reader and prepares it with specific settings. and returns it.
+     * 
      * @param inputReader The string reader to create a tokenizer on.
      * @param settings Tokenizer settings.
      * @return The tokenizer created on the string reader.
@@ -188,18 +184,15 @@ class CellSplitter2CellFactory implements CellFactory {
     }
 
     /**
-     * Tokenizes the string representation of the given data cell and returns
-     * an array of data cells. The array contains only one data cell, which
-     * is a collection cell. Whether it is a List or Set cell is specified in
-     * the settings. The collection cell contains string cells. For each
-     * token one string cell is created.
+     * Tokenizes the string representation of the given data cell and returns an array of data cells. The array contains
+     * only one data cell, which is a collection cell. Whether it is a List or Set cell is specified in the settings.
+     * The collection cell contains string cells. For each token one string cell is created.
+     * 
      * @param inputCell the cell to tokenize (its string representation)
-     * @return An array containing exactly one collection cell, storing string
-     * cells. For each token one string cell.
+     * @return An array containing exactly one collection cell, storing string cells. For each token one string cell.
      * @since 2.6
      */
-    private DataCell[] tokenizeAndCreateCollectionsCell(
-            final DataCell inputCell) {
+    private DataCell[] tokenizeAndCreateCollectionsCell(final DataCell inputCell) {
         DataCell[] result = new DataCell[1];
 
         // missing value handling
@@ -239,16 +232,16 @@ class CellSplitter2CellFactory implements CellFactory {
     }
 
     /**
-     * Tokenizes the string representation of the given data cell and returns
-     * an array of data cells containing the tokens.
+     * Tokenizes the string representation of the given data cell and returns an array of data cells containing the
+     * tokens.
+     * 
      * @param inputCell the cell to tokenize (its string representation)
      * @param numOfCells The number of cells to create, containing the tokens
-     * @return An arrays of cells containing the tokens. The length of the array
-     * is specified by <code>numOfCells</code>.
+     * @return An arrays of cells containing the tokens. The length of the array is specified by
+     *         <code>numOfCells</code>.
      * @since 2.6
      */
-    private DataCell[] tokenizeAndCreateCells(final DataCell inputCell,
-            final int numOfCells) {
+    private DataCell[] tokenizeAndCreateCells(final DataCell inputCell, final int numOfCells) {
         DataCell[] result = new DataCell[numOfCells];
 
         if (inputCell.isMissing()) {
@@ -305,9 +298,7 @@ class CellSplitter2CellFactory implements CellFactory {
             }
 
             if (token == null) {
-                if (m_settings.isUseEmptyString()
-                        && m_settings.getTypeOfColumn(col).equals(
-                                StringCell.TYPE)) {
+                if (m_settings.isUseEmptyString() && m_settings.getTypeOfColumn(col).equals(StringCell.TYPE)) {
                     // create empty string cells - not missing cells.
                     result[col] = EMPTY_STRINGCELL;
                 } else {
@@ -317,8 +308,7 @@ class CellSplitter2CellFactory implements CellFactory {
                 if (m_settings.isTrim()) {
                     token = token.trim();
                 }
-                result[col] = createDataCell(token,
-                        m_settings.getTypeOfColumn(col));
+                result[col] = createDataCell(token, m_settings.getTypeOfColumn(col));
             }
         }
         return result;
@@ -337,8 +327,7 @@ class CellSplitter2CellFactory implements CellFactory {
                 return new DoubleCell(val);
             } catch (NumberFormatException nfe) {
                 throw new IllegalStateException(
-                        "Guessed the wrong type guessed " + "(got '" + token
-                                + "' for a double.)");
+                    "Guessed the wrong type guessed " + "(got '" + token + "' for a double.)");
             }
 
         } else if (type.equals(IntCell.TYPE)) {
@@ -350,8 +339,7 @@ class CellSplitter2CellFactory implements CellFactory {
                 return new IntCell(val);
             } catch (NumberFormatException nfe) {
                 throw new IllegalStateException(
-                        "Guessed the wrong type guessed " + "(got '" + token
-                                + "' for an integer.)");
+                    "Guessed the wrong type guessed " + "(got '" + token + "' for an integer.)");
             }
         } else {
             throw new IllegalStateException("Guessed an unsupported type ...");
@@ -458,12 +446,11 @@ class CellSplitter2CellFactory implements CellFactory {
                     colName = uniquifyName(colName, m_inSpec);
                     DataType colType = m_settings.getTypeOfColumn(col);
 
-                    DataColumnSpecCreator dcsc =
-                            new DataColumnSpecCreator(colName, colType);
+                    DataColumnSpecCreator dcsc = new DataColumnSpecCreator(colName, colType);
                     m_outSpecs[col] = dcsc.createSpec();
                 }
 
-            // create list or set cell output spec
+                // create list or set cell output spec
             } else {
                 m_outSpecs = new DataColumnSpec[1];
                 String selColName = m_settings.getColumnName();
@@ -480,12 +467,11 @@ class CellSplitter2CellFactory implements CellFactory {
                 // list cell type
                 if (m_settings.isOutputAsList()) {
                     colType = ListCell.getCollectionType(StringCell.TYPE);
-                // set cell type otherwise (there is no other option left)
+                    // set cell type otherwise (there is no other option left)
                 } else {
                     colType = SetCell.getCollectionType(StringCell.TYPE);
                 }
-                DataColumnSpecCreator dcsc =
-                        new DataColumnSpecCreator(colName, colType);
+                DataColumnSpecCreator dcsc = new DataColumnSpecCreator(colName, colType);
                 m_outSpecs[0] = dcsc.createSpec();
             }
 
@@ -500,12 +486,10 @@ class CellSplitter2CellFactory implements CellFactory {
      *
      * @param colName the name to change
      * @param tableSpec the spec to check the name against
-     * @return the same string, if the spec doesn't contain a column named
-     *         <code>colName</code>, or <code>colName</code> with a suffix
-     *         added to make it unique (e.g. (2)).
+     * @return the same string, if the spec doesn't contain a column named <code>colName</code>, or <code>colName</code>
+     *         with a suffix added to make it unique (e.g. (2)).
      */
-    private static String uniquifyName(final String colName,
-            final DataTableSpec tableSpec) {
+    private static String uniquifyName(final String colName, final DataTableSpec tableSpec) {
 
         String result = colName;
         int suffixIdx = 1;
@@ -519,44 +503,35 @@ class CellSplitter2CellFactory implements CellFactory {
 
     /**
      * {@inheritDoc}
+     * 
      * @deprecated
      */
     @Deprecated
     @Override
-    public void setProgress(final int curRowNr, final int rowCount,
-            final RowKey lastKey, final ExecutionMonitor exec) {
+    public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress((double)curRowNr / (double)rowCount,
-                "processing row #" + curRowNr + " of " + rowCount + " ("
-                        + lastKey.getString() + ")");
+            "processing row #" + curRowNr + " of " + rowCount + " (" + lastKey.getString() + ")");
     }
 
     /**
-     * Analyzes the values in the user selected column and tries to figure out
-     * how many columns are needed to hold the splitted values and of which type
-     * the new resulting column have to be. <br>
-     * If the "output as list" or "output as set" flag IS set in the settings
-     * object it returns one as column number, since only one collection cell
-     * is needed to store the output.
-     * If the "guess" flag in the settings object is NOT set, it returns the
-     * column number entered by the user and string type for all columns.
-     * Otherwise it runs once through the entire table, splits the value of the
-     * selected column, stores the maximum number of parts received, and tries
-     * to convert each part into an int (first), then into a double, and if both
-     * fails it sets string type for the corresponding column.
+     * Analyzes the values in the user selected column and tries to figure out how many columns are needed to hold the
+     * splitted values and of which type the new resulting column have to be. <br>
+     * If the "output as list" or "output as set" flag IS set in the settings object it returns one as column number,
+     * since only one collection cell is needed to store the output. If the "guess" flag in the settings object is NOT
+     * set, it returns the column number entered by the user and string type for all columns. Otherwise it runs once
+     * through the entire table, splits the value of the selected column, stores the maximum number of parts received,
+     * and tries to convert each part into an int (first), then into a double, and if both fails it sets string type for
+     * the corresponding column.
      *
-     * @param table the table with the column to examine (can be null, if no
-     *            type guessing is required)
+     * @param table the table with the column to examine (can be null, if no type guessing is required)
      * @param userSettings user settings
-     * @param exec the execution context to set progress and check for cancel
-     *            (can be null)
-     * @return a settings object containing the same settings as the ones passed
-     *         in and in addition the type (and number) of each column to add
+     * @param exec the execution context to set progress and check for cancel (can be null)
+     * @return a settings object containing the same settings as the ones passed in and in addition the type (and
+     *         number) of each column to add
      * @throws CanceledExecutionException if user cancels
      */
-    static CellSplitter2Settings createNewColumnTypes(
-            final BufferedDataTable table,
-            final CellSplitter2UserSettings userSettings,
-            final ExecutionContext exec) throws CanceledExecutionException {
+    static CellSplitter2Settings createNewColumnTypes(final BufferedDataTable table,
+        final CellSplitter2UserSettings userSettings, final ExecutionContext exec) throws CanceledExecutionException {
         CheckUtils.checkArgumentNotNull(userSettings);
 
         // make sure we have settings we can deal with
@@ -603,7 +578,7 @@ class CellSplitter2CellFactory implements CellFactory {
             // list cell type
             if (userSettings.isOutputAsList()) {
                 colType = ListCell.getCollectionType(StringCell.TYPE);
-            // set cell type otherwise (there is no other option left)
+                // set cell type otherwise (there is no other option left)
             } else {
                 colType = SetCell.getCollectionType(StringCell.TYPE);
             }
@@ -614,14 +589,11 @@ class CellSplitter2CellFactory implements CellFactory {
         /*
          * analyze table
          */
-        int colIdx =
-                table.getDataTableSpec().findColumnIndex(
-                        userSettings.getColumnName());
+        int colIdx = table.getDataTableSpec().findColumnIndex(userSettings.getColumnName());
         if (colIdx < 0) {
             // the status should have checked this!
             assert false;
-            throw new IllegalStateException(
-                    "Input table doesn't contain selected column");
+            throw new IllegalStateException("Input table doesn't contain selected column");
         }
         TokenizerSettings tokenizerSettings = userSettings.createTokenizerSettings();
         if (tokenizerSettings == null) {
@@ -629,11 +601,12 @@ class CellSplitter2CellFactory implements CellFactory {
         }
 
         long rowCnt = 0;
-        final long numOfRows = userSettings.hasScanLimit() ? Math.min(userSettings.scanLimit(), table.size()) : table.size();
+        final long numOfRows =
+            userSettings.hasScanLimit() ? Math.min(userSettings.scanLimit(), table.size()) : table.size();
 
         for (final DataRow row : table) {
             rowCnt++;
-            if(userSettings.hasScanLimit() && rowCnt >= userSettings.scanLimit()) {
+            if (userSettings.hasScanLimit() && rowCnt >= userSettings.scanLimit()) {
                 break;
             }
 
@@ -707,8 +680,7 @@ class CellSplitter2CellFactory implements CellFactory {
             }
             if (exec != null) {
                 exec.checkCanceled();
-                exec.setProgress((double)rowCnt / (double)numOfRows,
-                        "Analyzing row #" + rowCnt + " of " + numOfRows);
+                exec.setProgress((double)rowCnt / (double)numOfRows, "Analyzing row #" + rowCnt + " of " + numOfRows);
             }
         }
 
@@ -717,10 +689,9 @@ class CellSplitter2CellFactory implements CellFactory {
          * column to add. Throw an exception.
          */
         if (result.getNumOfColsGuessed() < 1) {
-            throw new IllegalStateException("Data analysis computed no "
-                    + "columns to add (happens if input table is empty or "
-                    + "has only missing values).\n"
-                    + "Please set the array size manually.");
+            throw new IllegalStateException(
+                "Data analysis computed no " + "columns to add (happens if input table is empty or "
+                    + "has only missing values).\n" + "Please set the array size manually.");
         }
 
         return result;

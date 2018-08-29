@@ -62,8 +62,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Model of the node that splits one column into many, based on a user specified
- * delimiter.
+ * Model of the node that splits one column into many, based on a user specified delimiter.
  *
  * @author ohl, University of Konstanz
  */
@@ -82,8 +81,7 @@ public class CellSplitter2NodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
 
         String errMsg = m_settings.getStatus(inSpecs[0]);
         if (errMsg != null) {
@@ -107,8 +105,7 @@ public class CellSplitter2NodeModel extends NodeModel {
         // Guessing is done in the execute method
         if (!m_settings.isGuessNumOfCols()) {
             try {
-                m_settings = CellSplitter2CellFactory.createNewColumnTypes(null,
-                                m_settings, null);
+                m_settings = CellSplitter2CellFactory.createNewColumnTypes(null, m_settings, null);
             } catch (CanceledExecutionException cee) {
                 // can't happen
             }
@@ -116,9 +113,8 @@ public class CellSplitter2NodeModel extends NodeModel {
 
         DataTableSpec outSpec = null;
 
-        if ((inSpecs[0] != null) 
-           && (((!m_settings.isGuessNumOfCols()) && m_settings.isOutputAsCols())
-                || !m_settings.isOutputAsCols())) {
+        if ((inSpecs[0] != null)
+            && (((!m_settings.isGuessNumOfCols()) && m_settings.isOutputAsCols()) || !m_settings.isOutputAsCols())) {
             // if we are supposed to guess we don't know the num of cols here
             outSpec = createColumnRearranger(inSpecs[0]).createSpec();
         }
@@ -131,23 +127,19 @@ public class CellSplitter2NodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
+        throws Exception {
 
         m_settings =
-                CellSplitter2CellFactory.createNewColumnTypes(inData[0],
-                        m_settings, exec.createSubExecutionContext(0.5));
+            CellSplitter2CellFactory.createNewColumnTypes(inData[0], m_settings, exec.createSubExecutionContext(0.5));
 
-        BufferedDataTable outTable =
-                exec.createColumnRearrangeTable(inData[0],
-                        createColumnRearranger(inData[0].getDataTableSpec()),
-                        exec.createSubExecutionContext(0.5));
+        BufferedDataTable outTable = exec.createColumnRearrangeTable(inData[0],
+            createColumnRearranger(inData[0].getDataTableSpec()), exec.createSubExecutionContext(0.5));
 
         return new BufferedDataTable[]{outTable};
     }
 
-    private ColumnRearranger createColumnRearranger(
-            final DataTableSpec inTableSpec) {
+    private ColumnRearranger createColumnRearranger(final DataTableSpec inTableSpec) {
         ColumnRearranger c = new ColumnRearranger(inTableSpec);
         c.append(new CellSplitter2CellFactory(inTableSpec, m_settings));
         return c;
@@ -157,9 +149,8 @@ public class CellSplitter2NodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         // no internals to save here.
     }
 
@@ -167,8 +158,7 @@ public class CellSplitter2NodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_settings = new CellSplitter2Settings(settings);
     }
 
@@ -184,9 +174,8 @@ public class CellSplitter2NodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         // nothing worth saving
     }
 
@@ -202,8 +191,7 @@ public class CellSplitter2NodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         CellSplitter2Settings s = new CellSplitter2Settings(settings);
         String msg = s.getStatus(null);
         if (msg != null) {

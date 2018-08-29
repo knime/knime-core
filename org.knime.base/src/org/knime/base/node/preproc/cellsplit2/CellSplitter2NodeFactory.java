@@ -78,8 +78,7 @@ public class CellSplitter2NodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView createNodeView(final int viewIndex, final NodeModel nodeModel) {
         return null;
     }
 

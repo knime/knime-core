@@ -81,8 +81,7 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  */
 public class CellSplitter2NodeDialogPane extends NodeDialogPane {
     @SuppressWarnings("unchecked")
-    private final ColumnSelectionComboxBox m_column =
-            new ColumnSelectionComboxBox((Border)null, StringValue.class);
+    private final ColumnSelectionComboxBox m_column = new ColumnSelectionComboxBox((Border)null, StringValue.class);
 
     private final JTextField m_delimiter = new JTextField();
 
@@ -93,40 +92,32 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
     /**
      * @since 2.6
      */
-    private final JRadioButton m_outputAsList = new JRadioButton(
-            "As list");
+    private final JRadioButton m_outputAsList = new JRadioButton("As list");
 
     /**
      * @since 2.6
      */
-    private final JRadioButton m_outputAsSet = new JRadioButton(
-            "As set (remove duplicates)");
+    private final JRadioButton m_outputAsSet = new JRadioButton("As set (remove duplicates)");
 
     /**
      * @since 2.6
      */
-    private final JRadioButton m_outputAsColumns = new JRadioButton(
-            "As new columns");
+    private final JRadioButton m_outputAsColumns = new JRadioButton("As new columns");
 
     /**
      * @since 2.6
      */
-    private final JCheckBox m_trim = new JCheckBox(
-            "Remove leading and trailing white space chars (trim)");
+    private final JCheckBox m_trim = new JCheckBox("Remove leading and trailing white space chars (trim)");
 
     private final JRadioButton m_fixedSize = new JRadioButton("Set array size");
 
     private final JRadioButton m_guessSize =
-            new JRadioButton(
-                    "Guess size and column types (requires additional "
-                            + "data table scan)");
+        new JRadioButton("Guess size and column types (requires additional " + "data table scan)");
 
     private final JCheckBox m_useEmptyString =
-            new JCheckBox("Create empty string cells "
-                    + "instead of missing string cells");
+        new JCheckBox("Create empty string cells " + "instead of missing string cells");
 
-    private final JCheckBox m_useEscapeCharacter =
-            new JCheckBox("Use \\ as escape character");
+    private final JCheckBox m_useEscapeCharacter = new JCheckBox("Use \\ as escape character");
 
     private final JCheckBox m_hasScanLimit = new JCheckBox("Scan limit (number of lines to guess on) ");
 
@@ -149,8 +140,7 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
         m_column.setMinimumSize(new Dimension(17, 25));
         m_column.setPreferredSize(new Dimension(200, 25));
         Box colSelBox = Box.createHorizontalBox();
-        colSelBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Column to split"));
+        colSelBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Column to split"));
         colSelBox.add(Box.createHorizontalGlue());
         colSelBox.add(new JLabel("Select a column:"));
         colSelBox.add(Box.createHorizontalStrut(3));
@@ -159,8 +149,7 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
 
         // settings panel
         Box settingsBox = Box.createVerticalBox();
-        settingsBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Settings"));
+        settingsBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Settings"));
         // - the delimiter
         Box delimBox = Box.createHorizontalBox();
         delimBox.add(new JLabel("Enter a delimiter:"));
@@ -197,8 +186,7 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
 
         // output box
         Box outputBox = Box.createVerticalBox();
-        outputBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Output"));
+        outputBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Output"));
 
         // - the output group (as list, as set, as columns)
         ButtonGroup obg = new ButtonGroup();
@@ -249,13 +237,11 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
         m_guessSize.addItemListener(listener);
 
         // the size spinner
-        m_columnNumber.setModel(new SpinnerNumberModel(1000, 1,
-                Integer.MAX_VALUE, 1));
+        m_columnNumber.setModel(new SpinnerNumberModel(1000, 1, Integer.MAX_VALUE, 1));
         m_columnNumber.setMaximumSize(new Dimension(200, 25));
         m_columnNumber.setMinimumSize(new Dimension(50, 25));
         m_columnNumber.setPreferredSize(new Dimension(100, 25));
-        JSpinner.DefaultEditor editor =
-                (JSpinner.DefaultEditor)m_columnNumber.getEditor();
+        JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor)m_columnNumber.getEditor();
         editor.getTextField().setColumns(4);
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
         Box sizeBox = Box.createVerticalBox();
@@ -286,11 +272,11 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
         outputBox.add(Box.createVerticalGlue());
 
         // the missing value handling box
-        m_useEmptyString.setToolTipText("If checked, empty string cells are "
-                + "created for missing or short input cells");
+        m_useEmptyString
+            .setToolTipText("If checked, empty string cells are " + "created for missing or short input cells");
         Box missValBox = Box.createHorizontalBox();
-        missValBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Missing Value Handling"));
+        missValBox
+            .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Missing Value Handling"));
         missValBox.add(m_useEmptyString);
         missValBox.add(Box.createHorizontalGlue());
 
@@ -309,11 +295,10 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        throws NotConfigurableException {
         if ((specs == null) || (specs.length == 0) || (specs[0] == null)) {
-            throw new NotConfigurableException(
-                    "Node can't be configured without input table spec");
+            throw new NotConfigurableException("Node can't be configured without input table spec");
         }
 
         CellSplitter2UserSettings csSettings;
@@ -356,8 +341,7 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
             m_quote.setText("");
         }
         if (csSettings.getNumOfCols() > 0) {
-            ((SpinnerNumberModel)m_columnNumber.getModel()).setValue(csSettings
-                    .getNumOfCols());
+            ((SpinnerNumberModel)m_columnNumber.getModel()).setValue(csSettings.getNumOfCols());
         } else {
             ((SpinnerNumberModel)m_columnNumber.getModel()).setValue(6);
         }
@@ -389,8 +373,7 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
 
         // transfer settings from dialog components into our settings object
         CellSplitter2UserSettings csSettings = new CellSplitter2UserSettings();

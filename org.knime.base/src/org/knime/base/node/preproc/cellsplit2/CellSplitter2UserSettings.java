@@ -57,8 +57,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.tokenizer.TokenizerSettings;
 
 /**
- * Holds all user settings needed for the cell splitter. Provides methods for
- * saving and a constructor taking a NodeSettingRO object.
+ * Holds all user settings needed for the cell splitter. Provides methods for saving and a constructor taking a
+ * NodeSettingRO object.
  *
  * @author ohl, University of Konstanz
  */
@@ -94,6 +94,7 @@ public class CellSplitter2UserSettings {
     private static final String CFG_SPLIT_COLUMN_NAMES = "splitColumnNames";
 
     private static final String CFG_HAS_SCAN_LIMIT = "hasScanLimit";
+
     private static final String CFG_SCAN_LIMIT = "scanLimit";
 
     private String m_columnName = null;
@@ -155,18 +156,15 @@ public class CellSplitter2UserSettings {
     }
 
     /**
-     * Creates a new settings object with the value from the specified settings
-     * object. If the values in there are incomplete it throws an Exception. The
-     * values can be validated (checked for consistency and validity) with the
+     * Creates a new settings object with the value from the specified settings object. If the values in there are
+     * incomplete it throws an Exception. The values can be validated (checked for consistency and validity) with the
      * getStatus method.
      *
      *
      * @param settings the config object to read the settings values from
-     * @throws InvalidSettingsException if the values in the settings object are
-     *             incomplete.
+     * @throws InvalidSettingsException if the values in the settings object are incomplete.
      */
-    CellSplitter2UserSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    CellSplitter2UserSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_columnName = settings.getString(CFG_COLNAME);
         m_delimiter = settings.getString(CFG_DELIMITER);
         m_guessNumOfCols = settings.getBoolean(CFG_GUESSCOLS);
@@ -222,8 +220,7 @@ public class CellSplitter2UserSettings {
 
     /**
      * @param spec the spec to check the settings against. Can be null.
-     * @return null, if the settings are okay, or an user error message if some
-     *         settings are missing or invalid.
+     * @return null, if the settings are okay, or an user error message if some settings are missing or invalid.
      */
     String getStatus(final DataTableSpec spec) {
 
@@ -235,8 +232,7 @@ public class CellSplitter2UserSettings {
             if (!spec.containsName(m_columnName)) {
                 return "Input table doesn't contain specified column name.";
             }
-            if (!spec.getColumnSpec(m_columnName).getType().isCompatible(
-                    StringValue.class)) {
+            if (!spec.getColumnSpec(m_columnName).getType().isCompatible(StringValue.class)) {
                 return "Selected split column must be of type string";
             }
         }
@@ -253,10 +249,8 @@ public class CellSplitter2UserSettings {
         }
 
         if ((m_quotePattern != null)
-                && (m_quotePattern.startsWith(m_delimiter) || m_delimiter
-                        .startsWith(m_quotePattern))) {
-            return "The quote and delimiter can't be the same and can't"
-                    + " prefix each other.";
+            && (m_quotePattern.startsWith(m_delimiter) || m_delimiter.startsWith(m_quotePattern))) {
+            return "The quote and delimiter can't be the same and can't" + " prefix each other.";
         }
 
         return null;
@@ -347,21 +341,18 @@ public class CellSplitter2UserSettings {
     }
 
     /**
-     * @return true, if an empty string cell is introduced instead of a missing
-     *         cell (in case of in missing input cell, or missing split
-     *         results).
+     * @return true, if an empty string cell is introduced instead of a missing cell (in case of in missing input cell,
+     *         or missing split results).
      */
     boolean isUseEmptyString() {
         return m_useEmptyStrings;
     }
 
     /**
-     * If set to true, the node creates an empty cell in case of a missing input
-     * cell or a missing split. Otherwise, if set false, it introduces a missing
-     * cell instead.
+     * If set to true, the node creates an empty cell in case of a missing input cell or a missing split. Otherwise, if
+     * set false, it introduces a missing cell instead.
      *
-     * @param useEmptyString set to true to create empty string cells instead of
-     *            missing cells.
+     * @param useEmptyString set to true to create empty string cells instead of missing cells.
      */
     void setUseEmptyString(final boolean useEmptyString) {
         m_useEmptyStrings = useEmptyString;
@@ -382,8 +373,7 @@ public class CellSplitter2UserSettings {
     }
 
     /**
-     * @return the outputAsList <code>true</code> if output is list, otherwise
-     * <code>false</code>.
+     * @return the outputAsList <code>true</code> if output is list, otherwise <code>false</code>.
      * @since 2.6
      */
     boolean isOutputAsList() {
@@ -399,8 +389,7 @@ public class CellSplitter2UserSettings {
     }
 
     /**
-     * @return the outputAsSet <code>true</code> if output is set, otherwise
-     * <code>false</code>.
+     * @return the outputAsSet <code>true</code> if output is set, otherwise <code>false</code>.
      * @since 2.6
      */
     boolean isOutputAsSet() {
@@ -416,8 +405,7 @@ public class CellSplitter2UserSettings {
     }
 
     /**
-     * @return the outputAsCols <code>true</code> if output are columns,
-     * otherwise <code>false</code>.
+     * @return the outputAsCols <code>true</code> if output are columns, otherwise <code>false</code>.
      * @since 2.6
      */
     boolean isOutputAsCols() {
@@ -433,8 +421,8 @@ public class CellSplitter2UserSettings {
     }
 
     /**
-     * @return the trim <code>true</code> if leading and trailing white spaces
-     * need to be removed, otherwise <code>false</code>.
+     * @return the trim <code>true</code> if leading and trailing white spaces need to be removed, otherwise
+     *         <code>false</code>.
      * @since 2.6
      */
     boolean isTrim() {
@@ -450,7 +438,6 @@ public class CellSplitter2UserSettings {
     }
 
     /**
-<<<<<<< HEAD
      * @return <code>true</code> if the input column name should be split with the same pattern as the columns contents
      *         and be used as column names.
      * @since 3.7
@@ -493,7 +480,8 @@ public class CellSplitter2UserSettings {
     }
 
     /**
-     * @param n Amount of numbers to use when guessing amount of output columns. Only has effect if {@link #hasScanLimit()}.
+     * @param n Amount of numbers to use when guessing amount of output columns. Only has effect if
+     *            {@link #hasScanLimit()}.
      * @since 3.7
      */
     void setScanLimit(final int n) {
