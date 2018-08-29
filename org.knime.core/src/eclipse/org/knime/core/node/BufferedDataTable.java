@@ -153,7 +153,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
         // update the lastID counter!
         assert result.m_tableID == tableID;
-        setLastIdToUnsignedMax(tableID, LAST_ID.get());
+        updateLastId(tableID);
         return result;
     }
 
@@ -260,7 +260,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
 
     private BufferedDataTable(final KnowsRowCountTable table, final int id) {
         m_delegate = table;
-        assert Integer.toUnsignedLong(id) <= Integer.toUnsignedLong(LAST_ID.get()) : "Table identifiers not unique";
+        // table ID -1 is used for old workflows (1.1.x) - no notion of blobs at that time
+        // see also DataContainer.readFromZip(ReferencedFile, BufferCreator)
+        assert id == -1 || Integer.toUnsignedLong(id) <= Integer.toUnsignedLong(LAST_ID.get()) //
+                : "Table identifiers not unique " + id;
         m_tableID = id;
     }
 
@@ -665,7 +668,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
             isVersion11x = true;
         }
         int id = s.getInt(CFG_TABLE_ID);
-        setLastIdToUnsignedMax(LAST_ID.get(), id + 1);
+        updateLastId(id + 1);
         String fileName = s.getString(CFG_TABLE_FILE_NAME);
         ReferencedFile fileRef;
         if (fileName != null) {
@@ -769,8 +772,12 @@ public final class BufferedDataTable implements DataTable, PortObject {
         return t;
     }
 
-    private static void setLastIdToUnsignedMax(final int i, final int j) {
-        LAST_ID.set((Integer.toUnsignedLong(i) >= Integer.toUnsignedLong(j)) ? i : j);
+    private static void updateLastId(final int id) {
+        // table ID -1 is used for old workflows (1.1.x) - no notion of blobs at that time
+        // see also DataContainer.readFromZip(ReferencedFile, BufferCreator)
+        if (id != -1 && Integer.toUnsignedLong(id) > Integer.toUnsignedLong(LAST_ID.get()) ) {
+            LAST_ID.set(id);
+        }
     }
 
     /**
