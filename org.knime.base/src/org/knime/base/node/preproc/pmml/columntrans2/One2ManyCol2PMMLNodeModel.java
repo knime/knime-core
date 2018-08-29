@@ -251,8 +251,9 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
                         + " not found in input table");
             }
             if (!spec.getColumnSpec(colName).getDomain().hasValues()) {
-                throw new InvalidSettingsException("column: " + colName
-                        + " has no possible values");
+                throw new InvalidSettingsException(
+                    "Possible value domain for column \"" + colName + "\" is empty, use the Domain Calculator node "
+                        + "(with a sufficient possible value limit) to create it.");
             }
             Set<String> possibleValues = new HashSet<String>();
             for (DataCell dc : spec.getColumnSpec(colName).getDomain()
