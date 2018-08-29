@@ -66,7 +66,9 @@ import org.knime.core.node.NodeSettingsWO;
  * delimiter.
  * 
  * @author ohl, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 public class CellSplitterNodeModel extends NodeModel {
 
     private CellSplitterSettings m_settings = new CellSplitterSettings();

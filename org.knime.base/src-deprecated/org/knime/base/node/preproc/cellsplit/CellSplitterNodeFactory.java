@@ -55,7 +55,9 @@ import org.knime.core.node.NodeView;
 /**
  * 
  * @author ohl, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 public class CellSplitterNodeFactory extends NodeFactory {
 
     /**

@@ -909,7 +909,11 @@
             factory-class="org.knime.base.node.preproc.stringreplacer.dict.SearchReplaceDictNodeFactory"/>
       <node
             category-path="/manipulation/column/column-split+combine"
-            factory-class="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"
+            deprecated="true"/>
+      <node
+            category-path="/manipulation/column/column-split+combine"
+            factory-class="org.knime.base.node.preproc.cellsplit2.CellSplitterNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"/>

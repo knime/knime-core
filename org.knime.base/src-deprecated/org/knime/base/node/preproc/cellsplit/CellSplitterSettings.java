@@ -59,7 +59,9 @@ import org.knime.core.node.NodeSettingsRO;
  * the values analyzed during execute. These values are not saved.
  * 
  * @author ohl, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 class CellSplitterSettings extends CellSplitterUserSettings {
 
     private Vector<DataType> m_types = new Vector<DataType>();

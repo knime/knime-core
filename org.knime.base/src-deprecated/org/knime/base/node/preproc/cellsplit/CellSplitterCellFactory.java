@@ -83,7 +83,9 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
  * Creates the data cells for the new columns of the cell splitter.
  *
  * @author ohl, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 class CellSplitterCellFactory implements CellFactory {
 
     private final CellSplitterSettings m_settings;

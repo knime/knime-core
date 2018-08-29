@@ -59,7 +59,9 @@ import org.knime.core.node.NodeSettingsWO;
  * saving and a constructor taking a NodeSettingRO object.
  *
  * @author ohl, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 public class CellSplitterUserSettings {
 
     /**

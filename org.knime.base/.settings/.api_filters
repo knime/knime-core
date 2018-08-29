@@ -107,6 +107,38 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/cellsplit/CellSplitterNodeDialogPane.java" type="org.knime.base.node.preproc.cellsplit.CellSplitterNodeDialogPane">
+        <filter comment="This was here before, eclipse cannot detect the src folder move" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeDialogPane"/>
+                <message_argument value="org.knime.base_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/cellsplit/CellSplitterNodeFactory.java" type="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory">
+        <filter comment="This was here before, eclipse cannot detect the src folder move" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
+                <message_argument value="org.knime.base_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/cellsplit/CellSplitterNodeModel.java" type="org.knime.base.node.preproc.cellsplit.CellSplitterNodeModel">
+        <filter comment="This was here before, eclipse cannot detect the src folder move" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeModel"/>
+                <message_argument value="org.knime.base_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/cellsplit/CellSplitterUserSettings.java" type="org.knime.base.node.preproc.cellsplit.CellSplitterUserSettings">
+        <filter comment="This was here before, eclipse cannot detect the src folder move" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.cellsplit.CellSplitterUserSettings"/>
+                <message_argument value="org.knime.base_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src-deprecated/org/knime/base/node/preproc/double2int/DoubleToIntNodeDialog.java" type="org.knime.base.node.preproc.double2int.DoubleToIntNodeDialog">
         <filter id="305365105">
             <message_arguments>

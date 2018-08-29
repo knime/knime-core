@@ -79,7 +79,9 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 /**
  *
  * @author ohl, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 public class CellSplitterNodeDialogPane extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_column =
