@@ -368,9 +368,6 @@ class CellSplitter2CellFactory implements CellFactory {
         return temp.toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataColumnSpec[] getColumnSpecs() {
 

@@ -913,7 +913,7 @@
             deprecated="true"/>
       <node
             category-path="/manipulation/column/column-split+combine"
-            factory-class="org.knime.base.node.preproc.cellsplit2.CellSplitterNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.cellsplit2.CellSplitter2NodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"/>
