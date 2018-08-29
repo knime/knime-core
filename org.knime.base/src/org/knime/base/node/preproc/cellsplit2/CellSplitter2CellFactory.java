@@ -56,7 +56,6 @@ import java.util.Collection;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -76,6 +75,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.UniqueNameGenerator;
 import org.knime.core.util.tokenizer.Tokenizer;
 import org.knime.core.util.tokenizer.TokenizerSettings;
 
@@ -153,7 +153,7 @@ class CellSplitter2CellFactory implements CellFactory {
 
     /**
      * Extracts the string representation of the given cell and returns it.
-     * 
+     *
      * @param inputCell The cell to extract the string representation from.
      * @return The string representation of the given cell.
      * @since 2.6
@@ -170,7 +170,7 @@ class CellSplitter2CellFactory implements CellFactory {
 
     /**
      * Creates a tokenizer on the given string reader and prepares it with specific settings. and returns it.
-     * 
+     *
      * @param inputReader The string reader to create a tokenizer on.
      * @param settings Tokenizer settings.
      * @return The tokenizer created on the string reader.
@@ -187,7 +187,7 @@ class CellSplitter2CellFactory implements CellFactory {
      * Tokenizes the string representation of the given data cell and returns an array of data cells. The array contains
      * only one data cell, which is a collection cell. Whether it is a List or Set cell is specified in the settings.
      * The collection cell contains string cells. For each token one string cell is created.
-     * 
+     *
      * @param inputCell the cell to tokenize (its string representation)
      * @return An array containing exactly one collection cell, storing string cells. For each token one string cell.
      * @since 2.6
@@ -234,7 +234,7 @@ class CellSplitter2CellFactory implements CellFactory {
     /**
      * Tokenizes the string representation of the given data cell and returns an array of data cells containing the
      * tokens.
-     * 
+     *
      * @param inputCell the cell to tokenize (its string representation)
      * @param numOfCells The number of cells to create, containing the tokens
      * @return An arrays of cells containing the tokens. The length of the array is specified by
@@ -411,6 +411,8 @@ class CellSplitter2CellFactory implements CellFactory {
             }
         }
 
+        final UniqueNameGenerator uniqueNames = new UniqueNameGenerator(m_inSpec);
+
         // now, create the output specs
         if (m_outSpecs == null) {
 
@@ -443,11 +445,10 @@ class CellSplitter2CellFactory implements CellFactory {
                         colName = selColName + "_Arr[" + col + "]";
                     }
 
-                    colName = uniquifyName(colName, m_inSpec);
+                    colName = uniqueNames.newName(colName);
                     DataType colType = m_settings.getTypeOfColumn(col);
 
-                    DataColumnSpecCreator dcsc = new DataColumnSpecCreator(colName, colType);
-                    m_outSpecs[col] = dcsc.createSpec();
+                    m_outSpecs[col] = uniqueNames.newColumn(colName, colType);
                 }
 
                 // create list or set cell output spec
@@ -461,7 +462,6 @@ class CellSplitter2CellFactory implements CellFactory {
                 } else {
                     colName = selColName + "_SplitResultSet";
                 }
-                colName = uniquifyName(colName, m_inSpec);
 
                 DataType colType = null;
                 // list cell type
@@ -471,8 +471,7 @@ class CellSplitter2CellFactory implements CellFactory {
                 } else {
                     colType = SetCell.getCollectionType(StringCell.TYPE);
                 }
-                DataColumnSpecCreator dcsc = new DataColumnSpecCreator(colName, colType);
-                m_outSpecs[0] = dcsc.createSpec();
+                m_outSpecs[0] = uniqueNames.newColumn(colName, colType);
             }
 
         }
@@ -482,28 +481,8 @@ class CellSplitter2CellFactory implements CellFactory {
     }
 
     /**
-     * Changes the specified col name to a name not contained in the table spec.
-     *
-     * @param colName the name to change
-     * @param tableSpec the spec to check the name against
-     * @return the same string, if the spec doesn't contain a column named <code>colName</code>, or <code>colName</code>
-     *         with a suffix added to make it unique (e.g. (2)).
-     */
-    private static String uniquifyName(final String colName, final DataTableSpec tableSpec) {
-
-        String result = colName;
-        int suffixIdx = 1;
-
-        while (tableSpec.containsName(result)) {
-            result = result + "(" + ++suffixIdx + ")";
-        }
-
-        return result;
-    }
-
-    /**
      * {@inheritDoc}
-     * 
+     *
      * @deprecated
      */
     @Deprecated
