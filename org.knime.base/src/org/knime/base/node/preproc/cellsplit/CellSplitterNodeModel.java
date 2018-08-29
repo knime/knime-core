@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
+ * 
  * History
  *   Jun 19, 2007 (ohl): created
  */
@@ -64,7 +64,7 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * Model of the node that splits one column into many, based on a user specified
  * delimiter.
- *
+ * 
  * @author ohl, University of Konstanz
  */
 public class CellSplitterNodeModel extends NodeModel {
@@ -133,6 +133,12 @@ public class CellSplitterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+
+        // sanity check. Shouldn't go off.
+        String err = m_settings.getStatus(inData[0].getDataTableSpec());
+        if (err != null) {
+            throw new IllegalStateException(err);
+        }
 
         m_settings =
                 CellSplitterCellFactory.createNewColumnTypes(inData[0],

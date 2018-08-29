@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -75,7 +76,6 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.tokenizer.Tokenizer;
 import org.knime.core.util.tokenizer.TokenizerSettings;
 
@@ -106,8 +106,6 @@ class CellSplitterCellFactory implements CellFactory {
      */
     public CellSplitterCellFactory(final DataTableSpec inSpec,
             final CellSplitterSettings settings) {
-        CheckUtils.checkArgumentNotNull(settings);
-
         m_settings = settings;
         m_inSpec = inSpec;
 
@@ -117,11 +115,50 @@ class CellSplitterCellFactory implements CellFactory {
             m_colIdx = -1;
         }
 
-        m_tokenizerSettings = m_settings.createTokenizerSettings();
+        m_tokenizerSettings =
+                CellSplitterCellFactory.createTokenizerSettings(m_settings);
     }
 
+    private static TokenizerSettings createTokenizerSettings(
+            final CellSplitterUserSettings userSettings) {
+
+        if (userSettings == null) {
+            return null;
+        }
+        if ((userSettings.getDelimiter() == null)
+                || (userSettings.getDelimiter().length() == 0)) {
+            return null;
+        }
+
+        TokenizerSettings result = new TokenizerSettings();
+
+        String delim = userSettings.getDelimiter();
+        if (userSettings.isUseEscapeCharacter()) {
+            delim = StringEscapeUtils.unescapeJava(delim);
+        }
+        result.addDelimiterPattern(delim,
+        /* combineConsecutive */false,
+        /* returnAsSeperateToken */false,
+        /* includeInToken */false);
+
+        String quote = userSettings.getQuotePattern();
+        if ((quote != null) && (quote.length() > 0)) {
+            result.addQuotePattern(quote, quote, '\\', userSettings
+                    .isRemoveQuotes());
+        }
+
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public DataCell[] getCells(final DataRow row) {
+        String msg = m_settings.getStatus(m_inSpec);
+        if (msg != null) {
+            throw new IllegalStateException(msg);
+        }
         if (m_settings.isGuessNumOfCols()
                 && m_settings.getNumOfColsGuessed() < 1
                 && m_settings.isOutputAsCols()) {
@@ -176,14 +213,13 @@ class CellSplitterCellFactory implements CellFactory {
      * specific settings.
      * and returns it.
      * @param inputReader The string reader to create a tokenizer on.
-     * @param settings Tokenizer settings.
      * @return The tokenizer created on the string reader.
      * @since 2.6
      */
-    private static Tokenizer prepareTokenizer(final StringReader inputReader, final TokenizerSettings settings) {
+    private Tokenizer prepareTokenizer(final StringReader inputReader) {
         assert inputReader.markSupported();
-        final Tokenizer tokenizer = new Tokenizer(inputReader);
-        tokenizer.setSettings(settings);
+        Tokenizer tokenizer = new Tokenizer(inputReader);
+        tokenizer.setSettings(m_tokenizerSettings);
         return tokenizer;
     }
 
@@ -218,7 +254,7 @@ class CellSplitterCellFactory implements CellFactory {
 
         // init the tokenizer
         StringReader inputReader = new StringReader(inputString);
-        final Tokenizer tokenizer = prepareTokenizer(inputReader, m_tokenizerSettings);
+        Tokenizer tokenizer = prepareTokenizer(inputReader);
 
         Collection<DataCell> strColl = new ArrayList<DataCell>();
         String token = null;
@@ -270,7 +306,7 @@ class CellSplitterCellFactory implements CellFactory {
 
         // init the tokenizer
         StringReader inputReader = new StringReader(inputString);
-        final Tokenizer tokenizer = prepareTokenizer(inputReader, m_tokenizerSettings);
+        Tokenizer tokenizer = prepareTokenizer(inputReader);
 
         // tokenize the column value and create new output cells
         for (int col = 0; col < result.length; col++) {
@@ -324,7 +360,8 @@ class CellSplitterCellFactory implements CellFactory {
         return result;
     }
 
-    private static DataCell createDataCell(final String token, final DataType type) {
+    private DataCell createDataCell(final String token, final DataType type) {
+
         if (type.equals(StringCell.TYPE)) {
             return new StringCell(token);
 
@@ -338,7 +375,7 @@ class CellSplitterCellFactory implements CellFactory {
             } catch (NumberFormatException nfe) {
                 throw new IllegalStateException(
                         "Guessed the wrong type guessed " + "(got '" + token
-                                + "' for a double.)");
+                                + "' for a double.");
             }
 
         } else if (type.equals(IntCell.TYPE)) {
@@ -351,7 +388,7 @@ class CellSplitterCellFactory implements CellFactory {
             } catch (NumberFormatException nfe) {
                 throw new IllegalStateException(
                         "Guessed the wrong type guessed " + "(got '" + token
-                                + "' for an integer.)");
+                                + "' for an integer.");
             }
         } else {
             throw new IllegalStateException("Guessed an unsupported type ...");
@@ -364,7 +401,8 @@ class CellSplitterCellFactory implements CellFactory {
      * Always instantiates a StringBuilder. Call only with chars left in the
      * stream (otherwise rewrite it).
      */
-    private static String readAll(final Reader src) {
+    private String readAll(final Reader src) {
+
         StringBuilder temp = new StringBuilder();
 
         try {
@@ -437,24 +475,8 @@ class CellSplitterCellFactory implements CellFactory {
                 m_outSpecs = new DataColumnSpec[colNum];
                 String selColName = m_settings.getColumnName();
 
-                Tokenizer tokenizer = null;
-                StringReader inputReader = null;
-                if (m_settings.splitColumnNames()) {
-                    /* If split column names is set, we need to split the selected column name with the same tokenizer as used later for the cell data. */
-                    inputReader = new StringReader(selColName);
-                    tokenizer = prepareTokenizer(inputReader, m_settings.createTokenizerSettings());
-                }
-
                 for (int col = 0; col < colNum; col++) {
-                    String colName = null;
-                    if (tokenizer != null) {
-                        /* nextToken() is null if there is no next Token */
-                        colName = tokenizer.nextToken();
-                    }
-                    if (colName == null) {
-                        colName = selColName + "_Arr[" + col + "]";
-                    }
-
+                    String colName = selColName + "_Arr[" + col + "]";
                     colName = uniquifyName(colName, m_inSpec);
                     DataType colType = m_settings.getTypeOfColumn(col);
 
@@ -504,7 +526,7 @@ class CellSplitterCellFactory implements CellFactory {
      *         <code>colName</code>, or <code>colName</code> with a suffix
      *         added to make it unique (e.g. (2)).
      */
-    private static String uniquifyName(final String colName,
+    private String uniquifyName(final String colName,
             final DataTableSpec tableSpec) {
 
         String result = colName;
@@ -519,9 +541,7 @@ class CellSplitterCellFactory implements CellFactory {
 
     /**
      * {@inheritDoc}
-     * @deprecated
      */
-    @Deprecated
     @Override
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
@@ -557,7 +577,6 @@ class CellSplitterCellFactory implements CellFactory {
             final BufferedDataTable table,
             final CellSplitterUserSettings userSettings,
             final ExecutionContext exec) throws CanceledExecutionException {
-        CheckUtils.checkArgumentNotNull(userSettings);
 
         // make sure we have settings we can deal with
         DataTableSpec spec = null;
@@ -623,22 +642,20 @@ class CellSplitterCellFactory implements CellFactory {
             throw new IllegalStateException(
                     "Input table doesn't contain selected column");
         }
-        TokenizerSettings tokenizerSettings = userSettings.createTokenizerSettings();
+        TokenizerSettings tokenizerSettings =
+                createTokenizerSettings(userSettings);
         if (tokenizerSettings == null) {
             throw new IllegalStateException("Incorrect user settings");
         }
 
         long rowCnt = 0;
-        final long numOfRows = userSettings.hasScanLimit() ? Math.min(userSettings.scanLimit(), table.size()) : table.size();
+        long numOfRows = table.size();
 
-        for (final DataRow row : table) {
+        for (DataRow row : table) {
             rowCnt++;
-            if(userSettings.hasScanLimit() && rowCnt >= userSettings.scanLimit()) {
-                break;
-            }
 
             String inputString = "";
-            final DataCell inputCell = row.getCell(colIdx);
+            DataCell inputCell = row.getCell(colIdx);
 
             if (inputCell.isMissing()) {
                 // missing cells don't help determining the target types
@@ -652,7 +669,7 @@ class CellSplitterCellFactory implements CellFactory {
             }
 
             // init the tokenizer
-            final StringReader inputReader = new StringReader(inputString);
+            StringReader inputReader = new StringReader(inputString);
             // the reader is no good if it doesn't support the mark operation
             assert inputReader.markSupported();
 

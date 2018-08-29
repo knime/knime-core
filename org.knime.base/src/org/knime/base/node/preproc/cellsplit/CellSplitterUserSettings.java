@@ -48,13 +48,11 @@
  */
 package org.knime.base.node.preproc.cellsplit;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.util.tokenizer.TokenizerSettings;
 
 /**
  * Holds all user settings needed for the cell splitter. Provides methods for
@@ -82,19 +80,14 @@ public class CellSplitterUserSettings {
     private static final String CFG_USEEMPTYSTRING = "useEmptyString";
 
     private static final String CFG_USEESCAPECHAR = "useEscapeCharacter";
-
+    
     private static final String CFG_OUTPUTASLIST = "outputAsList";
-
+    
     private static final String CFG_OUTPUTASSET = "outputAsSet";
-
+    
     private static final String CFG_OUTPUTASCOLS = "outputAsColumns";
-
+    
     private static final String CFG_TRIM = "removeWhitespaces";
-
-    private static final String CFG_SPLIT_COLUMN_NAMES = "splitColumnNames";
-
-    private static final String CFG_HAS_SCAN_LIMIT = "hasScanLimit";
-    private static final String CFG_SCAN_LIMIT = "scanLimit";
 
     private String m_columnName = null;
 
@@ -111,7 +104,7 @@ public class CellSplitterUserSettings {
     private boolean m_useEmptyStrings = false;
 
     private boolean m_useEscapeCharacter = false;
-
+    
     /**
      * @since 2.6
      */
@@ -121,32 +114,17 @@ public class CellSplitterUserSettings {
      * @since 2.6
      */
     private boolean m_outputAsSet = false;
-
+    
     /**
      * @since 2.6
-     */
+     */    
     private boolean m_outputAsCols = true;
 
     /**
      * @since 2.6
-     */
+     */    
     private boolean m_trim = true;
-
-    /**
-     * @since 3.7
-     */
-    private boolean m_splitColumnNames = false;
-
-    /**
-     * @since 3.7
-     */
-    private boolean m_hasScanLimit = false;
-
-    /**
-     * @since 3.7
-     */
-    private int m_scanLimit = 50;
-
+    
     /**
      * Creates a new settings object with no (or default) settings.
      */
@@ -186,12 +164,6 @@ public class CellSplitterUserSettings {
         m_outputAsSet = settings.getBoolean(CFG_OUTPUTASSET, false);
         m_outputAsCols = settings.getBoolean(CFG_OUTPUTASCOLS, true);
         m_trim = settings.getBoolean(CFG_TRIM, true);
-
-        /** @since 3.7 */
-        m_splitColumnNames = settings.getBoolean(CFG_SPLIT_COLUMN_NAMES, false);
-
-        m_hasScanLimit = settings.getBoolean(CFG_HAS_SCAN_LIMIT, true);
-        m_scanLimit = settings.getInt(CFG_SCAN_LIMIT, 50);
     }
 
     /**
@@ -212,12 +184,6 @@ public class CellSplitterUserSettings {
         settings.addBoolean(CFG_OUTPUTASSET, m_outputAsSet);
         settings.addBoolean(CFG_OUTPUTASCOLS, m_outputAsCols);
         settings.addBoolean(CFG_TRIM, m_trim);
-
-        settings.addBoolean(CFG_SPLIT_COLUMN_NAMES, m_splitColumnNames);
-
-        settings.addBoolean(CFG_HAS_SCAN_LIMIT, m_hasScanLimit);
-        settings.addInt(CFG_SCAN_LIMIT, m_scanLimit);
-
     }
 
     /**
@@ -416,7 +382,7 @@ public class CellSplitterUserSettings {
     }
 
     /**
-     * @return the outputAsCols <code>true</code> if output are columns,
+     * @return the outputAsCols <code>true</code> if output are columns, 
      * otherwise <code>false</code>.
      * @since 2.6
      */
@@ -433,7 +399,7 @@ public class CellSplitterUserSettings {
     }
 
     /**
-     * @return the trim <code>true</code> if leading and trailing white spaces
+     * @return the trim <code>true</code> if leading and trailing white spaces 
      * need to be removed, otherwise <code>false</code>.
      * @since 2.6
      */
@@ -447,83 +413,5 @@ public class CellSplitterUserSettings {
      */
     void setTrim(final boolean trim) {
         m_trim = trim;
-    }
-
-    /**
-<<<<<<< HEAD
-     * @return <code>true</code> if the input column name should be split with the same pattern as the columns contents
-     *         and be used as column names.
-     * @since 3.7
-     */
-    boolean splitColumnNames() {
-        return m_splitColumnNames;
-    }
-
-    /**
-     * Set whether to split the input column's name for use as output column names.
-     *
-     * @param split Whether to split
-     */
-    void setSplitColumnNames(final boolean split) {
-        m_splitColumnNames = split;
-    }
-
-    /*
-     * @return whether to use a scan limit while guessing the amount of output columns
-     * @since 3.7
-     */
-    boolean hasScanLimit() {
-        return m_hasScanLimit;
-    }
-
-    /**
-     * @param b whether to use a scan limit while guessing the amount of output columns
-     * @since 3.7
-     */
-    void setHasScanLimit(final boolean b) {
-        m_hasScanLimit = b;
-    }
-
-    /**
-     * @return the number of rows to scan to guess the number of output columns
-     * @since 3.7
-     */
-    int scanLimit() {
-        return m_scanLimit;
-    }
-
-    /**
-     * @param n Amount of numbers to use when guessing amount of output columns. Only has effect if {@link #hasScanLimit()}.
-     * @since 3.7
-     */
-    void setScanLimit(final int n) {
-        m_scanLimit = n;
-    }
-
-    /**
-     * Create TokenizerSettings from these CellSpliterUserSettings.
-     *
-     * @return the tokenizer settings.
-     */
-    TokenizerSettings createTokenizerSettings() {
-        if ((getDelimiter() == null) || (getDelimiter().length() == 0)) {
-            return null;
-        }
-
-        final TokenizerSettings result = new TokenizerSettings();
-
-        String delim = getDelimiter();
-        if (isUseEscapeCharacter()) {
-            delim = StringEscapeUtils.unescapeJava(delim);
-        }
-        result.addDelimiterPattern(delim, /* combineConsecutive */false, /* returnAsSeperateToken */false,
-            /* includeInToken */false);
-
-        final String quote = getQuotePattern();
-        if ((quote != null) && (quote.length() > 0)) {
-            result.addQuotePattern(quote, quote, '\\', isRemoveQuotes());
-        }
-
-        return result;
     }
 }
