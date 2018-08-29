@@ -255,7 +255,6 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
             }, wfm -> {
                 return wfm.removeAsync(new NodeID[]{m_newNode}, null, null);
             }, getHostWFMUI(), "Removing node ...");
-            getHostWFM().removeNode(m_newNode);
         } catch (Exception e) {
             String msg =
                     "Undo failed: Node " + m_newNode + " can't be removed: "
