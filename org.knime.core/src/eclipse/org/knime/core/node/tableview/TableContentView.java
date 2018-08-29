@@ -67,6 +67,7 @@ import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -285,6 +286,16 @@ public class TableContentView extends JTable {
         Color selColor = (isHiLit
                 ? ColorAttr.SELECTED_HILITE : ColorAttr.SELECTED);
         setSelectionBackground(selColor);
+
+        Object val;
+        if ((val = getValueAt(row, column)) instanceof CellLoadingError) {
+            String message = ((CellLoadingError)val).getErrorMessage();
+            JLabel errorLabel = new JLabel("Loading Error (" + message + ")");
+            errorLabel.setForeground(Color.red);
+            errorLabel.setToolTipText(message);
+            return errorLabel;
+        }
+
         return super.prepareRenderer(renderer, row, column);
     }
 
