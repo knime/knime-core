@@ -68,6 +68,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.LoopEndNode;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -370,11 +371,13 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     // in the 'else' block? Yes:
                     // it's only one or the other -- do not support nodes that have
                     // both (standard swing) interactive and web interactive views
-                    //TODO for subnodes move to submenu?
-                    InteractiveWebViewsResultUI interactiveWebViewsResult = container.getInteractiveWebViews();
-                    for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
-                        action = new OpenInteractiveWebViewAction(container, interactiveWebViewsResult.get(i));
-                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                    // For subnodes the views are moved into a submenu (see further below)
+                    if (wraps(container, NativeNodeContainer.class)) {
+                        InteractiveWebViewsResultUI interactiveWebViewsResult = container.getInteractiveWebViews();
+                        for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
+                            action = new OpenInteractiveWebViewAction(container, interactiveWebViewsResult.get(i));
+                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                        }
                     }
                 }
 
