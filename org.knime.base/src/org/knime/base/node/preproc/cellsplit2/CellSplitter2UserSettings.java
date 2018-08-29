@@ -97,6 +97,8 @@ public class CellSplitter2UserSettings {
 
     private static final String CFG_SCAN_LIMIT = "scanLimit";
 
+    private static final String CFG_REMOVE_INPUT_COL = "removeInputColumn";
+
     private String m_columnName = null;
 
     private String m_delimiter = null;
@@ -149,6 +151,11 @@ public class CellSplitter2UserSettings {
     private int m_scanLimit = 50;
 
     /**
+     * @since 3.7
+     */
+    private boolean m_removeInputColumn = false;
+
+    /**
      * Creates a new settings object with no (or default) settings.
      */
     CellSplitter2UserSettings() {
@@ -190,6 +197,8 @@ public class CellSplitter2UserSettings {
 
         m_hasScanLimit = settings.getBoolean(CFG_HAS_SCAN_LIMIT, true);
         m_scanLimit = settings.getInt(CFG_SCAN_LIMIT, 50);
+
+        m_removeInputColumn = settings.getBoolean(CFG_REMOVE_INPUT_COL, false);
     }
 
     /**
@@ -216,6 +225,7 @@ public class CellSplitter2UserSettings {
         settings.addBoolean(CFG_HAS_SCAN_LIMIT, m_hasScanLimit);
         settings.addInt(CFG_SCAN_LIMIT, m_scanLimit);
 
+        settings.addBoolean(CFG_REMOVE_INPUT_COL, m_removeInputColumn);
     }
 
     /**
@@ -487,6 +497,23 @@ public class CellSplitter2UserSettings {
     void setScanLimit(final int n) {
         m_scanLimit = n;
     }
+
+    /**
+     * @return whether to remove the input column
+     * @since 3.7
+     */
+    boolean isRemoveInputColumn() {
+        return m_removeInputColumn;
+    }
+
+    /**
+     * @param b Whether to remove the input column
+     * @since 3.7
+     */
+    void setRemoveInputColumn(final boolean b) {
+        m_removeInputColumn = b;
+    }
+
 
     /**
      * Create TokenizerSettings from these CellSpliterUserSettings.

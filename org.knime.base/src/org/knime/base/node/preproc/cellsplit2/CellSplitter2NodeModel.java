@@ -134,7 +134,10 @@ public class CellSplitter2NodeModel extends NodeModel {
     }
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec inTableSpec) {
-        ColumnRearranger c = new ColumnRearranger(inTableSpec);
+        final ColumnRearranger c = new ColumnRearranger(inTableSpec);
+        if(m_settings.isRemoveInputColumn()) {
+            c.remove(m_settings.getColumnName());
+        }
         c.append(new CellSplitter2CellFactory(inTableSpec, m_settings));
         return c;
     }

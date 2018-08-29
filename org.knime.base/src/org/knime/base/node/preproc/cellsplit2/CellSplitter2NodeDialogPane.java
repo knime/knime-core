@@ -128,6 +128,8 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
      */
     private final JCheckBox m_splitColumnNames = new JCheckBox("Split input column name for output column names");
 
+    private final JCheckBox m_removeInputColumn = new JCheckBox("Remove input column");
+
     /**
      * Creates a new panel for the dialog and inits all components.
      */
@@ -145,6 +147,8 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
         colSelBox.add(new JLabel("Select a column:"));
         colSelBox.add(Box.createHorizontalStrut(3));
         colSelBox.add(m_column);
+        colSelBox.add(Box.createHorizontalGlue());
+        colSelBox.add(m_removeInputColumn);
         colSelBox.add(Box.createHorizontalGlue());
 
         // settings panel
@@ -367,11 +371,10 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
 
         m_hasScanLimit.setSelected(csSettings.hasScanLimit());
         m_scanLimit.setValue(csSettings.scanLimit());
+
+        m_removeInputColumn.setSelected(csSettings.isRemoveInputColumn());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
 
@@ -413,6 +416,8 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
 
         csSettings.setHasScanLimit(m_hasScanLimit.isSelected());
         csSettings.setScanLimit(((SpinnerNumberModel)m_scanLimit.getModel()).getNumber().intValue());
+
+        csSettings.setRemoveInputColumn(m_removeInputColumn.isSelected());
 
         csSettings.saveSettingsTo(settings);
 

@@ -442,9 +442,7 @@ class CellSplitter2CellFactory implements CellFactory {
                         colName = selColName + "_Arr[" + col + "]";
                     }
 
-                    colName = uniqueNames.newName(colName);
-                    DataType colType = m_settings.getTypeOfColumn(col);
-
+                    final DataType colType = m_settings.getTypeOfColumn(col);
                     m_outSpecs[col] = uniqueNames.newColumn(colName, colType);
                 }
 
