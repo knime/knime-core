@@ -276,21 +276,13 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_retainOrder.setEnabled(!inMem);
     }
 
-    private JComponent createAdvancedOptionsBox() {
-        final DialogComponent maxNoneNumericVals =
-            new DialogComponentNumber(m_maxUniqueValues, "Maximum unique values per group", new Integer(1000), 5);
-        maxNoneNumericVals
-            .setToolTipText("All groups with more unique values " + "will be skipped and replaced by a missing value");
-        final DialogComponentStringSelection colNamePolicy = new DialogComponentStringSelection(m_columnNamePolicy,
-            "Column naming:", ColumnNamePolicy.getPolicyLabels());
-        final DialogComponent enableHilite = new DialogComponentBoolean(m_enableHilite, "Enable hiliting");
-        final DialogComponentString valueDelimiter =
-            new DialogComponentString(m_valueDelimiter, "Value delimiter", false, 2);
-        final DialogComponent inMemory = new DialogComponentBoolean(m_inMemory, "Process in memory");
-        inMemory.setToolTipText("Processes all data in memory.");
-        final DialogComponent retainOrder = new DialogComponentBoolean(m_retainOrder, "Retain row order");
-        retainOrder.setToolTipText("Retains the original row order of the input table.");
-
+    /**
+     * Creates the advanced options box.
+     *
+     * @return the advanced options box
+     * @since 3.7
+     */
+    protected JComponent createAdvancedOptionsBox() {
         final JPanel rootPanel = new JPanel(new GridBagLayout());
         rootPanel
             .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Advanced settings "));
@@ -302,18 +294,18 @@ public class GroupByNodeDialog extends NodeDialogPane {
         c.gridx = 0;
         c.gridy = 0;
 
-        rootPanel.add(colNamePolicy.getComponentPanel(), c);
+        rootPanel.add(createColNamePolicyDialog().getComponentPanel(), c);
         c.gridx++;
-        rootPanel.add(enableHilite.getComponentPanel(), c);
+        rootPanel.add(createHiliteDialog().getComponentPanel(), c);
         c.gridx++;
-        rootPanel.add(inMemory.getComponentPanel(), c);
+        rootPanel.add(createInMemoryDialog().getComponentPanel(), c);
         c.gridx++;
-        rootPanel.add(retainOrder.getComponentPanel(), c);
+        rootPanel.add(createRetainOrderDialog().getComponentPanel(), c);
 
         c.gridy++;
         c.gridx = 0;
         c.anchor = GridBagConstraints.FIRST_LINE_START;
-        rootPanel.add(maxNoneNumericVals.getComponentPanel(), c);
+        rootPanel.add(createMaxNoneNumValsDialog().getComponentPanel(), c);
         c.gridx++;
         c.anchor = GridBagConstraints.LINE_START;
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -324,13 +316,179 @@ public class GroupByNodeDialog extends NodeDialogPane {
         gc.gridx = 0;
         gc.gridy = 0;
         gc.fill = GridBagConstraints.NONE;
-        fakePanel.add(valueDelimiter.getComponentPanel(), gc);
+        fakePanel.add(createValueDelDialog().getComponentPanel(), gc);
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1;
         gc.gridy++;
         fakePanel.add(new JPanel(), gc);
         rootPanel.add(fakePanel, c);
         return rootPanel;
+    }
+
+    /**
+     * Creates the retain row order dialog with default label and tooltip.
+     *
+     * @return the retain row order dialog
+     * @since 3.7
+     */
+    protected final DialogComponentBoolean createRetainOrderDialog() {
+        return createRetainOrderDialog("Retain row order", "Retains the original row order of the input table.");
+    }
+
+    /**
+     * Creates the retain row order dialog with the given label and tooltip.
+     *
+     * @param label the label
+     * @param toolTip the tooltip which can be null
+     *
+     * @return the retain row order dialog
+     * @since 3.7
+     */
+    protected final DialogComponentBoolean createRetainOrderDialog(final String label, final String toolTip) {
+        final DialogComponentBoolean diaComp = new DialogComponentBoolean(m_retainOrder, label);
+        setToolTipText(diaComp, toolTip);
+        return diaComp;
+    }
+
+    /**
+     * Creates the process in memory dialog with default label and tooltip.
+     *
+     * @return the in memory dialog
+     * @since 3.7
+     */
+    protected final DialogComponentBoolean createInMemoryDialog() {
+        return createInMemoryDialog("Process in memory", "Processes all data in memory.");
+    }
+
+    /**
+     * Creates the process in memory dialog with the given label and tooltip.
+     *
+     * @param label the label
+     * @param toolTip the tooltip which can be null
+     *
+     * @return the in memory dialog
+     * @since 3.7
+     */
+    protected final DialogComponentBoolean createInMemoryDialog(final String label, final String toolTip) {
+        final DialogComponentBoolean diaComp = new DialogComponentBoolean(m_inMemory, label);
+        setToolTipText(diaComp, toolTip);
+        return diaComp;
+    }
+
+    /**
+     * Creates the value delimiter dialog with default label and tooltip.
+     *
+     * @return the value delimiter dialog
+     * @since 3.7
+     */
+    protected final DialogComponentString createValueDelDialog() {
+        return createValueDelDialog("Value delimiter", null);
+    }
+
+    /**
+     * Creates the value delimiter dialog with the given label and tooltip.
+     *
+     * @param label the label
+     * @param toolTip the tooltip which can be null
+     *
+     * @return the value delimiter dialog
+     * @since 3.7
+     */
+    protected final DialogComponentString createValueDelDialog(final String label, final String toolTip) {
+        final DialogComponentString diaComp = new DialogComponentString(m_valueDelimiter, label, false, 2);
+        setToolTipText(diaComp, toolTip);
+        return diaComp;
+    }
+
+    /**
+     * Creates the enable highlighting dialog with default label and tooltip.
+     *
+     * @return the enable highlighting dialog
+     * @since 3.7
+     */
+    protected final DialogComponentBoolean createHiliteDialog() {
+        return createHiliteDialog("Enable hiliting", null);
+    }
+
+    /**
+     * Creates the enable highlighting dialog with the given label and tooltip.
+     *
+     * @param label the label
+     * @param toolTip the tooltip which can be null
+     *
+     * @return the enable highlighting dialog
+     * @since 3.7
+     */
+    protected final DialogComponentBoolean createHiliteDialog(final String label, final String toolTip) {
+        final DialogComponentBoolean diaComp = new DialogComponentBoolean(m_enableHilite, label);
+        setToolTipText(diaComp, toolTip);
+        return diaComp;
+    }
+
+    /**
+     * Creates the column name policy dialog with default label and tooltip.
+     *
+     * @return the column name policy dialog
+     * @since 3.7
+     */
+    protected final DialogComponentStringSelection createColNamePolicyDialog() {
+        return createColNamePolicyDialog("Column naming:", null);
+    }
+
+    /**
+     * Creates the column name policy dialog with the given label and tooltip.
+     *
+     * @param label the label
+     * @param toolTip the tooltip which can be null
+     *
+     * @return the column name policy dialog
+     * @since 3.7
+     */
+    protected final DialogComponentStringSelection createColNamePolicyDialog(final String label, final String toolTip) {
+        final DialogComponentStringSelection diaComp =
+            new DialogComponentStringSelection(m_columnNamePolicy, label, ColumnNamePolicy.getPolicyLabels());
+        setToolTipText(diaComp, toolTip);
+        return diaComp;
+    }
+
+    /**
+     * Creates the maximum unique values per group dialog component with default label and tooltip.
+     *
+     * @return the maximum unique values per group dialog component
+     * @since 3.7
+     *
+     */
+    protected final DialogComponentNumber createMaxNoneNumValsDialog() {
+        return createMaxNoneNumValsDialog("Maximum unique values per group",
+            "All groups with more unique values will be skipped and replaced by a missing value");
+    }
+
+    /**
+     * Creates the maximum unique values per group dialog component with the given label and tooltip.
+     *
+     * @param label the label
+     * @param toolTip the tooltip which can be null
+     *
+     * @return the maximum unique values per group dialog component
+     * @since 3.7
+     *
+     */
+    protected final DialogComponentNumber createMaxNoneNumValsDialog(final String label, final String toolTip) {
+        final DialogComponentNumber diaComp = new DialogComponentNumber(m_maxUniqueValues, label, new Integer(1000), 5);
+        setToolTipText(diaComp, toolTip);
+        return diaComp;
+    }
+
+    /**
+     * Sets the tooltip for the given dialog component.
+     *
+     * @param diaComp the dialog component
+     * @param toolTip the tooltip
+     */
+    private static void setToolTipText(final DialogComponent diaComp, final String toolTip) {
+        if (toolTip != null) {
+            diaComp.setToolTipText(toolTip);
+        }
     }
 
     /**
