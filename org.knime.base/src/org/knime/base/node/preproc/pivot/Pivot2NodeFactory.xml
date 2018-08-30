@@ -69,23 +69,36 @@
           </option>
         </tab>
         <tab name="Advanced settings">
-          <option name="Maximum unique values per group">
-	        Defines the maximum number of unique values per group to avoid 
-	        problems with memory overloading. All groups with more unique
-	        values are skipped during the calculation and a missing value is set 
-            in the corresponding column, and a warning is displayed.
+          <option name="Column name">
+            The name of the resulting pivot column(s) depends on the 
+            selected naming schema.
+            <ul>
+                <li>Pivot name+Aggregation name:
+                Uses the pivot name first and the aggregation name second joint
+                by a + character.
+                Keeps the original column names.
+                Note that you can use all aggregation columns only once with 
+                this column naming option to prevent duplicate column names.
+                </li>
+                <li>Aggregation name+Pivot name: 
+                Uses the aggregation name first and the pivot name second joint
+                by a + character.
+                </li>
+                <li>Pivot name:
+                Uses solely the pivot name. Note that this option solely
+                supports the selection of a single aggregation method to ensure
+                uniqueness of the column names. 
+                </li>
+            </ul>
           </option>
-          <option name="Value delimiter">
-            The value delimiter used by aggregation methods such as concatenate. 
-          </option>
-          <option name="Column naming">
+          <option name="Aggregation name">
             The name of the resulting aggregation column(s) depends on the 
             selected naming schema.
             <ul>
                 <li>Keep original name(s):
                 Keeps the original column names.
                 Note that you can use all aggregation columns only once with 
-                this column naming option to prevent duplicate column names.
+                this naming option to prevent duplicated column names.
                 </li>
                 <li>Aggregation method (column name): 
                 Uses the aggregation method first and appends the column name
@@ -96,15 +109,24 @@
                 in brackets
                 </li>
             </ul>
-            All aggregation methods get a * appended if the missing value option 
-            is not ticked in the aggregation settings in order to distinguish
-            between columns that considered missing values in the aggregation
-            process and columns that does not.
+            All aggregation methods get an * appended if the missing value 
+            option is not ticked in the aggregation settings in order to
+            distinguish between columns that considered missing values in the
+            aggregation process and columns that do not.
           </option>
-          <option name="Enable hiliting">
-			If enabled, the hiliting of a group row will hilite all rows of this
-			group in other views. Depending on the number of rows, enabling this 
-			feature might consume a lot of memory.
+          <option name="Sort lexicographically">
+	        Lexicographically sorts all columns belonging to the same
+	        logical group, i.e., pivots (aggregations), groups, and overall
+	        totals. 
+          </option>
+          <option name="Maximum unique values per group">
+	        Defines the maximum number of unique values per group to avoid 
+	        problems with memory overloading. All groups with more unique
+	        values are skipped during the calculation and a missing value is set 
+            in the corresponding column, and a warning is displayed.
+          </option>
+          <option name="Value delimiter">
+            The value delimiter used by aggregation methods such as concatenate. 
           </option>
           <option name="Process in memory">
             Process the table in the memory. Requires more memory but is faster
@@ -118,6 +140,11 @@
             Could result in longer execution time.
             The row order is automatically retained if the process in memory
             option is selected.
+          </option>
+          <option name="Enable hiliting">
+			If enabled, the hiliting of a group row will hilite all rows of this
+			group in other views. Depending on the number of rows, enabling this 
+			feature might consume a lot of memory.
           </option>
           <option name="Missing">
             Missing values are considered during aggregation if the missing 

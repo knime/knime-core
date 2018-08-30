@@ -56,6 +56,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
@@ -86,9 +87,11 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.util.Pair;
 
 /**
  * The {@link NodeModel} implementation of the pivot node which uses the {@link GroupByNodeModel} class implementations
@@ -97,6 +100,79 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Thomas Gabriel, KNIME.com AG, Switzerland
  */
 public class Pivot2NodeModel extends GroupByNodeModel {
+
+    /**
+     * Enum providing the different options to name the pivot columns.
+     *
+     * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+     */
+    enum ColNameOption implements BiFunction<String, String, String> {
+
+            /** The pivot name + aggregation name option. */
+            PIV_FIRST_AGG_LAST("Pivot name" + PIVOT_AGGREGATION_DELIMITER + "Aggregation name",
+                (t, u) -> t + PIVOT_AGGREGATION_DELIMITER + u),
+
+            /** The aggregation name + pivot name option. */
+            AGG_FIRST_PIV_LAST("Aggregation name" + PIVOT_AGGREGATION_DELIMITER + "Pivot name",
+                (t, u) -> u + PIVOT_AGGREGATION_DELIMITER + t),
+
+            /** The pivot name only option. */
+            PIV_ONLY("Pivot name", (t, u) -> t);
+
+        // currently not supported. The problem is that the columns created by
+        // append overall totals are already reserve these names
+        //            AGG_ONLY("Aggregation name only", (t, u) -> u);
+
+        /** Missing name exception. */
+        private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
+
+        /** IllegalArgumentException prefix. */
+        private static final String ARGUMENT_EXCEPTION_PREFIX = "No ColNameOption constant with name: ";
+
+        /** The option name. */
+        private final String m_name;
+
+        /** The function. */
+        private final BiFunction<String, String, String> m_func;
+
+        /** Constructor. */
+        private ColNameOption(final String name, final BiFunction<String, String, String> func) {
+            m_name = name;
+            m_func = func;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String apply(final String t, final String u) {
+            return m_func.apply(t, u);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return m_name;
+        }
+
+        /**
+         * Returns the enum for a given name.
+         *
+         * @param name the enum name
+         * @return the enum
+         * @throws InvalidSettingsException if the given name is not associated with an {@link ColNameOption} value
+         */
+        public static ColNameOption getEnum(final String name) throws InvalidSettingsException {
+            if (name == null) {
+                throw new InvalidSettingsException(NAME_MUST_NOT_BE_NULL);
+            }
+            return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
+                .orElseThrow(() -> new InvalidSettingsException(ARGUMENT_EXCEPTION_PREFIX + name));
+        }
+
+    }
 
     /**
      * The private class InMemoryRowComparator sorts descending but with the missing values on top.
@@ -177,22 +253,32 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         }
     }
 
+    /** The column name options config key. */
+    private static final String CFG_COL_NAME_OPTION = "column_name_option";
+
+    /** The lexicographical sort config key. */
+    private static final String CFG_LEXICOGRAPHICAL_SORT = "sort_lexicographical";
+
     /** Configuration key of the selected group by columns. */
     protected static final String CFG_PIVOT_COLUMNS = "pivotColumns";
 
     private final SettingsModelFilterString m_pivotCols = new SettingsModelFilterString(CFG_PIVOT_COLUMNS);
 
-    private final SettingsModelBoolean m_ignoreMissValues = Pivot2NodeDialog.createSettingsMissingValues();
+    private final SettingsModelBoolean m_ignoreMissValues = createSettingsMissingValues();
 
-    private final SettingsModelBoolean m_totalAggregation = Pivot2NodeDialog.createSettingsTotal();
+    private final SettingsModelBoolean m_totalAggregation = createSettingsTotal();
 
-    private final SettingsModelBoolean m_ignoreDomain = Pivot2NodeDialog.createSettingsIgnoreDomain();
+    private final SettingsModelBoolean m_ignoreDomain = createSettingsIgnoreDomain();
 
     private static final String PIVOT_COLUMN_DELIMITER = "_";
 
     private static final String PIVOT_AGGREGATION_DELIMITER = "+";
 
     private final HiLiteHandler m_totalGroupsHilite = new HiLiteHandler();
+
+    private final SettingsModelString m_colAggOption = createSettingsColNameOption();
+
+    private final SettingsModelBoolean m_sortLexigraphcial = createSettingsLexicographical();
 
     /** Create a new pivot node model. */
     public Pivot2NodeModel() {
@@ -227,7 +313,13 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             throw new InvalidSettingsException("No aggregation columns selected.");
         }
 
-        final DataTableSpec groupRowsSpec = createGroupBySpec(origSpec, groupCols);
+        DataTableSpec groupRowsSpec = createGroupBySpec(origSpec, groupCols);
+
+        // sort the columns if necessary
+        if (m_sortLexigraphcial.getBooleanValue()) {
+            groupRowsSpec = sortCols(groupRowsSpec, createRange(0, groupCols.size()),
+                createRange(groupCols.size(), groupRowsSpec.getNumColumns())).createSpec();
+        }
         if (m_ignoreMissValues.getBooleanValue()) {
             final Set<String>[] combPivots = createCombinedPivots(groupSpec, pivotCols);
             for (final Set<String> combPivot : combPivots) {
@@ -235,8 +327,15 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                     return new DataTableSpec[]{null, groupRowsSpec, null};
                 }
             }
-            final DataTableSpec outSpec =
+            DataTableSpec outSpec =
                 createOutSpec(groupSpec, combPivots, /* ignored */ new HashMap<String, Integer>(), null);
+
+            // sort the columns if necessary
+            if (m_sortLexigraphcial.getBooleanValue()) {
+                final int grpSize = getGroupByColumns().size();
+                outSpec = sortCols(outSpec, createRange(0, grpSize), createRange(grpSize, outSpec.getNumColumns()))
+                    .createSpec();
+            }
             if (m_totalAggregation.getBooleanValue()) {
                 @SuppressWarnings("unchecked")
                 final DataTableSpec totalGroupSpec = createGroupBySpec(origSpec, Collections.EMPTY_LIST);
@@ -249,13 +348,49 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                 for (int i = 0; i < totalGroupSpec.getNumColumns(); i++) {
                     pivotRowsSpec[i + totalOffset] = totalGroupSpec.getColumnSpec(i);
                 }
-                return new DataTableSpec[]{outSpec, groupRowsSpec, new DataTableSpec(pivotRowsSpec)};
+                DataTableSpec pivTotalsSpec = new DataTableSpec(pivotRowsSpec);
+
+                // sort the columns if necessary
+                if (m_sortLexigraphcial.getBooleanValue()) {
+                    pivTotalsSpec =
+                        sortCols(pivTotalsSpec, createRange(totalOffset, pivTotalsSpec.getNumColumns())).createSpec();
+                }
+                return new DataTableSpec[]{outSpec, groupRowsSpec, pivTotalsSpec};
             } else {
                 return new DataTableSpec[]{outSpec, groupRowsSpec, outSpec};
             }
         } else {
             return new DataTableSpec[]{null, groupRowsSpec, null};
         }
+    }
+
+    /**
+     * Sorts the provided spec within the provided ranges lexicographically.
+     *
+     * @param spec the spec to be sorted/reordered
+     * @param range the ranges within the columns have to be sorted lexicographically
+     * @return the sorted columns
+     */
+    @SafeVarargs
+    private static ColumnRearranger sortCols(final DataTableSpec spec, final Pair<Integer, Integer>... range) {
+        final ColumnRearranger colReArr = new ColumnRearranger(spec);
+        final String[] colNames = spec.getColumnNames();
+        for (final Pair<Integer, Integer> p : range) {
+            Arrays.sort(colNames, p.getFirst(), p.getSecond());
+        }
+        colReArr.permute(colNames);
+        return colReArr;
+    }
+
+    /**
+     * Convenience method to create a range.
+     *
+     * @param lower the lower value
+     * @param upper the upper value
+     * @return the range
+     */
+    private static Pair<Integer, Integer> createRange(final int lower, final int upper) {
+        return new Pair<Integer, Integer>(lower, upper);
     }
 
     private Set<String>[] createCombinedPivots(final DataTableSpec groupSpec, final List<String> pivotCols) {
@@ -499,8 +634,31 @@ public class Pivot2NodeModel extends GroupByNodeModel {
          * the final hilite handler (mapping) for port #1 AND #2 (bug 3270) */
         exec.setMessage("Creating group totals");
         // create group table only on group columns; no pivoting
-        final BufferedDataTable columnGroupTable =
+        BufferedDataTable columnGroupTable =
             createGroupByTable(groupExec, table, getGroupByColumns()).getBufferedTable();
+
+        // if necessary sort the table columns lexicographically
+        if (m_sortLexigraphcial.getBooleanValue()) {
+            DataTableSpec tableSpec = pivotTable.getDataTableSpec();
+            // the group range
+            final Pair<Integer, Integer> grpRange = createRange(0, getGroupByColumns().size());
+            // the pivot range
+            final Pair<Integer, Integer> pivRange = createRange(grpRange.getSecond(), tableSpec.getNumColumns());
+
+            // rearrange the tables
+            pivotTable = exec.createColumnRearrangeTable(pivotTable, sortCols(tableSpec, grpRange, pivRange),
+                exec.createSilentSubProgress(0));
+
+            tableSpec = columnGroupTable.getDataTableSpec();
+            columnGroupTable = exec.createColumnRearrangeTable(columnGroupTable,
+                sortCols(tableSpec, grpRange, createRange(grpRange.getSecond(), tableSpec.getNumColumns())),
+                exec.createSilentSubProgress(0));
+
+            tableSpec = pivotRowsTable.getDataTableSpec();
+            pivotRowsTable = exec.createColumnRearrangeTable(pivotRowsTable,
+                sortCols(tableSpec, grpRange, pivRange, createRange(pivRange.getSecond(), tableSpec.getNumColumns())),
+                exec.createSilentSubProgress(0));
+        }
 
         return new PortObject[]{
             // pivot table
@@ -512,7 +670,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
     }
 
     private DataTableSpec createOutSpec(final DataTableSpec groupSpec, final Set<String>[] combPivots,
-        final Map<String, Integer> pivotStarts, final String orderPivotColumnName) {
+        final Map<String, Integer> pivotStarts, final String orderPivotColumnName) throws InvalidSettingsException {
         final List<String> groupCols = getGroupByColumns();
         final List<String> groupAndPivotCols = createAllColumns();
         final List<String> pivots = new ArrayList<String>();
@@ -524,6 +682,8 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             }
         }
 
+        final ColNameOption opt = ColNameOption.getEnum(m_colAggOption.getStringValue());
+
         // all pivots combined with agg. methods
         for (final String p : pivots) {
             pivotStarts.put(p, cspecs.size());
@@ -534,7 +694,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                 final String name = cspec.getName();
                 if (!groupAndPivotCols.contains(name)) {
                     final DataColumnSpec pivotCSpec =
-                        new DataColumnSpecCreator(p + PIVOT_AGGREGATION_DELIMITER + name, cspec.getType()).createSpec();
+                        new DataColumnSpecCreator(opt.apply(p, name), cspec.getType()).createSpec();
                     cspecs.add(pivotCSpec);
                 }
             }
@@ -628,7 +788,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         return buf.getTable();
     }
 
-    private void write(final BufferedDataContainer buf, final DataCell[] outcells) {
+    private static void write(final BufferedDataContainer buf, final DataCell[] outcells) {
         for (int j = 0; j < outcells.length; j++) {
             if (outcells[j] == null) {
                 outcells[j] = DataType.getMissingCell();
@@ -665,16 +825,41 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         m_ignoreMissValues.saveSettingsTo(settings);
         m_totalAggregation.saveSettingsTo(settings);
         m_ignoreDomain.saveSettingsTo(settings);
+        m_colAggOption.saveSettingsTo(settings);
+        m_sortLexigraphcial.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        super.validateSettings(settings);
         m_pivotCols.validateSettings(settings);
         m_ignoreMissValues.validateSettings(settings);
         m_totalAggregation.validateSettings(settings);
         m_ignoreDomain.validateSettings(settings);
+
+        // ensure backwards compatibility (since KNIME 3.7)
+        if (settings.containsKey(CFG_COL_NAME_OPTION)) {
+            // check if the column naming option string refers to a proper ColNameOption
+            m_colAggOption.validateSettings(settings);
+            final SettingsModelString tmpColAggOption = createSettingsColNameOption();
+            tmpColAggOption.loadSettingsFrom(settings);
+            final ColNameOption colAggOption = ColNameOption.getEnum(tmpColAggOption.getStringValue());
+            if (colAggOption == ColNameOption.PIV_ONLY && ColumnAggregator.loadColumnAggregators(settings).size() > 1) {
+                throw new InvalidSettingsException("The \'" + ColNameOption.PIV_ONLY.toString()
+                    + "\' column naming option solely supports the selection of a single aggregation method.");
+            }
+        }
+        if (settings.containsKey(CFG_LEXICOGRAPHICAL_SORT)) {
+            m_sortLexigraphcial.validateSettings(settings);
+        }
+
+        // has to be done after validating the column aggregation option
+        // Otherwise it is likely that one of the naming policies throws
+        // an exception even though its selection is disabled via the UI
+        // (this is the case when PIV_ONLY is selected.
+        // Important note! PIV_ONLY valid implies that the selected
+        // naming policy is valid too.
+        super.validateSettings(settings);
     }
 
     /** {@inheritDoc} */
@@ -685,6 +870,14 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         m_ignoreMissValues.loadSettingsFrom(settings);
         m_totalAggregation.loadSettingsFrom(settings);
         m_ignoreDomain.loadSettingsFrom(settings);
+
+        // ensure backwards compatibility (since KNIME 3.7)
+        if (settings.containsKey(CFG_COL_NAME_OPTION)) {
+            m_colAggOption.loadSettingsFrom(settings);
+        }
+        if (settings.containsKey(CFG_LEXICOGRAPHICAL_SORT)) {
+            m_sortLexigraphcial.loadSettingsFrom(settings);
+        }
     }
 
     /** {@inheritDoc} */
@@ -698,4 +891,38 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         }
     }
 
+    /**
+     * Creates the settings model storing the column name option.
+     *
+     * @return the settings model storing the column name option
+     */
+    static final SettingsModelString createSettingsColNameOption() {
+        // for backwards compatibility reason the default value cannot be changed!
+        return new SettingsModelString(CFG_COL_NAME_OPTION, ColNameOption.PIV_FIRST_AGG_LAST.toString());
+    }
+
+    /**
+     * Creates the settings model storing the sort lexicographical flag.
+     *
+     * @return the settings model storing the sort lexicographical flag
+     */
+    static final SettingsModelBoolean createSettingsLexicographical() {
+        // for backwards compatibility reason the default value cannot be changed!
+        return new SettingsModelBoolean(CFG_LEXICOGRAPHICAL_SORT, false);
+    }
+
+    /** @return settings model boolean for ignoring missing values */
+    static final SettingsModelBoolean createSettingsMissingValues() {
+        return new SettingsModelBoolean("missing_values", true);
+    }
+
+    /** @return settings model boolean for total aggregation */
+    static final SettingsModelBoolean createSettingsTotal() {
+        return new SettingsModelBoolean("total_aggregation", false);
+    }
+
+    /** @return settings model boolean for ignoring domain */
+    static final SettingsModelBoolean createSettingsIgnoreDomain() {
+        return new SettingsModelBoolean("ignore_domain", true);
+    }
 }
