@@ -1145,8 +1145,10 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     void setEditorUIInformation(EditorUIInformation editorInfo);
 
     /**
-     * Returns the editor specific settings. Returns a reference to the object. Does not create a copy.
-     * @return the editor settings currently stored
+     * Returns the editor specific settings.
+     *
+     * @return the editor settings currently stored, can be <code>null</code> (in that case the settings of the parent
+     *         workflow manager are usually used)
      * @since 2.6
      */
     EditorUIInformation getEditorUIInformation();
