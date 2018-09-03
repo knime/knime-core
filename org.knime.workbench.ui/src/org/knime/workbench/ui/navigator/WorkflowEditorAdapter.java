@@ -49,6 +49,9 @@ package org.knime.workbench.ui.navigator;
 
 import org.eclipse.ui.IEditorPart;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
+import org.knime.core.ui.wrapper.Wrapper;
 
 /**
  * Hackaround to avoid cyclic dependencies. The navigator needs to ask the
@@ -57,10 +60,25 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author ohl, University of Konstanz
  */
 public class WorkflowEditorAdapter {
-    private final WorkflowManager m_wfm;
+    private final WorkflowManagerUI m_wfm;
     private final IEditorPart m_parentEditor;
 
+    /**
+     * @deprecated use {@link #WorkflowEditorAdapter(WorkflowManagerUI, IEditorPart)} instead
+     * @param wfm
+     * @param parentEditor
+     */
+    @Deprecated
     public WorkflowEditorAdapter(final WorkflowManager wfm, final IEditorPart parentEditor) {
+        m_wfm = WorkflowManagerWrapper.wrap(wfm);
+        m_parentEditor = parentEditor;
+    }
+
+    /**
+     * @param wfm the workflow manager to be returned at {@link #getWorkflowManagerUI()}
+     * @param parentEditor the parent editor to be returned at {@link #getParentEditor()}
+     */
+    public WorkflowEditorAdapter(final WorkflowManagerUI wfm, final IEditorPart parentEditor) {
         m_wfm = wfm;
         m_parentEditor = parentEditor;
     }
@@ -68,9 +86,20 @@ public class WorkflowEditorAdapter {
     /**
      * Returns the workflow manager that is associated with the editor.
      *
-     * @param a workflow manager
+     * @return a workflow manager or <code>null</code> if not of type {@link WorkflowManager}
+     * @deprecated use {@link #getWorkflowManagerUI()} instead
      */
+    @Deprecated
     public WorkflowManager getWorkflowManager() {
+        return Wrapper.unwrapWFMOptional(m_wfm).orElse(null);
+    }
+
+    /**
+     * Returns the workflow manager that is associated with the editor.
+     *
+     * @return a workflow manager
+     */
+    public WorkflowManagerUI getWorkflowManagerUI() {
         return m_wfm;
     }
 

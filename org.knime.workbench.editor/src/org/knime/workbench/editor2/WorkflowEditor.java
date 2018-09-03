@@ -1467,7 +1467,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         if (adapter == WorkflowEditorAdapter.class) {
             // hackaround to deliver the wfm to the navigator
-            return new WorkflowEditorAdapter(getWorkflowManager().get(), m_parentEditor);
+            return new WorkflowEditorAdapter(getWorkflowManagerUI(), m_parentEditor);
         }
 
         // the super implementation handles the rest
