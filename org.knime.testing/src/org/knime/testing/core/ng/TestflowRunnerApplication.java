@@ -144,12 +144,14 @@ public class TestflowRunnerApplication implements IApplication {
                 throw new IOException("Can not create directory for result files " + m_xmlResultDir);
             }
             resultWriter = new XMLResultDirWriter(xmlResultDir, m_outputToSeparateFile);
+            System.setProperty("knime.testing.result-dir", m_xmlResultDir);
         } else {
             File xmlResultFile = new File(m_xmlResultFile);
             if (!xmlResultFile.getParentFile().exists() && !xmlResultFile.getParentFile().mkdirs()) {
                 throw new IOException("Can not create directory for results file " + m_xmlResultFile);
             }
             resultWriter = new XMLResultFileWriter(xmlResultFile);
+            System.setProperty("knime.testing.result-dir", xmlResultFile.getParent());
         }
 
         context.applicationRunning();

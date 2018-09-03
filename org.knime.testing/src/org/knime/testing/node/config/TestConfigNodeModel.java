@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -66,6 +67,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.testing.core.TestrunJanitor;
 
 /**
@@ -160,6 +163,14 @@ public class TestConfigNodeModel extends NodeModel {
         for (TestrunJanitor j : m_janitors) {
             pushFlowVariables(j.getFlowVariables());
         }
+
+        WorkflowContext ctx = NodeContext.getContext().getWorkflowManager().getContext();
+        String rootPath = !StringUtils.isEmpty(System.getProperty("knime.testing.result-dir"))
+            ? System.getProperty("knime.testing.result-dir") : System.getProperty("java.io.tmpdir");
+        String relPath = ctx.getCurrentLocation().getAbsolutePath();
+        relPath = relPath.substring(ctx.getMountpointRoot().getAbsolutePath().length());
+        String absPath = rootPath + relPath;
+        pushFlowVariableString("testing.workflow-result-path", absPath);
 
         return new DataTableSpec[0];
     }
