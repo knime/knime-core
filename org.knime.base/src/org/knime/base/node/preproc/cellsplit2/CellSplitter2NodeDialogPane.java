@@ -367,7 +367,7 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
 
         m_trim.setSelected(csSettings.isTrim());
 
-        m_splitColumnNames.setSelected(csSettings.splitColumnNames());
+        m_splitColumnNames.setSelected(csSettings.isSplitColumnNames());
 
         m_hasScanLimit.setSelected(csSettings.hasScanLimit());
         m_scanLimit.setValue(csSettings.scanLimit());

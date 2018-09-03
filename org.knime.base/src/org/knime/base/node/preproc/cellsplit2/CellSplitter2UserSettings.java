@@ -452,7 +452,7 @@ public class CellSplitter2UserSettings {
      *         and be used as column names.
      * @since 3.7
      */
-    boolean splitColumnNames() {
+    boolean isSplitColumnNames() {
         return m_splitColumnNames;
     }
 

@@ -426,7 +426,7 @@ class CellSplitter2CellFactory implements CellFactory {
 
                 Tokenizer tokenizer = null;
                 StringReader inputReader = null;
-                if (m_settings.splitColumnNames()) {
+                if (m_settings.isSplitColumnNames()) {
                     /* If split column names is set, we need to split the selected column name with the same tokenizer as used later for the cell data. */
                     inputReader = new StringReader(selColName);
                     tokenizer = prepareTokenizer(inputReader, m_settings.createTokenizerSettings());
