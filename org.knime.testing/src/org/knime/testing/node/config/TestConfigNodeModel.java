@@ -165,12 +165,15 @@ public class TestConfigNodeModel extends NodeModel {
         }
 
         WorkflowContext ctx = NodeContext.getContext().getWorkflowManager().getContext();
-        String rootPath = !StringUtils.isEmpty(System.getProperty("knime.testing.result-dir"))
-            ? System.getProperty("knime.testing.result-dir") : System.getProperty("java.io.tmpdir");
-        String relPath = ctx.getCurrentLocation().getAbsolutePath();
-        relPath = relPath.substring(ctx.getMountpointRoot().getAbsolutePath().length());
-        String absPath = rootPath + relPath;
-        pushFlowVariableString("testing.workflow-result-path", absPath);
+        if ((ctx != null) && (ctx.getMountpointRoot() != null)) {
+            // ctx is null when run in a job manager, see AP-10337
+            String rootPath = !StringUtils.isEmpty(System.getProperty("knime.testing.result-dir"))
+                ? System.getProperty("knime.testing.result-dir") : System.getProperty("java.io.tmpdir");
+            String relPath = ctx.getCurrentLocation().getAbsolutePath();
+            relPath = relPath.substring(ctx.getMountpointRoot().getAbsolutePath().length());
+            String absPath = rootPath + relPath;
+            pushFlowVariableString("testing.workflow-result-path", absPath);
+        }
 
         return new DataTableSpec[0];
     }
