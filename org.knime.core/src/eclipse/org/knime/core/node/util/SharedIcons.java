@@ -143,8 +143,8 @@ public enum SharedIcons {
     TYPE_BLOB("icons/binary_object.png"),
     /** Boolean type icon **/
     TYPE_BOOLEAN("icons/boolean.png"),
-    /** Bitvector type icon FIXME currently same icon as boolean**/
-    TYPE_BITVECTOR("icons/boolean.png"),
+    /** Bitvector type icon **/
+    TYPE_BITVECTOR("icons/bitvectoricon.png"),
     /** Bytevector type icon **/
     TYPE_BYTEVECTOR("icons/bytevectoricon.png"),
     /** Collection type icon **/
