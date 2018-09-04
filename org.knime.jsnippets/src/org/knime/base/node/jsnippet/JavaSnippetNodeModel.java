@@ -133,6 +133,7 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         m_snippet.setSettings(m_settings);
+
         FlowVariableRepository flowVarRepo =
             new FlowVariableRepository(getAvailableInputFlowVariables());
         BufferedDataTable output = m_snippet.execute(inData[0],
@@ -147,6 +148,10 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
                 pushFlowVariableString(var.getName(), var.getStringValue());
             }
         }
+
+        setWarningMessage(m_snippet.getWarningMessage());
+
+
         return new BufferedDataTable[] {output};
     }
 

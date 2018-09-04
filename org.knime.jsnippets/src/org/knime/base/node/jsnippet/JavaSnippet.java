@@ -1406,4 +1406,24 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         CLASSPATH_FOR_CLASS_CACHE.put(javaType, result);
         return result;
     }
+
+    private String m_warningMessage = null;
+
+    /**
+     * Set the warning message. Used by {@link JavaSnippetCellFactory} to set the node's warning message.
+     * @param message The message to set or <code>null</code> to clear the warning.
+     */
+    public synchronized void setWarningMessage(final String message) {
+        m_warningMessage = message;
+    }
+
+    /**
+     * Get warning message set by the {@link JavaSnippetCellFactory} if exceptions occurred during processing of on of
+     * the input rows. Used to set the node's warning message.
+     *
+     * @return Warning message currently set on the snippet
+     */
+    public String getWarningMessage() {
+        return m_warningMessage;
+    }
 }
