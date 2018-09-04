@@ -428,12 +428,6 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
         return cols;
     }
 
-    @Deprecated
-    @Override
-    public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey, final ExecutionMonitor exec) {
-        exec.setProgress(curRowNr / (double)rowCount, () -> "Processed row " + curRowNr + " (\"" + lastKey + "\")");
-    }
-
     @Override
     public void setProgress(final long curRowNr, final long rowCount, final RowKey lastKey,
         final ExecutionMonitor exec) {
