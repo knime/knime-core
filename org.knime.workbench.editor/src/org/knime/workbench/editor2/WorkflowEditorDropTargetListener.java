@@ -72,12 +72,14 @@ import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.CreateDropRequest.RequestType;
 import org.knime.workbench.editor2.actions.CreateSpaceAction.CreateSpaceDirection;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowOutPortBarEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.explorer.view.ContentObject;
 import org.knime.workbench.repository.util.ContextAwareNodeFactoryMapper;
 
@@ -500,5 +502,18 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
         result[2] = (int)(zoom * bounds[2]);
         result[3] = (int)(zoom * bounds[3]);
         return result;
+    }
+
+    /**
+     * @return the workflow manager of the drop-target, can be <code>null</code> if the drop target is not a
+     *         {@link WorkflowEditor}
+     */
+    protected WorkflowManagerUI getWorkflowManager() {
+        EditPart contents = getViewer().getRootEditPart().getContents();
+        if (contents != null && contents instanceof WorkflowRootEditPart) {
+            return ((WorkflowRootEditPart)contents).getWorkflowManager();
+        } else {
+            return null;
+        }
     }
 }

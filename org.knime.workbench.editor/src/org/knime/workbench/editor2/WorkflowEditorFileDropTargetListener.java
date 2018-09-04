@@ -44,6 +44,8 @@
  */
 package org.knime.workbench.editor2;
 
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import java.io.File;
 import java.net.URL;
 
@@ -53,6 +55,7 @@ import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  *
@@ -113,10 +116,15 @@ public class WorkflowEditorFileDropTargetListener
      */
     @Override
     public boolean isEnabled(final DropTargetEvent event) {
-        event.feedback = DND.FEEDBACK_SELECT;
-        event.operations = DND.DROP_DEFAULT;
-        event.detail = DND.DROP_DEFAULT;
-        return true;
+        //not yet supported by WorkflowManagerUI-implementations
+        if (wraps(getWorkflowManager(), WorkflowManager.class)) {
+            event.feedback = DND.FEEDBACK_SELECT;
+            event.operations = DND.DROP_DEFAULT;
+            event.detail = DND.DROP_DEFAULT;
+            return true;
+        } else {
+            return false;
+        }
     }
 
 

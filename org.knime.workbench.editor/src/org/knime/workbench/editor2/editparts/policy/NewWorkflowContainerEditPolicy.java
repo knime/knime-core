@@ -121,7 +121,14 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
             CreateDropRequest cdr = (CreateDropRequest)request;
             if (obj instanceof NodeFactory) {
                 return handleNodeDrop(managerUI, (NodeFactory<? extends NodeModel>)obj, cdr);
-            } else if (obj instanceof AbstractExplorerFileStore) {
+            }
+
+            if(!manager.isPresent()) {
+                //drops of the objects below are not yet supported
+                //for WorkflowManagerUI-implementations
+                return null;
+            }
+            if (obj instanceof AbstractExplorerFileStore) {
                 AbstractExplorerFileStore fs = (AbstractExplorerFileStore)obj;
                 if (AbstractExplorerFileStore.isWorkflowTemplate(fs)) {
                     return handleMetaNodeTemplateDrop(manager.get(), cdr, fs);

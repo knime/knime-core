@@ -47,11 +47,14 @@
  */
 package org.knime.workbench.editor2;
 
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.view.ContentObject;
 
@@ -95,12 +98,14 @@ public class MetaNodeTemplateDropTargetListener extends
                 = getDragResources(event).getObject();
         boolean isMetaNodeTemplate =
             AbstractExplorerFileStore.isWorkflowTemplate(fileStore);
-        if (isMetaNodeTemplate) {
+        //not yet supported by WorkflowManagerUI-implementations
+        if (isMetaNodeTemplate && wraps(getWorkflowManager(), WorkflowManager.class)) {
             event.feedback = DND.FEEDBACK_SELECT;
             event.operations = DND.DROP_COPY | DND.DROP_LINK;
             event.detail = DND.DROP_COPY;
+            return true;
         }
-        return isMetaNodeTemplate;
+        return false;
     }
 
     /**

@@ -48,6 +48,8 @@
  */
 package org.knime.workbench.editor2;
 
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.util.LocalSelectionTransfer;
@@ -55,6 +57,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.repository.model.AbstractNodeTemplate;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 
@@ -79,7 +82,8 @@ public class MetaNodeDropTargetListener extends
     @Override
     public boolean isEnabled(final DropTargetEvent event) {
         AbstractNodeTemplate snt = getSelectionNodeTemplate();
-        if (snt != null) {
+        //not yet supported by WorkflowManagerUI-implementations
+        if (snt != null && wraps(getWorkflowManager(), WorkflowManager.class)) {
             event.feedback = DND.FEEDBACK_SELECT;
             event.operations = DND.DROP_COPY;
             event.detail = DND.DROP_COPY;
