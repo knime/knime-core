@@ -5,8 +5,8 @@
 	<artifactId>org.knime.startup.macosx</artifactId>
 
     <parent>
-        <groupId>org.knime.core</groupId>
-        <artifactId>knime-core-parent</artifactId>
+        <groupId>org.knime</groupId>
+        <artifactId>knime-core</artifactId>
         <version>3.8.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
