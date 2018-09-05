@@ -16,10 +16,11 @@
 			confusion matrix's columns. The output of the node is the confusion 
 			matrix with the number of matches in each cell.
 			Additionally, the second out-port reports a number of 
-			<a href="http://en.wikipedia.org/wiki/Information_retrieval">
+			<a href="https://en.wikipedia.org/wiki/Confusion_matrix">
 			accuracy statistics</a> such as True-Positives, False-Positives, 
 			True-Negatives, False-Negatives, Recall, Precision, Sensitivity, 
-			Specificity, F-measure, as well as the overall accuracy and Cohen's kappa.
+			Specificity, F-measure, as well as the overall accuracy and 
+			<a href="https://en.wikipedia.org/wiki/Cohen%27s_kappa">Cohen's kappa</a>.
 		</intro>
         <option name="First column">The first column represents the real classes of the data.</option>
         <option name="Second column">The second column represents the predicted classes of the data.</option>
