@@ -52,8 +52,11 @@ import static org.knime.workbench.ui.async.AsyncUtil.wfmAsyncSwitchRethrow;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -61,6 +64,7 @@ import java.util.function.Supplier;
 import org.eclipse.gef.EditPartViewer;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowAnnotationID;
@@ -89,14 +93,18 @@ public class DeleteCommand extends AbstractKNIMECommand {
     /** References to annotations being deleted. */
     private final WorkflowAnnotationID[] m_annotationIDs;
 
-    /** Array containing connections that are to be deleted and which are not
-     * part of the persistor (perisistor only covers connections whose source
-     * and destination is part of the persistor as well). */
+    /**
+     * Array containing connections that are to be deleted and which are not part of the persistor (perisistor only
+     * covers connections whose source and destination is part of the persistor as well).
+     */
     private final ConnectionContainerUI[] m_connections;
 
-    /** Number of connections that will be deleted upon execute(). This includes
-     * m_connections and all connections covered by the persistor. This number
-     * is at least m_connections.length.
+    /** A Map from ConnectionContainerUI to the connection UI info **/
+    private final Map<ConnectionContainerUI, ConnectionUIInformation> m_connectionUIInfoMap;
+
+    /**
+     * Number of connections that will be deleted upon execute(). This includes m_connections and all connections
+     * covered by the persistor. This number is at least m_connections.length.
      */
     private final int m_connectionCount;
 
@@ -118,19 +126,21 @@ public class DeleteCommand extends AbstractKNIMECommand {
     }
 
     /**
-     * Creates a new delete command for a set of nodes. Undo will also restore
-     * all connections that were removed as part of this command's execute.
+     * Creates a new delete command for a set of nodes. Undo will also restore all connections that were removed as part
+     * of this command's execute.
+     *
+     * TODO Instances of this class are created several times during a single node replacement; perhaps evaluate making
+     * this less computationally involved given that.
+     *
      * @param editParts Selected nodes and connections and annotations
      * @param manager wfm hosting the nodes.
      */
-    public DeleteCommand(final Collection<?> editParts,
-            final WorkflowManagerUI manager) {
+    public DeleteCommand(final Collection<?> editParts, final WorkflowManagerUI manager) {
         super(manager);
-        Set<NodeID> idSet = new LinkedHashSet<NodeID>();
-        Set<WorkflowAnnotationID> annotationSet =
-            new LinkedHashSet<WorkflowAnnotationID>();
-        Set<ConnectionContainerUI> conSet =
-            new LinkedHashSet<ConnectionContainerUI>();
+
+        final Set<NodeID> idSet = new LinkedHashSet<NodeID>();
+        final Set<WorkflowAnnotationID> annotationSet = new LinkedHashSet<WorkflowAnnotationID>();
+        final Set<ConnectionContainerUI> conSet = new LinkedHashSet<ConnectionContainerUI>();
         EditPartViewer viewer = null;
         for (Object p : editParts) {
             if (p instanceof NodeContainerEditPart) {
@@ -155,8 +165,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
                 conSet.addAll(manager.getIncomingConnectionsFor(id));
                 conSet.addAll(manager.getOutgoingConnectionsFor(id));
             } else if (p instanceof ConnectionContainerEditPart) {
-                ConnectionContainerEditPart ccep =
-                    (ConnectionContainerEditPart)p;
+                ConnectionContainerEditPart ccep = (ConnectionContainerEditPart)p;
                 conSet.add(ccep.getModel());
                 if (viewer == null && ccep.getParent() != null) {
                     viewer = ccep.getViewer();
@@ -180,15 +189,20 @@ public class DeleteCommand extends AbstractKNIMECommand {
 
         m_connectionCount = conSet.size();
         // remove all connections that will be contained in the persistor
-        for (Iterator<ConnectionContainerUI> it = conSet.iterator();
-        it.hasNext();) {
+        for (final Iterator<ConnectionContainerUI> it = conSet.iterator(); it.hasNext();) {
             ConnectionContainerUI c = it.next();
             if (idSet.contains(c.getSource()) && idSet.contains(c.getDest())) {
                 it.remove();
             }
         }
 
-        m_connections = conSet.toArray(new ConnectionContainerUI[conSet.size()]);
+        m_connections = conSet.toArray(new ConnectionContainerUI[m_connectionCount]);
+
+        HashMap<ConnectionContainerUI, ConnectionUIInformation> uiInfoMap = new HashMap<>();
+        for (final ConnectionContainerUI cc : m_connections) {
+            uiInfoMap.put(cc, cc.getUIInfo());
+        }
+        m_connectionUIInfoMap = Collections.unmodifiableMap(uiInfoMap);
     }
 
     /** {@inheritDoc} */
@@ -328,5 +342,12 @@ public class DeleteCommand extends AbstractKNIMECommand {
     /** @return the number of workflow annotations to be deleted. */
     public int getAnnotationCount() {
         return m_annotationIDs.length;
+    }
+
+    /**
+     * @return an unmodifiable map, mapping the ConnectionContainerUI to its UI info
+     */
+    public Map<ConnectionContainerUI, ConnectionUIInformation> getConnectionUIInfo() {
+        return m_connectionUIInfoMap;
     }
 }

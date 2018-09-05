@@ -331,20 +331,18 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                 final int sourcePort;
                 final NodeID destinationNID;
                 final int destinationPort;
-                final ConnectionUIInformation uiInfo;
+                final ConnectionUIInformation uiInfo = sc.getOriginalUIInfo();
 
                 if (sc.isInputConnection()) {
                     sourceNID = sc.getOtherNodeId();
                     sourcePort = sc.getOtherPort();
                     destinationNID = dragNodeId;
                     destinationPort = sc.getNodeInDragPort();
-                    uiInfo = sc.getOriginalUIInfo();
                 } else {
                     sourceNID = dragNodeId;
                     sourcePort = sc.getNodeInDragPort();
                     destinationNID = sc.getOtherNodeId();
                     destinationPort = sc.getOtherPort();
-                    uiInfo = null;
                 }
 
                 final ConnectionContainer newCC =
