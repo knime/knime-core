@@ -194,42 +194,38 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
         }
     }
 
-    private Map<Integer, Integer> getMatchingPorts(final NodeContainerUI left,
-            final NodeContainerUI right) {
+    private Map<Integer, Integer> getMatchingPorts(final NodeContainerUI left, final NodeContainerUI right) {
         // don't auto connect to flow var ports - start with port index 1
-        int leftFirst = (left instanceof WorkflowManagerUI) ? 0 : 1;
-        int rightFirst = (right instanceof WorkflowManagerUI) ? 0 : 1;
-        Map<Integer, Integer> matchingPorts = new TreeMap<Integer, Integer>();
-        Map<Integer, Integer> possibleMatches = new TreeMap<Integer, Integer>();
-        Set<Integer> assignedRight = new HashSet<Integer>();
+        final int leftFirst = (left instanceof WorkflowManagerUI) ? 0 : 1;
+        final int rightFirst = (right instanceof WorkflowManagerUI) ? 0 : 1;
+        final Map<Integer, Integer> matchingPorts = new TreeMap<Integer, Integer>();
+        final Map<Integer, Integer> possibleMatches = new TreeMap<Integer, Integer>();
+        final Set<Integer> assignedRight = new HashSet<Integer>();
         for (int rightPidx = rightFirst; rightPidx < right.getNrInPorts(); rightPidx++) {
             for (int leftPidx = leftFirst; leftPidx < left.getNrOutPorts(); leftPidx++) {
-                NodeOutPortUI leftPort = left.getOutPort(leftPidx);
-                NodeInPortUI rightPort = right.getInPort(rightPidx);
-                PortType leftPortType = leftPort.getPortType();
-                PortType rightPortType = rightPort.getPortType();
-                if (leftPortType.isSuperTypeOf(rightPortType)) {
-                    if (getHostWFMUI().getOutgoingConnectionsFor(left.getID(),
-                            leftPidx).size() == 0) {
-                        if (!matchingPorts.containsKey(leftPidx)
-                                && !assignedRight.contains(rightPidx)) {
+                final NodeOutPortUI leftPort = left.getOutPort(leftPidx);
+                final NodeInPortUI rightPort = right.getInPort(rightPidx);
+                final PortType leftPortType = leftPort.getPortType();
+                final PortType rightPortType = rightPort.getPortType();
+                if (leftPortType.isSuperTypeOf(rightPortType) || rightPortType.isSuperTypeOf(leftPortType)) {
+                    if (getHostWFMUI().getOutgoingConnectionsFor(left.getID(), leftPidx).size() == 0) {
+                        if (!matchingPorts.containsKey(leftPidx) && !assignedRight.contains(rightPidx)) {
                             // output not connected: use it.
                             matchingPorts.put(leftPidx, rightPidx);
                             assignedRight.add(rightPidx);
                         }
                     } else {
                         // port already connected - we MAY use it
-                        if (!possibleMatches.containsKey(leftPidx)
-                                && !assignedRight.contains(rightPidx)) {
+                        if (!possibleMatches.containsKey(leftPidx) && !assignedRight.contains(rightPidx)) {
                             possibleMatches.put(leftPidx, rightPidx);
                         }
                     }
                 }
             }
         }
-        for (Map.Entry<Integer, Integer> entry : possibleMatches.entrySet()) {
-            Integer pl = entry.getKey();
-            Integer pr = entry.getValue();
+        for (final Map.Entry<Integer, Integer> entry : possibleMatches.entrySet()) {
+            final Integer pl = entry.getKey();
+            final Integer pr = entry.getValue();
             if (!matchingPorts.containsKey(pl) && !assignedRight.contains(pr)) {
                 matchingPorts.put(pl, pr);
                 assignedRight.add(pr);
