@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 20, 2007 (ohl): created
  */
@@ -56,10 +56,13 @@ import org.knime.core.node.NodeSettingsRO;
 /**
  * Extends the user settings object to a general splitter settings object. In addition to the user settings it stores
  * column types and number of columns, the values analyzed during execute. These values are not saved.
- * 
+ * <p>
+ * Note: This class replaces the (deprecated) CellSplitterSettings.
+ * </p>
+ *
  * @author ohl, University of Konstanz
  */
-class CellSplitter2Settings extends CellSplitter2UserSettings {
+final class CellSplitter2Settings extends CellSplitter2UserSettings {
 
     private Vector<DataType> m_types = new Vector<DataType>();
 
@@ -74,8 +77,8 @@ class CellSplitter2Settings extends CellSplitter2UserSettings {
      * Creates a new settings object with the value from the specified settings object. If the values in there
      * incomplete it throws an Exception. The values can be validated (checked for consistency and validity) with the
      * getStatus method.
-     * 
-     * 
+     *
+     *
      * @param values the config object to read the settings values from
      * @throws InvalidSettingsException if the values in the settings object are incomplete.
      */
@@ -85,7 +88,7 @@ class CellSplitter2Settings extends CellSplitter2UserSettings {
 
     /**
      * Adds the type of a new column at the end of the column list.
-     * 
+     *
      * @param type the type of the new column.
      */
     void addColumnOfType(final DataType type) {
@@ -94,7 +97,7 @@ class CellSplitter2Settings extends CellSplitter2UserSettings {
 
     /**
      * Replaces the type of an already found column. Used during column type guessing.
-     * 
+     *
      * @param colIdx the index of the column which gets a new type
      * @param newType the new type of the specified column
      */
@@ -104,7 +107,7 @@ class CellSplitter2Settings extends CellSplitter2UserSettings {
 
     /**
      * Return the type of a column previously added.
-     * 
+     *
      * @param colIdx the column to get the type for.
      * @return the guessed column type of the specified column.
      */

@@ -59,10 +59,13 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
 /**
  * Holds all user settings needed for the cell splitter. Provides methods for saving and a constructor taking a
  * NodeSettingRO object.
+ * <p>
+ * Note: This class replaces the (deprecated) CellSplitterUserSettings.
+ * </p>
  *
  * @author ohl, University of Konstanz
  */
-public class CellSplitter2UserSettings {
+class CellSplitter2UserSettings {
 
     /**
      * keys to store user settings with.
@@ -115,44 +118,20 @@ public class CellSplitter2UserSettings {
 
     private boolean m_useEscapeCharacter = false;
 
-    /**
-     * @since 2.6
-     */
     private boolean m_outputAsList = false;
 
-    /**
-     * @since 2.6
-     */
     private boolean m_outputAsSet = false;
 
-    /**
-     * @since 2.6
-     */
     private boolean m_outputAsCols = true;
 
-    /**
-     * @since 2.6
-     */
     private boolean m_trim = true;
 
-    /**
-     * @since 3.7
-     */
     private boolean m_splitColumnNames = false;
 
-    /**
-     * @since 3.7
-     */
     private boolean m_hasScanLimit = false;
 
-    /**
-     * @since 3.7
-     */
     private int m_scanLimit = 50;
 
-    /**
-     * @since 3.7
-     */
     private boolean m_removeInputColumn = false;
 
     /**
@@ -183,16 +162,13 @@ public class CellSplitter2UserSettings {
         // the node used to create empty cells instead of missing cells.
         m_useEmptyStrings = settings.getBoolean(CFG_USEEMPTYSTRING, true);
 
-        /** @since 2.6 */
         m_useEscapeCharacter = settings.getBoolean(CFG_USEESCAPECHAR, false);
 
-        /** @since 2.6 */
         m_outputAsList = settings.getBoolean(CFG_OUTPUTASLIST, false);
         m_outputAsSet = settings.getBoolean(CFG_OUTPUTASSET, false);
         m_outputAsCols = settings.getBoolean(CFG_OUTPUTASCOLS, true);
         m_trim = settings.getBoolean(CFG_TRIM, true);
 
-        /** @since 3.7 */
         m_splitColumnNames = settings.getBoolean(CFG_SPLIT_COLUMN_NAMES, false);
 
         m_hasScanLimit = settings.getBoolean(CFG_HAS_SCAN_LIMIT, true);
@@ -384,7 +360,6 @@ public class CellSplitter2UserSettings {
 
     /**
      * @return the outputAsList <code>true</code> if output is list, otherwise <code>false</code>.
-     * @since 2.6
      */
     boolean isOutputAsList() {
         return m_outputAsList;
@@ -392,7 +367,6 @@ public class CellSplitter2UserSettings {
 
     /**
      * @param outputAsList the outputAsList to set
-     * @since 2.6
      */
     void setOutputAsList(final boolean outputAsList) {
         m_outputAsList = outputAsList;
@@ -400,7 +374,6 @@ public class CellSplitter2UserSettings {
 
     /**
      * @return the outputAsSet <code>true</code> if output is set, otherwise <code>false</code>.
-     * @since 2.6
      */
     boolean isOutputAsSet() {
         return m_outputAsSet;
@@ -408,7 +381,6 @@ public class CellSplitter2UserSettings {
 
     /**
      * @param outputAsSet the outputAsSet to set
-     * @since 2.6
      */
     void setOutputAsSet(final boolean outputAsSet) {
         m_outputAsSet = outputAsSet;
@@ -416,7 +388,6 @@ public class CellSplitter2UserSettings {
 
     /**
      * @return the outputAsCols <code>true</code> if output are columns, otherwise <code>false</code>.
-     * @since 2.6
      */
     boolean isOutputAsCols() {
         return m_outputAsCols;
@@ -424,7 +395,6 @@ public class CellSplitter2UserSettings {
 
     /**
      * @param outputAsCols the outputAsCols to set
-     * @since 2.6
      */
     void setOutputAsCols(final boolean outputAsCols) {
         m_outputAsCols = outputAsCols;
@@ -433,7 +403,6 @@ public class CellSplitter2UserSettings {
     /**
      * @return the trim <code>true</code> if leading and trailing white spaces need to be removed, otherwise
      *         <code>false</code>.
-     * @since 2.6
      */
     boolean isTrim() {
         return m_trim;
@@ -441,7 +410,6 @@ public class CellSplitter2UserSettings {
 
     /**
      * @param trim the trim to set
-     * @since 2.6
      */
     void setTrim(final boolean trim) {
         m_trim = trim;
@@ -450,7 +418,6 @@ public class CellSplitter2UserSettings {
     /**
      * @return <code>true</code> if the input column name should be split with the same pattern as the columns contents
      *         and be used as column names.
-     * @since 3.7
      */
     boolean isSplitColumnNames() {
         return m_splitColumnNames;
@@ -465,9 +432,8 @@ public class CellSplitter2UserSettings {
         m_splitColumnNames = split;
     }
 
-    /*
+    /**
      * @return whether to use a scan limit while guessing the amount of output columns
-     * @since 3.7
      */
     boolean hasScanLimit() {
         return m_hasScanLimit;
@@ -475,7 +441,6 @@ public class CellSplitter2UserSettings {
 
     /**
      * @param b whether to use a scan limit while guessing the amount of output columns
-     * @since 3.7
      */
     void setHasScanLimit(final boolean b) {
         m_hasScanLimit = b;
@@ -483,7 +448,6 @@ public class CellSplitter2UserSettings {
 
     /**
      * @return the number of rows to scan to guess the number of output columns
-     * @since 3.7
      */
     int scanLimit() {
         return m_scanLimit;
@@ -492,7 +456,6 @@ public class CellSplitter2UserSettings {
     /**
      * @param n Amount of numbers to use when guessing amount of output columns. Only has effect if
      *            {@link #hasScanLimit()}.
-     * @since 3.7
      */
     void setScanLimit(final int n) {
         m_scanLimit = n;
@@ -500,7 +463,6 @@ public class CellSplitter2UserSettings {
 
     /**
      * @return whether to remove the input column
-     * @since 3.7
      */
     boolean isRemoveInputColumn() {
         return m_removeInputColumn;
@@ -508,15 +470,13 @@ public class CellSplitter2UserSettings {
 
     /**
      * @param b Whether to remove the input column
-     * @since 3.7
      */
     void setRemoveInputColumn(final boolean b) {
         m_removeInputColumn = b;
     }
 
-
     /**
-     * Create TokenizerSettings from these CellSpliterUserSettings.
+     * Creates the TokenizerSettings from these CellSpliterUserSettings, which can be <code>null</code>.
      *
      * @return the tokenizer settings.
      */

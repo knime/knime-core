@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 19, 2007 (ohl): created
  */
@@ -49,14 +49,17 @@ package org.knime.base.node.preproc.cellsplit2;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ * The cell splitter node factory.
+ * <p>
+ * Note: This class replaces the (deprecated) CellSplitterNodeFactory.
+ * </p>
+ *
  * @author ohl, University of Konstanz
  */
-public class CellSplitter2NodeFactory extends NodeFactory {
+public final class CellSplitter2NodeFactory extends NodeFactory<CellSplitter2NodeModel> {
 
     /**
      * {@inheritDoc}
@@ -70,7 +73,7 @@ public class CellSplitter2NodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public CellSplitter2NodeModel createNodeModel() {
         return new CellSplitter2NodeModel();
     }
 
@@ -78,7 +81,8 @@ public class CellSplitter2NodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, final NodeModel nodeModel) {
+    public NodeView<CellSplitter2NodeModel> createNodeView(final int viewIndex,
+        final CellSplitter2NodeModel nodeModel) {
         return null;
     }
 

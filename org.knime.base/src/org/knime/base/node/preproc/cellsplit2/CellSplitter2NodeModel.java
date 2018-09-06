@@ -63,17 +63,20 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Model of the node that splits one column into many, based on a user specified delimiter.
+ * <p>
+ * Note: This class replaces the (deprecated) CellSplitterNodeModel.
+ * </p>
  *
  * @author ohl, University of Konstanz
  */
-public class CellSplitter2NodeModel extends NodeModel {
+final class CellSplitter2NodeModel extends NodeModel {
 
     private CellSplitter2Settings m_settings = new CellSplitter2Settings();
 
     /**
      * The constructor.
      */
-    public CellSplitter2NodeModel() {
+    CellSplitter2NodeModel() {
         super(1, 1); // one data input, one data output
     }
 
@@ -135,7 +138,7 @@ public class CellSplitter2NodeModel extends NodeModel {
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec inTableSpec) {
         final ColumnRearranger c = new ColumnRearranger(inTableSpec);
-        if(m_settings.isRemoveInputColumn()) {
+        if (m_settings.isRemoveInputColumn()) {
             c.remove(m_settings.getColumnName());
         }
         c.append(new CellSplitter2CellFactory(inTableSpec, m_settings));

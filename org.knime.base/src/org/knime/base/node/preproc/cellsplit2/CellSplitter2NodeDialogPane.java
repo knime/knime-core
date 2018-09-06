@@ -76,10 +76,14 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
+ * The cell splitter node dialog pane.
+ * <p>
+ * Note: This class replaces the (deprecated) CellSplitterNodeDialogPane.
+ * </p>
  *
  * @author ohl, University of Konstanz
  */
-public class CellSplitter2NodeDialogPane extends NodeDialogPane {
+final class CellSplitter2NodeDialogPane extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_column = new ColumnSelectionComboxBox((Border)null, StringValue.class);
 
@@ -89,24 +93,12 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
 
     private final JSpinner m_columnNumber = new JSpinner();
 
-    /**
-     * @since 2.6
-     */
     private final JRadioButton m_outputAsList = new JRadioButton("As list");
 
-    /**
-     * @since 2.6
-     */
     private final JRadioButton m_outputAsSet = new JRadioButton("As set (remove duplicates)");
 
-    /**
-     * @since 2.6
-     */
     private final JRadioButton m_outputAsColumns = new JRadioButton("As new columns");
 
-    /**
-     * @since 2.6
-     */
     private final JCheckBox m_trim = new JCheckBox("Remove leading and trailing white space chars (trim)");
 
     private final JRadioButton m_fixedSize = new JRadioButton("Set array size");
@@ -123,9 +115,6 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
 
     private final JSpinner m_scanLimit = new JSpinner(new SpinnerNumberModel(25, 1, Integer.MAX_VALUE, 50));
 
-    /**
-     * @since 3.7
-     */
     private final JCheckBox m_splitColumnNames = new JCheckBox("Split input column name for output column names");
 
     private final JCheckBox m_removeInputColumn = new JCheckBox("Remove input column");
@@ -133,7 +122,7 @@ public class CellSplitter2NodeDialogPane extends NodeDialogPane {
     /**
      * Creates a new panel for the dialog and inits all components.
      */
-    public CellSplitter2NodeDialogPane() {
+    CellSplitter2NodeDialogPane() {
         JPanel pane = new JPanel();
         pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
 

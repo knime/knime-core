@@ -84,7 +84,7 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
  *
  * @author ohl, University of Konstanz
  */
-class CellSplitter2CellFactory implements CellFactory {
+final class CellSplitter2CellFactory implements CellFactory {
 
     private final CellSplitter2Settings m_settings;
 
@@ -104,7 +104,7 @@ class CellSplitter2CellFactory implements CellFactory {
      * @param inSpec the spec from the underlying input table
      * @param settings the settings object containing the user settings.
      */
-    public CellSplitter2CellFactory(final DataTableSpec inSpec, final CellSplitter2Settings settings) {
+    CellSplitter2CellFactory(final DataTableSpec inSpec, final CellSplitter2Settings settings) {
         CheckUtils.checkArgumentNotNull(settings);
 
         m_settings = settings;
@@ -156,9 +156,8 @@ class CellSplitter2CellFactory implements CellFactory {
      *
      * @param inputCell The cell to extract the string representation from.
      * @return The string representation of the given cell.
-     * @since 2.6
      */
-    private String getInputString(final DataCell inputCell) {
+    private static String getInputString(final DataCell inputCell) {
         final String inputString;
         if (inputCell instanceof StringValue) {
             inputString = ((StringValue)inputCell).getStringValue();
@@ -174,7 +173,6 @@ class CellSplitter2CellFactory implements CellFactory {
      * @param inputReader The string reader to create a tokenizer on.
      * @param settings Tokenizer settings.
      * @return The tokenizer created on the string reader.
-     * @since 2.6
      */
     private static Tokenizer prepareTokenizer(final StringReader inputReader, final TokenizerSettings settings) {
         assert inputReader.markSupported();
@@ -190,7 +188,6 @@ class CellSplitter2CellFactory implements CellFactory {
      *
      * @param inputCell the cell to tokenize (its string representation)
      * @return An array containing exactly one collection cell, storing string cells. For each token one string cell.
-     * @since 2.6
      */
     private DataCell[] tokenizeAndCreateCollectionsCell(final DataCell inputCell) {
         DataCell[] result = new DataCell[1];
@@ -239,7 +236,6 @@ class CellSplitter2CellFactory implements CellFactory {
      * @param numOfCells The number of cells to create, containing the tokens
      * @return An arrays of cells containing the tokens. The length of the array is specified by
      *         <code>numOfCells</code>.
-     * @since 2.6
      */
     private DataCell[] tokenizeAndCreateCells(final DataCell inputCell, final int numOfCells) {
         DataCell[] result = new DataCell[numOfCells];
