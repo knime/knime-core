@@ -48,9 +48,6 @@
  */
 package org.knime.core.data.convert;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
 import org.knime.core.data.convert.util.SerializeUtil;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
@@ -62,27 +59,25 @@ import org.knime.core.node.config.base.ConfigBaseWO;
  * Serializable via {@link SerializeUtil#storeConverterFactory(ConverterFactory, ConfigBaseWO, String)}.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <SourceType> Type that is converted
- * @param <DestType> Type that is converted to
+ * @param <ST> Type that is converted
+ * @param <DT> Type into which can be converted
  * @since 3.6
  */
-public interface ConverterFactory<SourceType, DestType> {
+public interface ConverterFactory<ST, DT> {
 
     /**
-     * Get the {@link DataType} (the type of {@link DataCell data cells}) which converters that were created by this
-     * factory are able to convert into.
+     * Get the type which converters that were created by this factory are able to convert into.
      *
-     * @return DataType of the {@link DataCell} created by the {@link JavaToDataCellConverter}s produced by this
-     *         factory.
+     * @return type of the values created by the converters produced by this factory.
      */
-    public DestType getDestinationType();
+    public DT getDestinationType();
 
     /**
      * Get the type which converters that were created by this factory are able to convert from.
      *
      * @return type which the created converters can convert
      */
-    public SourceType getSourceType();
+    public ST getSourceType();
 
     /**
      * A human readable name for this converter factory to be displayed in user interfaces for example.
@@ -98,7 +93,7 @@ public interface ConverterFactory<SourceType, DestType> {
      *
      * The identifier is a unique string used to unambiguously reference this converter factory. Since this identifier
      * is used for persistence, it is required that the identifier is the same every runtime. If the identifier is not
-     * unique, the factory may not be loaded from the extension point.
+     * unique, the factory may not be loaded, e.g. from the extension point.
      *
      * <p>
      * <b>Examples:</b>

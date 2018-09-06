@@ -49,13 +49,9 @@ package org.knime.core.data.convert;
 
 import java.util.Objects;
 
-import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
-import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
-
 /**
- * Class which contains information to reference a {@link DataCellToJavaConverterFactory} or
- * {@link JavaToDataCellConverterFactory} by source and destination types. This class is for internal usage only and
- * should not be used by other plug-ins.
+ * Class which contains information to reference a {@link ConverterFactory} or by source and destination types.
+ * This class is for internal usage only and should not be used by other plug-ins.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @since 3.2

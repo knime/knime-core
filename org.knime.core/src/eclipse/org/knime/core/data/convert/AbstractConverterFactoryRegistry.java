@@ -56,7 +56,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -65,13 +64,13 @@ import org.knime.core.node.NodeLogger;
  * Common code for registries which manage {@link ConverterFactory converter factories}.
  *
  * @author Jonathan Hale
- * @param <SourceType> Type object of source types
- * @param <DestType> Type object of dest types
+ * @param <ST> Type of source types
+ * @param <DT> Type of dest types
  * @param <ConverterFactoryType> Type of converter factory to be registered here
  * @param <RegistryImpl> Implementing class, used for proper method chaining
  * @since 3.6
  */
-public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, ConverterFactoryType extends ConverterFactory<SourceType, DestType>, RegistryImpl extends AbstractConverterFactoryRegistry<SourceType, DestType, ConverterFactoryType, RegistryImpl>> {
+public abstract class AbstractConverterFactoryRegistry<ST, DT, ConverterFactoryType extends ConverterFactory<ST, DT>, RegistryImpl extends AbstractConverterFactoryRegistry<ST, DT, ConverterFactoryType, RegistryImpl>> {
 
     private final static NodeLogger LOGGER = NodeLogger.getLogger(AbstractConverterFactoryRegistry.class);
 
@@ -79,10 +78,10 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
     protected final HashMap<ConversionKey, ArrayList<ConverterFactoryType>> m_factories = new HashMap<>();
 
     /** Factories stored by destination type */
-    protected final HashMap<DestType, Set<ConverterFactoryType>> m_byDestinationType = new HashMap<>();
+    protected final HashMap<DT, Set<ConverterFactoryType>> m_byDestinationType = new HashMap<>();
 
     /** Factories stored by source type */
-    protected final HashMap<SourceType, Set<ConverterFactoryType>> m_bySourceType = new HashMap<>();
+    protected final HashMap<ST, Set<ConverterFactoryType>> m_bySourceType = new HashMap<>();
 
     /** Factories stored by identifier */
     protected final HashMap<String, ConverterFactoryType> m_byIdentifier = new HashMap<>();
@@ -100,7 +99,7 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
      */
     public Collection<ConverterFactoryType> getAllConverterFactories() {
         final Set<ConverterFactoryType> factories =
-            m_factories.values().stream().flatMap(c -> c.stream()).collect(Collectors.toSet());
+            m_factories.values().stream().flatMap(factoryList -> factoryList.stream()).collect(Collectors.toSet());
         if (m_parent != null) {
             factories.addAll(m_parent.getAllConverterFactories());
         }
@@ -112,9 +111,9 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
      *
      * @return a {@link Collection} of all possible source types
      */
-    public Collection<SourceType> getAllSourceTypes() {
-        Set<SourceType> sourceTypes = m_factories.values().stream().flatMap(c -> c.stream())
-            .map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
+    public Collection<ST> getAllSourceTypes() {
+        final Set<ST> sourceTypes = m_factories.values().stream().flatMap(factoryList -> factoryList.stream())
+            .map(factory -> factory.getSourceType()).collect(Collectors.toSet());
         if (m_parent != null) {
             sourceTypes.addAll(m_parent.getAllSourceTypes());
         }
@@ -126,9 +125,9 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
      *
      * @return a {@link Collection} of all possible source types
      */
-    public Collection<DestType> getAllDestinationTypes() {
-        final Set<DestType> destTypes = m_factories.values().stream().flatMap(c -> c.stream())
-            .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
+    public Collection<DT> getAllDestinationTypes() {
+        final Set<DT> destTypes = m_factories.values().stream().flatMap(factoryList -> factoryList.stream())
+            .map(factory -> factory.getDestinationType()).collect(Collectors.toSet());
         if (m_parent != null) {
             destTypes.addAll(m_parent.getAllDestinationTypes());
         }
@@ -136,7 +135,7 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
     }
 
     /**
-     * Register a DataCellToJavaConverterFactory.
+     * Register a converter factory.
      *
      * @param factory the factory to register
      * @return self (for method chaining)
@@ -154,7 +153,7 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
         }
         list.add(factory);
 
-        final DestType destType = factory.getDestinationType();
+        final DT destType = factory.getDestinationType();
         Set<ConverterFactoryType> byDestType = m_byDestinationType.get(destType);
         if (byDestType == null) {
             byDestType = new LinkedHashSet<>();
@@ -162,7 +161,7 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
         }
         byDestType.add(factory);
 
-        final SourceType sourceType = factory.getSourceType();
+        final ST sourceType = factory.getSourceType();
         Set<ConverterFactoryType> bySourceType = m_bySourceType.get(sourceType);
         if (bySourceType == null) {
             bySourceType = new LinkedHashSet<>();
@@ -201,11 +200,11 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
     /**
      * Get all converter factories which create Converters which convert into a specific destination type.
      *
-     * @param destType DataType to query converter factories for
+     * @param destType Destination type to query converter factories for
      * @return a {@link Collection} of all possible source types which can be converted into the given
      *         <code>destType</code>. The first is always the preferred type.
      */
-    public Collection<ConverterFactoryType> getFactoriesForDestinationType(final DestType destType) {
+    public Collection<ConverterFactoryType> getFactoriesForDestinationType(final DT destType) {
         final LinkedHashSet<ConverterFactoryType> set = new LinkedHashSet<>();
 
         final Set<ConverterFactoryType> types = m_byDestinationType.get(destType);
@@ -221,14 +220,13 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
     }
 
     /**
-     * Get all {@link DataCellToJavaConverterFactory converter factories} which create converter which convert into a
-     * specific {@link Class destType}.
+     * Get all converter factories which create converter which convert into a specific destType.
      *
-     * @param sourceType DataType to query converter factories for
+     * @param sourceType Source type to query converter factories for
      * @return a {@link Collection} of all possible source types which can be converted into the given
      *         <code>destType</code>. The first is always the preferred type.
      */
-    public Collection<ConverterFactoryType> getFactoriesForSourceType(final SourceType sourceType) {
+    public Collection<ConverterFactoryType> getFactoriesForSourceType(final ST sourceType) {
         final LinkedHashSet<ConverterFactoryType> set = new LinkedHashSet<>();
 
         final Set<ConverterFactoryType> types = m_bySourceType.get(sourceType);
@@ -246,14 +244,15 @@ public abstract class AbstractConverterFactoryRegistry<SourceType, DestType, Con
     /**
      * Get all factories from given source to given destination type.
      *
-     * They may convert in different ways are distinguishable by {@link ConverterFactory#getIdentifier()} and usually
+     * If multiple converter factories are returned, they may do conversion in different lossless ways.
+     * The factories are distinguishable by {@link ConverterFactory#getIdentifier()} and usually
      * also by {@link ConverterFactory#getName()}.
      *
      * @param sourceType Source type to convert
-     * @param destType Destination type to convert to
+     * @param destType Destination type to convert into
      * @return Collection of suitable converter factories
      */
-    public Collection<ConverterFactoryType> getFactories(final SourceType sourceType, final DestType destType) {
+    public Collection<ConverterFactoryType> getFactories(final ST sourceType, final DT destType) {
         final ArrayList<ConverterFactoryType> factories = new ArrayList<>();
 
         final ArrayList<ConverterFactoryType> list = m_factories.get(new ConversionKey(sourceType, destType));
