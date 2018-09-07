@@ -18,16 +18,16 @@
 			a URL (such as http://some_host/some_path) or assign a variable 
 			representing the target file using the variable button on the right.
 		</option>
-		<option name="Row Header Prefix">
+		<option name="Row header prefix">
 			The prefix of the row headers (amended by a running index).
 		</option>
-		<option name="Column Header">
+		<option name="Column header">
 			The name of the single output column.
 		</option>
 		<option name="Use first line as column header">
-			If selected, the first line in the file will be used as column header 
-			(does not count as a row as per "limit number of rows").
-		</option>
+            If selected, the first line in the file will be used as column header. If it is used together with 
+            the "Limit number of rows" option it does not count as row.
+  		</option>
 		<option name="Skip empty lines">
 			If set, empty lines are skipped. This also includes lines only containing
 			white space characters such as spaces or tabs.

@@ -156,13 +156,13 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
 
         gbc.gridy += 1;
         gbc.gridwidth = 1;
-        optionsPanel.add(new JLabel("Row Header Prefix "), gbc);
+        optionsPanel.add(new JLabel("Row header prefix "), gbc);
         gbc.gridx += 1;
         optionsPanel.add(m_rowHeadPrefixField, gbc);
 
         gbc.gridy += 1;
         gbc.gridx = 0;
-        optionsPanel.add(new JLabel("Column Header "), gbc);
+        optionsPanel.add(new JLabel("Column header "), gbc);
         gbc.gridx += 1;
         Box colHeaderBox = Box.createHorizontalBox();
         colHeaderBox.add(m_columnHeaderField);
