@@ -204,7 +204,7 @@ final class LineReaderConfig {
             throw new InvalidSettingsException("Invalid (null) row prefix");
         }
         m_columnHeader = settings.getString("columnHeader");
-        m_readColHeader = settings.getBoolean("readColumnHeader", false);
+        m_readColHeader = settings.getBoolean("readColumnHeader", false); // added in 3.7, AP-9525
         if (!m_readColHeader && (m_columnHeader == null || m_columnHeader.length() == 0)) {
             throw new InvalidSettingsException(
                     "Invalid (empty) column header");

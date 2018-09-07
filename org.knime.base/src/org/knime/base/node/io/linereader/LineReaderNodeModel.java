@@ -49,6 +49,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
+import org.apache.commons.lang.StringUtils;
 import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -81,7 +82,7 @@ final class LineReaderNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        return new DataTableSpec[] {createOutputSpec()};
+        return new DataTableSpec[] {createOutputSpec(null)};
     }
 
     /** {@inheritDoc} */
@@ -91,21 +92,7 @@ final class LineReaderNodeModel extends NodeModel {
         URL url = m_config.getURL();
         BufferedDataContainer container;
         try (BufferedFileReader fileReader = BufferedFileReader.createNewReader(url)) {
-            DataTableSpec spec;
-            try {
-                if (m_config.isReadColumnHeader()) {
-                    spec = createOutputSpec(fileReader);
-                } else {
-                    spec = createOutputSpec();
-                }
-            } catch (Exception e) {
-                try {
-                    fileReader.close();
-                } catch (IOException ioe2) {
-                    // ignore
-                }
-                throw e;
-            }
+            DataTableSpec spec = createOutputSpec(fileReader);
             container = exec.createDataContainer(spec);
             try {
                 long fileSize = fileReader.getFileSize();
@@ -156,12 +143,10 @@ final class LineReaderNodeModel extends NodeModel {
             setWarningMessage(warning);
         }
         String colName;
-        if (fileReader == null) {
-            if (m_config.isReadColumnHeader()) {
+        if (m_config.isReadColumnHeader()) {
+            if (fileReader == null) { // during configure time
                 return null;
             }
-            colName = m_config.getColumnHeader();
-        } else {
             final boolean isSkipEmpty = m_config.isSkipEmptyLines();
             try {
                 while ((colName = fileReader.readLine()) != null && isSkipEmpty && colName.trim().length() == 0) {
@@ -169,8 +154,11 @@ final class LineReaderNodeModel extends NodeModel {
             } catch (IOException e) {
                 throw new InvalidSettingsException(e);
             }
+            // if top line in file is blank use a default non-empty string
+            colName = StringUtils.defaultIfBlank(colName, "<empty>");
+        } else {
+            colName = CheckUtils.checkNotNull(m_config.getColumnHeader(), "column header in config must not be null");
         }
-        CheckUtils.checkNotNull(colName, "Error reading column name");
 
         DataColumnSpecCreator creator = new DataColumnSpecCreator(colName, StringCell.TYPE);
         String path = url.getPath();
@@ -182,10 +170,6 @@ final class LineReaderNodeModel extends NodeModel {
             }
         }
         return new DataTableSpec(name, creator.createSpec());
-    }
-
-    private DataTableSpec createOutputSpec() throws InvalidSettingsException {
-        return createOutputSpec(null);
     }
 
     /** {@inheritDoc} */
