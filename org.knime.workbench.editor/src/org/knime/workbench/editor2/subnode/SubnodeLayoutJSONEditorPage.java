@@ -190,7 +190,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
         TabItem visualTab = new TabItem(tabs, SWT.NONE);
         visualTab.setText("Visual Layout");
-        visualTab.setControl(createVisualLayoutComposite(tabs));
+
 
         TabItem usageTab = new TabItem(tabs, SWT.NONE);
         usageTab.setText("Node Usage");
@@ -211,6 +211,11 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         TabItem jsonTab = new TabItem(tabs, SWT.NONE);
         jsonTab.setText("Advanced Layout");
         jsonTab.setControl(createJSONEditorComposite(tabs));
+
+        // The visual layout tab should be the first tab, but its control should be made
+        // after the Advanced tab. This ensures that the JSON document is created before
+        // it is used in the creation of the visual layout tab
+        visualTab.setControl(createVisualLayoutComposite(tabs));
 
         setControl(tabs);
     }
