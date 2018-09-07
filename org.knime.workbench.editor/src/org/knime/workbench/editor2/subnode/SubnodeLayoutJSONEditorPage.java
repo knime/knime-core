@@ -258,6 +258,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             File td = null;
             try {
                 td = WebResourceUtil.createTempDirectory("knimeLayoutEditor");
+                td.deleteOnExit();
             } catch(final IOException ex) {
                 LOGGER.error("Cannot create temp directory: " + ex.getMessage(), ex);
             }
@@ -276,7 +277,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         }
 
         // Create browser
-        m_browser = new Browser(composite, SWT.FILL);
+        m_browser = new Browser(composite, SWT.NONE);
+
         try {
             final String location = m_tempDir.getAbsolutePath() + "/layoutEditor/index.html";
             m_browser.setUrl(new File(location).toURI().toURL().toString());
@@ -1173,6 +1175,14 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         } else {
             m_text.setText(m_jsonDocument);
         }
+    }
+
+    @Override
+    public void dispose() {
+        if (m_browser != null) {
+            m_browser.dispose();
+        }
+        super.dispose();
     }
 
     private static class BasicLayoutInfo {
