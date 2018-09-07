@@ -171,7 +171,7 @@ class CellSplitter2UserSettings {
 
         m_splitColumnNames = settings.getBoolean(CFG_SPLIT_COLUMN_NAMES, false);
 
-        m_hasScanLimit = settings.getBoolean(CFG_HAS_SCAN_LIMIT, true);
+        m_hasScanLimit = settings.getBoolean(CFG_HAS_SCAN_LIMIT, false);
         m_scanLimit = settings.getInt(CFG_SCAN_LIMIT, 50);
 
         m_removeInputColumn = settings.getBoolean(CFG_REMOVE_INPUT_COL, false);

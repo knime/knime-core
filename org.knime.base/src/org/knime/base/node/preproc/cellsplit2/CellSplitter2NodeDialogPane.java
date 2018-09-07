@@ -158,7 +158,7 @@ final class CellSplitter2NodeDialogPane extends NodeDialogPane {
         settingsBox.add(delimBox);
 
         // - the quotes
-        Box quoteBox = Box.createHorizontalBox();
+        final Box quoteBox = Box.createHorizontalBox();
         quoteBox.add(new JLabel("Enter a quotation character:"));
         quoteBox.add(Box.createHorizontalStrut(3));
         quoteBox.add(m_quote);
@@ -172,13 +172,13 @@ final class CellSplitter2NodeDialogPane extends NodeDialogPane {
         settingsBox.add(quoteBox);
 
         // - the trim checkbox
-        Box trimBox = Box.createHorizontalBox();
+        final Box trimBox = Box.createHorizontalBox();
         trimBox.add(m_trim);
         trimBox.add(Box.createHorizontalGlue());
         settingsBox.add(trimBox);
 
         // output box
-        Box outputBox = Box.createVerticalBox();
+        final Box outputBox = Box.createVerticalBox();
         outputBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Output"));
 
         // - the output group (as list, as set, as columns)
@@ -197,7 +197,7 @@ final class CellSplitter2NodeDialogPane extends NodeDialogPane {
             m_hasScanLimit.setEnabled(enableScanLimit);
             m_scanLimit.setEnabled(enableScanLimit && m_hasScanLimit.isSelected());
         });
-        Box outputColBox = Box.createHorizontalBox();
+        final Box outputColBox = Box.createHorizontalBox();
         outputColBox.add(Box.createVerticalStrut(10));
         outputColBox.add(m_outputAsList);
         outputColBox.add(Box.createHorizontalStrut(5));
@@ -208,13 +208,13 @@ final class CellSplitter2NodeDialogPane extends NodeDialogPane {
         outputBox.add(outputColBox);
 
         // - the split column names checkbox
-        Box splitBox = Box.createHorizontalBox();
+        final Box splitBox = Box.createHorizontalBox();
         splitBox.add(m_splitColumnNames);
         splitBox.add(Box.createHorizontalGlue());
         outputBox.add(splitBox);
 
         // - the size group
-        ButtonGroup bg = new ButtonGroup();
+        final ButtonGroup bg = new ButtonGroup();
         bg.add(m_fixedSize);
         bg.add(m_guessSize);
         m_fixedSize.setSelected(true);
@@ -234,16 +234,18 @@ final class CellSplitter2NodeDialogPane extends NodeDialogPane {
         m_columnNumber.setMaximumSize(new Dimension(200, 25));
         m_columnNumber.setMinimumSize(new Dimension(50, 25));
         m_columnNumber.setPreferredSize(new Dimension(100, 25));
-        JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor)m_columnNumber.getEditor();
+
+        final JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor)m_columnNumber.getEditor();
         editor.getTextField().setColumns(4);
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
-        Box sizeBox = Box.createVerticalBox();
-        Box fixSizeBox = Box.createHorizontalBox();
+
+        final Box fixSizeBox = Box.createHorizontalBox();
         fixSizeBox.add(m_fixedSize);
         fixSizeBox.add(Box.createHorizontalStrut(5));
         fixSizeBox.add(m_columnNumber);
         fixSizeBox.add(Box.createHorizontalGlue());
-        Box guessSizeBox = Box.createHorizontalBox();
+
+        final Box guessSizeBox = Box.createHorizontalBox();
         guessSizeBox.add(m_guessSize);
         guessSizeBox.add(Box.createHorizontalGlue());
 
@@ -255,6 +257,7 @@ final class CellSplitter2NodeDialogPane extends NodeDialogPane {
             m_scanLimit.setEnabled(m_hasScanLimit.isSelected());
         });
 
+        final Box sizeBox = Box.createVerticalBox();
         sizeBox.add(fixSizeBox);
         sizeBox.add(Box.createVerticalStrut(3));
         sizeBox.add(guessSizeBox);
@@ -267,7 +270,7 @@ final class CellSplitter2NodeDialogPane extends NodeDialogPane {
         // the missing value handling box
         m_useEmptyString
             .setToolTipText("If checked, empty string cells are " + "created for missing or short input cells");
-        Box missValBox = Box.createHorizontalBox();
+        final Box missValBox = Box.createHorizontalBox();
         missValBox
             .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Missing Value Handling"));
         missValBox.add(m_useEmptyString);
@@ -386,7 +389,7 @@ final class CellSplitter2NodeDialogPane extends NodeDialogPane {
 
         csSettings.setDelimiter(m_delimiter.getText());
 
-        if (m_quote.getText().length() == 0) {
+        if (m_quote.getText().isEmpty()) {
             csSettings.setQuotePattern(null); // disable quoting
         } else {
             csSettings.setQuotePattern(m_quote.getText());

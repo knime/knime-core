@@ -315,7 +315,7 @@ final class CellSplitter2CellFactory implements CellFactory {
             return new StringCell(token);
 
         } else if (type.equals(DoubleCell.TYPE)) {
-            if (token.length() == 0) {
+            if (token.isEmpty()) {
                 return DataType.getMissingCell();
             }
             try {
@@ -323,11 +323,11 @@ final class CellSplitter2CellFactory implements CellFactory {
                 return new DoubleCell(val);
             } catch (NumberFormatException nfe) {
                 throw new IllegalStateException(
-                    "Guessed the wrong type guessed " + "(got '" + token + "' for a double.)");
+                    "Guessed the wrong type guessed (got '" + token + "' for a double.)");
             }
 
         } else if (type.equals(IntCell.TYPE)) {
-            if (token.length() == 0) {
+            if (token.isEmpty()) {
                 return DataType.getMissingCell();
             }
             try {
@@ -335,7 +335,7 @@ final class CellSplitter2CellFactory implements CellFactory {
                 return new IntCell(val);
             } catch (NumberFormatException nfe) {
                 throw new IllegalStateException(
-                    "Guessed the wrong type guessed " + "(got '" + token + "' for an integer.)");
+                    "Guessed the wrong type guessed (got '" + token + "' for an integer.)");
             }
         } else {
             throw new IllegalStateException("Guessed an unsupported type ...");
@@ -432,7 +432,34 @@ final class CellSplitter2CellFactory implements CellFactory {
                     String colName = null;
                     if (tokenizer != null) {
                         /* nextToken() is null if there is no next Token */
-                        colName = tokenizer.nextToken();
+
+                        String token = null;
+                        if (col == colNum - 1) {
+                            /*
+                             * this is the last column - if there is more than one token
+                             * left in the stream we need to store the entire rest
+                             * (including this token) in the column.
+                             */
+                            try {
+                                // mark the stream in case we need to read the rest of it
+                                inputReader.mark(0);
+                                token = tokenizer.nextToken();
+
+                                // see if there is more in the stream
+                                if (inputReader.read() != -1) {
+                                    // go back to before the token
+                                    inputReader.reset();
+                                    token = readAll(inputReader);
+                                }
+                            } catch(IOException e) {
+                                // May happen on .mark(0) if the input stream is closed
+                                inputReader.close();
+                            }
+                        } else {
+                            token = tokenizer.nextToken();
+                        }
+
+                        colName = token;
                     }
                     if (colName == null) {
                         colName = selColName + "_Arr[" + col + "]";
@@ -576,7 +603,7 @@ final class CellSplitter2CellFactory implements CellFactory {
 
         for (final DataRow row : table) {
             rowCnt++;
-            if (userSettings.hasScanLimit() && rowCnt >= userSettings.scanLimit()) {
+            if (userSettings.hasScanLimit() && rowCnt > userSettings.scanLimit()) {
                 break;
             }
 
@@ -599,7 +626,7 @@ final class CellSplitter2CellFactory implements CellFactory {
             // the reader is no good if it doesn't support the mark operation
             assert inputReader.markSupported();
 
-            Tokenizer tokenizer = new Tokenizer(inputReader);
+            final Tokenizer tokenizer = new Tokenizer(inputReader);
             tokenizer.setSettings(tokenizerSettings);
             int addedColIdx = -1;
 

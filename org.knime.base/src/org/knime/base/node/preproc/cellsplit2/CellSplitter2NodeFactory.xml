@@ -39,6 +39,9 @@
 		<option name="Column selection">
 			Select the column whose values are split.
 		</option>
+		<option name="Remove input column">
+			When checked, the selected input column will not be part of the output table.
+		</option>
 		<option name="Delimiter">Specify the delimiter in the value, that
 			splits each part.
 		</option>
@@ -52,7 +55,7 @@
 			is needed leave it empty.
 		</option>
 		<option
-			name="remove leading and trailing white space chars (trim)">
+			name="Remove leading and trailing white space chars (trim)">
 			If checked, leading and trailing white spaces of each part (token) will
 			be deleted.
 		</option>
@@ -70,6 +73,11 @@
 			If selected, the output will consist of one or more columns, each
 			containing a split part.
 		</option>
+		<option name="Split input column name">
+			When outputting as new column, check this option when the input column name
+			can be split in the same manner as the column's content to obtain the names
+			for the output columns.
+		</option>
 		<option name="Set Array Size">Check this and specify the number of columns
 			to append. All created columns will be of type String. (See above for
 			what happens if the split produces a different number of parts.)
@@ -78,6 +86,9 @@
 			performs an additional scan through the entire data table and computes
 			the number of columns needed to hold all parts of the split. In addition
 			it determines the column type of the new columns.
+		</option>
+		<option name="Scan Limit">Maximum number of rows to scan for guessing the number
+			of output columns.
 		</option>
 		<option name="Missing Value Handling">If select, the node creates
 			empty string cell instead of missing value cells.
