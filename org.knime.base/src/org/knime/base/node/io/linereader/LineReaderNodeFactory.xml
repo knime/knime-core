@@ -24,6 +24,10 @@
 		<option name="Column Header">
 			The name of the single output column.
 		</option>
+		<option name="Use first line as column header">
+			If selected, the first line in the file will be used as column header 
+			(does not count as a row as per "limit number of rows").
+		</option>
 		<option name="Skip empty lines">
 			If set, empty lines are skipped. This also includes lines only containing
 			white space characters such as spaces or tabs.
