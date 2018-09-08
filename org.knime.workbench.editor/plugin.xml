@@ -19,6 +19,11 @@
             id="knime.commands.editor.toggleGrid"
             name="Toggle Snap to Grid"/>
       <command
+            categoryId="org.eclipse.gef.category.view"
+            description="Resets the zoom level to 100%"
+            id="knime.actions.zoom_reset"
+            name="Reset Zoom"/>
+      <command
             categoryId="knime.command.category"
             description="Opens the settings dialog for the Wrapped Metanode layout."
             id="knime.commands.editor.subnodeLayout"
@@ -516,7 +521,11 @@
             commandId="knime.commands.editor.toggleGrid"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+SHIFT+X"/>            
+            sequence="M1+SHIFT+X"/>
+      <key
+            commandId="knime.actions.zoom_reset"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+0"/>
       <key
             commandId="knime.commands.openView"
             contextId="org.eclipse.ui.contexts.window"

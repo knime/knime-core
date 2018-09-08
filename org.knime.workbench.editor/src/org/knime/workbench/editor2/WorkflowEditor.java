@@ -115,6 +115,8 @@ import org.eclipse.gef.ui.actions.SaveAction;
 import org.eclipse.gef.ui.actions.StackAction;
 import org.eclipse.gef.ui.actions.UndoAction;
 import org.eclipse.gef.ui.actions.WorkbenchPartAction;
+import org.eclipse.gef.ui.actions.ZoomInAction;
+import org.eclipse.gef.ui.actions.ZoomOutAction;
 import org.eclipse.gef.ui.parts.GraphicalEditor;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.gef.ui.properties.UndoablePropertySheetEntry;
@@ -149,6 +151,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.internal.EditorHistory;
 import org.eclipse.ui.internal.Workbench;
@@ -242,6 +245,7 @@ import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.actions.UnlinkNodesAction;
+import org.knime.workbench.editor2.actions.ZoomResetAction;
 import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNewConnectedNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
@@ -649,8 +653,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         StackAction redo = new RedoAction(this);
 
         // Editor Actions
-        WorkbenchPartAction delete =
-                new NodeConnectionContainerDeleteAction(this);
+        WorkbenchPartAction delete = new NodeConnectionContainerDeleteAction(this);
         WorkbenchPartAction save = new SaveAction(this);
         WorkbenchPartAction saveAs = new SaveAsAction(this);
         WorkbenchPartAction print = new PrintAction(this);
@@ -671,10 +674,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
         AbstractNodeAction selectScope = new SelectLoopAction(this);
-        AbstractNodeAction setNameAndDescription =
-                new SetNodeDescriptionAction(this);
-        AbstractNodeAction toggleFlowVarPorts =
-            new ToggleFlowVarPortsAction(this);
+        AbstractNodeAction setNameAndDescription = new SetNodeDescriptionAction(this);
+        AbstractNodeAction toggleFlowVarPorts = new ToggleFlowVarPortsAction(this);
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
 
         AbstractNodeAction linkNodes = new LinkNodesAction(this);
@@ -710,6 +711,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         ExpandSubNodeAction expandSub = new ExpandSubNodeAction(this);
         ConvertMetaNodeToSubNodeAction wrap = new ConvertMetaNodeToSubNodeAction(this);
         ConvertSubNodeToMetaNodeAction unWrap = new ConvertSubNodeToMetaNodeAction(this);
+
 
         // register the actions
         m_actionRegistry.registerAction(undo);
@@ -769,7 +771,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(annotation);
 
         // remember ids for later updates via 'updateActions'
-        m_editorActions = new ArrayList<String>();
+        m_editorActions = new ArrayList<>();
         m_editorActions.add(undo.getId());
         m_editorActions.add(redo.getId());
         m_editorActions.add(delete.getId());
@@ -884,19 +886,17 @@ public class WorkflowEditor extends GraphicalEditor implements
     @SuppressWarnings("restriction") // WorkbenchHelpSystem.getInstance().setHelp(...) is discouraged API
     @Override
     protected void createGraphicalViewer(final Composite parent) {
-        IEditorSite editorSite = getEditorSite();
-        GraphicalViewer viewer = new WorkflowGraphicalViewerCreator(editorSite,
-            this.getActionRegistry()).createViewer(parent);
+        final IEditorSite editorSite = getEditorSite();
+        final GraphicalViewer viewer =
+            new WorkflowGraphicalViewerCreator(editorSite, getActionRegistry()).createViewer(parent);
 
         // Add a listener to the static node provider
         NodeProvider.INSTANCE.addListener(this);
 
         // Configure the key handler
-        GraphicalViewerKeyHandler keyHandler =
-            new GraphicalViewerKeyHandler(viewer);
+        final GraphicalViewerKeyHandler keyHandler = new GraphicalViewerKeyHandler(viewer);
 
-        KeyHandler parentKeyHandler =
-                keyHandler.setParent(getCommonKeyHandler());
+        final KeyHandler parentKeyHandler = keyHandler.setParent(getCommonKeyHandler());
         viewer.setKeyHandler(parentKeyHandler);
 
         // hook the viewer into the EditDomain
@@ -918,9 +918,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         getGraphicalViewer().setContents(m_manager);
 
         // add Help context
-        WorkbenchHelpSystem.getInstance().setHelp(
-                m_graphicalViewer.getControl(),
-                "org.knime.workbench.help.flow_editor_context");
+        WorkbenchHelpSystem.getInstance().setHelp(m_graphicalViewer.getControl(),
+            "org.knime.workbench.help.flow_editor_context");
 
         updateEditorBackgroundColor();
         updateJobManagerDisplay();
@@ -928,9 +927,20 @@ public class WorkflowEditor extends GraphicalEditor implements
         RootEditPart rep = getGraphicalViewer().getRootEditPart();
         ((WorkflowRootEditPart)rep.getChildren().get(0)).createToolTipHelper(getSite().getShell());
 
-        ZoomManager zm = this.getZoomManager();
+        final ZoomManager zm = this.getZoomManager();
         zm.setZoomLevels(ZOOM_LEVELS);
         m_zoomWheelListener = new ZoomWheelListener(zm, (FigureCanvas)getViewer().getControl());
+
+        final ZoomInAction zoomIn = new ZoomInAction(zm);
+        final ZoomOutAction zoomOut = new ZoomOutAction(zm);
+        final ZoomResetAction zoomReset = new ZoomResetAction(zm);
+        final ActionRegistry registry = getActionRegistry();
+        registry.registerAction(zoomReset);
+        registry.registerAction(zoomOut);
+        registry.registerAction(zoomIn);
+
+        final IHandlerService handlerService = getSite().getService(IHandlerService.class);
+        handlerService.activateHandler(ZoomResetAction.KEY_COMMAND_ID, zoomReset);
 
         m_nodeSupplantDragListener = new NodeSupplantDragListener(this);
         if (m_manager != null) {
@@ -2632,11 +2642,11 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     private double getZoomfactor() {
-        GraphicalViewer viewer = getViewer();
+        final GraphicalViewer viewer = getViewer();
         if (viewer == null) {
             return 1.0;
         }
-        ZoomManager zoomManager = this.getZoomManager();
+        final ZoomManager zoomManager = this.getZoomManager();
         if (zoomManager == null) {
             return 1.0;
         }
@@ -2644,7 +2654,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     private void setZoomfactor(final double z) {
-        ZoomManager zoomManager = this.getZoomManager();
+        final ZoomManager zoomManager = this.getZoomManager();
         zoomManager.setZoom(z);
     }
 
