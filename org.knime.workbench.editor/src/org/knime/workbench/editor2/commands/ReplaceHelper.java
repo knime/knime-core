@@ -66,10 +66,54 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
- *
  * @author Tim-Oliver Buchholz, KNIME AG, Zurich, Switzerland
  */
 public class ReplaceHelper {
+    /**
+     * This checks for an executed state of downstream nodes and, if the user's preference is such, dialog's the user to
+     * determine whether they really want to perform the action which will move those nodes out of that state.
+     *
+     * @param wm the <code>WorkflowManager</code> instance containining the connection(s) in question
+     * @param node if non-null, <code>wm</code> will have its <code>canRemoveNode(NodeID)</node> consulted and if false
+     *            is returned, this will trigger a potential dialog
+     * @param connections one or more connections whose destinations will be checked for an executed state
+     * @return true if the replacement can occur
+     */
+    public static boolean executedStateAllowsReplace(final WorkflowManager wm, final NodeContainer node,
+        final ConnectionContainer... connections) {
+        boolean aWarnableStateExists =
+            (node != null) ? (node.getNodeContainerState().isExecuted() || (!wm.canRemoveNode(node.getID()))) : false;
+
+        if ((!aWarnableStateExists) && (connections != null)) {
+            for (final ConnectionContainer connectionContainer : connections) {
+                if (wm.findNodeContainer(connectionContainer.getDest()).getNodeContainerState().isExecuted()) {
+                    aWarnableStateExists = true;
+
+                    break;
+                }
+            }
+        }
+
+        if (aWarnableStateExists) {
+            final IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
+            if (!store.contains(PreferenceConstants.P_CONFIRM_RESET)
+                || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
+                final MessageDialogWithToggle dialog =
+                    MessageDialogWithToggle.openOkCancelConfirm(SWTUtilities.getActiveShell(), "Confirm reset...",
+                        "Do you really want to reset all downstream node(s) ?", "Do not ask again", false, null, null);
+                if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
+                    return false;
+                }
+                if (dialog.getToggleState()) {
+                    store.setValue(PreferenceConstants.P_CONFIRM_RESET, false);
+                    KNIMEUIPlugin.getDefault().savePluginPreferences();
+                }
+            }
+        }
+
+        return true;
+    }
+
     private static final Comparator<ConnectionContainer> DEST_PORT_SORTER = new Comparator<ConnectionContainer>() {
         @Override
         public int compare(final ConnectionContainer o1, final ConnectionContainer o2) {
@@ -107,7 +151,6 @@ public class ReplaceHelper {
         // sort according to ports
         Collections.sort(m_incomingConnections, DEST_PORT_SORTER);
         Collections.sort(m_outgoingConnections, SOURCE_PORT_SORTER);
-
     }
 
     /**
@@ -116,32 +159,10 @@ public class ReplaceHelper {
      * @return if new node can be replaced
      */
     public boolean replaceNode() {
-        boolean hasExecutedSuccessor = false;
-        for (ConnectionContainer connectionContainer : m_outgoingConnections) {
-            hasExecutedSuccessor =
-                hasExecutedSuccessor
-                    || m_wfm.findNodeContainer(connectionContainer.getDest()).getNodeContainerState().isExecuted()
-                    || !m_wfm.canRemoveNode(m_oldNode.getID());
-        }
+        final ConnectionContainer[] connections =
+            m_outgoingConnections.toArray(new ConnectionContainer[m_outgoingConnections.size()]);
 
-        if (hasExecutedSuccessor) {
-            IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
-            if (!store.contains(PreferenceConstants.P_CONFIRM_RESET)
-                || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
-                MessageDialogWithToggle dialog =
-                    MessageDialogWithToggle.openOkCancelConfirm(SWTUtilities.getActiveShell(),
-                        "Confirm reset...", "Do you really want to reset all downstream node(s) ?", "Do not ask again",
-                        false, null, null);
-                if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
-                    return false;
-                }
-                if (dialog.getToggleState()) {
-                    store.setValue(PreferenceConstants.P_CONFIRM_RESET, false);
-                    KNIMEUIPlugin.getDefault().savePluginPreferences();
-                }
-            }
-        }
-        return true;
+        return executedStateAllowsReplace(m_wfm, m_oldNode, connections);
     }
 
     /**

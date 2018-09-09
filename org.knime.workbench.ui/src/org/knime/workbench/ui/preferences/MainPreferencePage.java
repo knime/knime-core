@@ -111,6 +111,8 @@ public class MainPreferencePage extends FieldEditorPreferencePage
                 "Confirm Node Reset", parent));
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_DELETE,
                 "Confirm Node/Connection Deletion", parent));
+        addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_REPLACE,
+                "Confirm Node/Connection Replacement/Interruption", parent));
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RECONNECT,
                 "Confirm reconnection of already connected nodes", parent));
         addField(new BooleanFieldEditor(
@@ -154,7 +156,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage
             "Workflow Annotation border size (in px)", parent));
         addField(new HorizontalLineField(parent));
 
-        ComboFieldEditor updateMetaNodeLinkOnLoadEditor = new ComboFieldEditor(
+        final ComboFieldEditor updateMetaNodeLinkOnLoadEditor = new ComboFieldEditor(
                 PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD,
                 "Update metanode links when workflow loads",
                 new String[][] {
@@ -170,13 +172,13 @@ public class MainPreferencePage extends FieldEditorPreferencePage
 
         addField(new HorizontalLineField(parent));
         addField(new LabelField(parent, "Settings for the 'Favorite Nodes' view"));
-        IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(
+        final IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE,
                 "Maximal size for most frequently used nodes", parent, 3);
         freqHistorySizeEditor.setValidRange(1, 50);
         freqHistorySizeEditor.setTextLimit(3);
         freqHistorySizeEditor.load();
-        IntegerFieldEditor usedHistorySizeEditor = new IntegerFieldEditor(
+        final IntegerFieldEditor usedHistorySizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_FAV_LAST_USED_SIZE,
                 "Maximal size for last used nodes", parent, 3);
         usedHistorySizeEditor.setValidRange(1, 50);
@@ -197,8 +199,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage
     @Override
     protected void initialize() {
         super.initialize();
-        m_consoleLogEditor.setPreferenceStore(
-                KNIMECorePlugin.getDefault().getPreferenceStore());
+        m_consoleLogEditor.setPreferenceStore(KNIMECorePlugin.getDefault().getPreferenceStore());
         m_consoleLogEditor.load();
     }
 
@@ -206,8 +207,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage
     @Override
     protected void performDefaults() {
         super.performDefaults();
-        m_consoleLogEditor.setPreferenceStore(
-                KNIMECorePlugin.getDefault().getPreferenceStore());
+        m_consoleLogEditor.setPreferenceStore(KNIMECorePlugin.getDefault().getPreferenceStore());
         m_consoleLogEditor.loadDefault();
     }
 }

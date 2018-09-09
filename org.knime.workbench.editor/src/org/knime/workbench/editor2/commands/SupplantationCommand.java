@@ -48,6 +48,7 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -161,9 +162,14 @@ public class SupplantationCommand extends AbstractKNIMECommand {
      */
     @Override
     public void execute() {
+        final WorkflowManager wm = getHostWFM();
         if (m_edgeTargetId != null) {
-            final WorkflowManager wm = getHostWFM();
             final ConnectionContainer targetCC = wm.getConnection(m_edgeTargetId);
+
+            if (!ReplaceHelper.executedStateAllowsReplace(wm, null, targetCC)) {
+                return;
+            }
+
             final NodeID sourceNodeId = targetCC.getSource();
             final WorkflowManagerUI wmUI = getHostWFMUI();
             final NodeContainerUI sourceNodeUI =
@@ -224,9 +230,16 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                 Wrapper.unwrapNC(destinationNodeUI));
         } else {
             final NodeContainerUI toRemoveNodeUI = m_nodeTarget.getNodeContainer();
+            final NodeID toRemoveNodeId = toRemoveNodeUI.getID();
+            final ArrayList<ConnectionContainer> ccs = new ArrayList<>(wm.getOutgoingConnectionsFor(toRemoveNodeId));
+            final ConnectionContainer[] connections = ccs.toArray(new ConnectionContainer[ccs.size()]);
+
+            if (!ReplaceHelper.executedStateAllowsReplace(wm, wm.getNodeContainer(toRemoveNodeId), connections)) {
+                return;
+            }
+
             final NodeID[] removeIds = new NodeID[1];
             final Set<ScheduledConnection> pendingConnections = new HashSet<>();
-            final WorkflowManager wm = getHostWFM();
 
             removeIds[0] = toRemoveNodeUI.getID();
 
@@ -337,23 +350,27 @@ public class SupplantationCommand extends AbstractKNIMECommand {
     public void undo() {
         final WorkflowManager wm = getHostWFM();
 
-        for (ConnectionContainer cc : m_replacementEdges) {
-            wm.removeConnection(cc);
+        if (m_replacementEdges != null) {
+            for (final ConnectionContainer cc : m_replacementEdges) {
+                wm.removeConnection(cc);
+            }
         }
 
         if (m_undoWorkflowPersitor != null) {
             wm.paste(m_undoWorkflowPersitor);
         }
 
-        for (ConnectionContainer cc : m_originalEdges) {
-            final ConnectionContainer newCC =
-                wm.addConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort());
+        if (m_originalEdges != null) {
+            for (final ConnectionContainer cc : m_originalEdges) {
+                final ConnectionContainer newCC =
+                    wm.addConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort());
 
-            newCC.setUIInfo(cc.getUIInfo());
+                newCC.setUIInfo(cc.getUIInfo());
 
-            // We need to capture the new connection id to support redo
-            if (m_edgeTargetId != null) {
-                m_edgeTargetId = newCC.getID();
+                // We need to capture the new connection id to support redo
+                if (m_edgeTargetId != null) {
+                    m_edgeTargetId = newCC.getID();
+                }
             }
         }
 

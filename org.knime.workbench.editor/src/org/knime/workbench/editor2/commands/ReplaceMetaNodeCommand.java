@@ -60,13 +60,13 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Tim-Oliver Buchholz, KNIME AG, Zurich, Switzerland
  */
 public class ReplaceMetaNodeCommand extends CreateMetaNodeCommand {
-    private DeleteCommand m_delete;
+    private final DeleteCommand m_delete;
 
-    private NodeContainerEditPart m_node;
+    private final NodeContainerEditPart m_node;
 
     private final RootEditPart m_root;
 
-    private ReplaceHelper m_rh;
+    private final ReplaceHelper m_replaceHelper;
 
     /**
      * @param manager the workflow manager
@@ -80,7 +80,7 @@ public class ReplaceMetaNodeCommand extends CreateMetaNodeCommand {
         super(manager, persistor, location, snapToGrid);
         m_node = node;
         m_root = node.getRoot();
-        m_rh = new ReplaceHelper(manager, Wrapper.unwrapNC(m_node.getNodeContainer()));
+        m_replaceHelper = new ReplaceHelper(manager, Wrapper.unwrapNC(m_node.getNodeContainer()));
         m_delete = new DeleteCommand(Collections.singleton(m_node), manager);
     }
 
@@ -89,7 +89,7 @@ public class ReplaceMetaNodeCommand extends CreateMetaNodeCommand {
      */
     @Override
     public boolean canExecute() {
-        return super.canExecute() && m_delete.canExecute() && m_rh.replaceNode();
+        return super.canExecute() && m_delete.canExecute();
     }
 
     /**
@@ -97,12 +97,13 @@ public class ReplaceMetaNodeCommand extends CreateMetaNodeCommand {
      */
     @Override
     public void execute() {
-        m_delete.execute();
-        super.execute();
-        m_rh.reconnect(m_container);
-        // the connections are not always properly re-drawn after "unmark". (Eclipse bug.) Repaint here.
-        m_root.refresh();
-
+        if (m_replaceHelper.replaceNode()) {
+            m_delete.execute();
+            super.execute();
+            m_replaceHelper.reconnect(m_container);
+            // the connections are not always properly re-drawn after "unmark". (Eclipse bug.) Repaint here.
+            m_root.refresh();
+        }
     }
 
     /**

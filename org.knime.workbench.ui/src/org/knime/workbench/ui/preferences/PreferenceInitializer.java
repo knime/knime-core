@@ -77,6 +77,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(PreferenceConstants.P_CONFIRM_DELETE, true);
 
+        store.setDefault(PreferenceConstants.P_CONFIRM_REPLACE, true);
+
         store.setDefault(PreferenceConstants.P_CONFIRM_RECONNECT, true);
 
         store.setDefault(PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED, true);

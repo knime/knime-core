@@ -142,7 +142,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
 
     private int m_distanceToMoveTarget = 0;
 
-    private DragPositionProcessor m_dragPositionProcessor;
+    private final DragPositionProcessor m_dragPositionProcessor;
 
     /**
      * @param viewer the edit part viewer this drop target listener is attached to
@@ -439,7 +439,20 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
         updateTargetEditPart();
 
         if (getTargetEditPart() != null) {
-            Command command = getCommand();
+            final Request r = getTargetRequest();
+            if (r instanceof CreateDropRequest) {
+                final EditPart ep = ((CreateDropRequest)r).getEditPart();
+
+                if (ep != null) {
+                    final boolean connection = (ep instanceof ConnectionContainerEditPart);
+
+                    if (!NodeSupplantDragListener.replacingNodeOrConnectionBisectionIsAllowed(connection)) {
+                        return;
+                    }
+                }
+            }
+
+            final Command command = getCommand();
             if (command instanceof CompoundCommand) {
                 // If the command is a compound command the drop request also needs to
                 // create space for the new node and therefore moves other nodes.

@@ -62,6 +62,9 @@ public interface PreferenceConstants {
     /** Preference constant: whether user needs to confirm delete actions. */
     public static final String P_CONFIRM_DELETE = "knime.confirm.delete";
 
+    /** Preference constant: whether user needs to confirm node/connection replacement by drop-on actions. */
+    public static final String P_CONFIRM_REPLACE = "knime.confirm.replace";
+
     /** Preference constant to confirm reconnecting a node. */
     public static final String P_CONFIRM_RECONNECT = "knime.confirm.reconnect";
 
@@ -152,7 +155,7 @@ public interface PreferenceConstants {
     public static final boolean P_AUTO_SAVE_DEFAULT_ENABLE = false;
     /** Default auto save interval in seconds ({@value #P_AUTO_SAVE_DEFAULT_INTERVAL_SECS}). */
     public static final int P_AUTO_SAVE_DEFAULT_INTERVAL_SECS = 180;
-    /** Default auto save data property: true = save with data (default is {@value #P_AUTO_SAVE_DEFAULT_DATA}). */
+    /** Default auto save data property: true = save with data (default is {@value #P_AUTO_SAVE_DEFAULT_WITH_DATA}). */
     public static final boolean P_AUTO_SAVE_DEFAULT_WITH_DATA = false;
 
     /** Pref constant to wrap column headers in table views (interactive table view & outport view). */
