@@ -694,4 +694,14 @@ public abstract class NodeFactory<T extends NodeModel> {
     boolean isDeprecatedInternal() {
         return m_nodeDescription.isDeprecated();
     }
+
+    //**** KNIME 4.0 Prototyping ****/
+
+    /**
+     * @return
+     * @since 3.7
+     */
+    public String getExecEnvNodeType() {
+        return null;
+    }
 }

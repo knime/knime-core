@@ -136,6 +136,8 @@ public final class RepositoryFactory {
 
         node.setType(factory.getType());
 
+        node.setExecEnvNodeType(factory.getExecEnvNodeType());
+
         if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
             // Load images from declaring plugin
             Image icon = ImageRepository.getIconImage(factory);

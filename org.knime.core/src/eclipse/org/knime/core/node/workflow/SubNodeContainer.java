@@ -68,6 +68,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -102,6 +104,8 @@ import org.knime.core.node.dialog.DialogNodeRepresentation;
 import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
+import org.knime.core.node.execenv.ExecEnv;
+import org.knime.core.node.execenv.ExecEnvManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.MetaPortInfo;
@@ -293,6 +297,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             m_inports[i] = new NodeInPort(i, inTypes[i]);
         }
         m_templateInformation = persistor.getTemplateInformation();
+        setExecEnvFromName(m_wfm.getName());
     }
 
     /**
@@ -370,6 +375,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_templateInformation = MetaNodeTemplateInformation.NONE;
 
         postLoadWFM();
+
+        setExecEnvFromName(name);
     }
 
     /** Adds new/empty instance of a virtual input node and returns its ID. */
@@ -732,6 +739,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_wfm.setName(name);
         setDirty();
         notifyNodePropertyChangedListener(NodeProperty.Name);
+        setExecEnvFromName(name);
     }
 
     /* ------------------- Specific Interna ------------------- */
@@ -1445,7 +1453,10 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @Override
     public PortObject getOutputObject(final int portIndex) {
-        return m_outputs[portIndex].getObject();
+        //make sure to attach this execution environment to the port object
+        PortObject po = m_outputs[portIndex].getObject();
+        po.setExecEnv(getExecEnv());
+        return po;
     }
 
     /**
@@ -2326,5 +2337,17 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         }
     }
 
+    //**** KNIME 4.0 Prototype ****/
+
+    private void setExecEnvFromName(final String name) {
+        Matcher m = Pattern.compile("(.+)(\\(.+\\))").matcher(name);
+        if (m.matches()) {
+            String s = m.group(2).replaceAll("(\\()|(\\))", "");
+            ExecEnvManager.getInstance().deregisterExecEnv(this);
+            ExecEnv execEnv = ExecEnvManager.getInstance().getExecEnvFactoryByID(s).createExecEnv();
+            ExecEnvManager.getInstance().registerExecEnv(execEnv, this);
+            setExecEnv(execEnv);
+        }
+    }
 
 }

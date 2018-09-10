@@ -5,7 +5,7 @@
    <extension-point id="AggregationOperator" name="AggregationOperator" schema="schema/org.knime.base.AggregationOperator.exsd"/>
    <extension-point id="MissingCellHandler" name="MissingCellHandler" schema="schema/MissingCellHandler.exsd"/>
     <extension
-         point="org.knime.workbench.repository.categories">
+          point="org.knime.workbench.repository.categories">
       <category
             icon="icons/16x16/category_reader.png"
             level-id="io"
@@ -477,6 +477,13 @@
             level-id="deeplearning"
             name="Deep Learning"
             path="/labs">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="dummies"
+            locked="true"
+            name="dummies"
+            path="/">
       </category>
    </extension>
             
@@ -1963,6 +1970,21 @@
             category-path="/analytics/mining/miscClass"
             deprecated="false"
             factory-class="org.knime.base.node.mine.knn.KnnNodeFactory2">
+      </node>
+      <node
+            category-path="/dummies"
+            deprecated="false"
+            factory-class="org.knime.base.node.dummies.a.ANodeFactory">
+      </node>
+      <node
+            category-path="/dummies"
+            deprecated="false"
+            factory-class="org.knime.base.node.dummies.converters.AToTableConverterNodeFactory">
+      </node>
+      <node
+            category-path="/dummies"
+            deprecated="false"
+            factory-class="org.knime.base.node.dummies.converters.TableToAConverterNodeFactory">
       </node>
    </extension>
    

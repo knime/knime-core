@@ -60,6 +60,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.execenv.ExecEnv;
 import org.knime.core.node.util.ConvenienceMethods;
 
 
@@ -233,4 +234,23 @@ public interface PortObject {
      */
     public JComponent[] getViews();
 
+
+    //**** KNIME 4.0 Prototyping ****/
+
+    /**
+     *
+     * @param ee
+     * @since 3.7
+     */
+    default void setExecEnv(final ExecEnv ee) {
+        //
+    }
+
+    /**
+     * @return
+     * @since 3.7
+     */
+    default ExecEnv getExecEnv() {
+        return null;
+    }
 }

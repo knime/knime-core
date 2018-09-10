@@ -192,4 +192,20 @@ public class NodeTemplate extends AbstractNodeTemplate {
     public IRepositoryObject deepCopy() {
         return new NodeTemplate(this);
     }
+
+    //**** KNIME 4.0 Prototype ****/
+
+    String m_execEnvNodeType;
+
+    /**
+     * @param execEnvNodeType
+     */
+    public void setExecEnvNodeType(final String execEnvNodeType) {
+        m_execEnvNodeType = execEnvNodeType;
+    }
+
+    public String getExecEnvNodeType() {
+        return m_execEnvNodeType;
+    }
+
 }

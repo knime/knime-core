@@ -72,6 +72,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
+import org.knime.core.node.execenv.ExecEnv;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.PortObject;
@@ -1749,4 +1750,31 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
          */
         CONFIGURE;
     }
+
+
+    /**** KNIME 4.0 Prototyping ****/
+
+    private ExecEnv m_execEnv;
+
+    /**
+     * @since 3.7
+     */
+    public void setExecEnv(final ExecEnv ee) {
+        m_execEnv = ee;
+    }
+
+    /**
+     * @return can be <code>null</code> if not set (default execution environment)
+     * @since 3.7
+     */
+    public ExecEnv getExecEnv() {
+        if (m_execEnv != null) {
+            return m_execEnv;
+        } else if (getParent() != null) {
+            return getParent().getExecEnv();
+        } else {
+            return null;
+        }
+    }
+
 }
