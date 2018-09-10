@@ -144,6 +144,9 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
     private final SettingsModelString settingsModel = LoopStartWindowNodeModel.createColumnModel();
 
+    // Row counter for missing rows. Ensures unique row ids.
+    private long m_missingRowCount = 0;
+
     /**
      * Creates a new model.
      */
@@ -1301,7 +1304,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
         /* Add missing preceding rows to fill up the window at the beginning of the loop. */
         while (container.size() < windowSize - (m_currRow + 1)) {
-            container.addRowToTable(new MissingRow(m_nColumns));
+            container.addRowToTable(new MissingRow(m_nColumns, m_missingRowCount++));
             currRowCount++;
         }
 
@@ -1383,7 +1386,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
         /* Fill missing preceding rows with missing values. Only needed at the start of*/
         while (container.size() < Math.floorDiv(windowSize, 2) - (m_currRow)) {
-            container.addRowToTable(new MissingRow(m_nColumns));
+            container.addRowToTable(new MissingRow(m_nColumns, m_missingRowCount++));
             currRowCount++;
         }
 
@@ -1413,7 +1416,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
         /* Add missing rows to fill up the window. */
         while (container.size() < windowSize) {
-            container.addRowToTable(new MissingRow(m_nColumns));
+            container.addRowToTable(new MissingRow(m_nColumns, m_missingRowCount++));
         }
 
         m_currRow += stepSize;
@@ -1472,7 +1475,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
         /* Add missing rows to fill up the window. */
         while (container.size() < windowSize) {
-            container.addRowToTable(new MissingRow(m_nColumns));
+            container.addRowToTable(new MissingRow(m_nColumns, m_missingRowCount++));
         }
 
         m_currRow += stepSize;
@@ -1488,7 +1491,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
     @Override
     protected void reset() {
         m_currRow = 0;
-        MissingRow.rowCounter = 0;
+        m_missingRowCount = 0;
         m_lastWindow = false;
         m_printedMissingWarning = false;
 
@@ -1600,21 +1603,22 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
      *
      * @author Heiko Hofer
      */
-    static class MissingRow implements DataRow {
+    private class MissingRow implements DataRow {
         private DataCell[] m_cells;
 
-        private static int rowCounter = 0;
+        private final static String rowName = "LSW_Missing_Row";
 
-        private static String rowName = "LSW_Missing_Row";
+        private final long m_rowCount;
 
         /**
          * @param numCells The number of cells in the {@link DataRow}
          */
-        public MissingRow(final int numCells) {
+        public MissingRow(final int numCells, final long rowCount) {
             m_cells = new DataCell[numCells];
             for (int i = 0; i < numCells; i++) {
                 m_cells[i] = DataType.getMissingCell();
             }
+            m_rowCount = rowCount;
         }
 
         /**
@@ -1622,7 +1626,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
          */
         @Override
         public RowKey getKey() {
-            return new RowKey(rowName + (rowCounter++));
+            return new RowKey(rowName + (m_rowCount));
         }
 
         /**
