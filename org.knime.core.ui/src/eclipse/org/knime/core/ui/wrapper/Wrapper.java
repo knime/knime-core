@@ -63,11 +63,13 @@ import com.google.common.collect.MapMaker;
 /**
  * Wraps another object and provides static methods to wrap and unwrap those.
  *
+ * Only intended for {@link UI}-stuff.
+ *
  * @author Martin Horn, University of Konstanz
  *
  * @param <W> the class that is wrapped
  */
-public interface Wrapper<W> {
+public interface Wrapper<W> extends UI {
 
     /**
      * The global wrapper map - not for direct access - use {@link #wrapOrGet(Object, Function)} instead!

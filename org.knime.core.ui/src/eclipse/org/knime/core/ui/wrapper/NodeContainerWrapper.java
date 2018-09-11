@@ -362,11 +362,6 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
     }
 
     @Override
-    public String toString() {
-        return unwrap().toString();
-    }
-
-    @Override
     public String getDisplayLabel() {
         return unwrap().getDisplayLabel();
     }

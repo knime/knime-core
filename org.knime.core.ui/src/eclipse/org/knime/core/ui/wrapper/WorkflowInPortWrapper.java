@@ -79,18 +79,8 @@ public class WorkflowInPortWrapper extends AbstractWrapper<WorkflowInPort> imple
     }
 
     @Override
-    public int hashCode() {
-        return unwrap().hashCode();
-    }
-
-    @Override
     public NodeOutPortUI getUnderlyingPort() {
         return NodeOutPortWrapper.wrap(unwrap().getUnderlyingPort());
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return unwrap().equals(obj);
     }
 
     @Override
@@ -116,11 +106,6 @@ public class WorkflowInPortWrapper extends AbstractWrapper<WorkflowInPort> imple
     @Override
     public final void setPortName(final String portName) {
         unwrap().setPortName(portName);
-    }
-
-    @Override
-    public String toString() {
-        return unwrap().toString();
     }
 
 }

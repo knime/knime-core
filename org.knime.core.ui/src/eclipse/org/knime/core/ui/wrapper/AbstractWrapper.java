@@ -48,6 +48,8 @@
  */
 package org.knime.core.ui.wrapper;
 
+import org.knime.core.ui.UI;
+
 /**
  * Abstract implementation of the {@link Wrapper} interface that keeps the wrapped object as local member.
  *
@@ -68,6 +70,27 @@ public abstract class AbstractWrapper<W> implements Wrapper<W> {
     @Override
     public final W unwrap() {
         return m_wrappedObj;
+    }
+
+    @Override
+    public final boolean equals(final Object obj) {
+        if (Wrapper.wraps(obj, m_wrappedObj.getClass())) {
+            //if the passed object wraps the same type, compare the wrapped objects directly
+            return unwrap().equals(Wrapper.unwrap((UI)obj, m_wrappedObj.getClass()));
+        } else {
+            //the passed object obviously wraps a different object type
+            return false;
+        }
+    }
+
+    @Override
+    public final int hashCode() {
+        return unwrap().hashCode();
+    }
+
+    @Override
+    public final String toString() {
+        return unwrap().toString();
     }
 
 }

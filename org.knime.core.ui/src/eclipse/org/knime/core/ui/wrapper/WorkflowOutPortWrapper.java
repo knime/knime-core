@@ -136,21 +136,6 @@ public class WorkflowOutPortWrapper extends AbstractWrapper<WorkflowOutPort> imp
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        return unwrap().equals(obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return unwrap().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return unwrap().toString();
-    }
-
-    @Override
     public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
         return unwrap().addNodeStateChangeListener(listener);
     }

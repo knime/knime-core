@@ -159,21 +159,6 @@ public final class ConnectionContainerWrapper extends AbstractWrapper<Connection
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        return unwrap().equals(obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return unwrap().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return unwrap().toString();
-    }
-
-    @Override
     public boolean isFlowVariablePortConnection() {
         return unwrap().isFlowVariablePortConnection();
     }
