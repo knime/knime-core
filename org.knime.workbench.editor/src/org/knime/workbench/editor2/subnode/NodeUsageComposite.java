@@ -213,6 +213,7 @@ public class NodeUsageComposite extends Composite {
         if (m_dialogUsageMap.size() < 1) {
             selectAllDialog.setEnabled(false);
         }
+        scrollPane.setMinSize(composite.computeSize(SWT.DEFAULT, SWT.DEFAULT, true));
     }
 
     private Button createCheckbox(final Composite parent) {
