@@ -76,9 +76,12 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitPMML;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.BufferedDataTable;
@@ -575,15 +578,33 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         // handle the optional PMML input
         PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)data[1] : null;
         DataTableSpec inSpec = inData.getSpec();
+        DataColumnSpec classColumnSpec = inSpec.getColumnSpec(classColumnIndex);
+        // AP-10263: Predictor fails if the class column has no possible values assigned
+        if (!classColumnSpec.getDomain().hasValues()) {
+            inSpec = setPossibleValuesInClassColumn(inSpec, classColumnIndex, initialTable.getPossibleClassValues());
+        }
         PMMLPortObjectSpec outPortSpec = createPMMLPortObjectSpec(
                 inPMMLPort == null ? null : inPMMLPort.getSpec(),
                         inSpec);
         PMMLPortObject outPMMLPort = new PMMLPortObject(outPortSpec,
-                inPMMLPort, inData.getSpec());
+                inPMMLPort, inSpec);
         outPMMLPort.addModelTranslater(new PMMLDecisionTreeTranslator(decisionTree));
 
         m_decisionTree = decisionTree;
         return new PortObject[]{outPMMLPort};
+    }
+
+    private static DataTableSpec setPossibleValuesInClassColumn(final DataTableSpec inSpec, final int classColumnIndex,
+        final Set<DataCell> possibleValues) {
+        DataTableSpecCreator specCreator = new DataTableSpecCreator(inSpec);
+        DataColumnSpec classColSpec = inSpec.getColumnSpec(classColumnIndex);
+        DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(classColSpec);
+        assert !classColSpec.getDomain().hasValues();
+        DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(classColSpec.getDomain());
+        domainCreator.setValues(possibleValues);
+        colSpecCreator.setDomain(domainCreator.createDomain());
+        specCreator.replaceColumn(classColumnIndex, colSpecCreator.createSpec());
+        return specCreator.createSpec();
     }
 
     private PMMLPortObjectSpec createPMMLPortObjectSpec(
