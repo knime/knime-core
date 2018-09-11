@@ -246,6 +246,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     private void fillBasicComposite() {
 
         if (!m_basicPanelAvailable) {
+            m_basicComposite.setLayout(new GridLayout(1, true));
             GridData gridData = new GridData();
             gridData.grabExcessHorizontalSpace = true;
             gridData.horizontalAlignment = SWT.CENTER;
