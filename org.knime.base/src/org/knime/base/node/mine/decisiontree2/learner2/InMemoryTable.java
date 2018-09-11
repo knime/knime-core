@@ -48,9 +48,9 @@
 package org.knime.base.node.mine.decisiontree2.learner2;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
@@ -307,7 +307,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      */
     public Set<DataCell> getPossibleClassValues() {
         int numMappings = m_classValueMapper.getNumMappings();
-        Set<DataCell> possibleValues = new HashSet<>(numMappings);
+        Set<DataCell> possibleValues = new LinkedHashSet<>();
         for (int i = 0; i < numMappings; i++) {
             possibleValues.add(m_classValueMapper.getMappedObject(i));
         }
