@@ -57,10 +57,12 @@ import java.awt.event.ItemListener;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
@@ -84,7 +86,8 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
 
     private final FilesHistoryPanel m_filePanel;
     private final JTextField m_columnHeaderField;
-    private final JCheckBox m_readColHeaderChecker;
+    private final JRadioButton m_customColHeaderRadio;
+    private final JRadioButton m_readColHeaderRadio;
     private final JTextField m_rowHeadPrefixField;
     private final JCheckBox m_limitRowCountChecker;
     private final JCheckBox m_skipEmptyLinesChecker;
@@ -100,10 +103,17 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
 
         int col = 10;
         m_columnHeaderField = new JTextField("Column", col);
-        m_readColHeaderChecker = new JCheckBox("Use first line as column header");
-        m_readColHeaderChecker.addChangeListener(e -> {
-            m_columnHeaderField.setEnabled(!m_readColHeaderChecker.isSelected());
+        m_customColHeaderRadio = new JRadioButton();
+        m_customColHeaderRadio.addActionListener(e -> {
+            m_columnHeaderField.setEnabled(m_customColHeaderRadio.isSelected());
         });
+        m_readColHeaderRadio = new JRadioButton("Use first line as column header");
+        m_readColHeaderRadio.addActionListener(e -> {
+            m_columnHeaderField.setEnabled(!m_readColHeaderRadio.isSelected());
+        });
+        ButtonGroup colHeaderGroup = new ButtonGroup();
+        colHeaderGroup.add(m_customColHeaderRadio);
+        colHeaderGroup.add(m_readColHeaderRadio);
         m_rowHeadPrefixField = new JTextField("Row", col);
         m_skipEmptyLinesChecker = new JCheckBox("Skip empty lines");
         m_regexField = new StringHistoryPanel("org.knime.base.node.io.linereader.RegexHistory");
@@ -165,10 +175,11 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         optionsPanel.add(new JLabel("Column header "), gbc);
         gbc.gridx += 1;
         Box colHeaderBox = Box.createHorizontalBox();
+        colHeaderBox.add(m_customColHeaderRadio);
         colHeaderBox.add(m_columnHeaderField);
-        colHeaderBox.add(Box.createHorizontalStrut(20));
-        colHeaderBox.add(m_readColHeaderChecker);
         optionsPanel.add(colHeaderBox, gbc);
+        gbc.gridy += 1;
+        optionsPanel.add(m_readColHeaderRadio, gbc);
 
         gbc.gridy += 1;
         gbc.gridx = 0;
@@ -213,8 +224,9 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         m_filePanel.updateHistory();
         m_filePanel.setSelectedFile(url);
         m_columnHeaderField.setText(config.getColumnHeader());
-        m_readColHeaderChecker.setSelected(config.isReadColumnHeader());
-        m_columnHeaderField.setEnabled(!m_readColHeaderChecker.isSelected());
+        m_customColHeaderRadio.setSelected(!config.isReadColumnHeader());
+        m_readColHeaderRadio.setSelected(config.isReadColumnHeader());
+        m_columnHeaderField.setEnabled(!m_readColHeaderRadio.isSelected());
         m_rowHeadPrefixField.setText(config.getRowPrefix());
         m_skipEmptyLinesChecker.setSelected(config.isSkipEmptyLines());
         int limitRows = config.getLimitRowCount();
@@ -251,7 +263,7 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         String fileS = m_filePanel.getSelectedFile().trim();
         config.setUrlString(fileS);
         config.setColumnHeader(m_columnHeaderField.getText());
-        config.setReadColumnHeader(m_readColHeaderChecker.isSelected());
+        config.setReadColumnHeader(m_readColHeaderRadio.isSelected());
         config.setRowPrefix(m_rowHeadPrefixField.getText());
         config.setSkipEmptyLines(m_skipEmptyLinesChecker.isSelected());
         if (m_limitRowCountChecker.isSelected()) {
