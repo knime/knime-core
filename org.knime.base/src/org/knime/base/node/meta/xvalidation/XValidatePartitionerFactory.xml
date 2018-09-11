@@ -14,9 +14,11 @@
         <option name="Number of validations">
             The number of cross validation iterations that should be performed.
         </option>
+        <option name="Linear sampling">
+            If checked, the input table is cut into consecutive pieces.
+        </option>
         <option name="Random sampling">
-            If checked, the partitions are sampled randomly from the input table, otherwise it is cut into consecutive
-            pieces.
+            If checked, the partitions are sampled randomly from the input table.
         </option>
         <option name="Stratified sampling">
             If checked, the partitions are sampled randomly but the class distribution from the column selected
