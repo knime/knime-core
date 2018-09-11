@@ -93,6 +93,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -232,6 +233,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         GridData gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.GRAB_VERTICAL);
         composite.setLayoutData(gridData);
         ScrolledComposite scrollPane = new ScrolledComposite(composite, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
+        scrollPane.setLayout(new FillLayout(SWT.VERTICAL));
         scrollPane.setExpandHorizontal(true);
         scrollPane.setExpandVertical(true);
         m_basicComposite = new Composite(scrollPane, SWT.NONE);
@@ -244,15 +246,20 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     }
 
     private void fillBasicComposite() {
-
         if (!m_basicPanelAvailable) {
             m_basicComposite.setLayout(new GridLayout(1, true));
             GridData gridData = new GridData();
             gridData.grabExcessHorizontalSpace = true;
             gridData.horizontalAlignment = SWT.CENTER;
-            Label infoLabel = new Label(m_basicComposite, SWT.CENTER);
+            gridData.grabExcessVerticalSpace = true;
+            Label infoLabel = new Label(m_basicComposite, SWT.FILL);
             infoLabel.setText("A basic configuration of the layout is not possible. \nPlease use the \"Advanced\" tab.");
             infoLabel.setLayoutData(gridData);
+
+            // Ensure scroll bar appears when composite data changes
+            ((ScrolledComposite)m_basicComposite.getParent())
+                .setMinSize(m_basicComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+            ((ScrolledComposite)m_basicComposite.getParent()).requestLayout();
             return;
         }
 
@@ -428,6 +435,10 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 updateModelFromJson();
             }
         });
+        // Ensure scroll bar appears when composite data changes
+        ((ScrolledComposite)m_basicComposite.getParent())
+            .setMinSize(m_basicComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+        ((ScrolledComposite)m_basicComposite.getParent()).requestLayout();
     }
 
     private Composite createNodeLabelComposite(final Composite parent, final NodeID nodeID, final NodeContainer nodeContainer) {
