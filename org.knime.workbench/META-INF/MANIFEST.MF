@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: KNIME Workbench
-Bundle-SymbolicName: org.knime.workbench;singleton:=true
-Bundle-Version: 3.8.0.qualifier
-Bundle-Vendor: KNIME AG, Zurich, Switzerland
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7

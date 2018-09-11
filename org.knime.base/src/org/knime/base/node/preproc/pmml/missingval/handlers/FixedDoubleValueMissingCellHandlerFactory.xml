@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<missingcellhandler name="Fix Value (Double)" xmlns="http://knime.org/missingval/v1.0">
-            Replaces missing values with a double given by the user.
-            This missing value handler produces valid PMML 4.2.
-</missingcellhandler>

@@ -1,7 +1,0 @@
-requires.1.namespace=org.eclipse.equinox.p2.iu
-requires.1.name=org.eclipse.jdt.compiler.tool
-requires.1.range=1.1.100.v20160418-1457
-
-requires.2.namespace=org.eclipse.equinox.p2.iu
-requires.2.name=org.eclipse.jdt.compiler.apt
-requires.2.range=1.2.100.v20160418-1457

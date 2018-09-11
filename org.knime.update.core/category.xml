@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature id="org.knime.features.base"/>
+   <bundle id="org.knime.core" version="3.8.0.qualifier"/>
+   <bundle id="org.knime.core.data.uritype" version="3.8.0.qualifier"/>
+   <bundle id="org.knime.core.pmml" version="3.8.0.qualifier"/>
+   <bundle id="org.knime.core.ui" version="3.8.0.qualifier"/>
 </site>

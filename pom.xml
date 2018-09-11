@@ -25,54 +25,16 @@
 			to the desired P2 update site.
 		-->
 		<knime.target.platform.url>${env.KNIME_TARGET_PLATFORM_URL}</knime.target.platform.url>
+		<knime.shared.url>${env.KNIME_SHARED_URL}</knime.shared.url>
 	</properties>
 
 	<modules>
-		<module>org.knime.base</module>
-		<module>org.knime.base.logisticregression</module>
-		<module>org.knime.base.treeensembles</module>
-		<module>org.knime.base.treeensembles2</module>
 		<module>org.knime.core</module>
+		<!-- <module>org.knime.core.tests</module> -->
 		<module>org.knime.core.data.uritype</module>
 		<module>org.knime.core.pmml</module>
 		<module>org.knime.core.ui</module>
-		<module>org.knime.core.wizard</module>
-		<module>org.knime.ext.sun</module>
-		<module>org.knime.features.base</module>
-		<module>org.knime.jsnippets</module>
-		<module>org.knime.product</module>
-		<module>org.knime.product.desktop</module>
-		<module>org.knime.startup.macosx</module>
-		<module>org.knime.stats</module>
-		<module>org.knime.time</module>
-		<module>org.knime.timeseries</module>
-		<module>org.knime.workbench</module>
-		<module>org.knime.workbench.core</module>
-		<module>org.knime.workbench.editor</module>
-		<module>org.knime.workbench.help</module>
-		<module>org.knime.workbench.repository</module>
-		<module>org.knime.workbench.ui</module>
-		<module>org.knime.workbench.ui.browser</module>
-		<module>org.knime.workbench.ui.layout</module>
-		<module>org.knime.workbench.workflowcoach</module>
 		<module>org.knime.update.core</module>
-
-		<!-- Test Modules -->
-		<module>org.knime.base.tests</module>
-		<module>org.knime.base.logisticregression.tests</module>
-		<module>org.knime.base.treeensembles2.tests</module>
-
-		<!-- Disabled 'org.knime.jsnippets.tests' because node setup fails? -->
-		<!-- <module>org.knime.core.tests</module> -->
-
-		<!--
-			Disabled 'org.knime.jsnippets.tests' because 'org.knime.base.node.jsnippet.ui.BundleListPanelTest' 
-			fails
-		-->
-		<!-- <module>org.knime.jsnippets.tests</module> -->
-
-		<module>org.knime.product.tests</module>
-		<module>org.knime.workbench.repository.tests</module>
 	</modules>
 
 	<repositories>
@@ -80,6 +42,11 @@
 			<id>org.knime.update.org</id>
 			<layout>p2</layout>
 			<url>${knime.target.platform.url}</url>
+		</repository>
+		<repository>
+			<id>org.knime.update.shared</id>
+			<layout>p2</layout>
+			<url>${knime.shared.url}</url>
 		</repository>
 	</repositories>
 </project>

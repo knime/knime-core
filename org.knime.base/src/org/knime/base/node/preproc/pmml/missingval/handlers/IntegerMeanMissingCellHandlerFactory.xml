@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<missingcellhandler name="Rounded Mean" xmlns="http://knime.org/missingval/v1.0">
-            Calculates the mean value of all non-missing cells in a column
-            and replaces the missing values with this mean.
-            This missing value handler produces valid PMML 4.2.
-</missingcellhandler>

@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<missingcellhandler name="Maximum" xmlns="http://knime.org/missingval/v1.0">
-       Finds the column's largest value and replaces all missing values with it.
-       This missing value handler produces valid PMML 4.2.
-</missingcellhandler>

@@ -1,4 +1,0 @@
-This folder contains the WindowsDNDHelper.jar. 
-The WindowsDNDHelper.jar contains two static methods which are used in
-org.knime.workbench.editor/src/org/knime.workbench/editor2/NodeTemplateDropTargetListener.
-WindowsDNDHelper.jar is a workaround for the eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868).

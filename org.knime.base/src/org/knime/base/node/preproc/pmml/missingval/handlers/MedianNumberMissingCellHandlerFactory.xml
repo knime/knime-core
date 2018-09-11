@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<missingcellhandler name="Median" xmlns="http://knime.org/missingval/v1.0">
-            Finds the column's median value and replaces all missing values with it.
-            For large tables this might be computationally expensive because the table needs
-            to be sorted to find the median.
-            This missing value handler produces valid PMML 4.2.
-</missingcellhandler>

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<missingcellhandler name="Most Frequent Value" xmlns="http://knime.org/missingval/v1.0">
-            Calculates the most frequent value in a column
-            and replaces the missing values with it.
-            This missing value handler produces valid PMML 4.2.
-</missingcellhandler>
