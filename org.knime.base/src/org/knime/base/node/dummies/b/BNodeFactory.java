@@ -44,98 +44,66 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2018 (hornm): created
+ *   Sep 11, 2018 (hornm): created
  */
-package org.knime.core.node.execenv.converter;
+package org.knime.base.node.dummies.b;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.execenv.ExecEnv;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  *
  * @author hornm
- * @since 3.7
  */
-public abstract class ConverterNodeModel extends NodeModel {
+public class BNodeFactory extends NodeFactory<BNodeModel> {
 
     /**
-     * @param in
-     * @param inEnv
-     * @param out
-     * @param outEnv
+     * {@inheritDoc}
      */
-    protected ConverterNodeModel(final PortType in, final PortType out) {
-        super(new PortType[]{in}, new PortType[]{out});
+    @Override
+    public BNodeModel createNodeModel() {
+        return new BNodeModel();
     }
 
-    public abstract ExecEnv getOutExecEnv();
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-        throws org.knime.core.node.InvalidSettingsException {
-        return new PortObjectSpec[]{getOutSpec()};
+    protected int getNrNodeViews() {
+        return 0;
     }
 
-    protected abstract PortObjectSpec getOutSpec();
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        ExecEnv inEnv = inObjects[0].getExecEnv();
-        PortObject po = convert(inObjects[0], inEnv, getOutExecEnv(), exec);
-        po.setExecEnv(getOutExecEnv());
-        return new PortObject[]{po};
+    public NodeView<BNodeModel> createNodeView(final int viewIndex, final BNodeModel nodeModel) {
+        return null;
     }
 
-    protected abstract PortObject convert(PortObject in, ExecEnv inEnv, ExecEnv outEnv, ExecutionContext exec);
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+    protected boolean hasDialog() {
+        return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // TODO Auto-generated method stub
-
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void reset() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+    public String getExecEnvNodeType() {
+        return "BNode";
     }
 
 }

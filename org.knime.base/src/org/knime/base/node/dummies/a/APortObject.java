@@ -48,10 +48,16 @@
  */
 package org.knime.base.node.dummies.a;
 
+import java.io.IOException;
+
 import javax.swing.JComponent;
 
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 
@@ -87,6 +93,27 @@ public class APortObject implements PortObject {
     public JComponent[] getViews() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public static class APortObjectSerializer extends PortObjectSerializer<APortObject> {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void savePortObject(final APortObject portObject, final PortObjectZipOutputStream out, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public APortObject loadPortObject(final PortObjectZipInputStream in, final PortObjectSpec spec, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+            return new APortObject();
+        }
+
     }
 
 }

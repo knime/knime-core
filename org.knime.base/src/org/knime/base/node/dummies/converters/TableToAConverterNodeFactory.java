@@ -88,7 +88,7 @@ public class TableToAConverterNodeFactory extends ConverterNodeFactory<Converter
             }
 
             @Override
-            protected ExecEnv getOutExecEnv() {
+            public ExecEnv getOutExecEnv() {
                 List<ExecEnv> envs = ExecEnvManager.getInstance().getRegisteredExecEnvsOfType("A");
                 if (!envs.isEmpty()) {
                     return envs.get(0);

@@ -44,98 +44,94 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2018 (hornm): created
+ *   Sep 11, 2018 (hornm): created
  */
-package org.knime.core.node.execenv.converter;
+package org.knime.base.node.dummies.converters;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.List;
 
-import org.knime.core.node.CanceledExecutionException;
+import org.knime.base.node.dummies.a.APortObject;
+import org.knime.base.node.dummies.b.BPortObject;
+import org.knime.base.node.dummies.b.BPortObjectSpec;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.execenv.ExecEnv;
+import org.knime.core.node.execenv.ExecEnvManager;
+import org.knime.core.node.execenv.converter.ConverterNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
 
 /**
  *
  * @author hornm
- * @since 3.7
  */
-public abstract class ConverterNodeModel extends NodeModel {
+public class AToBConverterNodeFactory extends NodeFactory<ConverterNodeModel> {
 
     /**
-     * @param in
-     * @param inEnv
-     * @param out
-     * @param outEnv
+     * {@inheritDoc}
      */
-    protected ConverterNodeModel(final PortType in, final PortType out) {
-        super(new PortType[]{in}, new PortType[]{out});
+    @Override
+    public ConverterNodeModel createNodeModel() {
+        return new ConverterNodeModel(APortObject.TYPE, BPortObject.TYPE) {
+
+            @Override
+            protected PortObjectSpec getOutSpec() {
+                return new BPortObjectSpec();
+            }
+
+            @Override
+            public ExecEnv getOutExecEnv() {
+                List<ExecEnv> envs = ExecEnvManager.getInstance().getRegisteredExecEnvsOfType("B");
+                if (!envs.isEmpty()) {
+                    return envs.get(0);
+                } else {
+                    return null;
+                }
+            }
+
+            @Override
+            protected PortObject convert(final PortObject in, final ExecEnv inEnv, final ExecEnv outEnv, final ExecutionContext exec) {
+                return new BPortObject();
+            }
+        };
     }
 
-    public abstract ExecEnv getOutExecEnv();
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-        throws org.knime.core.node.InvalidSettingsException {
-        return new PortObjectSpec[]{getOutSpec()};
-    }
-
-    protected abstract PortObjectSpec getOutSpec();
-
-    @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        ExecEnv inEnv = inObjects[0].getExecEnv();
-        PortObject po = convert(inObjects[0], inEnv, getOutExecEnv(), exec);
-        po.setExecEnv(getOutExecEnv());
-        return new PortObject[]{po};
-    }
-
-    protected abstract PortObject convert(PortObject in, ExecEnv inEnv, ExecEnv outEnv, ExecutionContext exec);
-
-    @Override
-    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+    protected int getNrNodeViews() {
         // TODO Auto-generated method stub
-
+        return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    public NodeView<ConverterNodeModel> createNodeView(final int viewIndex, final ConverterNodeModel nodeModel) {
         // TODO Auto-generated method stub
-
+        return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
+    protected boolean hasDialog() {
         // TODO Auto-generated method stub
-
+        return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void reset() {
+    protected NodeDialogPane createNodeDialogPane() {
         // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+        return null;
     }
 
 }

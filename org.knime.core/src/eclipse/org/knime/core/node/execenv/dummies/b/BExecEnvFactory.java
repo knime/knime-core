@@ -107,6 +107,14 @@ public class BExecEnvFactory implements ExecEnvFactory {
      * {@inheritDoc}
      */
     @Override
+    public String getExecEnvName() {
+        return "Spark";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public List<String> getSupportedExecEnvNodeTypes() {
         return Arrays.asList("BNode");
     }

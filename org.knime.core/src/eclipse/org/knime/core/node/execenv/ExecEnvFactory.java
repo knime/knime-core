@@ -62,6 +62,8 @@ public interface ExecEnvFactory {
 
     String getExecEnvID();
 
+    String getExecEnvName();
+
     List<String> getSupportedExecEnvNodeTypes();
 
 

@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.knime.core.node.execenv.dummies.a.AExecEnvFactory;
+import org.knime.core.node.execenv.dummies.b.BExecEnvFactory;
 import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
@@ -74,6 +75,7 @@ public class ExecEnvManager {
     private ExecEnvManager() {
         //singleton
         m_idToExecEnvMap.put("A", new AExecEnvFactory());
+        m_idToExecEnvMap.put("B", new BExecEnvFactory());
     }
 
     public static ExecEnvManager getInstance() {

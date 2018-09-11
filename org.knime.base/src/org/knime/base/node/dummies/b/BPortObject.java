@@ -44,98 +44,77 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2018 (hornm): created
+ *   Sep 11, 2018 (hornm): created
  */
-package org.knime.core.node.execenv.converter;
+package org.knime.base.node.dummies.b;
 
-import java.io.File;
 import java.io.IOException;
 
+import javax.swing.JComponent;
+
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.execenv.ExecEnv;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 
 /**
  *
  * @author hornm
- * @since 3.7
  */
-public abstract class ConverterNodeModel extends NodeModel {
+public class BPortObject implements PortObject {
+
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(BPortObject.class);
 
     /**
-     * @param in
-     * @param inEnv
-     * @param out
-     * @param outEnv
+     * {@inheritDoc}
      */
-    protected ConverterNodeModel(final PortType in, final PortType out) {
-        super(new PortType[]{in}, new PortType[]{out});
-    }
-
-    public abstract ExecEnv getOutExecEnv();
-
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-        throws org.knime.core.node.InvalidSettingsException {
-        return new PortObjectSpec[]{getOutSpec()};
-    }
-
-    protected abstract PortObjectSpec getOutSpec();
-
-    @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        ExecEnv inEnv = inObjects[0].getExecEnv();
-        PortObject po = convert(inObjects[0], inEnv, getOutExecEnv(), exec);
-        po.setExecEnv(getOutExecEnv());
-        return new PortObject[]{po};
-    }
-
-    protected abstract PortObject convert(PortObject in, ExecEnv inEnv, ExecEnv outEnv, ExecutionContext exec);
-
-    @Override
-    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+    public String getSummary() {
         // TODO Auto-generated method stub
-
+        return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // TODO Auto-generated method stub
-
+    public PortObjectSpec getSpec() {
+        return new BPortObjectSpec();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
+    public JComponent[] getViews() {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    public static class BPortObjectSerializer extends PortObjectSerializer<BPortObject> {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void savePortObject(final BPortObject portObject, final PortObjectZipOutputStream out, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public BPortObject loadPortObject(final PortObjectZipInputStream in, final PortObjectSpec spec, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+            return new BPortObject();
+        }
 
     }
 
-    @Override
-    protected void reset() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
-    }
 
 }

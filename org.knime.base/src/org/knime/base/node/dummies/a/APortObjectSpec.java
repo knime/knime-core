@@ -48,9 +48,13 @@
  */
 package org.knime.base.node.dummies.a;
 
+import java.io.IOException;
+
 import javax.swing.JComponent;
 
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpecZipInputStream;
+import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
  *
@@ -65,6 +69,28 @@ public class APortObjectSpec implements PortObjectSpec {
     public JComponent[] getViews() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public static class APortObjectSpecSerializer extends PortObjectSpecSerializer<APortObjectSpec> {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void savePortObjectSpec(final APortObjectSpec portObjectSpec, final PortObjectSpecZipOutputStream out)
+            throws IOException {
+            // TODO Auto-generated method stub
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public APortObjectSpec loadPortObjectSpec(final PortObjectSpecZipInputStream in) throws IOException {
+            return new APortObjectSpec();
+        }
+
     }
 
 }

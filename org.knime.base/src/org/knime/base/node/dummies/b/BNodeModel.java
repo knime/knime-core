@@ -44,9 +44,9 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2018 (hornm): created
+ *   Sep 11, 2018 (hornm): created
  */
-package org.knime.core.node.execenv.converter;
+package org.knime.base.node.dummies.b;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +58,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.execenv.ExecEnv;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -66,52 +65,45 @@ import org.knime.core.node.port.PortType;
 /**
  *
  * @author hornm
- * @since 3.7
  */
-public abstract class ConverterNodeModel extends NodeModel {
+public class BNodeModel extends NodeModel {
 
     /**
-     * @param in
-     * @param inEnv
-     * @param out
-     * @param outEnv
      */
-    protected ConverterNodeModel(final PortType in, final PortType out) {
-        super(new PortType[]{in}, new PortType[]{out});
+    protected BNodeModel() {
+        super(new PortType[]{BPortObject.TYPE}, new PortType[]{BPortObject.TYPE});
     }
 
-    public abstract ExecEnv getOutExecEnv();
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-        throws org.knime.core.node.InvalidSettingsException {
-        return new PortObjectSpec[]{getOutSpec()};
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new PortObjectSpec[] {new BPortObjectSpec()};
     }
 
-    protected abstract PortObjectSpec getOutSpec();
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        ExecEnv inEnv = inObjects[0].getExecEnv();
-        PortObject po = convert(inObjects[0], inEnv, getOutExecEnv(), exec);
-        po.setExecEnv(getOutExecEnv());
-        return new PortObject[]{po};
+        return new PortObject[]{new BPortObject()};
     }
 
-    protected abstract PortObject convert(PortObject in, ExecEnv inEnv, ExecEnv outEnv, ExecutionContext exec);
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         // TODO Auto-generated method stub
 
     }
 
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // TODO Auto-generated method stub
-
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
@@ -119,21 +111,38 @@ public abstract class ConverterNodeModel extends NodeModel {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void reset() {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         // TODO Auto-generated method stub
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         // TODO Auto-generated method stub
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
+    protected void reset() {
         // TODO Auto-generated method stub
 
     }

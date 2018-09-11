@@ -1986,6 +1986,26 @@
             deprecated="false"
             factory-class="org.knime.base.node.dummies.converters.TableToAConverterNodeFactory">
       </node>
+      <node
+            category-path="/dummies"
+            deprecated="false"
+            factory-class="org.knime.base.node.dummies.converters.BToTableConverterNodeFactory">
+      </node>
+      <node
+            category-path="/dummies"
+            deprecated="false"
+            factory-class="org.knime.base.node.dummies.converters.TableToBConverterNodeFactory">
+      </node>
+      <node
+            category-path="/dummies"
+            deprecated="false"
+            factory-class="org.knime.base.node.dummies.converters.AToBConverterNodeFactory">
+      </node>
+      <node
+            category-path="/dummies"
+            deprecated="false"
+            factory-class="org.knime.base.node.dummies.b.BNodeFactory">
+      </node>
    </extension>
    
       
@@ -2240,5 +2260,21 @@
             specClass="org.knime.base.node.meta.feature.selection.FeatureSelectionModel"
             specSerializer="org.knime.base.node.meta.feature.selection.FeatureSelectionModel$NewSpecSerializer">
       </portType>
+        <portType
+              hidden="false"
+              name="Port Type A"
+              objectClass="org.knime.base.node.dummies.a.APortObject"
+              objectSerializer="org.knime.base.node.dummies.a.APortObject$APortObjectSerializer"
+              specClass="org.knime.base.node.dummies.a.APortObjectSpec"
+              specSerializer="org.knime.base.node.dummies.a.APortObjectSpec$APortObjectSpecSerializer">
+        </portType>
+        <portType
+              hidden="false"
+              name="Port Type B"
+              objectClass="org.knime.base.node.dummies.b.BPortObject"
+              objectSerializer="org.knime.base.node.dummies.b.BPortObject$BPortObjectSerializer"
+              specClass="org.knime.base.node.dummies.b.BPortObjectSpec"
+              specSerializer="org.knime.base.node.dummies.b.BPortObjectSpec$BPortObjectSpecSerializer">
+        </portType>
      </extension>   
 </plugin>

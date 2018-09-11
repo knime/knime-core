@@ -52,6 +52,7 @@ import java.util.List;
 
 import org.knime.base.node.dummies.a.APortObject;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeDialogPane;
@@ -84,11 +85,13 @@ public class AToTableConverterNodeFactory extends ConverterNodeFactory<Converter
             @Override
             protected PortObject convert(final PortObject in, final ExecEnv inEnv, final ExecEnv outEnv,
                 final ExecutionContext exec) {
-                return exec.createDataContainer(new DataTableSpec()).getTable();
+                BufferedDataContainer container = exec.createDataContainer(new DataTableSpec());
+                container.close();
+                return container.getTable();
             }
 
             @Override
-            protected ExecEnv getOutExecEnv() {
+            public ExecEnv getOutExecEnv() {
                 List<ExecEnv> envs = ExecEnvManager.getInstance().getRegisteredExecEnvsOfType("A");
                 if (!envs.isEmpty()) {
                     return envs.get(0);

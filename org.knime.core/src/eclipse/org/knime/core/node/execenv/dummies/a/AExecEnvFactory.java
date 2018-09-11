@@ -107,6 +107,14 @@ public class AExecEnvFactory implements ExecEnvFactory {
      * {@inheritDoc}
      */
     @Override
+    public String getExecEnvName() {
+        return "H2O";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public List<String> getSupportedExecEnvNodeTypes() {
         return Arrays.asList("ANode");
     }
