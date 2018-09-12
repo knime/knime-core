@@ -526,6 +526,11 @@
             commandId="knime.actions.zoom_reset"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+0"/>
+            <!-- copied from org.eclipse.gef/plugin.xml without locale=de -->
+      <key  
+            commandId="org.eclipse.gef.zoom_in"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1++"/>
       <key
             commandId="knime.commands.openView"
             contextId="org.eclipse.ui.contexts.window"
