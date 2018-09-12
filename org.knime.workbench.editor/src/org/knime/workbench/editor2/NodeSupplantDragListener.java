@@ -310,6 +310,8 @@ public class NodeSupplantDragListener implements KeyListener, MouseListener, Mou
 
                 if (!NodeSupplantDragListener
                     .replacingNodeOrConnectionBisectionIsAllowed(m_dragPositionProcessor.getEdge() != null)) {
+                    SupplantationCommand.moveNodeToLocation(m_nodeInDrag, m_mouseDownNodeBounds);
+
                     return;
                 }
 

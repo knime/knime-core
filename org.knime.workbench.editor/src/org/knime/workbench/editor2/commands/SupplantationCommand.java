@@ -80,6 +80,22 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author loki der quaeler
  */
 public class SupplantationCommand extends AbstractKNIMECommand {
+    /**
+     * A convenience method which places a node into a location; i would have imagined this would exist elsewhere in the
+     * code base but searching on "setUIInformation" reveals a number of usages, but not something this minimal.
+     *
+     * @param node the <code>NodeContainerEditPart</code> representing the node to move
+     * @param destinationBounds location information in the format returned by
+     *            <code>NodeUIInformation.getBounds()</code>
+     */
+    public static void moveNodeToLocation(final NodeContainerEditPart node, final int[] destinationBounds) {
+        final NodeContainerUI container = node.getNodeContainer();
+        final NodeUIInformation.Builder builder = NodeUIInformation.builder(container.getUIInformation());
+
+        builder.setNodeLocation(destinationBounds[0], destinationBounds[1], destinationBounds[2], destinationBounds[3]);
+        container.setUIInformation(builder.build());
+    }
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SupplantationCommand.class);
 
 
@@ -167,6 +183,8 @@ public class SupplantationCommand extends AbstractKNIMECommand {
             final ConnectionContainer targetCC = wm.getConnection(m_edgeTargetId);
 
             if (!ReplaceHelper.executedStateAllowsReplace(wm, null, targetCC)) {
+                returnNodeToOriginalLocation();
+
                 return;
             }
 
@@ -235,6 +253,8 @@ public class SupplantationCommand extends AbstractKNIMECommand {
             final ConnectionContainer[] connections = ccs.toArray(new ConnectionContainer[ccs.size()]);
 
             if (!ReplaceHelper.executedStateAllowsReplace(wm, wm.getNodeContainer(toRemoveNodeId), connections)) {
+                returnNodeToOriginalLocation();
+
                 return;
             }
 
@@ -374,12 +394,11 @@ public class SupplantationCommand extends AbstractKNIMECommand {
             }
         }
 
-        final NodeUIInformation.Builder builder =
-            NodeUIInformation.builder(m_supplantingNode.getNodeContainer().getUIInformation());
+        returnNodeToOriginalLocation();
+    }
 
-        builder.setNodeLocation(m_originalSupplantingNodeBounds[0], m_originalSupplantingNodeBounds[1],
-            m_originalSupplantingNodeBounds[2], m_originalSupplantingNodeBounds[3]);
-        m_supplantingNode.getNodeContainer().setUIInformation(builder.build());
+    private void returnNodeToOriginalLocation() {
+        moveNodeToLocation(m_supplantingNode, m_originalSupplantingNodeBounds);
     }
 
 
