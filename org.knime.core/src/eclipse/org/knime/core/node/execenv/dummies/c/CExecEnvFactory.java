@@ -44,29 +44,81 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2018 (hornm): created
+ *   Sep 11, 2018 (hornm): created
  */
-package org.knime.core.node.execenv;
+package org.knime.core.node.execenv.dummies.c;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.knime.core.node.execenv.ExecEnv;
+import org.knime.core.node.execenv.ExecEnvFactory;
+import org.knime.core.node.execenv.Executor;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NodeContainer;
 
 /**
- * Note: There should probably a WorkflowExecEnv (and -Factory) specifically to run workflows.
  *
  * @author hornm
- * @since 3.7
  */
-public interface ExecEnv {
+public class CExecEnvFactory implements ExecEnvFactory {
 
-    List<Executor> getExecutors();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ExecEnv createExecEnv() {
+        final ExecEnvFactory thisFactory = this;
+        return new ExecEnv() {
 
-    ExecEnvFactory getFactory();
+            @Override
+            public ExecEnvFactory getFactory() {
+                return thisFactory;
+            }
 
-    void registerNode(NodeContainer nc);
+            @Override
+            public List<Executor> getExecutors() {
+                return null;
+            }
 
-    void registerPortObject(PortObject po);
+            @Override
+            public void registerNode(final NodeContainer nc) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void registerPortObject(final PortObject po) {
+                // TODO Auto-generated method stub
+
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getExecEnvID() {
+        return "C";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getExecEnvName() {
+        return "Python";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<String> getSupportedExecEnvNodeTypes() {
+        //not an execution environment intended to execute nodes
+        //we need to differentiate that
+        return Collections.emptyList();
+    }
 
 }

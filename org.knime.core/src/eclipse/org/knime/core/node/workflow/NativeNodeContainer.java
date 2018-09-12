@@ -88,6 +88,10 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
+import org.knime.core.node.execenv.ExecEnv;
+import org.knime.core.node.execenv.ExecEnvFactory;
+import org.knime.core.node.execenv.ExecEnvManager;
+import org.knime.core.node.execenv.ExecEnvNodeFactory;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.missing.MissingNodeModel;
@@ -143,6 +147,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
         m_node = n;
         setPortNames();
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
+
+        getAndSetExecEnv();
     }
 
     /**
@@ -163,6 +169,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 + getClass().getSimpleName() + " with id \"" + id + "\"";
         setPortNames();
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
+
+        getAndSetExecEnv();
     }
 
     /** The message listener that is added the Node and listens for messages
@@ -1191,5 +1199,19 @@ public class NativeNodeContainer extends SingleNodeContainer {
     @Override
     public HiLiteHandler getOutputHiLiteHandler(final int portIndex) {
         return getNode().getOutputHiLiteHandler(portIndex);
+    }
+
+    //**** KNIME 4.0 Prototype ****/
+
+    void getAndSetExecEnv() {
+        if(m_node.getFactory() instanceof ExecEnvNodeFactory) {
+            ExecEnvFactory execEnvFac = ExecEnvManager.getInstance()
+                .getExecEnvFactoryByID(((ExecEnvNodeFactory)m_node.getFactory()).getRequiredExecEnvID());
+            if (execEnvFac != null) {
+                ExecEnv execEnv = execEnvFac.createExecEnv();
+                ExecEnvManager.getInstance().registerExecEnv(execEnv, this);
+                setExecEnv(execEnv);
+            }
+        }
     }
 }

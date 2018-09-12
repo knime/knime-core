@@ -44,29 +44,22 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2018 (hornm): created
+ *   Sep 12, 2018 (hornm): created
  */
 package org.knime.core.node.execenv;
 
-import java.util.List;
-
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.NodeFactory;
 
 /**
- * Note: There should probably a WorkflowExecEnv (and -Factory) specifically to run workflows.
+ * Kind of a generalisation of {@link NodeFactory} that also requires a execution environment in order to be executed.
+ *
+ * Specific input and output converters (from/to PortObject[] to/from something)
  *
  * @author hornm
  * @since 3.7
  */
-public interface ExecEnv {
+public interface ExecEnvNodeFactory {
 
-    List<Executor> getExecutors();
-
-    ExecEnvFactory getFactory();
-
-    void registerNode(NodeContainer nc);
-
-    void registerPortObject(PortObject po);
+    String getRequiredExecEnvID();
 
 }

@@ -56,6 +56,8 @@ import java.util.stream.Collectors;
 
 import org.knime.core.node.execenv.dummies.a.AExecEnvFactory;
 import org.knime.core.node.execenv.dummies.b.BExecEnvFactory;
+import org.knime.core.node.execenv.dummies.c.CExecEnvFactory;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
@@ -70,12 +72,13 @@ public class ExecEnvManager {
 
     private Map<String, ExecEnvFactory> m_idToExecEnvMap = new HashMap<String, ExecEnvFactory>();
 
-    private Map<Integer, ExecEnv> m_sncToExecEnvMap = new HashMap<Integer, ExecEnv>();
+    private Map<Integer, ExecEnv> m_ncToExecEnvMap = new HashMap<Integer, ExecEnv>();
 
     private ExecEnvManager() {
         //singleton
         m_idToExecEnvMap.put("A", new AExecEnvFactory());
         m_idToExecEnvMap.put("B", new BExecEnvFactory());
+        m_idToExecEnvMap.put("C", new CExecEnvFactory());
     }
 
     public static ExecEnvManager getInstance() {
@@ -93,16 +96,16 @@ public class ExecEnvManager {
         return m_idToExecEnvMap.get(id);
     }
 
-    public void registerExecEnv(final ExecEnv ee, final SubNodeContainer snc) {
-        m_sncToExecEnvMap.put(System.identityHashCode(snc), ee);
+    public void registerExecEnv(final ExecEnv ee, final NodeContainer nc) {
+        m_ncToExecEnvMap.put(System.identityHashCode(nc), ee);
     }
 
     public void deregisterExecEnv(final SubNodeContainer snc) {
-        m_sncToExecEnvMap.remove(System.identityHashCode(snc));
+        m_ncToExecEnvMap.remove(System.identityHashCode(snc));
     }
 
     public List<ExecEnv> getRegisteredExecEnvsOfType(final String id) {
-        return m_sncToExecEnvMap.values().stream().filter(ee -> id != null && id.equals(ee.getFactory().getExecEnvID()))
+        return m_ncToExecEnvMap.values().stream().filter(ee -> id != null && id.equals(ee.getFactory().getExecEnvID()))
             .collect(Collectors.toList());
     }
 

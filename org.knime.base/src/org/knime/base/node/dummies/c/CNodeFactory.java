@@ -44,29 +44,75 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2018 (hornm): created
+ *   Sep 11, 2018 (hornm): created
  */
-package org.knime.core.node.execenv;
+package org.knime.base.node.dummies.c;
 
-import java.util.List;
-
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.execenv.ExecEnvNodeFactory;
 
 /**
- * Note: There should probably a WorkflowExecEnv (and -Factory) specifically to run workflows.
  *
  * @author hornm
- * @since 3.7
  */
-public interface ExecEnv {
+public class CNodeFactory extends NodeFactory<CNodeModel> implements ExecEnvNodeFactory {
 
-    List<Executor> getExecutors();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CNodeModel createNodeModel() {
+        return new CNodeModel();
+    }
 
-    ExecEnvFactory getFactory();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
 
-    void registerNode(NodeContainer nc);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<CNodeModel> createNodeView(final int viewIndex, final CNodeModel nodeModel) {
+        return null;
+    }
 
-    void registerPortObject(PortObject po);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getExecEnvNodeType() {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getRequiredExecEnvID() {
+        return "C";
+    }
 
 }

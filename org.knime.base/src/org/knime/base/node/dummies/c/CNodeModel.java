@@ -44,29 +44,109 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2018 (hornm): created
+ *   Sep 11, 2018 (hornm): created
  */
-package org.knime.core.node.execenv;
+package org.knime.base.node.dummies.c;
 
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
 
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Note: There should probably a WorkflowExecEnv (and -Factory) specifically to run workflows.
  *
  * @author hornm
- * @since 3.7
  */
-public interface ExecEnv {
+public class CNodeModel extends NodeModel {
 
-    List<Executor> getExecutors();
+    /**
+     */
+    protected CNodeModel() {
+        super(1,1);
+    }
 
-    ExecEnvFactory getFactory();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        return inSpecs;
+    }
 
-    void registerNode(NodeContainer nc);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
+        //requires certain execution environment to be executed
+        //currently the execenv is created when the respective NativeNodeContainer is created ->
+        //this node model needs to be able that very specific execution environment
+        return inData;
+    }
 
-    void registerPortObject(PortObject po);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
+        // TODO Auto-generated method stub
+
+    }
 
 }

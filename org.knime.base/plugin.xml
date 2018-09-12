@@ -2006,6 +2006,11 @@
             deprecated="false"
             factory-class="org.knime.base.node.dummies.b.BNodeFactory">
       </node>
+      <node
+            category-path="/dummies"
+            deprecated="false"
+            factory-class="org.knime.base.node.dummies.c.CNodeFactory">
+      </node>
    </extension>
    
       
