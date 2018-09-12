@@ -93,9 +93,10 @@ public class DataCellFactory {
      * a string representation of data. By default the decimal separator for
      * floating point number is a point, thousands grouping is disabled, and no
      * missing value pattern is set.
-     * @deprecated use {@link #DataCellFactory(ExecutionContext)} instead
+     *
+     * <p>In comparison to {@link #DataCellFactory(ExecutionContext)} this method does not associate created cells
+     * with the workflow itself and hence should only be used for primitive types (string, int, double, ...).
      */
-    @Deprecated
     public DataCellFactory() {
         this(null);
     }
