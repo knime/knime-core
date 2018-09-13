@@ -188,8 +188,9 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     public void createControl(final Composite parent) {
         TabFolder tabs = new TabFolder(parent, SWT.BORDER);
 
-        TabItem visualTab = new TabItem(tabs, SWT.NONE);
-        visualTab.setText("Visual Layout");
+        //TODO: re-enable once visual layout editor doesn't look horrible anymore
+        /*TabItem visualTab = new TabItem(tabs, SWT.NONE);
+        visualTab.setText("Visual Layout");*/
 
 
         TabItem usageTab = new TabItem(tabs, SWT.NONE);
@@ -215,7 +216,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         // The visual layout tab should be the first tab, but its control should be made
         // after the Advanced tab. This ensures that the JSON document is created before
         // it is used in the creation of the visual layout tab
-        visualTab.setControl(createVisualLayoutComposite(tabs));
+        //TODO: re-enable me too
+        //visualTab.setControl(createVisualLayoutComposite(tabs));
 
         setControl(tabs);
     }
