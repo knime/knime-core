@@ -748,6 +748,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @return underlying workflow.
      */
     public WorkflowManager getWorkflowManager() {
+        //make sure to set the right exec env as given by this node
+        m_wfm.setExecEnv(getExecEnv());
         return m_wfm;
     }
 
