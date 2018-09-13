@@ -48,15 +48,22 @@
  */
 package org.knime.workbench.editor2.subnode;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.io.IOUtils;
 import org.eclipse.core.runtime.FileLocator;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.wizard.ViewHideable;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -65,6 +72,8 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.js.core.layout.LayoutTemplateProvider;
 import org.knime.js.core.layout.bs.JSONLayoutViewContent;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -155,12 +164,34 @@ public class JSONVisualLayoutEditorNodes {
     }
 
     private static String getIcon(final NodeContainer nodeContainer) {
-        URL iconURL = NodeFactory.class.getResource("default.png");
+        if (nodeContainer == null) {
+            return createMissingIcon();
+        }
+        String iconBase64 = "";
         try {
-            iconURL = FileLocator.resolve(nodeContainer.getIcon());
+            final URL url = FileLocator.resolve(nodeContainer.getIcon());
+            final String mimeType = URLConnection.guessContentTypeFromName(url.getFile());
+            byte[] imageBytes = null;
+            try (InputStream s = url.openStream()) {
+                imageBytes = IOUtils.toByteArray(s);
+            }
+            iconBase64 = "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
         } catch (final IOException e) {
             // Do nothing
         }
-        return iconURL.toString();
+
+        if (iconBase64.isEmpty()) {
+            return createMissingIcon();
+        }
+        return iconBase64;
+    }
+
+    private static String createMissingIcon() {
+        final Image i = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png");
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final ImageLoader loader = new ImageLoader();
+        loader.data = new ImageData[] { i.getImageData() };
+        loader.save(out, SWT.IMAGE_PNG);
+        return "data:image/png;base64," + Base64.getEncoder().encodeToString(out.toByteArray());
     }
 }
