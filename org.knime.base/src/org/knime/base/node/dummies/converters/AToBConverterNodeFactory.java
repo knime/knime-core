@@ -55,10 +55,10 @@ import org.knime.base.node.dummies.b.BPortObject;
 import org.knime.base.node.dummies.b.BPortObjectSpec;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.execenv.ExecEnv;
 import org.knime.core.node.execenv.ExecEnvManager;
+import org.knime.core.node.execenv.converter.ConverterNodeFactory;
 import org.knime.core.node.execenv.converter.ConverterNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -67,7 +67,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author hornm
  */
-public class AToBConverterNodeFactory extends NodeFactory<ConverterNodeModel> {
+public class AToBConverterNodeFactory extends ConverterNodeFactory<ConverterNodeModel> {
 
     /**
      * {@inheritDoc}
