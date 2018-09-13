@@ -48,8 +48,6 @@
  */
 package org.knime.core.api.workflow;
 
-import org.knime.core.api.workflow.function.WorkflowFunction;
-
 /**
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
@@ -58,5 +56,4 @@ public interface WorkflowNode extends Node {
 
     Workflow getWorkflow();
 
-    WorkflowFunction getWorkflowFunc();
 }

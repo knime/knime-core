@@ -44,18 +44,46 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 13, 2018 (hornm): created
  */
-package org.knime.core.api;
+package org.knime.core.api.impl.workflow;
 
-import org.knime.core.api.workflow.exec.Executor;
+import org.knime.core.api.workflow.Port;
+import org.knime.core.api.workflow.Workflow;
+import org.knime.core.api.workflow.WorkflowNode;
 
 /**
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author hornm
  */
-public interface ExecEnv {
+public class DefaultWorkflowNode implements WorkflowNode {
 
-    <E extends Executable> Executor<E> execute(E c);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Port[] getOutPorts() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Port[] getInPorts() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Workflow getWorkflow() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

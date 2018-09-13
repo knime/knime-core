@@ -44,20 +44,14 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 13, 2018 (hornm): created
  */
-package org.knime.core.api;
+package org.knime.core.api.workflow.config;
 
 /**
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author hornm
  */
-public interface Executor<E extends Executable> {
-
-    void execute();
-
-    void reset();
-
-    void cancel();
+public interface SingleNodeConfigurator extends Configurator {
 
 }

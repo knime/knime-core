@@ -44,16 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 13, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
-package org.knime.core.api.workflow.state;
+package org.knime.core.api.workflow.exec;
 
-import org.knime.core.api.workflow.function.Function;
+import org.knime.core.api.workflow.state.StateManipulator;
 
 /**
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public interface StateFunctionManipulator<F extends Function> extends StateManipulator {
+public interface Executor extends StateManipulator {
+
+    //executor always operates on a workflow??
+
+    void execute();
+
+    void reset();
+
+    void cancel();
 
 }

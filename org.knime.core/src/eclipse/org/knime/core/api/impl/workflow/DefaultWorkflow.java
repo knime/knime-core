@@ -44,18 +44,84 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 13, 2018 (hornm): created
  */
-package org.knime.core.api;
+package org.knime.core.api.impl.workflow;
 
-import org.knime.core.api.workflow.exec.Executor;
+import java.util.List;
+
+import org.knime.core.api.workflow.Connection;
+import org.knime.core.api.workflow.Node;
+import org.knime.core.api.workflow.Workflow;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author hornm
  */
-public interface ExecEnv {
+public class DefaultWorkflow implements Workflow {
 
-    <E extends Executable> Executor<E> execute(E c);
+
+    private WorkflowManager m_wfm;
+
+    /**
+     *
+     */
+    public DefaultWorkflow(final WorkflowManager wfm) {
+        m_wfm = wfm;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Node> getNodes() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Connection> getConnections() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addNode(final Node n) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeNode(final Node n) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addConnection(final Connection c) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeConnection(final Connection c) {
+        // TODO Auto-generated method stub
+
+    }
 
 }

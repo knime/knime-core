@@ -54,9 +54,8 @@ import org.knime.core.api.workflow.function.Function;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public interface StateManipulator<F extends Function> {
+public interface StateManipulator {
 
-    manipulate(Stateful)
 
 
 }

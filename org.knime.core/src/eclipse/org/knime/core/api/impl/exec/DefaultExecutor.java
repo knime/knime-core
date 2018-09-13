@@ -44,18 +44,82 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 13, 2018 (hornm): created
  */
-package org.knime.core.api;
+package org.knime.core.api.impl.exec;
 
-import org.knime.core.api.workflow.exec.Executor;
+import org.knime.core.api.impl.workflow.DefaultWorkflow;
+import org.knime.core.api.workflow.Node;
+import org.knime.core.api.workflow.exec.SingleNodeExecutor;
 
 /**
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author hornm
  */
-public interface ExecEnv {
+public class DefaultExecutor implements SingleNodeExecutor {
 
-    <E extends Executable> Executor<E> execute(E c);
+
+    private DefaultWorkflow m_w;
+
+    /**
+     *
+     */
+    public DefaultExecutor(final DefaultWorkflow w) {
+        m_w = w;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void execute() {
+        //get data from somewhere
+        //execute the workflow and attach the states
+        //put data to some place
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void reset() {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cancel() {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void executeNode(final Node n) {
+        //trigger execution of predecessor nodes, too
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cancelNode(final Node n) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void resetNode(final Node n) {
+        // TODO Auto-generated method stub
+
+    }
 
 }

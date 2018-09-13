@@ -44,18 +44,16 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 13, 2018 (hornm): created
  */
-package org.knime.core.api;
+package org.knime.core.api.impl.workflow.function;
 
-import org.knime.core.api.workflow.exec.Executor;
+import org.knime.core.api.workflow.function.Parameters;
 
 /**
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author hornm
  */
-public interface ExecEnv {
-
-    <E extends Executable> Executor<E> execute(E c);
+public class DefaultParameters implements Parameters {
 
 }

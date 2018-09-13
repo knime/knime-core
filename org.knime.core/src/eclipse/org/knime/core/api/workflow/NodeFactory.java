@@ -49,8 +49,10 @@
 package org.knime.core.api.workflow;
 
 /**
+ * Essentially an abstraction of {@link org.knime.core.node.NodeFactory}.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author hornm
  */
 public interface NodeFactory {
 

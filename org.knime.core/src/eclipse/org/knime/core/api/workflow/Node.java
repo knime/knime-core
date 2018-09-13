@@ -60,5 +60,4 @@ public interface Node extends Entity {
 
     Port[] getInPorts();
 
-    NodeFactory getFactory();
 }

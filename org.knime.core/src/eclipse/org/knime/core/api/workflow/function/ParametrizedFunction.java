@@ -54,7 +54,7 @@ package org.knime.core.api.workflow.function;
  */
 public interface ParametrizedFunction<P extends Parameters, V extends ParametersValues> extends Function {
 
-    void setValue(V values);
+    void setValues(V values);
 
     P getParameters();
 

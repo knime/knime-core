@@ -44,18 +44,71 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 13, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
-package org.knime.core.api;
+package org.knime.core.api.impl.workflow;
 
-import org.knime.core.api.workflow.exec.Executor;
+import org.knime.core.api.impl.workflow.function.DefaultParameters;
+import org.knime.core.api.impl.workflow.function.DefaultParametrizedFunction;
+import org.knime.core.api.workflow.Node;
+import org.knime.core.api.workflow.function.ParametrizedFunctionNodeFactory;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 
 /**
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public interface ExecEnv {
+public class DefaultNodeFactory implements ParametrizedFunctionNodeFactory<DefaultParameters, DefaultParametrizedFunction> {
 
-    <E extends Executable> Executor<E> execute(E c);
+    private NodeFactory<NodeModel> m_nodeFactory;
+
+    /**
+     *
+     */
+    public DefaultNodeFactory(final NodeFactory<NodeModel> nodeFactory) {
+        m_nodeFactory = nodeFactory;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Node createNode() {
+        return new DefaultSingleNode(new DefaultNodeFactory(m_nodeFactory));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+        return m_nodeFactory.getNodeName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DefaultParameters createParameters() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DefaultParametrizedFunction createFunction() {
+        return new DefaultParametrizedFunction(m_nodeFactory.createNodeModel());
+    }
 
 }

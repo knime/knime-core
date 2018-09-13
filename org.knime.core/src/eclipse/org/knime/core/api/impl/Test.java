@@ -48,16 +48,18 @@
  */
 package org.knime.core.api.impl;
 
-import org.knime.core.api.ExecEnv;
-import org.knime.core.api.ExecEnvFactory;
-import org.knime.core.api.ExecEnvRegistry;
-import org.knime.core.api.Executor;
-import org.knime.core.api.NodeRegistry;
-import org.knime.core.api.StatefulWorkflow;
-import org.knime.core.api.WorkflowEditor;
-import org.knime.core.api.workflow.NodeFactory;
-import org.knime.core.api.workflow.function.WorkflowFunction;
-import org.knime.core.api.workflow.state.StateManipulator;
+import org.knime.core.api.impl.exec.DefaultExecutor;
+import org.knime.core.api.impl.workflow.DefaultNodeFactory;
+import org.knime.core.api.impl.workflow.DefaultParametersValues;
+import org.knime.core.api.impl.workflow.DefaultSingleNode;
+import org.knime.core.api.impl.workflow.DefaultWorkflow;
+import org.knime.core.api.impl.workflow.function.DefaultParameters;
+import org.knime.core.api.impl.workflow.function.DefaultParametrizedFunction;
+import org.knime.core.api.workflow.SingleNode;
+import org.knime.core.api.workflow.Workflow;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  *
@@ -67,24 +69,56 @@ public class Test {
 
     public void test() {
 
-        final StatefulWorkflow sW = null;
+//        final StatefulWorkflow sW = null;
+//
+//        final WorkflowEditor wE = new WorkflowEditor(sW);
+//
+//        wE.addConnection(null);
+//
+//        wE.addNode(NodeRegistry.getInstance().getNodeFactory(NodeFactory.class).createNode());
+//
+//        final ExecEnv eE = ExecEnvRegistry.getInstance().createExecEnv(ExecEnvFactory.class);
+//
+//        StateManipulator<WorkflowFunction> m = null;
+//
+//        WorkflowExecutor
+//
+//
+//        Executor<StatefulWorkflow> e = eE.apply(sW);
+//
+//        e.execute();
+//
 
-        final WorkflowEditor wE = new WorkflowEditor(sW);
+        //create workflow and add node
+        NodeFactory<NodeModel> nf = null;
+        DefaultNodeFactory fac = new DefaultNodeFactory(nf);
+        SingleNode<DefaultNodeFactory> n = new DefaultSingleNode(fac);
+        WorkflowManager wfm = null;
+        Workflow w = new DefaultWorkflow(null);
+        w.addNode(n);
 
-        wE.addConnection(null);
-
-        wE.addNode(NodeRegistry.getInstance().getNodeFactory(NodeFactory.class).createNode());
-
-        final ExecEnv eE = ExecEnvRegistry.getInstance().createExecEnv(ExecEnvFactory.class);
-
-        StateManipulator<WorkflowFunction> m = null;
-
-        WorkflowExecutor
+        //try to configure a node - if individual node configuration is allowed
+        DefaultParameters params = n.getFactory().createParameters();
+        //create a dialog for the given parameters and return the actual values
+        //possibly load the values from somewhere first
+        DefaultParametersValues values = null;
+        //configure the node with these values by somehow attaching a new state to the node, i.e. a configured state
 
 
-        Executor<StatefulWorkflow> e = eE.apply(sW);
+        //try to execute a node
+        // get execution environment
+        // get an executor - i.e. one that allows individual node execution
+        DefaultParametrizedFunction fct = n.getFactory().createFunction();
+        fct.setValues(values);
+        //let some configurator call specify on the function with the inspecs -> needs to be done for multiple nodes
+        fct.specify(null);
+        DefaultExecutor exec = new DefaultExecutor(fct);
+        // execute the provided function by the factory -> will add states to the workflow
+        exec.execute();
 
-        e.execute();
+
+
+
     }
 
 }

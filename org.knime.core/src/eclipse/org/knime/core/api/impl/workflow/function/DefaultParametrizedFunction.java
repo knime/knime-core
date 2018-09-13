@@ -44,18 +44,65 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 13, 2018 (hornm): created
  */
-package org.knime.core.api;
+package org.knime.core.api.impl.workflow.function;
 
-import org.knime.core.api.workflow.exec.Executor;
+import org.knime.core.api.impl.workflow.DefaultParametersValues;
+import org.knime.core.api.workflow.PortObject;
+import org.knime.core.api.workflow.data.PortObjectSpec;
+import org.knime.core.api.workflow.function.ParametrizedFunction;
+import org.knime.core.node.NodeModel;
 
 /**
- *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * Wraps the NodeNModel
+ * @author hornm
  */
-public interface ExecEnv {
+public class DefaultParametrizedFunction implements ParametrizedFunction<DefaultParameters, DefaultParametersValues> {
 
-    <E extends Executable> Executor<E> execute(E c);
+    private NodeModel m_nodeModel;
+
+    /**
+     *
+     */
+    public DefaultParametrizedFunction(final NodeModel nodeModel) {
+        m_nodeModel = nodeModel;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PortObjectSpec[] specify(final PortObjectSpec[] inSpecs) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PortObject[] apply(final PortObject[] inObjs) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setValues(final DefaultParametersValues values) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DefaultParameters getParameters() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

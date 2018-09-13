@@ -48,6 +48,8 @@
  */
 package org.knime.core.api;
 
+import org.knime.core.api.workflow.exec.Executor;
+
 /**
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany

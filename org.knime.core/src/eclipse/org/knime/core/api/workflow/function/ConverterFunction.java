@@ -55,7 +55,7 @@ import org.knime.core.api.workflow.function.converter.OutConverter;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public interface ConverterFunction<T, IN, OUT> extends ObjectFunction<T> {
+public interface ConverterFunction<IN, OUT> extends Function {
 
 
     InConverter<IN> getInConverter();

@@ -44,18 +44,15 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 13, 2018 (hornm): created
  */
-package org.knime.core.api;
-
-import org.knime.core.api.workflow.exec.Executor;
+package org.knime.core.api.workflow;
 
 /**
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author hornm
  */
-public interface ExecEnv {
+public interface SingleNode<F extends NodeFactory> extends Node {
 
-    <E extends Executable> Executor<E> execute(E c);
-
+    F getFactory();
 }

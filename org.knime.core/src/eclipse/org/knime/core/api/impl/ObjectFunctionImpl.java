@@ -94,7 +94,7 @@ public class ObjectFunctionImpl
      * {@inheritDoc}
      */
     @Override
-    public void setValue(final ParametersImpl values) {
+    public void setValues(final ParametersImpl values) {
     }
 
     /**

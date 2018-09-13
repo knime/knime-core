@@ -44,18 +44,20 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 12, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 13, 2018 (hornm): created
  */
-package org.knime.core.api;
+package org.knime.core.api.workflow.config;
 
-import org.knime.core.api.workflow.exec.Executor;
+import org.knime.core.api.workflow.state.StateManipulator;
 
 /**
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author hornm
  */
-public interface ExecEnv {
+public interface Configurator extends StateManipulator {
+    //configurator for entire workflows
 
-    <E extends Executable> Executor<E> execute(E c);
+    //portobject specs and parameters
+    void configure();
 
 }

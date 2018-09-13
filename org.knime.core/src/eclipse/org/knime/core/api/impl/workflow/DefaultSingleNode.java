@@ -44,24 +44,33 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 13, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
+ *   Sep 13, 2018 (hornm): created
  */
-package org.knime.core.api.impl;
+package org.knime.core.api.impl.workflow;
 
-import org.knime.core.api.workflow.Node;
-import org.knime.core.api.workflow.function.ParametrizedFunctionNodeFactory;
+import org.knime.core.api.workflow.Port;
+import org.knime.core.api.workflow.SingleNode;
 
 /**
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author hornm
  */
-public class NodeFactoryImpl implements ParametrizedFunctionNodeFactory<ParametersImpl, ObjectFunctionImpl> {
+public class DefaultSingleNode
+    implements SingleNode<DefaultNodeFactory> {
+
+
+    private DefaultNodeFactory m_nodeFactory;
+
+    public DefaultSingleNode(final DefaultNodeFactory nodeFactory) {
+        m_nodeFactory = nodeFactory;
+
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Node createNode() {
+    public Port[] getOutPorts() {
         // TODO Auto-generated method stub
         return null;
     }
@@ -70,7 +79,7 @@ public class NodeFactoryImpl implements ParametrizedFunctionNodeFactory<Paramete
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
+    public Port[] getInPorts() {
         // TODO Auto-generated method stub
         return null;
     }
@@ -79,9 +88,7 @@ public class NodeFactoryImpl implements ParametrizedFunctionNodeFactory<Paramete
      * {@inheritDoc}
      */
     @Override
-    public String getDescription() {
-        // TODO Auto-generated method stub
-        return null;
+    public DefaultNodeFactory getFactory() {
+        return m_nodeFactory;
     }
-
 }

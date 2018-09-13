@@ -54,6 +54,10 @@ import org.knime.core.api.workflow.NodeFactory;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public interface ParametrizedFunctionNodeFactory<ParametersSpec, Function> extends NodeFactory {
+public interface ParametrizedFunctionNodeFactory<P extends Parameters, F extends Function> extends NodeFactory {
+
+    P createParameters();
+
+    F createFunction();
 
 }
