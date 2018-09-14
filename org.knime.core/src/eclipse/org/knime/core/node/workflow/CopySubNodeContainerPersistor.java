@@ -48,11 +48,9 @@ package org.knime.core.node.workflow;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 
@@ -69,8 +67,9 @@ public class CopySubNodeContainerPersistor
     private final WorkflowPortTemplate[] m_outPortTemplates;
     private final int m_virtualInNodeIDSuffix;
     private final int m_virtualOutNodeIDSuffix;
-    private final Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
     private final String m_layoutJSONString;
+    private final boolean m_hideInWizard;
+    private final String m_customCSS;
     private final MetaNodeTemplateInformation m_templateInformation;
 
     /**
@@ -102,14 +101,9 @@ public class CopySubNodeContainerPersistor
         }
         m_virtualInNodeIDSuffix = original.getVirtualInNode().getID().getIndex();
         m_virtualOutNodeIDSuffix = original.getVirtualOutNode().getID().getIndex();
-        m_layoutInfo = new HashMap<Integer, WizardNodeLayoutInfo>();
-        Map<Integer, WizardNodeLayoutInfo> orgLayoutInfo = original.getLayoutInfo();
-        for (Entry<Integer, WizardNodeLayoutInfo> layoutEntry : orgLayoutInfo.entrySet()) {
-            Integer id = new Integer(layoutEntry.getKey());
-            WizardNodeLayoutInfo newInfo = layoutEntry.getValue().clone();
-            m_layoutInfo.put(id, newInfo);
-        }
         m_layoutJSONString = new String(original.getLayoutJSONString());
+        m_hideInWizard = original.isHideInWizard();
+        m_customCSS = new String(original.getCssStyles());
         m_templateInformation = original.getTemplateInformation().clone();
     }
 
@@ -156,13 +150,6 @@ public class CopySubNodeContainerPersistor
         return m_virtualOutNodeIDSuffix;
     }
 
-    /** {@inheritDoc} */
-    @Deprecated
-    @Override
-    public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
-        return m_layoutInfo;
-    }
-
     /**
      * {@inheritDoc}
      * @since 3.1
@@ -170,6 +157,24 @@ public class CopySubNodeContainerPersistor
     @Override
     public String getLayoutJSONString() {
         return m_layoutJSONString;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.7
+     */
+    @Override
+    public boolean isHideInWizard() {
+        return m_hideInWizard;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.7
+     */
+    @Override
+    public String getCssStyles() {
+        return m_customCSS;
     }
 
     /**

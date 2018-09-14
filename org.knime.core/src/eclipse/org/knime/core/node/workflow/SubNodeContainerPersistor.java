@@ -46,9 +46,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.Map;
-
-import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 
 /**
@@ -73,12 +70,14 @@ public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor 
 
     int getVirtualOutNodeIDSuffix();
 
-    /** @since 2.10 */
-    @Deprecated
-    Map<Integer, WizardNodeLayoutInfo> getLayoutInfo();
-
     /** @since 3.1 */
     String getLayoutJSONString();
+
+    /** @since 3.7 */
+    boolean isHideInWizard();
+
+    /** @since 3.7 */
+    String getCssStyles();
 
     MetaNodeTemplateInformation getTemplateInformation();
 }

@@ -44,30 +44,27 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   11 Nov 2016 (albrecht): created
+ *   14.09.2018 (albrecht): created
  */
-package org.knime.core.node.wizard.util;
-
-import java.io.IOException;
-import java.util.Map;
-
-import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+package org.knime.core.node.wizard;
 
 /**
- * A service interface to create a default view layout from a given set of {@link WizardNode}.
+ * Interface to provide view implementations associated with this node model the possibility to hide themselves from
+ * any composite view in which they might appear.
  *
- * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
- * @since 3.3
+ * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
+ * @since 3.7
  */
-public interface DefaultLayoutCreator {
+public interface ViewHideable {
+
+    /** Property set in the configuration dialog to the node to skip this node in the wizard execution.
+     * @return that property. */
+    public boolean isHideInWizard();
 
     /**
-     * Creates a default layout structure as a serialized JSON string.
-     * @param viewNodes the nodes to include in the layout
-     * @return a default layout structure as JSON string.
-     * @throws IOException on creation error
+     * Property set in the configuration dialog to the node to skip this node in the wizard execution.
+     * @param hide true if node is to be skipped, false otherwise
      */
-    public String createDefaultLayout(final Map<NodeIDSuffix, WizardNode> viewNodes) throws IOException;
+    public void setHideInWizard(final boolean hide);
 
 }

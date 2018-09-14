@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.wizard.Wizard;
+import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -91,9 +92,9 @@ public class SubnodeLayoutWizard extends Wizard {
         setDefaultPageImageDescriptor(
             ImageRepository.getImageDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_55.png"));
         WorkflowManager wfManager = m_subNodeContainer.getWorkflowManager();
-        //Map<NodeID, SubNodeContainer> nestedSubnodes = wfManager.findNodes(SubNodeContainer.class, false);
+        Map<NodeID, SubNodeContainer> nestedSubnodes = wfManager.findNodes(SubNodeContainer.class, false);
         Map<NodeID, WizardNode> viewNodes = wfManager.findNodes(WizardNode.class, false);
-        LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<>();
+        LinkedHashMap<NodeIDSuffix, ViewHideable> resultMap = new LinkedHashMap<>();
         for (Map.Entry<NodeID, WizardNode> entry : viewNodes.entrySet()) {
             NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(wfManager.getID(), entry.getKey());
             resultMap.put(idSuffix, entry.getValue());

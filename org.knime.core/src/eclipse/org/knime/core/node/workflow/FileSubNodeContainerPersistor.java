@@ -67,7 +67,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -94,9 +93,11 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private int m_virtualOutNodeIDSuffix = -1;
 
-    private Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
-
     private String m_layoutJSONString;
+
+    private String m_customCSS;
+
+    private boolean m_hideInWizard;
 
     private MetaNodeTemplateInformation m_templateInformation;
 
@@ -193,13 +194,6 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         return m_virtualOutNodeIDSuffix;
     }
 
-    /** {@inheritDoc} */
-    @Deprecated
-    @Override
-    public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
-        return m_layoutInfo;
-    }
-
     /**
      * {@inheritDoc}
      * @since 3.1
@@ -207,6 +201,24 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     @Override
     public String getLayoutJSONString() {
         return m_layoutJSONString;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.7
+     */
+    @Override
+    public boolean isHideInWizard() {
+        return m_hideInWizard;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.7
+     */
+    @Override
+    public String getCssStyles() {
+        return m_customCSS;
     }
 
     /** {@inheritDoc} */
@@ -330,27 +342,12 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             }
         }
 
-        Set<String> layoutSetKeys = Collections.emptySet();
-        m_layoutInfo = new HashMap<Integer, WizardNodeLayoutInfo>();
-        NodeSettingsRO layoutSettings = null;
-        try {
-            layoutSettings = nodeSettings.getNodeSettings("layoutInfos");
-            layoutSetKeys = layoutSettings.keySet();
-            for (String key : layoutSetKeys) {
-                NodeSettingsRO singleLayoutSetting = layoutSettings.getNodeSettings(key);
-                int nodeID = singleLayoutSetting.getInt("nodeID");
-                WizardNodeLayoutInfo layoutInfo = WizardNodeLayoutInfo.loadFromNodeSettings(singleLayoutSetting);
-                m_layoutInfo.put(nodeID, layoutInfo);
-            }
-        } catch (InvalidSettingsException e) {
-            String error = "Could not load Wrapped Metanode layout information: " + e.getMessage();
-            result.addError(error);
-            getLogger().error(error, e);
-            setDirtyAfterLoad();
-        }
-
         // added in 3.1, load with default value
         m_layoutJSONString = nodeSettings.getString("layoutJSON", "");
+
+        // added in 3.7, load with default values
+        m_customCSS = nodeSettings.getString("customCSS", "");
+        m_hideInWizard = nodeSettings.getBoolean("hideInWizard", false);
 
         m_workflowPersistor.preLoadNodeContainer(parentPersistor, parentSettings, result);
     }
@@ -479,15 +476,9 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             virtualOutNode.getInPort(i).getPortType().save(portTypeSettings);
         }
         subnodeNC.getTemplateInformation().save(settings);
-        Map<Integer, WizardNodeLayoutInfo> layoutInfoMap = subnodeNC.getLayoutInfo();
-        Integer[] layoutIDs = layoutInfoMap.keySet().toArray(new Integer[0]);
-        NodeSettingsWO layoutInfoSettings = settings.addNodeSettings("layoutInfos");
-        for (int i = 0; i < layoutInfoMap.size(); i++) {
-            NodeSettingsWO curLayoutInfoSettings = layoutInfoSettings.addNodeSettings("layoutInfo_" + (i));
-            curLayoutInfoSettings.addInt("nodeID", layoutIDs[i]);
-            WizardNodeLayoutInfo.saveToNodeSettings(curLayoutInfoSettings, layoutInfoMap.get(layoutIDs[i]));
-        }
         settings.addString("layoutJSON", subnodeNC.getLayoutJSONString());
+        settings.addBoolean("hideInWizard", subnodeNC.isHideInWizard());
+        settings.addString("customCSS", subnodeNC.getCssStyles());
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();
         FileWorkflowPersistor.save(workflowManager, nodeDirRef, exec, saveHelper);
     }

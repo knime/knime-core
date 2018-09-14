@@ -113,8 +113,9 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.wizard.CSSModifiable;
+import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
@@ -152,7 +153,8 @@ import org.w3c.dom.Element;
  * @author M. Berthold &amp; B. Wiswedel
  * @since 2.9
  */
-public final class SubNodeContainer extends SingleNodeContainer implements NodeContainerParent, NodeContainerTemplate {
+public final class SubNodeContainer extends SingleNodeContainer
+    implements NodeContainerParent, NodeContainerTemplate, CSSModifiable, ViewHideable {
 
     /** Shown in help description when nothing is set in input/output node. */
     private static final String NO_DESCRIPTION_SET = "<no description set>";
@@ -249,10 +251,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * is triggered via {@link #performExecuteNode(PortObject[])} or reset via {@link #performReset()}. */
     private boolean m_isPerformingActionCalledFromParent;
 
-    /** Legacy layout info for wizard nodes. */
-    private Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
     /** JSON layout info for wizard nodes. */
     private String m_layoutJSONString;
+
+    private boolean m_hideInWizard;
+    private String m_customCSS;
 
     private MetaNodeTemplateInformation m_templateInformation;
 
@@ -283,8 +286,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_inports = new NodeInPort[inPortTemplates.length];
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
-        m_layoutInfo = persistor.getLayoutInfo();
         m_layoutJSONString = persistor.getLayoutJSONString();
+        m_hideInWizard = persistor.isHideInWizard();
+        m_customCSS = persistor.getCssStyles();
         PortType[] inTypes = new PortType[inPortTemplates.length];
         for (int i = 0; i < inPortTemplates.length; i++) {
             inTypes[i] = inPortTemplates[i].getPortType();
@@ -1877,32 +1881,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /* -------------- Layouting --------- */
 
     /**
-     * @return the layoutInfo
-     * @since 2.10
-     * @deprecated use {@link #getLayoutJSONString()} instead
-     */
-    @Deprecated
-    public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
-        if (m_layoutInfo == null) {
-            m_layoutInfo = new HashMap<Integer, WizardNodeLayoutInfo>();
-        }
-        return m_layoutInfo;
-    }
-
-    /**
-     * @param layoutInfo the layoutInfo to set
-     * @since 2.10
-     * @deprecated use {@link #setLayoutJSONString(String)} instead
-     */
-    @Deprecated
-    public void setLayoutInfo(final Map<Integer, WizardNodeLayoutInfo> layoutInfo) {
-        if (ObjectUtils.notEqual(m_layoutInfo, layoutInfo)) {
-            m_layoutInfo = layoutInfo;
-            setDirty();
-        }
-    }
-
-    /**
      * @return the layoutJSONString
      * @since 3.1
      */
@@ -1924,7 +1902,50 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         }
     }
 
-    /** Sets a flag on a given {@link WizardNode}, whether or not it is hidden from wizard execution
+    /**
+     * {@inheritDoc}
+     * @since 3.7
+     */
+    @Override
+    public boolean isHideInWizard() {
+        return m_hideInWizard;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.7
+     */
+    @Override
+    public void setHideInWizard(final boolean hide) {
+        if (hide != m_hideInWizard) {
+            m_hideInWizard = hide;
+            setDirty();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.7
+     */
+    @Override
+    public String getCssStyles() {
+        return m_customCSS;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.7
+     */
+    @Override
+    public void setCssStyles(final String styles) {
+        if (!StringUtils.equals(m_customCSS, styles)) {
+            m_customCSS = styles;
+            setDirty();
+        }
+    }
+
+    /**
+     * Sets a flag on a given {@link WizardNode}, whether or not it is hidden from wizard execution
      * @param id the node to set the flag on
      * @param hide true if the node is supposed to be hidden from WebPortal or wizard execution, false otherwise
      * @since 3.5
@@ -1940,6 +1961,24 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 wn.setHideInWizard(hide);
                 nnc.saveNodeSettingsToDefault();
                 nnc.setDirty();
+            }
+        }
+    }
+
+    /**
+     * Sets a flag on a given subnode, whether or not it is hidden from wizard execution
+     * @param subnodeId the node to set the flag on
+     * @param hide true if the node is supposed to be hidden from WebPortal or wizard execution, false otherwise
+     * @since 3.7
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void setHideSubnodeFromWizard(final NodeID subnodeId, final boolean hide) {
+        try (WorkflowLock lock = lock()) {
+            SubNodeContainer snc = m_wfm.getNodeContainer(subnodeId, SubNodeContainer.class, true);
+            if (hide != snc.isHideInWizard()) {
+                snc.setHideInWizard(hide);
+                //do we need this call?
+                //snc.saveNodeSettingsToDefault();
             }
         }
     }

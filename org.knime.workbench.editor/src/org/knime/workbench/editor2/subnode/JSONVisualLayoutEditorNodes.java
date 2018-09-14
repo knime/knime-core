@@ -56,6 +56,7 @@ import java.util.Map.Entry;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -86,8 +87,7 @@ public class JSONVisualLayoutEditorNodes {
      * @param subNodeContainer the container node
      * @param wfManager the current workflow manager
      */
-    @SuppressWarnings("rawtypes")
-    public JSONVisualLayoutEditorNodes(final Map<NodeIDSuffix, WizardNode> viewNodes,
+    public JSONVisualLayoutEditorNodes(final Map<NodeIDSuffix, ViewHideable> viewNodes,
         final SubNodeContainer subNodeContainer, final WorkflowManager wfManager) {
         if ((viewNodes == null) || viewNodes.isEmpty() || (subNodeContainer == null) || (wfManager == null)) {
             return;
@@ -95,8 +95,8 @@ public class JSONVisualLayoutEditorNodes {
 
         long maxId = Long.MIN_VALUE;
         m_nodes = new HashMap<>();
-        for (final Entry<NodeIDSuffix, WizardNode> viewNode : viewNodes.entrySet()) {
-            final WizardNode<?, ?> node = viewNode.getValue();
+        for (final Entry<NodeIDSuffix, ViewHideable> viewNode : viewNodes.entrySet()) {
+            final ViewHideable node = viewNode.getValue();
             final NodeID nodeID = viewNode.getKey().prependParent(subNodeContainer.getWorkflowManager().getID());
             final NodeContainer nodeContainer = wfManager.getNodeContainer(nodeID);
 
@@ -147,7 +147,7 @@ public class JSONVisualLayoutEditorNodes {
 
     // -- Helper methods--
 
-    private static JSONLayoutViewContent getTemplate(final WizardNode<?, ?> node) {
+    private static JSONLayoutViewContent getTemplate(final ViewHideable node) {
         if (node instanceof LayoutTemplateProvider) {
             return ((LayoutTemplateProvider)node).getLayoutTemplate();
         }

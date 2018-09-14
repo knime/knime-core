@@ -357,8 +357,8 @@ public abstract class WebResourceController {
             return false;
         }
         SubNodeContainer subnodeSource = (SubNodeContainer)sourceNC;
-        // ...active.
-        if (subnodeSource.isInactive()) {
+        // ...active and not hidden.
+        if (subnodeSource.isInactive() || subnodeSource.isHideInWizard()) {
             return false;
         }
         // Now check if the active SubNode contains active QuickForm nodes:
@@ -372,7 +372,27 @@ public abstract class WebResourceController {
                 break;
             }
         }
+        // also consider nested SubNodes which might have views to display
+        Map<NodeID, SubNodeContainer> sncSet = findSubnodeContainers(subNodeWFM);
+        for (NodeID id : sncSet.keySet()) {
+            if (isSubnodeViewAvailable(id)) {
+                allInactive = false;
+                break;
+            }
+        }
         return !allInactive;
+    }
+
+    private static Map<NodeID, SubNodeContainer> findSubnodeContainers(final WorkflowManager subnodeManager) {
+        try(WorkflowLock lock = subnodeManager.lock()) {
+            Map<NodeID, SubNodeContainer> result = new LinkedHashMap<NodeID, SubNodeContainer>();
+            for (NodeContainer nc : subnodeManager.getWorkflow().getNodeValues()) {
+                if (nc instanceof SubNodeContainer) {
+                    result.put(nc.getID(), (SubNodeContainer)nc);
+                }
+            }
+            return result;
+        }
     }
 
     /**
@@ -395,6 +415,7 @@ public abstract class WebResourceController {
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subWFM = subNC.getWorkflowManager();
         Map<NodeID, WizardNode> wizardNodeMap = subWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
+        //TODO: get applicable nested subnodes
         LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<NodeIDSuffix, WizardNode>();
         //LinkedHashMap<NodeIDSuffix, WizardNode> errorMap = new LinkedHashMap<NodeIDSuffix, WizardNode>();
         LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo> infoMap = new LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo>();
@@ -443,6 +464,7 @@ public abstract class WebResourceController {
         List<HiLiteManager> managerList = knownManagers.size() > 0 ? new ArrayList<HiLiteManager>(knownManagers) : null;
         WizardPageContent page = new WizardPageContent(pageID, resultMap, pageLayout, translatorList, managerList);
         page.setInfoMap(infoMap);
+        //TODO page.setNestedContent(nestedContent);
         return page;
     }
 
@@ -772,6 +794,8 @@ public abstract class WebResourceController {
         @SuppressWarnings("rawtypes")
         private final Map<NodeIDSuffix, WizardNode> m_pageMap;
 
+        private Map<NodeIDSuffix, WizardPageContent> m_nestedContent;
+
         @SuppressWarnings("rawtypes")
         private Map<NodeIDSuffix, WizardPageNodeInfo> m_infoMap;
 
@@ -812,6 +836,22 @@ public abstract class WebResourceController {
         @SuppressWarnings("rawtypes")
         public Map<NodeIDSuffix, WizardNode> getPageMap() {
             return m_pageMap;
+        }
+
+        /**
+         * @return the nestedContent
+         * @since 3.7
+         */
+        public Map<NodeIDSuffix, WizardPageContent> getNestedContent() {
+            return m_nestedContent;
+        }
+
+        /**
+         * @param nestedContent the nestedContent to set
+         * @since 3.7
+         */
+        public void setNestedContent(final Map<NodeIDSuffix, WizardPageContent> nestedContent) {
+            m_nestedContent = nestedContent;
         }
 
         /**

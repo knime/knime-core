@@ -66,6 +66,7 @@ import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
+import org.knime.core.node.wizard.CSSModifiable;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -86,7 +87,6 @@ import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
 import org.knime.js.core.layout.bs.JSONLayoutRow;
 import org.knime.js.core.layout.bs.JSONLayoutViewContent;
-import org.knime.js.core.node.CSSModifiable;
 import org.knime.js.core.selections.json.JSONSelectionTranslator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

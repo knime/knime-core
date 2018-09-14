@@ -58,7 +58,7 @@ import org.knime.core.node.web.WebViewContent;
  * @since 2.9
  */
 public interface WizardNode<REP extends WebViewContent, VAL extends WebViewContent>
-        extends InteractiveNode<REP, VAL>, ValueControlledNode {
+        extends InteractiveNode<REP, VAL>, ValueControlledNode, ViewHideable {
 
     /**
      * Create content which can be used by the web view implementation.
@@ -104,14 +104,16 @@ public interface WizardNode<REP extends WebViewContent, VAL extends WebViewConte
      */
     public WizardViewCreator<REP, VAL> getViewCreator();
 
-    /** Property set in the configuration dialog to the node to skip this node in the wizard execution.
-     * @return that property. */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean isHideInWizard();
 
     /**
-     * Property set in the configuration dialog to the node to skip this node in the wizard execution.
-     * @param hide true if node is to be skipped, false otherwise
+     * {@inheritDoc}
      * @since 3.5
      */
+    @Override
     public void setHideInWizard(final boolean hide);
 }

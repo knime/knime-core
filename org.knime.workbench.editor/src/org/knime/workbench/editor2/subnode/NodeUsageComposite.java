@@ -70,7 +70,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.knime.core.node.dialog.DialogNode;
-import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -79,7 +79,7 @@ import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 
 /**
- * A Composite to set up quicknode and view node usage in a wrapped meta node dialog and the web portal.
+ * A Composite to set up QuickForm and view node usage in a wrapped meta node dialog and the web portal.
  *
  * @author Ferry Abt, KNIME GmbH, Konstanz, Germany
  */
@@ -94,8 +94,7 @@ public class NodeUsageComposite extends Composite {
      * @param viewNodes the quickforms and view nodes in this wrapped metanode
      * @param subNodeContainer the container of the wrapped meta node
      */
-    public NodeUsageComposite(final Composite parent,
-        @SuppressWarnings("rawtypes") final Map<NodeIDSuffix, WizardNode> viewNodes,
+    public NodeUsageComposite(final Composite parent, final Map<NodeIDSuffix, ViewHideable> viewNodes,
         final SubNodeContainer subNodeContainer) {
         super(parent, SWT.NONE);
 
@@ -121,8 +120,9 @@ public class NodeUsageComposite extends Composite {
         infoLabel.setLayoutData(gridData);
     }
 
+    @SuppressWarnings("unused")
     private void createNodeGrid(final SubNodeContainer subNodeContainer,
-        @SuppressWarnings("rawtypes") final Map<NodeIDSuffix, WizardNode> viewNodes) {
+        final Map<NodeIDSuffix, ViewHideable> viewNodes) {
         ScrolledComposite scrollPane = new ScrolledComposite(this, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
         scrollPane.setExpandHorizontal(true);
         scrollPane.setExpandVertical(true);
@@ -151,16 +151,14 @@ public class NodeUsageComposite extends Composite {
         Button selectAllDialog = createCheckbox(composite);
 
         //individual nodes
-        for (@SuppressWarnings("rawtypes")
-        Entry<NodeIDSuffix, WizardNode> entry : viewNodes.entrySet()) {
+        for (Entry<NodeIDSuffix, ViewHideable> entry : viewNodes.entrySet()) {
             NodeIDSuffix suffix = entry.getKey();
             NodeID id = suffix.prependParent(subNodeContainer.getWorkflowManager().getID());
             NodeContainer nodeContainer =
                 viewNodes.containsKey(suffix) ? subNodeContainer.getWorkflowManager().getNodeContainer(id) : null;
             createNodeLabelComposite(composite, id, nodeContainer);
 
-            @SuppressWarnings("rawtypes")
-            WizardNode model = entry.getValue();
+            ViewHideable model = entry.getValue();
             Button wizardButton = createCheckbox(composite);
             wizardButton.addSelectionListener(new SelectionAdapter() {
                 @Override
@@ -169,7 +167,7 @@ public class NodeUsageComposite extends Composite {
                 }
             });
             wizardButton.setToolTipText("Enable/disable for usage in WebPortal and wizard execution.");
-            wizardButton.setSelection(!((WizardNode<?, ?>)model).isHideInWizard());
+            wizardButton.setSelection(model.isHideInWizard());
             m_wizardUsageMap.put(id, wizardButton);
             if (model instanceof DialogNode) {
                 Button dialogButton = createCheckbox(composite);
@@ -216,13 +214,13 @@ public class NodeUsageComposite extends Composite {
         scrollPane.setMinSize(composite.computeSize(SWT.DEFAULT, SWT.DEFAULT, true));
     }
 
-    private Button createCheckbox(final Composite parent) {
+    private static Button createCheckbox(final Composite parent) {
         Button checkbox = new Button(parent, SWT.CHECK);
         checkbox.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
         return checkbox;
     }
 
-    private void checkAllSelected(final Map<NodeID, Button> buttons, final Button selectAllButton) {
+    private static void checkAllSelected(final Map<NodeID, Button> buttons, final Button selectAllButton) {
         boolean allSelected = true;
         boolean oneSelected = false;
         for (Button b : buttons.values()) {
@@ -233,7 +231,7 @@ public class NodeUsageComposite extends Composite {
         selectAllButton.setGrayed(!allSelected);
     }
 
-    private Composite createNodeLabelComposite(final Composite parent, final NodeID nodeID,
+    private static Composite createNodeLabelComposite(final Composite parent, final NodeID nodeID,
         final NodeContainer nodeContainer) {
 
         Composite labelComposite = new Composite(parent, SWT.NONE);

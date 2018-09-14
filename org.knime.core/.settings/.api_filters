@@ -314,6 +314,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/WizardNode.java" type="org.knime.core.node.wizard.WizardNode">
+        <filter id="403984517">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="org.knime.core.node.wizard.ViewHideable"/>
+                <message_argument value="isHideInWizard()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/ConnectionUIInformation.java" type="org.knime.core.node.workflow.ConnectionUIInformation$Builder">
         <filter id="1143996420">
             <message_arguments>
@@ -322,10 +331,10 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/CopySubNodeContainerPersistor.java" type="org.knime.core.node.workflow.CopySubNodeContainerPersistor">
-        <filter id="338722907">
+        <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.CopySubNodeContainerPersistor"/>
-                <message_argument value="CopySubNodeContainerPersistor(SubNodeContainer, HashMap&lt;Integer,ContainerTable&gt;, FileStoreHandlerRepository, boolean, boolean)"/>
+                <message_argument value="getLayoutInfo()"/>
             </message_arguments>
         </filter>
         <filter id="576725006">
@@ -334,48 +343,41 @@
                 <message_argument value="CopySubNodeContainerPersistor"/>
             </message_arguments>
         </filter>
+        <filter id="643850349">
+            <message_arguments>
+                <message_argument value="FileStoreHandlerRepository"/>
+                <message_argument value="CopySubNodeContainerPersistor"/>
+                <message_argument value="CopySubNodeContainerPersistor(SubNodeContainer, HashMap&lt;Integer,ContainerTable&gt;, FileStoreHandlerRepository, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileSubNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSubNodeContainerPersistor">
-        <filter id="338722907">
+        <filter comment="Removing legacy method" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.FileSubNodeContainerPersistor"/>
-                <message_argument value="FileSubNodeContainerPersistor(ReferencedFile, WorkflowLoadHelper, FileWorkflowPersistor.LoadVersion, HashMap&lt;Integer,ContainerTable&gt;, WorkflowFileStoreHandlerRepository, boolean)"/>
+                <message_argument value="getLayoutInfo()"/>
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/FileWorkflowPersistor.java" type="org.knime.core.node.workflow.FileWorkflowPersistor">
+    <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
         <filter id="338792546">
             <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
-                <message_argument value="getFileStoreHandlerRepository()"/>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+                <message_argument value="getLayoutInfo()"/>
             </message_arguments>
         </filter>
         <filter id="338792546">
             <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
-                <message_argument value="getGlobalTableRepository()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.NativeNodeContainer"/>
-                <message_argument value="getCopyPersistor(HashMap&lt;Integer,ContainerTable&gt;, FileStoreHandlerRepository, boolean, boolean)"/>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+                <message_argument value="setLayoutInfo(Map&lt;Integer,WizardNodeLayoutInfo&gt;)"/>
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/PasteWorkflowContentPersistor.java" type="org.knime.core.node.workflow.PasteWorkflowContentPersistor">
-        <filter id="338792546">
+    <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainerPersistor.java" type="org.knime.core.node.workflow.SubNodeContainerPersistor">
+        <filter id="405901410">
             <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
-                <message_argument value="getFileStoreHandlerRepository()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
-                <message_argument value="getGlobalTableRepository()"/>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainerPersistor"/>
+                <message_argument value="getLayoutInfo()"/>
             </message_arguments>
         </filter>
     </resource>

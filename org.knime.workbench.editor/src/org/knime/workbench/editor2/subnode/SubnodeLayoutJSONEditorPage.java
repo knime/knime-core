@@ -119,7 +119,7 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
-import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -152,7 +152,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     private WorkflowManager m_wfManager;
     private DefaultLayoutCreatorImpl m_layoutCreator;
     @SuppressWarnings("rawtypes")
-    private Map<NodeIDSuffix, WizardNode> m_viewNodes;
+    private Map<NodeIDSuffix, ViewHideable> m_viewNodes;
     private String m_jsonDocument;
     private Label m_statusLine;
     private RSyntaxTextArea m_textArea;
@@ -527,8 +527,10 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
                     @Override
                     public void widgetSelected(final SelectionEvent e) {
-                        JSONLayoutViewContent defaultViewContent = m_layoutCreator.getDefaultViewContentForNode(suffix, m_viewNodes.get(suffix));
-                        ViewContentSettingsDialog settingsDialog = new ViewContentSettingsDialog(m_basicComposite.getShell(), layoutInfo.getView(), defaultViewContent);
+                        JSONLayoutViewContent defaultViewContent =
+                            DefaultLayoutCreatorImpl.getDefaultViewContentForNode(suffix, m_viewNodes.get(suffix));
+                        ViewContentSettingsDialog settingsDialog = new ViewContentSettingsDialog(
+                            m_basicComposite.getShell(), layoutInfo.getView(), defaultViewContent);
                         if (settingsDialog.open() == Window.OK) {
                             layoutInfo.setView(settingsDialog.getViewSettings());
                             tryUpdateJsonFromBasic();
@@ -555,7 +557,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             });
         }
 
-        for (@SuppressWarnings("rawtypes") final Entry<NodeIDSuffix, WizardNode> entry : m_viewNodes.entrySet()) {
+        for (final Entry<NodeIDSuffix, ViewHideable> entry : m_viewNodes.entrySet()) {
             if (m_basicMap.containsKey(entry.getKey())) {
                 continue;
             }
@@ -585,7 +587,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                     newInfo.setRow(lastRow + 1);
                     newInfo.setCol(1);
                     newInfo.setColWidth(12);
-                    newInfo.setView(m_layoutCreator.getDefaultViewContentForNode(entry.getKey(), entry.getValue()));
+                    newInfo.setView(DefaultLayoutCreatorImpl.getDefaultViewContentForNode(entry.getKey(), entry.getValue()));
                     m_basicMap.put(entry.getKey(), newInfo);
                     tryUpdateJsonFromBasic();
                 }
@@ -821,7 +823,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      * @param viewNodes a map of all available view nodes
      */
     public void setNodes(final WorkflowManager manager, final SubNodeContainer subnodeContainer,
-        @SuppressWarnings("rawtypes") final Map<NodeIDSuffix, WizardNode> viewNodes) {
+        @SuppressWarnings("rawtypes") final Map<NodeIDSuffix, ViewHideable> viewNodes) {
         m_wfManager = manager;
         m_subNodeContainer = subnodeContainer;
         m_viewNodes = viewNodes;
@@ -869,7 +871,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     }
 
     private JSONLayoutPage generateInitialJson() {
-        JSONLayoutPage page = m_layoutCreator.createDefaultLayoutStructure(m_viewNodes);
+        JSONLayoutPage page = DefaultLayoutCreatorImpl.createDefaultLayoutStructure(m_viewNodes, true);
         ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
         try {
             String initialJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
