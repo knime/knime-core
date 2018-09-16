@@ -167,9 +167,9 @@ public class NodeSupplantDragListener implements KeyListener, MouseListener, Mou
      */
     public void dispose() {
         if (m_workflowEditor != null) {
-            final FigureCanvas fc = (FigureCanvas)m_workflowEditor.getGraphicalViewer().getControl();
+            final FigureCanvas fc = m_workflowEditor.getFigureCanvas();
 
-            if (fc != null) {
+            if ((fc != null) && (!fc.isDisposed())) {
                 fc.removeMouseListener(this);
                 fc.removeMouseMoveListener(this);
             }

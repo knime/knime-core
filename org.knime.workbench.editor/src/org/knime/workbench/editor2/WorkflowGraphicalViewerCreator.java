@@ -52,7 +52,6 @@ import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.ui.actions.ActionRegistry;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
-import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorSite;
 
@@ -105,12 +104,13 @@ public class WorkflowGraphicalViewerCreator {
      * @return The viewer
      */
     protected GraphicalViewer createViewer(final Composite parent) {
-        ScrollingGraphicalViewer viewer = new ScrollingGraphicalViewer();
+        final ViewportPinningGraphicalViewer viewer = new ViewportPinningGraphicalViewer();
+
         viewer.createControl(parent);
 
         // configure the m_viewer
         viewer.getControl().setBackground(ColorConstants.white);
-        ScalableFreeformRootEditPart part = new ConnectionSelectingScalableFreeformRootEditPart();
+        final ScalableFreeformRootEditPart part = new ConnectionSelectingScalableFreeformRootEditPart();
         viewer.setRootEditPart(part);
         viewer.setKeyHandler(new GraphicalViewerKeyHandler(viewer));
 
@@ -124,7 +124,7 @@ public class WorkflowGraphicalViewerCreator {
         /* Don't add any drag listener here. Processing of drag events seems
          * to influence GEF events (resize, node move, create connection).
          * See bug 2844 for details (linux only) */
-        MetaNodeTemplateDropTargetListener metaNodeTemplateDropListener =
+        final MetaNodeTemplateDropTargetListener metaNodeTemplateDropListener =
             new MetaNodeTemplateDropTargetListener(viewer);
         viewer.addDropTargetListener(metaNodeTemplateDropListener);
         // configure context menu
@@ -134,6 +134,7 @@ public class WorkflowGraphicalViewerCreator {
         // set the factory that is able to create the edit parts to be
         // used in the viewer
         viewer.setEditPartFactory(new WorkflowEditPartFactory());
+
         return viewer;
     }
 

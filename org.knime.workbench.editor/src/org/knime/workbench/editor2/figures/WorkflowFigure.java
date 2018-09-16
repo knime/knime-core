@@ -47,45 +47,35 @@
  */
 package org.knime.workbench.editor2.figures;
 
+import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FreeformLayeredPane;
 import org.eclipse.draw2d.Graphics;
-import org.eclipse.draw2d.Label;
-import org.eclipse.draw2d.RectangleFigure;
+import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.knime.workbench.core.util.ImageRepository;
-import org.knime.workbench.core.util.ImageRepository.SharedImages;
 
 /**
- * The root figure, containing all diagram elements inside the workflow.
- *
- * TODO a grid in the background (?GridLayer - where?)
+ * The root figure, containing potentially a progress tool tip helper and an image representing the job manager.
  *
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowFigure extends FreeformLayeredPane {
-
-    private static final Color MSG_BG = new Color(null, 255, 249, 0);
-
-    private static final Color INFO_MSG_BG = new Color(null, 200, 200, 255);
-
     private ProgressToolTipHelper m_progressToolTipHelper;
 
     private Image m_jobManagerFigure;
 
-    /* Info (index 0), warning (index 1) and error (index 2) messages. */
-    private Label[] m_messages = new Label[3];
-
-    /* Rectangle underneath the message figure */
-    private RectangleFigure[] m_messageRects = new RectangleFigure[3];
+    private final TentStakeFigure m_tentStakeFigure;
 
     /**
      * New workflow root figure.
      */
     public WorkflowFigure() {
         // not opaque, so that we can directly select on the "background" layer
-        this.setOpaque(false);
+        setOpaque(false);
+
+        m_tentStakeFigure = new TentStakeFigure();
+        add(m_tentStakeFigure);
     }
 
     /**
@@ -105,86 +95,13 @@ public class WorkflowFigure extends FreeformLayeredPane {
     protected void paintFigure(final Graphics graphics) {
         super.paintFigure(graphics);
         if (m_jobManagerFigure != null) {
-            org.eclipse.swt.graphics.Rectangle imgBox = m_jobManagerFigure.getBounds();
-            Rectangle bounds2 = getBounds();
-            graphics.drawImage(m_jobManagerFigure, 0, 0, imgBox.width,
-                               imgBox.height, bounds2.width - imgBox.width, 5, imgBox.width, imgBox.height + 5);
-        }
-        int y_offset = 0;
-        int y_0 = 10;
-        for (int i = 0; i < m_messages.length; i++) {
-            if (m_messages[i] != null) {
-                Rectangle b = m_messages[i].getBounds();
-                b.setY(y_0 + y_offset);
-                Rectangle r = new Rectangle(0, y_offset, getBounds().width, m_messages[i].getBounds().height + 20);
-                //setConstraint(m_messageRects[i], r);
-                m_messageRects[i].getBounds().setBounds(r);//setting the bounds without repainting it
-                y_offset = b.y + b.height + 10;
-            }
+            final org.eclipse.swt.graphics.Rectangle imgBox = m_jobManagerFigure.getBounds();
+            final Rectangle bounds2 = getBounds();
+            graphics.drawImage(m_jobManagerFigure, 0, 0, imgBox.width, imgBox.height, bounds2.width - imgBox.width, 5,
+                imgBox.width, imgBox.height + 5);
         }
     }
 
-    /**
-     * Sets an info message (with an info icon and light grey background) at the top of the editor (above an error
-     * message, if there is any, and instead of a warning message).
-     *
-     * @param msg the message to display or <code>null</code> to remove it
-     */
-    public void setInfoMessage(final String msg) {
-        setMessage(msg, 0, SharedImages.Info, INFO_MSG_BG);
-    }
-
-    /**
-     * Sets a warning message displayed at the top of the editor (above an error message if there is any).
-     *
-     * @param msg the message to display or <code>null</code> to remove it
-     */
-    public void setWarningMessage(final String msg) {
-        setMessage(msg, 1, SharedImages.Warning, MSG_BG);
-    }
-
-    /**
-     * Sets an error message displayed at the top of the editor (underneath a warning message if there is any).
-     *
-     * @param msg the message to display or <code>null</code> to remove it
-     */
-    public void setErrorMessage(final String msg) {
-        setMessage(msg, 2, SharedImages.Error, MSG_BG);
-    }
-
-    private void setMessage(final String msg, final int index, final SharedImages icon, final Color msgColor) {
-        if ((msg == null && m_messages[index] == null)
-            || (msg != null && m_messages[index] != null && msg.equals(m_messages[index].getText()))) {
-            //nothing has changed
-            return;
-        }
-
-        if (m_messages[index] != null) {
-            remove(m_messages[index]);
-            remove(m_messageRects[index]);
-            m_messages[index] = null;
-            m_messageRects[index] = null;
-        }
-
-        if (msg != null) {
-            m_messageRects[index] = new RectangleFigure();
-            m_messageRects[index].setOpaque(true);
-            m_messageRects[index].setBackgroundColor(msgColor);
-            m_messageRects[index].setForegroundColor(msgColor);
-            add(m_messageRects[index]);
-
-            m_messages[index] = new Label(msg);
-            m_messages[index].setOpaque(true);
-            m_messages[index].setBackgroundColor(msgColor);
-            m_messages[index].setIcon(ImageRepository.getUnscaledIconImage(icon));
-            Rectangle msgBounds = new Rectangle(m_messages[index].getBounds());
-            msgBounds.x += 10;
-            msgBounds.y += 10;
-            m_messages[index].setBounds(msgBounds);
-            add(m_messages[index], new Rectangle(msgBounds.x, msgBounds.y, getBounds().width - 20, 120));
-        }
-        repaint();
-    }
     /**
      * @param jobManagerFigure the jobManagerFigure to set
      */
@@ -193,14 +110,46 @@ public class WorkflowFigure extends FreeformLayeredPane {
         repaint();
     }
 
+    /**
+     * @return returns the instance of ProgressToolTipHelper set via
+     *         <code>setProgressToolTipHelper(ProgressToolTipHelper)</code>
+     */
     public ProgressToolTipHelper getProgressToolTipHelper() {
         return m_progressToolTipHelper;
     }
 
-
+    /**
+     * @param progressToolTipHelper an instance of ProgressToolTipHelper
+     */
     public void setProgressToolTipHelper(final ProgressToolTipHelper progressToolTipHelper) {
         m_progressToolTipHelper = progressToolTipHelper;
     }
 
+    /**
+     * This drags out the tent stake to create a white space buffer in the canvas of the specified pixel height (so, if
+     * the vertical scroll bar were to be moved to the zero location the user would see a whitespace buffer of the
+     * specified pixel height before the start of the actual canvas at (0, 0)).
+     *
+     * @param pixelHeight the height in pixels of the white space buffer
+     */
+    public void placeTentStakeToAllowForWhitespaceBuffer(final int pixelHeight) {
+        m_tentStakeFigure.setLocation(new Point(0, -pixelHeight));
+    }
 
+
+    /**
+     * This figure is an invisible 1 x 1 figure which represents the stake we 'stretch the canvas with by continual
+     * re-placement (not replacement) in the northwest corner of the workflow canvas.' We do this trivial subclassing
+     * only to allow simple figure sussing when walking the children of the root figure.
+     */
+    private static class TentStakeFigure extends Figure {
+
+        /**
+         * Simply set the size of our figure to be 1 x 1.
+         */
+        public TentStakeFigure() {
+            setSize(new Dimension(1, 1));
+        }
+
+    }
 }
