@@ -128,8 +128,11 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
     /** {@inheritDoc} */
     @Override
     public void clearAndDispose() {
-        clearFileStoresFromPreviousIteration();
+        ILoopStartWriteFileStoreHandler.clearFileStoresFromPreviousIteration(m_endNodeCacheWithKeysToPersist,
+            m_fileStoresInLoopCache, this);
+        m_endNodeCacheWithKeysToPersist = null;
         m_reference.clearNestedLoopPath(m_thisNestedLoopPath[m_thisNestedLoopPath.length - 1]);
+        m_fileStoresInLoopCache.dispose();
     }
 
     /** {@inheritDoc} */
@@ -158,23 +161,11 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
     /** {@inheritDoc} */
     @Override
     public void open(final ExecutionContext exec) {
-        clearFileStoresFromPreviousIteration();
+        ILoopStartWriteFileStoreHandler.clearFileStoresFromPreviousIteration(m_endNodeCacheWithKeysToPersist,
+            m_fileStoresInLoopCache, this);
+        m_endNodeCacheWithKeysToPersist = null;
         m_fileStoresInLoopCache = new FileStoresInLoopCache(exec);
         m_duplicateChecker = new InternalDuplicateChecker();
-    }
-
-    /**
-     *  */
-    private void clearFileStoresFromPreviousIteration() {
-        if (m_endNodeCacheWithKeysToPersist != null) {
-            try {
-                m_fileStoresInLoopCache.onIterationEnd(m_endNodeCacheWithKeysToPersist, this);
-            } catch (CanceledExecutionException e) {
-                throw new RuntimeException("Canceled", e);
-            }
-            m_endNodeCacheWithKeysToPersist.dispose();
-            m_endNodeCacheWithKeysToPersist = null;
-        }
     }
 
     /** {@inheritDoc} */

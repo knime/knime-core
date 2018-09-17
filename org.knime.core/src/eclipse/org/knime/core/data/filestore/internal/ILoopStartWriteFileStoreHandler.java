@@ -77,4 +77,18 @@ public interface ILoopStartWriteFileStoreHandler extends IWriteFileStoreHandler 
 
     public UUID getOutmostLoopStartStoreUUID();
 
+    /** Code that would otherwise need to be copied into LoopStart implementations: It syncs the file stores seen
+     * at a loop end node with all file stores generated in loop iteration and clears the ones which are 'temporary'. */
+    static void clearFileStoresFromPreviousIteration(final FileStoresInLoopCache endNodeCacheWithKeysToPersist,
+        final FileStoresInLoopCache fileStoresInLoopCache, final ILoopStartWriteFileStoreHandler handler) {
+        if (endNodeCacheWithKeysToPersist != null) {
+            try {
+                fileStoresInLoopCache.onIterationEnd(endNodeCacheWithKeysToPersist, handler);
+                fileStoresInLoopCache.dispose();
+            } catch (CanceledExecutionException e) {
+                throw new RuntimeException("Canceled", e);
+            }
+            endNodeCacheWithKeysToPersist.dispose();
+        }
+    }
 }

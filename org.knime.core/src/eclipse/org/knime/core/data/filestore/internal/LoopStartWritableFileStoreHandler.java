@@ -100,16 +100,9 @@ public class LoopStartWritableFileStoreHandler
     @Override
     public void open(final ExecutionContext exec) {
         super.open(exec);
-        if (m_endNodeCacheWithKeysToPersist != null) {
-            try {
-                m_fileStoresInLoopCache.onIterationEnd(m_endNodeCacheWithKeysToPersist, this);
-                m_fileStoresInLoopCache.dispose();
-            } catch (CanceledExecutionException e) {
-                throw new RuntimeException("Canceled", e);
-            }
-            m_endNodeCacheWithKeysToPersist.dispose();
-            m_endNodeCacheWithKeysToPersist = null;
-        }
+        ILoopStartWriteFileStoreHandler.clearFileStoresFromPreviousIteration(m_endNodeCacheWithKeysToPersist,
+            m_fileStoresInLoopCache, this);
+        m_endNodeCacheWithKeysToPersist = null;
         m_fileStoresInLoopCache = new FileStoresInLoopCache(exec);
     }
 
@@ -170,6 +163,7 @@ public class LoopStartWritableFileStoreHandler
         if (m_endNodeCacheWithKeysToPersist != null) {
             m_endNodeCacheWithKeysToPersist.dispose();
         }
+        m_fileStoresInLoopCache.dispose();
     }
 
     /** {@inheritDoc} */
