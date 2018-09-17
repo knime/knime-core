@@ -123,6 +123,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.ShutdownHelper;
 import org.knime.core.util.ThreadUtils;
 
 /**
@@ -268,20 +269,16 @@ public class Buffer implements KNIMEStreamConstants {
             LOGGER.debug("Zlib library doesn't support compression level switch");
         }
         try {
-            Thread hook = new Thread() {
-                @Override
-                public void run() {
-                    isExecutingShutdownHook = true;
-                    for (WeakReference<Buffer> ref : OPENBUFFERS) {
-                        Buffer it = ref.get();
-                        if (it != null) {
-                            it.clear();
-                        }
+            ShutdownHelper.getInstance().appendShutdownHook(() -> {
+                isExecutingShutdownHook = true;
+                for (WeakReference<Buffer> ref : OPENBUFFERS) {
+                    Buffer it = ref.get();
+                    if (it != null) {
+                        it.clear();
                     }
-                    DeleteInBackgroundThread.waitUntilFinished();
                 }
-            };
-            Runtime.getRuntime().addShutdownHook(hook);
+                DeleteInBackgroundThread.waitUntilFinished();
+            });
         } catch (Exception e) {
             LOGGER.warn("Unable to add shutdown hook to delete temp files", e);
         }

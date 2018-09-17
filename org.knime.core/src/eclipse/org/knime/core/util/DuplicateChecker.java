@@ -202,15 +202,7 @@ public class DuplicateChecker {
     private static final Collection<Chunk> ALL_CHUNKS = new ArrayList<Chunk>();
 
     static {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void run() {
-                removeTempFiles();
-            }
-        });
+        ShutdownHelper.getInstance().appendShutdownHook(() -> removeTempFiles());
     }
 
     private static void removeTempFiles() {

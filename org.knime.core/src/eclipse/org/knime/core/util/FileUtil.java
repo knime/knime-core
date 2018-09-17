@@ -126,23 +126,20 @@ public final class FileUtil {
     private static final boolean IS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
 
     static {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                synchronized (TEMP_FILES) {
-                    for (File f : TEMP_FILES) {
-                        if (!f.exists()) {
-                            continue;
-                        }
+        ShutdownHelper.getInstance().appendShutdownHook(() -> {
+            synchronized (TEMP_FILES) {
+                for (File f : TEMP_FILES) {
+                    if (!f.exists()) {
+                        continue;
+                    }
 
-                        if (f.isFile()) {
-                            f.delete();
-                        } else if (f.isDirectory()) {
-                            try {
-                                deleteRecursively(f, false);
-                            } catch (Exception ex) {
-                                LOGGER.error(ex.getMessage(), ex);
-                            }
+                    if (f.isFile()) {
+                        f.delete();
+                    } else if (f.isDirectory()) {
+                        try {
+                            deleteRecursively(f, false);
+                        } catch (Exception ex) {
+                            LOGGER.error(ex.getMessage(), ex);
                         }
                     }
                 }
