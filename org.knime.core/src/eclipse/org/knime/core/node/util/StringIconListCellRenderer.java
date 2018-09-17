@@ -81,7 +81,9 @@ public class StringIconListCellRenderer extends DefaultListCellRenderer {
         if (value instanceof StringIconOption) {
             final StringIconOption stringIcon =
                 (StringIconOption) value;
-            setText(stringIcon.getText());
+            final String text = stringIcon.getText();
+            setText(text);
+            list.setToolTipText(text);
             if (stringIcon.getIcon() != null) {
                 setIcon(stringIcon.getIcon());
             }
