@@ -200,6 +200,7 @@ final class FileStoresInLoopCache {
             }
             unique.close();
             m_exec.clearTable(table);
+            m_exec.clearTable(sort);
             m_createdFileStoresTable = unique.getTable();
         }
         return m_createdFileStoresTable;
