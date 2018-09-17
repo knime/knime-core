@@ -89,6 +89,10 @@ public class CNodeModel extends NodeModel {
         //requires certain execution environment to be executed
         //currently the execenv is created when the respective NativeNodeContainer is created ->
         //this node model needs to be able that very specific execution environment
+        for (int i = 0; i < 100; i++) {
+            exec.setProgress(i / 100.0);
+            Thread.sleep(100);
+        }
         return inData;
     }
 

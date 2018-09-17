@@ -88,6 +88,10 @@ public class ANodeModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        for (int i = 0; i < 100; i++) {
+           exec.setProgress(i / 100.0);
+           Thread.sleep(100);
+        }
         return new PortObject[]{new APortObject()};
     }
 

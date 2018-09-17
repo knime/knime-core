@@ -88,6 +88,7 @@ public class BNodeModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        Thread.sleep(1000);
         return new PortObject[]{new BPortObject()};
     }
 
