@@ -201,22 +201,28 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMESt
      * @return
      * @throws IOException
      */
-    public FileStoreKey getFileStoreKeyAndFlush(final DataCell cell) throws IOException {
-        FileStoreKey fileStoreKey = null;
+    public FileStoreKey[] getFileStoreKeysAndFlush(final DataCell cell) throws IOException {
+        FileStoreKey[] fileStoreKeys = null;
         if (cell instanceof FileStoreCell) {
             final FileStoreCell fsCell = (FileStoreCell)cell;
-            FileStore fileStore = FileStoreUtil.getFileStore(fsCell);
-            // TODO is the 'else' case realistic?
-            if (getFileStoreHandler() instanceof IWriteFileStoreHandler) {
-                fileStoreKey = getFileStoreHandler().translateToLocal(fileStore, fsCell);
-            } else {
-                // handler is not an IWriteFileStoreHandler but the buffer still contains file stores:
-                // the flow is part of a workflow and all file stores were already properly handled
-                // (this buffer is restored from disc - and then a memory alert forces the data back onto disc)
-                fileStoreKey = FileStoreUtil.getFileStoreKey(fileStore);
+            FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
+            fileStoreKeys = new FileStoreKey[fileStores.length];
+
+            for(int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
+
+                // TODO is the 'else' case realistic?
+                if (getFileStoreHandler() instanceof IWriteFileStoreHandler) {
+                    fileStoreKeys[fileStoreIndex] = getFileStoreHandler().translateToLocal(fileStores[fileStoreIndex], fsCell);
+                } else {
+                    // handler is not an IWriteFileStoreHandler but the buffer still contains file stores:
+                    // the flow is part of a workflow and all file stores were already properly handled
+                    // (this buffer is restored from disc - and then a memory alert forces the data back onto disc)
+                    fileStoreKeys[fileStoreIndex] = FileStoreUtil.getFileStoreKey(fileStores[fileStoreIndex]);
+                }
             }
+
             FileStoreUtil.invokeFlush(fsCell);
         }
-        return fileStoreKey;
+        return fileStoreKeys;
     }
 }

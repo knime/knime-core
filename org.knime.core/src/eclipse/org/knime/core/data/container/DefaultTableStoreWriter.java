@@ -143,14 +143,14 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
         CellClassInfo cellClass = isBlob ? ((BlobWrapperDataCell)cell).getBlobClassInfo() : CellClassInfo.get(cell);
         DataCellSerializer<DataCell> ser = getSerializerForDataCell(cellClass);
         Byte identifier = getTypeShortCut(cellClass);
-        FileStoreKey fileStoreKey = super.getFileStoreKeyAndFlush(cell);
+        FileStoreKey[] fileStoreKeys = super.getFileStoreKeysAndFlush(cell);
         final boolean isJavaSerializationOrBlob = ser == null && !isBlob;
         if (isJavaSerializationOrBlob) {
             outStream.writeControlByte(BYTE_TYPE_SERIALIZATION);
         }
         outStream.writeControlByte(identifier);
-        if (fileStoreKey != null) {
-            outStream.writeFileStoreKey(fileStoreKey);
+        if (fileStoreKeys != null) {
+            outStream.writeFileStoreKeys(fileStoreKeys);
         }
         // DataCell is datacell-serializable
         if (!isJavaSerializationOrBlob) {
