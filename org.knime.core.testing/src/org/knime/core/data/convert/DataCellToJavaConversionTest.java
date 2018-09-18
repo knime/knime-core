@@ -417,4 +417,13 @@ public class DataCellToJavaConversionTest {
         assertTrue(DataCellToJavaConverterRegistry.getInstance().getFactory("org.knime.core.data.convert.java.SimpleDataCellToJavaConverterFactory(StringValue,class java.lang.String,String)").isPresent());
         assertTrue(DataCellToJavaConverterRegistry.getInstance().getFactory("org.knime.core.data.convert.java.SimpleDataCellToJavaConverterFactory(DataValue,class java.lang.String,String (toString()))").isPresent());
     }
+
+    @Test
+    public void testConvertibleTypes() {
+        final Set<DataType> types = DataCellToJavaConverterRegistry.getInstance().getAllConvertibleDataTypes();
+
+        /* Check a couple */
+        assertTrue("getAllConvertibleDataTypes() returns incomplete set",
+            types.containsAll(Arrays.asList(IntCell.TYPE, StringCell.TYPE, BinaryObjectDataCell.TYPE, XMLCell.TYPE)));
+    }
 }

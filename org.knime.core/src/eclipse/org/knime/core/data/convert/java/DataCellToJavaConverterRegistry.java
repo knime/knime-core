@@ -146,6 +146,35 @@ public final class DataCellToJavaConverterRegistry extends
     private final HashMap<Class<? extends DataValue>, DataType> m_prefferedTypes = new HashMap<>();
 
     /**
+     * Get all {@link DataType} that have at least one {@link DataValue} interface that is convertible by one of the
+     * registered converters.
+     *
+     * @return Set of {@link DataType} that can be converted.
+     * @since 3.7
+     */
+    public Set<DataType> getAllConvertibleDataTypes() {
+        final Collection<DataType> availableDataTypes = DataTypeRegistry.getInstance().availableDataTypes();
+
+        final HashSet<DataType> convertibleTypes = new HashSet<>(availableDataTypes.size());
+        for (DataType dataType : availableDataTypes) {
+            /* Get a non-collection element type */
+            while(dataType.isCollectionType()) {
+                dataType = dataType.getCollectionElementType();
+            }
+
+            for (final Class<? extends DataValue> val : dataType.getValueClasses()) {
+                if (m_bySourceType.containsKey(val)) {
+                    /* We can convert this type! */
+                    convertibleTypes.add(dataType);
+                    break;
+                }
+            }
+        }
+
+        return convertibleTypes;
+    }
+
+    /**
      * Get all {@link DataCellToJavaConverterFactory converter factories} which create Converters which convert into a
      * specific {@link Class destType}.
      *
