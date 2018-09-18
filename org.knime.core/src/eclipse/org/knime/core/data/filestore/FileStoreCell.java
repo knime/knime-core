@@ -48,6 +48,8 @@
 package org.knime.core.data.filestore;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
@@ -61,35 +63,69 @@ import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
  */
 public abstract class FileStoreCell extends DataCell implements FlushCallback {
 
-    private FileStoreProxy m_fileStoreProxy;
+    private FileStoreProxy m_fileStoreProxies[];
     private boolean m_isFlushedToFileStore;
 
     /**
-     *  */
+     * @since 3.7
+     */
+    protected FileStoreCell(final FileStore[] fileStores) {
+        if(fileStores.length < 1) {
+            throw new IllegalArgumentException("FileStoreCell needs at least one fileStore");
+        }
+
+        m_fileStoreProxies = Arrays.stream(fileStores).map(fs -> new FileStoreProxy(fs)).toArray(FileStoreProxy[]::new);
+    }
+
     protected FileStoreCell(final FileStore fileStore) {
-        m_fileStoreProxy = new FileStoreProxy(fileStore);
+       this(new FileStore[] { fileStore });
     }
 
     /** Used when read from persisted stream.
      *  */
     protected FileStoreCell() {
-        m_fileStoreProxy = new FileStoreProxy();
         m_isFlushedToFileStore = true;
     }
 
-    /** @return the fileStoreKey */
+    /** @return the fileStoreKey of the first fileStore */
     final FileStoreKey getFileStoreKey() {
-        return m_fileStoreProxy.getFileStoreKey();
+        return m_fileStoreProxies[0].getFileStoreKey();
     }
 
+    /** @return the first fileStore */
     protected FileStore getFileStore() {
-        return m_fileStoreProxy.getFileStore();
+        return m_fileStoreProxies[0].getFileStore();
+    }
+
+    final int getNumFileStores() {
+        return m_fileStoreProxies.length;
+    }
+
+    /**
+     * @since 3.7
+     */
+    final FileStoreKey[] getFileStoreKeys() {
+        return Arrays.stream(m_fileStoreProxies).map(proxy -> proxy.getFileStoreKey()).toArray(FileStoreKey[]::new);
+    }
+
+    /**
+     * @since 3.7
+     */
+    protected FileStore[] getFileStores() {
+        return Arrays.stream(m_fileStoreProxies).map(proxy -> proxy.getFileStore()).toArray(FileStore[]::new);
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    final void retrieveFileStoreHandlerFrom(final FileStoreKey key,
+    final void retrieveFileStoreHandlersFrom(final FileStoreKey[] keys,
             final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
-        m_fileStoreProxy.retrieveFileStoreHandlerFrom(key, fileStoreHandlerRepository);
+        m_fileStoreProxies = new FileStoreProxy[keys.length];
+        int fsIdx = 0;
+        for (FileStoreKey key : keys) {
+            FileStoreProxy proxy = new FileStoreProxy();
+            proxy.retrieveFileStoreHandlerFrom(key, fileStoreHandlerRepository);
+            m_fileStoreProxies[fsIdx] = proxy;
+            fsIdx++;
+        }
         postConstruct();
     }
 
@@ -128,20 +164,25 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return m_fileStoreProxy.toString();
+        return Arrays.stream(m_fileStoreProxies).map(Object::toString).collect(Collectors.joining(", "));
     }
 
     /** {@inheritDoc} */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        FileStoreProxy otherFileStoreProxy = ((FileStoreCell)dc).m_fileStoreProxy;
-        return m_fileStoreProxy.equals(otherFileStoreProxy);
+        FileStoreProxy otherFileStoreProxies[] = ((FileStoreCell)dc).m_fileStoreProxies;
+        for(int fsIdx = 0; fsIdx < m_fileStoreProxies.length; fsIdx++) {
+            if(!otherFileStoreProxies[fsIdx].equals(m_fileStoreProxies[fsIdx])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return m_fileStoreProxy.hashCode();
+        return Arrays.hashCode(m_fileStoreProxies);
     }
 
 }
