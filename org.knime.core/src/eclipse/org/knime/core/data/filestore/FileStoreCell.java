@@ -97,6 +97,9 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
         return m_fileStoreProxies[0].getFileStore();
     }
 
+    /**
+     * @since 3.7
+     */
     final int getNumFileStores() {
         return m_fileStoreProxies.length;
     }
@@ -115,7 +118,21 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
         return Arrays.stream(m_fileStoreProxies).map(proxy -> proxy.getFileStore()).toArray(FileStore[]::new);
     }
 
-    /** @noreference This method is not intended to be referenced by clients. */
+
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     * @deprecated use retrieveFileStoreHandlersFrom(keys, repo) instead
+     */
+    @Deprecated
+    final void retrieveFileStoreHandlerFrom(final FileStoreKey key,
+                     final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
+        retrieveFileStoreHandlersFrom(new FileStoreKey[] {key}, fileStoreHandlerRepository);
+    }
+
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 3.7
+     */
     final void retrieveFileStoreHandlersFrom(final FileStoreKey[] keys,
             final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
         m_fileStoreProxies = new FileStoreProxy[keys.length];

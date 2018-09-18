@@ -147,6 +147,7 @@ final class DCObjectInputVersion2 implements KNIMEStreamConstants {
 
     /** Reads an array of FileStore keys
      * @return An array of FileStore keys.
+     * @since 3.7
      * @throws IOException If IO problems occur.
      */
     FileStoreKey[] readFileStoreKeys() throws IOException {

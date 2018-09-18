@@ -83,7 +83,10 @@ public final class FileStoreUtil {
         return cell.getFileStoreKey();
     }
 
-    /** @noreference This method is not intended to be referenced by clients. */
+    /**
+     * @since 3.7
+     * @noreference This method is not intended to be referenced by clients.
+     */
     public static FileStoreKey[] getFileStoreKeys(final FileStoreCell cell) {
         return cell.getFileStoreKeys();
     }
@@ -93,12 +96,18 @@ public final class FileStoreUtil {
         return cell.getFileStore();
     }
 
-    /** @noreference This method is not intended to be referenced by clients. */
+    /**
+     * @since 3.7
+     * @noreference This method is not intended to be referenced by clients.
+     */
     public static FileStore[] getFileStores(final FileStoreCell cell) {
         return cell.getFileStores();
     }
 
-    /** @noreference This method is not intended to be referenced by clients. */
+    /**
+     * @since 3.7
+     * @noreference This method is not intended to be referenced by clients.
+     */
     public static int getNumFileStores(final FileStoreCell cell) {
         return cell.getNumFileStores();
     }
@@ -131,7 +140,21 @@ public final class FileStoreUtil {
         }
     }
 
-    /** @noreference This method is not intended to be referenced by clients. */
+    /**
+     * @deprecated use retrieveFileStoreHandlersFrom instead
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    @Deprecated
+    public static void retrieveFileStoreHandlerFrom(final FileStoreCell cell,
+            final FileStoreKey key,
+            final FileStoreHandlerRepository repos) throws IOException {
+        cell.retrieveFileStoreHandlerFrom(key, repos);
+    }
+
+    /**
+     * @since 3.7
+     * @noreference This method is not intended to be referenced by clients.
+     */
     public static void retrieveFileStoreHandlersFrom(final FileStoreCell fsCell,
         final FileStoreKey[] fileStoreKeys,
         final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
