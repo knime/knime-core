@@ -115,11 +115,22 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
         serializer.serialize(cell, m_dataOut);
     }
 
-    /** Saves file store cell.
+    /** Saves a file store key.
      * @param key ...
      * @throws IOException ... */
     void writeFileStoreKey(final FileStoreKey key) throws IOException {
         key.save(m_dataOut);
+    }
+
+    /** Saves an array of file store keys
+     * @param fileStoreKeys
+     * @throws IOException
+     */
+    void writeFileStoreKeys(final FileStoreKey[] fileStoreKeys) throws IOException {
+        m_dataOut.writeInt(fileStoreKeys.length);
+        for(FileStoreKey fsKey : fileStoreKeys) {
+            fsKey.save(m_dataOut);
+        }
     }
 
     /** Writes a cell using java serialization. This method will create
