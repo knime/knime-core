@@ -163,7 +163,9 @@ public class LoopStartWritableFileStoreHandler
         if (m_endNodeCacheWithKeysToPersist != null) {
             m_endNodeCacheWithKeysToPersist.dispose();
         }
-        m_fileStoresInLoopCache.dispose();
+        if (m_fileStoresInLoopCache != null) {
+            m_fileStoresInLoopCache.dispose();
+        }
     }
 
     /** {@inheritDoc} */
