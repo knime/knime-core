@@ -320,8 +320,9 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
             m_tableFormatReader = tableFormatReader;
         }
 
-        /** Reads a data cell from the argument stream. Does not exception
-         * handling, nor stream blocking.
+        /**
+         * Reads a data cell from the argument stream. Does not exception handling, nor stream blocking.
+         *
          * @param inStream To read from.
          * @return the data cell being read
          * @throws IOException If exceptions occur.
@@ -338,13 +339,21 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
             }
             CellClassInfo type = m_tableFormatReader.getTypeForChar(identifier);
             Class<? extends DataCell> cellClass = type.getCellClass();
+
             boolean isFileStore = FileStoreCell.class.isAssignableFrom(cellClass);
-            final FileStoreKey fileStoreKey;
+            // starting with table version 11 FileStoreCells support multiple FileStores
+            final boolean multipleFileStoresSupported = m_tableFormatReader.getReadVersion() > 10;
+            final FileStoreKey[] fileStoreKeys;
             if (isFileStore) {
-                fileStoreKey = inStream.readFileStoreKey();
+                if (multipleFileStoresSupported) {
+                    fileStoreKeys = inStream.readFileStoreKeys();
+                } else {
+                    fileStoreKeys = new FileStoreKey[]{inStream.readFileStoreKey()};
+                }
             } else {
-                fileStoreKey = null;
+                fileStoreKeys = null;
             }
+
             boolean isBlob = BlobDataCell.class.isAssignableFrom(cellClass);
             final DataCell result;
             if (isBlob) {
@@ -354,17 +363,17 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
                 inStream.setCurrentClassLoader(cellLoader);
                 result = inStream.readDataCellPerJavaSerialization();
             } else {
-                DataCellSerializer<? extends DataCell> serializer =
-                    type.getSerializer();
+                DataCellSerializer<? extends DataCell> serializer = type.getSerializer();
                 assert serializer != null;
                 result = inStream.readDataCellPerKNIMESerializer(serializer);
             }
 
-            if (fileStoreKey != null) {
+            if (fileStoreKeys != null) {
                 FileStoreCell fsCell = (FileStoreCell)result;
-                FileStoreUtil.retrieveFileStoreHandlerFrom(fsCell,
-                        fileStoreKey, m_tableFormatReader.getFileStoreHandlerRepository());
+                FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys,
+                    m_tableFormatReader.getFileStoreHandlerRepository());
             }
+
             return result;
         }
     } // class DataCellStreamReader
