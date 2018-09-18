@@ -84,8 +84,23 @@ public final class FileStoreUtil {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
+    public static FileStoreKey[] getFileStoreKeys(final FileStoreCell cell) {
+        return cell.getFileStoreKeys();
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
     public static FileStore getFileStore(final FileStoreCell cell) {
         return cell.getFileStore();
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public static FileStore[] getFileStores(final FileStoreCell cell) {
+        return cell.getFileStores();
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public static int getNumFileStores(final FileStoreCell cell) {
+        return cell.getNumFileStores();
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
@@ -117,10 +132,10 @@ public final class FileStoreUtil {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    public static void retrieveFileStoreHandlerFrom(final FileStoreCell cell,
-            final FileStoreKey key,
-            final FileStoreHandlerRepository repos) throws IOException {
-        cell.retrieveFileStoreHandlerFrom(key, repos);
+    public static void retrieveFileStoreHandlersFrom(final FileStoreCell fsCell,
+        final FileStoreKey[] fileStoreKeys,
+        final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
+        fsCell.retrieveFileStoreHandlersFrom(fileStoreKeys, fileStoreHandlerRepository);
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
