@@ -47,6 +47,7 @@ package org.knime.base.node.preproc.crossjoin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,7 +62,6 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.CloseableRowIterator;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
@@ -76,6 +76,18 @@ import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  * This is the model implementation of CrossJoiner.
@@ -111,67 +123,152 @@ final class CrossJoinerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
-        throws Exception {
-        boolean showLeft = m_showLeft.getBooleanValue();
-        boolean showRight = m_showRight.getBooleanValue();
-        int chunksize = m_cacheSize.getIntValue();
-        String sep = m_rkseparator.getStringValue();
-
-        DataContainer dc = exec.createDataContainer(
-            createSpec(inData[0].getDataTableSpec(), inData[1].getDataTableSpec(), showLeft, showRight));
-
-        long numOutRows = inData[0].size() * inData[1].size();
-        long rowcounter = 0;
-
-        CloseableRowIterator leftit = inData[0].iterator();
-        // iterate over all possible chunks of left table
-        for (long chunkcount = 0; chunkcount < Math.ceil(inData[0].size() * 1.0 / chunksize); chunkcount++) {
-            // read one chunk of left table
-            List<DataRow> rowsleft = new LinkedList<DataRow>();
-            for (int i = 0; i < chunksize && leftit.hasNext(); i++) {
-                rowsleft.add(leftit.next());
-                exec.checkCanceled();
-            }
-            // iterate over all possible chunks of right table
-            CloseableRowIterator rightit = inData[1].iterator();
-            for (long chunkcount2 = 0; chunkcount2 < Math.ceil(inData[1].size() * 1.0 / chunksize); chunkcount2++) {
-                // read  one chunk of right table
-                List<DataRow> rowsright = new LinkedList<DataRow>();
-                for (int i = 0; i < chunksize && rightit.hasNext(); i++) {
-                    rowsright.add(rightit.next());
-                }
-
-                for (DataRow left : rowsleft) {
-                    for (DataRow right : rowsright) {
-                        DataRow newRow = joinRow(left, right, showLeft, showRight, sep);
-                        dc.addRowToTable(newRow);
-                        exec.checkCanceled();
-                        exec.setProgress(rowcounter++ / (double)numOutRows,
-                            "Generating Row " + newRow.getKey().toString());
-                    }
-                }
-            }
-            rightit.close();
-        }
-        leftit.close();
-        dc.close();
-        return new BufferedDataTable[]{(BufferedDataTable)dc.getTable()};
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_STREAMABLE, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
     }
 
     /**
-     * Joins the two rows into one.
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
+        throws Exception {
+        // initialize the output table
+        final BufferedDataTableRowOutput output = new BufferedDataTableRowOutput(
+            exec.createDataContainer(createSpec(inData[0].getDataTableSpec(), inData[1].getDataTableSpec())));
+
+        // join the tables
+        crossJoin(new DataTableRowInput(inData[0]), inData[1], output, inData[0].size() * inData[1].size(), exec);
+
+        // return the joined table
+        return new BufferedDataTable[]{output.getDataTable()};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                crossJoin((RowInput)inputs[0], (BufferedDataTable)((PortObjectInput)inputs[1]).getPortObject(),
+                    (RowOutput)outputs[0], 0, exec);
+            }
+        };
+    }
+
+    /**
+     * Cross joins the left and right data input and writes the result to the output.
+     *
+     * @param lData the left data input
+     * @param rData the right data input
+     * @param output the output, i.e., the joined table
+     * @param totalNumRows the row count of the resulting table. Use 0 if it's not known in advance
+     * @param exec the execution context
+     * @throws Exception - If the execution was, e.g., interrupted or canceled
+     */
+    private void crossJoin(final RowInput lData, final BufferedDataTable rData, final RowOutput output,
+        final long totalNumRows, final ExecutionContext exec) throws Exception {
+        int chunksize = m_cacheSize.getIntValue();
+        double rowCounter = 0;
+        final List<DataRow> lDataChunk = new ArrayList<DataRow>();
+        final List<DataRow> rDataChunk = new ArrayList<DataRow>();
+        boolean finished = false;
+        while (!finished) {
+            // collect a chunk from the left data input
+            fillLeftDataChunk(lDataChunk, lData, chunksize, exec);
+            // check whether we reached the end of the left data input
+            finished = lDataChunk.size() < chunksize;
+            // start joining the chunked data rows of the left data input with the right input data
+            if (!lDataChunk.isEmpty()) {
+                try (CloseableRowIterator rRowIt = rData.iterator()) {
+                    while (rRowIt.hasNext()) {
+                        // collect a chunk from the right data input
+                        fillRightDataChunk(rDataChunk, rRowIt, chunksize, exec);
+                        // join the data rows
+                        for (final DataRow lRow : lDataChunk) {
+                            for (final DataRow rRow : rDataChunk) {
+                                exec.checkCanceled();
+                                final DataRow row = joinRows(lRow, rRow);
+                                output.push(row);
+                                exec.setProgress(++rowCounter / totalNumRows,
+                                    () -> "Generating Row " + row.getKey().toString());
+                            }
+                        }
+                        rDataChunk.clear();
+                    }
+                    lDataChunk.clear();
+                }
+            }
+        }
+        output.close();
+    }
+
+    /**
+     * Fills the provided list with an unprocessed chunk of data rows.
+     *
+     * @param list the list to store the chunk of data rows to
+     * @param rowIt the data row iterator
+     * @param chunkSize the size of the chunk to be collected
+     * @throws CanceledExecutionException - If the execution was canceled
+     */
+    private static void fillRightDataChunk(final List<DataRow> list, final CloseableRowIterator rowIt,
+        final int chunkSize, final ExecutionContext exec) throws CanceledExecutionException {
+        for (int i = 0; i < chunkSize && rowIt.hasNext(); i++) {
+            exec.checkCanceled();
+            list.add(rowIt.next());
+        }
+    }
+
+    /**
+     * Fills the provided list with an unprocessed chunk of data rows.
+     *
+     * @param list the list to store the chunk of data rows to
+     * @param data the input holding the next chunk of data rows
+     * @param chunkSize the size of the chunk to be collected
+     * @param exec the execution context
+     * @throws InterruptedException - If the execution was interrupted
+     * @throws CanceledExecutionException - If the execution was canceled
+     */
+    private static void fillLeftDataChunk(final List<DataRow> list, final RowInput data, final int chunkSize,
+        final ExecutionContext exec) throws InterruptedException, CanceledExecutionException {
+        for (int i = 0; i < chunkSize; i++) {
+            exec.checkCanceled();
+            final DataRow row = data.poll();
+            if (row == null) {
+                return;
+            }
+            list.add(row);
+        }
+    }
+
+    /**
+     * Returns a new DataRow composed of the two rows to join. The row-key of the new DataRow is composed of the two
+     * individual row-keys joined together with the selected {@link #m_rkseparator delimiter}. Depending on the settings
+     * a new left and/or right column containing the corresponding row-keys is created.
      *
      * @param left the first data row (put at the beginning of the new one)
      * @param right the second data row (at the end of the new one)
-     * @param showLeft if true there will be new column containing the rowid of the left column
-     * @param showRight if true there will be new column containing the rowid of the left column
-     * @param seperator String which will be put between the two rowkeys to generate the new one.
-     * @return a DataRow, containing the cells of both rows and if selected the rowkeys in new columns
+     * @return a DataRow, containing the cells of both rows and if selected the (original) row-keys in additional
+     *         columns
      * @since 2.9.1
      */
-    private DataRow joinRow(final DataRow left, final DataRow right, final boolean showLeft, final boolean showRight,
-        final String seperator) {
+    private DataRow joinRows(final DataRow left, final DataRow right) {
+        final boolean showLeft = m_showLeft.getBooleanValue();
+        final boolean showRight = m_showRight.getBooleanValue();
+        final String delimiter = m_rkseparator.getStringValue();
 
         int numCols = left.getNumCells() + right.getNumCells() + (showLeft ? 1 : 0) + (showRight ? 1 : 0);
         DataCell[] cells = new DataCell[numCols];
@@ -192,12 +289,13 @@ final class CrossJoinerNodeModel extends NodeModel {
                 new StringCell(right.getKey().toString());
         }
 
-        String newrowkey = left.getKey().getString() + seperator + right.getKey().getString();
+        String newrowkey = left.getKey().getString() + delimiter + right.getKey().getString();
         return new DefaultRow(newrowkey, cells);
     }
 
-    private DataTableSpec createSpec(final DataTableSpec left, final DataTableSpec right, final boolean showLeft,
-        final boolean showRight) {
+    private DataTableSpec createSpec(final DataTableSpec left, final DataTableSpec right) {
+        final boolean showLeft = m_showLeft.getBooleanValue();
+        final boolean showRight = m_showRight.getBooleanValue();
         int numCols = left.getNumColumns() + right.getNumColumns() + (showLeft ? 1 : 0) + (showRight ? 1 : 0);
         DataColumnSpec[] colSpecs = new DataColumnSpec[numCols];
 
@@ -255,8 +353,7 @@ final class CrossJoinerNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        return new DataTableSpec[]{
-            createSpec(inSpecs[0], inSpecs[1], m_showLeft.getBooleanValue(), m_showRight.getBooleanValue())};
+        return new DataTableSpec[]{createSpec(inSpecs[0], inSpecs[1])};
     }
 
     /**
