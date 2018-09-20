@@ -60,6 +60,7 @@ import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WebResourceController;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -92,7 +93,7 @@ public class SubnodeLayoutWizard extends Wizard {
         setDefaultPageImageDescriptor(
             ImageRepository.getImageDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_55.png"));
         WorkflowManager wfManager = m_subNodeContainer.getWorkflowManager();
-        Map<NodeID, SubNodeContainer> nestedSubnodes = wfManager.findNodes(SubNodeContainer.class, false);
+        Map<NodeID, SubNodeContainer> nestedSubnodes = WebResourceController.findSubnodeContainers(wfManager);
         Map<NodeID, WizardNode> viewNodes = wfManager.findNodes(WizardNode.class, false);
         LinkedHashMap<NodeIDSuffix, ViewHideable> resultMap = new LinkedHashMap<>();
         for (Map.Entry<NodeID, WizardNode> entry : viewNodes.entrySet()) {
@@ -101,12 +102,14 @@ public class SubnodeLayoutWizard extends Wizard {
         }
         List<NodeID> nodeIDs = new ArrayList<NodeID>();
         nodeIDs.addAll(viewNodes.keySet());
-        /*for (NodeID subnodeID : nestedSubnodes.keySet()) {
-            WorkflowManager nestedWFManager = nestedSubnodes.get(subnodeID).getWorkflowManager();
+        for (Map.Entry<NodeID, SubNodeContainer> entry : nestedSubnodes.entrySet()) {
+            WorkflowManager nestedWFManager = nestedSubnodes.get(entry.getKey()).getWorkflowManager();
             if (!nestedWFManager.findNodes(WizardNode.class, true).isEmpty()) {
-                nodeIDs.add(subnodeID);
+                NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(wfManager.getID(), entry.getKey());
+                resultMap.put(idSuffix, entry.getValue());
+                nodeIDs.add(entry.getKey());
             }
-        }*/
+        }
         Collections.sort(nodeIDs);
         m_page = new SubnodeLayoutJSONEditorPage("Change the layout configuration");
         m_page.setNodes(wfManager, m_subNodeContainer, resultMap);

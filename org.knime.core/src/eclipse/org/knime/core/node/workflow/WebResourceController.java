@@ -383,7 +383,11 @@ public abstract class WebResourceController {
         return !allInactive;
     }
 
-    private static Map<NodeID, SubNodeContainer> findSubnodeContainers(final WorkflowManager subnodeManager) {
+    /**
+     * @param subnodeManager
+     * @return
+     */
+    public static Map<NodeID, SubNodeContainer> findSubnodeContainers(final WorkflowManager subnodeManager) {
         try(WorkflowLock lock = subnodeManager.lock()) {
             Map<NodeID, SubNodeContainer> result = new LinkedHashMap<NodeID, SubNodeContainer>();
             for (NodeContainer nc : subnodeManager.getWorkflow().getNodeValues()) {
