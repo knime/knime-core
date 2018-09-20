@@ -62,6 +62,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+
 /**
  * A default panel to show two color palettes.
  *
@@ -75,6 +77,8 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
 
     private final JButton m_set3Button = new JButton("Apply to columns");
 
+    private JPanel m_newValuesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, PALETTE_ELEMENT_SPACING, 0));
+
     private final String[] m_paletteSet1;
 
     private final String[] m_paletteSet2;
@@ -86,6 +90,9 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
 
     /** Spacing between the individual elements of a palette. */
     private static final int PALETTE_ELEMENT_SPACING = 4;
+
+    private DialogComponentStringSelection m_handleNewValues;
+
 
     /**
      * @param paletteSet1 the first, default color palette
@@ -181,6 +188,10 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         JLabel set3Label = new JLabel("Set 3 (colorblind safe)");
         set3Label.setFont(new Font(set3Label.getFont().getName(), Font.PLAIN, set3Label.getFont().getSize() + 2));
 
+        // Panel for new values
+        m_handleNewValues = new DialogComponentStringSelection(ColorManager2NodeModel.createNewValueSettings(), "On different table:", new String[] {ColorManager2NodeModel.SET1, ColorManager2NodeModel.SET2, ColorManager2NodeModel.SET3, ColorManager2NodeModel.FAIL});
+        JPanel newValuesPanel = m_handleNewValues.getComponentPanel();
+        newValuesPanel.setAlignmentX(LEFT_ALIGNMENT);
         //add panels to layout
         super.add(set1Label);
         super.add(Box.createVerticalStrut(5));
@@ -193,6 +204,8 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         super.add(set3Label);
         super.add(Box.createVerticalStrut(5));
         super.add(set3Panel);
+        super.add(Box.createVerticalStrut(20));
+        super.add(newValuesPanel);
 
     }
 
@@ -213,9 +226,11 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
     @Override
     public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
+        // hide buttons and handling of new values for range columns
         m_set1Button.setVisible(enabled);
         m_set2Button.setVisible(enabled);
         m_set3Button.setVisible(enabled);
+        m_newValuesPanel.setVisible(enabled);
     }
 
     /**
@@ -264,5 +279,13 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
     @Override
     public void updateChooser() {
 
+    }
+
+    /**
+     * Returns the new value combobox
+     * @return the combobox
+     */
+    public DialogComponentStringSelection getNewValues() {
+        return m_handleNewValues;
     }
 }
