@@ -1090,7 +1090,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     }
 
     private void updateVisualLayout() {
-        m_browser.evaluate("loadLayout(\'" + getJsonDocument() + "\');");
+        //TODO: enable me again
+        //m_browser.evaluate("loadLayout(\'" + getJsonDocument() + "\');");
     }
 
     /**
