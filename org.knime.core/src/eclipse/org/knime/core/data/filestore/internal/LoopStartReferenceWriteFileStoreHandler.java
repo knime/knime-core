@@ -132,7 +132,9 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
             m_fileStoresInLoopCache, this);
         m_endNodeCacheWithKeysToPersist = null;
         m_reference.clearNestedLoopPath(m_thisNestedLoopPath[m_thisNestedLoopPath.length - 1]);
-        m_fileStoresInLoopCache.dispose();
+        if (m_fileStoresInLoopCache != null) {
+            m_fileStoresInLoopCache.dispose();
+        }
     }
 
     /** {@inheritDoc} */
