@@ -47,7 +47,9 @@ package org.knime.base.node.viz.property.color;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -72,6 +74,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -124,12 +127,21 @@ class ColorManager2NodeModel extends NodeModel {
     /** Type of color setting. */
     static final String IS_NOMINAL = "is_nominal";
 
+    /** Setting for handling of new values **/
+    private final SettingsModelString m_newValueSettings = createNewValueSettings();
 
     /** Key for minimum color value. */
     private static final DataCell MIN_VALUE = new StringCell("min_value");
 
     /** Key for maximum color value. */
     private static final DataCell MAX_VALUE = new StringCell("max_value");
+
+    /** Settingstrings for the handling of new values **/
+    final static String NEW_VALUES = "new_values";
+    final static String SET1 = "Use Set1 for new values";
+    final static String SET2 = "Use Set2 for new values";
+    final static String SET3 = "Use Set3 for new values";
+    final static String FAIL = "Fail";
 
     /**
      * Creates a new model for mapping colors. The model has one input and two
@@ -141,6 +153,14 @@ class ColorManager2NodeModel extends NodeModel {
                 BufferedDataTable.TYPE, ColorHandlerPortObject.TYPE});
         m_map = new LinkedHashMap<DataCell, ColorAttr>();
         m_mapGuess = new LinkedHashMap<DataCell, ColorAttr>();
+    }
+
+    /**
+     * Creates a new setting for handling new values.
+     * @return the setting
+     */
+    static SettingsModelString createNewValueSettings() {
+        return new SettingsModelString(NEW_VALUES, ColorManager2NodeModel.SET1);
     }
 
     /**
@@ -172,8 +192,7 @@ class ColorManager2NodeModel extends NodeModel {
             Set<DataCell> set =
                 inSpec.getColumnSpec(column).getDomain().getValues();
             m_mapGuess.clear();
-            m_mapGuess.putAll(
-                    ColorManager2DialogNominal.createColorMapping(set));
+            m_mapGuess.putAll(ColorManager2DialogNominal.createColorMapping(set, m_newValueSettings.getStringValue()));
             colorHandler = createNominalColorHandler(m_mapGuess);
             DataTableSpec newSpec = getOutSpec(inSpec, column, colorHandler);
             BufferedDataTable changedSpecTable =
@@ -190,6 +209,11 @@ class ColorManager2NodeModel extends NodeModel {
         // create new column spec based on color settings
         DataColumnSpec cspec = inSpec.getColumnSpec(m_column);
         if (m_isNominal) {
+            // update possible values
+            ArrayList<DataCell> set = new ArrayList<DataCell>(cspec.getDomain().getValues());
+            set.removeAll(m_map.keySet());
+            // find values that need new color mapping
+            m_map.putAll(ColorManager2DialogNominal.createColorMapping(new HashSet<DataCell>(set), m_map, m_newValueSettings.getStringValue()));
             colorHandler = createNominalColorHandler(m_map);
         } else {
             DataColumnDomain dom = cspec.getDomain();
@@ -268,8 +292,7 @@ class ColorManager2NodeModel extends NodeModel {
             Set<DataCell> set = spec.getColumnSpec(column).
                     getDomain().getValues();
             m_mapGuess.clear();
-            m_mapGuess.putAll(
-                    ColorManager2DialogNominal.createColorMapping(set));
+            m_mapGuess.putAll(ColorManager2DialogNominal.createColorMapping(set, m_newValueSettings.getStringValue()));
             ColorHandler colorHandler = createNominalColorHandler(m_mapGuess);
             DataTableSpec dataSpec = getOutSpec(spec, column, colorHandler);
             DataTableSpec modelSpec =
@@ -295,10 +318,10 @@ class ColorManager2NodeModel extends NodeModel {
                         + " has no nominal values set: "
                         + "execute predecessor or add Binner.");
             }
-            // check if the mapping values and the possible values match
-            if (!m_map.keySet().containsAll(list)) {
-                throw new InvalidSettingsException(
-                       "Color mapping does not match possible values.");
+            // check if the stored values and the domain values match and the new value setting is set to 'Fail'
+            if (m_newValueSettings.getStringValue().equals(FAIL) && !m_map.keySet().containsAll(list)) {
+                throw new InvalidSettingsException("New values for column \"" + m_column
+                    + "\" found with no assigned color. Change the 'On new values' setting.");
             }
         } else { // range
             // check if double column is selected
@@ -348,6 +371,13 @@ class ColorManager2NodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         assert (settings != null);
+        // load setting for handling new values
+        try {
+            m_newValueSettings.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            // new setting introduced after 3.6.1, fallback 'Fail'
+            m_newValueSettings.setStringValue(FAIL);
+        }
         // remove all color mappings
         m_map.clear();
         // read settings and write into the map
@@ -382,6 +412,7 @@ class ColorManager2NodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_newValueSettings.saveSettingsTo(settings);
         if (m_column != null) {
             settings.addString(SELECTED_COLUMN, m_column);
             settings.addBoolean(IS_NOMINAL, m_isNominal);
