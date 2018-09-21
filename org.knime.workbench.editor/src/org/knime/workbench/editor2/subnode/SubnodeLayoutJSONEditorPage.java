@@ -120,6 +120,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.wizard.ViewHideable;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -151,7 +152,6 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     private SubNodeContainer m_subNodeContainer;
     private WorkflowManager m_wfManager;
     private DefaultLayoutCreatorImpl m_layoutCreator;
-    @SuppressWarnings("rawtypes")
     private Map<NodeIDSuffix, ViewHideable> m_viewNodes;
     private String m_jsonDocument;
     private Label m_statusLine;
@@ -520,7 +520,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             final Button advancedButton = new Button(m_basicComposite, SWT.PUSH | SWT.CENTER);
             advancedButton.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/settings.png"));
             advancedButton.setToolTipText("Additional layout settings");
-            if (nodeContainer == null) {
+            if (nodeContainer == null || !(nodeContainer instanceof NativeNodeContainer)) {
                 advancedButton.setEnabled(false);
             } else {
                 advancedButton.addSelectionListener(new SelectionAdapter() {
@@ -529,8 +529,9 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                     public void widgetSelected(final SelectionEvent e) {
                         JSONLayoutViewContent defaultViewContent =
                             DefaultLayoutCreatorImpl.getDefaultViewContentForNode(suffix, m_viewNodes.get(suffix));
-                        ViewContentSettingsDialog settingsDialog = new ViewContentSettingsDialog(
-                            m_basicComposite.getShell(), layoutInfo.getView(), defaultViewContent);
+                        ViewContentSettingsDialog settingsDialog =
+                            new ViewContentSettingsDialog(m_basicComposite.getShell(),
+                                (JSONLayoutViewContent)layoutInfo.getView(), defaultViewContent);
                         if (settingsDialog.open() == Window.OK) {
                             layoutInfo.setView(settingsDialog.getViewSettings());
                             tryUpdateJsonFromBasic();
@@ -638,10 +639,15 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         if (nodeContainer == null) {
             iconLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png"));
             iconLabel.setToolTipText("This node does not exist. \nIt is suggested to delete it from the layout.");
+        } else if (nodeContainer instanceof SubNodeContainer) {
+            iconLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_16.png"));
+            iconLabel.setToolTipText(
+                "This node might contain a nested layout, which needs to be configured inside the node.");
         } else {
             try (InputStream iconURLStream = FileLocator.resolve(nodeContainer.getIcon()).openStream()) {
                 iconLabel.setImage(new Image(Display.getCurrent(), iconURLStream));
-            } catch (IOException e) { /* do nothing */ }
+            } catch (IOException e) {
+                /* do nothing */ }
         }
 
         Label nodeLabel = new Label(labelComposite, SWT.LEFT);
@@ -1195,7 +1201,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         private int m_row;
         private int m_col;
         private int m_colWidth;
-        private JSONLayoutViewContent m_view;
+        private JSONLayoutContent m_view;
 
         /**
          * @return the row
@@ -1242,13 +1248,13 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         /**
          * @return the view
          */
-        JSONLayoutViewContent getView() {
+        JSONLayoutContent getView() {
             return m_view;
         }
         /**
          * @param view the view to set
          */
-        void setView(final JSONLayoutViewContent view) {
+        void setView(final JSONLayoutContent view) {
             m_view = view;
         }
 

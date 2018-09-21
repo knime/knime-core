@@ -243,6 +243,10 @@ public class NodeUsageComposite extends Composite {
         if (nodeContainer == null) {
             iconLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png"));
             iconLabel.setToolTipText("This node does not exist. \nIt is suggested to delete it from the layout.");
+        }  else if (nodeContainer instanceof SubNodeContainer) {
+            iconLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_16.png"));
+            iconLabel.setToolTipText(
+                "This node might contain a nested layout, which needs to be configured inside the node.");
         } else {
             try (InputStream iconURLStream = FileLocator.resolve(nodeContainer.getIcon()).openStream()) {
                 iconLabel.setImage(new Image(Display.getCurrent(), iconURLStream));
