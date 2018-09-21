@@ -167,7 +167,7 @@ public class NodeUsageComposite extends Composite {
                 }
             });
             wizardButton.setToolTipText("Enable/disable for usage in WebPortal and wizard execution.");
-            wizardButton.setSelection(model.isHideInWizard());
+            wizardButton.setSelection(!model.isHideInWizard());
             m_wizardUsageMap.put(id, wizardButton);
             if (model instanceof DialogNode) {
                 Button dialogButton = createCheckbox(composite);

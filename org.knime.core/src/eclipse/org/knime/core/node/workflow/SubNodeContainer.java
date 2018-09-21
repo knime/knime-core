@@ -1945,7 +1945,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
-     * Sets a flag on a given {@link WizardNode}, whether or not it is hidden from wizard execution
+     * Sets a flag on a given {@link WizardNode} of nested subnode, whether or not it is hidden from wizard execution
      * @param id the node to set the flag on
      * @param hide true if the node is supposed to be hidden from WebPortal or wizard execution, false otherwise
      * @since 3.5
@@ -1953,32 +1953,29 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     public void setHideNodeFromWizard(final NodeID id, final boolean hide) {
         try (WorkflowLock lock = lock()) {
-            NativeNodeContainer nnc = m_wfm.getNodeContainer(id, NativeNodeContainer.class, true);
-            NodeModel model = nnc.getNodeModel();
-            CheckUtils.checkArgument(model instanceof WizardNode, "Can't set hide in wizard flag on non-wizard nodes.");
-            WizardNode<?,?> wn = (WizardNode<?,?>)model;
-            if (hide != wn.isHideInWizard()) {
-                wn.setHideInWizard(hide);
-                nnc.saveNodeSettingsToDefault();
-                nnc.setDirty();
+            NodeContainer container = m_wfm.getNodeContainer(id, NodeContainer.class, true);
+            ViewHideable vh = null;
+            NativeNodeContainer nnc = null;
+            if (container instanceof SubNodeContainer) {
+                vh = (SubNodeContainer)container;
+            } else if (container instanceof NativeNodeContainer) {
+                nnc = (NativeNodeContainer)container;
+                NodeModel model = nnc.getNodeModel();
+                CheckUtils.checkArgument(model instanceof WizardNode,
+                    "Can't set hide in wizard flag on non-wizard nodes.");
+                vh = (WizardNode<?, ?>)model;
+            } else {
+                throw new IllegalArgumentException(
+                    "Node with id " + id + " needs to be a native node or a subnode container!");
             }
-        }
-    }
-
-    /**
-     * Sets a flag on a given subnode, whether or not it is hidden from wizard execution
-     * @param subnodeId the node to set the flag on
-     * @param hide true if the node is supposed to be hidden from WebPortal or wizard execution, false otherwise
-     * @since 3.7
-     * @noreference This method is not intended to be referenced by clients.
-     */
-    public void setHideSubnodeFromWizard(final NodeID subnodeId, final boolean hide) {
-        try (WorkflowLock lock = lock()) {
-            SubNodeContainer snc = m_wfm.getNodeContainer(subnodeId, SubNodeContainer.class, true);
-            if (hide != snc.isHideInWizard()) {
-                snc.setHideInWizard(hide);
-                //do we need this call?
-                //snc.saveNodeSettingsToDefault();
+            if (vh != null) {
+                if (hide != vh.isHideInWizard()) {
+                    vh.setHideInWizard(hide);
+                    if (nnc != null) {
+                        nnc.saveNodeSettingsToDefault();
+                        nnc.setDirty();
+                    }
+                }
             }
         }
     }
