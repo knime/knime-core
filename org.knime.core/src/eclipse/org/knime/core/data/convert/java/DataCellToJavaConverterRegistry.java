@@ -142,7 +142,7 @@ import org.knime.core.util.Pair;
 public final class DataCellToJavaConverterRegistry extends
     AbstractConverterFactoryRegistry<Class<? extends DataValue>, Class<?>, DataCellToJavaConverterFactory<?, ?>, DataCellToJavaConverterRegistry> {
 
-    /* data types stored by their preferred value type */
+    /* Data types stored by their preferred value type, only for collection cells, for DataType we can directly use getPreferredValueClass */
     private final HashMap<Class<? extends DataValue>, DataType> m_prefferedTypes = new HashMap<>();
 
     /**
