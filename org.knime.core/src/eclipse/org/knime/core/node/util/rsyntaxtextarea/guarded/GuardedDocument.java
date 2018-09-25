@@ -302,6 +302,16 @@ public class GuardedDocument extends RSyntaxDocument {
     }
 
     /**
+     * Try to remove the guarded section with the given name
+     *
+     * @param name the name of the guarded section
+     * @since 3.7
+     */
+    public void removeGuardedSection(final String name) {
+        m_guards.remove(name);
+    }
+
+    /**
      * Retrieve guarded section by its name.
      *
      * @param name the name of the guarded section
