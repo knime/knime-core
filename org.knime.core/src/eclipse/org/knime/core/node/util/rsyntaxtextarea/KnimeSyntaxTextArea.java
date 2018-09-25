@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,91 +43,114 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 2013.04.25. by Gabor
+ * History
+ *   24 Sep 2018 (albrecht): created
  */
-package org.knime.base.node.util;
+package org.knime.core.node.util.rsyntaxtextarea;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.swing.ToolTipManager;
+
+import org.fife.rsta.ac.LanguageSupportFactory;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rtextarea.RTextArea;
-import org.knime.base.node.jsnippet.ui.JSnippetTextArea;
+import org.fife.ui.rsyntaxtextarea.Theme;
+import org.knime.core.node.NodeLogger;
 
 /**
- * A base class for {@link JSnippetTextArea}, but this can be used for non-Java editors too. This class loads the
+ * A base class for {@link RSyntaxTextArea}, which can be used by generic editors. This class loads the
  * default theme for the editor and applies workarounds to the known problems with {@link RSyntaxTextArea}.
  *
  * @author Gabor Bakos
- * @since 2.8
- * @deprecated Use {@link org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea} instead
+ * @since 3.7
  */
-@Deprecated
 @SuppressWarnings("serial")
-public class KnimeSyntaxTextArea extends org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea {
+public class KnimeSyntaxTextArea extends RSyntaxTextArea {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(KnimeSyntaxTextArea.class);
+
     /**
-     * No-arg constructor for {@link KnimeSyntaxTextArea}.
+     *
      */
     public KnimeSyntaxTextArea() {
         super();
     }
 
     /**
-     * Constructs {@link KnimeSyntaxTextArea}.
-     *
-     * @param doc The wrapped document.
+     * @param doc
      */
     public KnimeSyntaxTextArea(final RSyntaxDocument doc) {
         super(doc);
     }
 
     /**
-     * Constructs {@link KnimeSyntaxTextArea}.
-     *
-     * @param text The initial text to show.
+     * @param text
      */
     public KnimeSyntaxTextArea(final String text) {
         super(text);
     }
 
     /**
-     * Constructs {@link KnimeSyntaxTextArea}.
-     *
-     * @param textMode The initial text mode. Either {@link RTextArea#INSERT_MODE} or {@link RTextArea#OVERWRITE_MODE}.
-     * @see RSyntaxTextArea#RSyntaxTextArea(int)
+     * @param textMode
      */
     public KnimeSyntaxTextArea(final int textMode) {
         super(textMode);
     }
 
     /**
-     * Constructs {@link KnimeSyntaxTextArea}.
-     *
-     * @param rows Number of rows in preferred size.
-     * @param columns Number of columns in preferred size.
+     * @param rows
+     * @param cols
      */
-    public KnimeSyntaxTextArea(final int rows, final int columns) {
-        super(rows, columns);
+    public KnimeSyntaxTextArea(final int rows, final int cols) {
+        super(rows, cols);
     }
 
     /**
-     * Constructs {@link KnimeSyntaxTextArea}.
-     *
-     * @param text Initial text content.
-     * @param rows Number of rows in preferred size.
-     * @param columns Number of columns in preferred size.
+     * @param text
+     * @param rows
+     * @param cols
      */
-    public KnimeSyntaxTextArea(final String text, final int rows, final int columns) {
-        super(text, rows, columns);
+    public KnimeSyntaxTextArea(final String text, final int rows, final int cols) {
+        super(text, rows, cols);
     }
 
     /**
-     * Constructs {@link KnimeSyntaxTextArea}.
-     *
-     * @param document The wrapped document.
-     * @param text Initial text content.
-     * @param rows Number of rows in preferred size.
-     * @param columns Number of columns in preferred size.
+     * @param doc
+     * @param text
+     * @param rows
+     * @param cols
      */
-    public KnimeSyntaxTextArea(final RSyntaxDocument document, final String text, final int rows, final int columns) {
-        super(document, text, rows, columns);
+    public KnimeSyntaxTextArea(final RSyntaxDocument doc, final String text, final int rows, final int cols) {
+        super(doc, text, rows, cols);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void init() {
+        super.init();
+        try {
+            applySyntaxColors();
+        } catch (Exception e) {
+            LOGGER.debug(e.getMessage(), e);
+        }
+
+        ToolTipManager.sharedInstance().registerComponent(this);
+        LanguageSupportFactory.get().register(this);
+    }
+
+    /**
+     * Loads the theme from this class' package {@code eclipse.xml} file.
+     *
+     * @throws IOException Problem with loading.
+     */
+    protected void applySyntaxColors() throws IOException {
+        InputStream in = KnimeSyntaxTextArea.class.getResourceAsStream("eclipse.xml");
+        Theme theme = Theme.load(in);
+        theme.apply(this);
+    }
+
 }

@@ -95,6 +95,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
@@ -140,6 +141,7 @@ public class JSnippetPanel extends JPanel {
      *            available functions
      * @param completionProvider a completion provider used for autocompletion
      *            in the editor
+     * @since 3.7
      */
     public JSnippetPanel(final ManipulatorProvider manipulatorProvider,
                          final KnimeCompletionProvider completionProvider) {
@@ -154,7 +156,7 @@ public class JSnippetPanel extends JPanel {
      * @param completionProvider a completion provider used for autocompletion
      *            in the editor
      * @param showColumns Show the columns panel, or hide it?
-     * @since 2.8
+     * @since 3.7
      */
     public JSnippetPanel(final ManipulatorProvider manipulatorProvider,
         final KnimeCompletionProvider completionProvider, final boolean showColumns) {
@@ -169,7 +171,7 @@ public class JSnippetPanel extends JPanel {
      *            in the editor
      * @param showColumns Show the columns panel, or hide it?
      * @param showFlowVariables Show the flow variables panel, or hide it?
-     * @since 2.9
+     * @since 3.7
      */
     public JSnippetPanel(final ManipulatorProvider manipulatorProvider,
             final KnimeCompletionProvider completionProvider, final boolean showColumns, final boolean showFlowVariables) {
@@ -779,7 +781,7 @@ public class JSnippetPanel extends JPanel {
 
     /**
      * @return the completionProvider
-     * @since 2.8
+     * @since 3.7
      */
     protected KnimeCompletionProvider getCompletionProvider() {
         return m_completionProvider;

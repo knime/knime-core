@@ -48,6 +48,7 @@
 package org.knime.base.node.util;
 
 import org.fife.ui.autocomplete.BasicCompletion;
+import org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**

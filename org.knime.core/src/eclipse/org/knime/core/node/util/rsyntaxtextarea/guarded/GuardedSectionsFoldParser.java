@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,28 +41,58 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   07.12.2011 (hofer): created
+ *   25 Sep 2018 (Christian Albrecht, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.base.node.jsnippet.guarded;
+package org.knime.core.node.util.rsyntaxtextarea.guarded;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.text.BadLocationException;
+
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.folding.Fold;
+import org.fife.ui.rsyntaxtextarea.folding.FoldParser;
+import org.fife.ui.rsyntaxtextarea.folding.FoldType;
+import org.knime.core.node.NodeLogger;
 
 /**
  * A FoldParser that gives folds for every guarded section.
  * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
- * @since 2.12
+ * @since 3.7
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
- * @deprecated
  */
-@Deprecated
-public class GuardedSectionsFoldParser extends org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSectionsFoldParser {
+public class GuardedSectionsFoldParser implements FoldParser {
 
-    /* empty implementation for backwards compatibility */
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+                GuardedSectionsFoldParser.class);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Fold> getFolds(final RSyntaxTextArea textArea) {
+        final List<Fold> folds = new ArrayList<>();
+
+        final GuardedDocument doc = (GuardedDocument)textArea.getDocument();
+        for (final String name : doc.getGuardedSections()) {
+            final GuardedSection guard = doc.getGuardedSection(name);
+            try {
+                final Fold fold = new Fold(FoldType.FOLD_TYPE_USER_DEFINED_MIN, textArea, guard.getStart().getOffset());
+                fold.setEndOffset(guard.getEnd().getOffset());
+                folds.add(fold);
+            } catch (BadLocationException e) {
+                LOGGER.debug(e.getMessage());
+            }
+        }
+        return folds;
+    }
 
 }

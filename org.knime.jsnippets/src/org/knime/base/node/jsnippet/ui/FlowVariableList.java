@@ -59,8 +59,8 @@ import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 
-import org.knime.base.node.util.KnimeSyntaxTextArea;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
