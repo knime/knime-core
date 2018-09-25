@@ -105,8 +105,9 @@ public class Pivot2NodeModel extends GroupByNodeModel {
      * Enum providing the different options to name the pivot columns.
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+     * @since 3.7
      */
-    enum ColNameOption implements BiFunction<String, String, String> {
+    public enum ColNameOption implements BiFunction<String, String, String> {
 
             /** The pivot name + aggregation name option. */
             PIV_FIRST_AGG_LAST("Pivot name" + PIVOT_AGGREGATION_DELIMITER + "Aggregation name",
