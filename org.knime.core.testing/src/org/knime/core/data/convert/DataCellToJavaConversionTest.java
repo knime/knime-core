@@ -387,20 +387,31 @@ public class DataCellToJavaConversionTest {
         Optional<Class<?>> cell = DataCellToJavaConverterRegistry.getInstance().getPreferredJavaTypeForCell(IntCell.TYPE);
         assertTrue(cell.isPresent());
         assertEquals(Integer.class, cell.get());
+        assertEquals(Integer.class, DataCellToJavaConverterRegistry.getInstance()
+            .getFactoriesForSourceType(IntCell.TYPE).stream().findFirst().get().getDestinationType());
 
         cell = DataCellToJavaConverterRegistry.getInstance().getPreferredJavaTypeForCell(LongCell.TYPE);
         assertTrue(cell.isPresent());
         assertEquals(Long.class, cell.get());
+        assertEquals(Long.class, DataCellToJavaConverterRegistry.getInstance()
+            .getFactoriesForSourceType(LongCell.TYPE).stream().findFirst().get().getDestinationType());
 
         cell = DataCellToJavaConverterRegistry.getInstance().getPreferredJavaTypeForCell(StringCell.TYPE);
         assertTrue(cell.isPresent());
         assertEquals(String.class, cell.get());
+        assertEquals(String.class, DataCellToJavaConverterRegistry.getInstance()
+            .getFactoriesForSourceType(StringCell.TYPE).stream().findFirst().get().getDestinationType());
 
         cell = DataCellToJavaConverterRegistry.getInstance().getPreferredJavaTypeForCell(BinaryObjectDataCell.TYPE);
         assertTrue(cell.isPresent());
         assertEquals(InputStream.class, cell.get());
+        assertEquals(InputStream.class, DataCellToJavaConverterRegistry.getInstance()
+            .getFactoriesForSourceType(BinaryObjectDataCell.TYPE).stream().findFirst().get().getDestinationType());
     }
 
+    /**
+     * Tests that querying by identifiers and the automatic identifiers for the annotations.
+     */
     @Test
     public void testIdentifiers() {
         {
@@ -418,6 +429,9 @@ public class DataCellToJavaConversionTest {
         assertTrue(DataCellToJavaConverterRegistry.getInstance().getFactory("org.knime.core.data.convert.java.SimpleDataCellToJavaConverterFactory(DataValue,class java.lang.String,String (toString()))").isPresent());
     }
 
+    /**
+     * Spotty test for {@link DataCellToJavaConverterRegistry#getAllConvertibleDataTypes()}
+     */
     @Test
     public void testConvertibleTypes() {
         final Set<DataType> types = DataCellToJavaConverterRegistry.getInstance().getAllConvertibleDataTypes();

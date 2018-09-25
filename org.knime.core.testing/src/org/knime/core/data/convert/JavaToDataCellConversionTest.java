@@ -227,8 +227,7 @@ public class JavaToDataCellConversionTest {
         }
 
         /* from InputStream */
-        {
-            final InputStream stream = getClass().getResourceAsStream("test.xml");
+        try(final InputStream stream = getClass().getResourceAsStream("test.xml")) {
             assertTrue(stream.available() > 0);
             final XMLCell xmlCell = testSimpleConversion(InputStream.class, XMLCell.TYPE, XMLCell.class, stream);
             assertEquals(xmlString, xmlCell.getStringValue().replace('\'', '"'));
@@ -246,13 +245,17 @@ public class JavaToDataCellConversionTest {
             final BinaryObjectDataCell cell = testSimpleConversion(byte[].class, BinaryObjectDataCell.TYPE,
                 BinaryObjectDataCell.class, new String("I am bytes.").getBytes());
             final InputStream stream = cell.openInputStream();
-            assertEquals("I am bytes.", new BufferedReader(new InputStreamReader(stream)).readLine());
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+                assertEquals("I am bytes.", reader.readLine());
+            }
         }
         {
             final BinaryObjectDataCell cell = testSimpleConversion(InputStream.class, BinaryObjectDataCell.TYPE,
                 BinaryObjectDataCell.class, new ByteArrayInputStream("I am bytes.".getBytes()));
             final InputStream stream = cell.openInputStream();
-            assertEquals("I am bytes.", new BufferedReader(new InputStreamReader(stream)).readLine());
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+                assertEquals("I am bytes.", reader.readLine());
+            }
         }
     }
 
@@ -381,9 +384,9 @@ public class JavaToDataCellConversionTest {
     public void testAllSourceTypes() {
         final Collection<Class<?>> set = JavaToDataCellConverterRegistry.getInstance().getAllSourceTypes();
 
-        // extensions may increase this number
+        // extensions may increase this number, which is why we test greaterThan
         assertThat("Unexpected number of supported source types", set.size(), is(greaterThan(9)));
-        assertThat("Double not found in support source types", set, hasItem(Double.class));
+        assertThat("Double not found in supported source types", set, hasItem(Double.class));
     }
 
     /**
@@ -393,8 +396,8 @@ public class JavaToDataCellConversionTest {
     public void testAllDestinationTypes() {
         final Collection<DataType> set = JavaToDataCellConverterRegistry.getInstance().getAllDestinationTypes();
 
-        // extensions may increase this number
+        // extensions may increase this number, which is why we test greaterThan
         assertThat("Unexpected number of supported destination types", set.size(), is(greaterThan(6)));
-        assertThat("Double not found in support destination types", set, hasItem(DoubleCell.TYPE));
+        assertThat("Double not found in supported destination types", set, hasItem(DoubleCell.TYPE));
     }
 }
