@@ -51,6 +51,7 @@ package org.knime.core.data.convert.util;
 import java.util.Optional;
 
 import org.knime.core.data.DataType;
+import org.knime.core.data.convert.AbstractConverterFactoryRegistry;
 import org.knime.core.data.convert.ConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
@@ -222,14 +223,7 @@ public final class SerializeUtil {
      */
     public static Optional<DataCellToJavaConverterFactory<?, ?>> loadDataCellToJavaConverterFactory(
         final ConfigBaseRO config, final String key) throws InvalidSettingsException {
-        final String id = config.getString(key);
-
-        final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
-            DataCellToJavaConverterRegistry.getInstance().getFactory(id);
-        if (factory.isPresent()) {
-            factory.get().loadAdditionalConfig(config.getConfigBase(key + "_config"));
-        }
-        return factory;
+        return loadConverterFactory(config, DataCellToJavaConverterRegistry.getInstance(), key);
     }
 
     /**
@@ -243,9 +237,7 @@ public final class SerializeUtil {
      */
     public static Optional<JavaToDataCellConverterFactory<?>> loadJavaToDataCellConverterFactory(
         final ConfigBaseRO config, final String key) throws InvalidSettingsException {
-        final String id = config.getString(key);
-
-        return JavaToDataCellConverterRegistry.getInstance().getFactory(id);
+        return loadConverterFactory(config, JavaToDataCellConverterRegistry.getInstance(), key);
     }
 
     /**
@@ -298,9 +290,8 @@ public final class SerializeUtil {
             return Optional.empty();
         }
 
-        final String consumerId = config.getString(key + "_consumer");
         final Optional<CellValueConsumerFactory<DestType, ?, ExternalType, ?>> consumer =
-            registry.getFactory(consumerId);
+            loadConverterFactory(config, registry, key + "_consumer");
 
         if (!consumer.isPresent()) {
             return Optional.empty();
@@ -343,14 +334,39 @@ public final class SerializeUtil {
             return Optional.empty();
         }
 
-        final String producerId = config.getString(key + "_producer");
         final Optional<CellValueProducerFactory<SourceType, ExternalType, ?, ?>> producer =
-            registry.getFactory(producerId);
-
+            loadConverterFactory(config, registry, key + "_producer");
         if (!producer.isPresent()) {
             return Optional.empty();
         }
 
+
         return Optional.of(new ProductionPath(producer.get(), converter.get()));
     }
+
+    /**
+     * Load a {@link ConverterFactory converter factory} from given config.
+     *
+     * Use {@link #getPlaceholder(ConfigBaseRO, String)} to get information about the converter factory if it's missing.
+     * To store a converter factory use {@link #storeConverterFactory(ConverterFactory, ConfigBaseWO, String)}.
+     *
+     * @param config Config to load from
+     * @param registry Registry to load converter factory with
+     * @param key setting key
+     * @return an optional {@link ConverterFactory}, present if the factory identifier was found in the given
+     *         <code>registry</code>.
+     * @throws InvalidSettingsException
+     * @since 3.7
+     */
+    public static <S, D, F extends ConverterFactory<S, D>, R extends AbstractConverterFactoryRegistry<S, D, F, R>> Optional<F> loadConverterFactory(
+        final ConfigBaseRO config, final R registry, final String key) throws InvalidSettingsException {
+        final String id = config.getString(key);
+
+        final Optional<F> factory = registry.getFactory(id);
+        if (factory.isPresent()) {
+            factory.get().loadAdditionalConfig(config.getConfigBase(key + "_config"));
+        }
+        return factory;
+    }
+
 }
