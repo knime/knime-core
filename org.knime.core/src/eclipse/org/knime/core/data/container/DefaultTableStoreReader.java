@@ -66,7 +66,6 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
     private CompressionFormat m_compressionFormat;
     private final File m_binFile;
     private final DataTableSpec m_spec;
-    private int m_version;
     private final boolean m_isReadRowKey;
 
     /**
@@ -88,7 +87,6 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
         super(binFile, spec, settings, version);
         m_binFile = binFile;
         m_spec = spec;
-        m_version = version;
         m_isReadRowKey = isReadRowKey;
     }
 
@@ -126,15 +124,6 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
 
     boolean isReadRowKey() {
         return m_isReadRowKey;
-    }
-
-    /**
-     * Get underlying stream version. Important for file iterators.
-     *
-     * @return Underlying stream version.
-     */
-    int getReadVersion() {
-        return m_version;
     }
 
     /**

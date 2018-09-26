@@ -117,6 +117,9 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
 
     private Buffer m_buffer;
 
+    /** Input stream version **/
+    protected final int m_version;
+
     /**
      * Constructs an abstract table store reader.
      *
@@ -134,6 +137,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         m_file = CheckUtils.checkArgumentNotNull(binFile);
         m_spec = CheckUtils.checkArgumentNotNull(spec);
         m_openIteratorSet = new WeakHashMap<>();
+        m_version = version;
         readMetaFromFile(settings, version);
     }
 
@@ -150,6 +154,15 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
     /** @return the buffer */
     protected final Buffer getBuffer() {
         return m_buffer;
+    }
+
+    /**
+     * Get underlying stream version. Important for file iterators.
+     *
+     * @return Underlying stream version.
+     */
+    public int getReadVersion() {
+        return m_version;
     }
 
     public final BlobWrapperDataCell createBlobWrapperCell(final BlobAddress address, final CellClassInfo type)
