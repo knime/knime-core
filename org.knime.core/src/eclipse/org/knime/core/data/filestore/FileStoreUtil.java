@@ -78,11 +78,6 @@ public final class FileStoreUtil {
         return store.getKey();
     }
 
-    /** @noreference This method is not intended to be referenced by clients. */
-    public static FileStoreKey getFileStoreKey(final FileStoreCell cell) {
-        return cell.getFileStoreKey();
-    }
-
     /**
      * @since 3.7
      * @noreference This method is not intended to be referenced by clients.
@@ -138,17 +133,6 @@ public final class FileStoreUtil {
                     + FlushCallback.class.getSimpleName() + ": "
                     + flushCallback == null ? "<null>" : flushCallback.getClass().getName());
         }
-    }
-
-    /**
-     * @deprecated use retrieveFileStoreHandlersFrom instead
-     * @noreference This method is not intended to be referenced by clients.
-     */
-    @Deprecated
-    public static void retrieveFileStoreHandlerFrom(final FileStoreCell cell,
-            final FileStoreKey key,
-            final FileStoreHandlerRepository repos) throws IOException {
-        cell.retrieveFileStoreHandlerFrom(key, repos);
     }
 
     /**

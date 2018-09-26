@@ -87,11 +87,6 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
         m_isFlushedToFileStore = true;
     }
 
-    /** @return the fileStoreKey of the first fileStore */
-    final FileStoreKey getFileStoreKey() {
-        return m_fileStoreProxies[0].getFileStoreKey();
-    }
-
     /** @return the first fileStore */
     protected FileStore getFileStore() {
         return m_fileStoreProxies[0].getFileStore();
@@ -116,17 +111,6 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
      */
     protected FileStore[] getFileStores() {
         return Arrays.stream(m_fileStoreProxies).map(FileStoreProxy::getFileStore).toArray(FileStore[]::new);
-    }
-
-
-    /**
-     * @noreference This method is not intended to be referenced by clients.
-     * @deprecated use retrieveFileStoreHandlersFrom(keys, repo) instead
-     */
-    @Deprecated
-    final void retrieveFileStoreHandlerFrom(final FileStoreKey key,
-                     final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
-        retrieveFileStoreHandlersFrom(new FileStoreKey[] {key}, fileStoreHandlerRepository);
     }
 
     /**
