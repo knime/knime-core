@@ -57,16 +57,29 @@ import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 
 /**
+ * A {@link DataCell} that references {@link FileStore}s with direct file access, e.g. for the serialization of large
+ * data blobs. When this cell is initially created, the {@link FileStore}s must be given. But when a {@link FileStoreCell} is
+ * deserialized, the FileStore references will automatically be restored.
+ *
+ * Derived classes should implement postConstruct and flushToFileStore to load and save externally stored data. To read
+ * data from the {@link FileStore}s after cell deserialization, postConstruct is called exactly once, when all
+ * {@link FileStore}s are present. Similarly, when the cell is about to be serialized, flushToFileStore is invoked once
+ * and expects all {@link FileStore}s to be written.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  * @since 2.6
  */
 public abstract class FileStoreCell extends DataCell implements FlushCallback {
 
     private FileStoreProxy[] m_fileStoreProxies;
+
     private boolean m_isFlushedToFileStore;
 
     /**
+     * Create a {@link FileStoreCell} with an array of {@link FileStore}s.
+     *
+     * @param fileStores The fileStores that this cell is allowed to read from and write to
      * @since 3.7
      */
     protected FileStoreCell(final FileStore[] fileStores) {
@@ -77,12 +90,18 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
         m_fileStoreProxies = Arrays.stream(fileStores).map(FileStoreProxy::new).toArray(FileStoreProxy[]::new);
     }
 
+    /**
+     * Create a {@link FileStoreCell} with a single {@link FileStore}
+     * @param fileStore
+     */
     protected FileStoreCell(final FileStore fileStore) {
        this(new FileStore[] { fileStore });
     }
 
-    /** Used when read from persisted stream.
-     *  */
+    /**
+     * This constructor should only be used when the cell is read from a persisted stream. Referenced {@link FileStore}s
+     * will be restored automatically.
+     */
     protected FileStoreCell() {
         m_isFlushedToFileStore = true;
     }
@@ -94,6 +113,7 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
 
     /**
      * @since 3.7
+     * @return The number of file stores referenced from this cell.
      */
     final int getNumFileStores() {
         return m_fileStoreProxies.length;
@@ -101,6 +121,8 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
 
     /**
      * @since 3.7
+     * @return An array of the {@link FileStoreKey}s corresponding to the {@link FileStore}s referenced by this cell, in
+     *         the same order as the {@link FileStore}s.
      */
     final FileStoreKey[] getFileStoreKeys() {
         return Arrays.stream(m_fileStoreProxies).map(FileStoreProxy::getFileStoreKey).toArray(FileStoreKey[]::new);
@@ -108,6 +130,7 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
 
     /**
      * @since 3.7
+     * @return The array of all referenced {@link FileStore}s.
      */
     protected FileStore[] getFileStores() {
         return Arrays.stream(m_fileStoreProxies).map(FileStoreProxy::getFileStore).toArray(FileStore[]::new);
@@ -145,19 +168,24 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
         }
     }
 
-    /** Called before the cell is about to be serialized. Subclasses may override it to make sure the content
-     * is sync'ed with the file (e.g. in-memory content is written to the FileStore).
+    /**
+     * Called before the cell is about to be serialized. Subclasses may override it to make sure the content is sync'ed
+     * with the file (e.g. in-memory content is written to the FileStore). This method is called only once, even if the
+     * cell uses multiple FileStores.
      *
-     * <p>This method is also called when the file underlying the cell is copied into a another context (from
-     * a BufferedDataTable to DataTable).
-     * @throws IOException If thrown, the cell will be replaced by a missing value in the data stream and
-     * an error will be reported to the log.
-     * @since 2.8 */
+     * <p>
+     * This method is also called when the file underlying the cell is copied into a another context (from a
+     * BufferedDataTable to DataTable).
+     *
+     * @throws IOException If thrown, the cell will be replaced by a missing value in the data stream and an error will
+     *             be reported to the log.
+     * @since 2.8
+     */
     protected void flushToFileStore() throws IOException {
         // no op.
     }
 
-    /** @return the isFlushedToFileStore */
+    /** @return whether this cell's content has been flushed to the {@link FileStore}s */
     boolean isFlushedToFileStore() {
         return m_isFlushedToFileStore;
     }
