@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.lang.ref.SoftReference;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,6 @@ import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactoryMana
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.missingval.v10.MissingcellhandlerDocument;
-import org.knime.workbench.repository.util.NodeFactoryHTMLCreator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -118,17 +118,13 @@ public final class MissingCellHandlerDescriptionFactory {
         // do some stuff to determine the version
         LOGGER.debugWithFormat("Loading description for factory: %s", factoryClass);
         String descriptionFile = factoryClass.getSimpleName() + ".xml";
-        InputStream resourceAsStream = factoryClass.getResourceAsStream(descriptionFile);
-
-        if (resourceAsStream != null) {
-            try {
+        try (InputStream resourceAsStream = factoryClass.getResourceAsStream(descriptionFile)) {
+            if (resourceAsStream != null) {
                 return new MissingCellHandlerDescriptionV1(resourceAsStream);
-            } catch (XmlException | IOException e) {
-                LOGGER.error("Error during loading description for factory: " + factoryClass, e);
-                return errorDescription(fac.getDisplayName());
-            } finally {
-                IOUtils.closeQuietly(resourceAsStream);
             }
+        } catch (XmlException | IOException e) {
+            LOGGER.error("Error during loading description for factory: " + factoryClass, e);
+            return errorDescription(fac.getDisplayName());
         }
         return emptyDescription(fac.getDisplayName());
     }
@@ -242,15 +238,12 @@ public final class MissingCellHandlerDescriptionFactory {
     }
 
     private static String readFile(final String fileName) {
-        InputStream resourceAsStream = MissingCellHandlerDescriptionFactory.class.getResourceAsStream(fileName);
-        CheckUtils.checkArgument(resourceAsStream != null, "Resource : '%s' cannot be found", fileName);
-        try {
-            return IOUtils.toString(resourceAsStream).replace("[CSS]", NodeFactoryHTMLCreator.instance.getCss());
+        try (InputStream resourceAsStream = MissingCellHandlerDescriptionFactory.class.getResourceAsStream(fileName)) {
+            CheckUtils.checkArgument(resourceAsStream != null, "Resource : '%s' cannot be found", fileName);
+            return IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
         } catch (IOException e) {
             LOGGER.coding("Error reading " + fileName, e);
             throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(resourceAsStream);
         }
     }
 
