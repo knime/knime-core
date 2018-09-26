@@ -205,7 +205,7 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMESt
     @Deprecated
     public FileStoreKey getFileStoreKeyAndFlush(final DataCell cell) throws IOException {
         FileStoreKey[] fileStoreKeys = getFileStoreKeysAndFlush(cell);
-        if(fileStoreKeys == null) {
+        if (fileStoreKeys == null) {
             return null;
         } else {
             return fileStoreKeys[0];
@@ -214,9 +214,11 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMESt
 
     /**
      * Gets the file store keys of the given cell and invokes flush on the cell
+     *
      * @since 3.7
      * @param cell
-     * @return null if the given cell is no FileStoreCell, otherwise the cell's FileStoreKeys translated to the local FileStore handler
+     * @return null if the given cell is no FileStoreCell, otherwise the cell's FileStoreKeys translated to the local
+     *         FileStore handler
      * @throws IOException
      */
     public FileStoreKey[] getFileStoreKeysAndFlush(final DataCell cell) throws IOException {
@@ -226,11 +228,11 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMESt
             FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
             fileStoreKeys = new FileStoreKey[fileStores.length];
 
-            for(int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
-
+            for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
                 // TODO is the 'else' case realistic?
                 if (getFileStoreHandler() instanceof IWriteFileStoreHandler) {
-                    fileStoreKeys[fileStoreIndex] = getFileStoreHandler().translateToLocal(fileStores[fileStoreIndex], fsCell);
+                    fileStoreKeys[fileStoreIndex] =
+                        getFileStoreHandler().translateToLocal(fileStores[fileStoreIndex], fsCell);
                 } else {
                     // handler is not an IWriteFileStoreHandler but the buffer still contains file stores:
                     // the flow is part of a workflow and all file stores were already properly handled

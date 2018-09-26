@@ -63,7 +63,7 @@ import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
  */
 public abstract class FileStoreCell extends DataCell implements FlushCallback {
 
-    private FileStoreProxy m_fileStoreProxies[];
+    private FileStoreProxy[] m_fileStoreProxies;
     private boolean m_isFlushedToFileStore;
 
     /**
@@ -74,7 +74,7 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
             throw new IllegalArgumentException("FileStoreCell needs at least one fileStore");
         }
 
-        m_fileStoreProxies = Arrays.stream(fileStores).map(fs -> new FileStoreProxy(fs)).toArray(FileStoreProxy[]::new);
+        m_fileStoreProxies = Arrays.stream(fileStores).map(FileStoreProxy::new).toArray(FileStoreProxy[]::new);
     }
 
     protected FileStoreCell(final FileStore fileStore) {
@@ -108,14 +108,14 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
      * @since 3.7
      */
     final FileStoreKey[] getFileStoreKeys() {
-        return Arrays.stream(m_fileStoreProxies).map(proxy -> proxy.getFileStoreKey()).toArray(FileStoreKey[]::new);
+        return Arrays.stream(m_fileStoreProxies).map(FileStoreProxy::getFileStoreKey).toArray(FileStoreKey[]::new);
     }
 
     /**
      * @since 3.7
      */
     protected FileStore[] getFileStores() {
-        return Arrays.stream(m_fileStoreProxies).map(proxy -> proxy.getFileStore()).toArray(FileStore[]::new);
+        return Arrays.stream(m_fileStoreProxies).map(FileStoreProxy::getFileStore).toArray(FileStore[]::new);
     }
 
 
@@ -134,7 +134,7 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
      * @since 3.7
      */
     final void retrieveFileStoreHandlersFrom(final FileStoreKey[] keys,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
+        final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
         m_fileStoreProxies = new FileStoreProxy[keys.length];
         int fsIdx = 0;
         for (FileStoreKey key : keys) {
@@ -187,9 +187,9 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
     /** {@inheritDoc} */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        FileStoreProxy otherFileStoreProxies[] = ((FileStoreCell)dc).m_fileStoreProxies;
-        for(int fsIdx = 0; fsIdx < m_fileStoreProxies.length; fsIdx++) {
-            if(!otherFileStoreProxies[fsIdx].equals(m_fileStoreProxies[fsIdx])) {
+        FileStoreProxy[] otherFileStoreProxies = ((FileStoreCell)dc).m_fileStoreProxies;
+        for (int fsIdx = 0; fsIdx < m_fileStoreProxies.length; fsIdx++) {
+            if (!otherFileStoreProxies[fsIdx].equals(m_fileStoreProxies[fsIdx])) {
                 return false;
             }
         }
