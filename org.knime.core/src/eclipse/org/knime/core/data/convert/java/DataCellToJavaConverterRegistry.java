@@ -59,6 +59,7 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
@@ -154,24 +155,9 @@ public final class DataCellToJavaConverterRegistry extends
      */
     public Set<DataType> getAllConvertibleDataTypes() {
         final Collection<DataType> availableDataTypes = DataTypeRegistry.getInstance().availableDataTypes();
-
-        final HashSet<DataType> convertibleTypes = new HashSet<>(availableDataTypes.size());
-        for (DataType dataType : availableDataTypes) {
-            /* Get a non-collection element type */
-            while(dataType.isCollectionType()) {
-                dataType = dataType.getCollectionElementType();
-            }
-
-            for (final Class<? extends DataValue> val : dataType.getValueClasses()) {
-                if (m_bySourceType.containsKey(val)) {
-                    /* We can convert this type! */
-                    convertibleTypes.add(dataType);
-                    break;
-                }
-            }
-        }
-
-        return convertibleTypes;
+        return availableDataTypes.stream() //
+                .filter(dataType -> !getFactoriesForSourceType(dataType).isEmpty()) //
+                .collect(Collectors.toSet());
     }
 
     /**
