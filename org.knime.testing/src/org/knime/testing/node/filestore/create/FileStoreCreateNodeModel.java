@@ -77,6 +77,8 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
 
     private final SettingsModelBoolean m_keepInMemorySettingsModel = createKeepInMemorySettingsModel();
 
+    private final SettingsModelBoolean m_useTwoFileStoresSettingsModel = createUseTwoFileStoresSettingsModel();
+
     /** {@inheritDoc} */
     @Override
     protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
@@ -95,6 +97,15 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
                 } catch (final IOException e) {
                     throw new RuntimeException(e);
                 }
+                if (m_useTwoFileStoresSettingsModel.getBooleanValue()) {
+                    try {
+                        final FileStore fs2 = getFileStoreFactory().createFileStore("other" + row.getKey().getString());
+                        LargeFile lf2 = LargeFile.create(fs2, seed >> 1, keepInMemory);
+                        return new LargeFileStoreCell(lf, lf2, seed);
+                    } catch (final IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
                 return new LargeFileStoreCell(lf, seed);
             }
         });
@@ -112,6 +123,7 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_keepInMemorySettingsModel.saveSettingsTo(settings);
+        m_useTwoFileStoresSettingsModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
@@ -129,6 +141,11 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
             m_keepInMemorySettingsModel.loadSettingsFrom(settings);
         } catch (final InvalidSettingsException e) {
             m_keepInMemorySettingsModel.setBooleanValue(false);
+        }
+        try {
+            m_useTwoFileStoresSettingsModel.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+            m_useTwoFileStoresSettingsModel.setBooleanValue(false);
         }
     }
 
@@ -157,5 +174,10 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
 
     static SettingsModelBoolean createKeepInMemorySettingsModel() {
         return new SettingsModelBoolean("keepInMemory", false);
+    }
+
+
+    static SettingsModelBoolean createUseTwoFileStoresSettingsModel() {
+        return new SettingsModelBoolean("useTwoFileStores", false);
     }
 }

@@ -52,6 +52,8 @@ final class FileStoreTestNodeDialogPane extends DefaultNodeSettingsPane {
     FileStoreTestNodeDialogPane() {
         addDialogComponent(new DialogComponentBoolean(
             FileStoreTestNodeModel.createAllowMissingModel(), "Allow Missing Values"));
+        addDialogComponent(new DialogComponentBoolean(FileStoreTestNodeModel.createExpectTwoFileStoresSettingsModel(),
+            "Expects a second FileStore"));
     }
 
 }

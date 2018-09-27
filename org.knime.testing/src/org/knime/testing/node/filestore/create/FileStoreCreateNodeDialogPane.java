@@ -60,6 +60,7 @@ final public class FileStoreCreateNodeDialogPane extends DefaultNodeSettingsPane
     public FileStoreCreateNodeDialogPane() {
         final SettingsModelBoolean keepInMemorySettingsModel = FileStoreCreateNodeModel.createKeepInMemorySettingsModel();
         addDialogComponent(new DialogComponentBoolean(keepInMemorySettingsModel, "Keep in memory"));
+        addDialogComponent(new DialogComponentBoolean(FileStoreCreateNodeModel.createUseTwoFileStoresSettingsModel(), "Use Two FileStores"));
     }
 
 }

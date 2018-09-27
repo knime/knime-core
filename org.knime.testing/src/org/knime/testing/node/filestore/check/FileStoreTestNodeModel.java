@@ -75,6 +75,8 @@ final class FileStoreTestNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_allowMissingModel = createAllowMissingModel();
 
+    private final SettingsModelBoolean m_expectTwoFileStoresSettingsModel = createExpectTwoFileStoresSettingsModel();
+
     /**
      *  */
     public FileStoreTestNodeModel() {
@@ -114,6 +116,18 @@ final class FileStoreTestNodeModel extends NodeModel {
                 long seed = lf.read();
                 if (seed != v.getSeed()) {
                     throw new Exception("Unequal in row " + r.getKey());
+                }
+                LargeFile lf2 = v.getOtherLargeFile();
+                if (m_expectTwoFileStoresSettingsModel.getBooleanValue()) {
+                    if (lf2 == null) {
+                        throw new Exception("Expected a second FileStore in row " + r.getKey());
+                    }
+
+                    if (lf2.read() != seed >> 1) {
+                        throw new Exception("Unequal second FileStore in row " + r.getKey());
+                    }
+                } else if (lf2 != null) {
+                    throw new Exception("Did not expect a second FileStore in row " + r.getKey());
                 }
             }
             exec.checkCanceled();
@@ -161,6 +175,7 @@ final class FileStoreTestNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_allowMissingModel.saveSettingsTo(settings);
+        m_expectTwoFileStoresSettingsModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
@@ -179,6 +194,11 @@ final class FileStoreTestNodeModel extends NodeModel {
         } catch (InvalidSettingsException ise) {
             m_allowMissingModel.setBooleanValue(true);
         }
+        try {
+            m_expectTwoFileStoresSettingsModel.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_expectTwoFileStoresSettingsModel.setBooleanValue(false);
+        }
     }
 
     /** {@inheritDoc} */
@@ -190,6 +210,10 @@ final class FileStoreTestNodeModel extends NodeModel {
 
     static final SettingsModelBoolean createAllowMissingModel() {
         return new SettingsModelBoolean("allowMissings", false);
+    }
+
+    static final SettingsModelBoolean createExpectTwoFileStoresSettingsModel() {
+        return new SettingsModelBoolean("expectTwoFileStores", false);
     }
 
 }
