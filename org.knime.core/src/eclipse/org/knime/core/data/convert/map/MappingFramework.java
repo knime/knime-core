@@ -80,7 +80,7 @@ import org.knime.core.node.ExecutionContext;
  *
  * <code lang="java"><pre>
  * // One time setup, e.g. in plugin initialisation:
- * MappingFramework.forDT(OracleSQLDatabaseDest.class) //
+ * MappingFramework.forDestinationType(OracleSQLDatabaseDest.class) //
  *      .setParent(SQLDatabaseDest.class) // inherit less specific consumers
  *      .register(new SimpleDataValueConsumerFactory(
  *          String.class, "TEXT", (dest, value, params) -> { /* ... *{@literal /} }));
@@ -94,8 +94,8 @@ import org.knime.core.node.ExecutionContext;
  *
  * <code><pre>
  * // One time setup, e.g. in plugin initialisation:
- * MappingFramework.forST(MyST.class) //
- *      .setParent(MyParentST.class) // inherit less specific producers
+ * MappingFramework.forSourceType(MySourceType.class) //
+ *      .setParent(MyParentSourceType.class) // inherit less specific producers
  *      .register(new SimpleDataValueProducerFactory(
  *          "TEXT", String.class, (dest, params) -> { /* ... *{@literal /} }));
  * </pre></code>
