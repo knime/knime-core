@@ -54,6 +54,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
+import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 
 /**
@@ -77,6 +78,9 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
         @Override
         public void serialize(final LargeFileStoreCell cell, final DataCellDataOutput output) throws IOException {
             cell.m_largeFile.flushToFileStore(); // does nothing if already written (handles "keepInMemory")
+            if (null != cell.m_otherLargeFile) {
+                cell.m_otherLargeFile.flushToFileStore();
+            }
             output.writeLong(cell.m_seed);
         }
     }
@@ -87,10 +91,20 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
 
     private LargeFile m_largeFile;
 
+    private LargeFile m_otherLargeFile;
+
     /** {@inheritDoc} */
     @Override
     public LargeFile getLargeFile() {
         return m_largeFile;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public LargeFile getOtherLargeFile() {
+        return m_otherLargeFile;
     }
 
     /** {@inheritDoc} */
@@ -119,14 +133,37 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
         m_seed = seed;
     }
 
+    /**
+     * @param largeFile
+     * @param otherLargeFile a second file with the same seed
+     * @param seed the expected seed as hidden in largeFile.
+     */
+    public LargeFileStoreCell(final LargeFile largeFile, final LargeFile otherLargeFile, final long seed) {
+        super(new FileStore[]{largeFile.getFileStore(), otherLargeFile.getFileStore()});
+        m_largeFile = largeFile;
+        m_otherLargeFile = otherLargeFile;
+        m_seed = seed;
+    }
+
     @Override
     protected void postConstruct() throws IOException {
-        m_largeFile = LargeFile.restore(getFileStore());
+        final FileStore[] fileStores = getFileStores();
+        if (fileStores.length < 1) {
+            throw new IOException("At least one file store should be present");
+        }
+        m_largeFile = LargeFile.restore(fileStores[0]);
+
+        if (fileStores.length == 2) {
+            m_otherLargeFile = LargeFile.restore(fileStores[1]);
+        }
     }
 
     @Override
     protected void flushToFileStore() throws IOException {
         m_largeFile.flushToFileStore();
+        if (null != m_otherLargeFile) {
+            m_otherLargeFile.flushToFileStore();
+        }
     }
 
     /**
@@ -135,7 +172,12 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     @Override
     public String toString() {
         try {
-            return "Content of LargeFile: " + getLargeFile().read();
+            if (getOtherLargeFile() != null) {
+                return "Content of LargeFile 1: " + getLargeFile().read() + ", LargeFile 2: "
+                    + getOtherLargeFile().read();
+            } else {
+                return "Content of LargeFile: " + getLargeFile().read();
+            }
         } catch (Exception e) {
             throw new IllegalStateException("Large file not accessible!", e);
         }

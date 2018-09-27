@@ -50,13 +50,17 @@ package org.knime.testing.data.filestore;
 import org.knime.core.data.DataValue;
 
 /** Access interface for a {@link LargeFileStoreCell}. It has a (long) seed and a {@link LargeFile}, which contains
- * the same seed (subject to test).
+ * the same seed (subject to test). Optionally, it holds a second large file.
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public interface LargeFileStoreValue extends DataValue {
 
     /** @return the large file containing the seed. */
     LargeFile getLargeFile();
+
+    /** @return another large file containing data. */
+    LargeFile getOtherLargeFile();
+
     /** @return the expected seed value. */
     long getSeed();
 }
