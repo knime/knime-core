@@ -74,7 +74,6 @@ import org.fife.ui.autocomplete.BasicCompletion;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.base.node.util.JSnippetPanel;
 import org.knime.base.node.util.JavaScriptingCompletionProvider;
-import org.knime.base.node.util.KnimeCompletionProvider;
 import org.knime.base.node.util.ManipulatorProvider;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
@@ -87,6 +86,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.ext.sun.nodes.script.compile.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
@@ -216,7 +216,7 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
      * Create a simple provider that adds some Java-related completions.
      *
      * @return The completion provider.
-     * @since 3.3
+     * @since 3.7
      */
     protected KnimeCompletionProvider createCompletionProvider() {
         m_completionProvider = new JavaScriptingCompletionProvider();

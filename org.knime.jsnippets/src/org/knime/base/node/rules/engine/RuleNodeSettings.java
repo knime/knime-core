@@ -58,7 +58,7 @@ import org.knime.base.node.rules.engine.rsyntax.AbstractRuleParser;
 import org.knime.base.node.rules.engine.rsyntax.PMMLRuleParser;
 import org.knime.base.node.rules.engine.rsyntax.VariableRuleParser;
 import org.knime.base.node.util.JavaScriptingCompletionProvider;
-import org.knime.base.node.util.KnimeCompletionProvider;
+import org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**

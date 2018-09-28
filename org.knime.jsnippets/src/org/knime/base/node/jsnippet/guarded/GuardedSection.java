@@ -47,173 +47,60 @@
  */
 package org.knime.base.node.jsnippet.guarded;
 
-import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
 
+import org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedDocument;
 
 /**
  * A guarded, e.g. non editable section in a document.
- * <p>This class might change and is not meant as public API.
+ * <p>
+ * This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
  * @since 2.12
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
+ * @deprecated Use {@link org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSection} instead.
  */
-public final class GuardedSection {
+@Deprecated
+public final class GuardedSection extends org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSection {
 
-    private Position m_start;
-    private Position m_end;
-    private final GuardedDocument m_document;
-    private int m_endOffset;
+    /* empty implementation for backwards compatibility */
 
-    /**
-     * Creates new <code>GuardedSection</code>.
-     *
-     * @param start the start position of the range
-     * @param end the end position of the range
-     * @param document the document this section belongs to
-     */
-    private GuardedSection(final Position start, final Position end,
-            final GuardedDocument document, final boolean footer) {
-        this.m_start = start;
-        this.m_end = end;
-        this.m_document = document;
-        this.m_endOffset = footer ? 1 : 0;
+    private GuardedSection(final Position start, final Position end, final GuardedDocument document,
+        final boolean footer) {
+        super(start, end, document, footer);
     }
 
     /**
-     * Creates a guarded section in the document. Note that text can always
-     * be inserted after the guarded section. To prevent this use the method
-     * addGuardedFootterSection(...).
+     * Creates a guarded section in the document. Note that text can always be inserted after the guarded section. To
+     * prevent this use the method addGuardedFootterSection(...).
      *
      * @param start the start of the guarded section
      * @param end the end point of the guarded section
      * @param document the document
      * @return the newly created guarded section
+     * @deprecated
      */
-    public static GuardedSection create(final Position start,
-            final Position end, final GuardedDocument document) {
+    @Deprecated
+    public static GuardedSection create(final Position start, final Position end, final GuardedDocument document) {
         return new GuardedSection(start, end, document, false);
     }
 
     /**
-     * Creates a guarded section in the document. No text can be inserted
-     * right after this guarded section.
+     * Creates a guarded section in the document. No text can be inserted right after this guarded section.
      *
      * @param start the start of the guarded section
      * @param end the end point of the guarded section
      * @param document the document
      * @return the newly created guarded section
+     * @deprecated
      */
-    public static GuardedSection createFooter(final Position start,
-            final Position end, final GuardedDocument document) {
+    @Deprecated
+    public static GuardedSection createFooter(final Position start, final Position end,
+        final GuardedDocument document) {
         return new GuardedSection(start, end, document, true);
     }
 
-    /**
-     * Get the start position.
-     *
-     * @return the start position
-     */
-    public Position getStart() {
-        return m_start;
-    }
-
-    /**
-     * Get the end position.
-     *
-     * @return the end position
-     */
-    public Position getEnd() {
-        return m_end;
-    }
-
-    /**
-     * Replaces the text of this guarded section.
-     *
-     * @param t new text to insert over existing text
-     * @exception BadLocationException if the positions are out of the bounds
-     * of the document
-     */
-    public void setText(final String t) throws BadLocationException {
-        final int sectionStart = m_start.getOffset();
-        int start = sectionStart;
-        int end = m_end.getOffset();
-
-        boolean orig = m_document.getBreakGuarded();
-        m_document.setBreakGuarded(true);
-        // Empty text is not allowed, this would break the positioning
-        String text = (null == t || t.isEmpty()) ? " " : t;
-        if(text.endsWith("\n")) {
-            text = text.substring(0, text.length() - 1);
-        }
-
-        final int textLength = text.length();
-        final int firstLineBreak = text.indexOf('\n');
-        if(firstLineBreak != -1) {
-            final String firstLine = text.substring(0, firstLineBreak+1);
-            final String previousText = getText();
-
-            /* If first line is unchanged, skip changing it so that section does not unfold if folded.
-             * See AP-9123 */
-            if(previousText.startsWith(firstLine)) {
-                start += firstLine.length();
-                text = text.substring(firstLine.length());
-            }
-        }
-
-        /* We cannot replace from start, otherwise start will be moved to end */
-        m_document.replace(start + 1, end - start - 1, text, null);
-        m_document.remove(start, 1);
-
-        /* Fix end, it will become the same as start during the remove step of replace and then will not have moved with what was inserted after it */
-        m_end = m_document.createPosition(m_start.getOffset() + textLength);
-        assert m_end.getOffset() != m_start.getOffset();
-
-        m_document.setBreakGuarded(orig);
-    }
-
-    /**
-     * Get the text within the range.
-     *
-     * @return the text
-     * @exception BadLocationException if the positions are out of the
-     * bounds of the document
-     */
-    public String getText() throws BadLocationException {
-        int p1 = m_start.getOffset();
-        int p2 = m_end.getOffset();
-        // for negative length when p1 > p2 => return ""
-        return (p1 <= p2) ? m_document.getText(p1, p2 - p1 + 1) : "";
-    }
-
-    /**
-     * Returns true when offset is in the guarded section.
-     *
-     * @param offset the offset to test
-     * @return true when offset is in the guarded section
-     */
-    public boolean contains(final int offset) {
-        return m_start.getOffset() <= offset
-            && m_end.getOffset() + m_endOffset >= offset;
-    }
-
-    /**
-     * Returns true when the guarded section intersects the given section.
-     *
-     * @param offset the start point of the section to test
-     * @param length the length of the section to test
-     * @return true when the guarded section intersects the given section
-     */
-    public boolean intersects(final int offset, final int length) {
-        return m_end.getOffset() + m_endOffset >= offset
-            && m_start.getOffset() <= offset + length;
-    }
-
-    @Override
-    public String toString() {
-        return "(" + m_start.getOffset() + ", " + m_end.getOffset() + ")";
-    }
 }

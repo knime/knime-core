@@ -51,6 +51,7 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSection;
 
 /**
  * The document used in the jsnippet dialogs.
@@ -87,7 +88,7 @@ public class JavaSnippetDocument extends GuardedDocument {
             addGuardedSection(GUARDED_FIELDS, getLength());
             insertString(getLength(), " \n", null);
 
-            final GuardedSection bodyStart = addGuardedSection(GUARDED_BODY_START, getLength());
+            final org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSection bodyStart = addGuardedSection(GUARDED_BODY_START, getLength());
             bodyStart.setText("// expression start\n    " + methodSignature + " {\n");
             insertString(getLength(), " \n", null);
 

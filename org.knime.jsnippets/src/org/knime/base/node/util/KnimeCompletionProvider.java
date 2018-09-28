@@ -47,109 +47,16 @@
  */
 package org.knime.base.node.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.fife.ui.autocomplete.BasicCompletion;
-import org.fife.ui.autocomplete.Completion;
-import org.fife.ui.autocomplete.DefaultCompletionProvider;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.node.workflow.FlowVariable;
-
 /**
  * A provider for auto-completion that adds completions for column names and flow variables.
  *
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6
+ * @deprecated Use {@link org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider} instead
  */
-public abstract class KnimeCompletionProvider extends DefaultCompletionProvider {
-    private final List<Completion> m_columnCompletions = new ArrayList<Completion>();
+@Deprecated
+public abstract class KnimeCompletionProvider extends org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider {
 
-    private final List<Completion> m_flowVariableCompletions = new ArrayList<Completion>();
+    /* empty implementation for backwards compatibility */
 
-    /**
-     * Escapes a column name, e.g. by delimiting it with "$".
-     *
-     * @param colName the column's name
-     * @return the escaped column name
-     */
-    public abstract String escapeColumnName(String colName);
-
-    /**
-     * Escapes a column name, e.g. by delimiting it with "${" and "$}".
-     *
-     * @param varName the flow variables names
-     * @return the escaped variable name
-     */
-    public abstract String escapeFlowVariableName(String varName);
-
-    /**
-     * Set columns that should be shown in the code completion box.
-     *
-     * @param columns the columns
-     */
-    public void setColumns(final Iterable<DataColumnSpec> columns) {
-        if (m_columnCompletions.size() > 0) {
-            for (Completion c : m_columnCompletions) {
-                removeCompletion(c);
-            }
-        }
-        m_columnCompletions.clear();
-        for (DataColumnSpec column : columns) {
-            m_columnCompletions.add(new BasicCompletion(this,
-                    escapeColumnName(column.getName()/*.replace("\\", "\\\\").replace("$", "\\$")*/), column.getType()
-                            .toString(), "The column " + column.getName() + "."));
-        }
-        addCompletions(m_columnCompletions);
-    }
-
-    /**
-     * Set flow variables that should be shown in the code completion box.
-     *
-     * @param variables flow variables
-     */
-    public void setFlowVariables(final Iterable<FlowVariable> variables) {
-        if (m_flowVariableCompletions.size() > 0) {
-            for (Completion c : m_flowVariableCompletions) {
-                removeCompletion(c);
-            }
-        }
-        m_flowVariableCompletions.clear();
-        for (FlowVariable var : variables) {
-            String typeChar;
-            switch (var.getType()) {
-                case DOUBLE:
-                    typeChar = "D";
-                    break;
-                case INTEGER:
-                    typeChar = "I";
-                    break;
-                case STRING:
-                    typeChar = "S";
-                    break;
-                default:
-                    return;
-            }
-            m_flowVariableCompletions.add(new BasicCompletion(this, "$${" + typeChar + var.getName()/*.replace("\\", "\\\\").replace("}", "\\}")*/
-                    + "}$$", var.getType().toString(), "The flow variable " + var.getName() + "."));
-        }
-        addCompletions(m_flowVariableCompletions);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean isValidChar(final char ch) {
-        // FIXME: this is not perfect, since columns can contain any unicode
-        // character. The solution would be to add semantics to
-        // CompletionProvider::getParameterizedCompletions(...).
-        // for flow variables
-        if (!m_flowVariableCompletions.isEmpty() && (ch == '{' || ch == '}')) {
-            return true;
-        } else {
-            // $ is needed for KNIME specials (columns, flowvariables)
-            return Character.isLetterOrDigit(ch) || ch == '_' || ch == '$';
-        }
-    }
 }

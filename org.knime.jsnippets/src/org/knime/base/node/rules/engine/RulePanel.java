@@ -84,7 +84,6 @@ import org.knime.base.node.rules.engine.rsyntax.AbstractRuleParser;
 import org.knime.base.node.rules.engine.rsyntax.PMMLRuleParser;
 import org.knime.base.node.rules.engine.rsyntax.RuleParser;
 import org.knime.base.node.rules.engine.rsyntax.VariableRuleParser;
-import org.knime.base.node.util.KnimeSyntaxTextArea;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -99,6 +98,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.ThreadUtils;
 
