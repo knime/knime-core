@@ -148,9 +148,10 @@ public class KnimeSyntaxTextArea extends RSyntaxTextArea {
      * @throws IOException Problem with loading.
      */
     protected void applySyntaxColors() throws IOException {
-        InputStream in = KnimeSyntaxTextArea.class.getResourceAsStream("eclipse.xml");
-        Theme theme = Theme.load(in);
-        theme.apply(this);
+        try (InputStream in = KnimeSyntaxTextArea.class.getResourceAsStream("eclipse.xml")) {
+            Theme theme = Theme.load(in);
+            theme.apply(this);
+        }
     }
 
 }
