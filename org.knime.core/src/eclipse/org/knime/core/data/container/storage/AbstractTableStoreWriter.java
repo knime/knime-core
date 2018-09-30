@@ -197,22 +197,6 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMESt
     public abstract void close() throws IOException;
 
     /**
-     * @param cell
-     * @return
-     * @throws IOException
-     * @deprecated use getFileStoreKeysAndFlush() instead
-     */
-    @Deprecated
-    public FileStoreKey getFileStoreKeyAndFlush(final DataCell cell) throws IOException {
-        FileStoreKey[] fileStoreKeys = getFileStoreKeysAndFlush(cell);
-        if (fileStoreKeys == null) {
-            return null;
-        } else {
-            return fileStoreKeys[0];
-        }
-    }
-
-    /**
      * Gets the file store keys of the given cell and invokes flush on the cell
      *
      * @since 3.7

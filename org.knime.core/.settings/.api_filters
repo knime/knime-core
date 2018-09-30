@@ -24,6 +24,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/storage/AbstractTableStoreWriter.java" type="org.knime.core.data.container.storage.AbstractTableStoreWriter">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.storage.AbstractTableStoreWriter"/>
+                <message_argument value="getFileStoreKeyAndFlush(DataCell)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
         <filter id="338792546">
             <message_arguments>
