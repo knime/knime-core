@@ -67,10 +67,13 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.core.LayoutExemptingLayout;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.editor2.figures.WorkflowFigure;
 
 /**
  * Our subclass of <code>ScrollingGraphicalViewer</code> which facilitates the pinning of info, warning and error
@@ -139,75 +142,67 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
     private Composite m_parent;
 
     /**
-     * @return the current pixel height of the space consumed by all visible messages
-     */
-    public int getCurrentTotalMessageViewHeight() {
-        return m_currentMessageViewHeight.get();
-    }
-
-    /**
      * Sets an info message (with an info icon and light purple background) at the top of the editor (above an error
-     * message and above a warning message, if either or both exist.) This method should be called on the SWT thread.
-     * After this method returns, a call to <code>getCurrentTotalMessageViewHeight()</code> will return a correct value.
+     * message and above a warning message, if either or both exist.)
      *
      * @param msg the message to display or <code>null</code> to remove it
-     * @see #getCurrentTotalMessageViewHeight()
      */
     public void setInfoMessage(final String msg) {
-        if (msg != null) {
-            setMessage(msg, MessageAttributes.INFO);
-        } else {
-            removeMessageFromView(MessageAttributes.INFO);
-        }
+        Display.getDefault().asyncExec(() -> {
+            if (msg != null) {
+                setMessage(msg, MessageAttributes.INFO);
+            } else {
+                removeMessageFromView(MessageAttributes.INFO);
+            }
+        });
     }
 
     /**
      * Sets a warning message displayed at the top of the editor (above an error message if there is any, and below an
-     * info message if there is any.) This method should be called on the SWT thread. After this method returns, a call
-     * to <code>getCurrentTotalMessageViewHeight()</code> will return a correct value.
+     * info message if there is any.)
      *
      * @param msg the message to display or <code>null</code> to remove it
-     * @see #getCurrentTotalMessageViewHeight()
      */
     public void setWarningMessage(final String msg) {
-        if (msg != null) {
-            setMessage(msg, MessageAttributes.WARNING);
-        } else {
-            removeMessageFromView(MessageAttributes.WARNING);
-        }
+        Display.getDefault().asyncExec(() -> {
+            if (msg != null) {
+                setMessage(msg, MessageAttributes.WARNING);
+            } else {
+                removeMessageFromView(MessageAttributes.WARNING);
+            }
+        });
     }
 
     /**
      * Sets an error message displayed at the top of the editor (underneath a warning message and underneath an info
-     * message, if either or both exist.) This method should be called on the SWT thread. After this method returns, a
-     * call to <code>getCurrentTotalMessageViewHeight()</code> will return a correct value.
+     * message, if either or both exist.)
      *
      * @param msg the message to display or <code>null</code> to remove it
-     * @see #getCurrentTotalMessageViewHeight()
      */
     public void setErrorMessage(final String msg) {
-        if (msg != null) {
-            setMessage(msg, MessageAttributes.ERROR);
-        } else {
-            removeMessageFromView(MessageAttributes.ERROR);
-        }
+        Display.getDefault().asyncExec(() -> {
+            if (msg != null) {
+                setMessage(msg, MessageAttributes.ERROR);
+            } else {
+                removeMessageFromView(MessageAttributes.ERROR);
+            }
+        });
     }
 
     /**
      * A less computationally / redraw intensive method to clear messages than call each set-message-type with null.
-     * This method should be called on the SWT thread. After this method returns, a call to
-     * <code>getCurrentTotalMessageViewHeight()</code> will return a correct value.
-     *
-     * @see #getCurrentTotalMessageViewHeight()
      */
     public void clearAllMessages() {
-        for (int i = 0; i < m_messages.length; i++) {
-            removeMessageFromView(i, false);
-        }
+        Display.getDefault().asyncExec(() -> {
+            for (int i = 0; i < m_messages.length; i++) {
+                removeMessageFromView(i, false);
+            }
 
-        m_currentMessageViewHeight.set(0);
+            m_currentMessageViewHeight.set(0);
+            updateTopWhitespaceBuffer();
 
-        repaint();
+            repaint();
+        });
     }
 
     /**
@@ -226,7 +221,7 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
     private void removeMessageFromView(final MessageAttributes attributes) {
         removeMessageFromView(attributes.getIndex(), true);
 
-        layoutMessages();
+        layoutMessages(true);
     }
 
     private void removeMessageFromView(final int index, final boolean triggerRepaint) {
@@ -244,6 +239,22 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
 
     private void repaint() {
         getFigureCanvas().redraw();
+    }
+
+    private void updateTopWhitespaceBuffer() {
+        final int yOffset = m_currentMessageViewHeight.get();
+        final WorkflowFigure workflowFigure = ((WorkflowRootEditPart)getRootEditPart().getContents()).getFigure();
+        workflowFigure.placeTentStakeToAllowForWhitespaceBuffer(yOffset);
+
+        final FigureCanvas fc = getFigureCanvas();
+        if (fc.getViewport().getViewLocation().y == 0) {
+            // If the view is already sitting at the 0-height position, then scroll the view back to
+            //      tent-stake so that the messages are not covering any of the canvas elements.
+            // We asyncExec again to give *something* a pause, for invoking this immediately rarely seems to work :-/
+            Display.getDefault().asyncExec(() -> {
+                fc.scrollTo(0, -yOffset);
+            });
+        }
     }
 
     private void setMessage(final String msg, final MessageAttributes attributes) {
@@ -270,10 +281,10 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
         message.setLabelAlignment(PositionConstants.LEFT);
         m_messages[index] = message;
 
-        layoutMessages();
+        layoutMessages(true);
     }
 
-    private void layoutMessages() {
+    private void layoutMessages(final boolean requireTopWhitespaceReplacement) {
         final Viewport v = getViewport();
 
         if (v != null) {
@@ -298,6 +309,10 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
             }
 
             m_currentMessageViewHeight.set(yOffset);
+
+            if (requireTopWhitespaceReplacement) {
+                updateTopWhitespaceBuffer();
+            }
         } else {
             LOGGER.warn("Could not get viewport to layout messages.");
         }
@@ -313,7 +328,7 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
                 if (!m_haveInitializedViewport.getAndSet(true)) {
                     v.addFigureListener((figure) -> {
                         // this is invoked when the size of the viewport changes
-                        layoutMessages();
+                        layoutMessages(false);
                     });
                 }
 

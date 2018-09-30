@@ -2365,20 +2365,6 @@ public class WorkflowEditor extends GraphicalEditor implements
             viewer.clearAllMessages();
         }
 
-        final int pixelWhitespaceHeight = viewer.getCurrentTotalMessageViewHeight();
-        final WorkflowFigure workflowFigure =
-            ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getFigure();
-        workflowFigure.placeTentStakeToAllowForWhitespaceBuffer(pixelWhitespaceHeight);
-
-        final FigureCanvas fc = getFigureCanvas();
-        if (fc.getViewport().getViewLocation().y == 0) {
-            // If the view is already sitting at the 0-height position, then scroll the view back to
-            //      tent-stake so that the messages are not covering any of the canvas elements.
-            Display.getDefault().asyncExec(() -> {
-                fc.scrollTo(0, -pixelWhitespaceHeight);
-            });
-        }
-
         for (final IEditorPart ep : getSubEditors()) {
             if (ep instanceof WorkflowEditor) {
                 ((WorkflowEditor)ep).updateWorkflowMessages();
