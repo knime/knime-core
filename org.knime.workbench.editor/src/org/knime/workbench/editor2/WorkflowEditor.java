@@ -202,6 +202,8 @@ import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
+import org.knime.workbench.editor2.actions.BringAnnotationForwardAction;
+import org.knime.workbench.editor2.actions.BringAnnotationToFrontAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
 import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
@@ -239,6 +241,8 @@ import org.knime.workbench.editor2.actions.SaveAsAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SaveAsSubNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SelectLoopAction;
+import org.knime.workbench.editor2.actions.SendAnnotationBackwardAction;
+import org.knime.workbench.editor2.actions.SendAnnotationToBackAction;
 import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.ShowNodeIdsAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
@@ -649,68 +653,72 @@ public class WorkflowEditor extends GraphicalEditor implements
         super.createActions();
 
         // Stack actions
-        StackAction undo = new UndoAction(this);
-        StackAction redo = new RedoAction(this);
+        final StackAction undo = new UndoAction(this);
+        final StackAction redo = new RedoAction(this);
 
         // Editor Actions
-        WorkbenchPartAction delete = new NodeConnectionContainerDeleteAction(this);
-        WorkbenchPartAction save = new SaveAction(this);
-        WorkbenchPartAction saveAs = new SaveAsAction(this);
-        WorkbenchPartAction print = new PrintAction(this);
-        WorkbenchPartAction hideNodeName = new HideNodeNamesAction(this);
-        WorkbenchPartAction showNodeIdAction = new ShowNodeIdsAction(this);
+        final WorkbenchPartAction delete = new NodeConnectionContainerDeleteAction(this);
+        final WorkbenchPartAction save = new SaveAction(this);
+        final WorkbenchPartAction saveAs = new SaveAsAction(this);
+        final WorkbenchPartAction print = new PrintAction(this);
+        final WorkbenchPartAction hideNodeName = new HideNodeNamesAction(this);
+        final WorkbenchPartAction showNodeIdAction = new ShowNodeIdsAction(this);
 
         // node actions
         //
-        AbstractNodeAction openDialog = new OpenDialogAction(this);
+        final AbstractNodeAction openDialog = new OpenDialogAction(this);
 
-        AbstractNodeAction execute = new ExecuteAction(this);
-        AbstractNodeAction executeAll = new ExecuteAllAction(this);
-        AbstractNodeAction cancelAll = new CancelAllAction(this);
-        AbstractNodeAction cancel = new CancelAction(this);
-        AbstractNodeAction pause = new PauseLoopExecutionAction(this);
-        AbstractNodeAction step = new StepLoopAction(this);
-        AbstractNodeAction resume = new ResumeLoopAction(this);
-        AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
-        AbstractNodeAction reset = new ResetAction(this);
-        AbstractNodeAction selectScope = new SelectLoopAction(this);
-        AbstractNodeAction setNameAndDescription = new SetNodeDescriptionAction(this);
-        AbstractNodeAction toggleFlowVarPorts = new ToggleFlowVarPortsAction(this);
-        AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
+        final AbstractNodeAction execute = new ExecuteAction(this);
+        final AbstractNodeAction executeAll = new ExecuteAllAction(this);
+        final AbstractNodeAction cancelAll = new CancelAllAction(this);
+        final AbstractNodeAction cancel = new CancelAction(this);
+        final AbstractNodeAction pause = new PauseLoopExecutionAction(this);
+        final AbstractNodeAction step = new StepLoopAction(this);
+        final AbstractNodeAction resume = new ResumeLoopAction(this);
+        final AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
+        final AbstractNodeAction reset = new ResetAction(this);
+        final AbstractNodeAction selectScope = new SelectLoopAction(this);
+        final AbstractNodeAction setNameAndDescription = new SetNodeDescriptionAction(this);
+        final AbstractNodeAction toggleFlowVarPorts = new ToggleFlowVarPortsAction(this);
+        final AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
 
-        AbstractNodeAction linkNodes = new LinkNodesAction(this);
-        AbstractNodeAction unlinkNodes = new UnlinkNodesAction(this);
+        final AbstractNodeAction linkNodes = new LinkNodesAction(this);
+        final AbstractNodeAction unlinkNodes = new UnlinkNodesAction(this);
 
-        AbstractNodeAction metaNodeReConfigure = new MetaNodeReconfigureAction(this);
-        AbstractNodeAction metaNodeChangeLink = new ChangeMetaNodeLinkAction(this);
-        AbstractNodeAction defineMetaNodeTemplate = new SaveAsMetaNodeTemplateAction(this);
-        AbstractNodeAction checkUpdateMetaNodeLink = new CheckUpdateMetaNodeLinkAction(this);
-        AbstractNodeAction revealMetaNodeTemplate = new RevealMetaNodeTemplateAction(this);
-        AbstractNodeAction disconnectMetaNodeLink = new DisconnectMetaNodeLinkAction(this);
-        AbstractNodeAction lockMetaLink = new LockMetaNodeAction(this);
+        final AbstractNodeAction metaNodeReConfigure = new MetaNodeReconfigureAction(this);
+        final AbstractNodeAction metaNodeChangeLink = new ChangeMetaNodeLinkAction(this);
+        final AbstractNodeAction defineMetaNodeTemplate = new SaveAsMetaNodeTemplateAction(this);
+        final AbstractNodeAction checkUpdateMetaNodeLink = new CheckUpdateMetaNodeLinkAction(this);
+        final AbstractNodeAction revealMetaNodeTemplate = new RevealMetaNodeTemplateAction(this);
+        final AbstractNodeAction disconnectMetaNodeLink = new DisconnectMetaNodeLinkAction(this);
+        final AbstractNodeAction lockMetaLink = new LockMetaNodeAction(this);
 
-        AbstractNodeAction subNodeReConfigure = new SubNodeReconfigureAction(this);
-        AbstractNodeAction subNodeChangeLink = new ChangeSubNodeLinkAction(this);
-        AbstractNodeAction defineSubNodeTemplate = new SaveAsSubNodeTemplateAction(this);
-        AbstractNodeAction checkUpdateSubNodeLink = new CheckUpdateMetaNodeLinkAction(this);
-        AbstractNodeAction revealSubNodeTemplate = new RevealSubNodeTemplateAction(this);
-        AbstractNodeAction disconnectSubNodeLink = new DisconnectSubNodeLinkAction(this);
-        AbstractNodeAction lockSubLink = new LockSubNodeAction(this);
+        final AbstractNodeAction subNodeReConfigure = new SubNodeReconfigureAction(this);
+        final AbstractNodeAction subNodeChangeLink = new ChangeSubNodeLinkAction(this);
+        final AbstractNodeAction defineSubNodeTemplate = new SaveAsSubNodeTemplateAction(this);
+        final AbstractNodeAction checkUpdateSubNodeLink = new CheckUpdateMetaNodeLinkAction(this);
+        final AbstractNodeAction revealSubNodeTemplate = new RevealSubNodeTemplateAction(this);
+        final AbstractNodeAction disconnectSubNodeLink = new DisconnectSubNodeLinkAction(this);
+        final AbstractNodeAction lockSubLink = new LockSubNodeAction(this);
 
-        // new annotation action
-        AddAnnotationAction annotation = new AddAnnotationAction(this);
+        // annotation actions
+        final AddAnnotationAction annotation = new AddAnnotationAction(this);
+        final BringAnnotationToFrontAction bringAnnotationToFront = new BringAnnotationToFrontAction(this);
+        final BringAnnotationForwardAction bringAnnotationForward = new BringAnnotationForwardAction(this);
+        final SendAnnotationBackwardAction sendAnnotationBackward = new SendAnnotationBackwardAction(this);
+        final SendAnnotationToBackAction sendAnnotationToBack = new SendAnnotationToBackAction(this);
 
         // copy / cut / paste action
-        CopyAction copy = new CopyAction(this);
-        CutAction cut = new CutAction(this);
-        PasteAction paste = new PasteAction(this);
-        PasteActionContextMenu pasteContext = new PasteActionContextMenu(this);
-        CollapseMetaNodeAction collapse = new CollapseMetaNodeAction(this);
-        EncapsulateSubNodeAction encapsulate = new EncapsulateSubNodeAction(this);
-        ExpandMetaNodeAction expand = new ExpandMetaNodeAction(this);
-        ExpandSubNodeAction expandSub = new ExpandSubNodeAction(this);
-        ConvertMetaNodeToSubNodeAction wrap = new ConvertMetaNodeToSubNodeAction(this);
-        ConvertSubNodeToMetaNodeAction unWrap = new ConvertSubNodeToMetaNodeAction(this);
+        final CopyAction copy = new CopyAction(this);
+        final CutAction cut = new CutAction(this);
+        final PasteAction paste = new PasteAction(this);
+        final PasteActionContextMenu pasteContext = new PasteActionContextMenu(this);
+        final CollapseMetaNodeAction collapse = new CollapseMetaNodeAction(this);
+        final EncapsulateSubNodeAction encapsulate = new EncapsulateSubNodeAction(this);
+        final ExpandMetaNodeAction expand = new ExpandMetaNodeAction(this);
+        final ExpandSubNodeAction expandSub = new ExpandSubNodeAction(this);
+        final ConvertMetaNodeToSubNodeAction wrap = new ConvertMetaNodeToSubNodeAction(this);
+        final ConvertSubNodeToMetaNodeAction unWrap = new ConvertSubNodeToMetaNodeAction(this);
 
 
         // register the actions
@@ -769,6 +777,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(lockSubLink);
 
         m_actionRegistry.registerAction(annotation);
+        m_actionRegistry.registerAction(bringAnnotationToFront);
+        m_actionRegistry.registerAction(bringAnnotationForward);
+        m_actionRegistry.registerAction(sendAnnotationBackward);
+        m_actionRegistry.registerAction(sendAnnotationToBack);
 
         // remember ids for later updates via 'updateActions'
         m_editorActions = new ArrayList<>();
@@ -804,7 +816,12 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(metaNodeChangeLink.getId());
         m_editorActions.add(defineMetaNodeTemplate.getId());
         m_editorActions.add(checkUpdateMetaNodeLink.getId());
+
         m_editorActions.add(annotation.getId());
+        m_editorActions.add(bringAnnotationToFront.getId());
+        m_editorActions.add(bringAnnotationForward.getId());
+        m_editorActions.add(sendAnnotationBackward.getId());
+        m_editorActions.add(sendAnnotationToBack.getId());
     }
 
     /**

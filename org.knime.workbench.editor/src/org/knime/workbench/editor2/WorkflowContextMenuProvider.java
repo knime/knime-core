@@ -83,6 +83,8 @@ import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
+import org.knime.workbench.editor2.actions.BringAnnotationForwardAction;
+import org.knime.workbench.editor2.actions.BringAnnotationToFrontAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.ChangeSubNodeLinkAction;
@@ -119,6 +121,8 @@ import org.knime.workbench.editor2.actions.RevealSubNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SaveAsSubNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SelectLoopAction;
+import org.knime.workbench.editor2.actions.SendAnnotationBackwardAction;
+import org.knime.workbench.editor2.actions.SendAnnotationToBackAction;
 import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
@@ -235,14 +239,14 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
         // show some menu items on LoopEndNodes only
-        List parts = m_viewer.getSelectedEditParts();
+        List<?> parts = m_viewer.getSelectedEditParts();
         if (parts.size() == 1) {
             EditPart p = (EditPart)parts.get(0);
             if (p instanceof NodeContainerEditPart) {
-                NodeContainerUI container =
+                final NodeContainerUI container =
                         (NodeContainerUI)((NodeContainerEditPart)p).getModel();
                 if (container instanceof SingleNodeContainerUI) {
-                    SingleNodeContainerUI snc = (SingleNodeContainerUI)container;
+                    final SingleNodeContainerUI snc = (SingleNodeContainerUI)container;
                     Wrapper.unwrapOptional(snc, SingleNodeContainer.class).ifPresent(sncImpl -> {
                         if (sncImpl.isModelCompatibleTo(LoopEndNode.class)) {
                             // pause loop execution
@@ -271,10 +275,27 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         action = m_actionRegistry.getAction(SetNodeDescriptionAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
+
         // add workflow annotation
         action = m_actionRegistry.getAction(AddAnnotationAction.ID);
         AddAnnotationAction aaa = (AddAnnotationAction)action;
         aaa.setLocation(m_lastLocation.x, m_lastLocation.y);
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        ((AbstractNodeAction)action).update();
+        // bring annotation to the front
+        action = m_actionRegistry.getAction(BringAnnotationToFrontAction.ID);
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        ((AbstractNodeAction)action).update();
+        // bring annotation forward
+        action = m_actionRegistry.getAction(BringAnnotationForwardAction.ID);
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        ((AbstractNodeAction)action).update();
+        // send annotation backward
+        action = m_actionRegistry.getAction(SendAnnotationBackwardAction.ID);
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        ((AbstractNodeAction)action).update();
+        // send annotation to the back
+        action = m_actionRegistry.getAction(SendAnnotationToBackAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
 

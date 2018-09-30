@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,73 +41,74 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   29.06.2012 (Peter Ohl): created
+ *   Sep 29, 2018 (loki): created
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.KNIMEEditorPlugin;
-import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to move the selected annotation in front of all other annotations.
+ * Now with four actions that perform annotation ordering and that all do basically the same enable evaluation and
+ * execution, we're abstracting the commonality.
  *
- * @author Peter Ohl, KNIME AG, Zurich, Switzerland
+ * @author loki der quaeler
  */
-public class BringAnnotationToFrontAction extends AbstractAnnotationReorderingAction {
-    /** unique ID for this action. **/
-    public static final String ID = "knime.action.annotationToFront";
+abstract class AbstractAnnotationReorderingAction extends AbstractNodeAction {
+    private final String m_id;
 
+    AbstractAnnotationReorderingAction(final WorkflowEditor editor, final String uniqueId) {
+        super(editor);
 
-    /**
-     * @param editor The workflow editor
-     */
-    public BringAnnotationToFrontAction(final WorkflowEditor editor) {
-        super(editor, ID);
+        m_id = uniqueId;
     }
 
+    abstract void executeWorkflowManagerMethod(final WorkflowManager wm, final WorkflowAnnotation annotation);
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    void executeWorkflowManagerMethod(final WorkflowManager wm, final WorkflowAnnotation annotation) {
-        wm.bringAnnotationToFront(annotation);
+    public String getId() {
+        return m_id;
+    }
+
+    /**
+     * @return true if one and only one <code>WorkflowAnnotation</code> is selected
+     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
+     */
+    @Override
+    protected boolean internalCalculateEnabled() {
+        if (getManager().isWriteProtected()) {
+            return false;
+        }
+        final AnnotationEditPart[] selectedParts = getSelectedParts(AnnotationEditPart.class);
+        if (selectedParts.length != 1) {
+            return false;
+        }
+        return (selectedParts[0].getModel() instanceof WorkflowAnnotation);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getText() {
-        return "Bring Annotation to Front\t" + getHotkey("knime.commands.editor.bringToFront");
-    }
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        final AnnotationEditPart[] selectedParts = getSelectedParts(AnnotationEditPart.class);
+        // I'm preserving this logic, though i am suspicious this could be true since we were enabled
+        if (selectedParts.length != 1) {
+            return;
+        }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move.png");
-    }
+        final WorkflowAnnotation annotation = (WorkflowAnnotation)selectedParts[0].getModel();
+        executeWorkflowManagerMethod(getEditor().getWorkflowManager().get(), annotation);
 
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move_dis.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Move the selected annotation on top of all other annotations";
+        getEditor().getViewer().getRootEditPart().getContents().refresh();
     }
 }

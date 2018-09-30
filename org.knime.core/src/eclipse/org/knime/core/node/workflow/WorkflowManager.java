@@ -9076,15 +9076,73 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.6
      */
     public void bringAnnotationToFront(final WorkflowAnnotation annotation) {
-        int index = m_annotations.indexOf(annotation);
+        final int index = m_annotations.indexOf(annotation);
         if (index == -1) {
             throw new IllegalArgumentException(
                 "Annotation \"" + annotation + "\" does not exists - can't be moved to front");
         }
+
+        if (index == (m_annotations.size() - 1)) {
+            // already in the front
+            return;
+        }
+
         m_annotations.remove(index);
         m_annotations.add(annotation);
-        WorkflowAnnotationID waID = m_annotationIDs.remove(index);
+        final WorkflowAnnotationID waID = m_annotationIDs.remove(index);
         m_annotationIDs.add(waID);
+        annotation.fireChangeEvent(); // triggers workflow dirty
+    }
+
+    /**
+     * Alters the ordering of the internal array to increment the index of the specified annotation (thereby moving it
+     * one step forward in the z-ordering.)
+     *
+     * @param annotation to move forward
+     * @since 3.7
+     */
+    public void bringAnnotationForward(final WorkflowAnnotation annotation) {
+        final int index = m_annotations.indexOf(annotation);
+        if (index == -1) {
+            throw new IllegalArgumentException(
+                "Annotation \"" + annotation + "\" does not exists - can't be moved to front");
+        }
+
+        if (index == (m_annotations.size() - 1)) {
+            // already in the front
+            return;
+        }
+
+        m_annotations.remove(index);
+        m_annotations.insertElementAt(annotation, (index + 1));
+        final WorkflowAnnotationID waID = m_annotationIDs.remove(index);
+        m_annotationIDs.insertElementAt(waID, (index + 1));
+        annotation.fireChangeEvent(); // triggers workflow dirty
+    }
+
+    /**
+     * Alters the ordering of the internal array to decrement the index of the specified annotation (thereby moving it
+     * one step backwards in the z-ordering.)
+     *
+     * @param annotation to move forward
+     * @since 3.7
+     */
+    public void sendAnnotationBackward(final WorkflowAnnotation annotation) {
+        final int index = m_annotations.indexOf(annotation);
+        if (index == -1) {
+            throw new IllegalArgumentException(
+                "Annotation \"" + annotation + "\" does not exists - can't be moved to front");
+        }
+
+        if (index == 0) {
+            // already at the back
+            return;
+        }
+
+        m_annotations.remove(index);
+        m_annotations.insertElementAt(annotation, (index - 1));
+        final WorkflowAnnotationID waID = m_annotationIDs.remove(index);
+        m_annotationIDs.insertElementAt(waID, (index - 1));
         annotation.fireChangeEvent(); // triggers workflow dirty
     }
 
@@ -9095,14 +9153,20 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.6
      */
     public void sendAnnotationToBack(final WorkflowAnnotation annotation) {
-        int index = m_annotations.indexOf(annotation);
+        final int index = m_annotations.indexOf(annotation);
         if (index == -1) {
             throw new IllegalArgumentException(
                 "Annotation \"" + annotation + "\" does not exists - can't be moved to front");
         }
+
+        if (index == 0) {
+            // already at the back
+            return;
+        }
+
         m_annotations.remove(index);
         m_annotations.insertElementAt(annotation, 0);
-        WorkflowAnnotationID waID = m_annotationIDs.remove(index);
+        final WorkflowAnnotationID waID = m_annotationIDs.remove(index);
         m_annotationIDs.insertElementAt(waID, 0);
         annotation.fireChangeEvent(); // triggers workflow dirty
     }

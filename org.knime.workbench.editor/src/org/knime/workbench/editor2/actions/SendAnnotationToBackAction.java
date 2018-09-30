@@ -49,36 +49,32 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.AnnotationEditPart;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Action to send the selected annotation back of all other annotations.
  *
  * @author Peter Ohl, KNIME AG, Zurich, Switzerland
  */
-public class SendAnnotationToBackAction extends AbstractNodeAction {
-
+public class SendAnnotationToBackAction extends AbstractAnnotationReorderingAction {
     /** unique ID for this action. * */
     public static final String ID = "knime.action.annotationToBack";
+
 
     /**
      *
      * @param editor The workflow editor
      */
     public SendAnnotationToBackAction(final WorkflowEditor editor) {
-        super(editor);
+        super(editor, ID);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public String getId() {
-        return ID;
+    void executeWorkflowManagerMethod(final WorkflowManager wm, final WorkflowAnnotation annotation) {
+        wm.sendAnnotationToBack(annotation);
     }
 
     /**
@@ -86,7 +82,7 @@ public class SendAnnotationToBackAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Annotation to Back";
+        return "Send Annotation to Back\t" + getHotkey("knime.commands.editor.sendToBack");
     }
 
     /**
@@ -96,8 +92,6 @@ public class SendAnnotationToBackAction extends AbstractNodeAction {
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move.png");
     }
-
-
 
     /**
      * {@inheritDoc}
@@ -113,34 +107,5 @@ public class SendAnnotationToBackAction extends AbstractNodeAction {
     @Override
     public String getToolTipText() {
         return "Send the selected annotation to the back behind all other annotations";
-    }
-
-    /**
-     * @return true if at least one node is selected
-     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
-     */
-    @Override
-    protected boolean internalCalculateEnabled() {
-        if (getManager().isWriteProtected()) {
-            return false;
-        }
-        AnnotationEditPart[] selectedParts = getSelectedParts(AnnotationEditPart.class);
-        if (selectedParts.length != 1) {
-            return false;
-        }
-        return (selectedParts[0].getModel() instanceof WorkflowAnnotation);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        AnnotationEditPart[] sel = getSelectedParts(AnnotationEditPart.class);
-        if (sel.length != 1) {
-            return;
-        }
-        getEditor().getWorkflowManager().get().sendAnnotationToBack((WorkflowAnnotation)sel[0].getModel());
-        getEditor().getViewer().getRootEditPart().getContents().refresh();
     }
 }
