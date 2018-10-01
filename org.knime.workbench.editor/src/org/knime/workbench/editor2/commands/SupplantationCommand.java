@@ -66,6 +66,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
@@ -179,20 +180,20 @@ public class SupplantationCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         final WorkflowManager wm = getHostWFM();
+        final WorkflowManagerUI wmUI = getHostWFMUI();
         if (m_edgeTargetId != null) {
-            final ConnectionContainer targetCC = wm.getConnection(m_edgeTargetId);
+            final ConnectionContainerUI targetCCUI = wmUI.getConnection(m_edgeTargetId);
 
-            if (!ReplaceHelper.executedStateAllowsReplace(wm, null, targetCC)) {
+            if (!ReplaceHelper.executedStateAllowsReplace(wm, null, targetCCUI)) {
                 returnNodeToOriginalLocation();
 
                 return;
             }
 
-            final NodeID sourceNodeId = targetCC.getSource();
-            final WorkflowManagerUI wmUI = getHostWFMUI();
+            final NodeID sourceNodeId = targetCCUI.getSource();
             final NodeContainerUI sourceNodeUI =
                 sourceNodeId.equals(wm.getID()) ? wmUI : wmUI.getNodeContainer(sourceNodeId);
-            final PortType portType = sourceNodeUI.getOutPort(targetCC.getSourcePort()).getPortType();
+            final PortType portType = sourceNodeUI.getOutPort(targetCCUI.getSourcePort()).getPortType();
             final ConnectionManifest inportManifest = m_supplantingNodeInportManifest.clone();
             final ConnectionManifest outportManifest = m_supplantingNodeOutportManifest.clone();
             final int dragNodeInPortToUse = inportManifest.consumePortForPortType(portType, true);
@@ -210,6 +211,7 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                 }
             }
 
+            final ConnectionContainer targetCC = wm.getConnection(m_edgeTargetId);
             wm.removeConnection(targetCC);
             m_originalEdges.add(targetCC);
 
@@ -249,8 +251,9 @@ public class SupplantationCommand extends AbstractKNIMECommand {
         } else {
             final NodeContainerUI toRemoveNodeUI = m_nodeTarget.getNodeContainer();
             final NodeID toRemoveNodeId = toRemoveNodeUI.getID();
-            final ArrayList<ConnectionContainer> ccs = new ArrayList<>(wm.getOutgoingConnectionsFor(toRemoveNodeId));
-            final ConnectionContainer[] connections = ccs.toArray(new ConnectionContainer[ccs.size()]);
+            final ArrayList<ConnectionContainerUI> ccs =
+                new ArrayList<>(wmUI.getOutgoingConnectionsFor(toRemoveNodeId));
+            final ConnectionContainerUI[] connections = ccs.toArray(new ConnectionContainerUI[ccs.size()]);
 
             if (!ReplaceHelper.executedStateAllowsReplace(wm, wm.getNodeContainer(toRemoveNodeId), connections)) {
                 returnNodeToOriginalLocation();
@@ -325,7 +328,6 @@ public class SupplantationCommand extends AbstractKNIMECommand {
 
             m_replacementEdges = new HashSet<>();
 
-            final WorkflowManagerUI wmUI = getHostWFMUI();
             for (ScheduledConnection sc : pendingConnections) {
                 final NodeID sourceNID;
                 final int sourcePort;

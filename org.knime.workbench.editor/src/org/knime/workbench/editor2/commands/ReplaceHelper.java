@@ -85,12 +85,12 @@ public class ReplaceHelper {
      * @return true if the replacement can occur
      */
     public static boolean executedStateAllowsReplace(final WorkflowManager wm, final NodeContainer node,
-        final ConnectionContainer... connections) {
+        final ConnectionContainerUI... connections) {
         boolean aWarnableStateExists =
             (node != null) ? (node.getNodeContainerState().isExecuted() || (!wm.canRemoveNode(node.getID()))) : false;
 
         if ((!aWarnableStateExists) && (connections != null)) {
-            for (final ConnectionContainer connectionContainer : connections) {
+            for (final ConnectionContainerUI connectionContainer : connections) {
                 if (wm.findNodeContainer(connectionContainer.getDest()).getNodeContainerState().isExecuted()) {
                     aWarnableStateExists = true;
 
@@ -161,8 +161,8 @@ public class ReplaceHelper {
      * @return if new node can be replaced
      */
     public boolean replaceNode() {
-        final ConnectionContainer[] connections =
-            m_outgoingConnections.toArray(new ConnectionContainer[m_outgoingConnections.size()]);
+        final ConnectionContainerUI[] connections =
+            m_outgoingConnections.toArray(new ConnectionContainerUI[m_outgoingConnections.size()]);
 
         return executedStateAllowsReplace(m_wfm, m_oldNode, connections);
     }
@@ -245,10 +245,13 @@ public class ReplaceHelper {
             if (m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), newId, c.getDestPort() + inShift)) {
                 final ConnectionContainer cc =
                     m_wfm.addConnection(c.getSource(), c.getSourcePort(), newId, c.getDestPort() + inShift);
-                final ConnectionUIInformation uiInfo = m_connectionUIInfoMap.get(c);
 
-                if (uiInfo != null) {
-                    cc.setUIInfo(uiInfo);
+                if (m_connectionUIInfoMap != null) {
+                    final ConnectionUIInformation uiInfo = m_connectionUIInfoMap.get(c);
+
+                    if (uiInfo != null) {
+                        cc.setUIInfo(uiInfo);
+                    }
                 }
             } else {
                 break;
@@ -260,10 +263,13 @@ public class ReplaceHelper {
             if (m_wfm.canAddConnection(newId, c.getSourcePort() + outShift, c.getDest(), c.getDestPort())) {
                 final ConnectionContainer cc =
                     m_wfm.addConnection(newId, c.getSourcePort() + outShift, c.getDest(), c.getDestPort());
-                final ConnectionUIInformation uiInfo = m_connectionUIInfoMap.get(c);
 
-                if (uiInfo != null) {
-                    cc.setUIInfo(uiInfo);
+                if (m_connectionUIInfoMap != null) {
+                    final ConnectionUIInformation uiInfo = m_connectionUIInfoMap.get(c);
+
+                    if (uiInfo != null) {
+                        cc.setUIInfo(uiInfo);
+                    }
                 }
             } else {
                 break;
