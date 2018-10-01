@@ -133,6 +133,7 @@ import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
 import org.knime.js.core.layout.bs.JSONLayoutRow;
 import org.knime.js.core.layout.bs.JSONLayoutViewContent;
+import org.knime.js.core.layout.bs.JSONNestedLayout;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 
@@ -955,19 +956,29 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             if (content != null) {
                 for (JSONLayoutContent jsonLayoutContent : content) {
                     if (jsonLayoutContent != null) {
-                        if (jsonLayoutContent instanceof JSONLayoutViewContent) {
-                            JSONLayoutViewContent viewContent = (JSONLayoutViewContent)jsonLayoutContent;
-                            if (listNotNullOrEmpty(viewContent.getAdditionalStyles()) || listNotNullOrEmpty(viewContent.getAdditionalClasses())) {
-                             // basic layout not possible, show only advanced tab
-                                m_basicPanelAvailable = false;
-                                return;
+                        boolean isView = jsonLayoutContent instanceof JSONLayoutViewContent;
+                        boolean isNested = jsonLayoutContent instanceof JSONNestedLayout;
+                        if (isView || isNested) {
+                            NodeIDSuffix id;
+                            if (isView) {
+                                JSONLayoutViewContent viewContent = (JSONLayoutViewContent)jsonLayoutContent;
+                                if (listNotNullOrEmpty(viewContent.getAdditionalStyles())
+                                        || listNotNullOrEmpty(viewContent.getAdditionalClasses())) {
+                                    // basic layout not possible, show only advanced tab
+                                    m_basicPanelAvailable = false;
+                                    return;
+                                }
+                                id = NodeIDSuffix.fromString(viewContent.getNodeID());
+                            } else {
+                                JSONNestedLayout nestedLayout = (JSONNestedLayout)jsonLayoutContent;
+                                id = NodeIDSuffix.fromString(nestedLayout.getNodeID());
                             }
                             BasicLayoutInfo basicInfo = new BasicLayoutInfo();
                             basicInfo.setRow(rowIndex + 1);
                             basicInfo.setCol(colIndex + 1);
                             basicInfo.setColWidth(column.getWidthMD());
-                            basicInfo.setView(viewContent);
-                            NodeIDSuffix id = NodeIDSuffix.fromString(viewContent.getNodeID());
+                            basicInfo.setView(jsonLayoutContent);
+
                             m_basicMap.put(id, basicInfo);
                         } else {
                             // basic layout not possible, show only advanced tab
@@ -1010,7 +1021,13 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 columns.add(new JSONLayoutColumn());
             }
             JSONLayoutColumn column = columns.get(basicLayoutInfo.getCol() - 1);
-            column.setWidthMD(basicLayoutInfo.getColWidth());
+            int colWidth = basicLayoutInfo.getColWidth();
+            // avoid creating responsive layout from basic editor, set the same for all screen sizes
+            column.setWidthXS(colWidth);
+            column.setWidthSM(colWidth);
+            column.setWidthMD(colWidth);
+            column.setWidthLG(colWidth);
+            column.setWidthXL(colWidth);
             List<JSONLayoutContent> contentList = column.getContent();
             if (contentList == null) {
                 contentList = new ArrayList<JSONLayoutContent>(1);
