@@ -53,8 +53,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -65,11 +65,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
+import org.knime.base.node.viz.property.color.ColorManager2NodeModel.NewValueOption;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 
 /**
  * A dialog panel used to set color for nominal values.
@@ -78,14 +80,17 @@ import org.knime.core.node.NodeSettingsWO;
  */
 final class ColorManager2DialogNominal extends JPanel {
 
+    /** Generated UID. */
+    private static final long serialVersionUID = -4827274897057009654L;
+
     /** Keeps mapping from data cell name to color. */
     private final Map<String, Map<DataCell, ColorAttr>> m_map;
 
     /** Keeps the all possible column values. */
-    private final JList m_columnValues;
+    private final JList<ColorManager2Icon> m_columnValues;
 
     /** list model for column values. */
-    private final DefaultListModel m_columnModel;
+    private final DefaultListModel<ColorManager2Icon> m_columnModel;
 
     private int m_alpha = 255;
 
@@ -99,8 +104,8 @@ final class ColorManager2DialogNominal extends JPanel {
         m_map = new LinkedHashMap<String, Map<DataCell, ColorAttr>>();
 
         // create list for possible column values
-        m_columnModel = new DefaultListModel();
-        m_columnValues = new JList(m_columnModel);
+        m_columnModel = new DefaultListModel<>();
+        m_columnValues = new JList<>(m_columnModel);
         m_columnValues.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_columnValues.setCellRenderer(new ColorManager2IconRenderer());
         super.add(new JScrollPane(m_columnValues));
@@ -184,11 +189,10 @@ final class ColorManager2DialogNominal extends JPanel {
      *
      * @param column the column name
      * @param set the set of possible values for this column
-     * @param newValues Setting for dealing with new values
      */
-    void add(final String column, final Set<DataCell> set, final String newValues) {
+    void add(final String column, final Set<DataCell> set) {
         if (set != null && !set.isEmpty()) {
-            Map<DataCell, ColorAttr> map = new HashMap<DataCell, ColorAttr>();
+            Map<DataCell, ColorAttr> map = new LinkedHashMap<DataCell, ColorAttr>();
             for (DataCell cell : set) {
                 map.put(cell, null);
             }
@@ -199,18 +203,19 @@ final class ColorManager2DialogNominal extends JPanel {
     /**
      * Create default color mapping for the given set of possible <code>DataCell</code> values.
      *
-     * @param set set of values to be assigned a color
+     * @param set set of values to assign a color to
      * @param existingSet map containing already existing values and colors
-     * @param newValues string representing a setting for dealing with new values
+     * @param newValueOption the new value option
      * @return a map of possible value to color
      */
-    static final Map<DataCell, ColorAttr> createColorMapping(final Set<DataCell> set, final Map<DataCell, ColorAttr> existingSet, final String newValues) {
-        if (set == null) {
+    static final Map<DataCell, ColorAttr> createColorMapping(final Set<DataCell> set,
+        final Map<DataCell, ColorAttr> existingSet, final NewValueOption newValueOption) {
+        if (set == null || set.isEmpty()) {
             return Collections.emptyMap();
         }
         Map<DataCell, ColorAttr> map = new LinkedHashMap<DataCell, ColorAttr>();
         // get palette for new values setting
-        String[] palette = getPalette(newValues);
+        String[] palette = getPalette(newValueOption);
 
         // count apperances of colors from the palette
         // colors of the palette and the number of appearances in the existingSet
@@ -229,7 +234,8 @@ final class ColorManager2DialogNominal extends JPanel {
 
         // find least used color in palette and apply it to new value
         for (DataCell cell : set) {
-            Entry<Color, Integer> smallestEntry = paletteColors.entrySet().stream().min(Map.Entry.comparingByValue(Integer::compareTo)).get();
+            Entry<Color, Integer> smallestEntry =
+                paletteColors.entrySet().stream().min(Map.Entry.comparingByValue(Integer::compareTo)).get();
             paletteColors.put(smallestEntry.getKey(), smallestEntry.getValue() + 1);
             map.put(cell, ColorAttr.getInstance(smallestEntry.getKey()));
         }
@@ -240,23 +246,21 @@ final class ColorManager2DialogNominal extends JPanel {
      * Create default color mapping for the given set of possible <code>DataCell</code> values.
      *
      * @param set Set of values to be assigned a color
-     * @param String Setting for dealing with new values
+     * @param newValueOption the new value option
      * @return a map of possible value to color
      */
-    static final Map<DataCell, ColorAttr> createColorMapping(final Set<DataCell> set, final String newValues) {
+    static final Map<DataCell, ColorAttr> createColorMapping(final Set<DataCell> set,
+        final NewValueOption newValueOption) {
         if (set == null) {
             return Collections.emptyMap();
         }
         Map<DataCell, ColorAttr> map = new LinkedHashMap<DataCell, ColorAttr>();
         // get palette for new values setting
-        String[] palette = getPalette(newValues);
+        String[] palette = getPalette(newValueOption);
         // assign colors from the palette to the new values
         int idx = 0;
         for (DataCell cell : set) {
-            if (idx >= palette.length) {
-                idx = 0;
-            }
-            Color color = Color.decode(palette[idx]);
+            Color color = Color.decode(palette[idx % palette.length]);
             map.put(cell, ColorAttr.getInstance(color));
             idx++;
         }
@@ -265,27 +269,24 @@ final class ColorManager2DialogNominal extends JPanel {
 
     /**
      * Returns the palette corresponding to the new values setting
-     * @param newValues String representing which set to pick
+     *
+     * @param newValueOption the new value option
      * @return the palette
      */
-    private static String[] getPalette(final String newValues) {
-        String[] palette;
-        switch (newValues) {
-            case ColorManager2NodeModel.FAIL:
-                palette = ColorManager2NodeDialogPane.PALETTE_SET1;
-                break;
-            case ColorManager2NodeModel.SET1:
-                palette = ColorManager2NodeDialogPane.PALETTE_SET1;
-                break;
-            case ColorManager2NodeModel.SET2:
-                palette = ColorManager2NodeDialogPane.PALETTE_SET2;
-                break;
-            case ColorManager2NodeModel.SET3:
-                palette = ColorManager2NodeDialogPane.PALETTE_SET3;
-                break;
-            default: palette = null;
+    private static String[] getPalette(final NewValueOption newValueOption) {
+        switch (newValueOption) {
+            case FAIL:
+                throw new IllegalArgumentException(
+                    "The option \"" + newValueOption.toString() + "\" does not map to a color palette");
+            case SET1:
+                return ColorManager2NodeDialogPane.PALETTE_SET1;
+            case SET2:
+                return ColorManager2NodeDialogPane.PALETTE_SET2;
+            case SET3:
+                return ColorManager2NodeDialogPane.PALETTE_SET3;
+            default:
+                return null;
         }
-        return palette;
     }
 
     /**
@@ -308,7 +309,7 @@ final class ColorManager2DialogNominal extends JPanel {
         if (len > 0) {
             DataCell[] vals = new DataCell[len];
             for (int i = 0; i < m_columnModel.getSize(); i++) {
-                ColorManager2Icon icon = (ColorManager2Icon)m_columnModel.getElementAt(i);
+                ColorManager2Icon icon = m_columnModel.getElementAt(i);
                 vals[i] = icon.getCell();
                 Color c = icon.getColor();
                 c = new Color(c.getRed(), c.getGreen(), c.getBlue(), m_alpha);
@@ -327,7 +328,7 @@ final class ColorManager2DialogNominal extends JPanel {
      * @param settings to read from
      * @param column the selected column
      */
-    void loadSettings(final NodeSettingsRO settings, final String column) {
+    void loadSettings(final NodeSettingsRO settings, final String column) throws NotConfigurableException {
         if (column == null) {
             return;
         }
@@ -359,10 +360,19 @@ final class ColorManager2DialogNominal extends JPanel {
                 list.add(d);
             }
         }
-        // get color mapping for unassigned colors
-        String newValues = settings.getString(ColorManager2NodeModel.NEW_VALUES, ColorManager2NodeModel.FAIL);
-        Map<DataCell, ColorAttr> m = createColorMapping(new HashSet<DataCell>(list), existingSet, newValues);
-        map.putAll(m);
+        try {
+            // get color mapping for unassigned colors, if fail was selected we still have to choose colors here.
+            NewValueOption newValuesOption = NewValueOption.getEnum(
+                settings.getString(ColorManager2NodeModel.CFG_NEW_VALUES, NewValueOption.SET1.getSettingsName()));
+            if (newValuesOption == NewValueOption.FAIL) {
+                newValuesOption = NewValueOption.SET1;
+            }
+            Map<DataCell, ColorAttr> m =
+                createColorMapping(new LinkedHashSet<DataCell>(list), existingSet, newValuesOption);
+            map.putAll(m);
+        } catch (InvalidSettingsException e) {
+            throw new NotConfigurableException(e.getMessage());
+        }
     }
 
     /**
