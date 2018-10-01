@@ -98,6 +98,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -9076,22 +9077,10 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.6
      */
     public void bringAnnotationToFront(final WorkflowAnnotation annotation) {
-        final int index = m_annotations.indexOf(annotation);
-        if (index == -1) {
-            throw new IllegalArgumentException(
-                "Annotation \"" + annotation + "\" does not exists - can't be moved to front");
-        }
-
-        if (index == (m_annotations.size() - 1)) {
-            // already in the front
-            return;
-        }
-
-        m_annotations.remove(index);
-        m_annotations.add(annotation);
-        final WorkflowAnnotationID waID = m_annotationIDs.remove(index);
-        m_annotationIDs.add(waID);
-        annotation.fireChangeEvent(); // triggers workflow dirty
+        alterAnnotationZOrdering(annotation, (m_annotations.size() - 1), (index) -> {
+            // -1 because at the time of usage, the array will be one smaller
+            return new Integer(m_annotations.size() - 1);
+        });
     }
 
     /**
@@ -9102,22 +9091,9 @@ public final class WorkflowManager extends NodeContainer
      * @since 3.7
      */
     public void bringAnnotationForward(final WorkflowAnnotation annotation) {
-        final int index = m_annotations.indexOf(annotation);
-        if (index == -1) {
-            throw new IllegalArgumentException(
-                "Annotation \"" + annotation + "\" does not exists - can't be moved to front");
-        }
-
-        if (index == (m_annotations.size() - 1)) {
-            // already in the front
-            return;
-        }
-
-        m_annotations.remove(index);
-        m_annotations.insertElementAt(annotation, (index + 1));
-        final WorkflowAnnotationID waID = m_annotationIDs.remove(index);
-        m_annotationIDs.insertElementAt(waID, (index + 1));
-        annotation.fireChangeEvent(); // triggers workflow dirty
+        alterAnnotationZOrdering(annotation, (m_annotations.size() - 1), (index) -> {
+            return new Integer(index + 1);
+        });
     }
 
     /**
@@ -9128,22 +9104,9 @@ public final class WorkflowManager extends NodeContainer
      * @since 3.7
      */
     public void sendAnnotationBackward(final WorkflowAnnotation annotation) {
-        final int index = m_annotations.indexOf(annotation);
-        if (index == -1) {
-            throw new IllegalArgumentException(
-                "Annotation \"" + annotation + "\" does not exists - can't be moved to front");
-        }
-
-        if (index == 0) {
-            // already at the back
-            return;
-        }
-
-        m_annotations.remove(index);
-        m_annotations.insertElementAt(annotation, (index - 1));
-        final WorkflowAnnotationID waID = m_annotationIDs.remove(index);
-        m_annotationIDs.insertElementAt(waID, (index - 1));
-        annotation.fireChangeEvent(); // triggers workflow dirty
+        alterAnnotationZOrdering(annotation, 0, (index) -> {
+            return new Integer(index - 1);
+        });
     }
 
     /**
@@ -9153,21 +9116,34 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.6
      */
     public void sendAnnotationToBack(final WorkflowAnnotation annotation) {
+        alterAnnotationZOrdering(annotation, 0, (index) -> {
+            return new Integer(0);
+        });
+    }
+
+    /**
+     * @param noOpIndex if the annotation is already at this index value, no re-ordering will occur
+     * @param indexSpecifier a function which, given the existing index, returns the desired index at which to place the
+     *            annotation
+     */
+    private void alterAnnotationZOrdering(final WorkflowAnnotation annotation, final int noOpIndex,
+        final IntFunction<Integer> indexSpecifier) {
         final int index = m_annotations.indexOf(annotation);
         if (index == -1) {
             throw new IllegalArgumentException(
-                "Annotation \"" + annotation + "\" does not exists - can't be moved to front");
+                "Annotation \"" + annotation + "\" does not exist - cannot be moved");
         }
 
-        if (index == 0) {
-            // already at the back
+        if (index == noOpIndex) {
+            // cannot move any further in the direction desired
             return;
         }
 
+        final int newIndex = indexSpecifier.apply(index).intValue();
         m_annotations.remove(index);
-        m_annotations.insertElementAt(annotation, 0);
+        m_annotations.insertElementAt(annotation, newIndex);
         final WorkflowAnnotationID waID = m_annotationIDs.remove(index);
-        m_annotationIDs.insertElementAt(waID, 0);
+        m_annotationIDs.insertElementAt(waID, newIndex);
         annotation.fireChangeEvent(); // triggers workflow dirty
     }
 
