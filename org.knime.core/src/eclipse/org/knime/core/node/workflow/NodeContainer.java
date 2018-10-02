@@ -152,7 +152,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /**
      * Object that represents locks set on the node, i.e.
-     * whether the node is allowed to be deleted, reseted or configured.
+     * whether the node is allowed to be deleted, reset or configured.
      */
     private NodeLocks m_nodeLocks;
 
@@ -1628,7 +1628,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     /* ------------- Node Locking -------------- */
 
     /**
-     * Changes the nodes lock status for various actions, i.e. from being deleted, reseted or configured.
+     * Changes the nodes lock status for various actions, i.e. from being deleted, reset or configured.
      *
      * @param setLock whether the locks should be set (<code>true</code>) or released (<code>false</code>)
      * @param locks the locks to be set or released, e.g. {@link NodeLock#DELETE}, {@link NodeLock#RESET},
@@ -1667,7 +1667,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
 
     /**
-     * Returns the node's lock status, i.e. whether the node is locked from being deleted, reseted or configured.
+     * Returns the node's lock status, i.e. whether the node is locked from being deleted, reset or configured.
      *
      * @return the currently set {@link NodeLocks}
      * @since 3.2
@@ -1705,7 +1705,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
 
        /**
-        * @return <code>true</code> if the node is locked from being reseted, i.e. it is under NO circumstances resetable, if
+        * @return <code>true</code> if the node is locked from being reset, i.e. it is under NO circumstances resetable, if
         *         <code>false</code> it still might be not resetable depending on the {@link NodeContainer#isResetable()}-implementation.
         * @since 3.2
         */

@@ -1031,7 +1031,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         NodeContainerUI nc = getNodeContainer();
         Image i;
         StringBuilder toolTip = new StringBuilder();
-        //node is considered being locked if it is either lock from being reseted, it's not deletable, or the dialog is locked
+        //node is considered being locked if it is either lock from being reset, it's not deletable, or the dialog is locked
         if (nc.getNodeLocks().hasResetLock() || nc.getNodeLocks().hasDeleteLock() || nc.getNodeLocks().hasConfigureLock()) {
             toolTip.append("Node Locked (");
             i = NODE_LOCK_ICON;

@@ -421,7 +421,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             }
         }
 
-        //check whether it's just the same selection as the previous one (e.g. when a node has been reseted etc.)
+        //check whether it's just the same selection as the previous one (e.g. when a node has been reset etc.)
         //-> in that case no redraw is required
         if (nodeSelected) {
             if (m_lastSelection.equals(nc.getNameWithID())) {

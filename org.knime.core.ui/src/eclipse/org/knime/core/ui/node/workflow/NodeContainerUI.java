@@ -441,7 +441,7 @@ public interface NodeContainerUI extends NodeProgressListener, NodeContainerStat
 //    NodeContainerExecutionResult createExecutionResult(ExecutionMonitor exec) throws CanceledExecutionException;
 
     /**
-     * Changes the nodes lock status for various actions, i.e. from being deleted, reseted or configured.
+     * Changes the nodes lock status for various actions, i.e. from being deleted, reset or configured.
      *
      * @param setLock whether the locks should be set (<code>true</code>) or released (<code>false</code>)
      * @param locks the locks to be set or released, e.g. {@link NodeLock#DELETE}, {@link NodeLock#RESET},
@@ -451,7 +451,7 @@ public interface NodeContainerUI extends NodeProgressListener, NodeContainerStat
     void changeNodeLocks(boolean setLock, NodeLock... locks);
 
     /**
-     * Returns the node's lock status, i.e. whether the node is locked from being deleted, reseted or configured.
+     * Returns the node's lock status, i.e. whether the node is locked from being deleted, reset or configured.
      *
      * @return the currently set {@link NodeLocks}
      * @since 3.2

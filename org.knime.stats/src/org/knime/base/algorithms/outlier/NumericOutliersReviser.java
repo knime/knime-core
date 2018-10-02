@@ -803,7 +803,7 @@ public final class NumericOutliersReviser {
          * Update the domain for the given columns.
          *
          * @param exec the execution context
-         * @param data the data table whose domains have to be reseted
+         * @param data the data table whose domains have to be reset
          * @return the data table after reseting the domains
          */
         private BufferedDataTable updateDomain(final ExecutionContext exec, final BufferedDataTable data) {
