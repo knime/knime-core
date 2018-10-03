@@ -196,7 +196,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
             }
         }
 
-        m_connections = conSet.toArray(new ConnectionContainerUI[m_connectionCount]);
+        m_connections = conSet.toArray(new ConnectionContainerUI[conSet.size()]);
 
         HashMap<ConnectionContainerUI, ConnectionUIInformation> uiInfoMap = new HashMap<>();
         for (final ConnectionContainerUI cc : m_connections) {
