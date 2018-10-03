@@ -83,7 +83,7 @@ public class BugAP6262_FileStoresInPortObjectCell extends WorkflowTestCase {
         return loadResult;
     }
 
-    @Test(timeout = 3000L)
+    @Test(timeout = 5000L)
     public void testExecute() throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, IDLE);
