@@ -53,7 +53,7 @@ import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 
 import java.util.function.Function;
@@ -159,7 +159,7 @@ public class DefaultNodeProgressMonitorTest {
             assertThat(progressPointer.get().getMessage(), is(equalTo(lastExpectedMsg)));
             // the lazy string creation should only be called 4 times a second at most,
             // it must be at least two - one for the reference string creation and one during an event
-            Assert.assertThat(stringComposeCounter.getValue(), is(allOf(greaterThanOrEqualTo(2L), lessThan(5L))));
+            Assert.assertThat(stringComposeCounter.getValue(), is(allOf(greaterThanOrEqualTo(2L), lessThanOrEqualTo(5L))));
         } finally {
             toMonitor.removeProgressListener(l);
         }
