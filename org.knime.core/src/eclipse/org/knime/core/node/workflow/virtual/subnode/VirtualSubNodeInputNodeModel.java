@@ -197,7 +197,9 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
         Map<String, FlowVariable> availableVariables =
                 getSubNodeContainerFlowObjectStack().getAvailableFlowVariables(Type.values());
         FilterResult filtered = filterConfiguration.applyTo(availableVariables);
-        for (String include : filtered.getIncludes()) {
+        String[] includes = filtered.getIncludes();
+        ArrayUtils.reverse(includes);
+        for (String include : includes) {
             FlowVariable f = availableVariables.get(include);
             switch (f.getScope()) {
                 case Global:
