@@ -93,13 +93,13 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  */
 public class ColumnAutoTypeCasterNodeModel extends NodeModel {
 
-    private static final String CFGKEY_DATEFORMAT = "dateFormat";
+    static final String CFGKEY_DATEFORMAT = "dateFormat";
 
-    private static final String CFGKEY_QUICKSANBOOLEAN = "doAQuickScan";
+    static final String CFGKEY_QUICKSANBOOLEAN = "doAQuickScan";
 
-    private static final String CFGKEY_QUICKSCANROWS = "numberOfRowsForQuickScan";
+    static final String CFGKEY_QUICKSCANROWS = "numberOfRowsForQuickScan";
 
-    private static final String CFGKEY_MISSVALPAT = "missingValuePattern";
+    static final String CFGKEY_MISSVALPAT = "missingValuePattern";
 
     private DataColumnSpecFilterConfiguration m_conf;
 

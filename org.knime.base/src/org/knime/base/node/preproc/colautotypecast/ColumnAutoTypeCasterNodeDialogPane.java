@@ -82,10 +82,6 @@ public class ColumnAutoTypeCasterNodeDialogPane extends NodeDialogPane {
      */
     private static final double M_WEIGHTX = 0.5;
     private static final int M_INSETS_TOP = 20;
-    private static final String CFGKEY_DATEFORMAT = "dateFormat";
-    private static final String CFGKEY_QUICKSANBOOLEAN = "doAQuickScan";
-    private static final String CFGKEY_QUICKSCANROWS = "numberOfRowsForQuickScan";
-    private static final String CFGKEY_MISSVALPAT = "missingValuePattern";
 
     private static final String[] MISSING_VALUE_PATTERNS = new String[]{"<none>", "<empty>"};
 
@@ -222,10 +218,12 @@ public class ColumnAutoTypeCasterNodeDialogPane extends NodeDialogPane {
         DataColumnSpecFilterConfiguration config = ColumnAutoTypeCasterNodeModel.createDCSFilterConfiguration();
         config.loadConfigurationInDialog(settings, specs[0]);
         m_filterPanel.loadConfiguration(config, specs[0]);
-        m_dateBox.setSelectedItem(settings.getString(CFGKEY_DATEFORMAT, "dd.MM.yy"));
-        m_missValueChooser.setSelectedItem(settings.getString(CFGKEY_MISSVALPAT, "<none>"));
-        m_quickScanCheckBox.setSelected(settings.getBoolean(CFGKEY_QUICKSANBOOLEAN, false));
-        m_numberOfRowsSpinner.setValue(settings.getInt(CFGKEY_QUICKSCANROWS, 1000));
+        m_dateBox.setSelectedItem(settings.getString(ColumnAutoTypeCasterNodeModel.CFGKEY_DATEFORMAT, "dd.MM.yy"));
+        m_missValueChooser
+            .setSelectedItem(settings.getString(ColumnAutoTypeCasterNodeModel.CFGKEY_MISSVALPAT, "<none>"));
+        m_quickScanCheckBox
+            .setSelected(settings.getBoolean(ColumnAutoTypeCasterNodeModel.CFGKEY_QUICKSANBOOLEAN, false));
+        m_numberOfRowsSpinner.setValue(settings.getInt(ColumnAutoTypeCasterNodeModel.CFGKEY_QUICKSCANROWS, 1000));
 
     }
 
@@ -242,9 +240,10 @@ public class ColumnAutoTypeCasterNodeDialogPane extends NodeDialogPane {
         m_filterPanel.saveConfiguration(config);
         config.saveConfiguration(settings);
 
-        settings.addString(CFGKEY_DATEFORMAT, m_dateBox.getEditor().getItem().toString());
-        settings.addString(CFGKEY_MISSVALPAT, m_missValueChooser.getEditor().getItem().toString());
-        settings.addBoolean(CFGKEY_QUICKSANBOOLEAN, m_quickScanCheckBox.isSelected());
-        settings.addInt(CFGKEY_QUICKSCANROWS, (int)m_numberOfRowsSpinner.getValue());
+        settings.addString(ColumnAutoTypeCasterNodeModel.CFGKEY_DATEFORMAT, m_dateBox.getEditor().getItem().toString());
+        settings.addString(ColumnAutoTypeCasterNodeModel.CFGKEY_MISSVALPAT,
+            m_missValueChooser.getEditor().getItem().toString());
+        settings.addBoolean(ColumnAutoTypeCasterNodeModel.CFGKEY_QUICKSANBOOLEAN, m_quickScanCheckBox.isSelected());
+        settings.addInt(ColumnAutoTypeCasterNodeModel.CFGKEY_QUICKSCANROWS, (int)m_numberOfRowsSpinner.getValue());
     }
 }
