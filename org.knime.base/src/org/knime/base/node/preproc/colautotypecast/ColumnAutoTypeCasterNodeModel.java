@@ -101,6 +101,10 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
 
     static final String CFGKEY_MISSVALPAT = "missingValuePattern";
 
+    static final String MISSVALDESC_NONE = "<none>";
+
+    static final String MISSVALDESC_EMPTY = "<empty>";
+
     private DataColumnSpecFilterConfiguration m_conf;
 
     private String m_dateFormat = "dd.MM.yy";
@@ -460,10 +464,10 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
         conf.loadConfigurationInModel(settings);
         m_conf = conf;
         m_dateFormat = settings.getString(CFGKEY_DATEFORMAT);
-        m_missValPat = settings.getString(CFGKEY_MISSVALPAT);
-        if (m_missValPat.equals("<none>")) {
+        final String missValDesc = settings.getString(CFGKEY_MISSVALPAT);
+        if (missValDesc.equals(MISSVALDESC_NONE)) {
             m_missValPat = null;
-        } else if (m_missValPat.equals("<empty>")) {
+        } else if (missValDesc.equals(MISSVALDESC_EMPTY)) {
             m_missValPat = "";
         }
         m_quickScan = settings.getBoolean(CFGKEY_QUICKSANBOOLEAN);
@@ -488,11 +492,10 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
         }
         settings.addString(CFGKEY_DATEFORMAT, m_dateFormat);
         if (m_missValPat == null) {
-            m_missValPat = "<none>";
+            settings.addString(CFGKEY_MISSVALPAT, MISSVALDESC_NONE);
         } else if (m_missValPat.equals("")) {
-            m_missValPat = "<empty>";
+            settings.addString(CFGKEY_MISSVALPAT, MISSVALDESC_EMPTY);
         }
-        settings.addString(CFGKEY_MISSVALPAT, m_missValPat);
         settings.addBoolean(CFGKEY_QUICKSANBOOLEAN, m_quickScan);
         settings.addInt(CFGKEY_QUICKSCANROWS, m_numberOfRows);
     }
