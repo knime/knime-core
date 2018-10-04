@@ -52,6 +52,7 @@ import java.util.ArrayList;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.node.ExecutionContext;
@@ -84,6 +85,9 @@ public class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellCo
         @Override
         public DataCell convert(final T source) throws Exception {
             final E[] array = (E[])source;
+            if(array == null) {
+                return new MissingCell("Value was null.");
+            }
             final ArrayList<DataCell> cells = new ArrayList<>(array.length);
 
             for (final E element : array) {
@@ -124,5 +128,28 @@ public class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellCo
     @Override
     public String getName() {
         return "Array of " + m_elementFactory.getName();
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ArrayToCollectionConverterFactory<?,?> other = (ArrayToCollectionConverterFactory<?,?>) obj;
+       return other.m_elementFactory.equals(m_elementFactory);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_elementFactory == null) ? 0 : m_elementFactory.hashCode());
+        return result;
     }
 }
