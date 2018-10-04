@@ -83,7 +83,8 @@ public class ColumnAutoTypeCasterNodeDialogPane extends NodeDialogPane {
     private static final double M_WEIGHTX = 0.5;
     private static final int M_INSETS_TOP = 20;
 
-    private static final String[] MISSING_VALUE_PATTERNS = new String[]{"<none>", "<empty>"};
+    private static final String[] MISSING_VALUE_PATTERNS =
+        new String[]{ColumnAutoTypeCasterNodeModel.MISSVALDESC_NONE, ColumnAutoTypeCasterNodeModel.MISSVALDESC_EMPTY};
 
     private final JPanel m_panel;
     private final DataColumnSpecFilterPanel m_filterPanel;
@@ -114,7 +115,7 @@ public class ColumnAutoTypeCasterNodeDialogPane extends NodeDialogPane {
         m_missValueChooser = new JComboBox<String>(MISSING_VALUE_PATTERNS);
         m_missValueChooser.setPreferredSize(prefDim);
         m_missValueChooser.setEditable(true);
-        m_missValueChooser.setSelectedItem("<none>");
+        m_missValueChooser.setSelectedItem(ColumnAutoTypeCasterNodeModel.MISSVALDESC_NONE);
 
         m_quickScanCheckBox = new JCheckBox("Do a quickscan.");
         m_quickScanCheckBox.setToolTipText("Select if you want to do a quickscan. Node may fail in execute.");
@@ -219,8 +220,8 @@ public class ColumnAutoTypeCasterNodeDialogPane extends NodeDialogPane {
         config.loadConfigurationInDialog(settings, specs[0]);
         m_filterPanel.loadConfiguration(config, specs[0]);
         m_dateBox.setSelectedItem(settings.getString(ColumnAutoTypeCasterNodeModel.CFGKEY_DATEFORMAT, "dd.MM.yy"));
-        m_missValueChooser
-            .setSelectedItem(settings.getString(ColumnAutoTypeCasterNodeModel.CFGKEY_MISSVALPAT, "<none>"));
+        m_missValueChooser.setSelectedItem(settings.getString(ColumnAutoTypeCasterNodeModel.CFGKEY_MISSVALPAT,
+            ColumnAutoTypeCasterNodeModel.MISSVALDESC_NONE));
         m_quickScanCheckBox
             .setSelected(settings.getBoolean(ColumnAutoTypeCasterNodeModel.CFGKEY_QUICKSANBOOLEAN, false));
         m_numberOfRowsSpinner.setValue(settings.getInt(ColumnAutoTypeCasterNodeModel.CFGKEY_QUICKSCANROWS, 1000));
