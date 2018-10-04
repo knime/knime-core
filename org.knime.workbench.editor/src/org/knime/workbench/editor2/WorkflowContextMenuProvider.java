@@ -47,9 +47,6 @@
  */
 package org.knime.workbench.editor2;
 
-import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
-import static org.knime.core.ui.wrapper.Wrapper.wraps;
-
 import java.util.List;
 
 import org.eclipse.gef.ContextMenuProvider;
@@ -129,6 +126,7 @@ import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.actions.UnlinkNodesAction;
+import org.knime.workbench.editor2.directannotationedit.StyledTextEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
@@ -186,6 +184,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
      */
     @Override
     public void buildContextMenu(final IMenuManager manager) {
+        if (StyledTextEditor.workflowContextMenuShouldBeVetoed()) {
+            manager.updateAll(true);
+            return;
+        }
 
         final String FLOW_VAR_PORT_GRP = "Flow Variable Ports";
 
@@ -385,13 +387,13 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 // add for node views option if applicable
                 int numNodeViews = container.getNrViews();
                 for (int i = 0; i < numNodeViews; i++) {
-                    action = new OpenViewAction(unwrapNC(container), i);
+                    action = new OpenViewAction(Wrapper.unwrapNC(container), i);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 }
 
                 // add interactive view options
                 if (container.hasInteractiveView()) {
-                    action = new OpenInteractiveViewAction(unwrapNC(container));
+                    action = new OpenInteractiveViewAction(Wrapper.unwrapNC(container));
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 } else {
                     // in the 'else' block? Yes:
@@ -457,14 +459,13 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     subnodeMenuMgr.appendToGroup(GROUP_SUBNODE, action);
                     ((AbstractNodeAction)action).update();
 
-                    if (wraps(container, SubNodeContainer.class)) {
-
-                        InteractiveWebViewsResult interactiveWebViewsResult =
-                                unwrapNC(container).getInteractiveWebViews();
+                    if (Wrapper.wraps(container, SubNodeContainer.class)) {
+                        final InteractiveWebViewsResult interactiveWebViewsResult =
+                                Wrapper.unwrapNC(container).getInteractiveWebViews();
                         if (interactiveWebViewsResult.size() > 0) {
                             subnodeViewMgr = getSingleSubNodeViewsMenuManager(subnodeViewMgr, subnodeMenuMgr);
                             for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
-                                action = new OpenInteractiveWebViewAction(unwrapNC(container),
+                                action = new OpenInteractiveWebViewAction(Wrapper.unwrapNC(container),
                                     interactiveWebViewsResult.get(i));
                                 subnodeViewMgr.appendToGroup(GROUP_SUBNODE_VIEWS, action);
                             }
@@ -484,7 +485,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                         // skip the implicit flow var ports on "normal" nodes
                         continue;
                     }
-                    if (!wraps(container, NodeContainer.class)
+                    if (!Wrapper.wraps(container, NodeContainer.class)
                         && !container.getOutPort(i).getPortType().equals(BufferedDataTable.TYPE)) {
                         // only view on data tables are currently supported for WorkflowManagerUI and Co.
                         continue;
