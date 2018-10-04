@@ -124,6 +124,7 @@ import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.actions.UnlinkNodesAction;
+import org.knime.workbench.editor2.directannotationedit.StyledTextEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
@@ -181,6 +182,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
      */
     @Override
     public void buildContextMenu(final IMenuManager manager) {
+        if (StyledTextEditor.workflowContextMenuShouldBeVetoed()) {
+            manager.updateAll(true);
+            return;
+        }
 
         final String FLOW_VAR_PORT_GRP = "Flow Variable Ports";
 
@@ -235,14 +240,14 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
         // show some menu items on LoopEndNodes only
-        List parts = m_viewer.getSelectedEditParts();
+        List<?> parts = m_viewer.getSelectedEditParts();
         if (parts.size() == 1) {
             EditPart p = (EditPart)parts.get(0);
             if (p instanceof NodeContainerEditPart) {
-                NodeContainerUI container =
+                final NodeContainerUI container =
                         (NodeContainerUI)((NodeContainerEditPart)p).getModel();
                 if (container instanceof SingleNodeContainerUI) {
-                    SingleNodeContainerUI snc = (SingleNodeContainerUI)container;
+                    final SingleNodeContainerUI snc = (SingleNodeContainerUI)container;
                     Wrapper.unwrapOptional(snc, SingleNodeContainer.class).ifPresent(sncImpl -> {
                         if (sncImpl.isModelCompatibleTo(LoopEndNode.class)) {
                             // pause loop execution

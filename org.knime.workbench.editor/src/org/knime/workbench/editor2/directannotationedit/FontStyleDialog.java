@@ -73,7 +73,6 @@ import org.eclipse.swt.widgets.Spinner;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
- *
  * @author ohl
  */
 public class FontStyleDialog extends Dialog {
@@ -114,6 +113,16 @@ public class FontStyleDialog extends Dialog {
         m_defBold = defBold;
         m_defItalic = defItalic;
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean close() {
+        StyledTextEditor.markStyleDecorationCloseTime();
+
+        return super.close();
     }
 
     /**

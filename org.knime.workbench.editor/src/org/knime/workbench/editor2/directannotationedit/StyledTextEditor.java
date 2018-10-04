@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.CellEditor;
@@ -97,15 +98,25 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.FontStore;
 
 /**
- *
  * @author ohl, KNIME AG, Zurich, Switzerland
  */
 public class StyledTextEditor extends CellEditor {
+    private static final boolean PLATFORM_IS_MAC = Platform.OS_MACOSX.equals(Platform.getOS());
+
+    /**
+     * @see #workflowContextMenuShouldBeVetoed()
+     */
+    private static final long INHUMANLY_QUICK_INTER_EVENT_TIME = 90;
+
+    // Perfectly fine that this is shared across all instances as the amount of time it would take to switch workflow
+    // editors falls very far outside our "inhumanly quick" boundary.
+    private static final AtomicLong LAST_STYLE_CONTEXT_MENU_CLOSE = new AtomicLong(-1);
+
     private static final int TAB_SIZE;
 
     static {
         // set tab size for win and linux and mac differently (it even depends on the zoom level, yuk!)
-        if (Platform.OS_MACOSX.equals(Platform.getOS())) {
+        if (PLATFORM_IS_MAC) {
             TAB_SIZE = 8;
         } else if (Platform.OS_LINUX.equals(Platform.getOS())) {
             TAB_SIZE = 8;
@@ -123,6 +134,28 @@ public class StyledTextEditor extends CellEditor {
         fromHex("C4CBE0"), fromHex("E3B67D")};
 
     private static RGB[] lastColors = null;
+
+    static void markStyleDecorationCloseTime() {
+        LAST_STYLE_CONTEXT_MENU_CLOSE.set(System.currentTimeMillis());
+    }
+
+    /**
+     * This is a hack work-around for https://knime-com.atlassian.net/browse/AP-10383 in which we conclude that if we
+     * are on a Mac and the request for the display of the context menu is inhumanly fast given the close time of this
+     * editor's context menu, that the worklfow editor's context menu should not be shown.
+     *
+     * @return true if the workflow context menu should not be shown, false if it should be shown
+     */
+    public static boolean workflowContextMenuShouldBeVetoed() {
+        if ((PLATFORM_IS_MAC)
+              && ((System.currentTimeMillis() - LAST_STYLE_CONTEXT_MENU_CLOSE.get()) < INHUMANLY_QUICK_INTER_EVENT_TIME)) {
+            return true;
+        }
+
+        return false;
+    }
+
+
 
     private StyledText m_styledText;
 
@@ -370,6 +403,8 @@ public class StyledTextEditor extends CellEditor {
             @Override
             public void handleEvent(final Event event) {
                 m_allowFocusLost.set(true);
+
+                markStyleDecorationCloseTime();
             }
         });
         Image img;
@@ -795,6 +830,7 @@ public class StyledTextEditor extends CellEditor {
             colDlg.setRGB(m_backgroundColor.getRGB());
         }
         RGB newBGCol = colDlg.open();
+        markStyleDecorationCloseTime();
         if (newBGCol == null) {
             // user canceled
             return;

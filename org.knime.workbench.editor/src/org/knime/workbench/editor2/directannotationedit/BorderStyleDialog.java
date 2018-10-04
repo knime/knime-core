@@ -70,7 +70,6 @@ import org.eclipse.swt.widgets.Spinner;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
- *
  * @author ohl
  */
 public class BorderStyleDialog extends Dialog {
@@ -94,6 +93,16 @@ public class BorderStyleDialog extends Dialog {
             m_defColor = defColor;
         }
         m_defBorderSize = defSize;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean close() {
+        StyledTextEditor.markStyleDecorationCloseTime();
+
+        return super.close();
     }
 
     /**
