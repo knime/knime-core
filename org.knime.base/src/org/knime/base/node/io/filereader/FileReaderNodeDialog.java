@@ -344,21 +344,24 @@ class FileReaderNodeDialog extends NodeDialogPane {
         try {
             fileChanged = takeOverNewFileLocation();
 
-            if (fileChanged && !m_preserveSettings.isSelected() && !m_filePanel.isVariableReplacementEnabled()) {
-                resetSettings();
+            if (fileChanged) {
+                if (!m_preserveSettings.isSelected() && !m_filePanel.isVariableReplacementEnabled()) {
+                    resetSettings();
+                }
+
+                analyzeDataFileAndUpdatePreview(fileChanged);
             }
 
         } catch (final InvalidSettingsException e) {
             // clear the URL in the settings
             m_frSettings.setDataFileLocationAndUpdateTableName(null);
 
-            setErrorLabelText("Malformed URL '"
-                    + m_filePanel.getSelectedFile()  + "'.");
+            setErrorLabelText("Malformed URL '" + m_filePanel.getSelectedFile() + "'.");
             setPreviewTable(null);
-        }
 
-        // also "analyze" an invalid file (hides "analyze" buttons)
-        analyzeDataFileAndUpdatePreview(fileChanged);
+            // also "analyze" an invalid file (hides "analyze" buttons)
+            analyzeDataFileAndUpdatePreview(fileChanged);
+        }
     }
 
     /*
