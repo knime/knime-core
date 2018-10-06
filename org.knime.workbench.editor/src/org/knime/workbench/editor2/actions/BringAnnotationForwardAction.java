@@ -78,12 +78,20 @@ public class BringAnnotationForwardAction extends AbstractAnnotationReorderingAc
         wm.bringAnnotationForward(annotation);
     }
 
+    @Override
+    boolean concludeCalculateEnabled(final WorkflowManager wm, final WorkflowAnnotation annotation) {
+        final int currentIndex = wm.getZOrderForAnnotation(annotation);
+        final int annotationCount = wm.getAnnotationCount();
+
+        return (currentIndex < (annotationCount - 1));
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public String getText() {
-        return "Bring Annotation Forward";
+        return "Bring Annotation Forward\t" + getHotkey("knime.commands.editor.bringForward");
     }
 
     /**
@@ -91,7 +99,7 @@ public class BringAnnotationForwardAction extends AbstractAnnotationReorderingAc
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-forward.png");
     }
 
     /**
@@ -99,7 +107,7 @@ public class BringAnnotationForwardAction extends AbstractAnnotationReorderingAc
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move_dis.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-forward_disabled.png");
     }
 
     /**

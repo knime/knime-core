@@ -48,6 +48,7 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -72,6 +73,13 @@ abstract class AbstractAnnotationReorderingAction extends AbstractNodeAction {
     abstract void executeWorkflowManagerMethod(final WorkflowManager wm, final WorkflowAnnotation annotation);
 
     /**
+     * @param annotation the selected annotation
+     * @return true if the action can be enabled; this method will only be called if there is a single selected
+     *         annotation whose model is an instance of <code>WorklowAnnotation</code>
+     */
+    abstract boolean concludeCalculateEnabled(final WorkflowManager wm, final WorkflowAnnotation annotation);
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -80,7 +88,8 @@ abstract class AbstractAnnotationReorderingAction extends AbstractNodeAction {
     }
 
     /**
-     * @return true if one and only one <code>WorkflowAnnotation</code> is selected
+     * @return true if one and only one <code>WorkflowAnnotation</code> is selected and the concrete subclass'
+     *         implementation of <code>concludeCalculateEnabled()</code> returns true
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
@@ -88,11 +97,18 @@ abstract class AbstractAnnotationReorderingAction extends AbstractNodeAction {
         if (getManager().isWriteProtected()) {
             return false;
         }
+
         final AnnotationEditPart[] selectedParts = getSelectedParts(AnnotationEditPart.class);
         if (selectedParts.length != 1) {
             return false;
         }
-        return (selectedParts[0].getModel() instanceof WorkflowAnnotation);
+
+        Annotation a = selectedParts[0].getModel();
+        if (a instanceof WorkflowAnnotation) {
+            return concludeCalculateEnabled(getEditor().getWorkflowManager().get(), (WorkflowAnnotation)a);
+        }
+
+        return false;
     }
 
     /**

@@ -62,6 +62,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Point;
@@ -282,22 +283,27 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         aaa.setLocation(m_lastLocation.x, m_lastLocation.y);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
+
+        final ImageDescriptor subMenuImage =
+            ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-forward.png");
+        final MenuManager annotationSubmenu = new MenuManager("Arrange", subMenuImage, null);
         // bring annotation to the front
         action = m_actionRegistry.getAction(BringAnnotationToFrontAction.ID);
-        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        annotationSubmenu.add(action);
         ((AbstractNodeAction)action).update();
         // bring annotation forward
         action = m_actionRegistry.getAction(BringAnnotationForwardAction.ID);
-        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        annotationSubmenu.add(action);
         ((AbstractNodeAction)action).update();
         // send annotation backward
         action = m_actionRegistry.getAction(SendAnnotationBackwardAction.ID);
-        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        annotationSubmenu.add(action);
         ((AbstractNodeAction)action).update();
         // send annotation to the back
         action = m_actionRegistry.getAction(SendAnnotationToBackAction.ID);
-        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        annotationSubmenu.add(action);
         ((AbstractNodeAction)action).update();
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, annotationSubmenu);
 
         // linking nodes
         action = m_actionRegistry.getAction(LinkNodesAction.ID);

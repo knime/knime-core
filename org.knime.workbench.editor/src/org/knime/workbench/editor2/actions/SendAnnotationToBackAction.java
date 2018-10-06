@@ -77,6 +77,13 @@ public class SendAnnotationToBackAction extends AbstractAnnotationReorderingActi
         wm.sendAnnotationToBack(annotation);
     }
 
+    @Override
+    boolean concludeCalculateEnabled(final WorkflowManager wm, final WorkflowAnnotation annotation) {
+        final int currentIndex = wm.getZOrderForAnnotation(annotation);
+
+        return (currentIndex > 0);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -90,7 +97,7 @@ public class SendAnnotationToBackAction extends AbstractAnnotationReorderingActi
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-to-back.png");
     }
 
     /**
@@ -98,7 +105,7 @@ public class SendAnnotationToBackAction extends AbstractAnnotationReorderingActi
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move_dis.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-to-back_disabled.png");
     }
 
     /**

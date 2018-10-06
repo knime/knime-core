@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,81 +41,29 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   29.06.2012 (Peter Ohl): created
+ *   Oct 6, 2018 (loki): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2.actions.delegates;
 
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.workflow.WorkflowAnnotation;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.KNIMEEditorPlugin;
-import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.actions.SendAnnotationBackwardAction;
 
 /**
- * Action to move the selected annotation in front of all other annotations.
+ * The editor action proxy for generating an instance of <code>SendAnnotationBackwardAction</code>
  *
- * @author Peter Ohl, KNIME AG, Zurich, Switzerland
+ * @author loki der quaeler
+ * @see org.knime.workbench.editor2.actions.SendAnnotationBackwardAction
  */
-public class BringAnnotationToFrontAction extends AbstractAnnotationReorderingAction {
-    /** unique ID for this action. **/
-    public static final String ID = "knime.action.annotationToFront";
-
-
-    /**
-     * @param editor The workflow editor
-     */
-    public BringAnnotationToFrontAction(final WorkflowEditor editor) {
-        super(editor, ID);
-    }
-
-    @Override
-    void executeWorkflowManagerMethod(final WorkflowManager wm, final WorkflowAnnotation annotation) {
-        wm.bringAnnotationToFront(annotation);
-    }
-
-    @Override
-    boolean concludeCalculateEnabled(final WorkflowManager wm, final WorkflowAnnotation annotation) {
-        final int currentIndex = wm.getZOrderForAnnotation(annotation);
-        final int annotationCount = wm.getAnnotationCount();
-
-        return (currentIndex < (annotationCount - 1));
-    }
-
+public class SendAnnotationBackwardEditorAction extends AbstractEditorAction {
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getText() {
-        return "Bring Annotation to Front\t" + getHotkey("knime.commands.editor.bringToFront");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-to-front.png");
-    }
-
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-to-front_disabled.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Move the selected annotation on top of all other annotations";
+    protected AbstractNodeAction createAction(final WorkflowEditor editor) {
+        return new SendAnnotationBackwardAction(editor);
     }
 }

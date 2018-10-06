@@ -78,12 +78,19 @@ public class SendAnnotationBackwardAction extends AbstractAnnotationReorderingAc
         wm.sendAnnotationBackward(annotation);
     }
 
+    @Override
+    boolean concludeCalculateEnabled(final WorkflowManager wm, final WorkflowAnnotation annotation) {
+        final int currentIndex = wm.getZOrderForAnnotation(annotation);
+
+        return (currentIndex > 0);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public String getText() {
-        return "Send Annotation Backward";
+        return "Send Annotation Backward\t" + getHotkey("knime.commands.editor.sendBackward");
     }
 
     /**
@@ -91,7 +98,7 @@ public class SendAnnotationBackwardAction extends AbstractAnnotationReorderingAc
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-backward.png");
     }
 
     /**
@@ -99,7 +106,7 @@ public class SendAnnotationBackwardAction extends AbstractAnnotationReorderingAc
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move_dis.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-backward_disabled.png");
     }
 
     /**

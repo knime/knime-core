@@ -9071,7 +9071,7 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Resorts the internal array to move the specified annotation to the last index.
+     * Re-sorts the internal array to move the specified annotation to the last index.
      *
      * @param annotation to bring to front
      * @since 2.6
@@ -9110,7 +9110,7 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Resorts the internal array to move the specified annotation to the first index.
+     * Re-sorts the internal array to move the specified annotation to the first index.
      *
      * @param annotation to bring to front
      * @since 2.6
@@ -9122,16 +9122,34 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * Returns the z-order index of the specified parameter, where a lower value is more to the 'back.'
+     *
+     * @param annotation the annotation for which we want to know the z-order index.
+     * @return the z-order index, or -1 if the annotation does not exist in this workflow manager.
+     * @since 3.7
+     */
+    public int getZOrderForAnnotation(final WorkflowAnnotation annotation) {
+        return m_annotations.indexOf(annotation);
+    }
+
+    /**
+     * @return The number of annotations which this workflow manager is tracking.
+     * @since 3.7
+     */
+    public int getAnnotationCount() {
+        return m_annotations.size();
+    }
+
+    /**
      * @param noOpIndex if the annotation is already at this index value, no re-ordering will occur
      * @param indexSpecifier a function which, given the existing index, returns the desired index at which to place the
      *            annotation
      */
     private void alterAnnotationZOrdering(final WorkflowAnnotation annotation, final int noOpIndex,
         final IntFunction<Integer> indexSpecifier) {
-        final int index = m_annotations.indexOf(annotation);
+        final int index = getZOrderForAnnotation(annotation);
         if (index == -1) {
-            throw new IllegalArgumentException(
-                "Annotation \"" + annotation + "\" does not exist - cannot be moved");
+            throw new IllegalArgumentException("Annotation \"" + annotation + "\" does not exist - cannot be moved");
         }
 
         if (index == noOpIndex) {

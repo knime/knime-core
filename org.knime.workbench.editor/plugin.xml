@@ -55,6 +55,16 @@
             name="Bring to Front"/>
       <command
             categoryId="knime.command.category"
+            description="Brings the selected annotation forward"
+            id="knime.commands.editor.bringForward"
+            name="Bring Forward"/>
+      <command
+            categoryId="knime.command.category"
+            description="Sends the selected annotation backward"
+            id="knime.commands.editor.sendBackward"
+            name="Send Backward"/>
+      <command
+            categoryId="knime.command.category"
             description="Sends the selected annotation to the back"
             id="knime.commands.editor.sendToBack"
             name="Send to Back"/>
@@ -469,17 +479,35 @@
          <action
                class="org.knime.workbench.editor2.actions.delegates.BringAnnotationToFrontEditorAction"
                definitionId="knime.commands.editor.bringToFront"
-               disabledIcon="icons/move_dis.png"
-               icon="icons/move.png"
+               disabledIcon="icons/annotation-to-front_disabled.png"
+               icon="icons/annotation-to-front.png"
                id="org.knime.workbench.editor.actions.bringToFront"
                label="Bring to Front"
                style="push"
                tooltip="Bring the selected annotation to the front"/>     
          <action
+               class="org.knime.workbench.editor2.actions.delegates.BringAnnotationForwardEditorAction"
+               definitionId="knime.commands.editor.bringForward"
+               disabledIcon="icons/annotation-forward_disabled.png"
+               icon="icons/annotation-forward.png"
+               id="org.knime.workbench.editor.actions.bringForward"
+               label="Bring Forward"
+               style="push"
+               tooltip="Bring the selected annotation forward"/>     
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.SendAnnotationBackwardEditorAction"
+               definitionId="knime.commands.editor.sendBackward"
+               disabledIcon="icons/annotation-backward_disabled.png"
+               icon="icons/annotation-backward.png"
+               id="org.knime.workbench.editor.actions.sendBackward"
+               label="Send Backward"
+               style="push"
+               tooltip="Send the selected annotation backward"/>     
+         <action
                class="org.knime.workbench.editor2.actions.delegates.SendAnnotationToBackEditorAction"
                definitionId="knime.commands.editor.sendToBack"
-               disabledIcon="icons/move_dis.png"
-               icon="icons/move.png"
+               disabledIcon="icons/annotation-to-back_disabled.png"
+               icon="icons/annotation-to-back.png"
                id="org.knime.workbench.editor.actions.sendToBack"
                label="Send to Back"
                style="push"
@@ -636,6 +664,16 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+SHIFT+PAGE_UP"/>
+      <key
+            commandId="knime.commands.editor.bringForward"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+PAGE_UP"/>
+      <key
+            commandId="knime.commands.editor.sendBackward"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+PAGE_DOWN"/>
       <key
             commandId="knime.commands.editor.sendToBack"
             contextId="org.eclipse.ui.contexts.window"
