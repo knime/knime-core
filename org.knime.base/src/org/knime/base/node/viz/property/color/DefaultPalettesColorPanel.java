@@ -81,19 +81,14 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
     /** Generated UID. */
     private static final long serialVersionUID = -5676752347061190827L;
 
-    private final JButton m_set1Button = new JButton("Apply to columns");
+    /** The label of the 1st color palette. */
+    private static final String SET_1_LBL = "Set 1";
 
-    private final JButton m_set2Button = new JButton("Apply to columns");
+    /** The label of the 2nd color palette. */
+    private static final String SET_2_LBL = "Set 2";
 
-    private final JButton m_set3Button = new JButton("Apply to columns");
-
-    private JPanel m_newValuesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, PALETTE_ELEMENT_SPACING, 0));
-
-    private final String[] m_paletteSet1;
-
-    private final String[] m_paletteSet2;
-
-    private final String[] m_paletteSet3;
+    /** The label of the 3rd color palette. */
+    private static final String SET_3_LBL = "Set 3 (colorblind safe)";
 
     /** Size of the individual elements of a palette. */
     private static final int PALETTE_ELEMENT_SIZE = 20;
@@ -101,7 +96,23 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
     /** Spacing between the individual elements of a palette. */
     private static final int PALETTE_ELEMENT_SPACING = 4;
 
-    private JComboBox<NewValueOption> m_handleNewValues;
+    private final JButton m_set1Button = new JButton("Apply to columns");
+
+    private final JButton m_set2Button = new JButton("Apply to columns");
+
+    private final JButton m_set3Button = new JButton("Apply to columns");
+
+    /** The on different table label. */
+    private final JLabel m_diffTableLabel = createLabel("On different table:");
+
+    /** The new values selection box. */
+    private final JComboBox<NewValueOption> m_handleNewValues = new JComboBox<>(NewValueOption.values());
+
+    private final String[] m_paletteSet1;
+
+    private final String[] m_paletteSet2;
+
+    private final String[] m_paletteSet3;
 
     /**
      * @param paletteSet1 the first, default color palette
@@ -111,16 +122,15 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         m_paletteSet1 = paletteSet1;
         m_paletteSet2 = paletteSet2;
         m_paletteSet3 = paletteSet3;
-        // set the button fonts
-        m_set1Button.setFont(new Font(m_set1Button.getFont().getName(), Font.PLAIN, m_set1Button.getFont().getSize()));
-        m_set2Button.setFont(new Font(m_set2Button.getFont().getName(), Font.PLAIN, m_set2Button.getFont().getSize()));
-        m_set3Button.setFont(new Font(m_set3Button.getFont().getName(), Font.PLAIN, m_set3Button.getFont().getSize()));
     }
 
     /**
      * Overwrites the default JPanel to notify the ColorSelectionModel of changes.
      */
     private class PaletteElement extends JPanel {
+
+        /** Generated UID. */
+        private static final long serialVersionUID = 1769535613045417935L;
 
         private Color m_color;
 
@@ -165,53 +175,51 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         setLayout(new GridBagLayout());
 
         final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(0, 5, 10, 20);
-
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.LINE_START;
         gbc.fill = GridBagConstraints.NONE;
 
-        gbc.gridwidth = 2;
-        add(createLabel("Set 1:"), gbc);
-        ++gbc.gridy;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        add(createColorPanel(m_paletteSet1), gbc);
-        gbc.gridx += 2;
-        gbc.gridwidth = 1;
-        add(m_set1Button, gbc);
-        gbc.gridx = 0;
-        ++gbc.gridy;
+        // palette 1 entry
+        gbc.insets = new Insets(16, 0, 8, 0);
+        createPaletteEntry(gbc, SET_1_LBL, m_paletteSet1, m_set1Button);
 
-        gbc.gridwidth = 2;
-        add(createLabel("Set 2:"), gbc);
-        ++gbc.gridy;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        add(createColorPanel(m_paletteSet2), gbc);
-        gbc.gridx += 2;
-        gbc.gridwidth = 1;
-        add(m_set2Button, gbc);
-        gbc.gridx = 0;
-        ++gbc.gridy;
+        // palette 2 entry
+        gbc.insets = new Insets(0, 0, 8, 0);
+        createPaletteEntry(gbc, SET_2_LBL, m_paletteSet2, m_set2Button);
 
-        gbc.gridwidth = 2;
-        add(createLabel("Set 3 (colorblind safe):"), gbc);
-        ++gbc.gridy;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        add(createColorPanel(m_paletteSet3), gbc);
-        gbc.gridx += 2;
-        gbc.gridwidth = 1;
-        add(m_set3Button, gbc);
-        gbc.gridx = 0;
-        ++gbc.gridy;
+        // palette 3 entry
+        gbc.insets = new Insets(0, 0, 8, 0);
+        createPaletteEntry(gbc, SET_3_LBL, m_paletteSet3, m_set3Button);
 
-        gbc.insets = new Insets(10, 5, 10, 20);
-        add(createLabel("On different table:"), gbc);
+        // new value entry
+        gbc.insets = new Insets(0, 0, 16, 0);
+        add(m_diffTableLabel, gbc);
         ++gbc.gridx;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.LINE_END;
-        m_handleNewValues = new JComboBox<NewValueOption>(NewValueOption.values());
+        gbc.insets = new Insets(0, 0, 16, 0);
         add(m_handleNewValues, gbc);
+    }
+
+    /**
+     * @param gbc
+     */
+    private void createPaletteEntry(final GridBagConstraints gbc, final String label, final String[] palette,
+        final JButton button) {
+        gbc.gridwidth = 2;
+        add(createLabel(label), gbc);
+        ++gbc.gridy;
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.insets = new Insets(0, 0, 16, 32);
+        add(createColorPanel(palette), gbc);
+        gbc.gridx += 2;
+        gbc.gridwidth = 1;
+        gbc.insets = new Insets(0, 0, 16, 0);
+        button.setFont(new Font(button.getFont().getName(), Font.PLAIN, button.getFont().getSize()));
+        add(button, gbc);
+        gbc.gridx = 0;
+        ++gbc.gridy;
     }
 
     /**
@@ -261,7 +269,8 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         m_set1Button.setVisible(enabled);
         m_set2Button.setVisible(enabled);
         m_set3Button.setVisible(enabled);
-        m_newValuesPanel.setVisible(enabled);
+        m_diffTableLabel.setVisible(enabled);
+        m_handleNewValues.setVisible(enabled);
     }
 
     /**
