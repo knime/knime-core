@@ -176,7 +176,7 @@ class ColorManager2NodeModel extends NodeModel {
     private final Map<DataCell, ColorAttr> m_map;
 
     /** Option for handling of new values. For backwards-compatibility the default option is FAIL. **/
-    private NewValueOption m_newValueOption = NewValueOption.FAIL;
+    private NewValueOption m_newValueOption = NewValueOption.SET1;
 
     /** The selected column. */
     private String m_columnGuess;
