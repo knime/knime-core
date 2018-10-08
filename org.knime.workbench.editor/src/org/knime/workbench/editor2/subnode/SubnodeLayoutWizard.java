@@ -62,6 +62,7 @@ import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WebResourceController;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 
@@ -104,7 +105,7 @@ public class SubnodeLayoutWizard extends Wizard {
         nodeIDs.addAll(viewNodes.keySet());
         for (Map.Entry<NodeID, SubNodeContainer> entry : nestedSubnodes.entrySet()) {
             WorkflowManager nestedWFManager = nestedSubnodes.get(entry.getKey()).getWorkflowManager();
-            if (!nestedWFManager.findNodes(WizardNode.class, true).isEmpty()) {
+            if (!nestedWFManager.findNodes(WizardNode.class, new NodeModelFilter<WizardNode>(), false, true).isEmpty()) {
                 NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(wfManager.getID(), entry.getKey());
                 resultMap.put(idSuffix, entry.getValue());
                 nodeIDs.add(entry.getKey());
