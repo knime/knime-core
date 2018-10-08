@@ -53,6 +53,7 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -69,6 +70,10 @@ public class SubnodeLayoutAction extends AbstractNodeAction {
 
     /** unique ID for this action. * */
     public static final String ID = "knime.action.sub_node_layout";
+
+    /** filter for wizard node class */
+    @SuppressWarnings("rawtypes")
+    public static final NodeModelFilter<WizardNode> WIZARD_NODE_FILTER = new NodeModelFilter<WizardNode>();
 
     /**
      *
@@ -135,7 +140,7 @@ public class SubnodeLayoutAction extends AbstractNodeAction {
             return false;
         }
         if (manager.getDirectNCParent() instanceof SubNodeContainer) {
-            return !manager.findNodes(WizardNode.class, false).isEmpty();
+            return !manager.findNodes(WizardNode.class, WIZARD_NODE_FILTER, false, true).isEmpty();
         }
         return false;
     }
