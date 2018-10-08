@@ -157,16 +157,18 @@ public final class WrappedTable implements KnowsRowCountTable {
      * {@link #saveToFile(File, NodeSettingsWO, ExecutionMonitor) save}.
      * @param s To load from
      * @param tblRep Global table loader map.
+     * @param dataRepository The data repository (needed for blobs, file stores, and table ids).
      * @return A freshly created wrapped table.
      * @throws InvalidSettingsException If settings are invalid.
+     * @since 3.7
      */
-    public static WrappedTable load(final NodeSettingsRO s,
-            final Map<Integer, BufferedDataTable> tblRep)
+    public static WrappedTable load(final NodeSettingsRO s, final Map<Integer, BufferedDataTable> tblRep,
+        final WorkflowDataRepository dataRepository)
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int refID = subSettings.getInt(CFG_REFERENCE_ID);
         BufferedDataTable reference =
-            BufferedDataTable.getDataTable(tblRep, refID);
+            BufferedDataTable.getDataTable(tblRep, refID, dataRepository);
         return new WrappedTable(reference);
     }
 

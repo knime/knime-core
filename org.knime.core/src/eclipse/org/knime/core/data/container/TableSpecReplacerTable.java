@@ -139,20 +139,21 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
      * @param f The file to read from.
      * @param s The settings to get meta information from.
      * @param tblRep The table repository
+     * @param dataRepository The data repository (needed for blobs, file stores, and table ids).
      * @return The resulting table.
      * @throws IOException If reading the file fails.
      * @throws InvalidSettingsException If reading the settings fails.
+     * @since 3.7
      */
-    public static TableSpecReplacerTable load11x(
-            final File f, final NodeSettingsRO s,
-            final Map<Integer, BufferedDataTable> tblRep)
+    public static TableSpecReplacerTable load11x(final File f, final NodeSettingsRO s,
+        final Map<Integer, BufferedDataTable> tblRep, final WorkflowDataRepository dataRepository)
         throws IOException, InvalidSettingsException {
 
         try (ZipFile zipFile = new ZipFile(f);
                 InputStream in = new BufferedInputStream(zipFile.getInputStream(new ZipEntry(ZIP_ENTRY_SPEC)))) {
             NodeSettingsRO specSettings = NodeSettings.loadFromXML(in);
             DataTableSpec newSpec = DataTableSpec.load(specSettings);
-            return load(s, newSpec, tblRep);
+            return load(s, newSpec, tblRep, dataRepository);
         }
     }
 
@@ -162,17 +163,18 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
      * @param s The settings to get meta information from.
      * @param newSpec The new table spec.
      * @param tblRep The table repository
+     * @param dataRepository The data repository (needed for blobs, file stores, and table ids).
      * @return The resulting table.
      * @throws InvalidSettingsException If reading the settings fails.
+     * @since 3.7
      */
-    public static TableSpecReplacerTable load(final NodeSettingsRO s,
-            final DataTableSpec newSpec,
-            final Map<Integer, BufferedDataTable> tblRep)
+    public static TableSpecReplacerTable load(final NodeSettingsRO s, final DataTableSpec newSpec,
+        final Map<Integer, BufferedDataTable> tblRep, final WorkflowDataRepository dataRepository)
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int refID = subSettings.getInt(CFG_REFERENCE_ID);
         BufferedDataTable reference =
-            BufferedDataTable.getDataTable(tblRep, refID);
+            BufferedDataTable.getDataTable(tblRep, refID, dataRepository);
         return new TableSpecReplacerTable(reference, newSpec);
     }
 

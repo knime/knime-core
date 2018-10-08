@@ -205,20 +205,21 @@ public final class JoinedTable implements KnowsRowCountTable {
      * @param s The settings object, contains tables ids.
      * @param spec The final spec.
      * @param tblRep The table repository
+     * @param dataRepository The data repository (needed for blobs, file stores, and table ids).
      * @return The restored table.
      * @throws InvalidSettingsException If the settings can't be read.
+     * @since 3.7
      */
-    public static JoinedTable load(final NodeSettingsRO s,
-            final DataTableSpec spec,
-            final Map<Integer, BufferedDataTable> tblRep)
+    public static JoinedTable load(final NodeSettingsRO s, final DataTableSpec spec,
+        final Map<Integer, BufferedDataTable> tblRep, final WorkflowDataRepository dataRepository)
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int leftID = subSettings.getInt(CFG_LEFT_TABLE_ID);
         int rightID = subSettings.getInt(CFG_RIGHT_TABLE_ID);
         BufferedDataTable leftTable =
-            BufferedDataTable.getDataTable(tblRep, leftID);
+            BufferedDataTable.getDataTable(tblRep, leftID, dataRepository);
         BufferedDataTable rightTable =
-            BufferedDataTable.getDataTable(tblRep, rightID);
+            BufferedDataTable.getDataTable(tblRep, rightID, dataRepository);
         return new JoinedTable(leftTable, rightTable, spec);
     }
 

@@ -60,7 +60,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
@@ -71,6 +70,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIteratorBuilder;
 import org.knime.core.data.RowIteratorBuilder.DefaultRowIteratorBuilder;
 import org.knime.core.data.RowKey;
@@ -128,20 +128,18 @@ public final class BufferedDataTable implements DataTable, PortObject {
     public static final PortType TYPE_OPTIONAL =
         PortTypeRegistry.getInstance().getPortType(BufferedDataTable.class, true);
 
-    /** internal ID for any generated table. */
-    private static final AtomicInteger LAST_ID = new AtomicInteger(0);
-
     /**
      * Method that is used internally while the workflow is being loaded. Not
      * intended to be used directly by node implementations.
      * @param tblRep The table repository
      * @param tableID The table ID
+     * @param dataRepository The data repository (needed for blobs, file stores, and table ids).
      * @return The table from the repository.
      * @throws InvalidSettingsException If no such table exists.
+     * @since 3.7
      */
-    public static BufferedDataTable getDataTable(
-            final Map<Integer, BufferedDataTable> tblRep,
-            final Integer tableID) throws InvalidSettingsException {
+    public static BufferedDataTable getDataTable(final Map<Integer, BufferedDataTable> tblRep, final Integer tableID,
+        final WorkflowDataRepository dataRepository) throws InvalidSettingsException {
         if (tblRep == null) {
             throw new NullPointerException("Table repository must not be null");
         }
@@ -152,7 +150,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
         // update the lastID counter!
         assert result.m_tableID == tableID;
-        updateLastId(tableID);
+        dataRepository.updateLastId(tableID);
         return result;
     }
 
@@ -166,16 +164,6 @@ public final class BufferedDataTable implements DataTable, PortObject {
             final Map<Integer, BufferedDataTable> tblRep,
             final BufferedDataTable t) {
         tblRep.put(t.getBufferedTableId(), t);
-    }
-
-    /** Returns a table identifier and increments the internal counter.
-     * @return Table identifier.
-     */
-    static int generateNewID() {
-        // see AP-10195: we accept a buffer overflow: 2147483647 -> -2147483648(neg)-> -2147483647 -> ... -> -2
-        int id = LAST_ID.incrementAndGet();
-        CheckUtils.checkArgument(id != -1, "Range of table IDs exhausted (integer max)");
-        return id;
     }
 
     /** Throws <code>IllegalStateException</code> as this method is not
@@ -193,76 +181,96 @@ public final class BufferedDataTable implements DataTable, PortObject {
     private int m_tableID;
     private Node m_owner;
 
-    /** Creates a new buffered data table based on a container table
-     * (caching everything).
+    /**
+     * Creates a new buffered data table based on a container table (caching everything).
+     *
      * @param table The reference.
      * @param bufferID The buffer ID.
      */
     BufferedDataTable(final ContainerTable table, final int bufferID) {
-        this((KnowsRowCountTable)table, bufferID);
+        this(table, bufferID, null);
     }
 
-    /** Creates a new buffered data table based on a changed columns table
-     * (only memorize columns that changed).
+    /**
+     * Creates a new buffered data table based on a changed columns table (only memorize columns that changed).
+     *
      * @param table The reference.
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      */
-    BufferedDataTable(final RearrangeColumnsTable table) {
-        this(table, table.getAppendTable() != null
-                ? table.getAppendTable().getBufferID() : generateNewID());
+    BufferedDataTable(final RearrangeColumnsTable table, final IDataRepository dataRepository) {
+        this(table,
+            table.getAppendTable() != null ? table.getAppendTable().getBufferID() : dataRepository.generateNewID(), dataRepository);
     }
 
-    /** Creates a new buffered data table based on a changed spec table
-     * (only keep new spec).
+    /**
+     * Creates a new buffered data table based on a changed spec table (only keep new spec).
+     *
      * @param table The reference.
+     * @param dataRepository the data repository needed for blobs, file stores, and table ids)
      */
-    BufferedDataTable(final TableSpecReplacerTable table) {
-        this(table, generateNewID());
+    BufferedDataTable(final TableSpecReplacerTable table, final IDataRepository dataRepository) {
+        this(table, dataRepository.generateNewID(), dataRepository);
     }
 
-    /** Creates a new buffered data table based on a wrapped table.
+    /**
+     * Creates a new buffered data table based on a wrapped table.
+     *
      * @param table The reference.
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      */
-    BufferedDataTable(final WrappedTable table) {
-        this(table, generateNewID());
+    BufferedDataTable(final WrappedTable table, final IDataRepository dataRepository) {
+        this(table, dataRepository.generateNewID(), dataRepository);
     }
 
-    /** Creates a new buffered data table based on a concatenation of
-     * BufferedDataTables.
+    /**
+     * Creates a new buffered data table based on a concatenation of BufferedDataTables.
+     *
      * @param table The reference.
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      */
-    BufferedDataTable(final ConcatenateTable table) {
-        this(table, generateNewID());
+    BufferedDataTable(final ConcatenateTable table, final IDataRepository dataRepository) {
+        this(table, dataRepository.generateNewID(), dataRepository);
     }
 
-    /** Creates a new buffered data table based on a join of
-     * BufferedDataTables.
+    /**
+     * Creates a new buffered data table based on a join of BufferedDataTables.
+     *
      * @param table The reference.
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      */
-    BufferedDataTable(final JoinedTable table) {
-        this(table, generateNewID());
+    BufferedDataTable(final JoinedTable table, final IDataRepository dataRepository) {
+        this(table, dataRepository.generateNewID(), dataRepository);
     }
 
-    /** Creates a new buffered data table based on a "void" table.
+    /**
+     * Creates a new buffered data table based on a "void" table.
+     *
      * @param table The reference.
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      */
-    BufferedDataTable(final VoidTable table) {
-        this(table, generateNewID());
+    BufferedDataTable(final VoidTable table, final IDataRepository dataRepository) {
+        this(table, dataRepository.generateNewID(), dataRepository);
     }
 
     /**
      * Creates a new BufferedDataTable for an extended table type.
+     *
      * @param table The extended table
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      */
-    BufferedDataTable(final ExtensionTable table) {
-        this(table, generateNewID());
+    BufferedDataTable(final ExtensionTable table, final IDataRepository dataRepository) {
+        this(table, dataRepository.generateNewID(), dataRepository);
     }
 
-    private BufferedDataTable(final KnowsRowCountTable table, final int id) {
+    private BufferedDataTable(final KnowsRowCountTable table, final int id,
+        final IDataRepository dataRepository) {
         m_delegate = table;
-        // table ID -1 is used for old workflows (1.1.x) - no notion of blobs at that time
-        // see also DataContainer.readFromZip(ReferencedFile, BufferCreator)
-        assert id == -1 || Integer.toUnsignedLong(id) <= Integer.toUnsignedLong(LAST_ID.get()) //
-                : "Table identifiers not unique " + id;
+        if (dataRepository != null) {
+            // table ID -1 is used for old workflows (1.1.x) - no notion of blobs at that time
+            // see also DataContainer.readFromZip(ReferencedFile, BufferCreator)
+            assert id == -1 || Integer.toUnsignedLong(id) <= Integer.toUnsignedLong(dataRepository.getLastId()) //
+                    : "Table identifiers not unique " + id;
+        }
         m_tableID = id;
     }
 
@@ -665,7 +673,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
             isVersion11x = true;
         }
         int id = s.getInt(CFG_TABLE_ID);
-        updateLastId(id + 1);
+        dataRepository.updateLastId(id);
         String fileName = s.getString(CFG_TABLE_FILE_NAME);
         ReferencedFile fileRef;
         if (fileName != null) {
@@ -731,30 +739,30 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 }
                 if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
                     t = new BufferedDataTable(
-                        new RearrangeColumnsTable(fileRef, s, tblRep, spec, id, dataRepository));
+                        new RearrangeColumnsTable(fileRef, s, tblRep, spec, id, dataRepository), dataRepository);
                 } else if (tableType.equals(TABLE_TYPE_JOINED)) {
-                    JoinedTable jt = JoinedTable.load(s, spec, tblRep);
-                    t = new BufferedDataTable(jt);
+                    JoinedTable jt = JoinedTable.load(s, spec, tblRep, dataRepository);
+                    t = new BufferedDataTable(jt, dataRepository);
                 } else if (tableType.equals(TABLE_TYPE_VOID)) {
                     VoidTable jt = VoidTable.load(spec);
-                    t = new BufferedDataTable(jt);
+                    t = new BufferedDataTable(jt, dataRepository);
                 } else if (tableType.equals(TABLE_TYPE_CONCATENATE)) {
-                    ConcatenateTable ct = ConcatenateTable.load(s, spec, tblRep);
-                    t = new BufferedDataTable(ct);
+                    ConcatenateTable ct = ConcatenateTable.load(s, spec, tblRep, dataRepository);
+                    t = new BufferedDataTable(ct, dataRepository);
                 } else if (tableType.equals(TABLE_TYPE_WRAPPED)) {
-                    WrappedTable wt = WrappedTable.load(s, tblRep);
-                    t = new BufferedDataTable(wt);
+                    WrappedTable wt = WrappedTable.load(s, tblRep, dataRepository);
+                    t = new BufferedDataTable(wt, dataRepository);
                 } else if (tableType.equals(TABLE_TYPE_NEW_SPEC)) {
                     TableSpecReplacerTable replTable;
                     if (isVersion11x) {
-                        replTable = TableSpecReplacerTable.load11x(fileRef.getFile(), s, tblRep);
+                        replTable = TableSpecReplacerTable.load11x(fileRef.getFile(), s, tblRep, dataRepository);
                     } else {
-                        replTable = TableSpecReplacerTable.load(s, spec, tblRep);
+                        replTable = TableSpecReplacerTable.load(s, spec, tblRep, dataRepository);
                     }
-                    t = new BufferedDataTable(replTable);
+                    t = new BufferedDataTable(replTable, dataRepository);
                 } else if (tableType.equals(TABLE_TYPE_EXTENSION)) {
                     ExtensionTable et = ExtensionTable.loadExtensionTable(fileRef, spec, s, tblRep, exec);
-                    t = new BufferedDataTable(et);
+                    t = new BufferedDataTable(et, dataRepository);
                 } else {
                     assert false : "Insufficent case switch: " + tableType;
                     throw new InvalidSettingsException("Unknown table identifier: " + tableType);
@@ -766,14 +774,6 @@ public final class BufferedDataTable implements DataTable, PortObject {
         t.m_tableID = id;
         tblRep.put(id, t);
         return t;
-    }
-
-    private static void updateLastId(final int id) {
-        // table ID -1 is used for old workflows (1.1.x) - no notion of blobs at that time
-        // see also DataContainer.readFromZip(ReferencedFile, BufferCreator)
-        if (id != -1 && Integer.toUnsignedLong(id) > Integer.toUnsignedLong(LAST_ID.get()) ) {
-            LAST_ID.set(id);
-        }
     }
 
     /**

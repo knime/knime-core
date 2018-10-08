@@ -52,6 +52,7 @@ import java.util.UUID;
 
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.NodeLogger;
 
 /** Fallback repository that is used when the node is run outside the workflow manager, for instance in the
@@ -66,6 +67,30 @@ public final class NotInWorkflowDataRepository implements IDataRepository {
     private IFileStoreHandler m_fileStoreHandler;
 
     private NotInWorkflowDataRepository() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int generateNewID() {
+        return DataContainer.NOT_IN_WORKFLOW_BUFFER;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getLastId() {
+        return DataContainer.NOT_IN_WORKFLOW_BUFFER;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateLastId(final int id) {
+    	// nothing to update
     }
 
     /** {@inheritDoc} */

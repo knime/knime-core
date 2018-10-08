@@ -15,6 +15,176 @@
                 <message_argument value="clearIteratorInstance(AbstractTableStoreReader.TableStoreCloseableRowIterator, boolean)"/>
             </message_arguments>
         </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.Buffer"/>
+                <message_argument value="getGlobalRepository()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/ConcatenateTable.java" type="org.knime.core.data.container.ConcatenateTable">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.ConcatenateTable"/>
+                <message_argument value="load(NodeSettingsRO, DataTableSpec, Map&lt;Integer,BufferedDataTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.ConcatenateTable"/>
+                <message_argument value="putIntoTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.ConcatenateTable"/>
+                <message_argument value="removeFromTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/ContainerTable.java" type="org.knime.core.data.container.ContainerTable">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.ContainerTable"/>
+                <message_argument value="putIntoTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.ContainerTable"/>
+                <message_argument value="removeFromTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/DataContainer.java" type="org.knime.core.data.container.DataContainer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="getGlobalTableRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="readFromZipDelayed(ReferencedFile, DataTableSpec, int, Map&lt;Integer,ContainerTable&gt;, FileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/DefaultTableStoreFormat.java" type="org.knime.core.data.container.DefaultTableStoreFormat">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DefaultTableStoreFormat"/>
+                <message_argument value="createReader(File, DataTableSpec, NodeSettingsRO, Map&lt;Integer,ContainerTable&gt;, int, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/JoinedTable.java" type="org.knime.core.data.container.JoinedTable">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.JoinedTable"/>
+                <message_argument value="load(NodeSettingsRO, DataTableSpec, Map&lt;Integer,BufferedDataTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.JoinedTable"/>
+                <message_argument value="putIntoTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.JoinedTable"/>
+                <message_argument value="removeFromTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/RearrangeColumnsTable.java" type="org.knime.core.data.container.RearrangeColumnsTable">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.RearrangeColumnsTable"/>
+                <message_argument value="putIntoTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.RearrangeColumnsTable"/>
+                <message_argument value="removeFromTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/TableSpecReplacerTable.java" type="org.knime.core.data.container.TableSpecReplacerTable">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.TableSpecReplacerTable"/>
+                <message_argument value="load(NodeSettingsRO, DataTableSpec, Map&lt;Integer,BufferedDataTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.TableSpecReplacerTable"/>
+                <message_argument value="load11x(File, NodeSettingsRO, Map&lt;Integer,BufferedDataTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.TableSpecReplacerTable"/>
+                <message_argument value="putIntoTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.TableSpecReplacerTable"/>
+                <message_argument value="removeFromTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/VoidTable.java" type="org.knime.core.data.container.VoidTable">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.VoidTable"/>
+                <message_argument value="putIntoTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.VoidTable"/>
+                <message_argument value="removeFromTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/WrappedTable.java" type="org.knime.core.data.container.WrappedTable">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.WrappedTable"/>
+                <message_argument value="load(NodeSettingsRO, Map&lt;Integer,BufferedDataTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.WrappedTable"/>
+                <message_argument value="putIntoTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.WrappedTable"/>
+                <message_argument value="removeFromTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/storage/AbstractTableStoreReader.java" type="org.knime.core.data.container.storage.AbstractTableStoreReader">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.storage.AbstractTableStoreReader"/>
+                <message_argument value="getFileStoreHandlerRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.storage.AbstractTableStoreReader"/>
+                <message_argument value="setBufferAndFileStoreHandlerRepository(Buffer, FileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/storage/AbstractTableStoreReader.java" type="org.knime.core.data.container.storage.AbstractTableStoreReader$TableStoreCloseableRowIterator">
         <filter id="338792546">
@@ -32,6 +202,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/storage/TableStoreFormat.java" type="org.knime.core.data.container.storage.TableStoreFormat">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.storage.TableStoreFormat"/>
+                <message_argument value="createReader(File, DataTableSpec, IDataRepository, NodeSettingsRO, int, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.storage.TableStoreFormat"/>
+                <message_argument value="createReader(File, DataTableSpec, NodeSettingsRO, Map&lt;Integer,ContainerTable&gt;, int, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
         <filter id="338792546">
             <message_arguments>
@@ -43,6 +227,70 @@
             <message_arguments>
                 <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
                 <message_argument value="retrieveFileStoreHandlerFrom(FileStoreCell, FileStoreKey, FileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="retrieveFileStoreHandlerFrom(FileStorePortObject, List&lt;FileStoreKey&gt;, FileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/BufferedDataContainer.java" type="org.knime.core.node.BufferedDataContainer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.BufferedDataContainer"/>
+                <message_argument value="getGlobalTableRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.BufferedDataContainer"/>
+                <message_argument value="readFromZipDelayed(ReferencedFile, DataTableSpec, int, Map&lt;Integer,ContainerTable&gt;, FileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/BufferedDataTable.java" type="org.knime.core.node.BufferedDataTable">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.BufferedDataTable"/>
+                <message_argument value="getDataTable(Map&lt;Integer,BufferedDataTable&gt;, Integer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/BufferedDataTable.java" type="org.knime.core.node.BufferedDataTable$KnowsRowCountTable">
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.BufferedDataTable.KnowsRowCountTable"/>
+                <message_argument value="putIntoTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.BufferedDataTable.KnowsRowCountTable"/>
+                <message_argument value="removeFromTableRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/FileNodePersistor.java" type="org.knime.core.node.FileNodePersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.FileNodePersistor"/>
+                <message_argument value="load(Node, WorkflowPersistor, ExecutionMonitor, Map&lt;Integer,BufferedDataTable&gt;, HashMap&lt;Integer,ContainerTable&gt;, WorkflowFileStoreHandlerRepository, WorkflowPersistor.LoadResult)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="putOutputTablesIntoGlobalRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="removeOutputTablesFromGlobalRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -70,6 +318,52 @@
         <filter id="1143996420">
             <message_arguments>
                 <message_argument value="setBendpoints(int[][])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/CopySubNodeContainerPersistor.java" type="org.knime.core.node.workflow.CopySubNodeContainerPersistor">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.CopySubNodeContainerPersistor"/>
+                <message_argument value="CopySubNodeContainerPersistor(SubNodeContainer, HashMap&lt;Integer,ContainerTable&gt;, FileStoreHandlerRepository, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="SubNodeContainerPersistor"/>
+                <message_argument value="CopySubNodeContainerPersistor"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FileSubNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSubNodeContainerPersistor">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileSubNodeContainerPersistor"/>
+                <message_argument value="FileSubNodeContainerPersistor(ReferencedFile, WorkflowLoadHelper, FileWorkflowPersistor.LoadVersion, HashMap&lt;Integer,ContainerTable&gt;, WorkflowFileStoreHandlerRepository, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FileWorkflowPersistor.java" type="org.knime.core.node.workflow.FileWorkflowPersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="getFileStoreHandlerRepository()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NativeNodeContainer"/>
+                <message_argument value="getCopyPersistor(HashMap&lt;Integer,ContainerTable&gt;, FileStoreHandlerRepository, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/PasteWorkflowContentPersistor.java" type="org.knime.core.node.workflow.PasteWorkflowContentPersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
+                <message_argument value="getFileStoreHandlerRepository()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -108,11 +402,43 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowCreationHelper.java" type="org.knime.core.node.workflow.WorkflowCreationHelper">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowCreationHelper"/>
+                <message_argument value="getFileStoreHandlerRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowCreationHelper"/>
+                <message_argument value="getGlobalTableRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowCreationHelper"/>
+                <message_argument value="setDataHandlers(HashMap&lt;Integer,ContainerTable&gt;, WorkflowFileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="addWorkflowAnnotation(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="getFileStoreHandlerRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="getGlobalTableRepository()"/>
             </message_arguments>
         </filter>
         <filter id="1143996420">
@@ -128,6 +454,20 @@
         <filter id="1143996420">
             <message_arguments>
                 <message_argument value="getWorkflowAnnotations(WorkflowAnnotationID[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getWorkflowDataRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getFileStoreHandlerRepository()"/>
             </message_arguments>
         </filter>
     </resource>

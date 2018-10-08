@@ -53,6 +53,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIteratorBuilder;
 import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.node.BufferedDataTable;
@@ -61,6 +62,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowDataRepository;
 
 
@@ -265,11 +267,11 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
     public void clear() {
         if (m_buffer != null) {
             m_buffer.clear();
-            // it may not even be in there
             m_buffer.getDataRepository().removeTable(m_buffer.getBufferID());
         }
         if (m_readTask != null) {
-            m_readTask.getDataRepository().removeTable(m_readTask.getBufferID());
+            IDataRepository dataRepository = CheckUtils.checkArgumentNotNull(m_readTask.getDataRepository());
+            dataRepository.removeTable(m_readTask.getBufferID());
         }
     }
 

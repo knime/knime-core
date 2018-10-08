@@ -182,7 +182,7 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
         throws IOException, InvalidSettingsException {
         NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
         int refTableID = subSettings.getInt(CFG_REFERENCE_ID);
-        m_reference = BufferedDataTable.getDataTable(tblRep, refTableID);
+        m_reference = BufferedDataTable.getDataTable(tblRep, refTableID, dataRepository);
         m_map = subSettings.getIntArray(CFG_MAP);
         m_isFromRefTable = subSettings.getBooleanArray(CFG_FLAGS);
         DataColumnSpec[] appendColSpecs;
@@ -676,9 +676,10 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
 
         /** {@inheritDoc} */
         @Override
-        Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory,
-            final int bufferID, final Map<Integer, ContainerTable> localTableRep, final IWriteFileStoreHandler fileStoreHandler) {
-            return new NoKeyBuffer(spec, rowsInMemory, bufferID, localTableRep, fileStoreHandler);
+        Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory, final int bufferID,
+            final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTableRep,
+            final IWriteFileStoreHandler fileStoreHandler) {
+            return new NoKeyBuffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler);
         }
 
         /** {@inheritDoc} */

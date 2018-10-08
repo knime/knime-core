@@ -219,19 +219,22 @@ public final class ConcatenateTable implements KnowsRowCountTable {
      * @param s Containing information.
      * @param spec Associated spec.
      * @param tblRep For table lookup
+     * @param dataRepository The data repository (needed for blobs, file stores, and table ids).
      * @return The newly instantiated table.
      * @throws InvalidSettingsException If information is invalid.
+     * @since 3.7
      */
     public static ConcatenateTable load(final NodeSettingsRO s,
             final DataTableSpec spec,
-            final Map<Integer, BufferedDataTable> tblRep)
+            final Map<Integer, BufferedDataTable> tblRep,
+            final WorkflowDataRepository dataRepository)
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int[] referenceIDs = subSettings.getIntArray(CFG_REFERENCE_IDS);
         int rowCount = subSettings.getInt(CFG_ROW_COUNT);
         BufferedDataTable[] tables = new BufferedDataTable[referenceIDs.length];
         for (int i = 0; i < tables.length; i++) {
-            tables[i] = BufferedDataTable.getDataTable(tblRep, referenceIDs[i]);
+            tables[i] = BufferedDataTable.getDataTable(tblRep, referenceIDs[i], dataRepository);
         }
         String dupSuffix = subSettings.getString(CFG_DUPLICATE_ROW_KEY_SUFFIX, null);
         return new ConcatenateTable(tables, dupSuffix, rowCount);

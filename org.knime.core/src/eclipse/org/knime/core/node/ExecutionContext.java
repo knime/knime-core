@@ -356,7 +356,7 @@ public class ExecutionContext extends ExecutionMonitor {
         boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
                 || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
         return new BufferedDataContainer(spec, initDomain, m_node,
-                m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory,
+                m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory, m_dataRepository,
                 m_localTableRepository, m_fileStoreHandler);
     }
 
@@ -380,7 +380,7 @@ public class ExecutionContext extends ExecutionMonitor {
             throws CanceledExecutionException {
         RearrangeColumnsTable t = RearrangeColumnsTable.create(
                 rearranger, in, subProgressMon, this);
-        BufferedDataTable out = new BufferedDataTable(t);
+        BufferedDataTable out = new BufferedDataTable(t, getFileStoreHandler().getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -397,7 +397,7 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createSpecReplacerTable(
             final BufferedDataTable in, final DataTableSpec newSpec) {
         TableSpecReplacerTable t = new TableSpecReplacerTable(in, newSpec);
-        BufferedDataTable out = new BufferedDataTable(t);
+        BufferedDataTable out = new BufferedDataTable(t, getFileStoreHandler().getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -414,7 +414,7 @@ public class ExecutionContext extends ExecutionMonitor {
     */
     public BufferedDataTable createWrappedTable(final BufferedDataTable in) {
         WrappedTable t = new WrappedTable(in);
-        BufferedDataTable out = new BufferedDataTable(t);
+        BufferedDataTable out = new BufferedDataTable(t, getFileStoreHandler().getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -429,7 +429,7 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataTable createVoidTable(final DataTableSpec spec) {
         VoidTable voidTable = VoidTable.create(spec);
-        BufferedDataTable out = new BufferedDataTable(voidTable);
+        BufferedDataTable out = new BufferedDataTable(voidTable, getFileStoreHandler().getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -470,7 +470,7 @@ public class ExecutionContext extends ExecutionMonitor {
             final ExecutionMonitor exec, final BufferedDataTable... tables)
         throws CanceledExecutionException {
         ConcatenateTable t = ConcatenateTable.create(exec, tables);
-        BufferedDataTable out = new BufferedDataTable(t);
+        BufferedDataTable out = new BufferedDataTable(t, getFileStoreHandler().getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -515,7 +515,7 @@ public class ExecutionContext extends ExecutionMonitor {
         throws CanceledExecutionException {
         ConcatenateTable t =
             ConcatenateTable.create(exec, rowKeyDuplicateSuffix, duplicatesPreCheck, tables);
-        BufferedDataTable out = new BufferedDataTable(t);
+        BufferedDataTable out = new BufferedDataTable(t, getFileStoreHandler().getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -558,7 +558,7 @@ public class ExecutionContext extends ExecutionMonitor {
             final BufferedDataTable right, final ExecutionMonitor exec)
         throws CanceledExecutionException {
         JoinedTable jt = JoinedTable.create(left, right, exec);
-        BufferedDataTable out = new BufferedDataTable(jt);
+        BufferedDataTable out = new BufferedDataTable(jt, getFileStoreHandler().getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }

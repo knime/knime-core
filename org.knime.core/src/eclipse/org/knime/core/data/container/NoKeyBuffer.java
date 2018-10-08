@@ -102,12 +102,14 @@ class NoKeyBuffer extends Buffer {
      * @param maxRowsInMemory Passed on to super.
      * @param bufferID Passed on to super.
      * @param tblRep Passed on to super.
+     * @param dataRepository Passed to super class.
      * @param localTblRep Passed on to super.
      * @param fileStoreHandler passed on to super.
      */
     NoKeyBuffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
-        final Map<Integer, ContainerTable> localTblRep, final IWriteFileStoreHandler fileStoreHandler) {
-        super(spec, maxRowsInMemory, bufferID, localTblRep, fileStoreHandler);
+        final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTblRep,
+        final IWriteFileStoreHandler fileStoreHandler) {
+        super(spec, maxRowsInMemory, bufferID, dataRepository, localTblRep, fileStoreHandler);
     }
 
     /** Creates new buffer for reading.
@@ -156,7 +158,8 @@ class NoKeyBuffer extends Buffer {
     /** {@inheritDoc} */
     @Override
     Buffer createLocalCloneForWriting() {
-        return new NoKeyBuffer(getTableSpec(), 0, getBufferID(), Collections.emptyMap(), castAndGetFileStoreHandler());
+        return new NoKeyBuffer(getTableSpec(), 0, getBufferID(), getDataRepository(), Collections.emptyMap(),
+            castAndGetFileStoreHandler());
     }
 
 }

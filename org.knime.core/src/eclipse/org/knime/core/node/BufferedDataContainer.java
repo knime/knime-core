@@ -50,9 +50,11 @@ package org.knime.core.node;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.WorkflowDataRepository;
@@ -111,6 +113,7 @@ import org.knime.core.node.workflow.WorkflowDataRepository;
 public class BufferedDataContainer extends DataContainer {
 
     private final Node m_node;
+    private final IDataRepository m_dataRepository;
     private final Map<Integer, ContainerTable> m_localTableRepository;
     private BufferedDataTable m_resultTable;
 
@@ -124,6 +127,8 @@ public class BufferedDataContainer extends DataContainer {
      * @param maxCellsInMemory Number of cells to be kept in memory, if negative
      * use user settings (according to node)
      * being added, see {@link DataContainer#setForceCopyOfBlobs(boolean)}.
+     * @param dataRepository A data repository for deserializing blobs and file stores
+     *        and for handling table ids
      * @param localTableRepository
      *        The local (Node) table repository for blob (de)serialization.
      * @see DataContainer#DataContainer(DataTableSpec, boolean)
@@ -131,6 +136,7 @@ public class BufferedDataContainer extends DataContainer {
     BufferedDataContainer(final DataTableSpec spec, final boolean initDomain,
             final Node node, final MemoryPolicy policy,
             final boolean forceCopyOfBlobs, final int maxCellsInMemory,
+            final IDataRepository dataRepository,
             final Map<Integer, ContainerTable> localTableRepository,
             final IWriteFileStoreHandler fileStoreHandler) {
         // force synchronous IO when the node is a loop end:
@@ -141,6 +147,13 @@ public class BufferedDataContainer extends DataContainer {
                         node.isForceSychronousIO());
         m_node = node;
         m_localTableRepository = localTableRepository;
+        /**
+         * "in theory" the data repository should never be null for non-cleared file store handlers. However...
+         * resetting nodes in fully executed loops causes the loop start to be reset first and then the loop body+end,
+         * see also WorkflowManager.resetAndConfigureAffectedLoopContext() (can be reproduced using unit test
+         * Bug4409_inactiveInnerLoop
+         */
+        m_dataRepository = (dataRepository == null) ? NotInWorkflowDataRepository.newInstance() : dataRepository;
         super.setFileStoreHandler(fileStoreHandler);
         super.setForceCopyOfBlobs(forceCopyOfBlobs);
     }
@@ -164,7 +177,15 @@ public class BufferedDataContainer extends DataContainer {
     /** {@inheritDoc} */
     @Override
     protected int createInternalBufferID() {
-        return BufferedDataTable.generateNewID();
+        return getDataRepository().generateNewID();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected IDataRepository getDataRepository() {
+        return m_dataRepository;
     }
 
     /**

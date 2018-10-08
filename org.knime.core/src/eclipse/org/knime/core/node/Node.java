@@ -1609,6 +1609,7 @@ public final class Node implements NodeModelWarningListener {
     /** Enumerates the output tables and puts them into the global workflow repository of tables. This method delegates
      * from the NodeContainer class to access a package-scope method in BufferedDataTable.
      * @param repository The global repository.
+     * @since 3.7
      */
     public void putOutputTablesIntoGlobalRepository(final WorkflowDataRepository repository) {
         for (int i = 0; i < m_outputs.length; i++) {
@@ -1635,6 +1636,7 @@ public final class Node implements NodeModelWarningListener {
      * all output tables and its delegates from the global table repository.
      * @param dataRepository The global table rep.
      * @return The number of tables effectively removed, used for assertions.
+     * @since 3.7
      */
     public int removeOutputTablesFromGlobalRepository(final WorkflowDataRepository dataRepository) {
         int result = 0;

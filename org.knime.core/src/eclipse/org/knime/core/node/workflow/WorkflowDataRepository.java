@@ -56,17 +56,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 
 /**
  * A repository of all the data elements (tables and file stores) that are held in a workflow. Used to enable
- * dereferencing blobs, filestores and linked tables.
+ * dereferencing blobs, filestores and linked tables. Also handles the handing out of {@link BufferedDataTable}'s
+ * internal identifiers.
  *
  * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
@@ -86,11 +89,46 @@ public class WorkflowDataRepository implements IDataRepository {
 
     private final ConcurrentHashMap<UUID, IWriteFileStoreHandler> m_handlerMap;
 
+    /**
+     * internal ID for any generated buffered data table.
+     */
+    private final AtomicInteger LAST_ID = new AtomicInteger(0);
+
     WorkflowDataRepository() {
         // synchronized as per bug 3383: workflow manager's table repository must synchronized
         // (problems with GroupLoop start "forgetting" its sorted table)
         m_globalTableRepository = Collections.synchronizedMap(new HashMap<Integer, ContainerTable>());
         m_handlerMap = new ConcurrentHashMap<UUID, IWriteFileStoreHandler>();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int generateNewID() {
+        // see AP-10195: we accept a buffer overflow: 2147483647 -> -2147483648(neg)-> -2147483647 -> ... -> -2
+        int id = LAST_ID.incrementAndGet();
+        CheckUtils.checkArgument(id != -1, "Range of table IDs exhausted (integer max)");
+        return id;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getLastId() {
+        return LAST_ID.get();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateLastId(final int id) {
+        // table ID -1 is used for old workflows (1.1.x) - no notion of blobs at that time
+        // see also DataContainer.readFromZip(ReferencedFile, BufferCreator)
+        LAST_ID.updateAndGet(
+            lastId -> (id != -1 && Integer.toUnsignedLong(id) > Integer.toUnsignedLong(lastId)) ? id : lastId);
     }
 
     @Override

@@ -353,11 +353,11 @@ public class DataContainer implements RowAppender {
 
     private DataTableDomainCreator m_domainCreator;
 
-    /** Global repository map, created lazily. */
-    private Map<Integer, ContainerTable> m_globalMap;
-
     /** Local repository map, created lazily. */
     private Map<Integer, ContainerTable> m_localMap;
+
+    /** repository for blob and filestore (de)serialization and table id handling */
+    private IDataRepository m_dataRepository;
 
     /**
      * A file store handler. It's lazy initialized in this class. The buffered data container sets the FSH of the
@@ -610,7 +610,7 @@ public class DataContainer implements RowAppender {
         }
         if (m_buffer == null) {
             m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, createInternalBufferID(),
-                getLocalTableRepository(), getFileStoreHandler());
+                getDataRepository(), getLocalTableRepository(), getFileStoreHandler());
         }
         if (!m_isSynchronousWrite) {
             try {
@@ -765,7 +765,8 @@ public class DataContainer implements RowAppender {
             int bufID = createInternalBufferID();
             Map<Integer, ContainerTable> localTableRep = getLocalTableRepository();
             IWriteFileStoreHandler fileStoreHandler = getFileStoreHandler();
-            m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, bufID, localTableRep, fileStoreHandler);
+            m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, bufID, getDataRepository(),
+                localTableRep, fileStoreHandler);
             if (m_buffer == null) {
                 throw new NullPointerException("Implementation error, must not return a null buffer.");
             }
@@ -797,9 +798,9 @@ public class DataContainer implements RowAppender {
     /**
      * ID for buffers, which are not part of the workflow (no BufferedDataTable).
      *
-     * @since 2.8
+     * @since 3.7
      */
-    protected static final int NOT_IN_WORKFLOW_BUFFER = -1;
+    public static final int NOT_IN_WORKFLOW_BUFFER = -1;
 
     /**
      * Get an internal id for the buffer being used. This ID is used in conjunction with blob serialization to locate
@@ -847,27 +848,6 @@ public class DataContainer implements RowAppender {
     }
 
     /**
-     * Get the map of buffers that potentially have written blob objects. If m_buffer needs to serialize a blob, it will
-     * check if any other buffer has written the blob already and then reference to this buffer rather than writing out
-     * the blob again.
-     * <p>
-     * If used along with the {@link org.knime.core.node.ExecutionContext}, this method returns the global table
-     * repository (global = in the context of the current workflow).
-     * <p>
-     * This implementation does not support sophisticated blob serialization. It will return a
-     * <code>new HashMap&lt;Integer, Buffer&gt;()</code>.
-     *
-     * @return The map bufferID to Buffer.
-     * @see #getLocalTableRepository()
-     */
-    protected Map<Integer, ContainerTable> getGlobalTableRepository() {
-        if (m_globalMap == null) {
-            m_globalMap = new HashMap<Integer, ContainerTable>();
-        }
-        return m_globalMap;
-    }
-
-    /**
      * @return The file store handler for this container (either initialized lazy or previously set by the node).
      * @since 2.6
      * @nooverride
@@ -893,6 +873,19 @@ public class DataContainer implements RowAppender {
             throw new NullPointerException("Argument must not be null.");
         }
         m_fileStoreHandler = handler;
+    }
+
+    /**
+     * Get the data repository. Overridden in {@link org.knime.core.node.BufferedDataContainer}.
+     *
+     * @return A data repository for deserializing blobs and file stores and for handling table ids
+     * @since 3.7
+     */
+    protected IDataRepository getDataRepository() {
+        if (m_dataRepository == null) {
+            m_dataRepository = NotInWorkflowDataRepository.newInstance();
+        }
+        return m_dataRepository;
     }
 
     /**
@@ -1012,9 +1005,8 @@ public class DataContainer implements RowAppender {
         } else {
             exec.setMessage("Archiving table");
             e = exec.createSubProgress(0.8);
-            buf =
-                new Buffer(table.getDataTableSpec(), 0, -1, new HashMap<Integer, ContainerTable>(),
-                	NotInWorkflowWriteFileStoreHandler.create());
+            buf = new Buffer(table.getDataTableSpec(), 0, -1, NotInWorkflowDataRepository.newInstance(),
+                new HashMap<Integer, ContainerTable>(), NotInWorkflowWriteFileStoreHandler.create());
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
@@ -1295,7 +1287,7 @@ public class DataContainer implements RowAppender {
          * @param spec The spec.
          * @param metaIn Input stream containing meta information.
          * @param bufID The buffer's id used for blob (de)serialization
-         * @param dataRepository repository for blob and filestore (de)serialization.
+         * @param dataRepository repository for blob and filestore (de)serialization and table id handling
          * @return A buffer instance.
          * @throws IOException If parsing fails.
          */
@@ -1309,14 +1301,16 @@ public class DataContainer implements RowAppender {
          * @param spec Write spec -- used to initialize output stream for some non-KNIME formats
          * @param rowsInMemory The number of rows being kept in memory.
          * @param bufferID The buffer's id used for blob (de)serialization.
+         * @param dataRepository repository for blob and filestore (de)serialization and table id handling
          * @param localTableRep Table repository for blob (de)serialization.
          * @param fileStoreHandler ...
          *
          * @return A newly created buffer.
          */
-        Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory,
-            final int bufferID, final Map<Integer, ContainerTable> localTableRep, final IWriteFileStoreHandler fileStoreHandler) {
-            return new Buffer(spec, rowsInMemory, bufferID, localTableRep, fileStoreHandler);
+        Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory, final int bufferID,
+            final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTableRep,
+            final IWriteFileStoreHandler fileStoreHandler) {
+            return new Buffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler);
         }
 
     }

@@ -433,11 +433,13 @@ public class Buffer implements KNIMEStreamConstants {
      * @param maxRowsInMemory Maximum numbers of rows that are kept in memory until they will be subsequent written to
      *            the temp file. (0 to write immediately to a file)
      * @param bufferID The id of this buffer used for blob (de)serialization.
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      * @param localRep Local table repository for blob (de)serialization.
      * @param fileStoreHandler ...
      */
     Buffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
-           final Map<Integer, ContainerTable> localRep, final IWriteFileStoreHandler fileStoreHandler) {
+        final IDataRepository dataRepository, final Map<Integer, ContainerTable> localRep,
+        final IWriteFileStoreHandler fileStoreHandler) {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
         m_list = new ArrayList<BlobSupportDataRow>();
@@ -445,7 +447,7 @@ public class Buffer implements KNIMEStreamConstants {
         m_bufferID = bufferID;
         m_localRepository = localRep;
         m_fileStoreHandler = fileStoreHandler;
-        m_dataRepository = fileStoreHandler.getDataRepository();
+        m_dataRepository = dataRepository;
         m_spec = spec;
         TableStoreFormat storeFormat = TableStoreFormatRegistry.getInstance().getFormatFor(spec);
         TableStoreFormat prefFormat = TableStoreFormatRegistry.getInstance().getInstanceTableStoreFormat();
@@ -470,7 +472,7 @@ public class Buffer implements KNIMEStreamConstants {
      * @param metaIn An input stream from which this constructor reads the meta information (e.g. which byte encodes
      *            which DataCell).
      * @param bufferID The id of this buffer used for blob (de)serialization.
-     * @param dataRepository ...
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      * @throws IOException If the header (the spec information) can't be read.
      */
     Buffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
@@ -1426,7 +1428,8 @@ public class Buffer implements KNIMEStreamConstants {
      * @return A new buffer with the same ID, which is only used locally to update the stream.
      */
     Buffer createLocalCloneForWriting() {
-        return new Buffer(m_spec, 0, getBufferID(), Collections.emptyMap(), castAndGetFileStoreHandler());
+        return new Buffer(m_spec, 0, getBufferID(), m_dataRepository, Collections.emptyMap(),
+            castAndGetFileStoreHandler());
     }
 
     /**
