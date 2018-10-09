@@ -85,9 +85,9 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
-import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
+import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
  *
@@ -2145,8 +2145,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             sub.addString("authored-by", aI.getAuthor());
             String authorWhen = aI.getAuthoredDate() == null ? null : formatDate(aI.getAuthoredDate());
             sub.addString("authored-when", authorWhen);
-            sub.addString("lastEdited-by", aI.getLastEditor());
-            String lastEditWhen = aI.getLastEditDate() == null ? null : formatDate(aI.getLastEditDate());
+            sub.addString("lastEdited-by", aI.getLastEditor().orElse(null));
+            String lastEditWhen = aI.getLastEditDate() == null ? null
+                : aI.getLastEditDate().isPresent() ? formatDate(aI.getLastEditDate().get()) : null;
             sub.addString("lastEdited-when", lastEditWhen);
         }
     }

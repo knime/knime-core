@@ -62,7 +62,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
+import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
  * Persistor that is used to represent, for instance the clipboard content.

@@ -57,7 +57,7 @@ import java.util.List;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
+import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
  * Static constants and utility methods for working with KNIME context properties.
@@ -178,7 +178,7 @@ public final class ContextProperties {
                 return author.getAuthor();
             }
             if (CONTEXT_PROPERTY_EDITOR.equals(property)) {
-                return author.getLastEditor();
+                return author.getLastEditor().orElse(null);
             }
             if (CONTEXT_PROPERTY_CREATION_DATE.equals(property)) {
                 final Date creationDate = author.getAuthoredDate();
@@ -187,9 +187,8 @@ public final class ContextProperties {
                 }
             }
             if (CONTEXT_PROPERTY_LAST_MODIFIED.equals(property)) {
-                final Date modDate = author.getLastEditDate();
-                if (modDate != null) {
-                    return modDate.toString();
+                if (author.getLastEditDate().isPresent()) {
+                    return author.getLastEditDate().get().toString();
                 }
             }
         } else if (CONTEXT_PROPERTY_AUTHOR.equals(property) || CONTEXT_PROPERTY_EDITOR.equals(property)

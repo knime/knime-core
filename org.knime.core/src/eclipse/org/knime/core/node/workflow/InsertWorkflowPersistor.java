@@ -58,7 +58,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
+import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
  * Persistor that is used when a workflow (a project) is loaded. It is used

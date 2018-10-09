@@ -60,7 +60,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
+import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
  * @author Bernd Wiswedel, University of Konstanz

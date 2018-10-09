@@ -73,7 +73,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -194,6 +193,7 @@ import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
+import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast to previous implementations, this class will
@@ -9607,67 +9607,6 @@ public final class WorkflowManager extends NodeContainer
                 assert parent != null;
                 return parent.isInWizardExecution();
             }
-        }
-    }
-
-    /**
-     * Meta data such as who create the workflow and who edited it last and when.
-     *
-     * @since 2.8
-     */
-    public static final class AuthorInformation {
-
-        /** Info for workflows created prior 2.8. */
-        static final AuthorInformation UNKNOWN = new AuthorInformation("<unknown>", new Date(0), null, null);
-
-        private final String m_author;
-
-        private final Date m_authoredDate;
-
-        private final String m_lastEditor;
-
-        private final Date m_lastEditDate;
-
-        private AuthorInformation() {
-            this(System.getProperty("user.name"), new Date(), null, null);
-        }
-
-        private AuthorInformation(final AuthorInformation past) {
-            this(past.m_author, past.m_authoredDate, System.getProperty("user.name"), new Date());
-        }
-
-        /**
-         * @param author Original author.
-         * @param authoredDate Original authored date.
-         * @param lastEditor Name of last editor.
-         * @param lastEditDate Date of last edit.
-         */
-        AuthorInformation(final String author, final Date authoredDate, final String lastEditor,
-            final Date lastEditDate) {
-            m_author = author;
-            m_authoredDate = authoredDate;
-            m_lastEditor = lastEditor;
-            m_lastEditDate = lastEditDate;
-        }
-
-        /** @return Name of the workflow author (person). Null when not saved yet. */
-        public String getAuthor() {
-            return m_author;
-        }
-
-        /** @return Date when the workflow was saved the first time. Can be null. */
-        public Date getAuthoredDate() {
-            return m_authoredDate;
-        }
-
-        /** @return Name of the person who edited the workflow last (on last save). Null when not saved yet. */
-        public String getLastEditor() {
-            return m_lastEditor;
-        }
-
-        /** @return Date when workflow was saved last. */
-        public Date getLastEditDate() {
-            return m_lastEditDate;
         }
     }
 
