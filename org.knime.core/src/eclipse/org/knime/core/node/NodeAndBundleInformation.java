@@ -58,7 +58,7 @@ import java.util.regex.PatternSyntaxException;
 
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.knime.core.eclipseUtil.OSGIHelper;
-import org.knime.core.node.workflow.FileWorkflowPersistor;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
 import org.osgi.framework.Bundle;
 
@@ -200,7 +200,7 @@ public final class NodeAndBundleInformation extends org.knime.core.util.workflow
      * @noreference This method is not intended to be referenced by clients.
      */
     public static NodeAndBundleInformation load(final NodeSettingsRO settings,
-        final FileWorkflowPersistor.LoadVersion version) throws InvalidSettingsException {
+        final LoadVersion version) throws InvalidSettingsException {
         String factoryClass = settings.getString("factory");
         if (factoryClass == null) {
             throw new InvalidSettingsException("Factory class is null");
@@ -216,7 +216,7 @@ public final class NodeAndBundleInformation extends org.knime.core.util.workflow
         String featureVendor;
         Version featureVersion;
 
-        if (version.ordinal() < FileWorkflowPersistor.LoadVersion.V260.ordinal()) {
+        if (version.ordinal() < LoadVersion.V260.ordinal()) {
             nodeName = null;
             bundleName = null;
             bundleVendor = null;

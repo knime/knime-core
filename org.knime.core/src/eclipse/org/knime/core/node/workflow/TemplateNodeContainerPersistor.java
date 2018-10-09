@@ -48,7 +48,7 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
+import org.knime.core.util.LoadVersion;
 
 
 

@@ -54,6 +54,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.util.LoadVersion;
 
 /**
  * @author  Bernd Wiswedel, KNIME AG, Zurich, Switzerland
@@ -427,7 +428,7 @@ public class AnnotationData implements Cloneable {
      * @param config To load from
      * @param loadVersion Version to load
      * @throws InvalidSettingsException If fails*/
-    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion)
+    public void load(final NodeSettingsRO config, final LoadVersion loadVersion)
             throws InvalidSettingsException {
         setText(config.getString("text"));
         setBgColor(config.getInt("bgcolor"));
@@ -440,7 +441,7 @@ public class AnnotationData implements Cloneable {
         int defFontSize = config.getInt("defFontSize", -1); // default for backward compatibility
         m_version = config.getInt("annotation-version", VERSION_OLD); // added in 3.0
         TextAlignment alignment = TextAlignment.LEFT;
-        if (loadVersion.ordinal() >= FileWorkflowPersistor.LoadVersion.V250.ordinal()) {
+        if (loadVersion.ordinal() >= LoadVersion.V250.ordinal()) {
             String alignmentS = config.getString("alignment");
             try {
                 alignment = TextAlignment.valueOf(alignmentS);

@@ -58,6 +58,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
@@ -123,7 +124,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public FileWorkflowPersistor.LoadVersion getLoadVersion() {
+    public LoadVersion getLoadVersion() {
         return m_nodePersistor.getLoadVersion();
     }
 

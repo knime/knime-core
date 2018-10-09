@@ -55,7 +55,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
+import org.knime.core.util.LoadVersion;
 
 /**
  * Additional information that is associated with a metanode that are used
@@ -341,7 +341,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @throws InvalidSettingsException If that fails.
      */
     public static MetaNodeTemplateInformation load(final NodeSettingsRO settings,
-        final FileWorkflowPersistor.LoadVersion version) throws InvalidSettingsException {
+        final LoadVersion version) throws InvalidSettingsException {
         if (!settings.containsKey(CFG_TEMPLATE_INFO)) {
             return NONE;
         }

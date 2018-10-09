@@ -64,7 +64,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -86,6 +85,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
@@ -94,94 +94,6 @@ import org.knime.core.util.workflowalizer.AuthorInformation;
  * @author wiswedel, University of Konstanz
  */
 public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeContainerPersistor {
-
-    /**
-     * A Version representing a specific workflow format. This enum covers only the version that this specific class can
-     * read (or write). Ordinal numbering is important.
-     */
-    public static enum LoadVersion {
-        // Don't modify order, ordinal number are important.
-            /** Pre v2.0. */
-            UNKNOWN("<unknown>"),
-            /** Version 2.0.0 - 2.0.x. */
-            V200("2.0.0"),
-            /**
-             * Trunk version when 2.0.x was out, covers cluster and server prototypes. Obsolete since 2009-08-12.
-             */
-            V210_Pre("2.0.1"),
-            /** Version 2.1.x. */
-            V210("2.1.0"),
-            /**
-             * Version 2.2.x, introduces optional inputs, flow variable input credentials, node local drop directory.
-             */
-            V220("2.2.0"),
-            /** Version 2.3.x, introduces workflow annotations &amp; switches. */
-            V230("2.3.0"),
-            /** Version 2.4.x, introduces metanode templates. */
-            V240("2.4.0"),
-            /** Version 2.5.x, lockable metanodes, node-relative annotations. */
-            V250("2.5.0"),
-            /** Version 2.6.x, file store objects, grid information, node vendor &amp; plugin information.
-             * @since 2.6 */
-            V260("2.6.0"),
-            /** node.xml and settings.xml are one file, settings in SNC, meta data in workflow.knime.
-             * @since 2.8 */
-            V280("2.8.0"),
-            /** basic subnode support, never released (trunk code between 2.9 and 2.10).
-             * @since 2.10 */
-            V2100Pre("2.10.0Pre"),
-            /** better subnode support, PortObjectHolder, FileStorePortObject w/ array file stores.
-             * @since 2.10 */
-            V2100("2.10.0"),
-            /** Subnode outputs as port object holder, "VoidTable".
-             * @since 3.1 */
-            V3010("3.1.0"),
-            /** Different table formats (col store).
-             * @since 3.6 */
-            V3060Pre("3.6.0Pre"),
-            /** Add support for multiple FileStores in FileStoreCell.
-             * @since 3.7 */
-            V3070("3.7.0"),
-            /** Try to be forward compatible.
-             * @since 2.8 */
-            FUTURE("<future>");
-
-        private final String m_versionString;
-
-        private LoadVersion(final String str) {
-            m_versionString = str;
-        }
-
-        /** @return The String representing the LoadVersion (workflow.knime). */
-        public String getVersionString() {
-            return m_versionString;
-        }
-
-        /** Is this' ordinal smaller than this ordinal of the argument? For instance
-         * getLoadVersion().isOlderThan(LoadVersion.V200) means we are loading a workflow
-         * older than 2.0
-         * @param version compare version
-         * @return  that property */
-        public boolean isOlderThan(final LoadVersion version) {
-            return ordinal() < version.ordinal();
-        }
-
-        /**
-         * Get the load version for the version string or an empty optional if unknown.
-         *
-         * @param string Version string (as in workflow.knime).
-         * @return The LoadVersion as Optional
-         */
-        static Optional<LoadVersion> get(final String string) {
-            for (LoadVersion e : values()) {
-                if (e.m_versionString.equals(string)) {
-                    return Optional.of(e);
-                }
-            }
-            return Optional.empty();
-        }
-
-    }
 
     /** KNIME Node type: native, meta or sub node.*/
     private enum NodeType {
@@ -1185,7 +1097,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             : nodeSetting.getNodeSettings(CFG_UIINFO_SUB_CONFIG);
         final int loadOrdinal = getLoadVersion().ordinal();
         int[] bounds = subSettings.getIntArray(KEY_BOUNDS);
-        boolean symbolRelative = loadOrdinal >= FileWorkflowPersistor.LoadVersion.V230.ordinal();
+        boolean symbolRelative = loadOrdinal >= LoadVersion.V230.ordinal();
         NodeUIInformation nodeUIInfo = NodeUIInformation.builder()
             .setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3])
             .setIsSymbolRelative(symbolRelative).build();

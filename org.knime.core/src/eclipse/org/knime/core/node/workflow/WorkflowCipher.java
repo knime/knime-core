@@ -66,6 +66,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.WorkflowCipherPrompt.PromptCancelled;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.util.crypto.HexUtils;
 
 /** A cipher object associated with a metanode or workflow. Most workflows
@@ -261,7 +262,7 @@ final class WorkflowCipher implements Cloneable {
      * @param cipherSettings Settings to load from.
      * @return A new cipher settings object.
      * @throws InvalidSettingsException if that fails. */
-    static WorkflowCipher load(final FileWorkflowPersistor.LoadVersion version,
+    static WorkflowCipher load(final LoadVersion version,
             final NodeSettingsRO cipherSettings)
         throws InvalidSettingsException {
         String passwordDigestHex = cipherSettings.getString("passwordDigest");

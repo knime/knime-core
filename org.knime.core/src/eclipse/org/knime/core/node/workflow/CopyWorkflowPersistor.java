@@ -60,6 +60,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
@@ -285,8 +286,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public FileWorkflowPersistor.LoadVersion getLoadVersion() {
-        return FileWorkflowPersistor.LoadVersion.UNKNOWN;
+    public LoadVersion getLoadVersion() {
+        return LoadVersion.UNKNOWN;
     }
 
     /** {@inheritDoc} */

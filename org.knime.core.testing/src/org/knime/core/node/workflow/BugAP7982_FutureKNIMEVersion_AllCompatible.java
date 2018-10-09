@@ -51,9 +51,9 @@ import java.io.File;
 
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
 
 import junit.framework.AssertionFailedError;

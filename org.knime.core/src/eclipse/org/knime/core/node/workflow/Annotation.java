@@ -53,6 +53,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
+import org.knime.core.util.LoadVersion;
 
 /**
  * An annotation on the workflow. It keeps all relevant information, such as
@@ -196,7 +197,7 @@ public abstract class Annotation implements UIInformation {
     /** {@inheritDoc}
     * loads new values and fires change event. */
     @Override
-    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion)
+    public void load(final NodeSettingsRO config, final LoadVersion loadVersion)
             throws InvalidSettingsException {
         m_data.load(config, loadVersion);
         fireChangeEvent();

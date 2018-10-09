@@ -61,7 +61,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**

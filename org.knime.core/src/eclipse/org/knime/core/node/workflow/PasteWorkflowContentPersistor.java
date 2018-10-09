@@ -62,6 +62,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
@@ -156,7 +157,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     /** {@inheritDoc}
      * @since 2.10*/
     @Override
-    public FileWorkflowPersistor.LoadVersion getLoadVersion() {
+    public LoadVersion getLoadVersion() {
         throwUnsupportedOperationException();
         return null;
     }
