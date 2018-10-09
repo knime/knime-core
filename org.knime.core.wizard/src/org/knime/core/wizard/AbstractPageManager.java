@@ -274,11 +274,11 @@ public abstract class AbstractPageManager {
         }
     }
 
-    private static String prependParentNodeID(final WorkflowManager parentManager, final String nodeIDString) {
+    private String prependParentNodeID(final WorkflowManager parentManager, final String nodeIDString) {
         String result = nodeIDString;
         if (parentManager != null) {
             NodeID layoutNodeID = parentManager.getID().createChild(Integer.parseInt(nodeIDString));
-            result = NodeIDSuffix.create(parentManager.getProjectWFM().getID(), layoutNodeID).toString();
+            result = NodeIDSuffix.create(m_wfm.getID(), layoutNodeID).toString();
         }
         return result;
     }
