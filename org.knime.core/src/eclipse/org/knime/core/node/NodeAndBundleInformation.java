@@ -59,8 +59,8 @@ import java.util.regex.PatternSyntaxException;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.node.workflow.FileWorkflowPersistor;
+import org.knime.core.util.Version;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Version;
 
 /**
  * Information object to a node. Contains bundle information and node name. Used in persistor to store extra
@@ -69,10 +69,13 @@ import org.osgi.framework.Version;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 2.6
  */
-public final class NodeAndBundleInformation implements KNIMEComponentInformation {
+public final class NodeAndBundleInformation extends org.knime.core.util.workflowalizer.NodeAndBundleInformation
+    implements KNIMEComponentInformation {
 
-    /** Maps a regular expression to the a new extension name. For instance, after open sourcing the big data extensions
-     * the namespace changed from "com.knime(.features).bigdata.()" to "org.knime(.features).bigdata.()." */
+    /**
+     * Maps a regular expression to the a new extension name. For instance, after open sourcing the big data extensions
+     * the namespace changed from "com.knime(.features).bigdata.()" to "org.knime(.features).bigdata.()."
+     */
     private static final Map<Pattern, String> EXTENSION_RENAME_MAP;
 
     static {
@@ -97,77 +100,6 @@ public final class NodeAndBundleInformation implements KNIMEComponentInformation
         EXTENSION_RENAME_MAP = Collections.unmodifiableMap(map);
     }
 
-    private final String m_featureSymbolicName;
-
-    private final String m_featureName;
-
-    private final String m_featureVendor;
-
-    private final Version m_featureVersion;
-
-    private final String m_bundleSymbolicName;
-
-    private final String m_bundleName;
-
-    private final String m_bundleVendor;
-
-    private final String m_nodeName;
-
-    private final String m_factoryClass;
-
-    private final Version m_bundleVersion;
-
-    /**
-     * Create a new information object based on the given node.
-     *
-     * @param node any node, must not be <code>null</code>
-     * @since 2.10
-     */
-    public NodeAndBundleInformation(final Node node) {
-        this(node.getFactory(), node.getName());
-    }
-
-    /**
-     * Create a new information object based on the given node factory.
-     *
-     * @param factory a node factory, must not be <code>null</code>
-     * @since 3.0
-     */
-    public NodeAndBundleInformation(final NodeFactory<? extends NodeModel> factory) {
-        this(factory, null);
-    }
-
-    private NodeAndBundleInformation(final NodeFactory<? extends NodeModel> factory, final String nodeName) {
-        @SuppressWarnings("rawtypes")
-        final Class<? extends NodeFactory> facClass = factory.getClass();
-        Bundle bundle = OSGIHelper.getBundle(facClass);
-        if (bundle != null) {
-            Dictionary<String, String> headers = bundle.getHeaders();
-            m_bundleSymbolicName = bundle.getSymbolicName();
-            m_bundleName = headers.get("Bundle-Name");
-            m_bundleVendor = headers.get("Bundle-Vendor");
-            m_bundleVersion = bundle.getVersion();
-
-            Optional<IInstallableUnit> feature = OSGIHelper.getFeature(bundle);
-            m_featureName = feature.map(f -> f.getProperty(IInstallableUnit.PROP_NAME, null)).orElse(null);
-            m_featureSymbolicName = feature.map(f -> f.getId()).orElse(null);
-            m_featureVendor = feature.map(f -> f.getProperty(IInstallableUnit.PROP_PROVIDER, null)).orElse(null);
-            m_featureVersion = feature.map(f -> new Version(f.getVersion().toString())).orElse(null);
-        } else {
-            m_bundleSymbolicName = null;
-            m_bundleName = null;
-            m_bundleVendor = null;
-            m_bundleVersion = null;
-
-            m_featureName = null;
-            m_featureSymbolicName = null;
-            m_featureVendor = null;
-            m_featureVersion = null;
-        }
-        m_nodeName = nodeName;
-        m_factoryClass = facClass.getName();
-    }
-
     /**
      * Create a new almost empty information object that only contains the factory class name.
      *
@@ -183,54 +115,13 @@ public final class NodeAndBundleInformation implements KNIMEComponentInformation
         final String bundleName, final String bundleVendor, final String nodeName, final Version bundleVersion,
         final String featureSymbolicName, final String featureName, final String featureVendor,
         final Version featureVersion) {
+        super(Optional.ofNullable(factoryClass), Optional.ofNullable(bundleSymbolicName),
+            Optional.ofNullable(bundleName), Optional.ofNullable(bundleVendor), Optional.ofNullable(nodeName),
+            Optional.ofNullable(bundleVersion), Optional.ofNullable(featureSymbolicName),
+            Optional.ofNullable(featureName), Optional.ofNullable(featureVendor), Optional.ofNullable(featureVersion));
         if (factoryClass == null) {
             throw new NullPointerException("factory class must not be null");
         }
-        m_bundleSymbolicName = bundleSymbolicName;
-        m_bundleName = bundleName;
-        m_bundleVendor = bundleVendor;
-        m_nodeName = nodeName;
-        m_bundleVersion = bundleVersion;
-        m_featureName = featureName;
-        m_featureSymbolicName = featureSymbolicName;
-        m_featureVendor = featureVendor;
-        m_featureVersion = featureVersion;
-        m_factoryClass = factoryClass;
-    }
-
-    /**
-     * Returns the bundle's name in which the node is contained. If the bundle is unknown an empty result is returned.
-     *
-     * @return the bundle's name
-     * @since 3.0
-     */
-    public Optional<String> getBundleName() {
-        return Optional.ofNullable(m_bundleName);
-    }
-
-    @Override
-    public Optional<String> getBundleSymbolicName() {
-        return Optional.ofNullable(m_bundleSymbolicName);
-    }
-
-    /**
-     * Returns the bundle's vendor in which the node is contained. If the bundle is unknown an empty result is returned.
-     *
-     * @return the bundle's vendor
-     * @since 3.0
-     */
-    public Optional<String> getBundleVendor() {
-        return Optional.ofNullable(m_bundleVendor);
-    }
-
-    /**
-     * Returns the bundle's version in which the node is contained. If the bundle is unknown an empty result is returned.
-     *
-     * @return the bundle's version
-     * @since 3.0
-     */
-    public Optional<Version> getBundleVersion() {
-        return Optional.ofNullable(m_bundleVersion);
     }
 
     /**
@@ -240,11 +131,12 @@ public final class NodeAndBundleInformation implements KNIMEComponentInformation
      * @since 2.7
      */
     public String getNodeNameNotNull() {
-        if (m_nodeName != null) {
-            return m_nodeName;
+        if (getNodeName().isPresent()) {
+            return getNodeName().get();
         }
-        int dotIndex = m_factoryClass.lastIndexOf('.');
-        String name = m_factoryClass.substring(dotIndex + 1);
+        final String factoryClass = getFactoryClassNotNull();
+        int dotIndex = factoryClass.lastIndexOf('.');
+        String name = factoryClass.substring(dotIndex + 1);
         if (name.length() > "NodeFactory".length() && name.endsWith("NodeFactory")) {
             name = name.substring(0, name.length() - "NodeFactory".length());
         } else if (name.length() > "Factory".length() && name.endsWith("Factory")) {
@@ -262,57 +154,15 @@ public final class NodeAndBundleInformation implements KNIMEComponentInformation
     }
 
     /**
-     * Returns the node's name. If the name is unknown an empty result is returned.
-     *
-     * @return the node's name
-     * @since 3.0
-     */
-    public Optional<String> getNodeName() {
-        return Optional.ofNullable(m_nodeName);
-    }
-
-    /**
      * Returns the node's factory class name.
      *
      * @return the factory class, never <code>null</code>
      */
-    public String getFactoryClass() {
-        return m_factoryClass;
-    }
-
-    /**
-     * Returns the features's name in which the node is contained. If the feature is unknown an empty result is returned.
-     *
-     * @return the feature's name
-     * @since 3.0
-     */
-    public Optional<String> getFeatureName() {
-        return Optional.ofNullable(m_featureName);
-    }
-
-    @Override
-    public Optional<String> getFeatureSymbolicName() {
-        return Optional.ofNullable(m_featureSymbolicName);
-    }
-
-    /**
-     * Returns the features' vendor in which the node is contained. If the feature is unknown an empty result is returned.
-     *
-     * @return the feature's vendor
-     * @since 3.0
-     */
-    public Optional<String> getFeatureVendor() {
-        return Optional.ofNullable(m_featureVendor);
-    }
-
-    /**
-     * Returns the features's version in which the node is contained. If the feature is unknown an empty result is returned.
-     *
-     * @return the feature's version
-     * @since 3.0
-     */
-    public Optional<Version> getFeatureVersion() {
-        return Optional.ofNullable(m_featureVersion);
+    public String getFactoryClassNotNull() {
+        if (getFactoryClass() == null || !getFactoryClass().isPresent()) {
+            throw new IllegalStateException("Factory class is null");
+        }
+        return getFactoryClass().get();
     }
 
     /**
@@ -322,21 +172,21 @@ public final class NodeAndBundleInformation implements KNIMEComponentInformation
      * @noreference This method is not intended to be referenced by clients.
      */
     public void save(final NodeSettingsWO settings) {
-        settings.addString("factory", getFactoryClass());
+        settings.addString("factory", getFactoryClassNotNull());
         // new in 2.6
         settings.addString("node-name", getNodeName().orElse(null));
         settings.addString("node-bundle-name", getBundleName().orElse(null));
         settings.addString("node-bundle-symbolic-name", getBundleSymbolicName().orElse(null));
         settings.addString("node-bundle-vendor", getBundleVendor().orElse(null));
         // new in 2.10
-        final Version bundleVersion = getBundleVersion().orElse(Version.emptyVersion);
+        final Version bundleVersion = getBundleVersion().orElse(Version.EMPTY_VERSION);
         settings.addString("node-bundle-version", bundleVersion.toString());
 
         // new in 3.0
         settings.addString("node-feature-name", getFeatureName().orElse(null));
         settings.addString("node-feature-symbolic-name", getFeatureSymbolicName().orElse(null));
         settings.addString("node-feature-vendor", getFeatureVendor().orElse(null));
-        final Version featureVersion = getFeatureVersion().orElse(Version.emptyVersion);
+        final Version featureVersion = getFeatureVersion().orElse(Version.EMPTY_VERSION);
         settings.addString("node-feature-version", featureVersion.toString());
     }
 
@@ -388,7 +238,7 @@ public final class NodeAndBundleInformation implements KNIMEComponentInformation
             String v = settings.getString("node-feature-version", "");
             try {
                 if (!v.isEmpty()) {
-                    featureVersion = Version.parseVersion(v);
+                    featureVersion = new Version(v);
                 } else {
                     featureVersion = null;
                 }
@@ -400,7 +250,7 @@ public final class NodeAndBundleInformation implements KNIMEComponentInformation
         String v = settings.getString("node-bundle-version", "");
         try {
             if (!v.isEmpty()) {
-                bundleVersion = Version.parseVersion(v);
+                bundleVersion = new Version(v);
             } else {
                 bundleVersion = null;
             }
@@ -434,22 +284,22 @@ public final class NodeAndBundleInformation implements KNIMEComponentInformation
      */
     public String getErrorMessageWhenNodeIsMissing() {
         StringBuilder b = new StringBuilder(256);
-        if (m_nodeName != null) {
-            b.append("Node \"").append(m_nodeName).append("\" not available");
+        if (getNodeName().isPresent()) {
+            b.append("Node \"").append(getNodeName().get()).append("\" not available");
         } else {
             b.append("Unable to load factory class \"");
-            b.append(m_factoryClass);
+            b.append(getFactoryClassNotNull());
             b.append("\"");
         }
-        if (m_featureName != null) {
-            b.append(" from extension \"").append(m_featureName).append("\"");
+        if (getFeatureName().isPresent()) {
+            b.append(" from extension \"").append(getFeatureName().get()).append("\"");
         }
-        if (m_bundleVendor != null) {
-            b.append(" (provided by \"").append(m_bundleVendor).append("\"");
-            if (m_bundleSymbolicName != null) {
-                b.append("; plugin \"").append(m_bundleSymbolicName);
+        if (getBundleVendor().isPresent()) {
+            b.append(" (provided by \"").append(getBundleVendor().get()).append("\"");
+            if (getBundleSymbolicName().isPresent()) {
+                b.append("; plugin \"").append(getBundleSymbolicName().get());
                 b.append("\"");
-                if (OSGIHelper.getBundle(m_bundleSymbolicName) != null) {
+                if (OSGIHelper.getBundle(getBundleSymbolicName().get()) != null) {
                     b.append(" is installed");
                 } else {
                     b.append(" is not installed");
@@ -458,6 +308,55 @@ public final class NodeAndBundleInformation implements KNIMEComponentInformation
             b.append(")");
         }
         return b.toString();
+    }
+
+    /**
+     * @param node any node, must not be <code>null</code>
+     * @return a new information object based on the given node.
+     * @since 2.10
+     */
+    public static NodeAndBundleInformation create(final Node node) {
+        return create(node.getFactory(), node.getName());
+    }
+
+    /**
+     * @param factory a node factory, must not be <code>null</code>
+     * @return a new information object based on the given node factory.
+     * @since 3.0
+     */
+    public static NodeAndBundleInformation create(final NodeFactory<? extends NodeModel> factory) {
+        return create(factory, null);
+    }
+
+    private static NodeAndBundleInformation create(final NodeFactory<? extends NodeModel> factory,
+        final String nodeName) {
+        String bundleSymbolicName = null;
+        String bundleName = null;
+        String bundleVendor = null;
+        Version bundleVersion = null;
+        String featureSymbolicName = null;
+        String featureName = null;
+        String featureVendor = null;
+        Version featureVersion = null;
+
+        @SuppressWarnings("rawtypes")
+        final Class<? extends NodeFactory> facClass = factory.getClass();
+        Bundle bundle = OSGIHelper.getBundle(facClass);
+        if (bundle != null) {
+            Dictionary<String, String> headers = bundle.getHeaders();
+            bundleSymbolicName = bundle.getSymbolicName();
+            bundleName = headers.get("Bundle-Name");
+            bundleVendor = headers.get("Bundle-Vendor");
+            bundleVersion = bundle.getVersion() == null ? null : new Version(bundle.getVersion().toString());
+
+            Optional<IInstallableUnit> feature = OSGIHelper.getFeature(bundle);
+            featureName = feature.map(f -> f.getProperty(IInstallableUnit.PROP_NAME, null)).orElse(null);
+            featureSymbolicName = feature.map(f -> f.getId()).orElse(null);
+            featureVendor = feature.map(f -> f.getProperty(IInstallableUnit.PROP_PROVIDER, null)).orElse(null);
+            featureVersion = feature.map(f -> new Version(f.getVersion().toString())).orElse(null);
+        }
+        return new NodeAndBundleInformation(facClass.getName(), bundleSymbolicName, bundleName, bundleVendor, nodeName,
+            bundleVersion, featureSymbolicName, featureName, featureVendor, featureVersion);
     }
 
     /** If feature or bundle name matches any in {@link #EXTENSION_RENAME_MAP} the string is modified so that

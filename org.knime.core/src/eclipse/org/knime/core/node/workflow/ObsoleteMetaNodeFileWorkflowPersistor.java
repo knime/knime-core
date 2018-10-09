@@ -433,7 +433,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
             case LOOPER:
                 String in = "org.knime.core.node.meta.DataInputNodeFactory";
                 String out = "org.knime.core.node.meta.DataOutputNodeFactory";
-                String newClass = f.getFactoryClass();
+                String newClass = f.getFactoryClassNotNull();
                 if (in.equals(newClass)) {
                     newClass =
                         "org.knime.base.node.meta.looper.ForLoopHeadNodeFactory";

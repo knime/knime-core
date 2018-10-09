@@ -264,7 +264,7 @@ public abstract class NodeFactory<T extends NodeModel> {
         Element root = m_nodeDescription.getXMLDescription();
 
         if ((root != null) && !(this instanceof MissingNodeFactory)) { // for running in non-osgi context
-            NodeAndBundleInformation nodeInfo = new NodeAndBundleInformation(this);
+            NodeAndBundleInformation nodeInfo = NodeAndBundleInformation.create(this);
 
             Document doc = root.getOwnerDocument();
             Element bundleElement = doc.createElement("osgi-info");

@@ -496,7 +496,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                         setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
                     } else {
                         setInternalState(InternalNodeContainerState.EXECUTED);
-                        m_nodeAndBundleInformation = new NodeAndBundleInformation(m_node);
+                        m_nodeAndBundleInformation = NodeAndBundleInformation.create(m_node);
                         setExecutionEnvironment(null);
                     }
                 } else {
@@ -1093,7 +1093,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         if (model instanceof MissingNodeModel) {
             return ((MissingNodeModel)model).getNodeAndBundleInformation();
         }
-        return new NodeAndBundleInformation(getNode());
+        return NodeAndBundleInformation.create(getNode());
     }
 
     /* ------------------ Dialog ------------- */
