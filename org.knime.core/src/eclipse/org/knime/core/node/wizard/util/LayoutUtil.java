@@ -53,6 +53,7 @@ import java.util.Map;
 
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
@@ -92,6 +93,17 @@ public final class LayoutUtil {
             throw new IOException("Can't create default layout; no appropriate service registered.");
         }
         return creator.createDefaultLayout(viewNodes);
+    }
+
+    public static String expandNestedLayout(final String originalLayout, final WorkflowManager wfm) throws IOException {
+        if (serviceTracker == null) {
+            throw new IOException("Core bundle is not active, can't create default layout.");
+        }
+        DefaultLayoutCreator creator = (DefaultLayoutCreator)serviceTracker.getService();
+        if (creator == null) {
+            throw new IOException("Can't expand nested layout; no appropriate service registered.");
+        }
+        return creator.expandNestedLayout(originalLayout, wfm);
     }
 
 }

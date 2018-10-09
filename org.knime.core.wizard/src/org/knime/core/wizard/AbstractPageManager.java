@@ -68,9 +68,12 @@ import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.CSSModifiable;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WebResourceController;
 import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
 import org.knime.core.node.workflow.WebResourceController.WizardPageContent.WizardPageNodeInfo;
@@ -87,6 +90,7 @@ import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
 import org.knime.js.core.layout.bs.JSONLayoutRow;
 import org.knime.js.core.layout.bs.JSONLayoutViewContent;
+import org.knime.js.core.layout.bs.JSONNestedLayout;
 import org.knime.js.core.selections.json.JSONSelectionTranslator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -221,36 +225,62 @@ public abstract class AbstractPageManager {
         return new JSONWebNodePage(pageConfig, nodes);
     }
 
-    private JSONLayoutPage getJSONLayoutFromSubnode(final NodeIDSuffix pageID, final String layoutInfo) throws IOException {
+    private JSONLayoutPage getJSONLayoutFromSubnode(final NodeIDSuffix pageID, final String layoutInfo)
+            throws IOException {
         ObjectMapper mapper = JSONLayoutPage.getConfiguredVerboseObjectMapper();
         ObjectReader reader = mapper.readerForUpdating(new JSONLayoutPage());
         JSONLayoutPage page = reader.readValue(layoutInfo);
+        SubNodeContainer subNodeContainer =
+            m_wfm.getNodeContainer(pageID.prependParent(m_wfm.getID()), SubNodeContainer.class, true);
         if (page != null && page.getRows() != null) {
             for (JSONLayoutRow row : page.getRows()) {
-                setNodeIDInContent(row, pageID);
+                setNodeIDInContent(row, subNodeContainer.getWorkflowManager());
             }
         }
         return page;
     }
 
-    private void setNodeIDInContent(final JSONLayoutContent content, final NodeIDSuffix pageID) {
+    private void setNodeIDInContent(final JSONLayoutContent content, final WorkflowManager subNodeManager) {
         if (content instanceof JSONLayoutRow) {
             for (JSONLayoutColumn col : ((JSONLayoutRow)content).getColumns()) {
                 if (col != null && col.getContent() != null) {
                     for (JSONLayoutContent subContent : col.getContent()) {
-                        setNodeIDInContent(subContent, pageID);
+                        setNodeIDInContent(subContent, subNodeManager);
                     }
                 }
             }
         } else if (content instanceof JSONLayoutViewContent) {
             JSONLayoutViewContent view = (JSONLayoutViewContent)content;
             String nodeIDString = view.getNodeID();
-            if (pageID != null) {
-                NodeIDSuffix layoutNodeID = pageID.createChild(Integer.parseInt(view.getNodeID()));
-                nodeIDString = layoutNodeID.toString();
+            view.setNodeID(prependParentNodeID(subNodeManager, nodeIDString));
+        } else if (content instanceof JSONNestedLayout) {
+            JSONNestedLayout nestedLayout = (JSONNestedLayout)content;
+            String nodeIDString = nestedLayout.getNodeID();
+            nestedLayout.setNodeID(prependParentNodeID(subNodeManager, nodeIDString));
+            JSONLayoutPage nestedPage = nestedLayout.getLayout();
+            if (nestedPage != null && nestedPage.getRows() != null) {
+                NodeIDSuffix suffix = NodeIDSuffix.fromString(nestedLayout.getNodeID());
+                NodeContainer container = subNodeManager.getNodeContainer(suffix.prependParent(m_wfm.getID()));
+                if (container != null && container instanceof SubNodeContainer) {
+                    WorkflowManager nestedManager = ((SubNodeContainer)container).getWorkflowManager();
+                    for (JSONLayoutRow nestedRow : nestedPage.getRows()) {
+                        setNodeIDInContent(nestedRow, nestedManager);
+                    }
+                } else {
+                    LOGGER.error("Container for nested layout with id " + nodeIDString + " could not be found. "
+                        + "Setting the node ids on nested views failed.");
+                }
             }
-            view.setNodeID(nodeIDString);
         }
+    }
+
+    private static String prependParentNodeID(final WorkflowManager parentManager, final String nodeIDString) {
+        String result = nodeIDString;
+        if (parentManager != null) {
+            NodeID layoutNodeID = parentManager.getID().createChild(Integer.parseInt(nodeIDString));
+            result = NodeIDSuffix.create(parentManager.getProjectWFM().getID(), layoutNodeID).toString();
+        }
+        return result;
     }
 
     /**

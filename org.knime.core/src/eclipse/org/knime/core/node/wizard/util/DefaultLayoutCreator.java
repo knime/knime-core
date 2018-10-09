@@ -53,6 +53,8 @@ import java.util.Map;
 
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * A service interface to create a default view layout from a given set of {@link WizardNode}.
@@ -69,5 +71,13 @@ public interface DefaultLayoutCreator {
      * @throws IOException on creation error
      */
     public String createDefaultLayout(final Map<NodeIDSuffix, WizardNode> viewNodes) throws IOException;
+
+    /**
+     * Expands nested layouts by inserting the appropriate sub-layouts in an original layout.
+     * @param originalLayout the original not expanded layout
+     * @param wfm the {@link WorkflowManager} of the containing {@link SubNodeContainer}
+     * @return The expanded layout as JSON serialized string
+     */
+    public String expandNestedLayout(final String originalLayout, final WorkflowManager wfm);
 
 }

@@ -60,6 +60,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -350,8 +351,12 @@ public abstract class WebResourceController {
      * @since 3.4
      */
     protected boolean isSubnodeViewAvailable(final NodeID subnodeId) {
+        return isSubnodeViewAvailable(subnodeId, m_manager);
+    }
+
+    private boolean isSubnodeViewAvailable(final NodeID subnodeId, final WorkflowManager wfm) {
         // potentially null when queried from contained metanode
-        NodeContainer sourceNC = m_manager.getWorkflow().getNode(subnodeId);
+        NodeContainer sourceNC = wfm.getWorkflow().getNode(subnodeId);
         // only consider nodes that are...SubNodes and...
         if (!(sourceNC instanceof SubNodeContainer)) {
             return false;
@@ -372,12 +377,14 @@ public abstract class WebResourceController {
                 break;
             }
         }
-        // also consider nested SubNodes which might have views to display
-        Map<NodeID, SubNodeContainer> sncSet = findSubnodeContainers(subNodeWFM);
-        for (NodeID id : sncSet.keySet()) {
-            if (isSubnodeViewAvailable(id)) {
-                allInactive = false;
-                break;
+        if (allInactive) {
+            // also consider nested SubNodes which might have views to display
+            Map<NodeID, SubNodeContainer> sncSet = findSubnodeContainers(subNodeWFM);
+            for (NodeID id : sncSet.keySet()) {
+                if (isSubnodeViewAvailable(id, subNodeWFM)) {
+                    allInactive = false;
+                    break;
+                }
             }
         }
         return !allInactive;
@@ -386,6 +393,7 @@ public abstract class WebResourceController {
     /**
      * @param subnodeManager
      * @return
+     * @since 3.7
      */
     public static Map<NodeID, SubNodeContainer> findSubnodeContainers(final WorkflowManager subnodeManager) {
         try(WorkflowLock lock = subnodeManager.lock()) {
@@ -414,23 +422,52 @@ public abstract class WebResourceController {
         final WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
 
-        //        int currentSubnodeIDSuffix = m_promptedSubnodeIDSuffixes.peek();
-        //        final NodeID subNodeID = toNodeID(currentSubnodeIDSuffix);
-        SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
-        WorkflowManager subWFM = subNC.getWorkflowManager();
-        Map<NodeID, WizardNode> wizardNodeMap = subWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
-        //TODO: get applicable nested subnodes
         LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<NodeIDSuffix, WizardNode>();
-        //LinkedHashMap<NodeIDSuffix, WizardNode> errorMap = new LinkedHashMap<NodeIDSuffix, WizardNode>();
         LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo> infoMap = new LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo>();
         Set<HiLiteHandler> initialHiliteHandlerSet = new HashSet<HiLiteHandler>();
+        SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
+        findNestedViewNodes(subNC, resultMap, infoMap, initialHiliteHandlerSet);
+        NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subNC.getID());
+        String pageLayout = subNC.getLayoutJSONString();
+        if (StringUtils.isEmpty(pageLayout)) {
+            try {
+                pageLayout = LayoutUtil.createDefaultLayout(resultMap);
+            } catch (IOException ex) {
+                LOGGER.error("Default page layout could not be created: " + ex.getMessage(), ex);
+            }
+        }
+        try {
+            pageLayout = LayoutUtil.expandNestedLayout(pageLayout, subNC.getWorkflowManager());
+        } catch (IOException ex) {
+            LOGGER.error("Nested layouts could not be expanded: " + ex.getMessage(), ex);
+        }
+        Set<HiLiteHandler> knownHiLiteHandlers = new HashSet<HiLiteHandler>();
+        Set<HiLiteTranslator> knownTranslators = new HashSet<HiLiteTranslator>();
+        Set<HiLiteManager> knownManagers = new HashSet<HiLiteManager>();
+        for (HiLiteHandler initialHandler : initialHiliteHandlerSet) {
+            getHiLiteTranslators(initialHandler, knownHiLiteHandlers, knownTranslators, knownManagers);
+        }
+        List<HiLiteTranslator> translatorList =
+            knownTranslators.size() > 0 ? new ArrayList<HiLiteTranslator>(knownTranslators) : null;
+        List<HiLiteManager> managerList = knownManagers.size() > 0 ? new ArrayList<HiLiteManager>(knownManagers) : null;
+        WizardPageContent page = new WizardPageContent(pageID, resultMap, pageLayout, translatorList, managerList);
+        page.setInfoMap(infoMap);
+        return page;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void findNestedViewNodes(final SubNodeContainer subNC,
+        final Map<NodeIDSuffix, WizardNode> resultMap, final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap,
+        final Set<HiLiteHandler> initialHiliteHandlerSet) {
+        WorkflowManager subWFM = subNC.getWorkflowManager();
+        Map<NodeID, WizardNode> wizardNodeMap = subWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
         for (Map.Entry<NodeID, WizardNode> entry : wizardNodeMap.entrySet()) {
             NodeContainer nc = subWFM.getNodeContainer(entry.getKey());
             if ((nc instanceof SingleNodeContainer) && ((SingleNodeContainer)nc).isInactive()) {
                 //skip nodes in inactive branches
                 continue;
             }
-            NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(manager.getID(), entry.getKey());
+            NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(m_manager.getID(), entry.getKey());
             WizardPageNodeInfo nodeInfo = new WizardPageNodeInfo();
             nodeInfo.setNodeName(nc.getName());
             nodeInfo.setNodeAnnotation(nc.getNodeAnnotation().toString());
@@ -448,28 +485,13 @@ public abstract class WebResourceController {
                 }
             }
         }
-        NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subWFM.getID());
-        String pageLayout = subNC.getLayoutJSONString();
-        if (StringUtils.isEmpty(pageLayout)) {
-            try {
-                pageLayout = LayoutUtil.createDefaultLayout(resultMap);
-            } catch (IOException ex) {
-                LOGGER.error("Default page layout could not be created: " + ex.getMessage(), ex);
+        Map<NodeID, SubNodeContainer> subnodeContainers = findSubnodeContainers(subNC.getWorkflowManager());
+        for (Entry<NodeID, SubNodeContainer> entry : subnodeContainers.entrySet()) {
+            SubNodeContainer snc = entry.getValue();
+            if (isSubnodeViewAvailable(snc.getID(), subWFM)) {
+                findNestedViewNodes(snc, resultMap, infoMap, initialHiliteHandlerSet);
             }
         }
-        Set<HiLiteHandler> knownHiLiteHandlers = new HashSet<HiLiteHandler>();
-        Set<HiLiteTranslator> knownTranslators = new HashSet<HiLiteTranslator>();
-        Set<HiLiteManager> knownManagers = new HashSet<HiLiteManager>();
-        for (HiLiteHandler initialHandler : initialHiliteHandlerSet) {
-            getHiLiteTranslators(initialHandler, knownHiLiteHandlers, knownTranslators, knownManagers);
-        }
-        List<HiLiteTranslator> translatorList =
-            knownTranslators.size() > 0 ? new ArrayList<HiLiteTranslator>(knownTranslators) : null;
-        List<HiLiteManager> managerList = knownManagers.size() > 0 ? new ArrayList<HiLiteManager>(knownManagers) : null;
-        WizardPageContent page = new WizardPageContent(pageID, resultMap, pageLayout, translatorList, managerList);
-        page.setInfoMap(infoMap);
-        //TODO page.setNestedContent(nestedContent);
-        return page;
     }
 
     protected Map<NodeIDSuffix, WebViewContent> getWizardPageViewValueMapInternal(final NodeID subnodeID) {

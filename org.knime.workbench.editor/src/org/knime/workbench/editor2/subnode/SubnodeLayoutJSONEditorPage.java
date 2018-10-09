@@ -589,7 +589,14 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                     newInfo.setRow(lastRow + 1);
                     newInfo.setCol(1);
                     newInfo.setColWidth(12);
-                    newInfo.setView(DefaultLayoutCreatorImpl.getDefaultViewContentForNode(entry.getKey(), entry.getValue()));
+                    ViewHideable view = entry.getValue();
+                    if (view instanceof SubNodeContainer) {
+                        JSONNestedLayout nestedLayout = new JSONNestedLayout();
+                        nestedLayout.setNodeID(entry.getKey().toString());
+                        newInfo.setView(nestedLayout);
+                    } else {
+                        newInfo.setView(DefaultLayoutCreatorImpl.getDefaultViewContentForNode(entry.getKey(), view));
+                    }
                     m_basicMap.put(entry.getKey(), newInfo);
                     tryUpdateJsonFromBasic();
                 }
@@ -904,6 +911,11 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             }
         } else if (content instanceof JSONLayoutViewContent) {
             String id = ((JSONLayoutViewContent)content).getNodeID();
+            if (id != null && !id.isEmpty()) {
+                m_documentNodeIDs.add(Integer.parseInt(id));
+            }
+        } else if (content instanceof JSONNestedLayout) {
+            String id = ((JSONNestedLayout)content).getNodeID();
             if (id != null && !id.isEmpty()) {
                 m_documentNodeIDs.add(Integer.parseInt(id));
             }
