@@ -613,4 +613,12 @@ public abstract class GroupByTable {
     public BufferedDataTable getBufferedTable() {
         return m_resultTable;
     }
+
+    /**
+     * @return a newly created map, since it will be overridden by sub classes anyway
+     * @since 3.7
+     */
+     public Map<String, Long> getMissingValuesMap() {
+         return new HashMap<>();
+     }
 }

@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.lang.mutable.MutableLong;
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
@@ -76,6 +77,7 @@ public class MemoryGroupByTable extends GroupByTable {
 
     private Map<GroupKey, Set<RowKey>> m_rowKeys;
     private Map<GroupKey, ColumnAggregator[]> m_vals;
+    private Map<String, MutableLong> m_missingValuesMap;
 
     /**Constructor for class MemoryGroupByTable.
      * @param exec the <code>ExecutionContext</code>
@@ -143,6 +145,25 @@ public class MemoryGroupByTable extends GroupByTable {
     }
 
     /**
+     * Returns a map where for each column (by its name), which has missing values, the number of them is given
+     * @return the missingValuesMap
+     * @since 3.7
+     */
+    @Override
+    public Map<String, Long> getMissingValuesMap() {
+        Map<String, Long> resMap = new HashMap<>();
+        if (m_missingValuesMap != null) {
+            for (Entry<String, MutableLong> entry : m_missingValuesMap.entrySet()) {
+                Long count = entry.getValue().toLong();
+                if (count > 0) {
+                    resMap.put(entry.getKey(), entry.getValue().toLong());
+                }
+            }
+        }
+        return resMap;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -155,6 +176,7 @@ public class MemoryGroupByTable extends GroupByTable {
         final DataTableSpec spec = dataTable.getDataTableSpec();
         final long rowCount = dataTable.size();
         long rowCounter = 0;
+        initMissingValuesMap();
         for (final DataRow row : dataTable) {
             groupExec.checkCanceled();
             groupExec.setProgress(rowCounter++ / (double) rowCount,
@@ -203,6 +225,7 @@ public class MemoryGroupByTable extends GroupByTable {
                             operator.getSkipMessage(),
                             groupVals.getGroupVals());
                 }
+                m_missingValuesMap.get(colAggr.getOriginalColName()).add(operator.getMissingValuesCount());
                 //reset the operator for the next group
                 operator.reset();
             }
@@ -244,6 +267,14 @@ public class MemoryGroupByTable extends GroupByTable {
                 m_rowKeys.put(groupKey, keySet);
             }
             keySet.add(key);
+        }
+    }
+
+    private void initMissingValuesMap() {
+        m_missingValuesMap = new HashMap<>();
+        ColumnAggregator[] colAggregators = getColAggregators();
+        for (ColumnAggregator ca : colAggregators) {
+            m_missingValuesMap.put(ca.getOriginalColName(), new MutableLong(0L));
         }
     }
 }
