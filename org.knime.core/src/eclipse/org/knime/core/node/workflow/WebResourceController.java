@@ -718,7 +718,7 @@ public abstract class WebResourceController {
         assert manager.isLockedByCurrentThread();
         SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subNodeWFM = subNodeNC.getWorkflowManager();
-        return subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
+        return subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false, true);
     }
 
     /**
@@ -735,7 +735,7 @@ public abstract class WebResourceController {
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
         SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
-        NodeContainer cont = subNodeNC.getWorkflowManager().getNodeContainer(wizardNodeID);
+        NodeContainer cont = subNodeNC.getWorkflowManager().findNodeContainer(wizardNodeID);
         if (cont instanceof NativeNodeContainer) {
             NodeModel model = ((NativeNodeContainer)cont).getNodeModel();
             if (model instanceof WizardNode) {
