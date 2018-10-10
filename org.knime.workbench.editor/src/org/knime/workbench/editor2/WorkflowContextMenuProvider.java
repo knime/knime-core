@@ -127,6 +127,7 @@ import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.actions.UnlinkNodesAction;
 import org.knime.workbench.editor2.directannotationedit.StyledTextEditor;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
@@ -241,13 +242,13 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         action = m_actionRegistry.getAction(CancelAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
+
         // show some menu items on LoopEndNodes only
         List<?> parts = m_viewer.getSelectedEditParts();
         if (parts.size() == 1) {
             EditPart p = (EditPart)parts.get(0);
             if (p instanceof NodeContainerEditPart) {
-                final NodeContainerUI container =
-                        (NodeContainerUI)((NodeContainerEditPart)p).getModel();
+                final NodeContainerUI container = (NodeContainerUI)((NodeContainerEditPart)p).getModel();
                 if (container instanceof SingleNodeContainerUI) {
                     final SingleNodeContainerUI snc = (SingleNodeContainerUI)container;
                     Wrapper.unwrapOptional(snc, SingleNodeContainer.class).ifPresent(sncImpl -> {
@@ -270,6 +271,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
             }
         }
+
         // reset
         action = m_actionRegistry.getAction(ResetAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
@@ -286,26 +288,33 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
 
-        final ImageDescriptor subMenuImage =
-            ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-forward.png");
-        final MenuManager annotationSubmenu = new MenuManager("Arrange", subMenuImage, null);
-        // bring annotation to the front
-        action = m_actionRegistry.getAction(BringAnnotationToFrontAction.ID);
-        annotationSubmenu.add(action);
-        ((AbstractNodeAction)action).update();
-        // bring annotation forward
-        action = m_actionRegistry.getAction(BringAnnotationForwardAction.ID);
-        annotationSubmenu.add(action);
-        ((AbstractNodeAction)action).update();
-        // send annotation backward
-        action = m_actionRegistry.getAction(SendAnnotationBackwardAction.ID);
-        annotationSubmenu.add(action);
-        ((AbstractNodeAction)action).update();
-        // send annotation to the back
-        action = m_actionRegistry.getAction(SendAnnotationToBackAction.ID);
-        annotationSubmenu.add(action);
-        ((AbstractNodeAction)action).update();
-        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, annotationSubmenu);
+        // Here's the questionable case - we don't allow the annotation movement (back, front) actions to
+        //      be enabled if there is more than one annotation selected; even though, it seems like it is
+        //      more logically consistent to still show the submenu since there *is* a selected annotation
+        //      (plus, in the future if we enable those actions in the future on multiple selections, this is
+        //      one less place to change.)
+        if (parts.stream().anyMatch((p) -> (p instanceof AnnotationEditPart))) {
+            final ImageDescriptor subMenuImage =
+                ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotation-forward.png");
+            final MenuManager annotationSubmenu = new MenuManager("Arrange", subMenuImage, null);
+            // bring annotation to the front
+            action = m_actionRegistry.getAction(BringAnnotationToFrontAction.ID);
+            annotationSubmenu.add(action);
+            ((AbstractNodeAction)action).update();
+            // bring annotation forward
+            action = m_actionRegistry.getAction(BringAnnotationForwardAction.ID);
+            annotationSubmenu.add(action);
+            ((AbstractNodeAction)action).update();
+            // send annotation backward
+            action = m_actionRegistry.getAction(SendAnnotationBackwardAction.ID);
+            annotationSubmenu.add(action);
+            ((AbstractNodeAction)action).update();
+            // send annotation to the back
+            action = m_actionRegistry.getAction(SendAnnotationToBackAction.ID);
+            annotationSubmenu.add(action);
+            ((AbstractNodeAction)action).update();
+            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, annotationSubmenu);
+        }
 
         // linking nodes
         action = m_actionRegistry.getAction(LinkNodesAction.ID);
