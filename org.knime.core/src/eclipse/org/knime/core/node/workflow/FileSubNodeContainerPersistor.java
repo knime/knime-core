@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -105,20 +104,17 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
      * @param nodeSettingsFile
      * @param loadHelper
      * @param version
-     * @param globalTableRepository
      * @param workflowDataRepository
      * @param mustWarnOnDataLoadError
      * @since 3.7
      */
     public FileSubNodeContainerPersistor(final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper,
-        final LoadVersion version, final HashMap<Integer, ContainerTable> globalTableRepository,
-        final WorkflowDataRepository workflowDataRepository, final boolean mustWarnOnDataLoadError) {
-        super(nodeSettingsFile, loadHelper, version, globalTableRepository,
-            workflowDataRepository, mustWarnOnDataLoadError);
+        final LoadVersion version, final WorkflowDataRepository workflowDataRepository,
+        final boolean mustWarnOnDataLoadError) {
+        super(nodeSettingsFile, loadHelper, version, workflowDataRepository, mustWarnOnDataLoadError);
         m_workflowPersistor =
-            new FileWorkflowPersistor(globalTableRepository, workflowDataRepository, new ReferencedFile(
-                nodeSettingsFile.getParent(), WorkflowPersistor.WORKFLOW_FILE), getLoadHelper(), getLoadVersion(),
-                false) {
+            new FileWorkflowPersistor(workflowDataRepository, new ReferencedFile(
+                nodeSettingsFile.getParent(), WorkflowPersistor.WORKFLOW_FILE), getLoadHelper(), getLoadVersion(), false) {
                 @Override
                 public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
                     NodeContainerParent ncParent = wfm.getDirectNCParent();

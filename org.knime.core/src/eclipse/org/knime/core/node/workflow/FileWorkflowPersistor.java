@@ -69,7 +69,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -263,8 +262,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private final FileNodeContainerMetaPersistor m_metaPersistor;
 
-    private final HashMap<Integer, ContainerTable> m_globalTableRepository;
-
     private final WorkflowDataRepository m_workflowDataRepository;
 
     private WorkflowPortTemplate[] m_inPortTemplates;
@@ -326,17 +323,14 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     /**
      * Create persistor for load.
-     *
-     * @param tableRep Table map
      * @param dotKNIMEFile Associated workflow.knime or template.knime file
      * @param loadHelper The load helper as required by meta persistor.
      * @param version of loading workflow.
      */
-    FileWorkflowPersistor(final HashMap<Integer, ContainerTable> tableRep,
-        final WorkflowDataRepository workflowDataRepository, final ReferencedFile dotKNIMEFile,
-        final WorkflowLoadHelper loadHelper, final LoadVersion version, final boolean isProject) {
+    FileWorkflowPersistor(final WorkflowDataRepository workflowDataRepository,
+        final ReferencedFile dotKNIMEFile, final WorkflowLoadHelper loadHelper,
+        final LoadVersion version, final boolean isProject) {
         assert version != null;
-        m_globalTableRepository = tableRep;
         m_workflowDataRepository = workflowDataRepository;
         m_versionString = version;
         m_metaPersistor = new FileNodeContainerMetaPersistor(dotKNIMEFile, loadHelper, version);
@@ -369,7 +363,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     ReferencedFile getWorkflowKNIMEFile() {
         FileNodeContainerMetaPersistor meta = getMetaPersistor();
         if (meta == null) {
-            throw new RuntimeException("Persistor not created for loading " + "workflow, meta persistor is null");
+            throw new RuntimeException("Persistor not created for loading workflow, meta persistor is null");
         }
         return meta.getNodeSettingsFile();
     }
@@ -402,12 +396,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     @Override
     public FileNodeContainerMetaPersistor getMetaPersistor() {
         return m_metaPersistor;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
-        return m_globalTableRepository;
     }
 
     /**
@@ -1835,21 +1823,21 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     FileSingleNodeContainerPersistor createNativeNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new FileNativeNodeContainerPersistor(nodeFile, getLoadHelper(), getLoadVersion(),
-            getGlobalTableRepository(), getWorkflowDataRepository(), mustWarnOnDataLoadError());
+            getWorkflowDataRepository(), mustWarnOnDataLoadError());
     }
 
     FileSubNodeContainerPersistor createSubNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new FileSubNodeContainerPersistor(nodeFile, getLoadHelper(), getLoadVersion(),
-            getGlobalTableRepository(), getWorkflowDataRepository(), mustWarnOnDataLoadError());
+            getWorkflowDataRepository(), mustWarnOnDataLoadError());
     }
 
     FileWorkflowPersistor createWorkflowPersistorLoad(final ReferencedFile wfmFile) {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            return new ObsoleteMetaNodeFileWorkflowPersistor(getGlobalTableRepository(),
-                getWorkflowDataRepository(), wfmFile, getLoadHelper(), getLoadVersion());
+            return new ObsoleteMetaNodeFileWorkflowPersistor(getWorkflowDataRepository(),
+                wfmFile, getLoadHelper(), getLoadVersion());
         } else {
-            return new FileWorkflowPersistor(getGlobalTableRepository(), getWorkflowDataRepository(),
-                wfmFile, getLoadHelper(), getLoadVersion(), false);
+            return new FileWorkflowPersistor(getWorkflowDataRepository(), wfmFile,
+                getLoadHelper(), getLoadVersion(), false);
         }
     }
 

@@ -398,7 +398,7 @@ public final class WorkflowManager extends NodeContainer
      * @param context The context
      * @param name Name of this workflow manager
      * @param nodeAnno object to copy the node annotation from
-     * @param fsHandlerRepositoryOptional TODO
+     * @param dataRepositoryOptional for blob and table handling, see class member
      */
     WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
         final PortType[] inTypes, final PortType[] outTypes, final boolean isProject, final WorkflowContext context,

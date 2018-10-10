@@ -48,6 +48,7 @@
 package org.knime.core.data.sort;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -64,6 +65,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -111,7 +113,7 @@ public class TableSorterTest {
         m_exec = new ExecutionContext(
                 new DefaultNodeProgressMonitor(),
                 new Node(dummyFactory),
-                    SingleNodeContainer.MemoryPolicy.CacheOnDisc);
+                    SingleNodeContainer.MemoryPolicy.CacheOnDisc, new HashMap<Integer, ContainerTable>());
     }
 
     /**

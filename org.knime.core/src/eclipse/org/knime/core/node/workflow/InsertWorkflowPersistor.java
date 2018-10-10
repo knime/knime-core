@@ -49,12 +49,10 @@ package org.knime.core.node.workflow;
 
 import java.io.InputStream;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -103,12 +101,6 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     @Override
     public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
         return Collections.emptySet();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
-        throw new IllegalStateException("no table repository for root wfm");
     }
 
     /** {@inheritDoc} */

@@ -50,10 +50,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
 
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -331,13 +329,12 @@ public class WorkflowLoadHelper {
         }
 
         final TemplateNodeContainerPersistor persistor;
-        // TODO only create new hash map if workflow is a project?
-        HashMap<Integer, ContainerTable> tableRep = new GlobalTableRepository();
+        // TODO only create new repo if workflow is a project?
         WorkflowDataRepository workflowDataRepository = new WorkflowDataRepository();
         // ordinary workflow is loaded
         if (templateInfo == null) {
-            persistor = new FileWorkflowPersistor(tableRep, workflowDataRepository, dotKNIMERef,
-                this, version, !isTemplateFlow());
+            persistor = new FileWorkflowPersistor(workflowDataRepository, dotKNIMERef, this,
+                version, !isTemplateFlow());
         } else {
             // some template is loaded
             switch (templateInfo.getNodeContainerTemplateType()) {
@@ -348,14 +345,14 @@ public class WorkflowLoadHelper {
                     } else {
                         workflowDotKNIME = new ReferencedFile(dotKNIMERef.getParent(), WorkflowPersistor.WORKFLOW_FILE);
                     }
-                    persistor = new FileWorkflowPersistor(tableRep, workflowDataRepository, workflowDotKNIME,
-                        this, version, !isTemplateFlow());
+                    persistor = new FileWorkflowPersistor(workflowDataRepository, workflowDotKNIME, this,
+                        version, !isTemplateFlow());
                     break;
                 case SubNode:
                     final ReferencedFile settingsDotXML = new ReferencedFile(dotKNIMERef.getParent(),
                         SingleNodeContainerPersistor.SETTINGS_FILE_NAME);
                     persistor = new FileSubNodeContainerPersistor(settingsDotXML, this, version,
-                        tableRep, workflowDataRepository, true);
+                        workflowDataRepository, true);
                     break;
                 default:
                     throw new IllegalStateException("Unsupported template type");

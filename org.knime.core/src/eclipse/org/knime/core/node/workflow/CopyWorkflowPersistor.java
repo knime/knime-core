@@ -50,14 +50,12 @@ package org.knime.core.node.workflow;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -81,7 +79,6 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final MetaNodeTemplateInformation m_templateInformation;
     private final AuthorInformation m_authorInformation;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
-    private final HashMap<Integer, ContainerTable> m_tableRep;
     private final WorkflowDataRepository m_workflowDataRepository;
     private final List<FlowVariable> m_workflowVariables;
     private final List<Credentials> m_credentials;
@@ -126,13 +123,10 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
                 original, preserveDeletableFlags, isUndoableDeleteCommand);
         if (m_isProject) {
-            assert m_outportTemplates.length == 0
-                    && m_inportTemplates.length == 0;
-            m_tableRep = new GlobalTableRepository();
+            assert m_outportTemplates.length == 0 && m_inportTemplates.length == 0;
             m_workflowDataRepository = new WorkflowDataRepository();
         } else {
             m_workflowDataRepository = null;
-            m_tableRep = null;
         }
         m_ncs = new LinkedHashMap<Integer, NodeContainerPersistor>();
         m_cons = new LinkedHashSet<ConnectionContainerTemplate>();
@@ -182,12 +176,6 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     @Override
     public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
         return Collections.emptySet();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
-        return m_tableRep;
     }
 
     /** {@inheritDoc} */

@@ -55,11 +55,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
@@ -124,10 +122,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
      * @param version
      */
     FileNativeNodeContainerPersistor(final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper,
-        final LoadVersion version, final HashMap<Integer, ContainerTable> globalTableRepository,
-        final WorkflowDataRepository workflowDataRepository, final boolean mustWarnOnDataLoadError) {
-        super(nodeSettingsFile, loadHelper, version, globalTableRepository,
-            workflowDataRepository, mustWarnOnDataLoadError);
+        final LoadVersion version, final WorkflowDataRepository workflowDataRepository,
+        final boolean mustWarnOnDataLoadError) {
+        super(nodeSettingsFile, loadHelper, version, workflowDataRepository, mustWarnOnDataLoadError);
     }
 
     /** Called by {@link Node} to update the message field in the {@link NodeModel} class.
@@ -264,10 +261,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             }
         }
         try {
-            HashMap<Integer, ContainerTable> globalTableRepository = getGlobalTableRepository();
             WorkflowDataRepository dataRepository = getWorkflowDataRepository();
-            m_nodePersistor.load(m_node, getParentPersistor(), exec, tblRep, globalTableRepository,
-                dataRepository, result);
+            m_nodePersistor.load(m_node, getParentPersistor(), exec, tblRep, dataRepository,
+                result);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
             getLogger().warn(error, e);

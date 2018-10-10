@@ -373,8 +373,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
     @Override
     public ExecutionContext createExecutionContext() {
         NodeProgressMonitor progressMonitor = getProgressMonitor();
-        return new ExecutionContext(progressMonitor, getNode(),
-                getOutDataMemoryPolicy());
+        return new ExecutionContext(progressMonitor, getNode(), getOutDataMemoryPolicy(),
+            getParent().getWorkflowDataRepository());
     }
 
     /* ---------------- Configuration/Execution ----------------- */

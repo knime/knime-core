@@ -140,24 +140,26 @@ public class ExecutionContext extends ExecutionMonitor {
     @Deprecated
     public ExecutionContext(final NodeProgressMonitor progMon, final Node node) {
         // as it is deprecated we don't introduce an argument for mem policy
-        this(progMon, node, MemoryPolicy.CacheSmallInMemory);
+        this(progMon, node, MemoryPolicy.CacheSmallInMemory, NotInWorkflowDataRepository.newInstance());
     }
 
     /**
-     * Creates new object based on a progress monitor and a node as parent of any created buffered data table. This
+     * Creates new object based on a progress monitor and a node as parent of any created buffered data table.
      *
      * @param progMon To report progress to.
      * @param node The parent of any BufferedDataTable being created.
      * @param policy the policy according to which created BufferedDataTables behave
      * @param tableRepository ignored
      * @deprecated This constructor ignores the last argument and calls
-     *             {@link #ExecutionContext(NodeProgressMonitor, Node, MemoryPolicy)}
+     *             {@link #ExecutionContext(NodeProgressMonitor, Node, MemoryPolicy, IDataRepository)}
      */
     @Deprecated
     public ExecutionContext(final NodeProgressMonitor progMon, final Node node,
         final MemoryPolicy policy,
         final HashMap<Integer, ContainerTable> tableRepository) {
-        this(progMon, node, policy);
+        this(progMon, node, policy, NotInWorkflowDataRepository.newInstance());
+        CheckUtils.checkArgument(tableRepository.isEmpty(),
+            "Not to be called with non-empty table repository (%d element(s))", tableRepository.size());
     }
 
     /**
@@ -168,13 +170,15 @@ public class ExecutionContext extends ExecutionMonitor {
      * @param node The parent of any BufferedDataTable being created.
      * @param policy the policy according to which created BufferedDataTables
      *            behave
+     * @param dataRepository for workflow global blob, filestore and table handling/lookup
      * @since 3.7
+     * @noreference This constructor is not intended to be referenced by clients.
      */
     public ExecutionContext(final NodeProgressMonitor progMon, final Node node,
-            final MemoryPolicy policy) {
-        this(progMon, node, policy, new HashMap<Integer, ContainerTable>(),
-                (node.getFileStoreHandler() instanceof IWriteFileStoreHandler ?
-                        (IWriteFileStoreHandler)node.getFileStoreHandler() : null));
+            final MemoryPolicy policy, final IDataRepository dataRepository) {
+        this(progMon, node, policy, dataRepository, new HashMap<Integer, ContainerTable>(),
+            (node.getFileStoreHandler() instanceof IWriteFileStoreHandler
+                ? (IWriteFileStoreHandler)node.getFileStoreHandler() : null));
     }
 
     /** Creates execution context with all required arguments. It's used
@@ -183,15 +187,15 @@ public class ExecutionContext extends ExecutionMonitor {
      * @param progMon see other constructor.
      * @param node see other constructor.
      * @param policy see other constructor.
-     * @param tableRepository see other constructor.
+     * @param dataRepository see other constructor
      * @param localTableRepository execution context local table. This argument
      * is non-null only if this is a sub execution context (inheriting table
      * repository from parent).
+     * @param tableRepository see other constructor.
      */
-    private ExecutionContext(final NodeProgressMonitor progMon, final Node node,
-            final MemoryPolicy policy,
-            final HashMap<Integer, ContainerTable> localTableRepository,
-            final IWriteFileStoreHandler fileStoreHandler) {
+    private ExecutionContext(final NodeProgressMonitor progMon, final Node node, final MemoryPolicy policy,
+        final IDataRepository dataRepository, final HashMap<Integer, ContainerTable> localTableRepository,
+        final IWriteFileStoreHandler fileStoreHandler) {
         super(progMon);
         m_node = CheckUtils.checkArgumentNotNull(node);
         if (fileStoreHandler == null) {
@@ -202,7 +206,7 @@ public class ExecutionContext extends ExecutionMonitor {
         } else {
             m_fileStoreHandler = fileStoreHandler;
         }
-        m_dataRepository = m_fileStoreHandler.getDataRepository();
+        m_dataRepository = CheckUtils.checkArgumentNotNull(dataRepository);
         m_memoryPolicy = policy;
         m_localTableRepository = localTableRepository;
     }
@@ -380,7 +384,7 @@ public class ExecutionContext extends ExecutionMonitor {
             throws CanceledExecutionException {
         RearrangeColumnsTable t = RearrangeColumnsTable.create(
                 rearranger, in, subProgressMon, this);
-        BufferedDataTable out = new BufferedDataTable(t, getFileStoreHandler().getDataRepository());
+        BufferedDataTable out = new BufferedDataTable(t, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -397,7 +401,7 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createSpecReplacerTable(
             final BufferedDataTable in, final DataTableSpec newSpec) {
         TableSpecReplacerTable t = new TableSpecReplacerTable(in, newSpec);
-        BufferedDataTable out = new BufferedDataTable(t, getFileStoreHandler().getDataRepository());
+        BufferedDataTable out = new BufferedDataTable(t, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -414,7 +418,7 @@ public class ExecutionContext extends ExecutionMonitor {
     */
     public BufferedDataTable createWrappedTable(final BufferedDataTable in) {
         WrappedTable t = new WrappedTable(in);
-        BufferedDataTable out = new BufferedDataTable(t, getFileStoreHandler().getDataRepository());
+        BufferedDataTable out = new BufferedDataTable(t, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -429,7 +433,7 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataTable createVoidTable(final DataTableSpec spec) {
         VoidTable voidTable = VoidTable.create(spec);
-        BufferedDataTable out = new BufferedDataTable(voidTable, getFileStoreHandler().getDataRepository());
+        BufferedDataTable out = new BufferedDataTable(voidTable, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -470,7 +474,7 @@ public class ExecutionContext extends ExecutionMonitor {
             final ExecutionMonitor exec, final BufferedDataTable... tables)
         throws CanceledExecutionException {
         ConcatenateTable t = ConcatenateTable.create(exec, tables);
-        BufferedDataTable out = new BufferedDataTable(t, getFileStoreHandler().getDataRepository());
+        BufferedDataTable out = new BufferedDataTable(t, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -515,7 +519,7 @@ public class ExecutionContext extends ExecutionMonitor {
         throws CanceledExecutionException {
         ConcatenateTable t =
             ConcatenateTable.create(exec, rowKeyDuplicateSuffix, duplicatesPreCheck, tables);
-        BufferedDataTable out = new BufferedDataTable(t, getFileStoreHandler().getDataRepository());
+        BufferedDataTable out = new BufferedDataTable(t, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -558,7 +562,7 @@ public class ExecutionContext extends ExecutionMonitor {
             final BufferedDataTable right, final ExecutionMonitor exec)
         throws CanceledExecutionException {
         JoinedTable jt = JoinedTable.create(left, right, exec);
-        BufferedDataTable out = new BufferedDataTable(jt, getFileStoreHandler().getDataRepository());
+        BufferedDataTable out = new BufferedDataTable(jt, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -624,7 +628,8 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public ExecutionContext createSubExecutionContext(final double maxProg) {
         NodeProgressMonitor subProgress = createSubProgressMonitor(maxProg);
-        return new ExecutionContext(subProgress, m_node, m_memoryPolicy, m_localTableRepository, m_fileStoreHandler);
+        return new ExecutionContext(subProgress, m_node, m_memoryPolicy, m_dataRepository, m_localTableRepository,
+            m_fileStoreHandler);
     }
 
     /**
@@ -644,12 +649,20 @@ public class ExecutionContext extends ExecutionMonitor {
     public ExecutionContext createSilentSubExecutionContext(
             final double maxProg) {
         NodeProgressMonitor subProgress = createSilentSubProgressMonitor(maxProg);
-        return new ExecutionContext(subProgress, m_node, m_memoryPolicy, m_localTableRepository, m_fileStoreHandler);
+        return new ExecutionContext(subProgress, m_node, m_memoryPolicy, m_dataRepository, m_localTableRepository,
+            m_fileStoreHandler);
     }
 
     /** @return the fileStoreHandler the handler set at construction time (possibly null if run in 3rd party exec) */
     IWriteFileStoreHandler getFileStoreHandler() {
         return m_fileStoreHandler;
+    }
+
+    /**
+     * @return the dataRepository set at construction time, not null.
+     */
+    IDataRepository getDataRepository() {
+        return m_dataRepository;
     }
 
     /**

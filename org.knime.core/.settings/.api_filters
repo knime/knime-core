@@ -470,5 +470,11 @@
                 <message_argument value="getFileStoreHandlerRepository()"/>
             </message_arguments>
         </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getGlobalTableRepository()"/>
+            </message_arguments>
+        </filter>
     </resource>
 </component>

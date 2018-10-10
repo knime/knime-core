@@ -163,7 +163,7 @@ public abstract class ExtensionTable implements KnowsRowCountTable {
      * @return a newly created buffered data table
      */
     protected final BufferedDataTable create(final ExecutionContext exec) {
-        BufferedDataTable table = new BufferedDataTable(this, exec.getFileStoreHandler().getDataRepository());
+        BufferedDataTable table = new BufferedDataTable(this, exec.getDataRepository());
         table.setOwnerRecursively(exec.getNode());
         return table;
     }

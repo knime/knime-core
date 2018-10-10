@@ -52,12 +52,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -112,13 +110,6 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     @Override
     public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
         return m_additionalConnectionSet;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
-        throwUnsupportedOperationException();
-        return null;
     }
 
     /** {@inheritDoc}

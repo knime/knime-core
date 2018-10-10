@@ -54,12 +54,10 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -108,27 +106,22 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
 
     private List<FlowObject> m_flowObjects;
 
-    private final HashMap<Integer, ContainerTable> m_globalTableRepository;
-
     private final boolean m_mustWarnOnDataLoadError;
 
     private final WorkflowDataRepository m_workflowDataRepository;
 
 
     /** Load persistor.
-     * @param globalTableRepository TODO
      * @param workflowDataRepository TODO
      * @param mustWarnOnDataLoadError TODO*/
     FileSingleNodeContainerPersistor(final ReferencedFile nodeSettingsFile,
         final WorkflowLoadHelper loadHelper, final LoadVersion version,
-        final HashMap<Integer, ContainerTable> globalTableRepository,
-        final WorkflowDataRepository workflowDataRepository, final boolean mustWarnOnDataLoadError) {
+        final WorkflowDataRepository workflowDataRepository,
+        final boolean mustWarnOnDataLoadError) {
         CheckUtils.checkArgumentNotNull(version, "Version must not be null");
-        CheckUtils.checkArgumentNotNull(globalTableRepository, "Table repository must not be null");
         CheckUtils.checkArgumentNotNull(workflowDataRepository, "File store handler repository must not be null");
         m_version = version;
         m_metaPersistor = new FileNodeContainerMetaPersistor(nodeSettingsFile, loadHelper, version);
-        m_globalTableRepository = globalTableRepository;
         m_workflowDataRepository = workflowDataRepository;
         m_mustWarnOnDataLoadError = mustWarnOnDataLoadError;
     }
@@ -489,11 +482,6 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
 
     boolean shouldFixModelPortOrder() {
         return getLoadVersion().isOlderThan(LoadVersion.V200);
-    }
-
-    /** @return the tableRepository as passed in constructor, not null. */
-    HashMap<Integer, ContainerTable> getGlobalTableRepository() {
-        return m_globalTableRepository;
     }
 
     /** @return the data repository as passed in constructor, not null. */

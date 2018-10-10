@@ -49,6 +49,7 @@ package org.knime.base.node.mine.regression.logistic.learner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -68,6 +69,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -112,7 +114,7 @@ public class LearnerTest {
         Node node = new Node(nodeFactory);
         m_exec = new ExecutionContext(
                 new DefaultNodeProgressMonitor(), node,
-                    SingleNodeContainer.MemoryPolicy.CacheOnDisc);
+                    SingleNodeContainer.MemoryPolicy.CacheOnDisc, new HashMap<Integer, ContainerTable>());
     }
 
     /**

@@ -602,7 +602,7 @@ public abstract class NodeModel implements ViewableModel {
             } else if (outData[i] instanceof FileStorePortObject) {
                 // file stores can be 'external', e.g. when a model reader node reads an external model file
                 FileStorePortObject fsPO = (FileStorePortObject)outData[i];
-                IDataRepository expectedRep = exec.getFileStoreHandler().getDataRepository();
+                IDataRepository expectedRep = exec.getDataRepository();
                 IDataRepository actualRep = FileStoreUtil.getFileStores(fsPO).stream()
                         .map(FileStoreUtil::getFileStoreHandler).map(h -> h.getDataRepository())
                         .findFirst().orElse(expectedRep);

@@ -51,12 +51,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.storage.TableStoreFormatInformation;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
@@ -135,10 +133,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @return Such a set (often empty but never null). */
     Set<ConnectionContainerTemplate> getAdditionalConnectionSet();
 
-    HashMap<Integer, ContainerTable> getGlobalTableRepository();
-
-    /** The repository of file store handlers.
-     * @return
+    /**
+     * @return The repository of file store handlers.
      * @since 3.7*/
     WorkflowDataRepository getWorkflowDataRepository();
 

@@ -53,7 +53,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +63,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.storage.TableStoreFormatUnknownException;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStorePortObject;
@@ -281,9 +279,8 @@ public class FileNodePersistor implements NodePersistor {
      * @nooverride
      */
     void loadPorts(final Node node, final ExecutionMonitor exec, final NodeSettingsRO settings,
-        final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep,
-        final WorkflowDataRepository dataRepository) throws IOException, InvalidSettingsException,
-        CanceledExecutionException {
+        final Map<Integer, BufferedDataTable> loadTblRep, final WorkflowDataRepository dataRepository)
+        throws IOException, InvalidSettingsException, CanceledExecutionException {
         final int nrOutPorts = node.getNrOutPorts();
         if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V200)) {
             // skip flow variables port (introduced in v2.2)
@@ -328,8 +325,7 @@ public class FileNodePersistor implements NodePersistor {
                 if (portDirN != null) {
                     ReferencedFile portDir = new ReferencedFile(getNodeDirectory(), portDirN);
                     subProgress.setMessage("Port " + index);
-                    loadPort(node, portDir, singlePortSetting, subProgress, index, loadTblRep, tblRep,
-                        dataRepository);
+                    loadPort(node, portDir, singlePortSetting, subProgress, index, loadTblRep, dataRepository);
                 }
                 subProgress.setProgress(1.0);
             }
@@ -339,7 +335,7 @@ public class FileNodePersistor implements NodePersistor {
 
     void loadPort(final Node node, final ReferencedFile portDir, final NodeSettingsRO settings,
         final ExecutionMonitor exec, final int portIdx, final Map<Integer, BufferedDataTable> loadTblRep,
-        final HashMap<Integer, ContainerTable> tblRep, final WorkflowDataRepository dataRepository)
+        final WorkflowDataRepository dataRepository)
         throws IOException, InvalidSettingsException, CanceledExecutionException {
         final String specClass = settings.getString("port_spec_class");
         final String objectClass = loadPortObjectClassName(settings);
@@ -591,8 +587,7 @@ public class FileNodePersistor implements NodePersistor {
     /** Reads internally held table in version {@link LoadVersion#V2100Pre} and before. Was replaced by
      * #loadInternalHeldObjects then on. */
     void loadInternalHeldTablesPre210(final Node node, final ExecutionMonitor execMon, final NodeSettingsRO settings,
-        final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep,
-        final WorkflowDataRepository dataRepository) throws IOException, InvalidSettingsException,
+        final Map<Integer, BufferedDataTable> loadTblRep, final WorkflowDataRepository dataRepository) throws IOException, InvalidSettingsException,
         CanceledExecutionException {
         if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V200)) {
             return;
@@ -632,8 +627,7 @@ public class FileNodePersistor implements NodePersistor {
 
     /** New with {@link LoadVersion#V2100}, supports {@link org.knime.core.node.port.PortObjectHolder}. */
     void loadInternalHeldObjects(final Node node, final ExecutionMonitor execMon, final NodeSettingsRO settings,
-        final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep,
-        final WorkflowDataRepository dataRepository) throws IOException, InvalidSettingsException,
+        final Map<Integer, BufferedDataTable> loadTblRep, final WorkflowDataRepository dataRepository) throws IOException, InvalidSettingsException,
         CanceledExecutionException {
         assert !getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V2100);
         if (!settings.containsKey("internalObjects")) {
@@ -941,7 +935,6 @@ public class FileNodePersistor implements NodePersistor {
      * @param parentPersistor workflow persistor for decryption
      * @param exec For progress/cancelation
      * @param loadTblRep The table repository used during load
-     * @param tblRep The table repository for blob handling
      * @param dataRepository ...
      * @param loadResult where to add errors to
      * @throws IOException If files can't be read
@@ -950,8 +943,8 @@ public class FileNodePersistor implements NodePersistor {
      * @nooverride
      */
     public final void load(final Node node, final WorkflowPersistor parentPersistor, final ExecutionMonitor exec,
-        final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep,
-        final WorkflowDataRepository dataRepository, final LoadResult loadResult)
+        final Map<Integer, BufferedDataTable> loadTblRep, final WorkflowDataRepository dataRepository,
+        final LoadResult loadResult)
         throws IOException, CanceledExecutionException {
         ExecutionMonitor loadExec = exec.createSilentSubProgress(0.6);
         ExecutionMonitor loadFileStoreExec = exec.createSilentSubProgress(0.2);
@@ -997,7 +990,7 @@ public class FileNodePersistor implements NodePersistor {
         exec.setMessage("ports");
         try {
             if (!loadHelper.isTemplateFlow()) {
-                loadPorts(node, loadExec, m_settings, loadTblRep, tblRep, dataRepository);
+                loadPorts(node, loadExec, m_settings, loadTblRep, dataRepository);
             }
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException) && !(e instanceof IOException)) {
@@ -1020,9 +1013,9 @@ public class FileNodePersistor implements NodePersistor {
         try {
             if (!loadHelper.isTemplateFlow()) {
                 if (getLoadVersion().isOlderThan(LoadVersion.V2100)) {
-                    loadInternalHeldTablesPre210(node, loadIntTblsExec, m_settings, loadTblRep, tblRep, dataRepository);
+                    loadInternalHeldTablesPre210(node, loadIntTblsExec, m_settings, loadTblRep, dataRepository);
                 } else {
-                    loadInternalHeldObjects(node, loadIntTblsExec, m_settings, loadTblRep, tblRep, dataRepository);
+                    loadInternalHeldObjects(node, loadIntTblsExec, m_settings, loadTblRep, dataRepository);
                 }
             }
         } catch (Exception e) {
