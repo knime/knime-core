@@ -236,6 +236,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     private NodeStateChangeListener m_wfmStateChangeListener;
 
     private NodeInPort[] m_inports;
+    private HiLiteHandler[] m_inHiliteHandler;
     private NodeContainerOutPort[] m_outports;
     private Output[] m_outputs;
 
@@ -284,6 +285,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             m_outports[i].setPortName(t.getPortName());
         }
         m_inports = new NodeInPort[inPortTemplates.length];
+        m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length];
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
         m_layoutJSONString = persistor.getLayoutJSONString();
@@ -293,6 +295,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         for (int i = 0; i < inPortTemplates.length; i++) {
             inTypes[i] = inPortTemplates[i].getPortType();
             m_inports[i] = new NodeInPort(i, inTypes[i]);
+            m_inHiliteHandler[i] = new HiLiteHandler();
         }
         m_templateInformation = persistor.getTemplateInformation();
     }
@@ -336,10 +339,12 @@ public final class SubNodeContainer extends SingleNodeContainer
         // initialize NodeContainer inports
         // (metanodes don't have hidden variable port 0, SingleNodeContainers do!)
         m_inports = new NodeInPort[content.getNrInPorts() + 1];
+        m_inHiliteHandler = new HiLiteHandler[content.getNrInPorts()];
         PortType[] inTypes = new PortType[content.getNrInPorts()];
         for (int i = 0; i < content.getNrInPorts(); i++) {
             inTypes[i] = content.getInPort(i).getPortType();
             m_inports[i + 1] = new NodeInPort(i + 1, inTypes[i]);
+            m_inHiliteHandler[i] = new HiLiteHandler();
         }
         m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
         // initialize NodeContainer outports
@@ -1465,6 +1470,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
+        m_inHiliteHandler[index] = hdl;
     }
 
     /**
@@ -1473,6 +1479,14 @@ public final class SubNodeContainer extends SingleNodeContainer
     @Override
     public HiLiteHandler getOutputHiLiteHandler(final int portIndex) {
         return getVirtualOutNode().getNode().getInHiLiteHandler(portIndex);
+    }
+
+    /**
+     * @param portIndex
+     * @return the inHiliteHandler
+     */
+    public HiLiteHandler getInHiliteHandler(final int portIndex) {
+        return m_inHiliteHandler[portIndex];
     }
 
     /* ------------------ Load&Save ------------------------- */

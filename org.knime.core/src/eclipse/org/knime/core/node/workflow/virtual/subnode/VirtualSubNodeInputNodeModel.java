@@ -68,6 +68,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.PortInput;
 import org.knime.core.node.streamable.PortObjectOutput;
@@ -319,4 +320,14 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
         return m_configuration.getPortDescriptions();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        if (m_subNodeContainer == null) {
+            return super.getInHiLiteHandler(outIndex);
+        }
+        return m_subNodeContainer.getInHiliteHandler(outIndex + 1);
+    }
 }
