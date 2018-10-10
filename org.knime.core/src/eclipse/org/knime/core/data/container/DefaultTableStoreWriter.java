@@ -53,14 +53,11 @@ import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
-import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
@@ -122,46 +119,6 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
         if (isWriteRowKey()) {
             outStream.writeRowKey(key);
             outStream.endBlock();
-        }
-    }
-
-    /**
-     * Writes a data cell to the outStream.
-     *
-     * @param cell The cell to write.
-     * @param outStream To write to.
-     * @throws IOException If stream corruption happens.
-     */
-    void writeDataCell(final DataCell cell, final DCObjectOutputVersion2 outStream) throws IOException {
-        if (cell == DataType.getMissingCell()) {
-            // only write 'missing' byte if that's the singleton missing cell;
-            // missing cells with error cause are handled like ordinary cells below (via serializer)
-            outStream.writeControlByte(BYTE_TYPE_MISSING);
-            return;
-        }
-        boolean isBlob = cell instanceof BlobWrapperDataCell;
-        CellClassInfo cellClass = isBlob ? ((BlobWrapperDataCell)cell).getBlobClassInfo() : CellClassInfo.get(cell);
-        DataCellSerializer<DataCell> ser = getSerializerForDataCell(cellClass);
-        Byte identifier = getTypeShortCut(cellClass);
-        FileStoreKey[] fileStoreKeys = super.getFileStoreKeysAndFlush(cell);
-        final boolean isJavaSerializationOrBlob = ser == null && !isBlob;
-        if (isJavaSerializationOrBlob) {
-            outStream.writeControlByte(BYTE_TYPE_SERIALIZATION);
-        }
-        outStream.writeControlByte(identifier);
-        if (fileStoreKeys != null) {
-            outStream.writeFileStoreKeys(fileStoreKeys);
-        }
-        // DataCell is datacell-serializable
-        if (!isJavaSerializationOrBlob) {
-            if (isBlob) {
-                BlobWrapperDataCell bc = (BlobWrapperDataCell)cell;
-                outStream.writeBlobAddress(bc.getAddress());
-            } else {
-                outStream.writeDataCellPerKNIMESerializer(ser, cell);
-            }
-        } else {
-            outStream.writeDataCellPerJavaSerialization(cell);
         }
     }
 

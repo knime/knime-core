@@ -57,7 +57,9 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.CellClassInfo;
+import org.knime.core.data.container.DCObjectOutputVersion2;
 import org.knime.core.data.container.KNIMEStreamConstants;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
@@ -65,6 +67,7 @@ import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * The abstract writer for writing specialized table formats.
@@ -98,7 +101,7 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMESt
      * @param writeRowKey a flag that determines whether to store the row keys in the Parquet file
      */
     protected AbstractTableStoreWriter(final DataTableSpec spec, final boolean writeRowKey) {
-        m_spec = spec;
+        m_spec = CheckUtils.checkArgumentNotNull(spec);
         m_writeRowKey = writeRowKey;
     }
 
@@ -228,5 +231,53 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMESt
             FileStoreUtil.invokeFlush(fsCell);
         }
         return fileStoreKeys;
+    }
+
+    /**
+     * Writes a data cell to the outStream.
+     *
+     * @param cell The cell to write.
+     * @param outStream To write to.
+     * @throws IOException If stream corruption happens.
+     */
+    public void writeDataCell(final DataCell cell, final DCObjectOutputVersion2 outStream) throws IOException {
+        if (cell == DataType.getMissingCell()) {
+            // only write 'missing' byte if that's the singleton missing cell;
+            // missing cells with error cause are handled like ordinary cells below (via serializer)
+            outStream.writeControlByte(BYTE_TYPE_MISSING);
+            return;
+        }
+
+        final boolean isBlob = cell instanceof BlobWrapperDataCell;
+        final CellClassInfo cellClass =
+            isBlob ? ((BlobWrapperDataCell)cell).getBlobClassInfo() : CellClassInfo.get(cell);
+        final DataCellSerializer<DataCell> ser = getSerializerForDataCell(cellClass);
+        final Byte identifier = getTypeShortCut(cellClass);
+        final FileStoreKey[] fileStoreKeys = getFileStoreKeysAndFlush(cell);
+
+        if (ser == null && !isBlob) {
+            outStream.writeControlByte(BYTE_TYPE_SERIALIZATION);
+        }
+        outStream.writeControlByte(identifier);
+
+        if (fileStoreKeys != null) {
+            outStream.writeFileStoreKeys(fileStoreKeys);
+        }
+
+        // DataCell is datacell-serializable
+        if (ser == null) {
+            // serialize using Java serialization
+            outStream.writeDataCellPerJavaSerialization(cell);
+
+        } else {
+
+            // serialize using KNIME serialization
+            if (isBlob) {
+                BlobWrapperDataCell bc = (BlobWrapperDataCell)cell;
+                outStream.writeBlobAddress(bc.getAddress());
+            } else {
+                outStream.writeDataCellPerKNIMESerializer(ser, cell);
+            }
+        }
     }
 }

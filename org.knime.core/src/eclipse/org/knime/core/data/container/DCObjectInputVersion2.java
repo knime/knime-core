@@ -71,8 +71,9 @@ import org.knime.core.data.util.NonClosableInputStream;
  * details on the file format in there.
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 3.7
  */
-final class DCObjectInputVersion2 implements KNIMEStreamConstants {
+public final class DCObjectInputVersion2 implements KNIMEStreamConstants {
 
     /** Escapable stream, returns eof when block ends. Stream we read from. */
     private final BlockableInputStream m_in;
@@ -99,7 +100,7 @@ final class DCObjectInputVersion2 implements KNIMEStreamConstants {
      * @param cellReader The object that helps to read DataCell contained in
      * DataCell as required by {@link DataCellDataInput#readDataCell()}.
      */
-    DCObjectInputVersion2(final InputStream in, final DataCellStreamReader cellReader) {
+    public DCObjectInputVersion2(final InputStream in, final DataCellStreamReader cellReader) {
         m_in = new BlockableInputStream(in);
         m_dataIn = new DCLongUTFDataInputStream(new DataInputStream(m_in), cellReader);
     }

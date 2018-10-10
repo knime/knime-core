@@ -57,6 +57,7 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.data.container.storage.AbstractTableStoreWriter;
 import org.knime.core.data.filestore.FileStoreKey;
 
 
@@ -77,8 +78,9 @@ import org.knime.core.data.filestore.FileStoreKey;
  * each cell a new stream).
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 3.7
  */
-class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
+public class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
 
     /** Stream that we write to. Used to mark end of cells (or row keys). */
     private final BlockableOutputStream m_out;
@@ -90,7 +92,7 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
      * @param out The stream to write to (the file)
      * @param tableStoreWriter the corresponding writer (callback for embedded cell writing)
      */
-    DCObjectOutputVersion2(final OutputStream out, final DefaultTableStoreWriter tableStoreWriter) {
+    public DCObjectOutputVersion2(final OutputStream out, final AbstractTableStoreWriter tableStoreWriter) {
         m_out = new BlockableOutputStream(out);
         m_dataOut = new DCLongUTFDataOutputStream(new DataOutputStream(m_out), tableStoreWriter);
     }
@@ -109,7 +111,7 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
      * @see DataCellSerializer#serialize(DataCell, DataCellDataOutput)
      * @throws IOException If that fails.
      */
-    void writeDataCellPerKNIMESerializer(
+    public void writeDataCellPerKNIMESerializer(
             final DataCellSerializer<DataCell> serializer,
             final DataCell cell) throws IOException {
         serializer.serialize(cell, m_dataOut);
@@ -121,7 +123,7 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
      * @param fileStoreKeys
      * @throws IOException
      */
-    void writeFileStoreKeys(final FileStoreKey[] fileStoreKeys) throws IOException {
+    public void writeFileStoreKeys(final FileStoreKey[] fileStoreKeys) throws IOException {
         m_dataOut.writeInt(fileStoreKeys.length);
         for(FileStoreKey fsKey : fileStoreKeys) {
             fsKey.save(m_dataOut);
@@ -132,7 +134,7 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
      * a new {@link ObjectOutputStream} for this single cell.
      * @param cell The cell to write.
      * @throws IOException If any exception occur. */
-    void writeDataCellPerJavaSerialization(final DataCell cell)
+    public void writeDataCellPerJavaSerialization(final DataCell cell)
         throws IOException {
         ObjectOutputStream oos = new ObjectOutputStream(m_dataOut);
         oos.writeObject(cell);
@@ -143,7 +145,7 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
      * @param address to write out.
      * @throws IOException if that fails
      */
-    void writeBlobAddress(final BlobAddress address) throws IOException {
+    public void writeBlobAddress(final BlobAddress address) throws IOException {
         address.serialize(m_dataOut);
     }
 
@@ -159,7 +161,7 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
      * @param controlByte The byte to write.
      * @throws IOException In case of stream corruption.
      */
-    void writeControlByte(final int controlByte) throws IOException {
+    public void writeControlByte(final int controlByte) throws IOException {
         m_dataOut.write(controlByte);
     }
 
@@ -191,9 +193,9 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
 
     /** Stream that supports writing of encapsulated {@link DataCell} objects
      * as required by {@link DataCellDataOutput}. */
-    final class DCLongUTFDataOutputStream extends LongUTFDataOutputStream implements DataCellDataOutput {
+    public final class DCLongUTFDataOutputStream extends LongUTFDataOutputStream implements DataCellDataOutput {
 
-        private final DefaultTableStoreWriter m_tableStoreWriter;
+        private final AbstractTableStoreWriter m_tableStoreWriter;
 
         /**
          * Delegates to super implementation.
@@ -201,7 +203,7 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
          * @param output Forwarded to super.
          * @param tableStoreWriter To redirect the contained cell writing to. Null when not supported (for blobs).
          */
-        DCLongUTFDataOutputStream(final DataOutputStream output, final DefaultTableStoreWriter tableStoreWriter) {
+        DCLongUTFDataOutputStream(final DataOutputStream output, final AbstractTableStoreWriter tableStoreWriter) {
             super(output);
             m_tableStoreWriter = tableStoreWriter;
         }

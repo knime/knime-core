@@ -88,12 +88,29 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
         m_binFile = binFile;
         m_spec = spec;
         m_isReadRowKey = isReadRowKey;
+
+        final CompressionFormat cF;
+        if (version < 3) { // stream was not zipped in KNIME 1.1.x
+            cF = CompressionFormat.None;
+        } else if (version >= 8) { // added sometime between format 8 and 9 - no increment of version number
+            String compFormat =
+                settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, CompressionFormat.Gzip.name());
+            try {
+                cF = CompressionFormat.valueOf(compFormat);
+            } catch (Exception e) {
+                throw new InvalidSettingsException(String.format("Unable to parse \"%s\" property (\"%s\"): %s",
+                    DefaultTableStoreFormat.CFG_COMPRESSION, compFormat, e.getMessage()), e);
+            }
+        } else {
+            cF = CompressionFormat.Gzip;
+        }
+        m_compressionFormat = cF;
     }
 
     @Override
     public TableStoreCloseableRowIterator iterator() {
         try {
-            if (m_version <= 5) { // 2.0 tech preview and before
+            if (getReadVersion() <= 5) { // 2.0 tech preview and before
                 return new BufferFromFileIteratorVersion1x(this);
             } else {
                 return new BufferFromFileIteratorVersion20(this);
@@ -132,31 +149,6 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
      */
     long size() {
         return getBuffer().size();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void readMetaFromFile(final NodeSettingsRO settings, final int version)
-        throws IOException, InvalidSettingsException {
-        final CompressionFormat cF;
-        if (version < 3) { // stream was not zipped in KNIME 1.1.x
-            cF = CompressionFormat.None;
-        } else if (version >= 8) { // added sometime between format 8 and 9 - no increment of version number
-            String compFormat =
-                settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, CompressionFormat.Gzip.name());
-            try {
-                cF = CompressionFormat.valueOf(compFormat);
-            } catch (Exception e) {
-                throw new InvalidSettingsException(String.format("Unable to parse \"%s\" property (\"%s\"): %s",
-                    DefaultTableStoreFormat.CFG_COMPRESSION, compFormat, e.getMessage()), e);
-            }
-        } else {
-            cF = CompressionFormat.Gzip;
-        }
-        m_compressionFormat = cF;
-        super.readMetaFromFile(settings, version);
     }
 
     /** Super class of all file iterators. */

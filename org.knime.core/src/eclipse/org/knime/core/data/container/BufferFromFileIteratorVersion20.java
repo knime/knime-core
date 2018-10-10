@@ -62,6 +62,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.DefaultTableStoreReader.FromFileIterator;
+import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
@@ -70,9 +71,10 @@ import org.knime.core.node.NodeLogger;
 /**
  * File iterator to read stream written by a {@link Buffer}.
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 3.7
  */
 @SuppressWarnings("javadoc")
-final class BufferFromFileIteratorVersion20 extends FromFileIterator {
+public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(BufferFromFileIteratorVersion20.class);
@@ -309,14 +311,14 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
     }
 
     /** Utility class that separates the logic of reading DataCells from the stream. */
-    static class DataCellStreamReader {
+    public static class DataCellStreamReader {
 
         /** Associated buffer. */
-        private final DefaultTableStoreReader m_tableFormatReader;
+        private final AbstractTableStoreReader m_tableFormatReader;
 
         /** Only memorizes the table reader.
          * @param tableFormatReader associated reader, possibly be null. */
-        DataCellStreamReader(final DefaultTableStoreReader tableFormatReader) {
+        public DataCellStreamReader(final AbstractTableStoreReader tableFormatReader) {
             m_tableFormatReader = tableFormatReader;
         }
 
@@ -327,19 +329,22 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
          * @return the data cell being read
          * @throws IOException If exceptions occur.
          */
-        DataCell readDataCell(final DCObjectInputVersion2 inStream) throws IOException {
+        public DataCell readDataCell(final DCObjectInputVersion2 inStream) throws IOException {
             inStream.setCurrentClassLoader(null);
+
             byte identifier = inStream.readControlByte();
             if (identifier == BYTE_TYPE_MISSING) {
                 return DataType.getMissingCell();
             }
-            final boolean isSerialized = identifier == BYTE_TYPE_SERIALIZATION;
-            if (isSerialized) {
+
+            final boolean isJavaSerialization = identifier == BYTE_TYPE_SERIALIZATION;
+            if (isJavaSerialization) {
                 identifier = inStream.readControlByte();
             }
+
             CellClassInfo type = m_tableFormatReader.getTypeForChar(identifier);
             Class<? extends DataCell> cellClass = type.getCellClass();
-
+            boolean isBlob = BlobDataCell.class.isAssignableFrom(cellClass);
             boolean isFileStore = FileStoreCell.class.isAssignableFrom(cellClass);
             // starting with table version 11 FileStoreCells support multiple FileStores
             final boolean multipleFileStoresSupported = m_tableFormatReader.getReadVersion() > 10;
@@ -354,15 +359,19 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
                 fileStoreKeys = null;
             }
 
-            boolean isBlob = BlobDataCell.class.isAssignableFrom(cellClass);
             final DataCell result;
             if (isBlob) {
+                // deserialize Blob cell
                 result = m_tableFormatReader.createBlobWrapperCell(inStream.readBlobAddress(), type);
-            } else if (isSerialized) {
+            } else if (isJavaSerialization) {
+
+                // deserialize using Java deserialization
                 ClassLoader cellLoader = cellClass.getClassLoader();
                 inStream.setCurrentClassLoader(cellLoader);
                 result = inStream.readDataCellPerJavaSerialization();
             } else {
+
+                // deserialize using KNIME deserialization
                 DataCellSerializer<? extends DataCell> serializer = type.getSerializer();
                 assert serializer != null;
                 result = inStream.readDataCellPerKNIMESerializer(serializer);

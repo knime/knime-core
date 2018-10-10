@@ -119,7 +119,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
     private Buffer m_buffer;
 
     /** Input stream version **/
-    protected final int m_version;
+    private final int m_version;
 
     /**
      * Constructs an abstract table store reader.
@@ -139,7 +139,11 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         m_spec = CheckUtils.checkArgumentNotNull(spec);
         m_openIteratorSet = new WeakHashMap<>();
         m_version = version;
-        readMetaFromFile(settings, version);
+        if (version <= 6) {
+            m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion1x(settings);
+        } else {
+            m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion2(settings);
+        }
     }
 
     /**
@@ -208,25 +212,6 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
                 return iterator;
             }
         };
-    }
-
-    /**
-     * Reads meta information, such as the classes of serialized {@link DataCell} instances.
-     *
-     * @param settings The settings (written by
-     *            {@link AbstractTableStoreWriter#writeMetaInfoAfterWrite(org.knime.core.node.NodeSettingsWO)})
-     * @param version The version as defined in the {@link Buffer} class
-     * @throws IOException Any type of I/O problem.
-     * @throws InvalidSettingsException thrown in case something goes wrong during de-serialization, e.g. a new version
-     *             of a writer has been used which hasn't been installed on the current system.
-     */
-    protected void readMetaFromFile(final NodeSettingsRO settings, final int version)
-        throws IOException, InvalidSettingsException {
-        if (version <= 6) {
-            m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion1x(settings);
-        } else {
-            m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion2(settings);
-        }
     }
 
     @SuppressWarnings("unchecked")
