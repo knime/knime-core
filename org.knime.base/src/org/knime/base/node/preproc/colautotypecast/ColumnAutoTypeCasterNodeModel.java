@@ -469,6 +469,8 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
             m_missValPat = null;
         } else if (missValDesc.equals(MISSVALDESC_EMPTY)) {
             m_missValPat = "";
+        } else {
+            m_missValPat = missValDesc;
         }
         m_quickScan = settings.getBoolean(CFGKEY_QUICKSANBOOLEAN);
         m_numberOfRows = settings.getInt(CFGKEY_QUICKSCANROWS);
@@ -495,6 +497,8 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
             settings.addString(CFGKEY_MISSVALPAT, MISSVALDESC_NONE);
         } else if (m_missValPat.equals("")) {
             settings.addString(CFGKEY_MISSVALPAT, MISSVALDESC_EMPTY);
+        } else {
+            settings.addString(CFGKEY_MISSVALPAT, m_missValPat);
         }
         settings.addBoolean(CFGKEY_QUICKSANBOOLEAN, m_quickScan);
         settings.addInt(CFGKEY_QUICKSCANROWS, m_numberOfRows);
