@@ -328,6 +328,6 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
         if (m_subNodeContainer == null) {
             return super.getInHiLiteHandler(outIndex);
         }
-        return m_subNodeContainer.getInHiliteHandler(outIndex + 1);
+        return m_subNodeContainer.getInHiliteHandler(outIndex);
     }
 }

@@ -285,7 +285,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             m_outports[i].setPortName(t.getPortName());
         }
         m_inports = new NodeInPort[inPortTemplates.length];
-        m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length];
+        m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length - 1];
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
         m_layoutJSONString = persistor.getLayoutJSONString();
@@ -295,7 +295,10 @@ public final class SubNodeContainer extends SingleNodeContainer
         for (int i = 0; i < inPortTemplates.length; i++) {
             inTypes[i] = inPortTemplates[i].getPortType();
             m_inports[i] = new NodeInPort(i, inTypes[i]);
-            m_inHiliteHandler[i] = new HiLiteHandler();
+            if (i > 0) {
+                // ignore optional variable input port
+                m_inHiliteHandler[i - 1] = new HiLiteHandler();
+            }
         }
         m_templateInformation = persistor.getTemplateInformation();
     }
@@ -339,6 +342,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         // initialize NodeContainer inports
         // (metanodes don't have hidden variable port 0, SingleNodeContainers do!)
         m_inports = new NodeInPort[content.getNrInPorts() + 1];
+        // but for hilite handler we still ignore optional variable port 0
         m_inHiliteHandler = new HiLiteHandler[content.getNrInPorts()];
         PortType[] inTypes = new PortType[content.getNrInPorts()];
         for (int i = 0; i < content.getNrInPorts(); i++) {
@@ -1470,7 +1474,11 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
-        m_inHiliteHandler[index] = hdl;
+        assert 0 <= index && index < getNrInPorts();
+        if (index > 0) {
+            // ignore HiLiteHandler on optional variable input port
+            m_inHiliteHandler[index - 1] = hdl;
+        }
     }
 
     /**

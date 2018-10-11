@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="node_file" type="xstring" value="settings.xml"/>
+<config key="flow_stack">
+<config key="Variable_0">
+<entry key="type" type="xstring" value="variable"/>
+<entry key="name" type="xstring" value="height"/>
+<entry key="class" type="xstring" value="INTEGER"/>
+<entry key="value" type="xint" value="600"/>
+</config>
+<config key="Variable_1">
+<entry key="type" type="xstring" value="variable"/>
+<entry key="name" type="xstring" value="width"/>
+<entry key="class" type="xstring" value="INTEGER"/>
+<entry key="value" type="xint" value="800"/>
+</config>
+</config>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="hideInWizard" type="xboolean" value="true"/>
+<entry key="generateImage" type="xboolean" value="false"/>
+<entry key="showLegend" type="xboolean" value="true"/>
+<entry key="autoRange" type="xboolean" value="true"/>
+<entry key="useDomainInformation" type="xboolean" value="false"/>
+<entry key="showGrid" type="xboolean" value="true"/>
+<entry key="showCrosshair" type="xboolean" value="false"/>
+<entry key="snapToPoints" type="xboolean" value="false"/>
+<entry key="resizeToWindow" type="xboolean" value="true"/>
+<entry key="enableViewConfiguration" type="xboolean" value="true"/>
+<entry key="enableTitleChange" type="xboolean" value="true"/>
+<entry key="enableSubtitleChange" type="xboolean" value="true"/>
+<entry key="enableXColumnChange" type="xboolean" value="true"/>
+<entry key="enableYColumnChange" type="xboolean" value="true"/>
+<entry key="enableXAxisLabelEdit" type="xboolean" value="true"/>
+<entry key="enableYAxisLabelEdit" type="xboolean" value="true"/>
+<entry key="enableDotSizeChange" type="xboolean" value="false"/>
+<entry key="enableZooming" type="xboolean" value="true"/>
+<entry key="enableDragZooming" type="xboolean" value="false"/>
+<entry key="enablePanning" type="xboolean" value="true"/>
+<entry key="showZoomResetButton" type="xboolean" value="false"/>
+<entry key="enableSelection" type="xboolean" value="true"/>
+<entry key="enableRectangleSelection" type="xboolean" value="true"/>
+<entry key="enableLassoSelection" type="xboolean" value="false"/>
+<entry key="chartTitle" type="xstring" value=""/>
+<entry key="chartSubtitle" type="xstring" value=""/>
+<entry key="xCol" type="xstring" value="Universe_0_0"/>
+<entry key="yCol" type="xstring" value="Universe_0_1"/>
+<entry key="maxRows" type="xint" value="2500"/>
+<entry key="selectionColumnName" type="xstring" value="Selected (Scatter Plot)"/>
+<entry key="xAxisLabel" type="xstring" value=""/>
+<entry key="yAxisLabel" type="xstring" value=""/>
+<entry key="xAxisMin" type="xstring" isnull="true" value=""/>
+<entry key="xAxisMax" type="xstring" isnull="true" value=""/>
+<entry key="yAxisMin" type="xstring" isnull="true" value=""/>
+<entry key="yAxisMax" type="xstring" isnull="true" value=""/>
+<entry key="dot_size" type="xstring" value="3"/>
+<entry key="imageWidth" type="xint" value="800"/>
+<entry key="imageHeight" type="xint" value="600"/>
+<entry key="backgroundColor" type="xstring" value="rgba(255,255,255,1.0)"/>
+<entry key="dataAreaColor" type="xstring" value="rgba(230,230,230,1.0)"/>
+<entry key="gridColor" type="xstring" value="rgba(255,255,255,1.0)"/>
+<entry key="displayFullscreenButton" type="xboolean" value="true"/>
+<entry key="publishSelection" type="xboolean" value="true"/>
+<entry key="subscribeSelection" type="xboolean" value="true"/>
+<entry key="enableShowSelectedOnly" type="xboolean" value="true"/>
+<entry key="subscribeFilter" type="xboolean" value="true"/>
+<entry key="enableSwitchLegend" type="xboolean" value="true"/>
+<entry key="showWarningInView" type="xboolean" value="true"/>
+<entry key="reportOnMissingValues" type="xboolean" value="true"/>
+<config key="dateTimeFormats_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_datetime"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<config key="dateTimeFormats">
+<config key="globalDateTimeLocale_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalDateTimeLocale" type="xstring" value="en"/>
+<config key="globalDateFormat_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalDateFormat" type="xstring" value="YYYY-MM-DD"/>
+<config key="globalLocalDateFormat_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalLocalDateFormat" type="xstring" value="YYYY-MM-DD"/>
+<config key="globalLocalDateTimeFormat_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalLocalDateTimeFormat" type="xstring" value="YYYY-MM-DD"/>
+<config key="globalLocalTimeFormat_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalLocalTimeFormat" type="xstring" value="HH:mm:ss"/>
+<config key="globalZonedDateTimeFormat_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalZonedDateTimeFormat" type="xstring" value="YYYY-MM-DD z"/>
+<config key="timezone_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="timezone" type="xstring" value="Europe/Berlin"/>
+</config>
+</config>
+<config key="variables">
+<config key="imageWidth">
+<entry key="used_variable" type="xstring" isnull="true" value=""/>
+<entry key="exposed_variable" type="xstring" value="width"/>
+</config>
+<config key="imageHeight">
+<entry key="used_variable" type="xstring" isnull="true" value=""/>
+<entry key="exposed_variable" type="xstring" value="height"/>
+</config>
+</config>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="state" type="xstring" value="IDLE"/>
+<entry key="factory" type="xstring" value="org.knime.js.base.node.viz.plotter.scatterSelectionAppender.ScatterPlotNodeFactory"/>
+<entry key="node-name" type="xstring" value="Scatter Plot (JavaScript)"/>
+<entry key="node-bundle-name" type="xstring" value="KNIME JavaScript Base Views"/>
+<entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.js.views"/>
+<entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
+<entry key="node-bundle-version" type="xstring" value="3.7.0.qualifier"/>
+<entry key="node-feature-name" type="xstring" isnull="true" value=""/>
+<entry key="node-feature-symbolic-name" type="xstring" isnull="true" value=""/>
+<entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>
+<entry key="node-feature-version" type="xstring" value="0.0.0"/>
+<config key="factory_settings"/>
+<entry key="name" type="xstring" value="Scatter Plot (JavaScript)"/>
+<entry key="hasContent" type="xboolean" value="false"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+<config key="port_2">
+<entry key="index" type="xint" value="2"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+<config key="filestores">
+<entry key="file_store_location" type="xstring" isnull="true" value=""/>
+<entry key="file_store_id" type="xstring" isnull="true" value=""/>
+</config>
+</config>

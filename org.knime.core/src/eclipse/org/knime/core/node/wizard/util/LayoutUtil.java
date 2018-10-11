@@ -53,6 +53,7 @@ import java.util.Map;
 
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -95,6 +96,14 @@ public final class LayoutUtil {
         return creator.createDefaultLayout(viewNodes);
     }
 
+    /**
+     * Expands nested layouts by inserting the appropriate sub-layouts in an original layout.
+     * @param originalLayout the original not expanded layout
+     * @param wfm the {@link WorkflowManager} of the containing {@link SubNodeContainer}
+     * @return The expanded layout as JSON serialized string
+     * @throws IOException If no service is registered or the layout cannot be expanded.
+     * @since 3.7
+     */
     public static String expandNestedLayout(final String originalLayout, final WorkflowManager wfm) throws IOException {
         if (serviceTracker == null) {
             throw new IOException("Core bundle is not active, can't create default layout.");

@@ -70,6 +70,7 @@ public interface DefaultLayoutCreator {
      * @return a default layout structure as JSON string.
      * @throws IOException on creation error
      */
+    @SuppressWarnings("rawtypes")
     public String createDefaultLayout(final Map<NodeIDSuffix, WizardNode> viewNodes) throws IOException;
 
     /**
@@ -77,6 +78,7 @@ public interface DefaultLayoutCreator {
      * @param originalLayout the original not expanded layout
      * @param wfm the {@link WorkflowManager} of the containing {@link SubNodeContainer}
      * @return The expanded layout as JSON serialized string
+     * @since 3.7
      */
     public String expandNestedLayout(final String originalLayout, final WorkflowManager wfm);
 
