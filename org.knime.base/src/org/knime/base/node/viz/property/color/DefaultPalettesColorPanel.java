@@ -344,7 +344,8 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         try {
             // get color mapping for unassigned colors
             final NewValueOption newValueOption = NewValueOption.getEnum(
-                settings.getString(ColorManager2NodeModel.CFG_NEW_VALUES, NewValueOption.FAIL.getSettingsName()));
+                settings.getString(ColorManager2NodeModel.CFG_NEW_VALUES,
+                    ColorManager2NodeModel.MISSING_CFG_OPTION.getSettingsName()));
             m_handleNewValues.setSelectedItem(newValueOption);
         } catch (InvalidSettingsException e) {
             throw new NotConfigurableException(e.getMessage());
