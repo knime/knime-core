@@ -58,6 +58,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
@@ -213,19 +214,19 @@ final class ColorManager2DialogNominal extends JPanel {
         if (set == null || set.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<DataCell, ColorAttr> map = new LinkedHashMap<DataCell, ColorAttr>();
+        final Map<DataCell, ColorAttr> map = new LinkedHashMap<>();
         // get palette for new values setting
-        String[] palette = getPalette(newValueOption);
+        final String[] palette = getPalette(newValueOption);
 
-        // count apperances of colors from the palette
+        // count appearances of colors from the palette
         // colors of the palette and the number of appearances in the existingSet
-        Map<Color, Integer> paletteColors = new LinkedHashMap<Color, Integer>();
-        for (String s : palette) {
+        final Map<Color, Integer> paletteColors = new LinkedHashMap<>();
+        for (final String s : palette) {
             paletteColors.put(Color.decode(s), 0);
         }
-        for (ColorAttr col : existingSet.values()) {
+        for (final ColorAttr col : existingSet.values()) {
             // check if Color is included in the palette
-            Color c = col.getColor();
+        	final Color c = col.getColor();
             // increase count if colors exists in palette
             if (paletteColors.get(c) != null) {
                 paletteColors.put(c, paletteColors.get(c) + 1);
@@ -235,7 +236,9 @@ final class ColorManager2DialogNominal extends JPanel {
         // find least used color in palette and apply it to new value
         for (DataCell cell : set) {
             Entry<Color, Integer> smallestEntry =
-                paletteColors.entrySet().stream().min(Map.Entry.comparingByValue(Integer::compareTo)).get();
+                paletteColors.entrySet().stream()//
+                .min(Map.Entry.comparingByValue(Integer::compareTo))//
+                .get();
             paletteColors.put(smallestEntry.getKey(), smallestEntry.getValue() + 1);
             map.put(cell, ColorAttr.getInstance(smallestEntry.getKey()));
         }
@@ -251,20 +254,7 @@ final class ColorManager2DialogNominal extends JPanel {
      */
     static final Map<DataCell, ColorAttr> createColorMapping(final Set<DataCell> set,
         final NewValueOption newValueOption) {
-        if (set == null) {
-            return Collections.emptyMap();
-        }
-        Map<DataCell, ColorAttr> map = new LinkedHashMap<DataCell, ColorAttr>();
-        // get palette for new values setting
-        String[] palette = getPalette(newValueOption);
-        // assign colors from the palette to the new values
-        int idx = 0;
-        for (DataCell cell : set) {
-            Color color = Color.decode(palette[idx % palette.length]);
-            map.put(cell, ColorAttr.getInstance(color));
-            idx++;
-        }
-        return map;
+        return createColorMapping(set, Collections.emptyMap(), newValueOption);
     }
 
     /**
@@ -275,17 +265,16 @@ final class ColorManager2DialogNominal extends JPanel {
      */
     private static String[] getPalette(final NewValueOption newValueOption) {
         switch (newValueOption) {
-            case FAIL:
-                throw new IllegalArgumentException(
-                    "The option \"" + newValueOption.toString() + "\" does not map to a color palette");
             case SET1:
                 return ColorManager2NodeDialogPane.PALETTE_SET1;
             case SET2:
                 return ColorManager2NodeDialogPane.PALETTE_SET2;
             case SET3:
                 return ColorManager2NodeDialogPane.PALETTE_SET3;
+            case FAIL:
             default:
-                return null;
+            	throw new IllegalArgumentException(
+                        "The option \"" + newValueOption.toString() + "\" does not map to a color palette");
         }
     }
 
@@ -333,24 +322,24 @@ final class ColorManager2DialogNominal extends JPanel {
             return;
         }
         // saved and assigned values in the settings
-        DataCell[] vals = settings.getDataCellArray(ColorManager2NodeModel.VALUES, (DataCell[])null);
+        final DataCell[] vals = settings.getDataCellArray(ColorManager2NodeModel.VALUES, (DataCell[])null);
         if (vals == null) {
             return;
         }
         // all values from the column
-        Map<DataCell, ColorAttr> map = m_map.get(column);
+        final Map<DataCell, ColorAttr> map = m_map.get(column);
         if (map == null) {
             return;
         }
         // list of all values with unset colors
-        ArrayList<DataCell> list = new ArrayList<DataCell>();
-        Map<DataCell, ColorAttr> existingSet = new HashMap<DataCell, ColorAttr>();
+        final ArrayList<DataCell> list = new ArrayList<>();
+        final Set<DataCell> valSet = Arrays.stream(vals).collect(Collectors.toSet());
+        final Map<DataCell, ColorAttr> existingSet = new HashMap<>();
         // replace all colors from settings in map
-        for (DataCell d : map.keySet()) {
+        for (final DataCell d : map.keySet()) {
             // is value part of the saved values?
-            int i = Arrays.asList(vals).indexOf(d);
-            if (i != -1) {
-                int c = settings.getInt(d.toString(), 0);
+            if (valSet.contains(d)) {
+            	final int c = settings.getInt(d.toString(), 0);
                 Color color = new Color(c, true);
                 m_alpha = color.getAlpha();
                 color = new Color(color.getRGB(), false);

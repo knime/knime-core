@@ -42,7 +42,7 @@
     	present than colors in the set, the colors are repeated. Set the
     	'On different table:' setting to 'Fail' if you want the node to fail
     	when a table with undefined values is input to the color manager.
-    	Otherwise new values are assigned a unused color from a defined set.
+    	Otherwise new values are assigned an unused color from a defined set.
     </option>
 	</fullDescription>
 	

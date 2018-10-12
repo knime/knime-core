@@ -98,16 +98,16 @@ class ColorManager2NodeModel extends NodeModel {
      */
     enum NewValueOption {
             /** Fail. */
-            FAIL("Fail", "Fail"),
+            FAIL("fail", "Fail"),
 
             /** Use color pallet 1. */
-            SET1("set_1", "Use Set1 for new values"),
+            SET1("set_1", "Use Set 1 for new values"),
 
             /** Use color pallet 2. */
-            SET2("set_2", "Use Set2 for new values"),
+            SET2("set_2", "Use Set 2 for new values"),
 
             /** Use color pallet 3. */
-            SET3("set_3", "Use Set3 for new values");
+            SET3("set_3", "Use Set 3 for new values");
 
         /** Missing name exception. */
         private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
@@ -177,6 +177,9 @@ class ColorManager2NodeModel extends NodeModel {
 
     /** Option for handling of new values. For backwards-compatibility the default option is FAIL. **/
     private NewValueOption m_newValueOption = NewValueOption.SET1;
+
+    /** The missing config value option. */
+    static final NewValueOption MISSING_CFG_OPTION = NewValueOption.FAIL;
 
     /** The selected column. */
     private String m_columnGuess;
@@ -263,10 +266,10 @@ class ColorManager2NodeModel extends NodeModel {
         // find column index
         int columnIndex = inSpec.findColumnIndex(m_column);
         // create new column spec based on color settings
-        DataColumnSpec cspec = inSpec.getColumnSpec(m_column);
+        final DataColumnSpec cspec = inSpec.getColumnSpec(m_column);
         if (m_isNominal) {
             // update possible values
-            Set<DataCell> set = new LinkedHashSet<DataCell>(cspec.getDomain().getValues());
+        	final Set<DataCell> set = new LinkedHashSet<>(cspec.getDomain().getValues());
             set.removeAll(m_map.keySet());
             // find values that need new color mapping
             m_map.putAll(ColorManager2DialogNominal.createColorMapping(set, m_map, m_newValueOption));
@@ -380,12 +383,12 @@ class ColorManager2NodeModel extends NodeModel {
                     + "\" found with no assigned color. Change the 'On different table' setting.");
             }
             // make list modifiable
-            list = new LinkedHashSet<DataCell>(list);
+            list = new LinkedHashSet<>(list);
             // update the color map
             list.removeAll(m_map.keySet());
             // find values that need new color mapping
-            final LinkedHashMap<DataCell, ColorAttr> tmpColMap = new LinkedHashMap<>(m_map);
-            tmpColMap.putAll(ColorManager2DialogNominal.createColorMapping(new LinkedHashSet<DataCell>(list), tmpColMap,
+            final Map<DataCell, ColorAttr> tmpColMap = new LinkedHashMap<>(m_map);
+            tmpColMap.putAll(ColorManager2DialogNominal.createColorMapping(new LinkedHashSet<>(list), tmpColMap,
                 m_newValueOption));
             colorHandler = createNominalColorHandler(tmpColMap);
 
@@ -429,7 +432,7 @@ class ColorManager2NodeModel extends NodeModel {
         assert (settings != null);
         // load setting for handling new values
         m_newValueOption =
-            NewValueOption.getEnum(settings.getString(CFG_NEW_VALUES, NewValueOption.FAIL.getSettingsName()));
+            NewValueOption.getEnum(settings.getString(CFG_NEW_VALUES, MISSING_CFG_OPTION.getSettingsName()));
         // remove all color mappings
         m_map.clear();
         // read settings and write into the map
