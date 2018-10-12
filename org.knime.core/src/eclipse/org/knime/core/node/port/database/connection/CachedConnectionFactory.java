@@ -187,21 +187,24 @@ public class CachedConnectionFactory implements DBConnectionFactory {
             } else {
                 CONNECTION_KEYS.put(databaseConnKey, databaseConnKey);
             }
+        }
+
+        //synchronize on the connection key only
+        LOGGER.debug("Try to lock key to obtain connection: " + databaseConnKey);
+        synchronized (databaseConnKey) {
             conn = CONNECTION_MAP.get(databaseConnKey);
-
             if (conn != null) {
-                synchronized (databaseConnKey) {
-                    if (isOpenAndValid(settings, conn, databaseConnKey)) {
-                        return conn;
-                    }
-                    //close invalid connection if it is not already closed
-                    closeSafely(databaseConnKey, conn);
-                    //remove the connection from the cache also if an exception occurs during closing
-                    LOGGER.debug("Removing closed connection from cache with key: " + databaseConnKey);
-                    CONNECTION_MAP.remove(databaseConnKey);
+                LOGGER.debug("Connection found for key: " + databaseConnKey);
+                if (isOpenAndValid(settings, conn, databaseConnKey)) {
+                    return conn;
                 }
+                //close invalid connection if it is not already closed
+                closeSafely(databaseConnKey, conn);
+                //remove the connection from the cache also if an exception occurs during closing
+                LOGGER.debug("Removing closed connection from cache with key: " + databaseConnKey);
+                CONNECTION_MAP.remove(databaseConnKey);
             }
-
+            LOGGER.debug("Create new connection for key: " + databaseConnKey);
             final Driver d;
             try {
                 d = getDriverFactory().getDriver(settings);
@@ -226,6 +229,7 @@ public class CachedConnectionFactory implements DBConnectionFactory {
             Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
             try {
                 conn = task.get(DatabaseConnectionSettings.getDatabaseTimeout() + 1, TimeUnit.SECONDS);
+                LOGGER.debug("Add connection to map for key: " + databaseConnKey);
                 CONNECTION_MAP.put(databaseConnKey, conn);
                 return conn;
             } catch (ExecutionException ee) {
@@ -265,7 +269,7 @@ public class CachedConnectionFactory implements DBConnectionFactory {
         }
     }
 
-    private boolean isOpenAndValid(final DatabaseConnectionSettings settings, final Connection conn,
+    private static boolean isOpenAndValid(final DatabaseConnectionSettings settings, final Connection conn,
         final ConnectionKey databaseConnKey) {
         try {
             if (conn.isClosed()) {
@@ -283,7 +287,7 @@ public class CachedConnectionFactory implements DBConnectionFactory {
         return false;
     }
 
-    private void closeSafely(final ConnectionKey databaseConnKey, final Connection conn) {
+    private static void closeSafely(final ConnectionKey databaseConnKey, final Connection conn) {
         try {
             if (!conn.isClosed()) {
                 LOGGER.debug("Closing connection with key: " + databaseConnKey);
