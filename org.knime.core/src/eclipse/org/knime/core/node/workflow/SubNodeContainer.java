@@ -1492,6 +1492,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     /**
      * @param portIndex
      * @return the inHiliteHandler
+     * @since 3.7
      */
     public HiLiteHandler getInHiliteHandler(final int portIndex) {
         return m_inHiliteHandler[portIndex];

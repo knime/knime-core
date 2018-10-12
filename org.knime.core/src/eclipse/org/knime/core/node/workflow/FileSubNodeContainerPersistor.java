@@ -49,7 +49,6 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -476,6 +475,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             virtualOutNode.getInPort(i).getPortType().save(portTypeSettings);
         }
         subnodeNC.getTemplateInformation().save(settings);
+        //legacy setting for forward-compatibility
+        settings.addNodeSettings("layoutInfos");
         settings.addString("layoutJSON", subnodeNC.getLayoutJSONString());
         settings.addBoolean("hideInWizard", subnodeNC.isHideInWizard());
         settings.addString("customCSS", subnodeNC.getCssStyles());
