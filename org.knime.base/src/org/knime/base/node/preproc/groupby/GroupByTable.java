@@ -51,8 +51,10 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.lang.mutable.MutableLong;
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
@@ -93,6 +95,8 @@ public abstract class GroupByTable {
     private final boolean m_retainOrder;
     private final ColumnAggregator[] m_colAggregators;
     private final BufferedDataTable m_resultTable;
+
+    private Map<String, MutableLong> m_missingValuesMap;
 
     /**Constructor for class GroupByTable.
      * @param exec the <code>ExecutionContext</code>
@@ -242,7 +246,7 @@ public abstract class GroupByTable {
      * @param colAggregators the aggregation columns
      * @return {@link Set} with the name of all columns to work with
      */
-    private Set<String> getWorkingCols(final GlobalSettings globalSettings, final List<String> groupByCols,
+    private static Set<String> getWorkingCols(final GlobalSettings globalSettings, final List<String> groupByCols,
         final ColumnAggregator[] colAggregators) {
         final Set<String> colNames = new LinkedHashSet<>(groupByCols);
         for (final ColumnAggregator aggr : colAggregators) {
@@ -615,10 +619,43 @@ public abstract class GroupByTable {
     }
 
     /**
-     * @return a newly created map, since it will be overridden by sub classes anyway
+     * Returns a map where for each column (by its name), which has missing values, the number of them is given
+     *
+     * @return the missingValuesMap
      * @since 3.7
      */
-     public Map<String, Long> getMissingValuesMap() {
-         return new HashMap<>();
-     }
+    public Map<String, Long> getMissingValuesMap() {
+        Map<String, Long> resMap = new HashMap<>();
+        if (m_missingValuesMap != null) {
+            for (Entry<String, MutableLong> entry : m_missingValuesMap.entrySet()) {
+                Long count = entry.getValue().toLong();
+                if (count > 0) {
+                    resMap.put(entry.getKey(), entry.getValue().toLong());
+                }
+            }
+        }
+        return resMap;
+    }
+
+    /**
+     * Add a count of missing values belonging to a specified column to the map of missing values
+     * @param columnName the name of the column
+     * @param count the count of missing values to add
+     * @since 3.7
+     */
+    protected void addToMissingValuesMap(final String columnName, final long count) {
+        m_missingValuesMap.get(columnName).add(count);
+    }
+
+    /**
+     * Initializes the missing value map
+     * @since 3.7
+     */
+    protected void initMissingValuesMap() {
+        m_missingValuesMap = new HashMap<>();
+        ColumnAggregator[] colAggregators = getColAggregators();
+        for (ColumnAggregator ca : colAggregators) {
+            m_missingValuesMap.put(ca.getOriginalColName(), new MutableLong(0L));
+        }
+    }
 }

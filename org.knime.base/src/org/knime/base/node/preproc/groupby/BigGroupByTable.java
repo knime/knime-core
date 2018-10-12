@@ -46,7 +46,6 @@
 package org.knime.base.node.preproc.groupby;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,7 +53,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.lang.mutable.MutableLong;
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
@@ -91,8 +89,6 @@ import org.knime.core.util.Pair;
 public class BigGroupByTable extends GroupByTable {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(BigGroupByTable.class);
-
-    private Map<String, MutableLong> m_missingValuesMap;
 
     /**Constructor for class BigGroupByTable.
      * @param exec the <code>ExecutionContext</code>
@@ -155,25 +151,6 @@ public class BigGroupByTable extends GroupByTable {
     throws CanceledExecutionException {
         super(exec, inDataTable, groupByCols, colAggregators, globalSettings,
                 sortInMemory, enableHilite, colNamePolicy, retainOrder);
-    }
-
-    /**
-     * Returns a map where for each column (by its name), which has missing values, the number of them is given
-     * @return the missingValuesMap
-     * @since 3.4
-     */
-    @Override
-    public Map<String, Long> getMissingValuesMap() {
-        Map<String, Long> resMap = new HashMap<>();
-        if (m_missingValuesMap != null) {
-            for (Entry<String, MutableLong> entry : m_missingValuesMap.entrySet()) {
-                Long count = entry.getValue().toLong();
-                if (count > 0) {
-                    resMap.put(entry.getKey(), entry.getValue().toLong());
-                }
-            }
-        }
-        return resMap;
     }
 
     /**
@@ -312,7 +289,7 @@ public class BigGroupByTable extends GroupByTable {
     /** Get a string describing the current group. Used in progress message.
      * @param currentGroup The current group
      * @return That string. */
-    private String createGroupLabelForProgress(final DataCell[] currentGroup) {
+    private static String createGroupLabelForProgress(final DataCell[] currentGroup) {
         final StringBuilder b = new StringBuilder("(");
         for (int i = 0; i < currentGroup.length; i++) {
             b.append(i > 0 ? "; " : "");
@@ -373,7 +350,7 @@ public class BigGroupByTable extends GroupByTable {
                     addSkippedGroup(colAggr.getOriginalColName(),
                             operator.getSkipMessage(), groupVals);
                 }
-                m_missingValuesMap.get(colAggr.getOriginalColName()).add(operator.getMissingValuesCount());
+                addToMissingValuesMap(colAggr.getOriginalColName(), operator.getMissingValuesCount());
             }
             final DataRow newRow = new DefaultRow(rowKey, rowVals);
             dc.addRowToTable(newRow);
@@ -407,7 +384,7 @@ public class BigGroupByTable extends GroupByTable {
      * @return <code>true</code> if both groups return 0 when all pairs are
      * compared using the given {@link DataValueComparator}s
      */
-    private boolean sameChunk(final DataValueComparator[] comparators,
+    private static boolean sameChunk(final DataValueComparator[] comparators,
             final DataCell[] previousGroup, final DataCell[] currentGroup) {
         if (comparators == null || comparators.length < 1) {
             return true;
@@ -419,13 +396,5 @@ public class BigGroupByTable extends GroupByTable {
             }
         }
         return true;
-    }
-
-    private void initMissingValuesMap() {
-        m_missingValuesMap = new HashMap<>();
-        ColumnAggregator[] colAggregators = getColAggregators();
-        for (ColumnAggregator ca : colAggregators) {
-            m_missingValuesMap.put(ca.getOriginalColName(), new MutableLong(0L));
-        }
     }
 }
