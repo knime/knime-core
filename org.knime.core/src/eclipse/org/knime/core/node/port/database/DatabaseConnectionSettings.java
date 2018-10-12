@@ -480,7 +480,7 @@ public class DatabaseConnectionSettings {
      * @return sync object which is either the given connection or an new object (no sync necessary)
      * @since 3.1
      */
-    public final Object syncConnection(final Connection conn) {
+    public final static Object syncConnection(final Connection conn) {
         if (SQL_CONCURRENCY && conn != null) {
             return conn;
         } else {
@@ -493,7 +493,7 @@ public class DatabaseConnectionSettings {
      * @param key connection used to sync access to all databases
      * @return sync object which is either the given connection or an new object (no sync necessary)
      */
-    private Object syncKey(final ConnectionKey key) {
+    private static Object syncKey(final ConnectionKey key) {
         if (SQL_CONCURRENCY && key != null) {
             return key;
         } else {
@@ -660,13 +660,16 @@ public class DatabaseConnectionSettings {
      * @throws SQLException if an exception during execution occurs
      * @since 3.5.3
      */
+    @SuppressWarnings("resource")
     public <T> T execute(final CredentialsProvider cp, final ExecuteStatement<T> stmt) throws SQLException {
         try {
             for (int i = 1; i <= MAX_CONNECTION_TRIES; i++) {
                 final Connection conn = createConnection(cp);
                 final ConnectionKey databaseConnKey = CachedConnectionFactory.getConnectionKey(cp, this);
+                LOGGER.debug("Try to lock key for stmt execution: " + databaseConnKey);
                 synchronized (syncKey(databaseConnKey)) {
                     try {
+                        LOGGER.debug("Check connection for key: " + databaseConnKey);
                         if (conn.isClosed() || !getUtility().isValid(conn)) {
                             LOGGER.debug("Invalid or closed connection found. Retry counter: " + i +
                                 ". Retry to get valid connection for key: " + databaseConnKey);
