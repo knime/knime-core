@@ -51,6 +51,7 @@ package org.knime.core.node.wizard.util;
 import java.io.IOException;
 import java.util.Map;
 
+import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -70,8 +71,7 @@ public interface DefaultLayoutCreator {
      * @return a default layout structure as JSON string.
      * @throws IOException on creation error
      */
-    @SuppressWarnings("rawtypes")
-    public String createDefaultLayout(final Map<NodeIDSuffix, WizardNode> viewNodes) throws IOException;
+    public String createDefaultLayout(final Map<NodeIDSuffix, ViewHideable> viewNodes) throws IOException;
 
     /**
      * Expands nested layouts by inserting the appropriate sub-layouts in an original layout.

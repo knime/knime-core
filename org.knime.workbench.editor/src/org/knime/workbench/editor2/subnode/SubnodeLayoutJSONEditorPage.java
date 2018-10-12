@@ -885,7 +885,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     }
 
     private JSONLayoutPage generateInitialJson() {
-        JSONLayoutPage page = DefaultLayoutCreatorImpl.createDefaultLayoutStructure(m_viewNodes, true);
+        JSONLayoutPage page = DefaultLayoutCreatorImpl.createDefaultLayoutStructure(m_viewNodes);
         ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
         try {
             String initialJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);

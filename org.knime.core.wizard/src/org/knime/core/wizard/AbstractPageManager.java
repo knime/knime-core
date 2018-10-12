@@ -277,7 +277,8 @@ public abstract class AbstractPageManager {
     private String prependParentNodeID(final WorkflowManager parentManager, final String nodeIDString) {
         String result = nodeIDString;
         if (parentManager != null) {
-            NodeID layoutNodeID = parentManager.getID().createChild(Integer.parseInt(nodeIDString));
+            NodeID orgID = NodeID.fromString(nodeIDString);
+            NodeID layoutNodeID = parentManager.getID().createChild(orgID.getIndex());
             result = NodeIDSuffix.create(m_wfm.getID(), layoutNodeID).toString();
         }
         return result;

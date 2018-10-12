@@ -87,6 +87,7 @@ import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
+import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardViewRequest;
 import org.knime.core.node.wizard.WizardViewRequestHandler;
@@ -431,7 +432,8 @@ public abstract class WebResourceController {
         String pageLayout = subNC.getLayoutJSONString();
         if (StringUtils.isEmpty(pageLayout)) {
             try {
-                pageLayout = LayoutUtil.createDefaultLayout(resultMap);
+                pageLayout = LayoutUtil.createDefaultLayout(resultMap.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, e -> (ViewHideable)e.getValue())));
             } catch (IOException ex) {
                 LOGGER.error("Default page layout could not be created: " + ex.getMessage(), ex);
             }

@@ -51,7 +51,7 @@ package org.knime.core.node.wizard.util;
 import java.io.IOException;
 import java.util.Map;
 
-import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -85,7 +85,7 @@ public final class LayoutUtil {
      * @return a default layout structure as JSON string.
      * @throws IOException If no service is registered or the default layout cannot be created.
      */
-    public static String createDefaultLayout(final Map<NodeIDSuffix, WizardNode> viewNodes) throws IOException {
+    public static String createDefaultLayout(final Map<NodeIDSuffix, ViewHideable> viewNodes) throws IOException {
         if (serviceTracker == null) {
             throw new IOException("Core bundle is not active, can't create default layout.");
         }
