@@ -480,7 +480,7 @@ public class DatabaseConnectionSettings {
      * @return sync object which is either the given connection or an new object (no sync necessary)
      * @since 3.1
      */
-    public final static Object syncConnection(final Connection conn) {
+    public final Object syncConnection(final Connection conn) {
         if (SQL_CONCURRENCY && conn != null) {
             return conn;
         } else {
