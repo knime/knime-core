@@ -139,11 +139,6 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         m_spec = CheckUtils.checkArgumentNotNull(spec);
         m_openIteratorSet = new WeakHashMap<>();
         m_version = version;
-        if (version <= 6) {
-            m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion1x(settings);
-        } else {
-            m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion2(settings);
-        }
     }
 
     /**
@@ -214,11 +209,19 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         };
     }
 
+    /**
+     * Reads the cell class info shortcuts array from the node settings for container versions 6 and lower.
+     *
+     * @param settings The settings (written by
+     *            {@link AbstractTableStoreWriter#writeMetaInfoAfterWrite(org.knime.core.node.NodeSettingsWO)})
+     * @throws InvalidSettingsException thrown in case something goes wrong during de-serialization, e.g. a new version
+     *             of a writer has been used which hasn't been installed on the current system.
+     */
     @SuppressWarnings("unchecked")
-    private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion1x(final NodeSettingsRO settings)
+    protected void readCellClassInfoArrayFromMetaVersion1x(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         String[] cellClasses = settings.getStringArray(TableStoreFormat.CFG_CELL_CLASSES);
-        CellClassInfo[] shortCutsLookup = new CellClassInfo[cellClasses.length];
+        m_shortCutsLookup = new CellClassInfo[cellClasses.length];
 
         for (int i = 0; i < cellClasses.length; i++) {
             String cellClassName = cellClasses[i];
@@ -226,21 +229,28 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
             Class<?> cl = DataTypeRegistry.getInstance().getCellClass(cellClassName).orElseThrow(
                 () -> new InvalidSettingsException("Data cell class \"" + cellClassName + "\" is unknown."));
             try {
-                shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, null);
+                m_shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, null);
             } catch (IllegalArgumentException e) {
                 throw new InvalidSettingsException(
                     "Unable to instantiate CellClassInfo for class \"" + cellClasses[i] + "\"", e);
             }
         }
-        return shortCutsLookup;
     }
 
+    /**
+     * Reads the cell class info shortcuts array from the node settings for container versions 7 and higher.
+     *
+     * @param settings The settings (written by
+     *            {@link AbstractTableStoreWriter#writeMetaInfoAfterWrite(org.knime.core.node.NodeSettingsWO)})
+     * @throws InvalidSettingsException thrown in case something goes wrong during de-serialization, e.g. a new version
+     *             of a writer has been used which hasn't been installed on the current system.
+     */
     @SuppressWarnings("unchecked")
-    private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion2(final NodeSettingsRO settings)
+    protected void readCellClassInfoArrayFromMetaVersion2(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         NodeSettingsRO typeSubSettings = settings.getNodeSettings(TableStoreFormat.CFG_CELL_CLASSES);
         Set<String> keys = typeSubSettings.keySet();
-        CellClassInfo[] shortCutsLookup = new CellClassInfo[keys.size()];
+        m_shortCutsLookup = new CellClassInfo[keys.size()];
         int i = 0;
         for (String s : keys) {
             NodeSettingsRO single = typeSubSettings.getNodeSettings(s);
@@ -255,14 +265,13 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
                 elementType = DataType.load(subTypeConfig);
             }
             try {
-                shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, elementType);
+                m_shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, elementType);
             } catch (IllegalArgumentException iae) {
                 throw new InvalidSettingsException("Unable to instantiate CellClassInfo for class \"" + className
                     + "\", element type: " + elementType);
             }
             i++;
         }
-        return shortCutsLookup;
     }
 
     /**

@@ -85,6 +85,12 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
         final int version, final boolean isReadRowKey)
                 throws IOException, InvalidSettingsException {
         super(binFile, spec, settings, version);
+        if (version <= 6) {
+            readCellClassInfoArrayFromMetaVersion1x(settings);
+        } else {
+            readCellClassInfoArrayFromMetaVersion2(settings);
+        }
+
         m_binFile = binFile;
         m_spec = spec;
         m_isReadRowKey = isReadRowKey;
