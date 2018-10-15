@@ -380,7 +380,7 @@ public abstract class WebResourceController {
         }
         if (allInactive) {
             // also consider nested SubNodes which might have views to display
-            Map<NodeID, SubNodeContainer> sncSet = findSubnodeContainers(subNodeWFM);
+            Map<NodeID, SubNodeContainer> sncSet = getSubnodeContainers(subNodeWFM);
             for (NodeID id : sncSet.keySet()) {
                 if (isSubnodeViewAvailable(id, subNodeWFM)) {
                     allInactive = false;
@@ -392,14 +392,17 @@ public abstract class WebResourceController {
     }
 
     /**
-     * @param subnodeManager
-     * @return
+     * Retrieves all directly contained {@link SubNodeContainer} inside a given {@link WorkflowManager}. Does not
+     * recursively look for nested subnodes.
+     * @param wfm The {@link WorkflowManager} of the parent container to look for contained subnodes.
+     * @return A map of {@link NodeID} to {@link SubNodeContainer}
      * @since 3.7
      */
-    public static Map<NodeID, SubNodeContainer> findSubnodeContainers(final WorkflowManager subnodeManager) {
-        try(WorkflowLock lock = subnodeManager.lock()) {
+    //TODO: this method could also be on the WorkflowManager itself but the functionality is only needed here so far
+    public static Map<NodeID, SubNodeContainer> getSubnodeContainers(final WorkflowManager wfm) {
+        try (WorkflowLock lock = wfm.lock()) {
             Map<NodeID, SubNodeContainer> result = new LinkedHashMap<NodeID, SubNodeContainer>();
-            for (NodeContainer nc : subnodeManager.getWorkflow().getNodeValues()) {
+            for (NodeContainer nc : wfm.getNodeContainers()) {
                 if (nc instanceof SubNodeContainer) {
                     result.put(nc.getID(), (SubNodeContainer)nc);
                 }
@@ -487,7 +490,7 @@ public abstract class WebResourceController {
                 }
             }
         }
-        Map<NodeID, SubNodeContainer> subnodeContainers = findSubnodeContainers(subNC.getWorkflowManager());
+        Map<NodeID, SubNodeContainer> subnodeContainers = getSubnodeContainers(subNC.getWorkflowManager());
         for (Entry<NodeID, SubNodeContainer> entry : subnodeContainers.entrySet()) {
             SubNodeContainer snc = entry.getValue();
             if (isSubnodeViewAvailable(snc.getID(), subWFM)) {

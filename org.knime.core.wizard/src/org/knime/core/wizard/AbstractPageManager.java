@@ -240,6 +240,12 @@ public abstract class AbstractPageManager {
         return page;
     }
 
+    /**
+     * For layout creation the individual (potentially nested) layouts need their correct node IDs resolved. This method
+     * traverses the layout content and sets the correct prefixes for all view and nested content elements.
+     * @param content the layout content element to check and traverse
+     * @param subNodeManager the {@link WorkflowManager} at the current level in the layout
+     */
     private void setNodeIDInContent(final JSONLayoutContent content, final WorkflowManager subNodeManager) {
         if (content instanceof JSONLayoutRow) {
             for (JSONLayoutColumn col : ((JSONLayoutRow)content).getColumns()) {
@@ -274,6 +280,14 @@ public abstract class AbstractPageManager {
         }
     }
 
+    /**
+     * Creates the node ID to include in the layout, which starts at the subnode that the view is created for
+     * @param parentManager the WorkflowManager that the current node id is contained in
+     * @param nodeIDString the nodeID as it is contained in a layout, this should usually just be the index of the node
+     * id
+     * @return the complete node ID string with the correct prefix from the created subnode till the parentManager with
+     * the index appended
+     */
     private String prependParentNodeID(final WorkflowManager parentManager, final String nodeIDString) {
         String result = nodeIDString;
         if (parentManager != null) {

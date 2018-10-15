@@ -94,7 +94,7 @@ public class SubnodeLayoutWizard extends Wizard {
         setDefaultPageImageDescriptor(
             ImageRepository.getImageDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_55.png"));
         WorkflowManager wfManager = m_subNodeContainer.getWorkflowManager();
-        Map<NodeID, SubNodeContainer> nestedSubnodes = WebResourceController.findSubnodeContainers(wfManager);
+        Map<NodeID, SubNodeContainer> nestedSubnodes = WebResourceController.getSubnodeContainers(wfManager);
         Map<NodeID, WizardNode> viewNodes = wfManager.findNodes(WizardNode.class, false);
         LinkedHashMap<NodeIDSuffix, ViewHideable> resultMap = new LinkedHashMap<>();
         for (Map.Entry<NodeID, WizardNode> entry : viewNodes.entrySet()) {
