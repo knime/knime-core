@@ -1952,6 +1952,9 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public String getCssStyles() {
+        if (m_customCSS == null) {
+            m_customCSS = "";
+        }
         return m_customCSS;
     }
 
