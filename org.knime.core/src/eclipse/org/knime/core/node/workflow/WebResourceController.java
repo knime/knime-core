@@ -435,8 +435,14 @@ public abstract class WebResourceController {
         String pageLayout = subNC.getLayoutJSONString();
         if (StringUtils.isEmpty(pageLayout)) {
             try {
-                pageLayout = LayoutUtil.createDefaultLayout(resultMap.entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey, e -> (ViewHideable)e.getValue())));
+                WorkflowManager subWfm = subNC.getWorkflowManager();
+                Map<NodeIDSuffix, ViewHideable> viewMap = new LinkedHashMap<NodeIDSuffix, ViewHideable>();
+                subWfm.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false).entrySet().stream()
+                    .forEach(e -> viewMap.put(NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()), e.getValue()));
+                Map<NodeID, SubNodeContainer> nestedSubs = getSubnodeContainers(subWfm);
+                nestedSubs.entrySet().stream().filter(e -> isSubnodeViewAvailable(e.getKey(), subWfm))
+                    .forEach(e -> viewMap.put(NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()), e.getValue()));
+                pageLayout = LayoutUtil.createDefaultLayout(viewMap);
             } catch (IOException ex) {
                 LOGGER.error("Default page layout could not be created: " + ex.getMessage(), ex);
             }
