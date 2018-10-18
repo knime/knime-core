@@ -49,6 +49,7 @@
 package org.knime.workbench.editor2.subnode;
 
 import org.knime.js.core.layout.LayoutTemplateProvider;
+import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutViewContent;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -61,27 +62,47 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 @JsonAutoDetect
 public class JSONNode {
 
+    private int m_nodeID;
     private String m_name;
     private String m_description;
-    private JSONLayoutViewContent m_layout;
+    private JSONLayoutContent m_layout;
     private String m_icon;
     private boolean m_availableInView;
     private String m_preview;
+    private String m_type;
 
     /**
+     * @param nodeID node id
      * @param name name of the node
      * @param description custom description of the node
      * @param layout the node's layout, if it is not a {@link LayoutTemplateProvider} then a default layout
      * @param icon the url to the node's icon
      * @param availableInView if the node is displayed
+     * @param type the node type (view, quickform, or nestedLayout)
      */
-    public JSONNode(final String name, final String description, final JSONLayoutViewContent layout,
-        final String icon, final boolean availableInView) {
+    public JSONNode(final int nodeID, final String name, final String description, final JSONLayoutContent layout,
+        final String icon, final boolean availableInView, final String type) {
+        m_nodeID = nodeID;
         m_name = name;
         m_description = description;
         m_layout = layout;
         m_icon = icon;
         m_availableInView = availableInView;
+        m_type = type;
+    }
+
+    /**
+     * @return the node ID
+     */
+    public int getNodeID() {
+        return m_nodeID;
+    }
+
+    /**
+     * @param nodeID the node ID to set
+     */
+    public void setNodeID(final int nodeID) {
+        m_nodeID = nodeID;
     }
 
     /**
@@ -117,7 +138,7 @@ public class JSONNode {
     /**
      * @return the layout
      */
-    public JSONLayoutViewContent getLayout() {
+    public JSONLayoutContent getLayout() {
         return m_layout;
     }
 
@@ -174,4 +195,17 @@ public class JSONNode {
         m_preview = preview;
     }
 
+    /**
+     * @return the node type (view, quickform, or nestedLayout)
+     */
+    public String getType() {
+        return m_type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(final String type) {
+        m_type = type;
+    }
 }

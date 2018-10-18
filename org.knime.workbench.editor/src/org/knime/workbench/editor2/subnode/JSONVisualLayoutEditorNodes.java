@@ -53,8 +53,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -64,6 +65,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
+import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeContainer;
@@ -71,13 +73,11 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.js.core.layout.LayoutTemplateProvider;
-import org.knime.js.core.layout.bs.JSONLayoutViewContent;
+import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * A JSON representation of the nodes for the visual layout editor.
@@ -87,88 +87,70 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @JsonAutoDetect
 public class JSONVisualLayoutEditorNodes {
 
-    // Map node ID index (as a String for Jackson JSON translation) to JSONNode representation
-    private Map<String, JSONNode> m_nodes;
-
-    private long m_length;
+    private List<JSONNode> m_nodes;
 
     /**
      * @param viewNodes a {@code Map} of {@link NodeIDSuffix} to available {@link WizardNode}s
+     * @param layouts a {@code Map} of {@link NodeIDSuffix} to {@link JSONLayoutContent}
      * @param subNodeContainer the container node
      * @param wfManager the current workflow manager
      */
     public JSONVisualLayoutEditorNodes(final Map<NodeIDSuffix, ViewHideable> viewNodes,
-        final SubNodeContainer subNodeContainer, final WorkflowManager wfManager) {
-        if ((viewNodes == null) || viewNodes.isEmpty() || (subNodeContainer == null) || (wfManager == null)) {
+        final Map<NodeIDSuffix, JSONLayoutContent> layouts, final SubNodeContainer subNodeContainer,
+        final WorkflowManager wfManager) {
+        if (viewNodes == null || viewNodes.isEmpty() || subNodeContainer == null || wfManager == null) {
             return;
         }
-
-        long maxId = Long.MIN_VALUE;
-        m_nodes = new HashMap<>();
+        m_nodes = new ArrayList<>();
         for (final Entry<NodeIDSuffix, ViewHideable> viewNode : viewNodes.entrySet()) {
             final ViewHideable node = viewNode.getValue();
             final NodeID nodeID = viewNode.getKey().prependParent(subNodeContainer.getWorkflowManager().getID());
             final NodeContainer nodeContainer = wfManager.getNodeContainer(nodeID);
-
-            final int nodeIdIndex = nodeContainer.getID().getIndex();
-            final String nodeIdIndexString = nodeIdIndex + "";
-            final JSONNode jsonNode = new JSONNode(nodeContainer.getName(), nodeContainer.getCustomDescription(),
-                getTemplate(node), getIcon(nodeContainer), node.isHideInWizard());
-            m_nodes.put(nodeIdIndexString, jsonNode);
-
-            if (nodeIdIndex > maxId) {
-                maxId = nodeIdIndex;
-            }
+            final JSONNode jsonNode = new JSONNode(nodeContainer.getID().getIndex(), nodeContainer.getName(),
+                nodeContainer.getCustomDescription(), layouts.get(viewNode.getKey()), getIcon(nodeContainer),
+                node.isHideInWizard(), getType(node));
+            m_nodes.add(jsonNode);
         }
-        m_length = maxId + 1;
     }
 
     /**
      * @return the nodes
      */
-    public Map<String, JSONNode> getNodes() {
+    public List<JSONNode> getNodes() {
         return m_nodes;
     }
 
     /**
      * @param nodes the nodes to set
      */
-    public void setNodes(final Map<String, JSONNode> nodes) {
+    public void setNodes(final List<JSONNode> nodes) {
         m_nodes = nodes;
-    }
-
-    /**
-     * The largest nodeID index + 1. This is needed by the javascript to convert the map into a keyed array.
-     *
-     * @return the length
-     */
-    @JsonIgnore
-    public long getLength() {
-        return m_length;
-    }
-
-    /**
-     * @param length the length to set
-     */
-    @JsonIgnore
-    public void setLength(final long length) {
-        m_length = length;
     }
 
     // -- Helper methods--
 
-    private static JSONLayoutViewContent getTemplate(final ViewHideable node) {
-        if (node instanceof LayoutTemplateProvider) {
-            return ((LayoutTemplateProvider)node).getLayoutTemplate();
+    private static String getType(final ViewHideable node) {
+        final boolean isWizardNode = node instanceof WizardNode;
+        if (isWizardNode) {
+            if (node instanceof DialogNode) {
+                return "quickform";
+            }
+            return "view";
         }
-        return new JSONLayoutViewContent();
+        if (node instanceof SubNodeContainer) {
+            return "nestedLayout";
+        }
+        throw new IllegalArgumentException("Node is not view, subnode, or quickform: " + node.getClass());
     }
 
     private static String getIcon(final NodeContainer nodeContainer) {
         if (nodeContainer == null) {
-            return createMissingIcon();
+            return createIcon(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png"));
         }
         String iconBase64 = "";
+        if (nodeContainer instanceof SubNodeContainer) {
+            return createIcon(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_16.png"));
+        }
         try {
             final URL url = FileLocator.resolve(nodeContainer.getIcon());
             final String mimeType = URLConnection.guessContentTypeFromName(url.getFile());
@@ -182,16 +164,15 @@ public class JSONVisualLayoutEditorNodes {
         }
 
         if (iconBase64.isEmpty()) {
-            return createMissingIcon();
+            return createIcon(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png"));
         }
         return iconBase64;
     }
 
-    private static String createMissingIcon() {
-        final Image i = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png");
+    private static String createIcon(final Image i) {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         final ImageLoader loader = new ImageLoader();
-        loader.data = new ImageData[] { i.getImageData() };
+        loader.data = new ImageData[]{i.getImageData()};
         loader.save(out, SWT.IMAGE_PNG);
         return "data:image/png;base64," + Base64.getEncoder().encodeToString(out.toByteArray());
     }

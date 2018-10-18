@@ -346,8 +346,10 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         });
 
         // Create JSON Objects
+        final Map<NodeIDSuffix, JSONLayoutContent> layoutMap = new HashMap<>();
+        m_basicMap.forEach((k, v) -> layoutMap.put(k, v.getView()));
         final JSONVisualLayoutEditorNodes nodes =
-            new JSONVisualLayoutEditorNodes(m_viewNodes, m_subNodeContainer, m_wfManager);
+            new JSONVisualLayoutEditorNodes(m_viewNodes, layoutMap, m_subNodeContainer, m_wfManager);
         final ObjectMapper mapper = new ObjectMapper();
         String JSONNodes = "";
         try {
@@ -357,8 +359,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         }
         // variables in progress listener must be final
         final String JSONLayout = getJsonDocument();
-        final String jsonNodes =
-            new StringBuilder(JSONNodes).insert(JSONNodes.length() - 2, ", length:" + nodes.getLength()).toString();
+        final String jsonNodes = JSONNodes;
         m_browser.addProgressListener(new ProgressListener() {
 
             @Override
