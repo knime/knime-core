@@ -55,6 +55,8 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.commons.math3.util.FastMath;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
@@ -236,28 +238,19 @@ public class OneSampleTTestStatistics {
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getTableSpec() {
-        return new DataTableSpec(new String[] {
-                LABEL
-                , TEST_VALUE
-                , T_VALUE
-                , DEGREES_OF_FREEDOM
-                , P_VALUE
-                , MEAN_DIFFERENCE
-                , CONFIDENCE_INTERVAL_PROBABILITY
-                , CONFIDENCE_INTERVAL_LOWER_BOUND
-                , CONFIDENCE_INTERVAL_UPPER_BOUND
-                },
-                new DataType[] {
-                StringCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , IntCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-        });
+
+        final List<DataColumnSpec> allColSpecs = new ArrayList<>(9);
+        allColSpecs.add(new DataColumnSpecCreator(LABEL, StringCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(TEST_VALUE, DoubleCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(T_VALUE, DoubleCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(DEGREES_OF_FREEDOM, IntCell.TYPE).createSpec());
+        allColSpecs.add(StatsUtil.createDataColumnSpec(P_VALUE, StatsUtil.FULL_PRECISION_RENDERER, DoubleCell.TYPE));
+        allColSpecs.add(new DataColumnSpecCreator(MEAN_DIFFERENCE, DoubleCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(CONFIDENCE_INTERVAL_PROBABILITY, DoubleCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(CONFIDENCE_INTERVAL_LOWER_BOUND, DoubleCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(CONFIDENCE_INTERVAL_UPPER_BOUND, DoubleCell.TYPE).createSpec());
+
+        return new DataTableSpec(allColSpecs.toArray(new DataColumnSpec[0]));
     }
 
     /**

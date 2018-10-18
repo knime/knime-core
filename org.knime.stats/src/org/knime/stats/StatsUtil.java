@@ -47,14 +47,32 @@
  */
 package org.knime.stats;
 
+import java.util.HashMap;
+
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.util.FastMath;
+import org.knime.core.data.DataColumnProperties;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.data.renderer.DoubleValueRenderer.FullPrecisionRendererFactory;
 
 /**
  *
  * @author Heiko Hofer
  */
 public final class StatsUtil {
+
+    private StatsUtil() {}
+
+    private static final String PVALUE_COLUMN_NAME = "p-Value";
+    /**
+     * Full precision renderer for double values
+     */
+    public static final String FULL_PRECISION_RENDERER = new FullPrecisionRendererFactory().getDescription();
+
     /**
      * Computes the standard error.
      * See http://mathworld.wolfram.com/StandardError.html for a definition.
@@ -65,5 +83,39 @@ public final class StatsUtil {
         double std = stats.getStandardDeviation();
         double n = stats.getN();
         return std / FastMath.sqrt(n);
+    }
+
+    /**
+     * @param name the name of the column
+     * @param properties the properties for the column or null for empty properties
+     * @param type the data type of the column
+     * @return the columnspec
+     */
+    public static DataColumnSpec createDataColumnSpec(final String name, final HashMap<String, String> properties, final DataType type) {
+        DataColumnSpecCreator columnSpecCreator = new DataColumnSpecCreator(name, type);
+        if (properties != null) {
+            columnSpecCreator.setProperties(new DataColumnProperties(properties));
+        }
+        return columnSpecCreator.createSpec();
+    }
+
+    /**
+     * @param name the name of the column
+     * @param preferredRenderer the preferred renderer for the values of the column
+     * @param type the data type of the column
+     * @return the columnspec
+     */
+    public static DataColumnSpec createDataColumnSpec(final String name, final String preferredRenderer,
+        final DataType type) {
+        HashMap<String, String> properties = new HashMap<>(1);
+        properties.put(DataValueRenderer.PROPERTY_PREFERRED_RENDERER, preferredRenderer);
+        return createDataColumnSpec(name, properties, type);
+    }
+
+    /**
+     * @return the default p-Value columnspec with 'Full Precision' renderer for the double values
+     */
+    public static DataColumnSpec createPValueColumnSpec() {
+        return createDataColumnSpec(PVALUE_COLUMN_NAME, FULL_PRECISION_RENDERER, DoubleCell.TYPE);
     }
 }

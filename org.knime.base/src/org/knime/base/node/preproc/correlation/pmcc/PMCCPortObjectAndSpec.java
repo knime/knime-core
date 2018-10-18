@@ -49,6 +49,7 @@ package org.knime.base.node.preproc.correlation.pmcc;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import javax.swing.JComponent;
@@ -56,6 +57,7 @@ import javax.swing.JComponent;
 import org.knime.base.util.HalfDoubleMatrix;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTable;
@@ -65,6 +67,8 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.data.renderer.DoubleValueRenderer.FullPrecisionRendererFactory;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -77,13 +81,13 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 
 /**
  * PortObject and PortObjectSpec of the model that's passed between the
@@ -363,10 +367,14 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
      * @since 2.6
      */
     public static DataTableSpec createOutSpec(final String[] names) {
+        String descFullPrecision = new FullPrecisionRendererFactory().getDescription();
         DataColumnSpec[] colSpecs = new DataColumnSpec[names.length];
         for (int i = 0; i < colSpecs.length; i++) {
             DataColumnSpecCreator c =
                 new DataColumnSpecCreator(names[i], DoubleCell.TYPE);
+            HashMap<String, String> properties = new HashMap<>(1);
+            properties.put(DataValueRenderer.PROPERTY_PREFERRED_RENDERER, descFullPrecision);
+            c.setProperties(new DataColumnProperties(properties));
             c.setDomain(new DataColumnDomainCreator(
                     MIN_VALUE_CELL, MAX_VALUE_CELL).createDomain());
             colSpecs[i] = c.createSpec();

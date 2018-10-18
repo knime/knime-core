@@ -55,6 +55,8 @@ import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.util.FastMath;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
@@ -329,24 +331,18 @@ public class OneWayANOVAStatistics {
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getTableSpec() {
-        return new DataTableSpec(new String[] {
-                TEST_COLUMN
-                , SOURCE
-                , SUM_OF_SQUARES
-                , DEGREES_OF_FREEDOM
-                , MEAN_SQUARE
-                , F_VALUE
-                , P_VALUE
-                },
-                new DataType[] {
-                StringCell.TYPE
-                , StringCell.TYPE
-                , DoubleCell.TYPE
-                , IntCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-        });
+
+
+        final List<DataColumnSpec> allColSpecs = new ArrayList<>(7);
+        allColSpecs.add(new DataColumnSpecCreator(TEST_COLUMN, StringCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(SOURCE, StringCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(SUM_OF_SQUARES, DoubleCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(DEGREES_OF_FREEDOM, IntCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(MEAN_SQUARE, DoubleCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(F_VALUE, DoubleCell.TYPE).createSpec());
+        allColSpecs.add(StatsUtil.createDataColumnSpec(P_VALUE, StatsUtil.FULL_PRECISION_RENDERER, DoubleCell.TYPE));
+
+        return new DataTableSpec(allColSpecs.toArray(new DataColumnSpec[0]));
     }
 
     /**

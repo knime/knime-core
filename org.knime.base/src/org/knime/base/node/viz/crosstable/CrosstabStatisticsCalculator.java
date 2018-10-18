@@ -51,12 +51,14 @@ package org.knime.base.node.viz.crosstable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.special.Gamma;
 import org.knime.base.node.viz.crosstable.CrosstabNodeModel.CrosstabTotals;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -67,6 +69,8 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.data.renderer.DoubleValueRenderer.FullPrecisionRendererFactory;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -443,7 +447,11 @@ public class CrosstabStatisticsCalculator {
             cspecs.add((new DataColumnSpecCreator(CHI_SQUARE, DoubleCell.TYPE)).createSpec());
             cspecs.add((new DataColumnSpecCreator(CHI_SQUARE_DF, IntCell.TYPE)).createSpec());
             cspecs.add((new DataColumnSpecCreator(CHI_SQUARE_PVALUE, DoubleCell.TYPE)).createSpec());
-            cspecs.add((new DataColumnSpecCreator(FISHER_EXACT_PVALUE, DoubleCell.TYPE)).createSpec());
+            HashMap<String, String> properties = new HashMap<>(1);
+            properties.put(DataValueRenderer.PROPERTY_PREFERRED_RENDERER, new FullPrecisionRendererFactory().getDescription());
+            DataColumnSpecCreator specCreator = new DataColumnSpecCreator(FISHER_EXACT_PVALUE, DoubleCell.TYPE);
+            specCreator.setProperties(new DataColumnProperties(properties));
+            cspecs.add(specCreator.createSpec());
             return new DataTableSpec(cspecs.toArray(new DataColumnSpec[cspecs.size()]));
         }
 

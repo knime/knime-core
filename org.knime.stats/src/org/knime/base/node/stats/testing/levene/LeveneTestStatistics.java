@@ -55,8 +55,9 @@ import org.apache.commons.math3.distribution.FDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.util.FastMath;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -66,6 +67,7 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
+import org.knime.stats.StatsUtil;
 
 /**
  * The levence test for two groups.
@@ -166,20 +168,15 @@ public class LeveneTestStatistics {
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getTableSpec() {
-        return new DataTableSpec(new String[] {
-                TEST_COLUMN
-                , F_VALUE
-                , DF1_VALUE
-                , DF2_VALUE
-                , P_VALUE
-                },
-                new DataType[] {
-                StringCell.TYPE
-                , DoubleCell.TYPE
-                , IntCell.TYPE
-                , IntCell.TYPE
-                , DoubleCell.TYPE
-        });
+
+        final List<DataColumnSpec> allColSpecs = new ArrayList<>(5);
+        allColSpecs.add(new DataColumnSpecCreator(TEST_COLUMN, StringCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(F_VALUE, DoubleCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(DF1_VALUE, IntCell.TYPE).createSpec());
+        allColSpecs.add(new DataColumnSpecCreator(DF2_VALUE, IntCell.TYPE).createSpec());
+        allColSpecs.add(StatsUtil.createDataColumnSpec(P_VALUE, StatsUtil.FULL_PRECISION_RENDERER, DoubleCell.TYPE));
+
+        return new DataTableSpec(allColSpecs.toArray(new DataColumnSpec[0]));
     }
 
     /**
