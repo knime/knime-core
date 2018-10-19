@@ -1,0 +1,33 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Java Snippet Nodes
+Bundle-SymbolicName: org.knime.jsnippets;singleton:=true
+Bundle-Version: 3.7.0.qualifier
+Bundle-ClassPath: knime-jsnippets.jar,
+  lib/prompt.jar
+Bundle-Activator: org.knime.base.node.jsnippet.JavaSnippetActivator
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
+Export-Package: org.knime.base.node.jsnippet.guarded,
+  org.knime.base.node.jsnippet.template,
+  org.knime.base.node.jsnippet.ui,
+  org.knime.base.node.jsnippet.util,
+  org.knime.base.node.jsnippet.util.field,
+  org.knime.base.node.preproc.stringmanipulation,
+  org.knime.base.node.preproc.stringmanipulation.manipulator,
+  org.knime.base.node.rules.engine.pmml,
+  org.knime.base.node.rules.engine.rsyntax;x-friends:="org.fife.rsyntaxtextarea",
+  org.knime.base.node.util
+Require-Bundle: org.eclipse.core.resources;bundle-version="[3.6.0,4.0.0)",
+  org.eclipse.jdt.core;bundle-version="[3.6.1,4.0.0)",
+  org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
+  org.knime.core.pmml;bundle-version="[3.0.0,4.0.0)",
+  org.knime.core;bundle-version="[3.7.0,4.0.0)",
+  org.knime.base;bundle-version="[3.7.0,4.0.0)",
+  org.knime.ext.sun;bundle-version="[3.0.0,4.0.0)";visibility:=reexport,
+  com.fifesoft.autocomplete;bundle-version="[2.5.7,3.0.0)",
+  com.fifesoft.languagesupport;bundle-version="[2.5.7,3.0.0)",
+  com.fifesoft.rstaui;bundle-version="[2.5.7,3.0.0)",
+  com.fifesoft.rsyntaxtextarea;bundle-version="[2.5.7,3.0.0)",
+  com.fifesoft.spellchecker;bundle-version="[2.5.7,3.0.0)"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
