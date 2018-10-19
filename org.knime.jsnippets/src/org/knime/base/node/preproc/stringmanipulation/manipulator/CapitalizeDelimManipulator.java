@@ -47,7 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.text.WordUtils;
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * The capitalize string manipulator to capitalize all delimiter separated
@@ -65,7 +65,7 @@ public class CapitalizeDelimManipulator implements Manipulator {
      * @return the capitalized string
      */
     public static String capitalize(final String str, final String delim) {
-        return WordUtils.capitalizeFully(str, delim.toCharArray());
+        return KnimeStringUtils.capitalize(str, delim);
     }
 
     /**

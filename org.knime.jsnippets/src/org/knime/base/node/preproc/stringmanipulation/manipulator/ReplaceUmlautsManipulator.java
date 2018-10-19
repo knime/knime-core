@@ -48,7 +48,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.StringUtils;
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * This Manipulator replaces all umlauts in a string.
@@ -56,12 +56,6 @@ import org.apache.commons.lang3.StringUtils;
  * @since 2.11
  */
 public class ReplaceUmlautsManipulator implements Manipulator {
-    private static final String[] UMLAUTS = new String[]{"ä", "Ä", "ö", "Ö", "ü", "Ü", "ß", "\u1e9e"};
-
-    private static final String[] REPLACEMENT_OMIT_E = new String[]{"a", "A", "o", "O", "u", "U", "ss", "Ss"};
-
-    private static final String[] REPLACEMENT_E = new String[]{"ae", "Ae", "oe", "Oe", "ue", "Ue", "ss", "Ss"};
-
 
     /**
      * @param str where all umlauts should be replaced (must be not null)
@@ -69,13 +63,7 @@ public class ReplaceUmlautsManipulator implements Manipulator {
      * @return string without umlauts (never null)
      */
     public static String replaceUmlauts(final String str, final boolean omitE) {
-        String result;
-        if (omitE) {
-            result = StringUtils.replaceEach(str, UMLAUTS, REPLACEMENT_OMIT_E);
-        } else {
-            result = StringUtils.replaceEach(str, UMLAUTS, REPLACEMENT_E);
-        }
-        return result;
+        return KnimeStringUtils.replaceUmlauts(str, omitE);
     }
 
     /**

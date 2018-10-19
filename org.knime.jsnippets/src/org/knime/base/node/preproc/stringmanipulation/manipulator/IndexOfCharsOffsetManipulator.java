@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * A StringManipulator to search for a substring. The search is performed
@@ -68,8 +69,7 @@ public class IndexOfCharsOffsetManipulator implements Manipulator {
     public static int indexOfChars(final CharSequence str,
             final String searchChars,
             final int start) {
-        return IndexOfCharsOffsetModifiersManipulator.indexOfChars(
-                str, searchChars, start, "");
+        return KnimeStringUtils.indexOfChars(str, searchChars, start);
     }
 
 

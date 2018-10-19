@@ -47,10 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.util.Locale;
-
-import org.apache.commons.lang3.StringUtils;
-
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * A StringManipulator to search for a substring. This Manipulator has
@@ -72,12 +69,7 @@ public class IndexOfModifiersManipulator implements Manipulator {
     public static int indexOf(final CharSequence str,
             final CharSequence needle,
             final String options) {
-        String opt = null != options ? options : "";
-        boolean backward = StringUtils.contains(
-                opt.toLowerCase(Locale.ENGLISH), 'b');
-        int start = backward ? str.length() : 0;
-        return IndexOfOffsetModifiersManipulator.indexOf(str, needle,
-                start, opt);
+        return KnimeStringUtils.indexOf(str, needle, options);
     }
 
     /**

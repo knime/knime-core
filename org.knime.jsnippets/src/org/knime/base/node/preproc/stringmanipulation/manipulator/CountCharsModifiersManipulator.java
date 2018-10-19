@@ -47,10 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.util.Locale;
-
-import org.apache.commons.lang3.StringUtils;
-
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * Count specific characters in the string.
@@ -69,29 +66,7 @@ public class CountCharsModifiersManipulator implements Manipulator {
      */
     public static int countChars(final String str, final String chars,
             final String modifiers) {
-        if (str == null || str.isEmpty()) {
-            return 0;
-        }
-        String c = (null != chars) ? chars : "";
-        String opt = (null != modifiers) ? modifiers.toLowerCase(Locale.ENGLISH) : "";
-        boolean ignoreCase = StringUtils.contains(opt, 'i');
-        boolean matchOpposite = StringUtils.contains(opt, 'v');
-        int sum = 0;
-        for (int i = 0; i < c.length(); i++) {
-            String s = c.substring(i, i + 1);
-            if (ignoreCase) {
-                // search for lower case and upper case
-                String lower = s.toLowerCase();
-                sum += StringUtils.countMatches(str, lower);
-                String upper = s.toUpperCase();
-                if (!lower.equals(upper)) {
-                    sum += StringUtils.countMatches(str, upper);
-                }
-            } else {
-                sum += StringUtils.countMatches(str, s);
-            }
-        }
-        return matchOpposite ? str.length() - sum : sum;
+        return KnimeStringUtils.countChars(str, chars, modifiers);
     }
 
     /**

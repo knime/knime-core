@@ -47,9 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.util.Locale;
-
-import org.apache.commons.lang3.StringUtils;
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * A StringManipulator to search for a substring. This Manipulator has
@@ -72,99 +70,7 @@ public class IndexOfOffsetModifiersManipulator implements Manipulator {
     public static int indexOf(final CharSequence str,
             final CharSequence needle, final int start,
             final String modifiers) {
-        String opt = (null != modifiers) ? modifiers.toLowerCase(Locale.ENGLISH) : "";
-        boolean ignoreCase = StringUtils.contains(opt, 'i');
-        boolean backward = StringUtils.contains(opt, 'b');
-        boolean words = StringUtils.contains(opt, 'w');
-
-
-        if (ignoreCase) {
-            if (backward) {
-                // ignore case, backward
-                if (words) {
-                    int index = StringUtils.lastIndexOfIgnoreCase(str,
-                            needle, start);
-                    while (!hasWordBoundaries(str, needle, index)) {
-                        index = StringUtils.lastIndexOfIgnoreCase(str,
-                                needle, index - 1);
-                    }
-                    return index;
-                } else {
-                    return StringUtils.lastIndexOfIgnoreCase(str,
-                            needle, start);
-                }
-            } else {
-                // ignore case, forward
-                if (words) {
-                    int index = StringUtils.indexOfIgnoreCase(str,
-                            needle, start);
-                    while (!hasWordBoundaries(str, needle, index)) {
-                        index = StringUtils.indexOfIgnoreCase(str,
-                                needle, index + 1);
-                    }
-                    return index;
-                } else {
-                    return StringUtils.indexOfIgnoreCase(str,
-                            needle, start);
-                }
-            }
-        } else {
-            if (backward) {
-                // match case, backward
-                if (words) {
-                    int index = StringUtils.lastIndexOf(str,
-                            needle, start);
-                    while (!hasWordBoundaries(str, needle, index)) {
-                        index = StringUtils.lastIndexOf(str,
-                                needle, index - 1);
-                    }
-                    return index;
-                } else {
-                    return StringUtils.lastIndexOf(str,
-                            needle, start);
-                }
-            } else {
-                // match case, forward
-                if (words) {
-                    int index = StringUtils.indexOf(str,
-                            needle, start);
-                    while (!hasWordBoundaries(str, needle, index)) {
-                        index = StringUtils.indexOf(str,
-                                needle, index + 1);
-                    }
-                    return index;
-                } else {
-                    return StringUtils.indexOf(str,
-                            needle, start);
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns true if needle has word boundaries in str at position index.
-     */
-    private static boolean hasWordBoundaries(final CharSequence str,
-            final CharSequence needle, final int index) {
-        if (-1 == index) {
-            return true;
-        }
-        return isWordBoundary(str, index - 1)
-            && isWordBoundary(str, index + needle.length());
-    }
-
-    /**
-     * Returns true if the character at index is a white space character or
-     * if the index is out of bounds (index < 0 or index > str.length - 1).
-     * Gives false in all other cases.
-     */
-    private static boolean isWordBoundary(final CharSequence str,
-            final int index) {
-        if (index < 0 || index > str.length() - 1) {
-            return true;
-        } else {
-            return Character.isWhitespace(str.charAt(index));
-        }
+        return KnimeStringUtils.indexOf(str, needle, start, modifiers);
     }
 
     /**

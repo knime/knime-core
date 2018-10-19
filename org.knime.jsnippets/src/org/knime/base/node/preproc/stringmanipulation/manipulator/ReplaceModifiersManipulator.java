@@ -47,11 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.util.Locale;
-
-import org.apache.commons.lang3.StringUtils;
-
-
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * A StringManipulator to perform search and replace of substrings.
@@ -72,32 +68,7 @@ public class ReplaceModifiersManipulator implements Manipulator {
     public static String replace(final String str,
             final String search, final String replace,
             final String modifiers) {
-        if (null == str || str.isEmpty() || null == search || search.isEmpty()
-                || replace == null) {
-            return str;
-        }
-        String opt = (null != modifiers) ? modifiers.toLowerCase(Locale.ENGLISH) : "";
-        boolean ignoreCase = StringUtils.contains(opt, 'i');
-        boolean words = StringUtils.contains(opt, 'w');
-        // create new modifiers string with allowed options
-        String mdfrs = "";
-        mdfrs = ignoreCase ? opt + "i" : opt;
-        mdfrs = words ? opt + "w" : opt;
-
-        int start = 0;
-        int end = IndexOfModifiersManipulator.indexOf(str, search, mdfrs);
-        if (end == StringUtils.INDEX_NOT_FOUND) {
-            return str;
-        }
-        StringBuilder buf = new StringBuilder();
-        while (end != StringUtils.INDEX_NOT_FOUND) {
-            buf.append(str.substring(start, end)).append(replace);
-            start = end + search.length();
-            end = IndexOfOffsetModifiersManipulator.indexOf(str, search,
-                    start, mdfrs);
-        }
-        buf.append(str.substring(start));
-        return buf.toString();
+        return KnimeStringUtils.replace(str, search, replace, modifiers);
     }
 
     /**

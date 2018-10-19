@@ -47,8 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-
-
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * A StringManipulator to perform search and replace of characters.
@@ -67,8 +66,7 @@ public class ReplaceCharsManipulator implements Manipulator {
      */
     public static String replaceChars(final String str,
             final String searchChars, final String replaceChars) {
-        return ReplaceCharsModifiersManipulator.replaceChars(str, searchChars,
-                replaceChars, "");
+        return KnimeStringUtils.replaceChars(str, searchChars, replaceChars);
     }
 
     /**

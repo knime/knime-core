@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import org.knime.core.util.string.KnimeStringUtils;
+
 /**
  * This Manipulator matches a string against a regex and return true or false.
  * @author Tim-Oliver Buchholz
@@ -61,11 +63,7 @@ public class RegexMatcherManipulator implements Manipulator {
      * @return String True/False (never null)
      */
     public static String regexMatcher(final String str, final String regex) {
-        if (str.matches(regex)) {
-            return "True";
-        } else {
-            return "False";
-        }
+        return KnimeStringUtils.regexMatcher(str, regex);
     }
 
     /**

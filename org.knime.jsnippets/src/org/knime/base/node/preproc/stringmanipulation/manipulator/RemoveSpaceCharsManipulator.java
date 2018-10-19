@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * Remove all space characters from a string.
@@ -62,10 +63,7 @@ public class RemoveSpaceCharsManipulator implements Manipulator {
      * @return the string without space characters
      */
     public static String removeChars(final String str) {
-        if (null == str) {
-            return null;
-        }
-        return str.replaceAll("[ ]+", "");
+        return KnimeStringUtils.removeChars(str);
     }
 
     /**

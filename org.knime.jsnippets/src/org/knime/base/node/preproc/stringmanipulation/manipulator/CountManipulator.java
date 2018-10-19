@@ -47,7 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * Count substrings in the string.
@@ -64,7 +64,7 @@ public class CountManipulator implements Manipulator {
      * @return the count
      */
     public static int count(final String str, final String toCount) {
-        return CountModifiersManipulator.count(str, toCount, "");
+        return KnimeStringUtils.count(str, toCount);
     }
 
     /**

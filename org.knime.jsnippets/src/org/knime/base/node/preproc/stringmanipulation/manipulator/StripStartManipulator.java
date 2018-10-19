@@ -48,6 +48,7 @@
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
 import org.apache.commons.lang3.StringUtils;
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * The stripStart string manipulator for stripping white space characters.
@@ -73,14 +74,7 @@ public class StripStartManipulator implements Manipulator {
      * @return the list of stripped strings
      */
     public static String[] stripStart(final String... str) {
-        if (str == null || (str.length) == 0) {
-            return str;
-        }
-        String[] newArr = new String[str.length];
-        for (int i = 0; i < str.length; i++) {
-            newArr[i] = StringUtils.stripStart(str[i], null);
-        }
-        return newArr;
+        return KnimeStringUtils.stripStart(str);
     }
 
     /**

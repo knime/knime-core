@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * The removeDuplicates string manipulator to remove duplicated spaces in a
@@ -61,10 +62,7 @@ public class RemoveSpaceCharDuplicatesManipulator implements Manipulator {
      * @return the string without duplicated spaces
      */
     public static String removeDuplicates(final String str) {
-        if (null == str) {
-            return null;
-        }
-        return str.replaceAll("[ ]+", " ");
+        return KnimeStringUtils.removeDuplicates(str);
     }
 
     /**

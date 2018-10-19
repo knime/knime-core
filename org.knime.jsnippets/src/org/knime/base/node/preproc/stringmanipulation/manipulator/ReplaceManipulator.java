@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * A StringManipulator to perform search and replace of substrings.
@@ -65,7 +66,7 @@ public class ReplaceManipulator implements Manipulator {
      */
     public static String replace(final String str,
             final String search, final String replace) {
-        return ReplaceModifiersManipulator.replace(str, search, replace, "");
+        return KnimeStringUtils.replace(str, search, replace);
     }
 
     /**

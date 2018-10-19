@@ -47,11 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.util.Locale;
-
-import org.apache.commons.lang3.StringUtils;
-
-
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * A StringManipulator to perform search and replace of characters.
@@ -72,58 +68,7 @@ public class ReplaceCharsModifiersManipulator implements Manipulator {
     public static String replaceChars(final String str,
             final String searchChars, final String replaceChars,
             final String modifiers) {
-        if (null == str || str.isEmpty()
-                || null == searchChars || searchChars.isEmpty()
-                || replaceChars == null) {
-            return str;
-        }
-        String opt = (null != modifiers) ? modifiers.toLowerCase(Locale.ENGLISH) : "";
-        boolean ignoreCase = StringUtils.contains(opt, 'i');
-        // create new modifiers string with allowed options
-        String mdfrs = "";
-        mdfrs = ignoreCase ? opt + "i" : opt;
-
-
-        int start = 0;
-        int end = IndexOfCharsModifiersManipulator.indexOfChars(str,
-                searchChars, mdfrs);
-        if (end == StringUtils.INDEX_NOT_FOUND) {
-            return str;
-        }
-        StringBuilder buf = new StringBuilder();
-        while (end != StringUtils.INDEX_NOT_FOUND) {
-            buf.append(str.substring(start, end));
-            int codePoint = str.codePointAt(end);
-
-            int index = indexOfChar(searchChars, codePoint, ignoreCase);
-            if (index < replaceChars.length()) {
-                buf.appendCodePoint(replaceChars.codePointAt(index));
-            }
-            start = end + 1;
-            end = IndexOfCharsOffsetModifiersManipulator.indexOfChars(str,
-                    searchChars, start, mdfrs);
-        }
-        buf.append(str.substring(start));
-        return buf.toString();
-    }
-
-    private static int indexOfChar(final String searchChars,
-            final int codePoint, final boolean ignoreCase) {
-        if (!ignoreCase) {
-            return searchChars.indexOf(codePoint);
-        }
-        if (Character.isLowerCase(codePoint)) {
-            // search for lower case, first
-            int index = searchChars.indexOf(Character.toLowerCase(codePoint));
-            return index >= 0 ? index
-                    : searchChars.indexOf(Character.toUpperCase(codePoint));
-        } else {
-            // search for upper case, first
-            int index = searchChars.indexOf(Character.toUpperCase(codePoint));
-            return index >= 0 ? index
-                    : searchChars.indexOf(Character.toLowerCase(codePoint));
-
-        }
+        return KnimeStringUtils.replaceChars(str, searchChars, replaceChars, modifiers);
     }
 
     /**

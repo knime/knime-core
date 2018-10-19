@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * The join string manipulator for concatenating strings.
@@ -62,7 +63,7 @@ public class JoinManipulator implements Manipulator {
      * @return the concatenated strings with separator
      */
     public static String join(final String... str) {
-        return JoinSepManipulator.joinSep(null, str);
+        return KnimeStringUtils.join(str);
     }
 
     /**

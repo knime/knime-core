@@ -47,8 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.util.regex.Pattern;
-
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * The removeChars string manipulator to remove all occurrences of given
@@ -66,13 +65,7 @@ public class RemoveCharsManipulator implements Manipulator {
      * @return the processed string
      */
     public static String removeChars(final String str, final String chars) {
-        if (null == str) {
-            return null;
-        }
-        if (null == chars || chars.isEmpty()) {
-            return str;
-        }
-        return str.replaceAll("[" + Pattern.quote(chars.toString()) + "]+", "");
+        return KnimeStringUtils.removeChars(str, chars);
     }
 
     /**

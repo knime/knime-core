@@ -47,9 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.util.Locale;
-
-import org.apache.commons.lang3.StringUtils;
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * A StringManipulator to search for characters. This Manipulator has
@@ -73,98 +71,7 @@ public class IndexOfCharsOffsetModifiersManipulator
     public static int indexOfChars(final CharSequence str,
             final String searchChars, final int start,
             final String modifiers) {
-        if (StringUtils.isEmpty(str) || StringUtils.isEmpty(searchChars)) {
-            return StringUtils.INDEX_NOT_FOUND;
-        }
-        String opt = (null != modifiers) ? modifiers.toLowerCase(Locale.ENGLISH) : "";
-        return indexOfAny(str, start, opt, searchChars.toCharArray());
-    }
-
-
-    /**
-     *  Search for characters in searchChars.
-     */
-    private static int indexOfAny(final CharSequence cs, final int start,
-            final String modifiers, final char... searchChars) {
-        boolean backward = StringUtils.contains(modifiers, 'b');
-
-        // forward search
-        if (!backward) {
-            return indexOfAnyForward(cs, start, modifiers, searchChars);
-        } else { // search right to left (backward)
-            return indexOfAnyBackward(cs, start, modifiers, searchChars);
-        }
-    }
-
-    /**
-     * Forward search (left to right).
-     */
-    private static int indexOfAnyForward(final CharSequence cs, final int start,
-            final String modifiers, final char... searchChars) {
-        boolean ignoreCase = StringUtils.contains(modifiers, 'i');
-        boolean matchOpposite = StringUtils.contains(modifiers, 'v');
-        int offset = Math.max(start, 0);
-
-        for (int i = offset; i < cs.length(); i++) {
-            int c = Character.codePointAt(cs, i);
-            if (doesMatch(c, ignoreCase, matchOpposite, searchChars)) {
-                return i;
-            }
-        }
-        return StringUtils.INDEX_NOT_FOUND;
-    }
-
-    /**
-     * Backward search (right to left).
-     */
-    private static int indexOfAnyBackward(final CharSequence cs,
-            final int start,
-            final String modifiers, final char... searchChars) {
-        boolean ignoreCase = StringUtils.contains(modifiers, 'i');
-        boolean matchOpposite = StringUtils.contains(modifiers, 'v');
-        int offset = Math.max(start, 0);
-        offset = Math.min(cs.length() - 1, offset);
-
-        for (int i = offset; i >= 0; i--) {
-            int c = Character.codePointAt(cs, i);
-            if (doesMatch(c, ignoreCase, matchOpposite, searchChars)) {
-                return i;
-            }
-
-        }
-        return StringUtils.INDEX_NOT_FOUND;
-    }
-
-    /**
-     * If matchOpposite is false the method gives true when c is in the
-     * searchChars. If matchOpposite is true the method gives false when c is
-     * in the searchChars.
-     */
-    private static boolean doesMatch(final int c, final boolean ignoreCase,
-            final boolean matchOpposite, final char... searchChars) {
-        boolean match = false;
-        for (int j = 0; j < searchChars.length; j++) {
-            int cRef = Character.codePointAt(searchChars, j);
-            if (!ignoreCase) { // match case
-                if (c == cRef) {
-                    match = true;
-                }
-            } else { // ignore case
-                if (Character.toUpperCase(c) == Character.toUpperCase(cRef)) {
-                    match = true;
-                }
-            }
-            // c matches cReff && this should considered to be a match
-            if (match && !matchOpposite) {
-                return true;
-            }
-        }
-        // c is not in searchChars && this case should considered as a
-        // match
-        if (!match && matchOpposite) {
-            return true;
-        }
-        return false;
+        return KnimeStringUtils.indexOfChars(str, searchChars, start, modifiers);
     }
 
     /**

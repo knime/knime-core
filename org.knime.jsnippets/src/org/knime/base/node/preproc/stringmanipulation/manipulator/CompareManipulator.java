@@ -47,10 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.text.Collator;
-import java.text.RuleBasedCollator;
-
-
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * Compares two strings lexicographically.
@@ -67,11 +64,7 @@ public class CompareManipulator implements Manipulator {
      * @return the comparison result
      */
     public static int compare(final String str1, final String str2) {
-        String s1 = null != str1 ? str1 : "";
-        String s2 = null != str2 ? str2 : "";
-
-        Collator collator = RuleBasedCollator.getInstance();
-        return collator.compare(s1, s2);
+        return KnimeStringUtils.compare(str1, str2);
     }
 
     /**

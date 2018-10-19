@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * A StringManipulator to search for characters.
@@ -65,7 +66,7 @@ public class IndexOfCharsManipulator implements Manipulator {
      */
     public static int indexOfChars(final CharSequence str,
             final String searchChars) {
-        return IndexOfCharsOffsetManipulator.indexOfChars(str, searchChars, 0);
+        return KnimeStringUtils.indexOfChars(str, searchChars);
     }
 
     /**

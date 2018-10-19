@@ -47,7 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * Count specific characters in the string.
@@ -64,7 +64,7 @@ public class CountCharsManipulator implements Manipulator {
      * @return the count
      */
     public static int countChars(final String str, final String chars) {
-        return CountCharsModifiersManipulator.countChars(str, chars, "");
+        return KnimeStringUtils.countChars(str, chars);
     }
 
     /**

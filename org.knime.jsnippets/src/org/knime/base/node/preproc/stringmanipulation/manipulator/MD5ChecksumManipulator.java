@@ -48,11 +48,8 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * This manipulator computs the md5 checksum of the input string.
@@ -68,23 +65,7 @@ public class MD5ChecksumManipulator implements Manipulator {
      * @return md5 checksum as string (never null)
      */
     public static String md5Checksum(final String str) {
-        try {
-            MessageDigest m = MessageDigest.getInstance("MD5");
-            m.reset();
-            m.update(str.getBytes());
-            byte[] digest = m.digest();
-            BigInteger bigInt = new BigInteger(1, digest);
-            String hashtext = bigInt.toString(16);
-            // Now we need to zero pad it if we actually want the full 32 chars.
-            while (hashtext.length() < 32) {
-                hashtext = "0" + hashtext;
-            }
-            return hashtext;
-        } catch (NoSuchAlgorithmException e) {
-            logger.error("No md5 checksum algorithm.", e);
-            return str;
-        }
-
+        return KnimeStringUtils.md5Checksum(str);
     }
 
     /**

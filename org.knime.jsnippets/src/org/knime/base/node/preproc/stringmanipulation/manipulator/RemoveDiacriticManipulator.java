@@ -48,7 +48,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.text.Normalizer;
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * This manipulator removes all diacritics from a string. A diacritic is a glyph added to a letter, or basic glyph. (Ex.
@@ -64,11 +64,7 @@ public class RemoveDiacriticManipulator implements Manipulator {
      * @return string without diacritics (never null)
      */
     public static String removeDiacritic(final String str) {
-        if (str == null) {
-            return null;
-        }
-        // normalize the input string and remove all letters which are part of the diacritic.
-        return Normalizer.normalize(str, Normalizer.Form.NFKD).replaceAll("\\p{M}", "");
+        return KnimeStringUtils.removeDiacritic(str);
     }
 
     /**

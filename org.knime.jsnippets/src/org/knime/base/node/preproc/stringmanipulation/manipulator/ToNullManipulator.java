@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * Converts empty strings to null.
@@ -75,14 +76,7 @@ public class ToNullManipulator implements Manipulator {
      * @return the converted strings
      */
     public static String[] toNull(final String... str) {
-        if (str == null || (str.length) == 0) {
-            return str;
-        }
-        String[] newArr = new String[str.length];
-        for (int i = 0; i < str.length; i++) {
-            newArr[i] = null != str[i] && str[i].isEmpty() ? null : str[i];
-        }
-        return newArr;
+        return KnimeStringUtils.toNull(str);
     }
 
     /**

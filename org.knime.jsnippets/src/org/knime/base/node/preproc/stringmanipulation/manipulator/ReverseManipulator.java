@@ -47,7 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * Get the reverse of the string.
@@ -63,10 +63,7 @@ public class ReverseManipulator implements Manipulator {
      * @return the reverse of the string
      */
     public static String reverse(final String str) {
-        if (null == str || str.isEmpty()) {
-            return str;
-        }
-        return new StringBuilder(str).reverse().toString();
+        return KnimeStringUtils.reverse(str);
     }
 
     /**

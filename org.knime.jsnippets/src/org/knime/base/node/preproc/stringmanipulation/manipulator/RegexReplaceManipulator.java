@@ -48,8 +48,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.knime.core.util.string.KnimeStringUtils;
 
 /**
  * This Manipulator replaces some parts of a string corresponding to the passed regex.
@@ -65,9 +64,7 @@ public class RegexReplaceManipulator implements Manipulator {
      * @return string with replacements (never null)
      */
     public static String regexReplace(final String str, final String regex, final String replaceStr) {
-        Pattern p = Pattern.compile(regex);
-        Matcher m = p.matcher(str);
-        return m.replaceAll(replaceStr);
+        return KnimeStringUtils.regexReplace(str, regex, replaceStr);
     }
 
     /**
