@@ -326,7 +326,7 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
         if (m_subNodeContainer == null) {
-            return super.getInHiLiteHandler(outIndex);
+            return new HiLiteHandler();
         }
         return m_subNodeContainer.getInHiliteHandler(outIndex);
     }
