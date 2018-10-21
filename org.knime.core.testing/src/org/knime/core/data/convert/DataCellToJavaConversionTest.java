@@ -47,6 +47,7 @@
 
 package org.knime.core.data.convert;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.core.Is.is; // only the overload is(Class<T>) is actually deprecated
 import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
@@ -61,6 +62,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -77,9 +79,13 @@ import org.knime.core.data.blob.BinaryObjectDataCell;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.convert.java.DataCellToBooleanConverter;
+import org.knime.core.data.convert.java.DataCellToDoubleConverter;
+import org.knime.core.data.convert.java.DataCellToIntConverter;
 import org.knime.core.data.convert.java.DataCellToJavaConverter;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
+import org.knime.core.data.convert.java.DataCellToLongConverter;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -94,6 +100,7 @@ import org.w3c.dom.NodeList;
  * Test conversion of Java objects to Java objects.
  *
  * @author Jonathan Hale
+ * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  * @see DataCellToJavaConverterRegistry
  */
 public class DataCellToJavaConversionTest {
@@ -112,20 +119,32 @@ public class DataCellToJavaConversionTest {
      */
     protected <D> void testSimpleConverter(final DataType sourceType, final Class<D> destType, final DataCell source,
         final D dest) throws Exception {
-        final Optional<? extends DataCellToJavaConverterFactory<? extends DataValue, D>> factory =
-            DataCellToJavaConverterRegistry.getInstance().getConverterFactories(sourceType, destType).stream()
-                .findFirst();
-        assertTrue(factory.isPresent());
+        final DataCellToJavaConverter<DataCell, D> converter = getConverter(sourceType, destType);
+        if (destType == Double.class) {
+            assertEquals((Double)dest, (Double)converter.convert(source), FUZZY_DOUBLE_TOLERANCE);
+        } else {
+            assertEquals(dest, converter.convert(source));
+        }
+    }
 
+    /**
+     * Returns the first converter that is found for the combination of source type and destination type. Tests that a
+     * corresponding converter factory is present and that it creates a non-{@code null} converter.
+     *
+     * @param sourceType Source type.
+     * @param destType Destination type.
+     * @return The first found converter, not {@code null}.
+     */
+    protected <D> DataCellToJavaConverter<DataCell, D> getConverter(final DataType sourceType,
+        final Class<D> destType) {
+        final Optional<? extends DataCellToJavaConverterFactory<? extends DataValue, D>> factory =
+            DataCellToJavaConverterRegistry.getInstance().getPreferredConverterFactory(sourceType, destType);
+        assertTrue(factory.isPresent());
+        @SuppressWarnings("unchecked")
         final DataCellToJavaConverter<DataCell, D> converter =
             (DataCellToJavaConverter<DataCell, D>)factory.get().create();
         assertNotNull(converter);
-
-        if (destType == Double.class) {
-            assertEquals((Double)converter.convert(source), (Double)dest, FUZZY_DOUBLE_TOLERANCE);
-        } else {
-            assertEquals(converter.convert(source), dest);
-        }
+        return converter;
     }
 
     /**
@@ -136,6 +155,19 @@ public class DataCellToJavaConversionTest {
     @Test
     public void testBoolean() throws Exception {
         testSimpleConverter(BooleanCell.TYPE, Boolean.class, BooleanCell.TRUE, true);
+    }
+
+    /**
+     * Test BooleanCell -> primitive boolean conversion.
+     *
+     * @throws Exception When something went wrong.
+     */
+    @Test
+    public void testPrimitiveBoolean() throws Exception {
+        final DataCellToJavaConverter<DataCell, Boolean> converter = getConverter(BooleanCell.TYPE, boolean.class);
+        assertThat(converter, instanceOf(DataCellToBooleanConverter.class));
+        final DataCellToBooleanConverter<DataCell> booleanConverter = (DataCellToBooleanConverter<DataCell>)converter;
+        assertEquals(true, booleanConverter.convertIntoBoolean(BooleanCell.TRUE));
     }
 
     /**
@@ -157,6 +189,19 @@ public class DataCellToJavaConversionTest {
     }
 
     /**
+     * Test IntCell -> primitive int conversion.
+     *
+     * @throws Exception When something went wrong.
+     */
+    @Test
+    public void testPrimitiveInt() throws Exception {
+        final DataCellToJavaConverter<DataCell, Integer> converter = getConverter(IntCell.TYPE, int.class);
+        assertThat(converter, instanceOf(DataCellToIntConverter.class));
+        final DataCellToIntConverter<DataCell> intConverter = (DataCellToIntConverter<DataCell>)converter;
+        assertEquals(42, intConverter.convertIntoInt(new IntCell(42)));
+    }
+
+    /**
      * Test LongCell -> Long conversion.
      *
      * @throws Exception When something went wrong
@@ -167,6 +212,19 @@ public class DataCellToJavaConversionTest {
     }
 
     /**
+     * Test LongCell -> primitive long conversion.
+     *
+     * @throws Exception When something went wrong.
+     */
+    @Test
+    public void testPrimitiveLong() throws Exception {
+        final DataCellToJavaConverter<DataCell, Long> converter = getConverter(LongCell.TYPE, long.class);
+        assertThat(converter, instanceOf(DataCellToLongConverter.class));
+        final DataCellToLongConverter<DataCell> longConverter = (DataCellToLongConverter<DataCell>)converter;
+        assertEquals(42, longConverter.convertIntoLong(new LongCell(42)));
+    }
+
+    /**
      * Test DoubleCell -> Double conversion.
      *
      * @throws Exception When something went wrong
@@ -174,6 +232,19 @@ public class DataCellToJavaConversionTest {
     @Test
     public void testDouble() throws Exception {
         testSimpleConverter(DoubleCell.TYPE, Double.class, new DoubleCell(Math.PI), new Double(Math.PI));
+    }
+
+    /**
+     * Test DoubleCell -> primitive double conversion.
+     *
+     * @throws Exception When something went wrong.
+     */
+    @Test
+    public void testPrimitiveDouble() throws Exception {
+        final DataCellToJavaConverter<DataCell, Double> converter = getConverter(DoubleCell.TYPE, double.class);
+        assertThat(converter, instanceOf(DataCellToDoubleConverter.class));
+        final DataCellToDoubleConverter<DataCell> doubleConverter = (DataCellToDoubleConverter<DataCell>)converter;
+        assertEquals(Math.PI, doubleConverter.convertIntoDouble(new DoubleCell(Math.PI)), FUZZY_DOUBLE_TOLERANCE);
     }
 
     /**
@@ -259,6 +330,36 @@ public class DataCellToJavaConversionTest {
     }
 
     /**
+     * Test ListCell(IntCell) -> int[] conversion.
+     *
+     * @throws Exception When something went wrong
+     */
+    @Test
+    public void testPrimitiveCollectionTypes() throws Exception {
+        final List<DataCell> coll = new ArrayList<>(5);
+        for (int i = 0; i < 6; i++) {
+            coll.add(new IntCell(i * i));
+        }
+        // Note that primitives do not support missing values.
+
+        final ListCell listCell = CollectionCellFactory.createListCell(coll);
+
+        final Optional<DataCellToJavaConverterFactory<? extends DataValue, int[]>> factory =
+            DataCellToJavaConverterRegistry.getInstance().getPreferredConverterFactory(listCell.getType(), int[].class);
+
+        assertTrue(factory.isPresent());
+
+        final DataCellToJavaConverter<DataCell, int[]> converter =
+            (DataCellToJavaConverter<DataCell, int[]>)factory.get().create();
+        assertNotNull(converter);
+
+        final int[] array = converter.convert(listCell);
+        for (int i = 0; i < 6; ++i) {
+            assertEquals(i * i, array[i]);
+        }
+    }
+
+    /**
      * Test ListCell(ListCell(IntCell)) -> Integer[][] conversion.
      *
      * @throws Exception When something went wrong
@@ -292,6 +393,38 @@ public class DataCellToJavaConversionTest {
     }
 
     /**
+     * Test ListCell(IntCell) -> int[][] conversion.
+     *
+     * @throws Exception When something went wrong
+     */
+    @Test
+    public void testNestedPrimitiveCollectionTypes() throws Exception {
+        final List<DataCell> coll = new ArrayList<>();
+        for (int i = 0; i < 6; ++i) {
+            coll.add(new IntCell(i * i));
+        }
+        // Note that primitives do not support missing values.
+
+        final ListCell listCell =
+            CollectionCellFactory.createListCell(Arrays.asList(CollectionCellFactory.createListCell(coll)));
+
+        final Optional<? extends DataCellToJavaConverterFactory<? extends DataValue, int[][]>> factory =
+            DataCellToJavaConverterRegistry.getInstance().getPreferredConverterFactory(listCell.getType(),
+                int[][].class);
+
+        assertTrue(factory.isPresent());
+
+        final DataCellToJavaConverter<DataCell, int[][]> converter =
+            (DataCellToJavaConverter<DataCell, int[][]>)factory.get().create();
+        assertNotNull(converter);
+
+        final int[][] array = converter.convert(listCell);
+        for (int i = 0; i < 6; ++i) {
+            assertEquals(i * i, array[0][i]);
+        }
+    }
+
+    /**
      * Test destination types of IntCell.
      *
      * @throws Exception When something went wrong
@@ -302,14 +435,18 @@ public class DataCellToJavaConversionTest {
             DataCellToJavaConverterRegistry.getInstance().getFactoriesForSourceType(IntCell.TYPE).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
-        assertThat("Not enough supported destination types for IntCell", destTypes.size(), is(greaterThan(2)));
+        assertThat("Not enough supported destination types for IntCell", destTypes.size(), is(greaterThan(5)));
         assertTrue(destTypes.contains(Integer.class));
         assertTrue(destTypes.contains(Long.class));
         assertTrue(destTypes.contains(Double.class));
+        // Primitive type converters:
+        assertTrue(destTypes.contains(int.class));
+        assertTrue(destTypes.contains(long.class));
+        assertTrue(destTypes.contains(double.class));
     }
 
     /**
-     * Test destination types of IntCell.
+     * Test destination types of ListCell of IntCell.
      *
      * @throws Exception When something went wrong
      */
@@ -320,14 +457,18 @@ public class DataCellToJavaConversionTest {
             .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
         assertThat("Not enough supported destination types for ListCell of IntCell", destTypes.size(),
-            is(greaterThan(2)));
+            is(greaterThan(5)));
         assertTrue(destTypes.contains(Integer[].class));
         assertTrue(destTypes.contains(Long[].class));
         assertTrue(destTypes.contains(Double[].class));
+        // Primitive type converters:
+        assertTrue(destTypes.contains(int[].class));
+        assertTrue(destTypes.contains(long[].class));
+        assertTrue(destTypes.contains(double[].class));
     }
 
     /**
-     * Test destination types of Integer.
+     * Test source types of Integer and int.
      *
      * @throws Exception When something went wrong
      */
@@ -342,10 +483,19 @@ public class DataCellToJavaConversionTest {
         assertTrue(sourceTypes.contains(MissingValue.class));
         // disable, see class header org.knime.core.data.convert.ExtensionPointTest
         // assertTrue(sourceTypes.contains(StringCell.class)); // Test extension point
+
+        // Primitive int type should also map to IntValue, but not to MissingValue because primitives cannot represent
+        // missing values.
+        final Set<Class<?>> sourceTypesOfPrimitive =
+            DataCellToJavaConverterRegistry.getInstance().getFactoriesForDestinationType(int.class).stream()
+                .map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
+
+        assertTrue(sourceTypesOfPrimitive.contains(IntValue.class));
+        assertFalse(sourceTypesOfPrimitive.contains(MissingValue.class));
     }
 
     /**
-     * Test destination types of Integer.
+     * Test source types of Integer[] and int[].
      *
      * @throws Exception When something went wrong
      */
@@ -358,6 +508,13 @@ public class DataCellToJavaConversionTest {
         assertEquals(2, sourceTypes.size());
         assertTrue(sourceTypes.contains(CollectionDataValue.class));
         assertTrue(sourceTypes.contains(MissingValue.class));
+
+        // Primitive int array types:
+        final Set<Class<?>> sourceTypesOfPrimitive =
+            DataCellToJavaConverterRegistry.getInstance().getFactoriesForDestinationType(int[].class).stream()
+                .map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
+
+        assertTrue(sourceTypesOfPrimitive.contains(CollectionDataValue.class));
     }
 
     /**
@@ -367,14 +524,25 @@ public class DataCellToJavaConversionTest {
      */
     @Test
     public void testPreferredConverters() throws Exception {
-        Collection<DataCellToJavaConverterFactory<?, ?>> factories = DataCellToJavaConverterRegistry.getInstance().getFactoriesForSourceType(IntCell.TYPE);
+        Collection<DataCellToJavaConverterFactory<?, ?>> factories =
+            DataCellToJavaConverterRegistry.getInstance().getFactoriesForSourceType(IntCell.TYPE);
         assertFalse(factories.isEmpty());
-        assertEquals(Integer.class, factories.stream().findFirst().get().getDestinationType());
+        // Note that primitive converters were a later addition, therefore we expect the boxing version to be the
+        // preferred one.
+        assertEquals("Integer is preferred type of IntValue and should be first.", Integer.class,
+            factories.stream().findFirst().get().getDestinationType());
 
         factories = DataCellToJavaConverterRegistry.getInstance().getFactoriesForDestinationType(Integer.class);
         assertFalse(factories.isEmpty());
-        assertEquals("Integer is preferred value of IntValue and should be first.",
-            IntValue.class, factories.stream().findFirst().get().getSourceType());
+        assertEquals("IntValue is preferred value of Integer and should be first.", IntValue.class,
+            factories.stream().findFirst().get().getSourceType());
+
+        // For primitive int:
+        factories = DataCellToJavaConverterRegistry.getInstance().getFactoriesForDestinationType(int.class);
+        final DataCellToJavaConverterFactory<?, ?> primitiveFactory = factories.stream().findFirst().get();
+        assertFalse(factories.isEmpty());
+        assertEquals("IntValue is preferred value of int and should be first.", IntValue.class,
+            primitiveFactory.getSourceType());
     }
 
     /**
@@ -384,6 +552,8 @@ public class DataCellToJavaConversionTest {
      */
     @Test
     public void testPreferredJavaType() throws Exception {
+        // Note that primitive converters were a later addition, therefore we expect the primitive wrapper types to be
+        // the preferred ones.
         Optional<Class<?>> cell = DataCellToJavaConverterRegistry.getInstance().getPreferredJavaTypeForCell(IntCell.TYPE);
         assertTrue(cell.isPresent());
         assertEquals(Integer.class, cell.get());
