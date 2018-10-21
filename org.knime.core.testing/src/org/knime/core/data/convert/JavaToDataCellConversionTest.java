@@ -47,6 +47,7 @@
 
 package org.knime.core.data.convert;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
@@ -64,6 +65,7 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -74,9 +76,13 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.blob.BinaryObjectDataCell;
 import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.convert.datacell.BooleanToDataCellConverter;
+import org.knime.core.data.convert.datacell.DoubleToDataCellConverter;
+import org.knime.core.data.convert.datacell.IntToDataCellConverter;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
+import org.knime.core.data.convert.datacell.LongToDataCellConverter;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -124,19 +130,29 @@ public class JavaToDataCellConversionTest {
      */
     protected <S, D> D testSimpleConversion(final Class<S> sourceType, final DataType dataType, final Class<D> destType,
         final S sourceValue) throws Exception {
-        final Optional<JavaToDataCellConverterFactory<S>> factory =
-            JavaToDataCellConverterRegistry.getInstance().getConverterFactories(sourceType, dataType).stream().findFirst();
-        assertTrue(factory.isPresent());
-
-        final JavaToDataCellConverter<S> converter = factory.get().create(null);
-        assertNotNull(converter);
-
+        final JavaToDataCellConverter<S> converter = getConverter(sourceType, dataType);
         final DataCell converted = converter.convert(sourceValue);
         assertTrue(destType.isInstance(converted));
-
         @SuppressWarnings("unchecked") // checked in the above assert.
         D d = (D)converted;
         return d;
+    }
+
+    /**
+     * Returns the first converter that is found for the combination of source type and destination type. Tests that a
+     * corresponding converter factory is present and that it creates a non-{@code null} converter.
+     *
+     * @param sourceType Source type.
+     * @param destDataType {@link DataType} of the {@link DataCell} into which to convert.
+     * @return The first found converter, not {@code null}.
+     */
+    protected <S> JavaToDataCellConverter<S> getConverter(final Class<S> sourceType, final DataType destDataType) {
+        final Optional<JavaToDataCellConverterFactory<S>> factory = JavaToDataCellConverterRegistry.getInstance()
+            .getConverterFactories(sourceType, destDataType).stream().findFirst();
+        assertTrue(factory.isPresent());
+        final JavaToDataCellConverter<S> converter = factory.get().create(null);
+        assertNotNull(converter);
+        return converter;
     }
 
     /**
@@ -152,6 +168,20 @@ public class JavaToDataCellConversionTest {
     }
 
     /**
+     * Test boolean -> BooleanCell conversion.
+     *
+     * @throws Exception When something went wrong
+     */
+    @Test
+    public void testPrimitiveToBooleanCell() throws Exception {
+        final JavaToDataCellConverter<Boolean> converter = getConverter(boolean.class, BooleanCell.TYPE);
+        assertThat(converter, instanceOf(BooleanToDataCellConverter.class));
+        final BooleanToDataCellConverter primitiveConverter = (BooleanToDataCellConverter)converter;
+        final BooleanCell cell = (BooleanCell)primitiveConverter.convertBoolean(true);
+        assertEquals(true, cell.getBooleanValue());
+    }
+
+    /**
      * Test Integer -> IntCell conversion.
      *
      * @throws Exception When something went wrong
@@ -163,7 +193,21 @@ public class JavaToDataCellConversionTest {
     }
 
     /**
-     * Test long -> LongCell and Integer -> LongCell conversions.
+     * Test int -> IntCell conversion.
+     *
+     * @throws Exception When something went wrong
+     */
+    @Test
+    public void testPrimitiveToIntCell() throws Exception {
+        final JavaToDataCellConverter<Integer> converter = getConverter(int.class, IntCell.TYPE);
+        assertThat(converter, instanceOf(IntToDataCellConverter.class));
+        final IntToDataCellConverter primitiveConverter = (IntToDataCellConverter)converter;
+        final IntCell cell = (IntCell)primitiveConverter.convertInt(42);
+        assertEquals(42, cell.getIntValue());
+    }
+
+    /**
+     * Test Long -> LongCell and Integer -> LongCell conversions.
      *
      * @throws Exception When something went wrong
      */
@@ -177,6 +221,26 @@ public class JavaToDataCellConversionTest {
     }
 
     /**
+     * Test long -> LongCell and int -> LongCell conversions.
+     *
+     * @throws Exception When something went wrong
+     */
+    @Test
+    public void testPrimitiveToLongCell() throws Exception {
+        final JavaToDataCellConverter<Long> longConverter = getConverter(long.class, LongCell.TYPE);
+        assertThat(longConverter, instanceOf(LongToDataCellConverter.class));
+        final LongToDataCellConverter primitiveLongConverter = (LongToDataCellConverter)longConverter;
+        final LongCell cellFromLong = (LongCell)primitiveLongConverter.convertLong(42l);
+        assertEquals(42l, cellFromLong.getLongValue());
+
+        final JavaToDataCellConverter<Integer> integerConverter = getConverter(int.class, LongCell.TYPE);
+        assertThat(integerConverter, instanceOf(IntToDataCellConverter.class));
+        final IntToDataCellConverter primitiveIntConverter = (IntToDataCellConverter)integerConverter;
+        final LongCell cellFromInt = (LongCell)primitiveIntConverter.convertInt(42);
+        assertEquals(42l, cellFromInt.getLongValue());
+    }
+
+    /**
      * Test Double -> DoubleCell conversion.
      *
      * @throws Exception When something went wrong
@@ -185,6 +249,20 @@ public class JavaToDataCellConversionTest {
     public void testToDoubleCell() throws Exception {
         final DoubleCell cell =
             testSimpleConversion(Double.class, DoubleCell.TYPE, DoubleCell.class, new Double(Math.PI));
+        assertEquals(Math.PI, cell.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
+    }
+
+    /**
+     * Test double -> DoubleCell conversion.
+     *
+     * @throws Exception When something went wrong
+     */
+    @Test
+    public void testPrimitiveToDoubleCell() throws Exception {
+        final JavaToDataCellConverter<Double> converter = getConverter(double.class, DoubleCell.TYPE);
+        assertThat(converter, instanceOf(DoubleToDataCellConverter.class));
+        final DoubleToDataCellConverter primitiveConverter = (DoubleToDataCellConverter)converter;
+        final DoubleCell cell = (DoubleCell)primitiveConverter.convertDouble(Math.PI);
         assertEquals(Math.PI, cell.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
     }
 
@@ -286,17 +364,48 @@ public class JavaToDataCellConversionTest {
     }
 
     /**
-     * Test destination types of Integer and FileInputStream.
+     * Test int[] -> ListCell(IntCell) conversion.
+     *
+     * @throws Exception When something went wrong
+     */
+    @Test
+    public void testPrimitiveCollectionTypes() throws Exception {
+        final int[] coll = {0, 1, 4, 9, 16, 25, 36}; // No missing values possible.
+
+        final Optional<JavaToDataCellConverterFactory<int[]>> factory = JavaToDataCellConverterRegistry.getInstance()
+            .getConverterFactories(int[].class, ListCell.getCollectionType(IntCell.TYPE)).stream().findFirst();
+        assertTrue(factory.isPresent());
+
+        final JavaToDataCellConverter<int[]> converter = factory.get().create(null);
+        assertNotNull(converter);
+
+        final DataCell cell = converter.convert(coll);
+        assertTrue(cell instanceof ListCell);
+
+        final ListCell listCell = (ListCell)converter.convert(coll);
+        for (int i = 0; i < 7; ++i) {
+            assertEquals(i * i, ((IntCell)listCell.get(i)).getIntValue());
+        }
+    }
+
+    /**
+     * Test destination types of Integer/int and FileInputStream.
      */
     @Test
     public void testDestTypes() {
-        final Collection<DataType> destTypes =
+        final Set<DataType> destTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(Integer.class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
         assertEquals(2, destTypes.size());
         assertTrue(destTypes.contains(IntCell.TYPE));
         assertTrue(destTypes.contains(LongCell.TYPE));
+
+        // Primitive int type should map to the same cells as Integer.
+        final Set<DataType> primitiveDestTypes =
+            JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(int.class).stream()
+                .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
+        assertEquals(destTypes, primitiveDestTypes);
 
         final Collection<DataType> supertypeDestTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(FileInputStream.class).stream()
@@ -309,11 +418,11 @@ public class JavaToDataCellConversionTest {
     }
 
     /**
-     * Test destination types of Integer and FileInputStream.
+     * Test destination types of Integer/int and FileInputStream arrays.
      */
     @Test
     public void testCollectionDestTypes() {
-        final Collection<DataType> destTypes =
+        final Set<DataType> destTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(Integer[].class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
@@ -321,28 +430,42 @@ public class JavaToDataCellConversionTest {
         assertTrue(destTypes.contains(ListCell.getCollectionType(IntCell.TYPE)));
         assertTrue(destTypes.contains(ListCell.getCollectionType(LongCell.TYPE)));
 
+        // Primitive int[] type should map to the same cells as Integer[]
+        // (+ also maps to Byte vector which is irrelevant here).
+        final Set<DataType> primitiveDestTypes =
+            JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(int[].class).stream()
+                .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
+        primitiveDestTypes.containsAll(destTypes);
+
         final Collection<DataType> supertypeDestTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(FileInputStream[].class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
-        assertThat("Not enough converters for conversion from FileInputStream[]",
-            supertypeDestTypes.size(), is(greaterThanOrEqualTo(3)));
+        assertThat("Not enough converters for conversion from FileInputStream[]", supertypeDestTypes.size(),
+            is(greaterThanOrEqualTo(3)));
         assertTrue(supertypeDestTypes.contains(ListCell.getCollectionType(BinaryObjectDataCell.TYPE)));
         assertTrue(supertypeDestTypes.contains(ListCell.getCollectionType(XMLCell.TYPE)));
         assertTrue(supertypeDestTypes.contains(ListCell.getCollectionType(StringCell.TYPE)));
     }
 
     /**
-     * Test destination types of Integer and FileInputStream.
+     * Test destination types of Integer/int arrays of arrays.
      */
     @Test
     public void testNestedCollectionDestTypes() {
-        final Collection<DataType> destTypes =
+        final Set<DataType> destTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(Integer[][].class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
         assertEquals(2, destTypes.size());
         assertTrue(destTypes.contains(ListCell.getCollectionType(ListCell.getCollectionType(IntCell.TYPE))));
         assertTrue(destTypes.contains(ListCell.getCollectionType(ListCell.getCollectionType(LongCell.TYPE))));
+
+        // Primitive int[][] type should map to the same cells as Integer[][]
+        // (+ also maps to Byte vector collection which is irrelevant here).
+        final Set<DataType> primitiveDestTypes =
+            JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(int[][].class).stream()
+                .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
+        primitiveDestTypes.containsAll(destTypes);
     }
 
     /**
@@ -356,8 +479,10 @@ public class JavaToDataCellConversionTest {
         final Collection<Class<?>> set =
             factories.stream().map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
 
-        assertEquals(1, set.size());
+        assertEquals(2, set.size());
         assertTrue(set.contains(Double.class));
+        // Primitive type converter:
+        assertTrue(set.contains(double.class));
     }
 
     /**
@@ -371,8 +496,10 @@ public class JavaToDataCellConversionTest {
         final Collection<Class<?>> set =
             factories.stream().map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
 
-        assertThat("Not enough converters for conversion to IntCell list ", factories.size(), is(greaterThanOrEqualTo(1)));
+        assertThat("Not enough converters for conversion to IntCell list ", factories.size(), is(greaterThanOrEqualTo(2)));
         assertTrue(set.contains(Integer[].class));
+        // Primitive type converter:
+        assertTrue(set.contains(int[].class));
         // disabled, see class header org.knime.core.data.convert.ExtensionPointTest
         // assertTrue(set.contains(String[].class));
     }
@@ -385,7 +512,7 @@ public class JavaToDataCellConversionTest {
         final Collection<Class<?>> set = JavaToDataCellConverterRegistry.getInstance().getAllSourceTypes();
 
         // extensions may increase this number, which is why we test greaterThan
-        assertThat("Unexpected number of supported source types", set.size(), is(greaterThan(9)));
+        assertThat("Unexpected number of supported source types", set.size(), is(greaterThan(13)));
         assertThat("Double not found in supported source types", set, hasItem(Double.class));
     }
 
