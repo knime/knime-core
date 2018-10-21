@@ -48,7 +48,6 @@
 package org.knime.core.data.convert.java;
 
 import java.lang.reflect.Array;
-import java.util.Iterator;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
@@ -62,11 +61,11 @@ import org.knime.core.data.convert.util.ClassUtil;
  * Warning: Incorrect use of this class results in undefined behavior. Handle with care.
  *
  * @author Jonathan Hale
+ * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  *
- * @param <S> An {@link CollectionDataValue} subtype so that the element type of S is SE.
- * @param <D> An array class so that <code> D == SE[] </code>
- * @param <SE> Type of elements of <S>
- * @param <DE> Type of elements of <DE>
+ * @param <D> An array class so that <code> D == DE[] </code>
+ * @param <SE> Type of elements of the source {@link CollectionDataValue}
+ * @param <DE> Type of elements of {@code <DE>}
  *
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
@@ -86,33 +85,271 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
      *            defining the single instance returned by {@link #create()}.
      */
     CollectionConverterFactory(final DataCellToJavaConverterFactory<SE, DE> elementConverterFactory) {
-
         m_destType = ClassUtil.getArrayType(elementConverterFactory.getDestinationType());
         m_elementConverterFactory = elementConverterFactory;
     }
 
     @Override
     public DataCellToJavaConverter<CollectionDataValue, D> create() {
-        return (final CollectionDataValue source) -> {
-            final DataCellToJavaConverter<SE, DE> elementConverter = m_elementConverterFactory.create();
-            final CollectionDataValue val = source;
-            final Object outputArray = Array.newInstance(m_destType.getComponentType(), val.size());
+        final DataCellToJavaConverter<SE, DE> elementConverter = m_elementConverterFactory.create();
+        if (m_elementConverterFactory.getDestinationType().isPrimitive()) {
+            // Implement for each primitive type explicitly. That's the most performant way.
+            // double:
+            if (elementConverter instanceof DataCellToDoubleConverter) {
+                return createToDoubleConverter(elementConverter);
+            }
+            // int:
+            else if (elementConverter instanceof DataCellToIntConverter) {
+                return createToIntConverter(elementConverter);
+            }
+            // long:
+            else if (elementConverter instanceof DataCellToLongConverter) {
+                return createToLongConverter(elementConverter);
+            }
+            // boolean:
+            else if (elementConverter instanceof DataCellToBooleanConverter) {
+                return createToBooleanConverter(elementConverter);
+            }
+            // float:
+            else if (elementConverter instanceof DataCellToFloatConverter) {
+                return createToFloatConverter(elementConverter);
+            }
+            // byte:
+            else if (elementConverter instanceof DataCellToByteConverter) {
+                return createToByteConverter(elementConverter);
+            }
+            // short:
+            else if (elementConverter instanceof DataCellToShortConverter) {
+                return createToShortConverter(elementConverter);
+            }
+            // char:
+            else if (elementConverter instanceof DataCellToCharConverter) {
+                return createToCharConverter(elementConverter);
+            }
+        }
+        // Otherwise it's an object type. / Fall-through.
+        return createToObjectConverter(elementConverter);
+    }
 
-            final Iterator<DataCell> itor = val.iterator();
-
+    private DataCellToJavaConverter<CollectionDataValue, D>
+        createToDoubleConverter(final DataCellToJavaConverter<SE, DE> elementConverter) {
+        @SuppressWarnings("unchecked")
+        final DataCellToDoubleConverter<SE> converter = (DataCellToDoubleConverter<SE>)elementConverter;
+        return source -> {
+            final double[] array = new double[source.size()];
             int i = 0;
-            while (itor.hasNext()) {
-                final DataCell next = itor.next();
-                // need to handle missing values
-                if (next.isMissing()) {
-                    Array.set(outputArray, i, null);
+            for (final DataCell element : source) {
+                if (element.isMissing()) {
+                    // TODO: Primitive converters don't support missing values at the moment.
+                    throw new IllegalStateException("Collection cell contains a missing value. This "
+                        + "cannot be converted to a Java primitive type.");
                 } else {
-                    Array.set(outputArray, i, elementConverter.convert((SE)next));
+                    @SuppressWarnings("unchecked")
+                    final SE elementValue = (SE)element;
+                    array[i] = converter.convertIntoDouble(elementValue);
                 }
                 i++;
             }
+            @SuppressWarnings("unchecked")
+            final D destination = (D)array;
+            return destination;
+        };
+    }
 
-            return (D)outputArray;
+    private DataCellToJavaConverter<CollectionDataValue, D>
+        createToIntConverter(final DataCellToJavaConverter<SE, DE> elementConverter) {
+        @SuppressWarnings("unchecked")
+        final DataCellToIntConverter<SE> converter = (DataCellToIntConverter<SE>)elementConverter;
+        return source -> {
+            final int[] array = new int[source.size()];
+            int i = 0;
+            for (final DataCell element : source) {
+                if (element.isMissing()) {
+                    // TODO: Primitive converters don't support missing values at the moment.
+                    throw new IllegalStateException("Collection cell contains a missing value. This "
+                        + "cannot be converted to a Java primitive type.");
+                } else {
+                    @SuppressWarnings("unchecked")
+                    final SE elementValue = (SE)element;
+                    array[i] = converter.convertIntoInt(elementValue);
+                }
+                i++;
+            }
+            @SuppressWarnings("unchecked")
+            final D destination = (D)array;
+            return destination;
+        };
+    }
+
+    private DataCellToJavaConverter<CollectionDataValue, D>
+        createToLongConverter(final DataCellToJavaConverter<SE, DE> elementConverter) {
+        @SuppressWarnings("unchecked")
+        final DataCellToLongConverter<SE> converter = (DataCellToLongConverter<SE>)elementConverter;
+        return source -> {
+            final long[] array = new long[source.size()];
+            int i = 0;
+            for (final DataCell element : source) {
+                if (element.isMissing()) {
+                    // TODO: Primitive converters don't support missing values at the moment.
+                    throw new IllegalStateException("Collection cell contains a missing value. This "
+                        + "cannot be converted to a Java primitive type.");
+                } else {
+                    @SuppressWarnings("unchecked")
+                    final SE elementValue = (SE)element;
+                    array[i] = converter.convertIntoLong(elementValue);
+                }
+                i++;
+            }
+            @SuppressWarnings("unchecked")
+            final D destination = (D)array;
+            return destination;
+        };
+    }
+
+    private DataCellToJavaConverter<CollectionDataValue, D>
+        createToBooleanConverter(final DataCellToJavaConverter<SE, DE> elementConverter) {
+        @SuppressWarnings("unchecked")
+        final DataCellToBooleanConverter<SE> converter = (DataCellToBooleanConverter<SE>)elementConverter;
+        return source -> {
+            final boolean[] array = new boolean[source.size()];
+            int i = 0;
+            for (final DataCell element : source) {
+                if (element.isMissing()) {
+                    // TODO: Primitive converters don't support missing values at the moment.
+                    throw new IllegalStateException("Collection cell contains a missing value. This "
+                        + "cannot be converted to a Java primitive type.");
+                } else {
+                    @SuppressWarnings("unchecked")
+                    final SE elementValue = (SE)element;
+                    array[i] = converter.convertIntoBoolean(elementValue);
+                }
+                i++;
+            }
+            @SuppressWarnings("unchecked")
+            final D destination = (D)array;
+            return destination;
+        };
+    }
+
+    private DataCellToJavaConverter<CollectionDataValue, D>
+        createToFloatConverter(final DataCellToJavaConverter<SE, DE> elementConverter) {
+        @SuppressWarnings("unchecked")
+        final DataCellToFloatConverter<SE> converter = (DataCellToFloatConverter<SE>)elementConverter;
+        return source -> {
+            final float[] array = new float[source.size()];
+            int i = 0;
+            for (final DataCell element : source) {
+                if (element.isMissing()) {
+                    // TODO: Primitive converters don't support missing values at the moment.
+                    throw new IllegalStateException("Collection cell contains a missing value. This "
+                        + "cannot be converted to a Java primitive type.");
+                } else {
+                    @SuppressWarnings("unchecked")
+                    final SE elementValue = (SE)element;
+                    array[i] = converter.convertIntoFloat(elementValue);
+                }
+                i++;
+            }
+            @SuppressWarnings("unchecked")
+            final D destination = (D)array;
+            return destination;
+        };
+    }
+
+    private DataCellToJavaConverter<CollectionDataValue, D>
+        createToByteConverter(final DataCellToJavaConverter<SE, DE> elementConverter) {
+        @SuppressWarnings("unchecked")
+        final DataCellToByteConverter<SE> converter = (DataCellToByteConverter<SE>)elementConverter;
+        return source -> {
+            final byte[] array = new byte[source.size()];
+            int i = 0;
+            for (final DataCell element : source) {
+                if (element.isMissing()) {
+                    // TODO: Primitive converters don't support missing values at the moment.
+                    throw new IllegalStateException("Collection cell contains a missing value. This "
+                        + "cannot be converted to a Java primitive type.");
+                } else {
+                    @SuppressWarnings("unchecked")
+                    final SE elementValue = (SE)element;
+                    array[i] = converter.convertIntoByte(elementValue);
+                }
+                i++;
+            }
+            @SuppressWarnings("unchecked")
+            final D destination = (D)array;
+            return destination;
+        };
+    }
+
+    private DataCellToJavaConverter<CollectionDataValue, D>
+        createToShortConverter(final DataCellToJavaConverter<SE, DE> elementConverter) {
+        @SuppressWarnings("unchecked")
+        final DataCellToShortConverter<SE> converter = (DataCellToShortConverter<SE>)elementConverter;
+        return source -> {
+            final short[] array = new short[source.size()];
+            int i = 0;
+            for (final DataCell element : source) {
+                if (element.isMissing()) {
+                    // TODO: Primitive converters don't support missing values at the moment.
+                    throw new IllegalStateException("Collection cell contains a missing value. This "
+                        + "cannot be converted to a Java primitive type.");
+                } else {
+                    @SuppressWarnings("unchecked")
+                    final SE elementValue = (SE)element;
+                    array[i] = converter.convertIntoShort(elementValue);
+                }
+                i++;
+            }
+            @SuppressWarnings("unchecked")
+            final D destination = (D)array;
+            return destination;
+        };
+    }
+
+    private DataCellToJavaConverter<CollectionDataValue, D>
+        createToCharConverter(final DataCellToJavaConverter<SE, DE> elementConverter) {
+        @SuppressWarnings("unchecked")
+        final DataCellToCharConverter<SE> converter = (DataCellToCharConverter<SE>)elementConverter;
+        return source -> {
+            final char[] array = new char[source.size()];
+            int i = 0;
+            for (final DataCell element : source) {
+                if (element.isMissing()) {
+                    // TODO: Primitive converters don't support missing values at the moment.
+                    throw new IllegalStateException("Collection cell contains a missing value. This "
+                        + "cannot be converted to a Java primitive type.");
+                } else {
+                    @SuppressWarnings("unchecked")
+                    final SE elementValue = (SE)element;
+                    array[i] = converter.convertIntoChar(elementValue);
+                }
+                i++;
+            }
+            @SuppressWarnings("unchecked")
+            final D destination = (D)array;
+            return destination;
+        };
+    }
+
+    private DataCellToJavaConverter<CollectionDataValue, D>
+        createToObjectConverter(final DataCellToJavaConverter<SE, DE> elementConverter) {
+        return source -> {
+            final Object array = Array.newInstance(m_destType.getComponentType(), source.size());
+            int i = 0;
+            for (final DataCell element : source) {
+                // Need to handle missing values.
+                if (element.isMissing()) {
+                    Array.set(array, i, null);
+                } else {
+                    @SuppressWarnings("unchecked")
+                    final SE elementValue = (SE)element;
+                    Array.set(array, i, elementConverter.convert(elementValue));
+                }
+                i++;
+            }
+            @SuppressWarnings("unchecked")
+            final D destination = (D)array;
+            return destination;
         };
     }
 

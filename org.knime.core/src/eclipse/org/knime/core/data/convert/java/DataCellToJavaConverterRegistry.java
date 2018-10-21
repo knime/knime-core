@@ -458,6 +458,10 @@ public final class DataCellToJavaConverterRegistry extends
             "String (toString())"));
         register(new SimpleDataCellToJavaConverterFactory<>(MissingValue.class, Object.class, (val) -> null,
             "Object (Null)"));
+
+        // Register special converter implementations that convert into Java primitive types.
+        // This is for performance reasons only (by avoiding boxing).
+        registerPrimitiveConverters();
     }
 
     /*
@@ -526,6 +530,29 @@ public final class DataCellToJavaConverterRegistry extends
         final String name = factory.getName();
         final String className = factory.getDestinationType().getSimpleName();
         return name.matches(Pattern.quote(className) + "(| \\(.+\\))");
+    }
+
+    /**
+     * Registers a primitive converter for each Java primitive type that is represented by a built-in KNIME data value
+     * type.
+     */
+    private void registerPrimitiveConverters() {
+        // boolean:
+        registerPrimitiveConverter(BooleanValue.class, boolean.class,
+            (DataCellToBooleanConverter<BooleanValue>)BooleanValue::getBooleanValue);
+        // double:
+        registerPrimitiveConverter(DoubleValue.class, double.class,
+            (DataCellToDoubleConverter<DoubleValue>)DoubleValue::getDoubleValue);
+        // int:
+        registerPrimitiveConverter(IntValue.class, int.class, (DataCellToIntConverter<IntValue>)IntValue::getIntValue);
+        // long:
+        registerPrimitiveConverter(LongValue.class, long.class,
+            (DataCellToLongConverter<LongValue>)LongValue::getLongValue);
+    }
+
+    private <S extends DataValue, D> void registerPrimitiveConverter(final Class<S> sourceType, final Class<D> destType,
+        final DataCellToJavaConverter<S, D> converter) {
+        register(new SimpleDataCellToJavaConverterFactory<>(sourceType, destType, converter, destType.getSimpleName()));
     }
 
     /**
