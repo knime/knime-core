@@ -48,7 +48,7 @@
 package org.knime.core.data.convert.datacell;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -62,57 +62,215 @@ import org.knime.core.node.ExecutionContext;
  * converting each element using a given converter.
  *
  * @author Jonathan Hale
+ * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  *
- * @param <T> {@link JavaToDataCellConverter} subclass which can be created by this factory.
- * @param <F> Element factory type
+ * @param <S> {@link JavaToDataCellConverter} subclass which can be created by this factory.
+ * @param <SE> Element factory type
  * @since 3.2
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-public class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellConverterFactory<T> {
+public class ArrayToCollectionConverterFactory<S, SE> implements JavaToDataCellConverterFactory<S> {
 
-    private final JavaToDataCellConverterFactory<F> m_elementFactory;
-
-    private class ToCollectionConverter<E> implements JavaToDataCellConverter<T> {
-
-        final JavaToDataCellConverter<E> m_elementConverter;
-
-        public ToCollectionConverter(final JavaToDataCellConverter<E> elementConverter) {
-            m_elementConverter = elementConverter;
-        }
-
-        @Override
-        public DataCell convert(final T source) throws Exception {
-            final E[] array = (E[])source;
-            if(array == null) {
-                return new MissingCell("Value was null.");
-            }
-            final ArrayList<DataCell> cells = new ArrayList<>(array.length);
-
-            for (final E element : array) {
-                cells.add(m_elementConverter.convert(element));
-            }
-
-            return CollectionCellFactory.createListCell(cells);
-        }
-    }
+    private final JavaToDataCellConverterFactory<SE> m_elementFactory;
 
     /**
      * @param elementFactory Factory to convert the components of the input array into components of the output array
      */
-    ArrayToCollectionConverterFactory(final JavaToDataCellConverterFactory<F> elementFactory) {
+    ArrayToCollectionConverterFactory(final JavaToDataCellConverterFactory<SE> elementFactory) {
         m_elementFactory = elementFactory;
     }
 
     @Override
-    public JavaToDataCellConverter<T> create(final ExecutionContext context) {
-        return new ToCollectionConverter(m_elementFactory.create(context));
+    public JavaToDataCellConverter<S> create(final ExecutionContext context) {
+        final JavaToDataCellConverter<SE> elementConverter = m_elementFactory.create(context);
+        if (m_elementFactory.getSourceType().isPrimitive()) {
+            // Implement for each primitive type explicitly. That's the most performant way.
+            // double:
+            if (elementConverter instanceof DoubleToDataCellConverter) {
+                return createDoubleConverter(elementConverter);
+            }
+            // int:
+            else if (elementConverter instanceof IntToDataCellConverter) {
+                return createIntConverter(elementConverter);
+            }
+            // long:
+            else if (elementConverter instanceof LongToDataCellConverter) {
+                return createLongConverter(elementConverter);
+            }
+            // boolean:
+            else if (elementConverter instanceof BooleanToDataCellConverter) {
+                return createBooleanConverter(elementConverter);
+            }
+            // float:
+            else if (elementConverter instanceof FloatToDataCellConverter) {
+                return createFloatConverter(elementConverter);
+            }
+            // byte:
+            else if (elementConverter instanceof ByteToDataCellConverter) {
+                return createByteConverter(elementConverter);
+            }
+            // short:
+            else if (elementConverter instanceof ShortToDataCellConverter) {
+                return createShortConverter(elementConverter);
+            }
+            // char:
+            else if (elementConverter instanceof CharToDataCellConverter) {
+                return createCharConverter(elementConverter);
+            }
+        }
+        // Otherwise it's an object type. / Fall-through.
+        return createObjectConverter(elementConverter);
+    }
+
+    private JavaToDataCellConverter<S> createDoubleConverter(final JavaToDataCellConverter<SE> elementConverter) {
+        return new AbstractArrayToCollectionConverter<S, DoubleToDataCellConverter>(
+            (DoubleToDataCellConverter)elementConverter) {
+
+            @Override
+            protected DataCell[] convertSourceArrayToDataCellArray(final Object sourceArray) throws Exception {
+                final double[] array = (double[])sourceArray;
+                final DataCell[] dataCellArray = new DataCell[array.length];
+                for (int i = 0; i < array.length; i++) {
+                    dataCellArray[i] = m_elementConverter.convertDouble(array[i]);
+                }
+                return dataCellArray;
+            }
+        };
+    }
+
+    private JavaToDataCellConverter<S> createIntConverter(final JavaToDataCellConverter<SE> elementConverter) {
+        return new AbstractArrayToCollectionConverter<S, IntToDataCellConverter>(
+            (IntToDataCellConverter)elementConverter) {
+
+            @Override
+            protected DataCell[] convertSourceArrayToDataCellArray(final Object sourceArray) throws Exception {
+                final int[] array = (int[])sourceArray;
+                final DataCell[] dataCellArray = new DataCell[array.length];
+                for (int i = 0; i < array.length; i++) {
+                    dataCellArray[i] = m_elementConverter.convertInt(array[i]);
+                }
+                return dataCellArray;
+            }
+        };
+    }
+
+    private JavaToDataCellConverter<S> createLongConverter(final JavaToDataCellConverter<SE> elementConverter) {
+        return new AbstractArrayToCollectionConverter<S, LongToDataCellConverter>(
+            (LongToDataCellConverter)elementConverter) {
+
+            @Override
+            protected DataCell[] convertSourceArrayToDataCellArray(final Object sourceArray) throws Exception {
+                final long[] array = (long[])sourceArray;
+                final DataCell[] dataCellArray = new DataCell[array.length];
+                for (int i = 0; i < array.length; i++) {
+                    dataCellArray[i] = m_elementConverter.convertLong(array[i]);
+                }
+                return dataCellArray;
+            }
+        };
+    }
+
+    private JavaToDataCellConverter<S> createBooleanConverter(final JavaToDataCellConverter<SE> elementConverter) {
+        return new AbstractArrayToCollectionConverter<S, BooleanToDataCellConverter>(
+            (BooleanToDataCellConverter)elementConverter) {
+
+            @Override
+            protected DataCell[] convertSourceArrayToDataCellArray(final Object sourceArray) throws Exception {
+                final boolean[] array = (boolean[])sourceArray;
+                final DataCell[] dataCellArray = new DataCell[array.length];
+                for (int i = 0; i < array.length; i++) {
+                    dataCellArray[i] = m_elementConverter.convertBoolean(array[i]);
+                }
+                return dataCellArray;
+            }
+        };
+    }
+
+    private JavaToDataCellConverter<S> createFloatConverter(final JavaToDataCellConverter<SE> elementConverter) {
+        return new AbstractArrayToCollectionConverter<S, FloatToDataCellConverter>(
+            (FloatToDataCellConverter)elementConverter) {
+
+            @Override
+            protected DataCell[] convertSourceArrayToDataCellArray(final Object sourceArray) throws Exception {
+                final float[] array = (float[])sourceArray;
+                final DataCell[] dataCellArray = new DataCell[array.length];
+                for (int i = 0; i < array.length; i++) {
+                    dataCellArray[i] = m_elementConverter.convertFloat(array[i]);
+                }
+                return dataCellArray;
+            }
+        };
+    }
+
+    private JavaToDataCellConverter<S> createByteConverter(final JavaToDataCellConverter<SE> elementConverter) {
+        return new AbstractArrayToCollectionConverter<S, ByteToDataCellConverter>(
+            (ByteToDataCellConverter)elementConverter) {
+
+            @Override
+            protected DataCell[] convertSourceArrayToDataCellArray(final Object sourceArray) throws Exception {
+                final byte[] array = (byte[])sourceArray;
+                final DataCell[] dataCellArray = new DataCell[array.length];
+                for (int i = 0; i < array.length; i++) {
+                    dataCellArray[i] = m_elementConverter.convertByte(array[i]);
+                }
+                return dataCellArray;
+            }
+        };
+    }
+
+    private JavaToDataCellConverter<S> createShortConverter(final JavaToDataCellConverter<SE> elementConverter) {
+        return new AbstractArrayToCollectionConverter<S, ShortToDataCellConverter>(
+            (ShortToDataCellConverter)elementConverter) {
+
+            @Override
+            protected DataCell[] convertSourceArrayToDataCellArray(final Object sourceArray) throws Exception {
+                final short[] array = (short[])sourceArray;
+                final DataCell[] dataCellArray = new DataCell[array.length];
+                for (int i = 0; i < array.length; i++) {
+                    dataCellArray[i] = m_elementConverter.convertShort(array[i]);
+                }
+                return dataCellArray;
+            }
+        };
+    }
+
+    private JavaToDataCellConverter<S> createCharConverter(final JavaToDataCellConverter<SE> elementConverter) {
+        return new AbstractArrayToCollectionConverter<S, CharToDataCellConverter>(
+            (CharToDataCellConverter)elementConverter) {
+
+            @Override
+            protected DataCell[] convertSourceArrayToDataCellArray(final Object sourceArray) throws Exception {
+                final char[] array = (char[])sourceArray;
+                final DataCell[] dataCellArray = new DataCell[array.length];
+                for (int i = 0; i < array.length; i++) {
+                    dataCellArray[i] = m_elementConverter.convertChar(array[i]);
+                }
+                return dataCellArray;
+            }
+        };
+    }
+
+    private JavaToDataCellConverter<S> createObjectConverter(final JavaToDataCellConverter<SE> elementConverter) {
+        return new AbstractArrayToCollectionConverter<S, JavaToDataCellConverter<SE>>(elementConverter) {
+
+            @Override
+            protected DataCell[] convertSourceArrayToDataCellArray(final Object sourceArray) throws Exception {
+                @SuppressWarnings("unchecked")
+                final SE[] array = (SE[])sourceArray;
+                final DataCell[] dataCellArray = new DataCell[array.length];
+                for (int i = 0; i < array.length; i++) {
+                    dataCellArray[i] = m_elementConverter.convert(array[i]);
+                }
+                return dataCellArray;
+            }
+        };
     }
 
     @Override
-    public Class<T> getSourceType() {
-        return (Class<T>)Array.newInstance(m_elementFactory.getSourceType(), 0).getClass();
+    public Class<S> getSourceType() {
+        return (Class<S>)Array.newInstance(m_elementFactory.getSourceType(), 0).getClass();
     }
 
     @Override
@@ -141,8 +299,8 @@ public class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellCo
         if (getClass() != obj.getClass()) {
             return false;
         }
-        ArrayToCollectionConverterFactory<?,?> other = (ArrayToCollectionConverterFactory<?,?>) obj;
-       return other.m_elementFactory.equals(m_elementFactory);
+        ArrayToCollectionConverterFactory<?, ?> other = (ArrayToCollectionConverterFactory<?, ?>)obj;
+        return other.m_elementFactory.equals(m_elementFactory);
     }
 
     @Override
@@ -151,5 +309,25 @@ public class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellCo
         int result = 1;
         result = prime * result + ((m_elementFactory == null) ? 0 : m_elementFactory.hashCode());
         return result;
+    }
+
+    private abstract static class AbstractArrayToCollectionConverter<S, EC extends JavaToDataCellConverter<?>>
+        implements JavaToDataCellConverter<S> {
+
+        final EC m_elementConverter;
+
+        public AbstractArrayToCollectionConverter(final EC elementConverter) {
+            m_elementConverter = elementConverter;
+        }
+
+        protected abstract DataCell[] convertSourceArrayToDataCellArray(Object sourceArray) throws Exception;
+
+        @Override
+        public DataCell convert(final S source) throws Exception {
+            if (source == null) {
+                return new MissingCell("Value was null.");
+            }
+            return CollectionCellFactory.createListCell(Arrays.asList(convertSourceArrayToDataCellArray(source)));
+        }
     }
 }
