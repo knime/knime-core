@@ -63,10 +63,14 @@ import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.MissingValue;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.ListCell;
@@ -144,7 +148,7 @@ public final class DataCellToJavaConverterRegistry extends
     AbstractConverterFactoryRegistry<Class<? extends DataValue>, Class<?>, DataCellToJavaConverterFactory<?, ?>, DataCellToJavaConverterRegistry> {
 
     /* Data types stored by their preferred value type, only for collection cells, for DataType we can directly use getPreferredValueClass */
-    private final HashMap<Class<? extends DataValue>, DataType> m_prefferedTypes = new HashMap<>();
+    private final HashMap<Class<? extends DataValue>, DataType> m_preferredTypes = new HashMap<>();
 
     /**
      * Get all {@link DataType} that have at least one {@link DataValue} interface that is convertible by one of the
@@ -183,11 +187,11 @@ public final class DataCellToJavaConverterRegistry extends
                 (LinkedHashSet<DataCellToJavaConverterFactory<?, ?>>)getFactoriesForDestinationType(
                     destType.getComponentType());
 
-            if (!factories.isEmpty() && m_prefferedTypes.isEmpty()) {
+            if (!factories.isEmpty() && m_preferredTypes.isEmpty()) {
                 DataTypeRegistry.getInstance().availableDataTypes().stream()
-                    .forEach((dataType) -> m_prefferedTypes.put(dataType.getPreferredValueClass(), dataType));
+                    .forEach((dataType) -> m_preferredTypes.put(dataType.getPreferredValueClass(), dataType));
 
-                m_prefferedTypes.put(MissingValue.class, DataType.getMissingCell().getType());
+                m_preferredTypes.put(MissingValue.class, DataType.getMissingCell().getType());
             }
 
             for (final DataCellToJavaConverterFactory<?, ?> cls : factories) {
@@ -195,10 +199,10 @@ public final class DataCellToJavaConverterRegistry extends
 
                 // sourceType could be a DataCell subclass!
                 final DataType elementType = (DataCell.class.isAssignableFrom(sourceType))
-                    ? DataType.getType((Class<? extends DataCell>)sourceType) : m_prefferedTypes.get(sourceType);
+                    ? DataType.getType((Class<? extends DataCell>)sourceType) : m_preferredTypes.get(sourceType);
                 if (elementType == null) {
                     LOGGER.error("Factory " + cls.getIdentifier() + " source type " + cls.getSourceType().getName()
-                        + " has no preffered type.");
+                        + " has no preferred type.");
                 }
 
                 set.addAll(getCollectionConverterFactories(ListCell.getCollectionType(elementType),

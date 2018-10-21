@@ -64,7 +64,7 @@ import org.knime.core.data.DataValue;
 public interface DataCellToJavaConverter<S extends DataValue, D> {
 
     /**
-     * Convert <code>source</code> into an instance of type <D>.
+     * Convert <code>source</code> into an instance of type {@code <D>}.
      *
      * @param source data value to convert
      * @return the converted object.
