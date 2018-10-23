@@ -47,6 +47,7 @@ package org.knime.testing.node.datagenerator;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 
 
 /**
@@ -59,6 +60,8 @@ public class TestDataNodeDialog extends DefaultNodeSettingsPane {
      *
      */
     public TestDataNodeDialog() {
+        addDialogComponent(new DialogComponentStringSelection(TestDataNodeModel.createVersionModel(), "Version: ",
+            TestDataNodeModel.Version.valueStrings()));
         addDialogComponent(new DialogComponentNumber(
                 TestDataNodeModel.createNoOfRowsModel(), "Total no of rows: ",
                 Integer.valueOf(100)));

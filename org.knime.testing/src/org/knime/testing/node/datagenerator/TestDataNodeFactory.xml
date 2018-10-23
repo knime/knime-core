@@ -15,6 +15,7 @@
 			visualization nodes.
 			</p>
 		</intro>
+		<option name="Version">The version of the node. Newer versions usually add additional columns.</option>
 		<option name="Total no of rows"> The total number of rows to create</option>
 		<option name="No of list items"> 
 		  The number of items the collection columns should contain

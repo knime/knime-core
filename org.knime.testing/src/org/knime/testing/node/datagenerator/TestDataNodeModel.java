@@ -52,13 +52,21 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.Period;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -76,6 +84,12 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.time.duration.DurationCellFactory;
+import org.knime.core.data.time.localdate.LocalDateCellFactory;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
+import org.knime.core.data.time.localtime.LocalTimeCellFactory;
+import org.knime.core.data.time.period.PeriodCellFactory;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.data.uri.URIContent;
 import org.knime.core.data.uri.URIDataCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -89,6 +103,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
 /**
@@ -96,6 +111,90 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
  * @author Tobias Koetter, University of Konstanz
  */
 public class TestDataNodeModel extends NodeModel {
+
+    interface CellGenerator extends Function<Integer, DataCell> {
+        @Override
+        DataCell apply(Integer rowIdx);
+    }
+
+
+    enum Version {
+        legacy(null, null),
+        /**Adds additional column types to the node such as the new date and time cells.*/
+        V_1(new DataType[] {LocalDateCellFactory.TYPE, LocalTimeCellFactory.TYPE, LocalDateTimeCellFactory.TYPE,
+            ZonedDateTimeCellFactory.TYPE, PeriodCellFactory.TYPE, DurationCellFactory.TYPE},
+            new CellGenerator[] {
+                i -> LocalDateCellFactory.create(createDate(i).toLocalDate()),
+                i -> LocalTimeCellFactory.create(createDate(i).toLocalTime()),
+                i -> LocalDateTimeCellFactory.create(createDate(i).toLocalDateTime()),
+                i -> ZonedDateTimeCellFactory.create(createDate(i)),
+                i -> PeriodCellFactory.create(i == 0 ? Period.ZERO : Period.ofDays(createDate(i).getSecond())),
+                i -> DurationCellFactory.create(i == 0 ? Duration.ZERO : Duration.ofNanos(createDate(i).getSecond()))
+            });
+
+        private DataType[] m_types;
+        private List<CellGenerator> m_generators;
+
+        private Version(final DataType[] types, final CellGenerator[] generators) {
+            m_generators = generators != null? Arrays.asList(generators) : Collections.emptyList();
+            m_types = types != null? types : new DataType[0];
+        }
+
+        private static ZonedDateTime createDate(final Integer i) {
+            final ZonedDateTime date;
+            switch(i) {
+            case 0:
+                date = ZonedDateTime.of(LocalDateTime.MIN, ZoneId.systemDefault());
+                break;
+            case 1:
+                date = ZonedDateTime.of(LocalDateTime.MAX, ZoneId.systemDefault());
+                break;
+            default:
+                date = ZonedDateTime.now();
+            }
+            return date;
+        }
+
+        /**
+         * @return the types
+         */
+        public DataType[] getTypes() {
+            return m_types;
+        }
+
+        /**
+         * @param version
+         * @return the {@link Version}
+         */
+        public static Version get(final SettingsModelString version) {
+            return valueOf(version.getStringValue());
+        }
+
+        /**
+         * @param rowIdx
+         * @return
+         */
+        public DataCell[] getDataCells(final int rowIdx) {
+            final DataCell[] cells = new DataCell[m_generators.size()];
+            for (int i = 0, length = cells.length; i < length; i++) {
+                cells[i] = m_generators.get(i).apply(rowIdx);
+            }
+            return cells;
+        }
+
+        /**
+         * @return all string names
+         */
+        public static String[] valueStrings() {
+            Version[] versions = values();
+            String[] names = new String[versions.length];
+            for (int i = 0, length = names.length; i < length; i++) {
+                names[i] = versions[i].name();
+            }
+            return names;
+        }
+
+    }
 
     private static final String[] stringVals = new String[] {
         "semicolon;semicolon", "backslash\\bakslash", "quotes\"quotes",
@@ -142,12 +241,18 @@ public class TestDataNodeModel extends NodeModel {
         createMaxStringLengthModel();
     private final SettingsModelInteger m_noOfAllMissingRows = createNoOfAllMissingRowsModel();
 
+    private final SettingsModelString m_version = createVersionModel();
+
     private static final Random rnd = new Random();
 
     /**Constructor for class TestDataNodeModel.
      */
     protected TestDataNodeModel() {
         super(0, 1);
+    }
+
+    static SettingsModelString createVersionModel() {
+        return new SettingsModelString("version", Version.V_1.name());
     }
 
     /**
@@ -249,6 +354,11 @@ public class TestDataNodeModel extends NodeModel {
 
             cells.add(getStringVal(exec, rowIdx));
             cells.add(getDoubleVal(rowIdx));
+
+            //add all version dependent cells
+            final Version v = Version.get(m_version);
+            DataCell[] additionalCells = v.getDataCells(rowIdx);
+            cells.addAll(Arrays.asList(additionalCells));
 
             final DefaultRow row =
                 new DefaultRow(RowKey.createRowKey(rowIdx), cells);
@@ -545,7 +655,7 @@ public class TestDataNodeModel extends NodeModel {
         return cells;
     }
 
-    private static DataTableSpec createSpec() {
+    private DataTableSpec createSpec() {
         final LinkedList<DataColumnSpec> specs =
             new LinkedList<DataColumnSpec>();
         final DataColumnSpecCreator creator =
@@ -647,13 +757,19 @@ public class TestDataNodeModel extends NodeModel {
         creator.setType(DoubleCell.TYPE);
         specs.add(creator.createSpec());
 
+        final Version v = Version.get(m_version);
+        for (DataType type : v.getTypes()) {
+            final String name = type.getName();
+            creator.setName(name);
+            creator.setType(type);
+            specs.add(creator.createSpec());
+        }
         return new DataTableSpec(specs.toArray(new DataColumnSpec[0]));
     }
 
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unused")
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
@@ -664,7 +780,6 @@ public class TestDataNodeModel extends NodeModel {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unused")
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
@@ -695,6 +810,12 @@ public class TestDataNodeModel extends NodeModel {
             // new introduced in 2.8
             m_noOfAllMissingRows.setIntValue(0);
         }
+        try {
+            m_version.loadSettingsFrom(settings);
+        } catch (final Exception e) {
+            // new introduced in 3.7
+            m_version.setStringValue(Version.legacy.name());
+        }
     }
 
     /**
@@ -707,6 +828,7 @@ public class TestDataNodeModel extends NodeModel {
         m_noOfSetItems.saveSettingsTo(settings);
         m_maxStringLength.saveSettingsTo(settings);
         m_noOfAllMissingRows.saveSettingsTo(settings);
+        m_version.saveSettingsTo(settings);
     }
 
     /**
