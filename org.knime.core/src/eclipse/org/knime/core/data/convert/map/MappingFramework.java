@@ -105,6 +105,7 @@ import org.knime.core.node.ExecutionContext;
  * {@link ProducerRegistry#getAvailableProductionPaths(Object)}.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
+ * @author Marcel Wiedenmann, KNIME, Konstanz, Germany
  * @see SerializeUtil SerializeUtil - for serializing ConsumptionPath or ProductionPath.
  * @since 3.6
  */
@@ -189,11 +190,29 @@ public class MappingFramework {
     }
 
     /**
+     * Creates a {@link DataRowProducer} that allows to produce data rows from a given {@link Source source} using a
+     * given {@link ProductionPath mapping}.
+     *
+     * @param <S> Type of the source from which to create data rows.
+     * @param <PP> Producer parameters subclass. Specific to the source.
+     * @param source The source from which to create data rows.
+     * @param mapping Per-{@link DataCell cell} production paths that describe the mapping from source to data cell.
+     * @param exec Execution context. Potentially required to create converters. May be {@code null} if it is known that
+     *            none of the converter factories in {@code mapping} require an execution context.
+     * @return The data row producer for the given source and the given mapping.
+     * @since 3.7
+     */
+    public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRowProducer<PP>
+        createDataRowProducer(final S source, final ProductionPath[] mapping, final ExecutionContext exec) {
+        return new DefaultDataRowProducer<>(source, mapping, exec);
+    }
+
+    /**
      * Map a row of input data from the given source to a {@link DataRow}.
      *
      * @param key Row key for the created row
      * @param source Source to get data from
-     * @param mapping Production paths to take when reading a column and producting a {@link DataCell} from it.
+     * @param mapping Production paths to take when reading a column and producing a {@link DataCell} from it.
      * @param params Per column parameters for the producers used
      * @param context Execution context potentially required to create converters
      * @return The DataRow which contains the data read from the source
@@ -201,9 +220,8 @@ public class MappingFramework {
      * @param <ST> Source type
      * @param <PP> Producer parameters subclass
      */
-    public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRow map(final RowKey key,
-        final S source, final ProductionPath[] mapping, final PP[] params, final ExecutionContext context)
-        throws Exception {
+    public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRow map(final RowKey key, final S source,
+        final ProductionPath[] mapping, final PP[] params, final ExecutionContext context) throws Exception {
 
         final DataCell[] cells = new DataCell[mapping.length];
 
