@@ -288,63 +288,6 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         }
         m_browser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-        // Create buttons
-        final Composite buttonComposite = new Composite(composite, SWT.NONE);
-        buttonComposite.setLayout(new GridLayout(4, true));
-        buttonComposite.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, true, false));
-
-        final GridData d = new GridData(SWT.RIGHT, SWT.BOTTOM, false, false);
-        d.widthHint = 110;
-
-        final Button resizeButton = new Button(buttonComposite, SWT.PUSH);
-        resizeButton.setText("Resize");
-        resizeButton.setLayoutData(d);
-        resizeButton.addSelectionListener(new SelectionAdapter() {
-
-            @Override
-            public void widgetSelected(final SelectionEvent e) {
-                final Shell s = Display.getCurrent().getActiveShell();
-                final boolean fullScreen = s.getFullScreen();
-                s.setFullScreen(!fullScreen);
-            }
-        });
-
-        final Button clearButton = new Button(buttonComposite, SWT.PUSH);
-        clearButton.setText("Clear");
-        clearButton.setLayoutData(d);
-        clearButton.addSelectionListener(new SelectionAdapter() {
-
-            @Override
-            public void widgetSelected(final SelectionEvent e) {
-                m_browser.evaluate("loadLayout(\'" + EMPTY_JSON +"\');");
-            }
-        });
-
-        final Button resetButton = new Button(buttonComposite, SWT.PUSH);
-        resetButton.setText("Reset");
-        resetButton.setLayoutData(d);
-        resetButton.addSelectionListener(new SelectionAdapter() {
-
-            @Override
-            public void widgetSelected(final SelectionEvent e) {
-                m_browser.evaluate("loadLayout(\'" + getJsonDocument() + "\');");
-            }
-        });
-
-        final Button applyButton = new Button(buttonComposite, SWT.PUSH);
-        applyButton.setText("Apply");
-        applyButton.setLayoutData(d);
-        applyButton.addSelectionListener(new SelectionAdapter() {
-
-            @Override
-            public void widgetSelected(final SelectionEvent e) {
-                final String layout = (String) m_browser.evaluate("return sendLayout();");
-                updateJsonDocument(layout);
-                updateJsonTextArea();
-                updateModelFromJson();
-            }
-        });
-
         // Create JSON Objects
         final Map<NodeIDSuffix, JSONLayoutContent> layoutMap = new HashMap<>();
         m_basicMap.forEach((k, v) -> layoutMap.put(k, v.getView()));
