@@ -239,6 +239,23 @@ public class MappingFramework {
     }
 
     /**
+     * Creates a {@link DataRowConsumer} that allows to write data rows to a given {@link Destination destination} using
+     * a given {@link ConsumptionPath mapping}.
+     *
+     * @param <D> Type of the destination to which to write data rows.
+     * @param <CP> Consumer parameters subclass. Specific to the destination.
+     * @param destination The destination to which to write data rows.
+     * @param mapping Per-{@link DataCell cell} consumption paths that describe the mapping from data cell to
+     *            destination.
+     * @return The data row consumer for the given destination and the given mapping.
+     * @since 3.7
+     */
+    public static <D extends Destination<?>, CP extends ConsumerParameters<D>> DataRowConsumer<CP>
+        createDataRowConsumer(final D destination, final ConsumptionPath[] mapping) {
+        return new DefaultDataRowConsumer<>(destination, mapping);
+    }
+
+    /**
      * Map data from a {@link DataRow} to an external storage.
      *
      * @param row Row to map
@@ -250,8 +267,8 @@ public class MappingFramework {
      * @param <DT> Destination type
      * @param <CP> Consumer parameters subclass
      */
-    public static <D extends Destination<?>, CP extends ConsumerParameters<D>> void map(final DataRow row,
-        final D dest, final ConsumptionPath[] mapping, final CP[] params) throws Exception {
+    public static <D extends Destination<?>, CP extends ConsumerParameters<D>> void map(final DataRow row, final D dest,
+        final ConsumptionPath[] mapping, final CP[] params) throws Exception {
 
         int i = 0;
         for (final DataCell cell : row) {
