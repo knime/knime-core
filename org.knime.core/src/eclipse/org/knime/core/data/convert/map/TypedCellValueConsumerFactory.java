@@ -44,72 +44,42 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   04.06.2018 (Jonathan Hale): created
+ *   Oct 24, 2018 (marcel): created
  */
 package org.knime.core.data.convert.map;
 
-import org.knime.core.data.convert.map.Source.ProducerParameters;
+import org.knime.core.data.convert.map.Destination.ConsumerParameters;
 
 /**
- * Simple implementation of {@link CellValueProducerFactory} that allows passing the production function as a lambda
- * expression.
+ * Consumer factory that is typed on the (base) type of the consumers that it creates. The type is exposed via
+ * {@link #getConsumerType()}. It is guaranteed that all created consumers are assignment-compatible with this type.
+ * This allows clients to check with which specific consumer type they will be dealing.
  *
- * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <S> Type of source this producer can read from
- * @param <ET> Type of external types
- * @param <T> Java type the created producer returns
- * @param <PP> Subclass of {@link ProducerParameters} for the given source type
- *
- * @since 3.6
+ * @param <D> Type of {@link Destination} to which consumers created by this factory write.
+ * @param <ET> Type of the external type.
+ * @param <T> The Java type of the values that consumers created by this factory accept.
+ * @param <CP> Subtype of {@link ConsumerParameters}} that can be used to configure the consumers created by this
+ *            factory.
+ * @param <C> The (base) type of the consumers created by this factory.
+ * @since 3.7
+ * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
+ * @see CellValueConsumerFactory
  */
-public class SimpleCellValueProducerFactory<S extends Source<ET>, ET, T, PP extends ProducerParameters<S>>
-    extends AbstractCellValueProducerFactory<S, ET, T, PP>
-    implements TypedCellValueProducerFactory<S, ET, T, PP, CellValueProducer<S, T, PP>> {
-
-    final ET m_externalType;
-
-    final Class<?> m_destType;
-
-    final CellValueProducer<S, T, PP> m_producer;
+public interface TypedCellValueConsumerFactory<D extends Destination<?>, T, ET, CP extends ConsumerParameters<D>, //
+        C extends CellValueConsumer<D, T, CP>>
+    extends CellValueConsumerFactory<D, T, ET, CP> {
 
     /**
-     * Constructor
-     *
-     * @param externalType Identifier of the external type this producer reads
-     * @param destType Target Java type
-     * @param producer The producer function (e.g. as lambda expression)
+     * @return The (base) type of the consumers created by this consumer factory.
      */
-    public SimpleCellValueProducerFactory(final ET externalType, final Class<?> destType,
-        final CellValueProducer<S, T, PP> producer) {
-        m_externalType = externalType;
-        m_destType = destType;
-        m_producer = producer;
-    }
+    Class<C> getConsumerType();
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc} - It is guaranteed that the created consumer is assignment-compatible with the type
+     *         returned by {@link #getConsumerType()}.
+     */
     @Override
-    public String getIdentifier() {
-        return m_externalType + "->" + m_destType.getName();
-    }
-
-    @Override
-    public Class<?> getDestinationType() {
-        return m_destType;
-    }
-
-    @Override
-    public ET getSourceType() {
-        return m_externalType;
-    }
-
-    @Override
-    public Class<CellValueProducer<S, T, PP>> getProducerType() {
-        @SuppressWarnings("unchecked")
-        Class<CellValueProducer<S, T, PP>> producerType = (Class<CellValueProducer<S, T, PP>>)m_producer.getClass();
-        return producerType;
-    }
-
-    @Override
-    public CellValueProducer<S, T, PP> create() {
-        return m_producer;
-    }
+    C create();
 }

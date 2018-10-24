@@ -63,7 +63,8 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * @since 3.6
  */
 public class SimpleCellValueConsumerFactory<D extends Destination<ET>, T, ET, CP extends ConsumerParameters<D>>
-    extends AbstractCellValueConsumerFactory<D, T, ET, CP> {
+    extends AbstractCellValueConsumerFactory<D, T, ET, CP>
+    implements TypedCellValueConsumerFactory<D, T, ET, CP, CellValueConsumer<D, T, CP>> {
 
     final ET m_externalType;
 
@@ -103,5 +104,13 @@ public class SimpleCellValueConsumerFactory<D extends Destination<ET>, T, ET, CP
     @Override
     public Class<?> getSourceType() {
         return m_sourceType;
+    }
+
+    @Override
+    public Class<CellValueConsumer<D, T, CP>> getConsumerType() {
+        @SuppressWarnings("unchecked")
+        final Class<CellValueConsumer<D, T, CP>> consumerType =
+            (Class<CellValueConsumer<D, T, CP>>)m_consumer.getClass();
+        return consumerType;
     }
 }
