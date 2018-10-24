@@ -167,7 +167,6 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private NodeUsageComposite m_nodeUsageComposite;
 
-    private final static String EMPTY_JSON = "{ \"rows\" : [] }";
     private Browser m_browser;
 
     /**
@@ -725,42 +724,35 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      * @param viewNodes a map of all available view nodes
      */
     public void setNodes(final WorkflowManager manager, final SubNodeContainer subnodeContainer,
-        @SuppressWarnings("rawtypes") final Map<NodeIDSuffix, ViewHideable> viewNodes) {
+        final Map<NodeIDSuffix, ViewHideable> viewNodes) {
         m_wfManager = manager;
         m_subNodeContainer = subnodeContainer;
         m_viewNodes = viewNodes;
-        String layout = m_subNodeContainer.getLayoutJSONString();
-        if (layout == null || layout.isEmpty() || layout.equals(EMPTY_JSON) || layout.equals("{}")
-            || layout.equals("{ }")) {
-            m_jsonDocument = EMPTY_JSON;
-            return;
-        }
-        JSONLayoutPage page = updateJsonDocument(layout);
-        List<JSONLayoutRow> rows = page.getRows();
-        if (rows != null) {
-            for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
-                JSONLayoutRow row = rows.get(rowIndex);
-                populateDocumentNodeIDs(row);
-                processBasicLayoutRow(row, rowIndex);
-            }
-        }
-    }
-
-    private JSONLayoutPage updateJsonDocument(final String layout) {
         JSONLayoutPage page = null;
-        try {
-            ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
-            page = mapper.readValue(layout, JSONLayoutPage.class);
-            if (page.getRows() == null) {
-                m_jsonDocument = EMPTY_JSON;
-            } else {
-                m_jsonDocument = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
+        String layout = m_subNodeContainer.getLayoutJSONString();
+        if (StringUtils.isNotEmpty(layout)) {
+            try {
+                ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
+                page = mapper.readValue(layout, JSONLayoutPage.class);
+                if (page.getRows() == null) {
+                    page = null;
+                } else {
+                    m_jsonDocument = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
+                }
+            } catch (IOException e) {
+                LOGGER.error("Error parsing layout. Pretty printing not possible: " + e.getMessage(), e);
+                m_jsonDocument = layout;
             }
-        } catch (IOException e) {
-            LOGGER.error("Error parsing layout. Pretty printing not possible: " + e.getMessage(), e);
-            m_jsonDocument = layout;
         }
-        return page;
+        if (page == null) {
+            page = resetLayout();
+        }
+        List<JSONLayoutRow> rows = page.getRows();
+        for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
+            JSONLayoutRow row = rows.get(rowIndex);
+            populateDocumentNodeIDs(row);
+            processBasicLayoutRow(row, rowIndex);
+        }
     }
 
     /**
@@ -1077,22 +1069,19 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     public String getJsonDocument() {
         ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
         ObjectReader reader = mapper.readerForUpdating(new JSONLayoutPage());
-        String layoutString = "";
-        String json = isWindows() ? m_textArea.getText() : m_jsonDocument;
-        if (json != null && !json.isEmpty()) {
-            try {
-                JSONLayoutPage page = reader.readValue(json);
-                layoutString = mapper.writeValueAsString(page);
-            } catch (IOException e) {
-                LOGGER.error("Failed to retrieve JSON string from layout:" + e.getMessage(), e);
-                layoutString = "";
-            }
+        try {
+            String json = isWindows() ? m_textArea.getText() : m_jsonDocument;
+            JSONLayoutPage page = reader.readValue(json);
+            String layoutString = mapper.writeValueAsString(page);
+            return layoutString;
+        } catch (IOException e) {
+            LOGGER.error("Failed to retrieve JSON string from layout:" + e.getMessage(), e);
         }
 
-        return layoutString;
+        return "";
     }
 
-    private boolean isWindows() {
+    private static boolean isWindows() {
         return Platform.OS_WIN32.equals(Platform.getOS());
     }
 
