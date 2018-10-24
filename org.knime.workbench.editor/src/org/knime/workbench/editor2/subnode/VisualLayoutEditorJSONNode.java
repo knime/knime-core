@@ -60,9 +60,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
  * @author Alison Walter, KNIME.com GmbH, Konstanz, Germany
  */
 @JsonAutoDetect
-public class JSONNode {
+public class VisualLayoutEditorJSONNode {
 
-    private int m_nodeID;
+    private String m_nodeID;
     private String m_name;
     private String m_description;
     private JSONLayoutContent m_layout;
@@ -80,9 +80,9 @@ public class JSONNode {
      * @param availableInView if the node is displayed
      * @param type the node type (view, quickform, or nestedLayout)
      */
-    public JSONNode(final int nodeID, final String name, final String description, final JSONLayoutContent layout,
+    public VisualLayoutEditorJSONNode(final int nodeID, final String name, final String description, final JSONLayoutContent layout,
         final String icon, final boolean availableInView, final String type) {
-        m_nodeID = nodeID;
+        m_nodeID = nodeID + "";
         m_name = name;
         m_description = description;
         m_layout = layout;
@@ -94,14 +94,14 @@ public class JSONNode {
     /**
      * @return the node ID
      */
-    public int getNodeID() {
+    public String getNodeID() {
         return m_nodeID;
     }
 
     /**
      * @param nodeID the node ID to set
      */
-    public void setNodeID(final int nodeID) {
+    public void setNodeID(final String nodeID) {
         m_nodeID = nodeID;
     }
 

@@ -52,12 +52,15 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Panel;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -73,6 +76,7 @@ import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
@@ -98,6 +102,8 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -115,10 +121,12 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.ViewHideable;
+import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -274,10 +282,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         m_browser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
         // Create JSON Objects
-        final Map<NodeIDSuffix, JSONLayoutContent> layoutMap = new HashMap<>();
-        m_basicMap.forEach((k, v) -> layoutMap.put(k, v.getView()));
-        final JSONVisualLayoutEditorNodes nodes =
-            new JSONVisualLayoutEditorNodes(m_viewNodes, layoutMap, m_subNodeContainer, m_wfManager);
+        final List<VisualLayoutEditorJSONNode> nodes = createJSONNodeList();
         final ObjectMapper mapper = new ObjectMapper();
         String JSONNodes = "";
         try {
@@ -1099,6 +1104,68 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             m_browser.dispose();
         }
         super.dispose();
+    }
+
+    private List<VisualLayoutEditorJSONNode> createJSONNodeList() {
+        final List<VisualLayoutEditorJSONNode> nodes = new ArrayList<>();
+        for (final Entry<NodeIDSuffix, ViewHideable> viewNode : m_viewNodes.entrySet()) {
+            final ViewHideable node = viewNode.getValue();
+            final NodeID nodeID = viewNode.getKey().prependParent(m_subNodeContainer.getWorkflowManager().getID());
+            final NodeContainer nodeContainer = m_wfManager.getNodeContainer(nodeID);
+            final VisualLayoutEditorJSONNode jsonNode = new VisualLayoutEditorJSONNode(nodeContainer.getID().getIndex(), nodeContainer.getName(),
+                nodeContainer.getCustomDescription(), m_basicMap.get(viewNode.getKey()).getView(),
+                getIcon(nodeContainer), node.isHideInWizard(), getType(node));
+            nodes.add(jsonNode);
+        }
+        return nodes;
+    }
+
+    private static String getType(final ViewHideable node) {
+        final boolean isWizardNode = node instanceof WizardNode;
+        if (isWizardNode) {
+            if (node instanceof DialogNode) {
+                return "quickform";
+            }
+            return "view";
+        }
+        if (node instanceof SubNodeContainer) {
+            return "nestedLayout";
+        }
+        throw new IllegalArgumentException("Node is not view, subnode, or quickform: " + node.getClass());
+    }
+
+    private static String getIcon(final NodeContainer nodeContainer) {
+        if (nodeContainer == null) {
+            return createIcon(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png"));
+        }
+        String iconBase64 = "";
+        if (nodeContainer instanceof SubNodeContainer) {
+            return createIcon(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_16.png"));
+        }
+        try {
+            final URL url = FileLocator.resolve(nodeContainer.getIcon());
+            final String mimeType = URLConnection.guessContentTypeFromName(url.getFile());
+            byte[] imageBytes = null;
+            try (InputStream s = url.openStream()) {
+                imageBytes = IOUtils.toByteArray(s);
+            }
+            iconBase64 = "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
+        } catch (final IOException e) {
+            // Do nothing
+        }
+
+        if (iconBase64.isEmpty()) {
+            return createIcon(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png"));
+        }
+        return iconBase64;
+    }
+
+    private static String createIcon(final Image i) {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final ImageLoader loader = new ImageLoader();
+        loader.data = new ImageData[]{i.getImageData()};
+        loader.save(out, SWT.IMAGE_PNG);
+        return "data:image/png;base64," + Base64.getEncoder().encodeToString(out.toByteArray());
     }
 
     private static class BasicLayoutInfo {
