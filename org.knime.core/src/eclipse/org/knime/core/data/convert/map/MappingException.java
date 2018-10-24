@@ -66,4 +66,13 @@ public class MappingException extends Exception {
     public MappingException(final Throwable cause) {
         super(cause);
     }
+
+    /**
+     * @param message Some further explanation.
+     * @param cause Cause for the conversion failure.
+     * @since 3.7
+     */
+    public MappingException(final String message, final Throwable cause) {
+        super(message != null ? message : cause.getMessage(), cause);
+    }
 }
