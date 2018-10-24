@@ -44,28 +44,23 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   04.06.2018 (Jonathan Hale): created
+ *   Oct 22, 2018 (marcel): created
  */
 package org.knime.core.data.convert.map;
 
-import org.knime.core.data.DataCell;
-
 /**
- * A cell value producer fetches a value of a certain external type from a {@link Source} which can then be written to a
- * KNIME {@link DataCell}.
+ * Interface for {@link CellValueProducer producers} of Java primitive {@code float} values.
  *
- * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @param <S> Type of {@link Source} from which this producer reads.
- * @param <T> The type of the values that this producer produces.
  * @param <PP> Subtype of {@link Source.ProducerParameters} that can be used to configure this producer.
- * @since 3.6
- * @see CellValueConsumer
+ * @since 3.7
+ * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  */
-@FunctionalInterface
-public interface CellValueProducer<S extends Source<?>, T, PP extends Source.ProducerParameters<S>> {
+public interface FloatCellValueProducer<S extends Source<?>, PP extends Source.ProducerParameters<S>>
+    extends PrimitiveCellValueProducer<S, Float, PP> {
 
     /**
-     * Reads a value from the given source using the given parameters.
+     * Reads an {@code float} value from the given source using the given parameters.
      *
      * @param source The {@link Source}.
      * @param params The parameters further specifying how to read from the given source, e.g., from which SQL column or
@@ -74,5 +69,14 @@ public interface CellValueProducer<S extends Source<?>, T, PP extends Source.Pro
      * @return The value which was read from source.
      * @throws MappingException If an exception occurs while producing the cell value.
      */
-    public T produceCellValue(final S source, final PP params) throws MappingException;
+    float produceFloatCellValue(S source, PP params) throws MappingException;
+
+    @Override
+    default Float produceCellValue(final S source, final PP params) throws MappingException {
+        if (producesMissingCellValue(source, params)) {
+            return null;
+        } else {
+            return produceFloatCellValue(source, params);
+        }
+    }
 }

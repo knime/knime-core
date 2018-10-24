@@ -44,35 +44,43 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   04.06.2018 (Jonathan Hale): created
+ *   Oct 24, 2018 (marcel): created
  */
 package org.knime.core.data.convert.map;
 
 import org.knime.core.data.DataCell;
 
 /**
- * A cell value producer fetches a value of a certain external type from a {@link Source} which can then be written to a
- * KNIME {@link DataCell}.
+ * Base interface for producers that read values of a certain Java primitive type from a {@link Source} which can then
+ * be written to a KNIME {@link DataCell}.
+ * <P>
+ * Implementation note: Implementations of this interface are advised to throw a {@link MappingException} in their
+ * primitive producing methods if they would produce a missing value. Clients should avoid that situation by checking
+ * for missing values first by calling {@link #producesMissingCellValue(Source, Source.ProducerParameters)}.
  *
- * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @param <S> Type of {@link Source} from which this producer reads.
- * @param <T> The type of the values that this producer produces.
+ * @param <T> The wrapper type of the Java primitive values that this producer produces. E.g., {@link Integer} for the
+ *            Java primitive type {@code int}.
  * @param <PP> Subtype of {@link Source.ProducerParameters} that can be used to configure this producer.
- * @since 3.6
- * @see CellValueConsumer
+ * @since 3.7
+ * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
+ * @see CellValueProducer
  */
-@FunctionalInterface
-public interface CellValueProducer<S extends Source<?>, T, PP extends Source.ProducerParameters<S>> {
+public interface PrimitiveCellValueProducer<S extends Source<?>, T, PP extends Source.ProducerParameters<S>>
+    extends CellValueProducer<S, T, PP> {
 
     /**
-     * Reads a value from the given source using the given parameters.
+     * Checks if reading from the given source using the given parameters produces a missing value. This method should
+     * always be called before asking implementations of this interface to read a value from source since Java primitive
+     * types cannot represent missing values.
      *
-     * @param source The {@link Source}.
+     * @param source The {@link Source} for which to check for a missing value.
      * @param params The parameters further specifying how to read from the given source, e.g., from which SQL column or
      *            table to read. Specific to the type of {@link Source} and {@link CellValueProducer} that is being
      *            used.
-     * @return The value which was read from source.
-     * @throws MappingException If an exception occurs while producing the cell value.
+     * @return {@code true} if reading from the given source using the given parameters produces a missing value,
+     *         {@code false} otherwise.
+     * @throws MappingException If an exception occurs while checking for a missing value.
      */
-    public T produceCellValue(final S source, final PP params) throws MappingException;
+    boolean producesMissingCellValue(S source, PP params) throws MappingException;
 }
