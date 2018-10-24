@@ -77,7 +77,8 @@ import org.knime.core.data.DataValue;
  * @param <D> Destination type which can be converted by converters created by this factory
  * @since 3.2
  */
-public class SimpleDataCellToJavaConverterFactory<S extends DataValue, D> implements DataCellToJavaConverterFactory<S, D> {
+public class SimpleDataCellToJavaConverterFactory<S extends DataValue, D>
+    implements TypedDataCellToJavaConverterFactory<S, D, DataCellToJavaConverter<S, D>> {
 
     private final Class<S> m_sourceType;
 
@@ -130,6 +131,14 @@ public class SimpleDataCellToJavaConverterFactory<S extends DataValue, D> implem
     @Override
     public Class<D> getDestinationType() {
         return m_destType;
+    }
+
+    @Override
+    public Class<DataCellToJavaConverter<S, D>> getConverterType() {
+        @SuppressWarnings("unchecked")
+        Class<DataCellToJavaConverter<S, D>> converterType =
+            (Class<DataCellToJavaConverter<S, D>>)m_converter.getClass();
+        return converterType;
     }
 
     @Override

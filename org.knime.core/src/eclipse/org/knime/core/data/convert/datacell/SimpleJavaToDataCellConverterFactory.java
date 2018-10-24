@@ -78,7 +78,8 @@ import org.knime.core.node.ExecutionContext;
  * @param <T> type which is convertible by the created {@link JavaToDataCellConverterFactory}.
  * @since 3.2
  */
-public class SimpleJavaToDataCellConverterFactory<T> implements JavaToDataCellConverterFactory<T> {
+public class SimpleJavaToDataCellConverterFactory<T>
+    implements TypedJavaToDataCellConverterFactory<T, JavaToDataCellConverter<T>> {
 
     private final Class<T> m_sourceType;
 
@@ -129,6 +130,13 @@ public class SimpleJavaToDataCellConverterFactory<T> implements JavaToDataCellCo
     @Override
     public DataType getDestinationType() {
         return m_dataType;
+    }
+
+    @Override
+    public Class<JavaToDataCellConverter<T>> getConverterType() {
+        @SuppressWarnings("unchecked")
+        Class<JavaToDataCellConverter<T>> converterType = (Class<JavaToDataCellConverter<T>>)m_converter.getClass();
+        return converterType;
     }
 
     @Override
