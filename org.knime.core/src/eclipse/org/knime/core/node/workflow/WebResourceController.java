@@ -203,6 +203,23 @@ public abstract class WebResourceController {
             validateMethodName, valueMethodName, setValidationErrorMethodName);
     }
 
+    /**
+     * @param bundleID the ID for the web bundle
+     * @return a template for non-views, all fields expected {@code webResources} will be empty
+     */
+    public static WebTemplate getWebTemplateFromBundleID(final String bundleID) {
+        LinkedHashSet<WebResourceLocator> webResList = new LinkedHashSet<WebResourceLocator>();
+        IConfigurationElement implementationExtension =
+            getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, bundleID);
+        if (implementationExtension == null) {
+            return getEmptyWebTemplate();
+        }
+        Set<WebResourceLocator> implementationRes = getResourcesFromExtension(implementationExtension);
+        webResList.addAll(DEFAULT_RES);
+        webResList.addAll(implementationRes);
+        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]), "", "", "", "", "");
+    }
+
     private static WebTemplate getEmptyWebTemplate() {
         return new DefaultWebTemplate(new WebResourceLocator[0], "", "", "", "", "");
     }

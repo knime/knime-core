@@ -73,10 +73,8 @@ import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.PixelConverter;
@@ -109,7 +107,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
@@ -119,14 +116,18 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.web.WebTemplate;
+import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WebResourceController;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.js.core.JavaScriptViewCreator;
 import org.knime.js.core.layout.DefaultLayoutCreatorImpl;
 import org.knime.js.core.layout.bs.JSONLayoutColumn;
 import org.knime.js.core.layout.bs.JSONLayoutContent;
@@ -166,7 +167,6 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private NodeUsageComposite m_nodeUsageComposite;
 
-    private File m_tempDir;
     private final static String EMPTY_JSON = "{ \"rows\" : [] }";
     private Browser m_browser;
 
@@ -254,35 +254,21 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         composite.setLayout(new GridLayout(1, false));
         composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-        // Create temporary directory if necessary
-        if (!tempDirExists()) {
-            File td = null;
-            try {
-                td = WebResourceUtil.createTempDirectory("knimeLayoutEditor");
-                td.deleteOnExit();
-            } catch(final IOException ex) {
-                LOGGER.error("Cannot create temp directory: " + ex.getMessage(), ex);
-            }
-            m_tempDir = td;
-        }
-
-        // Copy files to temp location
-        final IConfigurationElement i = WebResourceUtil.getConfigurationFromID(WebResourceUtil.ID_WEB_RES,
-            WebResourceUtil.ATTR_RES_BUNDLE_ID, "knimeLayoutEditor_1.0.0");
-        final Map<File, String> files = WebResourceUtil.getWebResourceAndDependencies(i);
-        final Map<File, String> fixedLocations = changeLocations(files);
+        // Web resources
+        final WebTemplate template = WebResourceController.getWebTemplateFromBundleID("knimeLayoutEditor_1.0.0");
+        VisualLayoutViewCreator creator = new VisualLayoutViewCreator(template);
+        String html = "";
         try {
-            WebResourceUtil.copyWebResourcesToTemp(m_tempDir, fixedLocations);
-        } catch (IOException ex) {
-            LOGGER.error("Cannot copy files to temp directory" + ex.getMessage(), ex);
+            html = creator.createWebResources("visual layout editor", null, null, "");
+        } catch (final IOException e) {
+            LOGGER.error("Cannot create visual layout editor", e);
         }
 
         // Create browser
         m_browser = new Browser(composite, SWT.NONE);
 
         try {
-            final String location = m_tempDir.getAbsolutePath() + "/layoutEditor/index.html";
-            m_browser.setUrl(new File(location).toURI().toURL().toString());
+            m_browser.setUrl(new File(html).toURI().toURL().toString());
         } catch (MalformedURLException e) {
             LOGGER.error(e.getMessage(), e);
         }
@@ -312,51 +298,11 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
             @Override
             public void completed(final ProgressEvent event) {
-                m_browser.evaluate("loadNodes(" + jsonNodes + ");");
-                m_browser.evaluate("loadLayout(\'" + JSONLayout + "\');");
-            } });
+                m_browser.evaluate("setNodes(\'" + jsonNodes + "\');");
+                m_browser.evaluate("setLayout(\'" + JSONLayout + "\');");
+            }
+        });
         return composite;
-    }
-
-    private boolean tempDirExists() {
-        return m_tempDir != null && m_tempDir.exists() && m_tempDir.isDirectory();
-    }
-
-    private static Map<File, String> changeLocations(final Map<File, String> files) {
-        final Map<File, String> updateLocations = new HashMap<>();
-        for (File f : files.keySet()) {
-            setLocation(updateLocations, f);
-        }
-        return updateLocations;
-    }
-
-    private static void setLocation(final Map<File, String> files, final File f) {
-        if (f.isFile()) {
-            final String fileName = f.toPath().getFileName().toString();
-            final String base = "layoutEditor/";
-            switch (FilenameUtils.getExtension(fileName.toLowerCase())) {
-                case "css":
-                    files.put(f, base + "css/" + fileName);
-                    break;
-                case "map" :
-                    files.put(f, base + "css/" + fileName);
-                    break;
-                case "js":
-                    files.put(f, base + "js/" + fileName);
-                    break;
-                case "html":
-                    files.put(f, base + fileName);
-                    break;
-                default:
-                    files.put(f, base + "fonts/" + fileName);
-            }
-        }
-        else {
-            File[] subFiles = f.listFiles();
-            for(final File subFile : subFiles) {
-                setLocation(files, subFile);
-            }
-        }
     }
 
     private Composite createBasicComposite(final Composite parent) {
@@ -1069,7 +1015,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     }
 
     private void updateVisualLayout() {
-        m_browser.evaluate("loadLayout(\'" + getJsonDocument() + "\');");
+        m_browser.evaluate("setLayout(\'" + getJsonDocument() + "\');");
     }
 
     /**
@@ -1230,4 +1176,10 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     }
 
+    private static final class VisualLayoutViewCreator extends JavaScriptViewCreator<WebViewContent, WebViewContent> {
+        VisualLayoutViewCreator(final WebTemplate template) {
+            super(null);
+            setWebTemplate(template);
+        }
+    }
 }
