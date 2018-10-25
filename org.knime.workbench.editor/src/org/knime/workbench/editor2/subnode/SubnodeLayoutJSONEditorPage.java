@@ -470,6 +470,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                     }
                     m_basicMap.remove(suffix);
                     tryUpdateJsonFromBasic();
+                    // repaint
+                    updateModelFromJson();
                 }
             });
         }
@@ -516,6 +518,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                     }
                     m_basicMap.put(entry.getKey(), newInfo);
                     tryUpdateJsonFromBasic();
+                    // repaint
+                    updateModelFromJson();
                 }
             });
             GridData gridData = new GridData();
@@ -543,6 +547,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                     return;
                 }
                 resetLayout();
+                // repaint
+                updateModelFromJson();
             }
         });
         // Ensure scroll bar appears when composite data changes
