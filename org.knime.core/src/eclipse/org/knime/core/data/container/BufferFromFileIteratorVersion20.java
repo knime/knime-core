@@ -61,6 +61,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.data.container.DCObjectInputVersion2.BlockableDCObjectInputVersion2;
 import org.knime.core.data.container.DefaultTableStoreReader.FromFileIterator;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.data.filestore.FileStoreCell;
@@ -96,7 +97,7 @@ public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
     private boolean m_hasThrownReadException;
 
     /** Stream to read from. */
-    private DCObjectInputVersion2 m_inStream;
+    private BlockableDCObjectInputVersion2 m_inStream;
 
     /** Utility object with designated functionality to deserialize datacell. */
     private DataCellStreamReader m_dataCellStreamReader;
@@ -131,7 +132,7 @@ public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
                 throw new IOException("Unsupported compression format: " + tableFormatReader.getBinFileCompressionFormat());
         }
         m_dataCellStreamReader = new DataCellStreamReader(tableFormatReader);
-        m_inStream = new DCObjectInputVersion2(in, m_dataCellStreamReader);
+        m_inStream = new BlockableDCObjectInputVersion2(in, m_dataCellStreamReader);
     }
 
     /** {@inheritDoc} */
@@ -150,7 +151,7 @@ public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
         if (!hasNext()) {
             throw new NoSuchElementException("Iterator at end");
         }
-        final DCObjectInputVersion2 inStream = m_inStream;
+        final BlockableDCObjectInputVersion2 inStream = m_inStream;
         int colCount = m_tableFormatReader.getTableSpec().getNumColumns();
         if (inStream == null) { // iterator was closed
             if (m_missingCellsForClosedTable == null) {
@@ -211,7 +212,7 @@ public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
      * @throws IOException If reading fails for IO problems.
      */
     private RowKey readRowKeyAndEndBlock(
-            final DCObjectInputVersion2 inStream) throws IOException {
+            final BlockableDCObjectInputVersion2 inStream) throws IOException {
         if (!m_tableFormatReader.isReadRowKey()) {
             return DUMMY_ROW_KEY;
         }
@@ -292,7 +293,7 @@ public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
         }
         Class<? extends DataCell> cellClass = cl.getCellClass();
         DataCellSerializer<? extends DataCell> ser = cl.getSerializer();
-        DCObjectInputVersion2 inStream = new DCObjectInputVersion2(in);
+        BlockableDCObjectInputVersion2 inStream = new BlockableDCObjectInputVersion2(in);
         BlobDataCell result;
         try {
             if (ser != null) {

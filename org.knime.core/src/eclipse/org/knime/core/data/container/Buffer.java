@@ -97,6 +97,7 @@ import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.data.container.DCObjectOutputVersion2.BlockableDCObjectOutputVersion2;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.data.container.storage.AbstractTableStoreReader.TableStoreCloseableRowIterator;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
@@ -910,7 +911,8 @@ public class Buffer implements KNIMEStreamConstants {
             // (in one case from 5mins down to 2 mins)
             out = new BufferedOutputStream(out);
         }
-        try (DCObjectOutputVersion2 outStream = new DCObjectOutputVersion2(out)) {
+        try (BlockableDCObjectOutputVersion2 outStream =
+            new BlockableDCObjectOutputVersion2(out)) {
             if (ser != null) { // DataCell is datacell-serializable
                 outStream.writeDataCellPerKNIMESerializer(ser, cell);
             } else {

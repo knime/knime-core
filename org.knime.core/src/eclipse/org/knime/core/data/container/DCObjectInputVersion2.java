@@ -73,10 +73,7 @@ import org.knime.core.data.util.NonClosableInputStream;
  * @author Bernd Wiswedel, University of Konstanz
  * @since 3.7
  */
-public final class DCObjectInputVersion2 implements KNIMEStreamConstants {
-
-    /** Escapable stream, returns eof when block ends. Stream we read from. */
-    private final BlockableInputStream m_in;
+public class DCObjectInputVersion2 implements KNIMEStreamConstants {
 
     /** Wrapped stream that is passed to the DataCellSerializer,
      * this stream reads from m_in. */
@@ -87,22 +84,13 @@ public final class DCObjectInputVersion2 implements KNIMEStreamConstants {
     private ClassLoader m_priorityClassLoader;
 
     /**
-     * Creates new input stream that reads from <code>in</code>. Used for blob reading (no embedded cell support).
-     * @param in The stream to read from.
-     */
-    DCObjectInputVersion2(final InputStream in) {
-        this(in, null);
-    }
-
-    /**
      * Creates new input stream that reads from <code>in</code>.
      * @param in The stream to read from.
      * @param cellReader The object that helps to read DataCell contained in
      * DataCell as required by {@link DataCellDataInput#readDataCell()}.
      */
     public DCObjectInputVersion2(final InputStream in, final DataCellStreamReader cellReader) {
-        m_in = new BlockableInputStream(in);
-        m_dataIn = new DCLongUTFDataInputStream(new DataInputStream(m_in), cellReader);
+        m_dataIn = new DCLongUTFDataInputStream(new DataInputStream(in), cellReader);
     }
 
     /** Reads a data cell from the stream.
@@ -111,8 +99,7 @@ public final class DCObjectInputVersion2 implements KNIMEStreamConstants {
      * @throws IOException If reading fails.
      * @see DataCellSerializer#deserialize(DataCellDataInput)
      */
-    DataCell readDataCellPerKNIMESerializer(
-            final DataCellSerializer<? extends DataCell> serializer)
+    DataCell readDataCellPerKNIMESerializer(final DataCellSerializer<? extends DataCell> serializer)
         throws IOException {
         return serializer.deserialize(m_dataIn);
     }
@@ -124,17 +111,13 @@ public final class DCObjectInputVersion2 implements KNIMEStreamConstants {
      * {@link ClassCastException} are wrapped in such IO exceptions).
      */
     DataCell readDataCellPerJavaSerialization() throws IOException {
-        PriorityGlobalObjectInputStream gl =
-            new PriorityGlobalObjectInputStream(
-                    new NonClosableInputStream(m_dataIn));
-        gl.setCurrentClassLoader(m_priorityClassLoader);
-        try {
+        try (PriorityGlobalObjectInputStream gl =
+            new PriorityGlobalObjectInputStream(new NonClosableInputStream(m_dataIn))) {
+            gl.setCurrentClassLoader(m_priorityClassLoader);
             return (DataCell)gl.readObject();
         } catch (Exception exception) {
-            throw new IOException("Unable to restore data cell ("
-                    + exception.getClass().getSimpleName() + ")" , exception);
-        } finally {
-            gl.close();
+            throw new IOException("Unable to restore data cell (" + exception.getClass().getSimpleName() + ")",
+                exception);
         }
     }
 
@@ -182,12 +165,6 @@ public final class DCObjectInputVersion2 implements KNIMEStreamConstants {
         return m_dataIn.readByte();
     }
 
-    /** Pushes the stream forth until a mark is encountered.
-     * @throws IOException If IO problems occur. */
-    void endBlock() throws IOException {
-        m_in.endBlock();
-    }
-
     /** Set the class loader to ask "first" to load classes. Used when
      * a data cell is deserialized and all its member should be loaded in the
      * context of that class loader.
@@ -203,6 +180,42 @@ public final class DCObjectInputVersion2 implements KNIMEStreamConstants {
      */
     void close() throws IOException {
         m_dataIn.close();
+    }
+
+    final static class BlockableDCObjectInputVersion2 extends DCObjectInputVersion2 {
+
+        /** Escapable stream, returns eof when block ends. Stream we read from. */
+        private final BlockableInputStream m_in;
+
+        private BlockableDCObjectInputVersion2(final BlockableInputStream in, final DataCellStreamReader cellReader) {
+            super(in, cellReader);
+            m_in = in;
+        }
+
+        /**
+         * Creates new input stream that reads from <code>in</code>.
+         * @param in The stream to read from.
+         * @param cellReader The object that helps to read DataCell contained in
+         * DataCell as required by {@link DataCellDataInput#readDataCell()}.
+         */
+        @SuppressWarnings("resource")
+        BlockableDCObjectInputVersion2(final InputStream in, final DataCellStreamReader cellReader) {
+            this(new BlockableInputStream(in), cellReader);
+        }
+
+        /**
+         * Creates new input stream that reads from <code>in</code>. Used for blob reading (no embedded cell support).
+         * @param in The stream to read from.
+         */
+        BlockableDCObjectInputVersion2(final InputStream in) {
+            this(in, null);
+        }
+
+        /** Pushes the stream forth until a mark is encountered.
+         * @throws IOException If IO problems occur. */
+        void endBlock() throws IOException {
+            m_in.endBlock();
+        }
     }
 
     /** Data input stream with functionality to read encapsulated DataCell

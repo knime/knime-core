@@ -56,6 +56,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.DCObjectOutputVersion2.BlockableDCObjectOutputVersion2;
 import org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
 import org.knime.core.node.NodeSettingsWO;
@@ -72,7 +73,7 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
      * the stream that writes to the file, it's a special object output stream, in which we can mark the end of an entry
      * (to figure out when a cell implementation reads too many or too few bytes).
      */
-    private final DCObjectOutputVersion2 m_outStream;
+    private final BlockableDCObjectOutputVersion2 m_outStream;
 
     /**
      * Constructs a writer for writing KNIME tables to disk.
@@ -115,7 +116,7 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
      * @param outStream To write to.
      * @throws IOException If that fails.
      */
-    void writeRowKey(final RowKey key, final DCObjectOutputVersion2 outStream) throws IOException {
+    void writeRowKey(final RowKey key, final BlockableDCObjectOutputVersion2 outStream) throws IOException {
         if (isWriteRowKey()) {
             outStream.writeRowKey(key);
             outStream.endBlock();
@@ -125,7 +126,8 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
     /**
      * Creates short cut array and wraps the argument stream in a {@link DCObjectOutputVersion2}.
      */
-    private DCObjectOutputVersion2 initOutFile(final OutputStream outStream) throws IOException {
+    private BlockableDCObjectOutputVersion2 initOutFile(final OutputStream outStream) throws IOException {
+        BlockableOutputStream bos;
         OutputStream wrap;
         switch (m_compressionFormat) {
             case Gzip:
@@ -142,7 +144,7 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
             default:
                 throw new IOException("Unsupported compression format: " + m_compressionFormat);
         }
-        return new DCObjectOutputVersion2(wrap, this);
+        return new BlockableDCObjectOutputVersion2(wrap, this);
     }
 
     /** {@inheritDoc} */

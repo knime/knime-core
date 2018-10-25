@@ -69,21 +69,10 @@ import org.knime.core.data.filestore.FileStoreKey;
  * {@link DataCell} class that offer it) as well as plain (and slow) java
  * serialization.
  *
- * <p>The general stream layout is as follows: Objects of this class write
- * to a {@link BlockableOutputStream} in order to write {@link DataCell}s to
- * an isolated sandbox. Each DataCell entry is preceded by one or more control
- * bytes, which are written by the associated {@link Buffer}. The {@link Buffer}
- * also decides when to close a block. {@link DataCell} which need to be java
- * serialized are written a freshly created {@link ObjectOutputStream} (for
- * each cell a new stream).
- *
  * @author Bernd Wiswedel, University of Konstanz
  * @since 3.7
  */
 public class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
-
-    /** Stream that we write to. Used to mark end of cells (or row keys). */
-    private final BlockableOutputStream m_out;
 
     /** This stream writes to m_out and is passed to the DataCellSerializer. */
     private DCLongUTFDataOutputStream m_dataOut;
@@ -93,16 +82,7 @@ public class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseab
      * @param tableStoreWriter the corresponding writer (callback for embedded cell writing)
      */
     public DCObjectOutputVersion2(final OutputStream out, final AbstractTableStoreWriter tableStoreWriter) {
-        m_out = new BlockableOutputStream(out);
-        m_dataOut = new DCLongUTFDataOutputStream(new DataOutputStream(m_out), tableStoreWriter);
-    }
-
-    /** Setups a new output stream for writing blobs (not supporting writing embedded cells).
-     * @param out The stream to write to (the file)
-     */
-    DCObjectOutputVersion2(final OutputStream out) {
-        m_out = new BlockableOutputStream(out);
-        m_dataOut = new DCLongUTFDataOutputStream(new DataOutputStream(m_out), null);
+        m_dataOut = new DCLongUTFDataOutputStream(new DataOutputStream(out), tableStoreWriter);
     }
 
     /** Writes a data cell using the serializer. No blocking is done (not here).
@@ -165,19 +145,6 @@ public class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseab
         m_dataOut.write(controlByte);
     }
 
-    /** Marks the end of the block.
-     * @throws IOException In case of stream corruption.
-     */
-    void endBlock() throws IOException {
-        m_out.endBlock();
-    }
-
-    /** Writes the row end identifier.
-     * @throws IOException In case of stream corruption. */
-    void endRow() throws IOException {
-        m_out.write(BYTE_ROW_SEPARATOR);
-    }
-
     /** Closes the underlying streams.
      * @throws IOException If the stream closing causes IO problems. */
     @Override
@@ -215,6 +182,54 @@ public class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseab
                 throw new UnsupportedOperationException("Writing encapsulated cells not supported for Blobs");
             }
             m_tableStoreWriter.writeDataCell(cell, DCObjectOutputVersion2.this);
+        }
+    }
+
+    /**
+     * The general stream layout is as follows: Objects of this class write to a {@link BlockableOutputStream} in order
+     * to write {@link DataCell}s to an isolated sandbox. Each DataCell entry is preceded by one or more control bytes,
+     * which are written by the associated {@link Buffer}. The {@link Buffer} also decides when to close a block.
+     * {@link DataCell} which need to be java serialized are written a freshly created {@link ObjectOutputStream} (for
+     * each cell a new stream).
+     */
+    static final class BlockableDCObjectOutputVersion2 extends DCObjectOutputVersion2 {
+
+        /** Stream that we write to. Used to mark end of cells (or row keys). */
+        private final BlockableOutputStream m_out;
+
+        private BlockableDCObjectOutputVersion2(final BlockableOutputStream out,
+            final DefaultTableStoreWriter tableStoreWriter) {
+            super(out, tableStoreWriter);
+            m_out = out;
+        }
+
+        /** Setups a new output stream.
+         * @param out The stream to write to (the file)
+         * @param tableStoreWriter the corresponding writer (callback for embedded cell writing)
+         */
+        @SuppressWarnings("resource")
+        BlockableDCObjectOutputVersion2(final OutputStream out, final DefaultTableStoreWriter tableStoreWriter) {
+            this(new BlockableOutputStream(out), tableStoreWriter);
+        }
+
+        /** Setups a new output stream for writing blobs (not supporting writing embedded cells).
+         * @param out The stream to write to (the file)
+         */
+        BlockableDCObjectOutputVersion2(final OutputStream out) {
+            this(out, null);
+        }
+
+        /** Marks the end of the block.
+         * @throws IOException In case of stream corruption.
+         */
+        void endBlock() throws IOException {
+            m_out.endBlock();
+        }
+
+        /** Writes the row end identifier.
+         * @throws IOException In case of stream corruption. */
+        void endRow() throws IOException {
+            m_out.write(BYTE_ROW_SEPARATOR);
         }
     }
 
