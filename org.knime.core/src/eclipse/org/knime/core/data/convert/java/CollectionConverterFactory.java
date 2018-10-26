@@ -48,6 +48,7 @@
 package org.knime.core.data.convert.java;
 
 import java.lang.reflect.Array;
+import java.util.function.Function;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
@@ -78,6 +79,9 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
 
     private final DataCellToJavaConverterFactory<SE, DE> m_elementConverterFactory;
 
+    private final Function<DataCellToJavaConverter<SE, DE>, //
+            DataCellToJavaConverter<CollectionDataValue, D>> m_converterCreator;
+
     /**
      * Constructor.
      *
@@ -87,49 +91,66 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
     CollectionConverterFactory(final DataCellToJavaConverterFactory<SE, DE> elementConverterFactory) {
         m_destType = ClassUtil.getArrayType(elementConverterFactory.getDestinationType());
         m_elementConverterFactory = elementConverterFactory;
+        m_converterCreator = createConverterCreator();
+    }
+
+    private Function<DataCellToJavaConverter<SE, DE>, DataCellToJavaConverter<CollectionDataValue, D>>
+        createConverterCreator() {
+        Function<DataCellToJavaConverter<SE, DE>, DataCellToJavaConverter<CollectionDataValue, D>> converterCreator =
+            null;
+        // Check if converter factory creates primitive converters. This allows us to avoid autoboxing.
+        if (m_elementConverterFactory.getDestinationType().isPrimitive()
+            && m_elementConverterFactory instanceof TypedDataCellToJavaConverterFactory) {
+            final Class<?> converterType =
+                ((TypedDataCellToJavaConverterFactory<?, ?, ?>)m_elementConverterFactory).getConverterType();
+            // Implement for each primitive type explicitly. That's the most performant way.
+            // double:
+            if (DataCellToDoubleConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createToDoubleConverter;
+            }
+            // int:
+            else if (DataCellToIntConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createToIntConverter;
+            }
+            // long:
+            else if (DataCellToLongConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createToLongConverter;
+            }
+            // boolean:
+            else if (DataCellToBooleanConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createToBooleanConverter;
+            }
+            // float:
+            else if (DataCellToFloatConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createToFloatConverter;
+            }
+            // byte:
+            else if (DataCellToByteConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createToByteConverter;
+            }
+            // short:
+            else if (DataCellToShortConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createToShortConverter;
+            }
+            // char:
+            else if (DataCellToCharConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createToCharConverter;
+            }
+        }
+        if (converterCreator == null) {
+            // Fall-through.
+            converterCreator = this::createToObjectConverter;
+        }
+        return converterCreator;
     }
 
     @Override
     public DataCellToJavaConverter<CollectionDataValue, D> create() {
         final DataCellToJavaConverter<SE, DE> elementConverter = m_elementConverterFactory.create();
-        if (m_elementConverterFactory.getDestinationType().isPrimitive()) {
-            // Implement for each primitive type explicitly. That's the most performant way.
-            // double:
-            if (elementConverter instanceof DataCellToDoubleConverter) {
-                return createToDoubleConverter(elementConverter);
-            }
-            // int:
-            else if (elementConverter instanceof DataCellToIntConverter) {
-                return createToIntConverter(elementConverter);
-            }
-            // long:
-            else if (elementConverter instanceof DataCellToLongConverter) {
-                return createToLongConverter(elementConverter);
-            }
-            // boolean:
-            else if (elementConverter instanceof DataCellToBooleanConverter) {
-                return createToBooleanConverter(elementConverter);
-            }
-            // float:
-            else if (elementConverter instanceof DataCellToFloatConverter) {
-                return createToFloatConverter(elementConverter);
-            }
-            // byte:
-            else if (elementConverter instanceof DataCellToByteConverter) {
-                return createToByteConverter(elementConverter);
-            }
-            // short:
-            else if (elementConverter instanceof DataCellToShortConverter) {
-                return createToShortConverter(elementConverter);
-            }
-            // char:
-            else if (elementConverter instanceof DataCellToCharConverter) {
-                return createToCharConverter(elementConverter);
-            }
-        }
-        // Otherwise it's an object type. / Fall-through.
-        return createToObjectConverter(elementConverter);
+        return m_converterCreator.apply(elementConverter);
     }
+
+    // Collection converter implementations:
 
     private DataCellToJavaConverter<CollectionDataValue, D>
         createToDoubleConverter(final DataCellToJavaConverter<SE, DE> elementConverter) {
@@ -140,9 +161,7 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
             int i = 0;
             for (final DataCell element : source) {
                 if (element.isMissing()) {
-                    // TODO: Primitive converters don't support missing values at the moment.
-                    throw new IllegalStateException("Collection cell contains a missing value. This "
-                        + "cannot be converted to a Java primitive type.");
+                    throw createMissingValueException();
                 } else {
                     @SuppressWarnings("unchecked")
                     final SE elementValue = (SE)element;
@@ -165,9 +184,7 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
             int i = 0;
             for (final DataCell element : source) {
                 if (element.isMissing()) {
-                    // TODO: Primitive converters don't support missing values at the moment.
-                    throw new IllegalStateException("Collection cell contains a missing value. This "
-                        + "cannot be converted to a Java primitive type.");
+                    throw createMissingValueException();
                 } else {
                     @SuppressWarnings("unchecked")
                     final SE elementValue = (SE)element;
@@ -190,9 +207,7 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
             int i = 0;
             for (final DataCell element : source) {
                 if (element.isMissing()) {
-                    // TODO: Primitive converters don't support missing values at the moment.
-                    throw new IllegalStateException("Collection cell contains a missing value. This "
-                        + "cannot be converted to a Java primitive type.");
+                    throw createMissingValueException();
                 } else {
                     @SuppressWarnings("unchecked")
                     final SE elementValue = (SE)element;
@@ -215,9 +230,7 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
             int i = 0;
             for (final DataCell element : source) {
                 if (element.isMissing()) {
-                    // TODO: Primitive converters don't support missing values at the moment.
-                    throw new IllegalStateException("Collection cell contains a missing value. This "
-                        + "cannot be converted to a Java primitive type.");
+                    throw createMissingValueException();
                 } else {
                     @SuppressWarnings("unchecked")
                     final SE elementValue = (SE)element;
@@ -240,9 +253,7 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
             int i = 0;
             for (final DataCell element : source) {
                 if (element.isMissing()) {
-                    // TODO: Primitive converters don't support missing values at the moment.
-                    throw new IllegalStateException("Collection cell contains a missing value. This "
-                        + "cannot be converted to a Java primitive type.");
+                    throw createMissingValueException();
                 } else {
                     @SuppressWarnings("unchecked")
                     final SE elementValue = (SE)element;
@@ -265,9 +276,7 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
             int i = 0;
             for (final DataCell element : source) {
                 if (element.isMissing()) {
-                    // TODO: Primitive converters don't support missing values at the moment.
-                    throw new IllegalStateException("Collection cell contains a missing value. This "
-                        + "cannot be converted to a Java primitive type.");
+                    throw createMissingValueException();
                 } else {
                     @SuppressWarnings("unchecked")
                     final SE elementValue = (SE)element;
@@ -290,9 +299,7 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
             int i = 0;
             for (final DataCell element : source) {
                 if (element.isMissing()) {
-                    // TODO: Primitive converters don't support missing values at the moment.
-                    throw new IllegalStateException("Collection cell contains a missing value. This "
-                        + "cannot be converted to a Java primitive type.");
+                    throw createMissingValueException();
                 } else {
                     @SuppressWarnings("unchecked")
                     final SE elementValue = (SE)element;
@@ -315,9 +322,7 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
             int i = 0;
             for (final DataCell element : source) {
                 if (element.isMissing()) {
-                    // TODO: Primitive converters don't support missing values at the moment.
-                    throw new IllegalStateException("Collection cell contains a missing value. This "
-                        + "cannot be converted to a Java primitive type.");
+                    throw createMissingValueException();
                 } else {
                     @SuppressWarnings("unchecked")
                     final SE elementValue = (SE)element;
@@ -351,6 +356,12 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
             final D destination = (D)array;
             return destination;
         };
+    }
+
+    private static RuntimeException createMissingValueException() {
+        throw new IllegalStateException("Collection cell contains missing values. Those cannot be converted by a "
+            + "primitive converter as Java primitives cannot represent missing values. Missing values must be handled "
+            + "outside the converter. This is an implementation error.");
     }
 
     @Override

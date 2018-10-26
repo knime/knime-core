@@ -49,6 +49,7 @@ package org.knime.core.data.convert.datacell;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.function.Function;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -73,56 +74,74 @@ import org.knime.core.node.ExecutionContext;
  */
 public class ArrayToCollectionConverterFactory<S, SE> implements JavaToDataCellConverterFactory<S> {
 
-    private final JavaToDataCellConverterFactory<SE> m_elementFactory;
+    private final JavaToDataCellConverterFactory<SE> m_elementConverterFactory;
+
+    private final Function<JavaToDataCellConverter<SE>, JavaToDataCellConverter<S>> m_converterCreator;
 
     /**
-     * @param elementFactory Factory to convert the components of the input array into components of the output array
+     * @param elementConverterFactory Factory to convert the components of the input array into components of the output
+     *            array
      */
-    ArrayToCollectionConverterFactory(final JavaToDataCellConverterFactory<SE> elementFactory) {
-        m_elementFactory = elementFactory;
+    ArrayToCollectionConverterFactory(final JavaToDataCellConverterFactory<SE> elementConverterFactory) {
+        m_elementConverterFactory = elementConverterFactory;
+        m_converterCreator = createConverterCreator();
+    }
+
+    private Function<JavaToDataCellConverter<SE>, JavaToDataCellConverter<S>> createConverterCreator() {
+        Function<JavaToDataCellConverter<SE>, JavaToDataCellConverter<S>> converterCreator = null;
+        // Check if converter factory creates primitive converters. This allows us to avoid autoboxing.
+        if (m_elementConverterFactory.getSourceType().isPrimitive()
+            && m_elementConverterFactory instanceof TypedJavaToDataCellConverterFactory) {
+            final Class<?> converterType =
+                ((TypedJavaToDataCellConverterFactory<?, ?>)m_elementConverterFactory).getConverterType();
+            // Implement for each primitive type explicitly. That's the most performant way.
+            // double:
+            if (DoubleToDataCellConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createDoubleConverter;
+            }
+            // int:
+            else if (IntToDataCellConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createIntConverter;
+            }
+            // long:
+            else if (LongToDataCellConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createLongConverter;
+            }
+            // boolean:
+            else if (BooleanToDataCellConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createBooleanConverter;
+            }
+            // float:
+            else if (FloatToDataCellConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createFloatConverter;
+            }
+            // byte:
+            else if (ByteToDataCellConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createByteConverter;
+            }
+            // short:
+            else if (ShortToDataCellConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createShortConverter;
+            }
+            // char:
+            else if (CharToDataCellConverter.class.isAssignableFrom(converterType)) {
+                converterCreator = this::createCharConverter;
+            }
+        }
+        if (converterCreator == null) {
+            // Fall-through.
+            converterCreator = this::createObjectConverter;
+        }
+        return converterCreator;
     }
 
     @Override
     public JavaToDataCellConverter<S> create(final ExecutionContext context) {
-        final JavaToDataCellConverter<SE> elementConverter = m_elementFactory.create(context);
-        if (m_elementFactory.getSourceType().isPrimitive()) {
-            // Implement for each primitive type explicitly. That's the most performant way.
-            // double:
-            if (elementConverter instanceof DoubleToDataCellConverter) {
-                return createDoubleConverter(elementConverter);
-            }
-            // int:
-            else if (elementConverter instanceof IntToDataCellConverter) {
-                return createIntConverter(elementConverter);
-            }
-            // long:
-            else if (elementConverter instanceof LongToDataCellConverter) {
-                return createLongConverter(elementConverter);
-            }
-            // boolean:
-            else if (elementConverter instanceof BooleanToDataCellConverter) {
-                return createBooleanConverter(elementConverter);
-            }
-            // float:
-            else if (elementConverter instanceof FloatToDataCellConverter) {
-                return createFloatConverter(elementConverter);
-            }
-            // byte:
-            else if (elementConverter instanceof ByteToDataCellConverter) {
-                return createByteConverter(elementConverter);
-            }
-            // short:
-            else if (elementConverter instanceof ShortToDataCellConverter) {
-                return createShortConverter(elementConverter);
-            }
-            // char:
-            else if (elementConverter instanceof CharToDataCellConverter) {
-                return createCharConverter(elementConverter);
-            }
-        }
-        // Otherwise it's an object type. / Fall-through.
-        return createObjectConverter(elementConverter);
+        final JavaToDataCellConverter<SE> elementConverter = m_elementConverterFactory.create(context);
+        return m_converterCreator.apply(elementConverter);
     }
+
+    // Collection converter implementations:
 
     private JavaToDataCellConverter<S> createDoubleConverter(final JavaToDataCellConverter<SE> elementConverter) {
         return new AbstractArrayToCollectionConverter<S, DoubleToDataCellConverter>(
@@ -270,22 +289,22 @@ public class ArrayToCollectionConverterFactory<S, SE> implements JavaToDataCellC
 
     @Override
     public Class<S> getSourceType() {
-        return (Class<S>)Array.newInstance(m_elementFactory.getSourceType(), 0).getClass();
+        return (Class<S>)Array.newInstance(m_elementConverterFactory.getSourceType(), 0).getClass();
     }
 
     @Override
     public DataType getDestinationType() {
-        return ListCell.getCollectionType(m_elementFactory.getDestinationType());
+        return ListCell.getCollectionType(m_elementConverterFactory.getDestinationType());
     }
 
     @Override
     public String getIdentifier() {
-        return getClass().getName() + "(" + m_elementFactory.getIdentifier() + ")";
+        return getClass().getName() + "(" + m_elementConverterFactory.getIdentifier() + ")";
     }
 
     @Override
     public String getName() {
-        return "Array of " + m_elementFactory.getName();
+        return "Array of " + m_elementConverterFactory.getName();
     }
 
     @Override
@@ -300,14 +319,14 @@ public class ArrayToCollectionConverterFactory<S, SE> implements JavaToDataCellC
             return false;
         }
         ArrayToCollectionConverterFactory<?, ?> other = (ArrayToCollectionConverterFactory<?, ?>)obj;
-        return other.m_elementFactory.equals(m_elementFactory);
+        return other.m_elementConverterFactory.equals(m_elementConverterFactory);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((m_elementFactory == null) ? 0 : m_elementFactory.hashCode());
+        result = prime * result + ((m_elementConverterFactory == null) ? 0 : m_elementConverterFactory.hashCode());
         return result;
     }
 
