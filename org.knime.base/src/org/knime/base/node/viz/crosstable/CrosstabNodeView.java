@@ -118,9 +118,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             JCheckBox checkBox = new JCheckBox(col);
 
             if (col.equals(naming.getFrequencyName())
-                    || col.equals(naming.getPercentName())
-                    || col.equals(naming.getRowPercentName())
-                    || col.equals(naming.getColPercentName())) {
+                    || col.equals(naming.getRowPercentName())) {
                 checkBox.setSelected(true);
             }
             m_propBoxes.add(checkBox);
