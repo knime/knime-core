@@ -71,38 +71,46 @@ import org.knime.core.util.MutableInteger;
 import org.knime.stats.StatsUtil;
 
 /**
- * The independent samples tow tailed T-test. Test statistics are computed for
- * the assumption the variances are equal and for the case that this assumption
- * is not made.
+ * The independent samples tow tailed T-test. Test statistics are computed for the assumption the variances are equal
+ * and for the case that this assumption is not made.
  *
  * @author Heiko Hofer
  */
 public class OneSampleTTestStatistics {
 
     public static final String T_VALUE = "t";
+
     public static final String DEGREES_OF_FREEDOM = "df";
+
     public static final String P_VALUE = "p-value (2-tailed)";
 
     public static final String COLUMN = "Column";
+
     public static final String N = "N";
+
     public static final String MISSING_COUNT = "Missing Count";
+
     public static final String LABEL = "Label";
+
     public static final String MEAN = "Mean";
+
     public static final String MEAN_DIFFERENCE = "Mean Difference";
+
     public static final String STANDARD_DEVIATION = "Standard Deviation";
+
     public static final String TEST_VALUE = "Test Value";
 
-    public static final String STANDARD_ERROR_MEAN =
-        "Standard Error Mean";
-    public static final String CONFIDENCE_INTERVAL_PROBABILITY =
-        "Confidence Interval Probability";
-    public static final String CONFIDENCE_INTERVAL_LOWER_BOUND =
-        "Confidence Interval of the Difference (Lower Bound)";
-    public static final String CONFIDENCE_INTERVAL_UPPER_BOUND =
-        "Confidence Interval of the Difference (Upper Bound)";
+    public static final String STANDARD_ERROR_MEAN = "Standard Error Mean";
+
+    public static final String CONFIDENCE_INTERVAL_PROBABILITY = "Confidence Interval Probability";
+
+    public static final String CONFIDENCE_INTERVAL_LOWER_BOUND = "Confidence Interval of the Difference (Lower Bound)";
+
+    public static final String CONFIDENCE_INTERVAL_UPPER_BOUND = "Confidence Interval of the Difference (Upper Bound)";
 
     /** the test column. */
     private String m_column;
+
     /** the test value. */
     private double m_testValue;
 
@@ -111,6 +119,7 @@ public class OneSampleTTestStatistics {
 
     /** summary statistics for the test column */
     private SummaryStatistics m_stats;
+
     /** summary statistics for the (test column - m_testValue) */
     private SummaryStatistics m_statsDiff;
 
@@ -123,12 +132,9 @@ public class OneSampleTTestStatistics {
     /**
      * @param column the column
      * @param testValue the test value
-     * @param confidenceIntervalProb the probability used to compute
-     * confidence intervals (Typically 0.95)
+     * @param confidenceIntervalProb the probability used to compute confidence intervals (Typically 0.95)
      */
-    public OneSampleTTestStatistics(final String column,
-            final double testValue,
-            final double confidenceIntervalProb) {
+    public OneSampleTTestStatistics(final String column, final double testValue, final double confidenceIntervalProb) {
         super();
         m_column = column;
         m_testValue = testValue;
@@ -160,28 +166,18 @@ public class OneSampleTTestStatistics {
 
     /**
      * Get the spec of the group statistics table.
+     *
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getDescStatsSpec() {
-        return new DataTableSpec(new String[] {
-                COLUMN
-                , N
-                , MISSING_COUNT
-                , MEAN
-                , STANDARD_DEVIATION
-                , STANDARD_ERROR_MEAN},
-                new DataType[] {
-                StringCell.TYPE
-                , IntCell.TYPE
-                , IntCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-        });
+        return new DataTableSpec(new String[]{COLUMN, N, MISSING_COUNT, MEAN, STANDARD_DEVIATION, STANDARD_ERROR_MEAN},
+            new DataType[]{StringCell.TYPE, IntCell.TYPE, IntCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE,
+                DoubleCell.TYPE});
     }
 
     /**
      * Get descriptive statistics
+     *
      * @param exec
      * @return the descriptive statistics for each column test column
      */
@@ -201,8 +197,8 @@ public class OneSampleTTestStatistics {
     }
 
     /**
-     * Get descriptive statistics. The cells of the table that is returned by
-     * getDescStatsTable(exec).
+     * Get descriptive statistics. The cells of the table that is returned by getDescStatsTable(exec).
+     *
      * @return the descriptive statistics for each column test column
      */
     public List<List<DataCell>> getDescStatsCells() {
@@ -214,14 +210,15 @@ public class OneSampleTTestStatistics {
 
     /**
      * Get descriptive statistics for the given column
+     *
      * @param rowID the row key
      * @param column the name of the column
      * @param stats the statistics of the column
      * @param missing the missing values in this column
      * @return a DataRow with descriptive statistics
      */
-    private List<DataCell> getDescStats(final String column,
-            final SummaryStatistics stats, final MutableInteger missing) {
+    private List<DataCell> getDescStats(final String column, final SummaryStatistics stats,
+        final MutableInteger missing) {
         List<DataCell> cells = new ArrayList<DataCell>();
         cells.add(new StringCell(column));
 
@@ -235,6 +232,7 @@ public class OneSampleTTestStatistics {
 
     /**
      * Get the spec of the group statistics table.
+     *
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getTableSpec() {
@@ -254,8 +252,8 @@ public class OneSampleTTestStatistics {
     }
 
     /**
-     * Get the test result of the t-test, for the assumption of equal
-     * variance and the assumption of unequal variances.
+     * Get the test result of the t-test, for the assumption of equal variance and the assumption of unequal variances.
+     *
      * @param exec the execution context
      * @return the t-test results
      */
@@ -276,6 +274,7 @@ public class OneSampleTTestStatistics {
 
     /**
      * Get the test result of the t-test.
+     *
      * @return the t-test results
      */
     public List<List<DataCell>> getTTestCells() {
@@ -285,31 +284,27 @@ public class OneSampleTTestStatistics {
         return cells;
     }
 
-
     /** A wrapper to the TTest class to access protected methods. */
     private class KnimeTTest extends TTest {
 
         /**
-         * Returns the  one-sample, two-tailed t-test
+         * Returns the one-sample, two-tailed t-test
+         *
          * @return the test results
          */
         public List<DataCell> getOneSampleTTest() {
             double meanDiff = m_statsDiff.getMean();
             double stdDeviation = m_statsDiff.getStandardDeviation();
-            double stdErrorMean =
-                stdDeviation / FastMath.sqrt(m_statsDiff.getN());
+            double stdErrorMean = stdDeviation / FastMath.sqrt(m_statsDiff.getN());
             long df = m_statsDiff.getN() - 1;
             TDistribution distribution = new TDistribution(df);
-            double tValue = FastMath.abs(
-                    distribution.inverseCumulativeProbability(
-                            (1 - m_confidenceIntervalProp) / 2));
+            double tValue = FastMath.abs(distribution.inverseCumulativeProbability((1 - m_confidenceIntervalProp) / 2));
             double confidenceDelta = tValue * stdErrorMean;
             double confidenceLowerBound = meanDiff - confidenceDelta;
             double confidenceUpperBound = meanDiff + confidenceDelta;
 
             double t = meanDiff / stdErrorMean;
-            double pValue = 2.0 * distribution.cumulativeProbability(
-                    -FastMath.abs(t));
+            double pValue = 2.0 * distribution.cumulativeProbability(-FastMath.abs(t));
 
             List<DataCell> cells = new ArrayList<DataCell>();
             cells.add(new StringCell(m_column));

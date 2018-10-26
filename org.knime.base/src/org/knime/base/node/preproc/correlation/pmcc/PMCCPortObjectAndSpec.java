@@ -90,8 +90,8 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 
 /**
- * PortObject and PortObjectSpec of the model that's passed between the
- * correlation nodes.
+ * PortObject and PortObjectSpec of the model that's passed between the correlation nodes.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
@@ -104,19 +104,14 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
      */
     public static final class ModelSerializer extends PortObjectSerializer<PMCCPortObjectAndSpec> {
         @Override
-        public PMCCPortObjectAndSpec loadPortObject(
-                final PortObjectZipInputStream in,
-                final PortObjectSpec spec,
-                final ExecutionMonitor exec) throws IOException,
-                CanceledExecutionException {
+        public PMCCPortObjectAndSpec loadPortObject(final PortObjectZipInputStream in, final PortObjectSpec spec,
+            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
             return (PMCCPortObjectAndSpec)spec;
         }
 
         @Override
-        public void savePortObject(final PMCCPortObjectAndSpec portObject,
-                final PortObjectZipOutputStream out,
-                final ExecutionMonitor exec)
-                throws IOException, CanceledExecutionException {
+        public void savePortObject(final PMCCPortObjectAndSpec portObject, final PortObjectZipOutputStream out,
+            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
         }
     }
 
@@ -128,8 +123,7 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
      */
     public static final class SpecSerializer extends PortObjectSpecSerializer<PMCCPortObjectAndSpec> {
         @Override
-        public PMCCPortObjectAndSpec loadPortObjectSpec(
-                final PortObjectSpecZipInputStream in) throws IOException {
+        public PMCCPortObjectAndSpec loadPortObjectSpec(final PortObjectSpecZipInputStream in) throws IOException {
             ModelContentRO cont = ModelContent.loadFromXML(in);
             try {
                 return load(cont);
@@ -139,10 +133,8 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
         }
 
         @Override
-        public void savePortObjectSpec(
-                final PMCCPortObjectAndSpec portObjectSpec,
-                final PortObjectSpecZipOutputStream out)
-            throws IOException {
+        public void savePortObjectSpec(final PMCCPortObjectAndSpec portObjectSpec,
+            final PortObjectSpecZipOutputStream out) throws IOException {
             ModelContent cont = new ModelContent("correlation");
             portObjectSpec.save(cont);
             cont.saveToXML(out);
@@ -153,39 +145,43 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
     public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(PMCCPortObjectAndSpec.class);
 
     private final String[] m_colNames;
+
     private final HalfDoubleMatrix m_correlations;
 
-    /** Values smaller than this are considered to be 0, used to avoid
-     * round-off errors.
-     * @since 2.6*/
+    /**
+     * Values smaller than this are considered to be 0, used to avoid round-off errors.
+     *
+     * @since 2.6
+     */
     public static final double ROUND_ERROR_OK = 1e-8;
 
-    /** Creates new object, whereby no correlation values are available.
+    /**
+     * Creates new object, whereby no correlation values are available.
+     *
      * @param includes The columns being analyzed.
      * @noreference This constructor is not intended to be referenced by clients.
      */
     public PMCCPortObjectAndSpec(final String[] includes) {
         if (includes == null || Arrays.asList(includes).contains(null)) {
-            throw new NullPointerException("Arg must not be null or "
-                    + "contain null elements");
+            throw new NullPointerException("Arg must not be null or " + "contain null elements");
         }
         m_colNames = includes;
         m_correlations = null;
     }
 
-    /** Creates new object with content. Used in the execute method.
+    /**
+     * Creates new object with content. Used in the execute method.
+     *
      * @param includes The names of the columns.
      * @param cors The correlation values
-     * @throws InvalidSettingsException If cor-values don't match the columns
-     * or are out of range.
+     * @throws InvalidSettingsException If cor-values don't match the columns or are out of range.
      * @noreference This constructor is not intended to be referenced by clients.
      */
-    public PMCCPortObjectAndSpec(final String[] includes, final HalfDoubleMatrix cors)
-        throws InvalidSettingsException {
+    public PMCCPortObjectAndSpec(final String[] includes, final HalfDoubleMatrix cors) throws InvalidSettingsException {
         final int l = includes.length;
         if (cors.getRowCount() != l) {
-            throw new InvalidSettingsException("Correlations array has wrong "
-                    + "size, expected " + l + " got " + cors.getRowCount());
+            throw new InvalidSettingsException(
+                "Correlations array has wrong " + "size, expected " + l + " got " + cors.getRowCount());
         }
         for (int i = 0; i < l; i++) {
             for (int j = i + 1; j < l; j++) {
@@ -219,10 +215,9 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
         return "Correlation values on " + m_colNames.length + " columns";
     }
 
-
     /**
-     * Returns a matrix with the pairwise correlation values. The entries in the
-     * matrix match the entries in {@link #getColNames()}.
+     * Returns a matrix with the pairwise correlation values. The entries in the matrix match the entries in
+     * {@link #getColNames()}.
      *
      * @return a matrix with correlation values
      */
@@ -230,15 +225,17 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
         return m_correlations;
     }
 
-    /** @return If correlation values are available.
-     * @since 2.6*/
+    /**
+     * @return If correlation values are available.
+     * @since 2.6
+     */
     public boolean hasData() {
         return m_correlations != null;
     }
 
     /**
-     * Get set of column names that would be in the output table if a given
-     * correlation threshold is applied.
+     * Get set of column names that would be in the output table if a given correlation threshold is applied.
+     *
      * @param threshold The threshold, in [0, 1]
      * @return The set of string suggested as "survivors"
      * @since 2.6
@@ -315,21 +312,19 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
 
     /**
      * Creates the correlation table, used in the view and as output table.
+     *
      * @param con For progress info/cancelation
      * @return The correlation table
      * @throws CanceledExecutionException If canceled.
      * @since 2.6
      */
-    public BufferedDataTable createCorrelationMatrix(final ExecutionContext con)
-        throws CanceledExecutionException {
-        BufferedDataContainer cont =
-            con.createDataContainer(createOutSpec(m_colNames));
+    public BufferedDataTable createCorrelationMatrix(final ExecutionContext con) throws CanceledExecutionException {
+        BufferedDataContainer cont = con.createDataContainer(createOutSpec(m_colNames));
         return (BufferedDataTable)createCorrelationMatrix(cont, con);
 
     }
 
-    private DataTable createCorrelationMatrix(final DataContainer cont,
-            final ExecutionMonitor mon)
+    private DataTable createCorrelationMatrix(final DataContainer cont, final ExecutionMonitor mon)
         throws CanceledExecutionException {
         if (!hasData()) {
             throw new IllegalStateException("No data available");
@@ -359,9 +354,12 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
     }
 
     private static final DataCell MIN_VALUE_CELL = new DoubleCell(-1.0);
+
     private static final DataCell MAX_VALUE_CELL = new DoubleCell(1.0);
 
-    /** Creates output spec for correlation table.
+    /**
+     * Creates output spec for correlation table.
+     *
      * @param names the column names being analyzed.
      * @return The new output spec.
      * @since 2.6
@@ -370,24 +368,27 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
         String descFullPrecision = new FullPrecisionRendererFactory().getDescription();
         DataColumnSpec[] colSpecs = new DataColumnSpec[names.length];
         for (int i = 0; i < colSpecs.length; i++) {
-            DataColumnSpecCreator c =
-                new DataColumnSpecCreator(names[i], DoubleCell.TYPE);
+            DataColumnSpecCreator c = new DataColumnSpecCreator(names[i], DoubleCell.TYPE);
             HashMap<String, String> properties = new HashMap<>(1);
             properties.put(DataValueRenderer.PROPERTY_PREFERRED_RENDERER, descFullPrecision);
             c.setProperties(new DataColumnProperties(properties));
-            c.setDomain(new DataColumnDomainCreator(
-                    MIN_VALUE_CELL, MAX_VALUE_CELL).createDomain());
+            c.setDomain(new DataColumnDomainCreator(MIN_VALUE_CELL, MAX_VALUE_CELL).createDomain());
             colSpecs[i] = c.createSpec();
         }
         return new DataTableSpec("Correlation values", colSpecs);
     }
 
     private static final String CFG_INTERNAL = "pmcc_model";
+
     private static final String CFG_NAMES = "names";
+
     private static final String CFG_VALUES = "correlation_values";
+
     private static final String CFG_CONTAINS_VALUES = "contains_values";
 
-    /** Saves this object to a config.
+    /**
+     * Saves this object to a config.
+     *
      * @param m To save to.
      */
     public void save(final ConfigWO m) {
@@ -399,21 +400,21 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
         }
     }
 
-    /** Factory method to load from config.
+    /**
+     * Factory method to load from config.
+     *
      * @param m to load from.
      * @return new object loaded from argument
      * @throws InvalidSettingsException If that fails.
      */
-    public static PMCCPortObjectAndSpec load(final ConfigRO m)
-        throws InvalidSettingsException {
+    public static PMCCPortObjectAndSpec load(final ConfigRO m) throws InvalidSettingsException {
         ConfigRO sub = m.getConfig(CFG_INTERNAL);
         String[] names = sub.getStringArray(CFG_NAMES);
         if (names == null) {
             throw new InvalidSettingsException("Column names array is null.");
         }
         if (sub.getBoolean(CFG_CONTAINS_VALUES)) {
-            HalfDoubleMatrix corrMatrix =
-                new HalfDoubleMatrix(sub.getConfig(CFG_VALUES));
+            HalfDoubleMatrix corrMatrix = new HalfDoubleMatrix(sub.getConfig(CFG_VALUES));
             return new PMCCPortObjectAndSpec(names, corrMatrix);
         } else {
             return new PMCCPortObjectAndSpec(names);

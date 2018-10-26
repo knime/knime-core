@@ -160,9 +160,8 @@ public class CrosstabStatisticsCalculator {
         int chiSquareDF = (m_totals.getRowTotal().size() - 1) * (m_totals.getColTotal().size() - 1);
         double chiSquarePValue = chiQuarePValue(chiSquare, chiSquareDF);
         // compute fisher's exact test
-        double fisherPValue =
-            fisherExactPValue(m_freqTable, m_rowIndex, m_colIndex, m_freqIndex, m_totals.getRowTotal().keySet(),
-                m_totals.getColTotal().keySet());
+        double fisherPValue = fisherExactPValue(m_freqTable, m_rowIndex, m_colIndex, m_freqIndex,
+            m_totals.getRowTotal().keySet(), m_totals.getColTotal().keySet());
         m_statistics = new CrosstabStatistics(chiSquare, chiSquareDF, chiSquarePValue, fisherPValue);
         m_statistics.run(exec);
 
@@ -287,9 +286,8 @@ public class CrosstabStatisticsCalculator {
         final double lowerBound = 0.00001;
         final double upperBound = 1;
 
-        int[] nom =
-            new int[]{crosstab[0][0] + crosstab[0][1], crosstab[1][0] + crosstab[1][1],
-                crosstab[0][0] + crosstab[1][0], crosstab[0][1] + crosstab[1][1],};
+        int[] nom = new int[]{crosstab[0][0] + crosstab[0][1], crosstab[1][0] + crosstab[1][1],
+            crosstab[0][0] + crosstab[1][0], crosstab[0][1] + crosstab[1][1],};
         int[] den = new int[]{nom[0] + nom[1], crosstab[0][0], crosstab[0][1], crosstab[1][0], crosstab[1][1]};
 
         checkZeros(nom);
@@ -448,7 +446,8 @@ public class CrosstabStatisticsCalculator {
             cspecs.add((new DataColumnSpecCreator(CHI_SQUARE_DF, IntCell.TYPE)).createSpec());
             cspecs.add((new DataColumnSpecCreator(CHI_SQUARE_PVALUE, DoubleCell.TYPE)).createSpec());
             HashMap<String, String> properties = new HashMap<>(1);
-            properties.put(DataValueRenderer.PROPERTY_PREFERRED_RENDERER, new FullPrecisionRendererFactory().getDescription());
+            properties.put(DataValueRenderer.PROPERTY_PREFERRED_RENDERER,
+                new FullPrecisionRendererFactory().getDescription());
             DataColumnSpecCreator specCreator = new DataColumnSpecCreator(FISHER_EXACT_PVALUE, DoubleCell.TYPE);
             specCreator.setProperties(new DataColumnProperties(properties));
             cspecs.add(specCreator.createSpec());

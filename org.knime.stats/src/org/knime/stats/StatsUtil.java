@@ -65,17 +65,19 @@ import org.knime.core.data.renderer.DoubleValueRenderer.FullPrecisionRendererFac
  */
 public final class StatsUtil {
 
-    private StatsUtil() {}
+    private StatsUtil() {
+    }
 
     private static final String PVALUE_COLUMN_NAME = "p-Value";
+
     /**
      * Full precision renderer for double values
      */
     public static final String FULL_PRECISION_RENDERER = new FullPrecisionRendererFactory().getDescription();
 
     /**
-     * Computes the standard error.
-     * See http://mathworld.wolfram.com/StandardError.html for a definition.
+     * Computes the standard error. See http://mathworld.wolfram.com/StandardError.html for a definition.
+     *
      * @param stats a summary of descriptive statistics
      * @return the standard error
      */
@@ -91,7 +93,8 @@ public final class StatsUtil {
      * @param type the data type of the column
      * @return the columnspec
      */
-    public static DataColumnSpec createDataColumnSpec(final String name, final HashMap<String, String> properties, final DataType type) {
+    public static DataColumnSpec createDataColumnSpec(final String name, final HashMap<String, String> properties,
+        final DataType type) {
         DataColumnSpecCreator columnSpecCreator = new DataColumnSpecCreator(name, type);
         if (properties != null) {
             columnSpecCreator.setProperties(new DataColumnProperties(properties));

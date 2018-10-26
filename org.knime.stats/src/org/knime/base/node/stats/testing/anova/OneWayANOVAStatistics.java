@@ -71,70 +71,84 @@ import org.knime.core.util.MutableInteger;
 import org.knime.stats.StatsUtil;
 
 /**
- * The independent samples tow tailed T-test. Test statistics are computed for
- * the assumption the variances are equal and for the case that this assumption
- * is not made.
+ * The independent samples tow tailed T-test. Test statistics are computed for the assumption the variances are equal
+ * and for the case that this assumption is not made.
  *
  * @author Heiko Hofer
  */
 public class OneWayANOVAStatistics {
 
     public static final String F_VALUE = "F";
+
     public static final String DEGREES_OF_FREEDOM = "df";
+
     public static final String P_VALUE = "p-value";
 
     public static final String TEST_COLUMN = "Test Column";
+
     public static final String GROUP = "Group";
+
     public static final String N = "N";
+
     public static final String MISSING_COUNT = "Missing Count";
-    public static final String MISSING_COUNT_GROUP_COL =
-        "Missing Count (Group Column)";
+
+    public static final String MISSING_COUNT_GROUP_COL = "Missing Count (Group Column)";
+
     public static final String MEAN = "Mean";
+
     public static final String STANDARD_DEVIATION = "Standard Deviation";
+
     public static final String STANDARD_ERROR = "Standard Error Mean";
 
-    public static final String CONFIDENCE_INTERVAL_PROBABILITY =
-        "Confidence Interval Probability";
-    public static final String CONFIDENCE_INTERVAL_LOWER_BOUND =
-        "Confidence Interval of the Difference (Lower Bound)";
-    public static final String CONFIDENCE_INTERVAL_UPPER_BOUND =
-        "Confidence Interval of the Difference (Upper Bound)";
+    public static final String CONFIDENCE_INTERVAL_PROBABILITY = "Confidence Interval Probability";
+
+    public static final String CONFIDENCE_INTERVAL_LOWER_BOUND = "Confidence Interval of the Difference (Lower Bound)";
+
+    public static final String CONFIDENCE_INTERVAL_UPPER_BOUND = "Confidence Interval of the Difference (Upper Bound)";
+
     public static final String MINIMUM = "Minimum";
+
     public static final String MAXIMUM = "Maximum";
 
     public static final String SUM_OF_SQUARES = "Sum of Squares";
+
     public static final String MEAN_SQUARE = "Mean Square";
 
     public static final String SOURCE = "Source";
-    public static final String SOURCE_BETWEEN_GROUPS = "Between Groups";
-    public static final String SOURCE_WITHIN_GROUPS = "Within Groups";
-    public static final String SOURCE_TOTAL = "Total";
 
+    public static final String SOURCE_BETWEEN_GROUPS = "Between Groups";
+
+    public static final String SOURCE_WITHIN_GROUPS = "Within Groups";
+
+    public static final String SOURCE_TOTAL = "Total";
 
     /** the test column. */
     private String m_column;
+
     /** The alpha used for the confidence interval. */
     private double m_confidenceIntervalProp;
+
     /** the group identifiers. */
     private List<String> m_groups;
+
     /** summary statistics across groups. */
     private SummaryStatistics m_stats;
+
     /** summary statistics per group. */
     private List<SummaryStatistics> m_gstats;
+
     /** number of missing values per group. */
     private List<MutableInteger> m_missing;
+
     /** number of missing values in the grouping column */
     private MutableInteger m_missingGroup;
 
     /**
      * @param column the test column
      * @param groups the group identifiers
-     * @param confindeceIntervalProb the probability used to compute
-     * confidence intervals (Typically 0.95)
+     * @param confindeceIntervalProb the probability used to compute confidence intervals (Typically 0.95)
      */
-    public OneWayANOVAStatistics(final String column,
-            final List<String> groups,
-            final double confindeceIntervalProb) {
+    public OneWayANOVAStatistics(final String column, final List<String> groups, final double confindeceIntervalProb) {
         super();
         m_column = column;
         m_confidenceIntervalProp = confindeceIntervalProb;
@@ -156,6 +170,7 @@ public class OneWayANOVAStatistics {
 
     /**
      * Add value to the test.
+     *
      * @param value the value
      * @param gIndex the group of the value
      */
@@ -166,6 +181,7 @@ public class OneWayANOVAStatistics {
 
     /**
      * Notify about a missing value in the given group.
+     *
      * @param gIndex the group
      */
     public void addMissing(final int gIndex) {
@@ -181,42 +197,22 @@ public class OneWayANOVAStatistics {
 
     /**
      * Get the spec of the group statistics table.
+     *
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getGroupStatisticsSpec() {
-        return new DataTableSpec(new String[] {
-                TEST_COLUMN
-                , GROUP
-                , N
-                , MISSING_COUNT
-                , MISSING_COUNT_GROUP_COL
-                , MEAN
-                , STANDARD_DEVIATION
-                , STANDARD_ERROR
-                , CONFIDENCE_INTERVAL_PROBABILITY
-                , CONFIDENCE_INTERVAL_LOWER_BOUND
-                , CONFIDENCE_INTERVAL_UPPER_BOUND
-                , MINIMUM
-                , MAXIMUM},
-                new DataType[] {
-                StringCell.TYPE
-                , StringCell.TYPE
-                , IntCell.TYPE
-                , IntCell.TYPE
-                , IntCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-        });
+        return new DataTableSpec(
+            new String[]{TEST_COLUMN, GROUP, N, MISSING_COUNT, MISSING_COUNT_GROUP_COL, MEAN, STANDARD_DEVIATION,
+                STANDARD_ERROR, CONFIDENCE_INTERVAL_PROBABILITY, CONFIDENCE_INTERVAL_LOWER_BOUND,
+                CONFIDENCE_INTERVAL_UPPER_BOUND, MINIMUM, MAXIMUM},
+            new DataType[]{StringCell.TYPE, StringCell.TYPE, IntCell.TYPE, IntCell.TYPE, IntCell.TYPE, DoubleCell.TYPE,
+                DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE,
+                DoubleCell.TYPE});
     }
 
     /**
      * Get descriptive statistics
+     *
      * @param exec
      * @return the descriptive statistics for each group
      */
@@ -236,8 +232,8 @@ public class OneWayANOVAStatistics {
     }
 
     /**
-     * Get descriptive statistics. The cells of the table that is returned by
-     * getGroupTable(exec).
+     * Get descriptive statistics. The cells of the table that is returned by getGroupTable(exec).
+     *
      * @return the descriptive statistics for each group
      */
     public List<List<DataCell>> getGroupStatisticsCells() {
@@ -252,6 +248,7 @@ public class OneWayANOVAStatistics {
 
     /**
      * Get descriptive statistics for the given Group.
+     *
      * @param groupIndex the index of the group
      * @return the descriptive statistics for this group.
      */
@@ -270,13 +267,10 @@ public class OneWayANOVAStatistics {
 
         long df = stats.getN() - 1;
         TDistribution distribution = new TDistribution(df);
-        double tValue = FastMath.abs(
-                distribution.inverseCumulativeProbability(
-                        (1 - m_confidenceIntervalProp) / 2));
+        double tValue = FastMath.abs(distribution.inverseCumulativeProbability((1 - m_confidenceIntervalProp) / 2));
         double confidenceDelta = tValue * StatsUtil.getStandardError(stats);
         double confidenceLowerBound = stats.getMean() - confidenceDelta;
         double confidenceUpperBound = stats.getMean() + confidenceDelta;
-
 
         cells.add(new DoubleCell(confidenceLowerBound));
         cells.add(new DoubleCell(confidenceUpperBound));
@@ -288,6 +282,7 @@ public class OneWayANOVAStatistics {
 
     /**
      * Get descriptive statistics for all groups.
+     *
      * @return the descriptive statistics for all groups
      */
     public List<DataCell> getGroupsTotalStatistics() {
@@ -309,13 +304,10 @@ public class OneWayANOVAStatistics {
 
         long df = stats.getN() - 1;
         TDistribution distribution = new TDistribution(df);
-        double tValue = FastMath.abs(
-                distribution.inverseCumulativeProbability(
-                        (1 - m_confidenceIntervalProp) / 2));
+        double tValue = FastMath.abs(distribution.inverseCumulativeProbability((1 - m_confidenceIntervalProp) / 2));
         double confidenceDelta = tValue * StatsUtil.getStandardError(stats);
         double confidenceLowerBound = stats.getMean() - confidenceDelta;
         double confidenceUpperBound = stats.getMean() + confidenceDelta;
-
 
         cells.add(new DoubleCell(confidenceLowerBound));
         cells.add(new DoubleCell(confidenceUpperBound));
@@ -325,13 +317,12 @@ public class OneWayANOVAStatistics {
         return cells;
     }
 
-
     /**
      * Get the spec of the group statistics table.
+     *
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getTableSpec() {
-
 
         final List<DataColumnSpec> allColSpecs = new ArrayList<>(7);
         allColSpecs.add(new DataColumnSpecCreator(TEST_COLUMN, StringCell.TYPE).createSpec());
@@ -346,8 +337,8 @@ public class OneWayANOVAStatistics {
     }
 
     /**
-     * Get the test result of the t-test, for the assumption of equal
-     * variance and the assumption of unequal variances.
+     * Get the test result of the t-test, for the assumption of equal variance and the assumption of unequal variances.
+     *
      * @param exec the execution context
      * @return the t-test results
      */
@@ -366,9 +357,9 @@ public class OneWayANOVAStatistics {
         return outTable;
     }
 
-
     /**
      * Get the test result of the t-test.
+     *
      * @return the t-test results
      */
     public List<List<DataCell>> getTTestCells() {
@@ -426,9 +417,9 @@ public class OneWayANOVAStatistics {
         return cells;
     }
 
-
     /**
      * Get summary statistics per group
+     *
      * @return the summary statistics
      */
     public List<SummaryStatistics> getGroupSummaryStatistics() {
@@ -437,6 +428,7 @@ public class OneWayANOVAStatistics {
 
     /**
      * Get summary statistics across groups
+     *
      * @return the summary statistics
      */
     public SummaryStatistics getSummaryStatistics() {
@@ -446,18 +438,25 @@ public class OneWayANOVAStatistics {
     private class ANOVA {
         /** sum of squares between the groups */
         private double m_squrb;
+
         /** sum of squares within the groups */
         private double m_squri;
+
         /** degrees of freedom between the groups */
         private long m_dfb;
+
         /** degrees of freedom within the groups */
         private long m_dfi;
+
         /** mean square between the groups */
         private double m_msqurb;
+
         /** mean square within the groups */
         private double m_msquri;
+
         /** the test statistic F */
         private double m_f;
+
         /** the p-value */
         private double m_pValue;
 
@@ -469,15 +468,13 @@ public class OneWayANOVAStatistics {
             // sum of squares between the groups:
             m_squrb = 0;
             for (SummaryStatistics stat : m_gstats) {
-                m_squrb += stat.getN() * (stat.getMean() - m_stats.getMean())
-                        * (stat.getMean() - m_stats.getMean());
+                m_squrb += stat.getN() * (stat.getMean() - m_stats.getMean()) * (stat.getMean() - m_stats.getMean());
             }
 
             // sum of squares within the groups:
             m_squri = 0;
             for (SummaryStatistics stat : m_gstats) {
-                m_squri += (stat.getN() - 1) * stat.getStandardDeviation()
-                    * stat.getStandardDeviation();
+                m_squri += (stat.getN() - 1) * stat.getStandardDeviation() * stat.getStandardDeviation();
             }
 
             m_dfb = k - 1;
@@ -545,8 +542,6 @@ public class OneWayANOVAStatistics {
         public double getpValue() {
             return m_pValue;
         }
-
-
 
     }
 }
