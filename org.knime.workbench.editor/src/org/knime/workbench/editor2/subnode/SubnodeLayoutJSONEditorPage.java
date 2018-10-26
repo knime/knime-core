@@ -146,10 +146,14 @@ import org.knime.js.core.layout.bs.JSONNestedLayout;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 /**
  *
@@ -171,6 +175,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     private boolean m_basicPanelAvailable = true;
     private final Map<NodeIDSuffix, BasicLayoutInfo> m_basicMap;
     private Composite m_basicComposite;
+    private Label m_basicStatusLine;
     private NodeUsageComposite m_nodeUsageComposite;
     private Browser m_browser;
     private BrowserFunction m_visualLayoutUpdate;
@@ -222,6 +227,18 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             public void widgetSelected(final SelectionEvent e) {
                 final String tabText = tabs.getSelection()[0].getText();
                 applyUsageChanges();
+
+                // clean JSON
+                final ObjectMapper mapper = createObjectMapperForUpdating();
+                final ObjectReader reader = mapper.readerForUpdating(new JSONLayoutPage());
+                try {
+                    JSONLayoutPage page = reader.readValue(m_jsonDocument);
+                    cleanJSONPage(page);
+                    m_jsonDocument = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
+                } catch (IOException ex) {
+                    LOGGER.error("Failed to retrieve JSON string from layout:" + ex.getMessage(), ex);
+                }
+
                 switch (tabText) {
                     case "Visual Layout":
                         updateVisualLayout();
@@ -298,7 +315,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
         // Create JSON Objects
         final List<VisualLayoutEditorJSONNode> nodes = createJSONNodeList();
-        final ObjectMapper mapper = new ObjectMapper();
+        // ensure node layout is written the same as the metanode layout
+        final ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
         String JSONNodes = "";
         try {
             JSONNodes = mapper.writeValueAsString(nodes);
@@ -339,6 +357,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         scrollPane.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
 
         fillBasicComposite();
+
         return composite;
     }
 
@@ -551,6 +570,17 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 updateModelFromJson();
             }
         });
+
+        // Add status line
+        m_basicStatusLine = new Label(m_basicComposite, SWT.SHADOW_NONE | SWT.WRAP);
+        m_basicStatusLine.setForeground(new Color(Display.getCurrent(), 255, 140, 0));
+        final GridData statusGridData = new GridData(SWT.LEFT, SWT.BOTTOM, true, false);
+        statusGridData.horizontalSpan = 7;
+        statusGridData.heightHint =  new PixelConverter(m_basicStatusLine).convertHeightInCharsToPixels(2);
+        statusGridData.minimumHeight = new PixelConverter(m_basicStatusLine).convertHeightInCharsToPixels(1);
+        statusGridData.minimumWidth = (int) (m_basicComposite.getBounds().width * 0.75);
+        m_basicStatusLine.setLayoutData(statusGridData);
+
         // Ensure scroll bar appears when composite data changes
         ((ScrolledComposite)m_basicComposite.getParent())
             .setMinSize(m_basicComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
@@ -772,11 +802,12 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         String layout = m_subNodeContainer.getLayoutJSONString();
         if (StringUtils.isNotEmpty(layout)) {
             try {
-                ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
+                ObjectMapper mapper = createObjectMapperForUpdating();
                 page = mapper.readValue(layout, JSONLayoutPage.class);
                 if (page.getRows() == null) {
                     page = null;
                 } else {
+                    cleanJSONPage(page);
                     m_jsonDocument = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
                 }
             } catch (IOException e) {
@@ -843,7 +874,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     }
 
     private void updateBasicLayout() {
-        ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
+        ObjectMapper mapper = createObjectMapperForUpdating();
         JSONLayoutPage page = new JSONLayoutPage();
         ObjectReader reader = mapper.readerForUpdating(page);
         try {
@@ -968,12 +999,52 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             column.setContent(contentList);
         }
         page.setRows(rows);
-        ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
+        final String errorMsg = cleanJSONPage(page);
+        m_basicStatusLine.setText(errorMsg);
+        ObjectMapper mapper = createObjectMapperForUpdating();
         String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
         m_jsonDocument = json;
-        if (isWindows()) {
-            m_textArea.setText(m_jsonDocument);
+    }
+
+    private static String cleanJSONPage(final JSONLayoutPage page) {
+        if (page.getRows() == null) {
+            return "";
         }
+        String errorMsg = "";
+        final List<JSONLayoutRow> cleanedRows = new ArrayList<>();
+        boolean emptyRows = false;
+        boolean emptyCols = false;
+        for(final JSONLayoutRow row : page.getRows()) {
+            if (!row.getColumns().isEmpty()) {
+                final List<JSONLayoutColumn> cleanedColumns = new ArrayList<>();
+                for (final JSONLayoutColumn col : row.getColumns()) {
+                    if (col.getContent() != null) {
+                        cleanedColumns.add(col);
+                    } else {
+                        emptyCols = true;
+                    }
+                }
+                if (!cleanedColumns.isEmpty()) {
+                    row.setColumns(cleanedColumns);
+                    cleanedRows.add(row);
+                } else {
+                    emptyRows = true;
+                }
+            } else {
+                emptyRows = true;
+            }
+        }
+        if (emptyRows && !cleanedRows.isEmpty()) {
+            errorMsg += "Empty row(s) detected, these will be ignored in the layout";
+        }
+        if (emptyCols && !cleanedRows.isEmpty()) {
+            if (!errorMsg.isEmpty()) {
+                errorMsg += "\n";
+            }
+            errorMsg += "Empty column(s) detected, these will be ignored in the layout";
+        }
+        page.setRows(cleanedRows);
+        return errorMsg;
     }
 
     private void compareNodeIDs() {
@@ -1049,7 +1120,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private void updateVisualLayout() {
         final List<VisualLayoutEditorJSONNode> nodes = createJSONNodeList();
-        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
         String JSONNodes = "";
         try {
             JSONNodes = mapper.writeValueAsString(nodes);
@@ -1064,7 +1135,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      * @return true, if current JSON layout structure is valid
      */
     protected boolean isJSONValid() {
-        ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
+        ObjectMapper mapper = createObjectMapperForUpdating();
         ObjectReader reader = mapper.readerForUpdating(new JSONLayoutPage());
         try {
             String json = isWindows() ? m_textArea.getText() : m_jsonDocument;
@@ -1075,6 +1146,14 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                     populateDocumentNodeIDs(row);
                 }
                 compareNodeIDs();
+                final String msg = cleanJSONPage(page);
+                if (msg != null && !msg.isEmpty() && m_statusLine != null && !m_statusLine.isDisposed()) {
+                    int textWidth = isWindows() ? m_textArea.getSize().width : m_text.getSize().x;
+                    Point newSize = m_statusLine.computeSize(textWidth, m_statusLine.getSize().y, true);
+                    m_statusLine.setSize(newSize);
+                    m_statusLine.setForeground(new Color(Display.getCurrent(), 255, 140, 0));
+                    m_statusLine.setText(msg);
+                }
             }
             return true;
         } catch (IOException | NumberFormatException e) {
@@ -1117,11 +1196,11 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      * @return the jsonDocument
      */
     public String getJsonDocument() {
-        ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
+        // keep empty fields
+        ObjectMapper mapper = createObjectMapperForUpdating();
         ObjectReader reader = mapper.readerForUpdating(new JSONLayoutPage());
         try {
-            String json = isWindows() ? m_textArea.getText() : m_jsonDocument;
-            JSONLayoutPage page = reader.readValue(json);
+            JSONLayoutPage page = reader.readValue(m_jsonDocument);
             String layoutString = mapper.writeValueAsString(page);
             return layoutString;
         } catch (IOException e) {
@@ -1154,6 +1233,17 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         m_browser = null;
         m_visualLayoutUpdate = null;
         super.dispose();
+    }
+
+    /**
+     * @return an {@link ObjectMapper} configured to skip non-empty fields, with the exception of empty content fields
+     */
+    private static ObjectMapper createObjectMapperForUpdating() {
+        final ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
+        final SimpleModule module = new SimpleModule();
+        module.addSerializer(new JSONLayoutColumnSerializer());
+        mapper.registerModule(module);
+        return mapper;
     }
 
     private List<VisualLayoutEditorJSONNode> createJSONNodeList() {
@@ -1319,7 +1409,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 return false;
             }
             final String layout = arguments[0].toString();
-            final ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
+            final ObjectMapper mapper = createObjectMapperForUpdating();
             JSONLayoutPage page = new JSONLayoutPage();
             final ObjectReader reader = mapper.readerForUpdating(page);
             try {
@@ -1332,9 +1422,6 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             try {
                 final String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
                 m_jsonDocument = json;
-                if (isWindows()) {
-                    m_textArea.setText(json);
-                }
             } catch (Exception e) {
                 LOGGER.error("Cannot write layout from visual editor. " + e.getMessage(), e);
                 return false;
@@ -1343,5 +1430,73 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             return true;
         }
 
+    }
+
+    /**
+     * Custom serializer for {@link JSONLayoutColumn}. This will only serialize non-empty fields with the exception of
+     * "content" which can be empty but not null. This was needed because there's no way to override Jackson's
+     * serialization inclusion rule.
+     */
+    private static final class JSONLayoutColumnSerializer extends StdSerializer<JSONLayoutColumn> {
+
+        private static final long serialVersionUID = 1L;
+
+        protected JSONLayoutColumnSerializer() {
+            super(JSONLayoutColumn.class);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void serialize(final JSONLayoutColumn value, final JsonGenerator gen,
+            final SerializerProvider serializers) throws IOException, JsonProcessingException {
+            final List<String> additionalClasses = value.getAdditionalClasses();
+            final List<String> additionalStyles = value.getAdditionalStyles();
+            final List<JSONLayoutContent> content = value.getContent();
+            final Integer widthLG = value.getWidthLG();
+            final Integer widthMD = value.getWidthMD();
+            final Integer widthSM = value.getWidthSM();
+            final Integer widthXL = value.getWidthXL();
+            final Integer widthXS = value.getWidthXS();
+            gen.writeStartObject();
+            if (additionalClasses != null && !additionalClasses.isEmpty()) {
+                gen.writeArrayFieldStart("additionalClasses");
+                for (final String s : additionalClasses) {
+                    gen.writeString(s);
+                }
+                gen.writeEndArray();
+            }
+            if (additionalStyles != null && !additionalStyles.isEmpty()) {
+                gen.writeArrayFieldStart("additionalStyles");
+                for (final String s : additionalStyles) {
+                    gen.writeString(s);
+                }
+                gen.writeEndArray();
+            }
+            if (content != null) {
+                gen.writeArrayFieldStart("content");
+                for (final JSONLayoutContent c : content) {
+                    gen.writeObject(c);
+                }
+                gen.writeEndArray();
+            }
+            if (widthLG != null) {
+                gen.writeNumberField("widthLG", widthLG);
+            }
+            if (widthMD != null) {
+                gen.writeNumberField("widthMD", widthMD);
+            }
+            if (widthSM != null) {
+                gen.writeNumberField("widthSM", widthSM);
+            }
+            if (widthXL != null) {
+                gen.writeNumberField("widthXL", widthXL);
+            }
+            if (widthXS != null) {
+                gen.writeNumberField("widthXS", widthXS);
+            }
+            gen.writeEndObject();
+        }
     }
 }
