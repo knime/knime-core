@@ -167,6 +167,9 @@ public final class DataCellToJavaConverterRegistry extends
     /**
      * Get all {@link DataCellToJavaConverterFactory converter factories} which create Converters which convert into a
      * specific {@link Class destType}.
+     * <P>
+     * Please be aware that converters for {@link Class#isPrimitive() primitive} destination types usually do not
+     * support missing values as input.
      *
      * @param destType DataType to query converter factories for
      * @return a {@link Collection} of all possible source types which can be converted into the given
@@ -216,6 +219,10 @@ public final class DataCellToJavaConverterRegistry extends
     /**
      * Get all {@link DataCellToJavaConverterFactory converter factories} which create converter which convert into a
      * specific {@link Class destType}.
+     * <P>
+     * Please be aware that converters of {@link Class#isPrimitive() primitive}
+     * {@link DataCellToJavaConverterFactory#getDestinationType() destination types} usually do not support missing
+     * values as input.
      *
      * @param sourceType DataType to query converter factories for
      * @return a {@link Collection} of all possible source types which can be converted into the given
@@ -282,6 +289,9 @@ public final class DataCellToJavaConverterRegistry extends
      * Get all {@link DataCellToJavaConverterFactory} which create {@link DataCellToJavaConverter}s that convert
      * <code>sourceType</code> into <code>destType</code>. If you do not require more than one converter factory, you
      * should consider using {@link #getPreferredConverterFactory(DataType, Class)} instead.
+     * <P>
+     * Please be aware that converters for {@link Class#isPrimitive() primitive} destination types usually do not
+     * support missing values as input.
      *
      * @param sourceType Type the created {@link DataCellToJavaConverter}s convert from
      * @param destType Type the created {@link DataCellToJavaConverter}s convert to
@@ -323,6 +333,9 @@ public final class DataCellToJavaConverterRegistry extends
      * data value of the given sourceType into the given destType. Since {@link DataCell DataCells} of a certain
      * {@link DataType} are required to implement the preferred {@link DataValue} interface, the resulting converter is
      * therefore guaranteed to be able to convert {@link DataCell DataCells} of the requested type.
+     * <P>
+     * Please be aware that converters for {@link Class#isPrimitive() primitive} destination types usually do not
+     * support missing values as input.
      *
      * @param sourceType type which should be convertible
      * @param destType type to which should be converted
@@ -346,6 +359,10 @@ public final class DataCellToJavaConverterRegistry extends
     /**
      * Get {@link CollectionConverterFactory CollectionConverterFactories} for converters from collection
      * <code>sourceType</code> into array <code>destType</code>.
+     *
+     * <P>
+     * Please be aware that converters for {@link Class#isPrimitive() primitive} array destination types usually do not
+     * support missing values as input.
      *
      * @param destType Type the created converters convert from
      * @param sourceType Type the created converters convert to
