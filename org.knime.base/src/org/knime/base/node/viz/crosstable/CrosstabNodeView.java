@@ -91,17 +91,25 @@ import org.knime.core.node.NodeView;
 public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
 
     private static final int DEFAULT_MAX_ROWS = 10;
+
     private static final int DEFAULT_MAX_COLS = 10;
+
     /** The text pane that holds the information. */
     private JEditorPane m_headerPane;
-    private JEditorPane m_tablePane;
-    private JEditorPane m_statPane;
-    private CrosstabTable m_crosstab;
-    private JPanel m_propsPanel;
-    private final List<JCheckBox> m_propBoxes;
-    private SpinnerNumberModel m_maxRows;
-    private SpinnerNumberModel m_maxCols;
 
+    private JEditorPane m_tablePane;
+
+    private JEditorPane m_statPane;
+
+    private CrosstabTable m_crosstab;
+
+    private JPanel m_propsPanel;
+
+    private final List<JCheckBox> m_propBoxes;
+
+    private SpinnerNumberModel m_maxRows;
+
+    private SpinnerNumberModel m_maxCols;
 
     /**
      * New instance.
@@ -112,13 +120,11 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         super(model);
         // define default visibility of crosstab properties
         m_propBoxes = new ArrayList<JCheckBox>();
-        CrosstabProperties naming = CrosstabProperties.create(
-                model.getSettings().getNamingVersion());
+        CrosstabProperties naming = CrosstabProperties.create(model.getSettings().getNamingVersion());
         for (String col : model.getSettings().getProperties()) {
             JCheckBox checkBox = new JCheckBox(col);
 
-            if (col.equals(naming.getFrequencyName())
-                    || col.equals(naming.getRowPercentName())) {
+            if (col.equals(naming.getFrequencyName()) || col.equals(naming.getRowPercentName())) {
                 checkBox.setSelected(true);
             }
             m_propBoxes.add(checkBox);
@@ -172,8 +178,6 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         p.setBackground(Color.white);
         GridBagConstraints c = createGridBagConstraints();
 
-
-
         c.insets = new Insets(8, 3, 3, 3);
         m_propsPanel = new JPanel(new GridBagLayout());
         m_propsPanel.setBackground(Color.white);
@@ -183,8 +187,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         c.gridy++;
         p.add(new JLabel("Max rows:"), c);
         c.gridy++;
-        m_maxRows = new SpinnerNumberModel(DEFAULT_MAX_ROWS, 1,
-                10000, 1);
+        m_maxRows = new SpinnerNumberModel(DEFAULT_MAX_ROWS, 1, 10000, 1);
         m_maxRows.addChangeListener(new ChangeListener() {
 
             @Override
@@ -200,8 +203,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         p.add(new JLabel("Max columns:"), c);
         c.gridy++;
         c.insets = new Insets(3, 3, 3, 3);
-        m_maxCols = new SpinnerNumberModel(DEFAULT_MAX_COLS, 1,
-                10000, 1);
+        m_maxCols = new SpinnerNumberModel(DEFAULT_MAX_COLS, 1, 10000, 1);
         m_maxCols.addChangeListener(new ChangeListener() {
 
             @Override
@@ -210,7 +212,6 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             }
         });
         p.add(new JSpinner(m_maxCols), c);
-
 
         c.gridy++;
         c.weighty = 1;
@@ -237,8 +238,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
     }
 
     /**
-     * Update the checkboxes that allow to edit the displayed properties
-     * in the cross tabulation.
+     * Update the checkboxes that allow to edit the displayed properties in the cross tabulation.
      */
     private void updatePropsPanel() {
         // remember selection
@@ -280,7 +280,6 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         m_propsPanel.validate();
     }
 
-
     /** Update the display of the header. */
     private void updateHeader() {
         m_headerPane.setText(renderHeader());
@@ -316,16 +315,13 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                 int numDisplayedCols = m_crosstab.getColVars().size();
                 int numRows = m_crosstab.m_numSkippedRows + numDisplayedRows;
                 int numCols = m_crosstab.m_numSkippedCols + numDisplayedCols;
-                if (maxToDisplayRows > numRows
-                        && numRows == numDisplayedRows
-                        && maxToDisplayCols > numCols
-                        && numCols == numDisplayedCols) {
+                if (maxToDisplayRows > numRows && numRows == numDisplayedRows && maxToDisplayCols > numCols
+                    && numCols == numDisplayedCols) {
                     // complete table already displayed
                     return;
                 }
             }
-            m_crosstab = new CrosstabTable(model, maxToDisplayRows,
-                    maxToDisplayCols);
+            m_crosstab = new CrosstabTable(model, maxToDisplayRows, maxToDisplayCols);
             updateCrosstabulation();
         } else {
             m_crosstab = null;
@@ -355,8 +351,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         buffer.append("<style type=\"text/css\">\n");
         buffer.append("body {color:#333333;}");
         buffer.append("table {width: 100%;margin: 7px 0 7px 0;}");
-        buffer.append("th {font-weight: bold;background-color: #aaccff;"
-                + "vertical-align: bottom;}");
+        buffer.append("th {font-weight: bold;background-color: #aaccff;" + "vertical-align: bottom;}");
         buffer.append("td {padding: 4px 10px 4px 10px;}");
         buffer.append("th {padding: 4px 10px 4px 10px;}");
         buffer.append(".left {text-align: left}");
@@ -396,7 +391,6 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         return s;
     }
 
-
     /** Create HTML of the cross tabulation. */
     private String renderTable(final List<String> props) {
         StringBuilder buffer = createHtmlHeader();
@@ -406,8 +400,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             buffer.append("<table>\n");
             buffer.append("<tr>");
             buffer.append("<th class=\"left\">");
-            for (Iterator<String> iter = props.iterator();
-                    iter.hasNext();) {
+            for (Iterator<String> iter = props.iterator(); iter.hasNext();) {
                 String prop = iter.next();
                 buffer.append(prop);
                 if (iter.hasNext()) {
@@ -431,7 +424,6 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             buffer.append("Total");
             buffer.append("</th>");
             buffer.append("</tr>");
-
 
             int i = 0;
             for (CrosstabRow row : m_crosstab) {
@@ -467,10 +459,8 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
     }
 
     /** Create HTML for the given row. */
-    private void renderRow(final CrosstabRow row,
-            final List<String> props,
-            final StringBuilder buffer,
-            final String cssClass) {
+    private void renderRow(final CrosstabRow row, final List<String> props, final StringBuilder buffer,
+        final String cssClass) {
         boolean first = true;
         List<String> rowProps = new ArrayList<String>();
         rowProps.addAll(props);
@@ -524,25 +514,20 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                 buffer.append(stats.getChiSquaredDegreesOfFreedom());
                 buffer.append("</td>");
                 buffer.append("<td class=\"numeric\">");
-                buffer.append(DoubleFormat.formatDouble(
-                        stats.getChiSquaredStatistic()));
+                buffer.append(DoubleFormat.formatDouble(stats.getChiSquaredStatistic()));
                 buffer.append("</td>");
                 buffer.append("<td class=\"numeric\">");
-                buffer.append(DoubleFormat.formatDouble(
-                        stats.getChiSquaredPValue()));
+                buffer.append(DoubleFormat.formatDouble(stats.getChiSquaredPValue()));
                 buffer.append("</td>");
                 buffer.append("</tr>");
                 if (!Double.isNaN(stats.getFisherExactPValue())) {
-                    buffer.append(
-                            "<td class=\"left\">Fisher's Exact Test (2-tail)"
-                            + "</td>");
+                    buffer.append("<td class=\"left\">Fisher's Exact Test (2-tail)" + "</td>");
                     buffer.append("<td class=\"numeric\">");
                     buffer.append("</td>");
                     buffer.append("<td class=\"numeric\">");
                     buffer.append("</td>");
                     buffer.append("<td class=\"numeric\">");
-                    buffer.append(DoubleFormat.formatDouble(
-                            stats.getFisherExactPValue()));
+                    buffer.append(DoubleFormat.formatDouble(stats.getFisherExactPValue()));
                     buffer.append("</td>");
                     buffer.append("</tr>");
                 }
@@ -556,7 +541,6 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         buffer.append("</html>\n");
         return buffer.toString();
     }
-
 
     /**
      * {@inheritDoc}
@@ -575,20 +559,27 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
     }
 
     /**
-     * Reads the data from the model and build the cross tabulation with
-     * restrict number of rows and columns.
+     * Reads the data from the model and build the cross tabulation with restrict number of rows and columns.
      *
      * @author Heiko Hofer
      */
     private static class CrosstabTable implements Iterable<CrosstabRow> {
         private final List<CrosstabRow> m_rows;
+
         private final CrosstabRow m_totalRow;
+
         private final List<DataCell> m_rowVars;
+
         private final List<DataCell> m_colVars;
+
         private final Collection<String> m_props;
+
         private final String m_responseVariable;
+
         private final String m_explanatoryVariable;
+
         private final int m_numSkippedCols;
+
         private final int m_numSkippedRows;
 
         /**
@@ -596,8 +587,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
          * @param maxRows the maximum number of rows to display
          * @param maxCols the maximum number of columns to display
          */
-        public CrosstabTable(final CrosstabNodeModel model,
-                final int maxRows, final int maxCols) {
+        public CrosstabTable(final CrosstabNodeModel model, final int maxRows, final int maxCols) {
             int c = 0;
             m_rowVars = new ArrayList<DataCell>();
             for (DataCell cell : model.getTotals().getRowTotal().keySet()) {
@@ -608,8 +598,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                 }
                 c++;
             }
-            m_numSkippedRows = model.getTotals().getRowTotal().size()
-                - m_rowVars.size();
+            m_numSkippedRows = model.getTotals().getRowTotal().size() - m_rowVars.size();
             c = 0;
             m_colVars = new ArrayList<DataCell>();
             for (DataCell cell : model.getTotals().getColTotal().keySet()) {
@@ -620,29 +609,22 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                 }
                 c++;
             }
-            m_numSkippedCols = model.getTotals().getColTotal().size()
-                - m_colVars.size();
-
+            m_numSkippedCols = model.getTotals().getColTotal().size() - m_colVars.size();
 
             CrosstabNodeSettings settings = model.getSettings();
-            CrosstabProperties naming = CrosstabProperties.create(
-                    settings.getNamingVersion());
+            CrosstabProperties naming = CrosstabProperties.create(settings.getNamingVersion());
             Map<String, Integer> propIndices = getPropIndices(model);
             // remove total props e.g. row total since they display
             // separately
-            for (String key : getTotalPropIndices(
-                    naming, propIndices).keySet()) {
+            for (String key : getTotalPropIndices(naming, propIndices).keySet()) {
                 propIndices.remove(key);
             }
             m_props = propIndices.keySet();
-            m_rows = createRows(model, m_rowVars, m_colVars,
-                    m_numSkippedCols > 0);
-            m_totalRow = createTotalRow(model, m_colVars,
-                    m_numSkippedCols > 0);
+            m_rows = createRows(model, m_rowVars, m_colVars, m_numSkippedCols > 0);
+            m_totalRow = createTotalRow(model, m_colVars, m_numSkippedCols > 0);
             m_responseVariable = settings.getColVarColumn();
             m_explanatoryVariable = settings.getRowVarColumn();
         }
-
 
         /**
          * @return the responseVariable
@@ -650,7 +632,6 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         String getResponseVariable() {
             return m_responseVariable;
         }
-
 
         /**
          * @return the explanatoryVariable
@@ -661,6 +642,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
 
         /**
          * Get the number of columns that are not displayed.
+         *
          * @return the number of skipped columns
          */
         int getNumSkippedCols() {
@@ -669,12 +651,12 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
 
         /**
          * Get the number of rows that are not displayed.
+         *
          * @return the number of skipped rows
          */
         int getNumSkippedRows() {
             return m_numSkippedRows;
         }
-
 
         /**
          * {@inheritDoc}
@@ -695,6 +677,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
 
         /**
          * Get the displayed categories of the explanatory variable.
+         *
          * @return the displayed categories of the explanatory variable
          */
         public List<DataCell> getRowVars() {
@@ -703,6 +686,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
 
         /**
          * Get the displayed categories of the response variable.
+         *
          * @return the displayed categories of the response variable
          */
         public List<DataCell> getColVars() {
@@ -711,6 +695,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
 
         /**
          * Get the crosstab properties e.g. Frequency, Percent, Row Percent...
+         *
          * @return the crosstab properties
          */
         public Collection<String> getProperties() {
@@ -721,22 +706,18 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
          * @param model the model
          * @param rowVars the displayed categories of the explanatory variable
          * @param colVars the displayed categories of the response variable
-         * @return the rows of the cross tabulation except the header and the
-         * row with the totals.
+         * @return the rows of the cross tabulation except the header and the row with the totals.
          */
-        private List<CrosstabRow> createRows(final CrosstabNodeModel model,
-                final List<DataCell> rowVars, final List<DataCell> colVars,
-                final boolean colsSkipped) {
+        private List<CrosstabRow> createRows(final CrosstabNodeModel model, final List<DataCell> rowVars,
+            final List<DataCell> colVars, final boolean colsSkipped) {
             BufferedDataTable out = model.getOutTable();
             CrosstabNodeSettings settings = model.getSettings();
-            CrosstabProperties naming = CrosstabProperties.create(
-                    settings.getNamingVersion());
+            CrosstabProperties naming = CrosstabProperties.create(settings.getNamingVersion());
             CrosstabTotals totals = model.getTotals();
             Map<String, Integer> propIndices = getPropIndices(model);
             // remove total props e.g. row total since they display
             // separately
-            for (String key : getTotalPropIndices(
-                    naming, propIndices).keySet()) {
+            for (String key : getTotalPropIndices(naming, propIndices).keySet()) {
                 propIndices.remove(key);
             }
             Iterator<DataRow> iter = out.iteratorFailProve();
@@ -746,10 +727,8 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             for (DataCell rowVar : rowVars) {
                 List<CrosstabCell> cells = new ArrayList<CrosstabCell>();
                 for (DataCell colVar : colVars) {
-                    if (null != row && rowVar.equals(row.getCell(0))
-                            && colVar.equals(row.getCell(1))) {
-                        Map<String, Double> props =
-                            new LinkedHashMap<String, Double>();
+                    if (null != row && rowVar.equals(row.getCell(0)) && colVar.equals(row.getCell(1))) {
+                        Map<String, Double> props = new LinkedHashMap<String, Double>();
                         for (String key : propIndices.keySet()) {
                             DataCell cell = row.getCell(propIndices.get(key));
                             if (!cell.isMissing()) {
@@ -774,24 +753,19 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                 }
                 // Create the total cell
                 CrosstabCell totalCell = null;
-                Map<String, Double> props =
-                    new LinkedHashMap<String, Double>();
+                Map<String, Double> props = new LinkedHashMap<String, Double>();
                 if (propIndices.containsKey(naming.getFrequencyName())) {
                     // the frequency
-                    props.put(naming.getFrequencyName(),
-                            totals.getRowTotal().get(rowVar));
+                    props.put(naming.getFrequencyName(), totals.getRowTotal().get(rowVar));
                 }
                 if (propIndices.containsKey(naming.getPercentName())) {
                     // the percent
-                    props.put(naming.getPercentName(),
-                            totals.getRowTotal().get(rowVar)
-                            / totals.getTotal() * 100);
+                    props.put(naming.getPercentName(), totals.getRowTotal().get(rowVar) / totals.getTotal() * 100);
                 }
                 if (!props.isEmpty()) {
                     totalCell = new CrosstabCell(props);
                 }
-                CrosstabRow crosstabRow = new CrosstabRow(rowVar.toString(),
-                        cells, totalCell, propIndices.keySet());
+                CrosstabRow crosstabRow = new CrosstabRow(rowVar.toString(), cells, totalCell, propIndices.keySet());
                 rows.add(crosstabRow);
             }
 
@@ -803,23 +777,18 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
          * @param rowVars the displayed categories of the explanatory variable
          * @return the row with the totals of the cross tabulation
          */
-        private CrosstabRow createTotalRow(final CrosstabNodeModel model,
-                final List<DataCell> colVars,
-                final boolean colsSkipped) {
+        private CrosstabRow createTotalRow(final CrosstabNodeModel model, final List<DataCell> colVars,
+            final boolean colsSkipped) {
             CrosstabNodeSettings settings = model.getSettings();
-            CrosstabProperties naming = CrosstabProperties.create(
-                    settings.getNamingVersion());
+            CrosstabProperties naming = CrosstabProperties.create(settings.getNamingVersion());
             CrosstabTotals totals = model.getTotals();
             Map<String, Integer> allProps = getPropIndices(model);
-            Map<String, Integer> propIndices =
-                new LinkedHashMap<String, Integer>();
+            Map<String, Integer> propIndices = new LinkedHashMap<String, Integer>();
             if (allProps.containsKey(naming.getFrequencyName())) {
-                propIndices.put(naming.getFrequencyName(),
-                        allProps.get(naming.getFrequencyName()));
+                propIndices.put(naming.getFrequencyName(), allProps.get(naming.getFrequencyName()));
             }
             if (allProps.containsKey(naming.getPercentName())) {
-                propIndices.put(naming.getPercentName(),
-                        allProps.get(naming.getPercentName()));
+                propIndices.put(naming.getPercentName(), allProps.get(naming.getPercentName()));
             }
             if (propIndices.isEmpty()) {
                 return null;
@@ -829,18 +798,14 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             for (DataCell colVar : colVars) {
                 // Create the total cell
                 CrosstabCell totalCell = null;
-                Map<String, Double> props =
-                    new LinkedHashMap<String, Double>();
+                Map<String, Double> props = new LinkedHashMap<String, Double>();
                 if (propIndices.containsKey(naming.getFrequencyName())) {
                     // the frequency
-                    props.put(naming.getFrequencyName(),
-                            totals.getColTotal().get(colVar));
+                    props.put(naming.getFrequencyName(), totals.getColTotal().get(colVar));
                 }
                 if (propIndices.containsKey(naming.getPercentName())) {
                     // the percent
-                    props.put(naming.getPercentName(),
-                            totals.getColTotal().get(colVar)
-                            / totals.getTotal() * 100);
+                    props.put(naming.getPercentName(), totals.getColTotal().get(colVar) / totals.getTotal() * 100);
                 }
                 if (!props.isEmpty()) {
                     totalCell = new CrosstabCell(props);
@@ -853,8 +818,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             }
             // Create the total cell
             CrosstabCell totalCell = null;
-            Map<String, Double> props =
-                new LinkedHashMap<String, Double>();
+            Map<String, Double> props = new LinkedHashMap<String, Double>();
             if (propIndices.containsKey(naming.getFrequencyName())) {
                 // the frequency
                 props.put(naming.getFrequencyName(), totals.getTotal());
@@ -866,18 +830,15 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             if (!props.isEmpty()) {
                 totalCell = new CrosstabCell(props);
             }
-            CrosstabRow crosstabRow = new CrosstabRow("Total",
-                    cells, totalCell, propIndices.keySet());
+            CrosstabRow crosstabRow = new CrosstabRow("Total", cells, totalCell, propIndices.keySet());
             return crosstabRow;
 
         }
 
-        private Map<String, Integer> getPropIndices(
-                final CrosstabNodeModel model) {
+        private Map<String, Integer> getPropIndices(final CrosstabNodeModel model) {
             BufferedDataTable out = model.getOutTable();
             CrosstabNodeSettings settings = model.getSettings();
-            CrosstabProperties naming = CrosstabProperties.create(
-                    settings.getNamingVersion());
+            CrosstabProperties naming = CrosstabProperties.create(settings.getNamingVersion());
 
             DataTableSpec spec = out.getDataTableSpec();
             List<String> supportedProps = naming.getProperties();
@@ -889,36 +850,31 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         }
 
         /** Convenient method to add a prop when it is found in the spec. */
-        private void conditionallyAddProp(final Map<String, Integer> props,
-                final DataTableSpec spec, final String colName) {
+        private void conditionallyAddProp(final Map<String, Integer> props, final DataTableSpec spec,
+            final String colName) {
             int index = spec.findColumnIndex(colName);
             if (index >= 0) {
                 props.put(colName, index);
             }
         }
 
-        /** Convenient method to get the properties of the total row and their
-         * column index in the output table.
+        /**
+         * Convenient method to get the properties of the total row and their column index in the output table.
          */
-        private Map<String, Integer> getTotalPropIndices(
-                final CrosstabProperties naming,
-                final Map<String, Integer> propIndices) {
-            Map<String, Integer> totalPropIndices =
-                new LinkedHashMap<String, Integer>();
+        private Map<String, Integer> getTotalPropIndices(final CrosstabProperties naming,
+            final Map<String, Integer> propIndices) {
+            Map<String, Integer> totalPropIndices = new LinkedHashMap<String, Integer>();
             if (propIndices.containsKey(naming.getTotalRowCountName())) {
                 // the total row count
-                totalPropIndices.put(naming.getTotalRowCountName(),
-                        propIndices.get(naming.getTotalRowCountName()));
+                totalPropIndices.put(naming.getTotalRowCountName(), propIndices.get(naming.getTotalRowCountName()));
             }
             if (propIndices.containsKey(naming.getTotalColCountName())) {
                 // the total column count
-                totalPropIndices.put(naming.getTotalColCountName(),
-                        propIndices.get(naming.getTotalColCountName()));
+                totalPropIndices.put(naming.getTotalColCountName(), propIndices.get(naming.getTotalColCountName()));
             }
             if (propIndices.containsKey(naming.getTotalCountName())) {
                 // the total count
-                totalPropIndices.put(naming.getTotalCountName(),
-                        propIndices.get(naming.getTotalCountName()));
+                totalPropIndices.put(naming.getTotalCountName(), propIndices.get(naming.getTotalCountName()));
             }
             return totalPropIndices;
         }
@@ -932,8 +888,11 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
      */
     private static class CrosstabRow implements Iterable<CrosstabCell> {
         private final String m_label;
+
         private final List<CrosstabCell> m_cells;
+
         private final CrosstabCell m_totalCell;
+
         private final Collection<String> m_props;
 
         /**
@@ -942,8 +901,8 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
          * @param totalCell the extra cell for the row total
          * @param props the properties provided by the cells of this row
          */
-        public CrosstabRow(final String label, final List<CrosstabCell> cells,
-                final CrosstabCell totalCell, final Collection<String> props) {
+        public CrosstabRow(final String label, final List<CrosstabCell> cells, final CrosstabCell totalCell,
+            final Collection<String> props) {
             super();
             m_label = label;
             m_cells = cells;
@@ -992,6 +951,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         public CrosstabCell() {
             this(new HashMap<String, Double>());
         }
+
         /**
          * @param props the properties that are provided by this cell.
          */
