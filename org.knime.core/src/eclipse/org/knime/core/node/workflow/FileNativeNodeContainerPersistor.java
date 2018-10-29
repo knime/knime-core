@@ -66,7 +66,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactoryClassMapper;
 import org.knime.core.node.NodeLogger;
@@ -114,7 +114,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
     private Node m_node;
 
-    private NodeAndBundleInformation m_nodeAndBundleInformation;
+    private NodeAndBundleInformationPersistor m_nodeAndBundleInformation;
 
     /**
      * @param nodeSettingsFile
@@ -146,7 +146,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
     /** {@inheritDoc} */
     @Override
-    public NodeAndBundleInformation getNodeAndBundleInformation() {
+    public NodeAndBundleInformationPersistor getNodeAndBundleInformation() {
         return m_nodeAndBundleInformation;
     }
 
@@ -170,7 +170,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         m_parentPersistor = parentPersistor;
         NodeSettingsRO settings = getNodeSettings();
         String error;
-        NodeAndBundleInformation nodeInfo;
+        NodeAndBundleInformationPersistor nodeInfo;
         try {
             nodeInfo = loadNodeFactoryInfo(parentSettings, settings);
         } catch (InvalidSettingsException e) {
@@ -287,7 +287,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
      * @return Factory information.
      * @throws InvalidSettingsException If that fails for any reason.
      */
-    NodeAndBundleInformation loadNodeFactoryInfo(final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
+    NodeAndBundleInformationPersistor loadNodeFactoryInfo(final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
         throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             String factoryName = parentSettings.getString("factory");
@@ -296,9 +296,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
                 factoryName = "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
             }
-            return new NodeAndBundleInformation(factoryName);
+            return new NodeAndBundleInformationPersistor(factoryName);
         } else {
-            return NodeAndBundleInformation.load(settings, getLoadVersion());
+            return NodeAndBundleInformationPersistor.load(settings, getLoadVersion());
         }
     }
 
@@ -415,7 +415,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
     /** {@inheritDoc} */
     @Override
-    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
+    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformationPersistor nodeInfo,
         final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
         final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
         if (m_node == null) {
@@ -519,7 +519,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     private static void saveNodeFactory(final NodeSettingsWO settings, final NativeNodeContainer nnc) {
         final Node node = nnc.getNode();
         // node info to missing node is the info to the actual instance, not MissingNodeFactory
-        NodeAndBundleInformation nodeInfo = nnc.getNodeAndBundleInformation();
+        NodeAndBundleInformationPersistor nodeInfo = nnc.getNodeAndBundleInformation();
         nodeInfo.save(settings);
 
         NodeSettingsWO subSets = settings.addNodeSettings("factory_settings");

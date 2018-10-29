@@ -53,7 +53,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -70,7 +70,7 @@ import org.knime.core.util.FileUtil;
  */
 public final class MissingNodeModel extends NodeModel {
 
-    private NodeAndBundleInformation m_nodeAndBundleInformation;
+    private NodeAndBundleInformationPersistor m_nodeAndBundleInformation;
     private NodeSettings m_settings;
 
     /** Copy the content of the internal directory to temp space in order to be save when the workflow is saved.
@@ -88,7 +88,7 @@ public final class MissingNodeModel extends NodeModel {
      * @param outPortTypes ...
      * @param copyInternDirForWorkflowVersionChange ...
      */
-    MissingNodeModel(final NodeAndBundleInformation nodeInfo, final PortType[] inPortTypes,
+    MissingNodeModel(final NodeAndBundleInformationPersistor nodeInfo, final PortType[] inPortTypes,
             final PortType[] outPortTypes, final boolean copyInternDirForWorkflowVersionChange) {
         super(inPortTypes, outPortTypes);
         m_nodeAndBundleInformation = nodeInfo;
@@ -98,7 +98,7 @@ public final class MissingNodeModel extends NodeModel {
     /**
      * @return the nodeAndBundleInformation
      */
-    public NodeAndBundleInformation getNodeAndBundleInformation() {
+    public NodeAndBundleInformationPersistor getNodeAndBundleInformation() {
         return m_nodeAndBundleInformation;
     }
 

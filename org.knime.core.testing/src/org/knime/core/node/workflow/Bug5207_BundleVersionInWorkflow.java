@@ -53,7 +53,7 @@ import static org.junit.Assert.assertFalse;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -79,7 +79,7 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
 
         // table creator is executed and must have version as from execution time (which was faked but still...)
         NativeNodeContainer tableCreatorNC = (NativeNodeContainer)getManager().getNodeContainer(m_tableCreator1);
-        NodeAndBundleInformation tableBundleInfo = tableCreatorNC.getNodeAndBundleInformation();
+        NodeAndBundleInformationPersistor tableBundleInfo = tableCreatorNC.getNodeAndBundleInformation();
         Bundle tableBundle = FrameworkUtil.getBundle(tableCreatorNC.getNodeModel().getClass());
         assertEquals("1.1.1.20140523", tableBundleInfo.getBundleVersion().get().toString());
         final String tableBundleInfoVersion =
@@ -90,7 +90,7 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
         // col filter is not executed and has current bundle version as version information
         // (stored in workflow but ignored during load)
         NativeNodeContainer colFilterNC = (NativeNodeContainer)getManager().getNodeContainer(m_columnFilter2);
-        NodeAndBundleInformation colFilterBundleInfo = colFilterNC.getNodeAndBundleInformation();
+        NodeAndBundleInformationPersistor colFilterBundleInfo = colFilterNC.getNodeAndBundleInformation();
         Bundle colFilterBundle = FrameworkUtil.getBundle(colFilterNC.getNodeModel().getClass());
         assertEquals(colFilterBundle.getVersion().toString(), colFilterBundleInfo.getBundleVersion().get().toString());
         assertEquals(colFilterBundle.getSymbolicName(), colFilterBundleInfo.getBundleSymbolicName().get());
@@ -101,7 +101,7 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
         reset(m_tableCreator1);
         // table creator is executed and must have version as from execution time (which was faked but still...)
         NativeNodeContainer tableCreatorNC = (NativeNodeContainer)getManager().getNodeContainer(m_tableCreator1);
-        NodeAndBundleInformation tableBundleInfo = tableCreatorNC.getNodeAndBundleInformation();
+        NodeAndBundleInformationPersistor tableBundleInfo = tableCreatorNC.getNodeAndBundleInformation();
         Bundle tableBundle = FrameworkUtil.getBundle(tableCreatorNC.getNodeModel().getClass());
         assertEquals(tableBundle.getVersion().toString(), tableBundleInfo.getBundleVersion().get().toString());
         assertEquals(tableBundle.getSymbolicName(), tableBundleInfo.getBundleSymbolicName().get());
@@ -120,7 +120,7 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
 
         // bundle version number is reset after copy & paste
         NativeNodeContainer copiedTableNC = (NativeNodeContainer)getManager().getNodeContainer(pasteID);
-        NodeAndBundleInformation copiedTableBundleInfo = copiedTableNC.getNodeAndBundleInformation();
+        NodeAndBundleInformationPersistor copiedTableBundleInfo = copiedTableNC.getNodeAndBundleInformation();
         Bundle tableBundle = FrameworkUtil.getBundle(copiedTableNC.getNodeModel().getClass());
         assertEquals(tableBundle.getVersion().toString(), copiedTableBundleInfo.getBundleVersion().get().toString());
         assertEquals(tableBundle.getSymbolicName(), copiedTableBundleInfo.getBundleSymbolicName().get());

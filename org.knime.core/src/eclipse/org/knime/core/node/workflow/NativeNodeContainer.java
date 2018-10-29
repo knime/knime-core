@@ -76,7 +76,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeConfigureHelper;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
@@ -128,7 +128,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** The bundle info with which the node was last executed with. Usually it's the latest installed
      * version but when a flow was executed, saved and loaded it's possibly "older". Used to address
      * bug 5207. This field is set when status changes to EXECUTED and set to null when reset. */
-    private NodeAndBundleInformation m_nodeAndBundleInformation;
+    private NodeAndBundleInformationPersistor m_nodeAndBundleInformation;
 
     /**
      * Create new SingleNodeContainer based on existing Node.
@@ -496,7 +496,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                         setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
                     } else {
                         setInternalState(InternalNodeContainerState.EXECUTED);
-                        m_nodeAndBundleInformation = NodeAndBundleInformation.create(m_node);
+                        m_nodeAndBundleInformation = NodeAndBundleInformationPersistor.create(m_node);
                         setExecutionEnvironment(null);
                     }
                 } else {
@@ -1085,7 +1085,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * return the information to the bundle as of time of execution (also for loaded workflows).
      * @since 2.10
      * @noreference This method is not intended to be referenced by clients. */
-    public NodeAndBundleInformation getNodeAndBundleInformation() {
+    public NodeAndBundleInformationPersistor getNodeAndBundleInformation() {
         if (m_nodeAndBundleInformation != null) {
             return m_nodeAndBundleInformation;
         }
@@ -1093,7 +1093,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         if (model instanceof MissingNodeModel) {
             return ((MissingNodeModel)model).getNodeAndBundleInformation();
         }
-        return NodeAndBundleInformation.create(getNode());
+        return NodeAndBundleInformationPersistor.create(getNode());
     }
 
     /* ------------------ Dialog ------------- */

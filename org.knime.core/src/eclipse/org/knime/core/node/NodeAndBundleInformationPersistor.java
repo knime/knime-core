@@ -60,6 +60,7 @@ import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
+import org.knime.core.util.workflowalizer.NodeAndBundleInformation;
 import org.osgi.framework.Bundle;
 
 /**
@@ -69,7 +70,7 @@ import org.osgi.framework.Bundle;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 2.6
  */
-public final class NodeAndBundleInformation extends org.knime.core.util.workflowalizer.NodeAndBundleInformation
+public final class NodeAndBundleInformationPersistor extends NodeAndBundleInformation
     implements KNIMEComponentInformation {
 
     /**
@@ -95,7 +96,7 @@ public final class NodeAndBundleInformation extends org.knime.core.util.workflow
             map.put(Pattern.compile("^com\\.knime\\.explorer\\.nodes"), "org.knime.explorer.nodes");
         } catch (PatternSyntaxException e) {
             map.clear(); // if one fails, all fail
-            NodeLogger.getLogger(NodeAndBundleInformation.class).coding(e.getMessage(), e);
+            NodeLogger.getLogger(NodeAndBundleInformationPersistor.class).coding(e.getMessage(), e);
         }
         EXTENSION_RENAME_MAP = Collections.unmodifiableMap(map);
     }
@@ -106,12 +107,12 @@ public final class NodeAndBundleInformation extends org.knime.core.util.workflow
      * @param factoryClass non-<code>null</code> factory class name
      * @noreference This constructor is not intended to be referenced by clients.
      */
-    public NodeAndBundleInformation(final String factoryClass) {
+    public NodeAndBundleInformationPersistor(final String factoryClass) {
         this(factoryClass, null, null, null, null, null, null, null, null, null);
     }
 
     /** Init from string array. All args except the factoryClass may be null. */
-    private NodeAndBundleInformation(final String factoryClass, final String bundleSymbolicName,
+    private NodeAndBundleInformationPersistor(final String factoryClass, final String bundleSymbolicName,
         final String bundleName, final String bundleVendor, final String nodeName, final Version bundleVersion,
         final String featureSymbolicName, final String featureName, final String featureVendor,
         final Version featureVersion) {
@@ -199,7 +200,7 @@ public final class NodeAndBundleInformation extends org.knime.core.util.workflow
      * @throws InvalidSettingsException if the node settings contain invalid entries
      * @noreference This method is not intended to be referenced by clients.
      */
-    public static NodeAndBundleInformation load(final NodeSettingsRO settings,
+    public static NodeAndBundleInformationPersistor load(final NodeSettingsRO settings,
         final LoadVersion version) throws InvalidSettingsException {
         String factoryClass = settings.getString("factory");
         if (factoryClass == null) {
@@ -258,7 +259,7 @@ public final class NodeAndBundleInformation extends org.knime.core.util.workflow
             throw new InvalidSettingsException("Invalid version \"" + v + "\"", iae);
         }
 
-        return new NodeAndBundleInformation(factoryClass, bundleSymbolicName, bundleName, bundleVendor, nodeName,
+        return new NodeAndBundleInformationPersistor(factoryClass, bundleSymbolicName, bundleName, bundleVendor, nodeName,
             bundleVersion, featureSymbolicName, featureName, featureVendor, featureVersion);
     }
 
@@ -315,7 +316,7 @@ public final class NodeAndBundleInformation extends org.knime.core.util.workflow
      * @return a new information object based on the given node.
      * @since 2.10
      */
-    public static NodeAndBundleInformation create(final Node node) {
+    public static NodeAndBundleInformationPersistor create(final Node node) {
         return create(node.getFactory(), node.getName());
     }
 
@@ -324,11 +325,11 @@ public final class NodeAndBundleInformation extends org.knime.core.util.workflow
      * @return a new information object based on the given node factory.
      * @since 3.0
      */
-    public static NodeAndBundleInformation create(final NodeFactory<? extends NodeModel> factory) {
+    public static NodeAndBundleInformationPersistor create(final NodeFactory<? extends NodeModel> factory) {
         return create(factory, null);
     }
 
-    private static NodeAndBundleInformation create(final NodeFactory<? extends NodeModel> factory,
+    private static NodeAndBundleInformationPersistor create(final NodeFactory<? extends NodeModel> factory,
         final String nodeName) {
         String bundleSymbolicName = null;
         String bundleName = null;
@@ -355,7 +356,7 @@ public final class NodeAndBundleInformation extends org.knime.core.util.workflow
             featureVendor = feature.map(f -> f.getProperty(IInstallableUnit.PROP_PROVIDER, null)).orElse(null);
             featureVersion = feature.map(f -> new Version(f.getVersion().toString())).orElse(null);
         }
-        return new NodeAndBundleInformation(facClass.getName(), bundleSymbolicName, bundleName, bundleVendor, nodeName,
+        return new NodeAndBundleInformationPersistor(facClass.getName(), bundleSymbolicName, bundleName, bundleVendor, nodeName,
             bundleVersion, featureSymbolicName, featureName, featureVendor, featureVersion);
     }
 

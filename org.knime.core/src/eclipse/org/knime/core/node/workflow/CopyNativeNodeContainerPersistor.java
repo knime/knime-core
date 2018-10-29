@@ -53,7 +53,7 @@ import org.knime.core.node.CopyNodePersistor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -116,7 +116,7 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
 
     /** {@inheritDoc} */
     @Override
-    public NodeAndBundleInformation getNodeAndBundleInformation() {
+    public NodeAndBundleInformationPersistor getNodeAndBundleInformation() {
         return null; // copy & paste only for idle/configured nodes - no need to keep bundle version
     }
 

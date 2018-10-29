@@ -47,7 +47,7 @@
 package org.knime.core.node.missing;
 
 import org.knime.core.node.DynamicNodeFactory;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeSettingsRO;
@@ -69,7 +69,7 @@ import org.knime.node2012.PortsDocument.Ports;
  */
 public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
 
-    private final NodeAndBundleInformation m_nodeInfo;
+    private final NodeAndBundleInformationPersistor m_nodeInfo;
     private final PortType[] m_inTypes;
     private final PortType[] m_outTypes;
     private final NodeSettingsRO m_additionalFactorySettings;
@@ -82,7 +82,7 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
      * @param ins ...
      * @param outs ...
      */
-    public MissingNodeFactory(final NodeAndBundleInformation nodeInfo, final NodeSettingsRO additionalFactorySettings,
+    public MissingNodeFactory(final NodeAndBundleInformationPersistor nodeInfo, final NodeSettingsRO additionalFactorySettings,
                   final PortType[] ins, final PortType[] outs) {
         m_nodeInfo = nodeInfo;
         m_additionalFactorySettings = additionalFactorySettings;

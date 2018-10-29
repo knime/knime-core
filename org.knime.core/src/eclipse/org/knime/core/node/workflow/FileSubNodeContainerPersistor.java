@@ -58,7 +58,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -393,7 +393,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     /** {@inheritDoc} */
     @Override
-    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
+    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformationPersistor nodeInfo,
         final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
         final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
         // no applicable for sub nodes

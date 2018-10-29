@@ -58,7 +58,7 @@ import java.util.List;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -426,10 +426,10 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
 
         /** {@inheritDoc} */
         @Override
-        NodeAndBundleInformation loadNodeFactoryInfo(
+        NodeAndBundleInformationPersistor loadNodeFactoryInfo(
                 final NodeSettingsRO parentSettings,
                 final NodeSettingsRO settings) throws InvalidSettingsException {
-            NodeAndBundleInformation f = super.loadNodeFactoryInfo(parentSettings, settings);
+            NodeAndBundleInformationPersistor f = super.loadNodeFactoryInfo(parentSettings, settings);
             switch (m_metaNodeType) {
             case LOOPER:
                 String in = "org.knime.core.node.meta.DataInputNodeFactory";
@@ -442,7 +442,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
                     newClass =
                         "org.knime.base.node.meta.looper.ForLoopTailNodeFactory";
                 }
-                f = new NodeAndBundleInformation(newClass);
+                f = new NodeAndBundleInformationPersistor(newClass);
                 break;
             case CROSSVALIDATION:
                 // the x-partitioner and aggregator node have the same name

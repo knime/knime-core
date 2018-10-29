@@ -82,7 +82,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.data.container.storage.TableStoreFormatInformation;
 import org.knime.core.node.KNIMEComponentInformation;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.SWTUtilities;
 import org.osgi.framework.Bundle;
@@ -96,7 +96,7 @@ import org.osgi.framework.FrameworkUtil;
  */
 final class InstallMissingNodesJob extends Job {
 
-    private final List<NodeAndBundleInformation> m_missingNodes;
+    private final List<NodeAndBundleInformationPersistor> m_missingNodes;
     private final List<TableStoreFormatInformation> m_missingTableFormats;
 
     /**
@@ -105,7 +105,7 @@ final class InstallMissingNodesJob extends Job {
      * @param missingNodes a list of information about missing nodes
      * @param missingTableFormats list of missing table formats (fully qualified names), not null.
      */
-    InstallMissingNodesJob(final List<NodeAndBundleInformation> missingNodes,
+    InstallMissingNodesJob(final List<NodeAndBundleInformationPersistor> missingNodes,
         final List<TableStoreFormatInformation> missingTableFormats) {
         super("Find extensions for missing components");
         m_missingNodes = missingNodes;

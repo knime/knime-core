@@ -58,7 +58,7 @@ import java.util.Set;
 import org.knime.core.data.container.storage.TableStoreFormatInformation;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.util.LoadVersion;
@@ -504,7 +504,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         private final List<LoadResultEntry> m_errors =
             new ArrayList<LoadResultEntry>();
 
-        private final List<NodeAndBundleInformation> m_missingNodes = new ArrayList<>();
+        private final List<NodeAndBundleInformationPersistor> m_missingNodes = new ArrayList<>();
 
         private final List<TableStoreFormatInformation> m_missingTableFormats = new ArrayList<>();
 
@@ -556,7 +556,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          *
          * @param missingNode information about a missing node; must not be <code>null</code>
          */
-        void addMissingNode(final NodeAndBundleInformation missingNode) {
+        void addMissingNode(final NodeAndBundleInformationPersistor missingNode) {
             m_missingNodes.add(missingNode);
         }
 
@@ -566,7 +566,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          * @return a (possibly empty) list of information about missing nodes
          * @since 3.2
          */
-        public List<NodeAndBundleInformation> getMissingNodes() {
+        public List<NodeAndBundleInformationPersistor> getMissingNodes() {
             return Collections.unmodifiableList(m_missingNodes);
         }
 
@@ -696,7 +696,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     @SuppressWarnings("serial")
     static final class NodeFactoryUnknownException extends InvalidSettingsException {
 
-        private final NodeAndBundleInformation m_nodeAndBundleInformation;
+        private final NodeAndBundleInformationPersistor m_nodeAndBundleInformation;
         private final NodeSettingsRO m_additionalFactorySettings;
 
         /**
@@ -704,7 +704,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          * @param nodeAndBundleInformation ...
          * @param additionalFactorySettings ...
          * @param cause ... */
-        NodeFactoryUnknownException(final String message, final NodeAndBundleInformation nodeAndBundleInformation,
+        NodeFactoryUnknownException(final String message, final NodeAndBundleInformationPersistor nodeAndBundleInformation,
                 final NodeSettingsRO additionalFactorySettings, final Throwable cause) {
             super(message, cause);
             m_nodeAndBundleInformation = nodeAndBundleInformation;
@@ -715,7 +715,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          * @param nodeAndBundleInformation ...
          * @param additionalFactorySettings ...
          * @param cause ... */
-        NodeFactoryUnknownException(final NodeAndBundleInformation nodeAndBundleInformation,
+        NodeFactoryUnknownException(final NodeAndBundleInformationPersistor nodeAndBundleInformation,
                 final NodeSettingsRO additionalFactorySettings, final Throwable cause) {
             this(nodeAndBundleInformation.getErrorMessageWhenNodeIsMissing(),
                 nodeAndBundleInformation, additionalFactorySettings, cause);
@@ -724,7 +724,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /**
          * @return the nodeAndBundleInformation
          */
-        NodeAndBundleInformation getNodeAndBundleInformation() {
+        NodeAndBundleInformationPersistor getNodeAndBundleInformation() {
             return m_nodeAndBundleInformation;
         }
 

@@ -51,7 +51,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -75,12 +75,12 @@ interface FromFileNodeContainerPersistor extends NodeContainerPersistor {
      * @param downstreamNodes the ordered list of downstream nodes (multiple connections to output possible).
      *        May contain null.
      */
-    void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
+    void guessPortTypesFromConnectedNodes(final NodeAndBundleInformationPersistor nodeInfo,
           NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
           final ArrayList<List<PersistorWithPortIndex>> downstreamNodes);
 
     /** Used in {@link #guessPortTypesFromConnectedNodes(
-     * NodeAndBundleInformation, NodeSettingsRO, ArrayList, ArrayList)} to retrieve
+     * NodeAndBundleInformationPersistor, NodeSettingsRO, ArrayList, ArrayList)} to retrieve
      * the port types of up- and downstream nodes. Might return null (if this node is missing, too).
      *
      * <p>Downstream port types are input ports for SNC but output ports for WFMs.

@@ -60,7 +60,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -78,7 +78,7 @@ public class MonitorSettingsTable implements NodeMonitorTable {
 
     private ConfigBaseRO m_settings;
 
-    private NodeAndBundleInformation m_nodeAndBundleInfo;
+    private NodeAndBundleInformationPersistor m_nodeAndBundleInfo;
 
     /**
      * Creates a new monitor table to display node settings.

@@ -75,7 +75,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -1044,7 +1044,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         for (Map.Entry<Integer, NodeFactoryUnknownException> missingNode : missingNodeIDMap.entrySet()) {
             exec.checkCanceled();
             int missingNodeSuffix = missingNode.getKey();
-            NodeAndBundleInformation nodeInfo = missingNode.getValue().getNodeAndBundleInformation();
+            NodeAndBundleInformationPersistor nodeInfo = missingNode.getValue().getNodeAndBundleInformation();
             loadResult.addMissingNode(nodeInfo);
             NodeSettingsRO additionalFactorySettings = missingNode.getValue().getAdditionalFactorySettings();
             ArrayList<PersistorWithPortIndex> upstreamNodes = new ArrayList<PersistorWithPortIndex>();
@@ -1768,7 +1768,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @since 2.7
      */
     @Override
-    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
+    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformationPersistor nodeInfo,
         final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
         final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
         // not applicable for metanodes
