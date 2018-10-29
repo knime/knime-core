@@ -1254,7 +1254,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             final NodeContainer nodeContainer = m_wfManager.getNodeContainer(nodeID);
             final VisualLayoutEditorJSONNode jsonNode =
                 new VisualLayoutEditorJSONNode(nodeContainer.getID().getIndex(), nodeContainer.getName(),
-                    nodeContainer.getCustomDescription(), getLayout(viewNode.getValue(), viewNode.getKey()),
+                    nodeContainer.getNodeAnnotation().getText(), getLayout(viewNode.getValue(), viewNode.getKey()),
                     getIcon(nodeContainer), !node.isHideInWizard(), getType(node));
             nodes.add(jsonNode);
         }
