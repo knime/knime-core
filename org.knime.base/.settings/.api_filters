@@ -296,6 +296,34 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/preproc/autobinner3/AutoBinner.java" type="org.knime.base.node.preproc.autobinner3.AutoBinner">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.autobinner3.AutoBinner"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/autobinner3/AutoBinnerLearnNodeDialogPane.java" type="org.knime.base.node.preproc.autobinner3.AutoBinnerLearnNodeDialogPane">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.autobinner3.AutoBinnerLearnNodeDialogPane"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/autobinner3/AutoBinnerLearnNodeFactory.java" type="org.knime.base.node.preproc.autobinner3.AutoBinnerLearnNodeFactory">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.autobinner3.AutoBinnerLearnNodeFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/autobinner3/AutoBinnerLearnSettings.java" type="org.knime.base.node.preproc.autobinner3.AutoBinnerLearnSettings">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.autobinner3.AutoBinnerLearnSettings"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/preproc/normalize3/Normalizer3NodeModel.java" type="org.knime.base.node.preproc.normalize3.Normalizer3NodeModel">
         <filter id="1110441988">
             <message_arguments>
