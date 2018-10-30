@@ -206,6 +206,7 @@ public abstract class WebResourceController {
     /**
      * @param bundleID the ID for the web bundle
      * @return a template for non-views, all fields expected {@code webResources} will be empty
+     * @since 3.7
      */
     public static WebTemplate getWebTemplateFromBundleID(final String bundleID) {
         LinkedHashSet<WebResourceLocator> webResList = new LinkedHashSet<WebResourceLocator>();
