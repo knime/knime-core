@@ -37,13 +37,6 @@
         alpha composition is expensive in cases when operations performed are 
         not hardware-accelerated.
     </option>
-    <option name="Plattes: ">
-    	Assigns a set of colors to the values in the column. If more values are
-    	present than colors in the set, the colors are repeated. Set the
-    	'On different table:' setting to 'Fail' if you want the node to fail
-    	when a table with undefined values is input to the color manager.
-    	Otherwise new values are assigned an unused color from a defined set.
-    </option>
 	</fullDescription>
 	
 	<ports>

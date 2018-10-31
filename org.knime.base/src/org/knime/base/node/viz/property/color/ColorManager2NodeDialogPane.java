@@ -254,16 +254,12 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
             LOGGER.debug("Nominal/Range selection flag" + " not available.");
         }
 
-        // get new values setting
-        m_palettesPanel.loadSettingsFrom(settings, specs);
-
         // find last columns for nominal values and numeric ranges defined
         for (int i = 0; i < specs[0].getNumColumns(); i++) {
             DataColumnSpec cspec = specs[0].getColumnSpec(i);
             DataColumnDomain domain = cspec.getDomain();
             // nominal values defined
             if (domain.hasValues()) {
-                // add all values to the nominal panel
                 m_nominal.add(cspec.getName(), domain.getValues());
                 // select last possible nominal column
                 hasNominals = i;
@@ -365,7 +361,6 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         assert (settings != null);
-        m_palettesPanel.saveSettingsTo(settings);
         String cell = getSelectedColumn();
         settings.addString(ColorManager2NodeModel.SELECTED_COLUMN, cell);
         if (cell != null) {
