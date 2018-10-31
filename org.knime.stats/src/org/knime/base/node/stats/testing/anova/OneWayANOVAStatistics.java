@@ -71,8 +71,9 @@ import org.knime.core.util.MutableInteger;
 import org.knime.stats.StatsUtil;
 
 /**
- * The independent samples tow tailed T-test. Test statistics are computed for the assumption the variances are equal
- * and for the case that this assumption is not made.
+ * The independent samples tow tailed T-test. Test statistics are computed for
+ * the assumption the variances are equal and for the case that this assumption
+ * is not made.
  *
  * @author Heiko Hofer
  */
@@ -86,17 +87,18 @@ public class OneWayANOVAStatistics {
     public static final String GROUP = "Group";
     public static final String N = "N";
     public static final String MISSING_COUNT = "Missing Count";
-
-    public static final String MISSING_COUNT_GROUP_COL = "Missing Count (Group Column)";
+    public static final String MISSING_COUNT_GROUP_COL =
+        "Missing Count (Group Column)";
     public static final String MEAN = "Mean";
     public static final String STANDARD_DEVIATION = "Standard Deviation";
     public static final String STANDARD_ERROR = "Standard Error Mean";
 
-    public static final String CONFIDENCE_INTERVAL_PROBABILITY = "Confidence Interval Probability";
-
-    public static final String CONFIDENCE_INTERVAL_LOWER_BOUND = "Confidence Interval of the Difference (Lower Bound)";
-
-    public static final String CONFIDENCE_INTERVAL_UPPER_BOUND = "Confidence Interval of the Difference (Upper Bound)";
+    public static final String CONFIDENCE_INTERVAL_PROBABILITY =
+        "Confidence Interval Probability";
+    public static final String CONFIDENCE_INTERVAL_LOWER_BOUND =
+        "Confidence Interval of the Difference (Lower Bound)";
+    public static final String CONFIDENCE_INTERVAL_UPPER_BOUND =
+        "Confidence Interval of the Difference (Upper Bound)";
     public static final String MINIMUM = "Minimum";
     public static final String MAXIMUM = "Maximum";
 
@@ -106,31 +108,33 @@ public class OneWayANOVAStatistics {
     public static final String SOURCE = "Source";
     public static final String SOURCE_BETWEEN_GROUPS = "Between Groups";
     public static final String SOURCE_WITHIN_GROUPS = "Within Groups";
-
     public static final String SOURCE_TOTAL = "Total";
 
 
     /** the test column. */
-    private final String m_column;
+    private String m_column;
     /** The alpha used for the confidence interval. */
-    private final double m_confidenceIntervalProp;
+    private double m_confidenceIntervalProp;
     /** the group identifiers. */
-    private final List<String> m_groups;
+    private List<String> m_groups;
     /** summary statistics across groups. */
-    private final SummaryStatistics m_stats;
+    private SummaryStatistics m_stats;
     /** summary statistics per group. */
-    private final List<SummaryStatistics> m_gstats;
+    private List<SummaryStatistics> m_gstats;
     /** number of missing values per group. */
-    private final List<MutableInteger> m_missing;
+    private List<MutableInteger> m_missing;
     /** number of missing values in the grouping column */
-    private final MutableInteger m_missingGroup;
+    private MutableInteger m_missingGroup;
 
     /**
      * @param column the test column
      * @param groups the group identifiers
-     * @param confindeceIntervalProb the probability used to compute confidence intervals (Typically 0.95)
+     * @param confindeceIntervalProb the probability used to compute
+     * confidence intervals (Typically 0.95)
      */
-    public OneWayANOVAStatistics(final String column, final List<String> groups, final double confindeceIntervalProb) {
+    public OneWayANOVAStatistics(final String column,
+            final List<String> groups,
+            final double confindeceIntervalProb) {
         super();
         m_column = column;
         m_confidenceIntervalProp = confindeceIntervalProb;
@@ -138,7 +142,7 @@ public class OneWayANOVAStatistics {
         m_missingGroup = new MutableInteger(0);
 
         m_stats = new SummaryStatistics();
-        final int numGroups = groups.size();
+        int numGroups = groups.size();
         m_gstats = new ArrayList<SummaryStatistics>(numGroups);
         for (int i = 0; i < numGroups; i++) {
             m_gstats.add(new SummaryStatistics());
@@ -180,13 +184,35 @@ public class OneWayANOVAStatistics {
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getGroupStatisticsSpec() {
-        return new DataTableSpec(
-            new String[]{TEST_COLUMN, GROUP, N, MISSING_COUNT, MISSING_COUNT_GROUP_COL, MEAN, STANDARD_DEVIATION,
-                STANDARD_ERROR, CONFIDENCE_INTERVAL_PROBABILITY, CONFIDENCE_INTERVAL_LOWER_BOUND,
-                CONFIDENCE_INTERVAL_UPPER_BOUND, MINIMUM, MAXIMUM},
-            new DataType[]{StringCell.TYPE, StringCell.TYPE, IntCell.TYPE, IntCell.TYPE, IntCell.TYPE, DoubleCell.TYPE,
-                DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE,
-                DoubleCell.TYPE});
+        return new DataTableSpec(new String[] {
+                TEST_COLUMN
+                , GROUP
+                , N
+                , MISSING_COUNT
+                , MISSING_COUNT_GROUP_COL
+                , MEAN
+                , STANDARD_DEVIATION
+                , STANDARD_ERROR
+                , CONFIDENCE_INTERVAL_PROBABILITY
+                , CONFIDENCE_INTERVAL_LOWER_BOUND
+                , CONFIDENCE_INTERVAL_UPPER_BOUND
+                , MINIMUM
+                , MAXIMUM},
+                new DataType[] {
+                StringCell.TYPE
+                , StringCell.TYPE
+                , IntCell.TYPE
+                , IntCell.TYPE
+                , IntCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+        });
     }
 
     /**
@@ -195,27 +221,27 @@ public class OneWayANOVAStatistics {
      * @return the descriptive statistics for each group
      */
     public BufferedDataTable getGroupTable(final ExecutionContext exec) {
-        final DataTableSpec outSpec = getGroupStatisticsSpec();
-        final BufferedDataContainer cont = exec.createDataContainer(outSpec);
+        DataTableSpec outSpec = getGroupStatisticsSpec();
+        BufferedDataContainer cont = exec.createDataContainer(outSpec);
 
         int r = 0;
-        for (final List<DataCell> cells : getGroupStatisticsCells()) {
+        for (List<DataCell> cells : getGroupStatisticsCells()) {
             cont.addRowToTable(new DefaultRow(RowKey.createRowKey(r), cells));
             r++;
         }
 
         cont.close();
-        final BufferedDataTable outTable = cont.getTable();
+        BufferedDataTable outTable = cont.getTable();
         return outTable;
     }
 
     /**
-     * Get descriptive statistics. The cells of the table that is returned by getGroupTable(exec).
-     * 
+     * Get descriptive statistics. The cells of the table that is returned by
+     * getGroupTable(exec).
      * @return the descriptive statistics for each group
      */
     public List<List<DataCell>> getGroupStatisticsCells() {
-        final List<List<DataCell>> cells = new ArrayList<List<DataCell>>();
+        List<List<DataCell>> cells = new ArrayList<List<DataCell>>();
 
         for (int i = 0; i < m_groups.size(); i++) {
             cells.add(getGroupStatistics(i));
@@ -230,10 +256,10 @@ public class OneWayANOVAStatistics {
      * @return the descriptive statistics for this group.
      */
     public List<DataCell> getGroupStatistics(final int groupIndex) {
-        final List<DataCell> cells = new ArrayList<DataCell>();
+        List<DataCell> cells = new ArrayList<DataCell>();
         cells.add(new StringCell(m_column));
         cells.add(new StringCell(m_groups.get(groupIndex)));
-        final SummaryStatistics stats = m_gstats.get(groupIndex);
+        SummaryStatistics stats = m_gstats.get(groupIndex);
         cells.add(new IntCell((int)stats.getN()));
         cells.add(new IntCell(m_missing.get(groupIndex).intValue()));
         cells.add(new IntCell(m_missingGroup.intValue()));
@@ -242,13 +268,14 @@ public class OneWayANOVAStatistics {
         cells.add(new DoubleCell(StatsUtil.getStandardError(stats)));
         cells.add(new DoubleCell(m_confidenceIntervalProp));
 
-        final long df = stats.getN() - 1;
-        final TDistribution distribution = new TDistribution(df);
-        final double tValue =
-            FastMath.abs(distribution.inverseCumulativeProbability((1 - m_confidenceIntervalProp) / 2));
-        final double confidenceDelta = tValue * StatsUtil.getStandardError(stats);
-        final double confidenceLowerBound = stats.getMean() - confidenceDelta;
-        final double confidenceUpperBound = stats.getMean() + confidenceDelta;
+        long df = stats.getN() - 1;
+        TDistribution distribution = new TDistribution(df);
+        double tValue = FastMath.abs(
+                distribution.inverseCumulativeProbability(
+                        (1 - m_confidenceIntervalProp) / 2));
+        double confidenceDelta = tValue * StatsUtil.getStandardError(stats);
+        double confidenceLowerBound = stats.getMean() - confidenceDelta;
+        double confidenceUpperBound = stats.getMean() + confidenceDelta;
 
 
         cells.add(new DoubleCell(confidenceLowerBound));
@@ -264,13 +291,13 @@ public class OneWayANOVAStatistics {
      * @return the descriptive statistics for all groups
      */
     public List<DataCell> getGroupsTotalStatistics() {
-        final List<DataCell> cells = new ArrayList<DataCell>();
+        List<DataCell> cells = new ArrayList<DataCell>();
         cells.add(new StringCell(m_column));
         cells.add(new StringCell("Total"));
-        final SummaryStatistics stats = m_stats;
+        SummaryStatistics stats = m_stats;
         cells.add(new IntCell((int)stats.getN()));
         int missingCount = 0;
-        for (final MutableInteger m : m_missing) {
+        for (MutableInteger m : m_missing) {
             missingCount += m.intValue();
         }
         cells.add(new IntCell(missingCount));
@@ -280,13 +307,14 @@ public class OneWayANOVAStatistics {
         cells.add(new DoubleCell(StatsUtil.getStandardError(stats)));
         cells.add(new DoubleCell(m_confidenceIntervalProp));
 
-        final long df = stats.getN() - 1;
-        final TDistribution distribution = new TDistribution(df);
-        final double tValue =
-            FastMath.abs(distribution.inverseCumulativeProbability((1 - m_confidenceIntervalProp) / 2));
-        final double confidenceDelta = tValue * StatsUtil.getStandardError(stats);
-        final double confidenceLowerBound = stats.getMean() - confidenceDelta;
-        final double confidenceUpperBound = stats.getMean() + confidenceDelta;
+        long df = stats.getN() - 1;
+        TDistribution distribution = new TDistribution(df);
+        double tValue = FastMath.abs(
+                distribution.inverseCumulativeProbability(
+                        (1 - m_confidenceIntervalProp) / 2));
+        double confidenceDelta = tValue * StatsUtil.getStandardError(stats);
+        double confidenceLowerBound = stats.getMean() - confidenceDelta;
+        double confidenceUpperBound = stats.getMean() + confidenceDelta;
 
 
         cells.add(new DoubleCell(confidenceLowerBound));
@@ -316,23 +344,23 @@ public class OneWayANOVAStatistics {
     }
 
     /**
-     * Get the test result of the t-test, for the assumption of equal variance and the assumption of unequal variances.
-     * 
+     * Get the test result of the t-test, for the assumption of equal
+     * variance and the assumption of unequal variances.
      * @param exec the execution context
      * @return the t-test results
      */
     public BufferedDataTable getTTestTable(final ExecutionContext exec) {
-        final DataTableSpec outSpec = getTableSpec();
-        final BufferedDataContainer cont = exec.createDataContainer(outSpec);
+        DataTableSpec outSpec = getTableSpec();
+        BufferedDataContainer cont = exec.createDataContainer(outSpec);
 
         int r = 0;
-        for (final List<DataCell> cells : getTTestCells()) {
+        for (List<DataCell> cells : getTTestCells()) {
             cont.addRowToTable(new DefaultRow(RowKey.createRowKey(r), cells));
             r++;
         }
 
         cont.close();
-        final BufferedDataTable outTable = cont.getTable();
+        BufferedDataTable outTable = cont.getTable();
         return outTable;
     }
 
@@ -342,9 +370,9 @@ public class OneWayANOVAStatistics {
      * @return the t-test results
      */
     public List<List<DataCell>> getTTestCells() {
-        final List<List<DataCell>> cells = new ArrayList<List<DataCell>>();
+        List<List<DataCell>> cells = new ArrayList<List<DataCell>>();
 
-        final ANOVA anova = new ANOVA();
+        ANOVA anova = new ANOVA();
         cells.add(getBetweenGroups(anova));
         cells.add(getWithinGroups(anova));
         cells.add(getTotal(anova));
@@ -355,7 +383,7 @@ public class OneWayANOVAStatistics {
      * Get the row of the ANOVA table with the cells "Between Groups".
      */
     private List<DataCell> getBetweenGroups(final ANOVA anova) {
-        final List<DataCell> cells = new ArrayList<DataCell>();
+        List<DataCell> cells = new ArrayList<DataCell>();
         cells.add(new StringCell(m_column));
         cells.add(new StringCell(SOURCE_BETWEEN_GROUPS));
         cells.add(new DoubleCell(anova.getSqurb()));
@@ -370,7 +398,7 @@ public class OneWayANOVAStatistics {
      * Get the row of the ANOVA table with the cells "Within Groups".
      */
     private List<DataCell> getWithinGroups(final ANOVA anova) {
-        final List<DataCell> cells = new ArrayList<DataCell>();
+        List<DataCell> cells = new ArrayList<DataCell>();
         cells.add(new StringCell(m_column));
         cells.add(new StringCell(SOURCE_WITHIN_GROUPS));
         cells.add(new DoubleCell(anova.getSquri()));
@@ -385,7 +413,7 @@ public class OneWayANOVAStatistics {
      * Get the row of the ANOVA table with the cells "Total".
      */
     private List<DataCell> getTotal(final ANOVA anova) {
-        final List<DataCell> cells = new ArrayList<DataCell>();
+        List<DataCell> cells = new ArrayList<DataCell>();
         cells.add(new StringCell(m_column));
         cells.add(new StringCell(SOURCE_TOTAL));
         cells.add(new DoubleCell(anova.getSqurb() + anova.getSquri()));
@@ -419,33 +447,35 @@ public class OneWayANOVAStatistics {
         /** sum of squares within the groups */
         private double m_squri;
         /** degrees of freedom between the groups */
-        private final long m_dfb;
+        private long m_dfb;
         /** degrees of freedom within the groups */
-        private final long m_dfi;
+        private long m_dfi;
         /** mean square between the groups */
-        private final double m_msqurb;
+        private double m_msqurb;
         /** mean square within the groups */
-        private final double m_msquri;
+        private double m_msquri;
         /** the test statistic F */
-        private final double m_f;
+        private double m_f;
         /** the p-value */
-        private final double m_pValue;
+        private double m_pValue;
 
         /**
          * Computes all values for the ANOVA table.
          */
         public ANOVA() {
-            final int k = m_groups.size();
+            int k = m_groups.size();
             // sum of squares between the groups:
             m_squrb = 0;
-            for (final SummaryStatistics stat : m_gstats) {
-                m_squrb += stat.getN() * (stat.getMean() - m_stats.getMean()) * (stat.getMean() - m_stats.getMean());
+            for (SummaryStatistics stat : m_gstats) {
+                m_squrb += stat.getN() * (stat.getMean() - m_stats.getMean())
+                        * (stat.getMean() - m_stats.getMean());
             }
 
             // sum of squares within the groups:
             m_squri = 0;
-            for (final SummaryStatistics stat : m_gstats) {
-                m_squri += (stat.getN() - 1) * stat.getStandardDeviation() * stat.getStandardDeviation();
+            for (SummaryStatistics stat : m_gstats) {
+                m_squri += (stat.getN() - 1) * stat.getStandardDeviation()
+                    * stat.getStandardDeviation();
             }
 
             m_dfb = k - 1;
@@ -454,7 +484,7 @@ public class OneWayANOVAStatistics {
             m_msquri = m_squri / m_dfi;
             m_f = m_msqurb / m_msquri;
 
-            final FDistribution distribution = new FDistribution(m_dfb, m_dfi);
+            FDistribution distribution = new FDistribution(m_dfb, m_dfi);
             m_pValue = 1 - distribution.cumulativeProbability(m_f);
         }
 
@@ -513,6 +543,7 @@ public class OneWayANOVAStatistics {
         public double getpValue() {
             return m_pValue;
         }
+
 
 
     }
