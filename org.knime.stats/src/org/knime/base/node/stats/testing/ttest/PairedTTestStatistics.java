@@ -71,68 +71,54 @@ import org.knime.core.util.MutableInteger;
 import org.knime.stats.StatsUtil;
 
 /**
- * The independent samples tow tailed T-test. Test statistics are computed for the assumption the variances are equal
- * and for the case that this assumption is not made.
+ * The independent samples tow tailed T-test. Test statistics are computed for
+ * the assumption the variances are equal and for the case that this assumption
+ * is not made.
  *
  * @author Heiko Hofer
  */
 public class PairedTTestStatistics {
 
     public static final String T_VALUE = "t";
-
     public static final String DEGREES_OF_FREEDOM = "df";
-
     public static final String P_VALUE = "p-value (2-tailed)";
 
     public static final String PAIR = "Pair";
-
     public static final String COLUMN = "Column";
-
     public static final String N = "N";
-
     public static final String MISSING_COUNT = "Missing Count";
-
     public static final String LABEL = "Label";
-
     public static final String MEAN = "Mean";
-
     public static final String STANDARD_DEVIATION = "Standard Deviation";
 
-    public static final String STANDARD_ERROR_MEAN = "Standard Error Mean";
-
-    public static final String CONFIDENCE_INTERVAL_PROBABILITY = "Confidence Interval Probability";
-
-    public static final String CONFIDENCE_INTERVAL_LOWER_BOUND = "Confidence Interval of the Difference (Lower Bound)";
-
-    public static final String CONFIDENCE_INTERVAL_UPPER_BOUND = "Confidence Interval of the Difference (Upper Bound)";
+    public static final String STANDARD_ERROR_MEAN =
+        "Standard Error Mean";
+    public static final String CONFIDENCE_INTERVAL_PROBABILITY =
+        "Confidence Interval Probability";
+    public static final String CONFIDENCE_INTERVAL_LOWER_BOUND =
+        "Confidence Interval of the Difference (Lower Bound)";
+    public static final String CONFIDENCE_INTERVAL_UPPER_BOUND =
+        "Confidence Interval of the Difference (Upper Bound)";
 
     /** an identifier for the pair. */
     private String m_pair;
-
     /** the left column of the pair. */
     private String m_columnA;
-
     /** the right column of the pair. */
     private String m_columnB;
-
     /** The alpha used for the confidence interval. */
     private double m_confidenceIntervalProp;
-
     /** summary statistics for column A */
     private SummaryStatistics m_statsA;
-
     /** summary statistics for column B */
     private SummaryStatistics m_statsB;
-
     /** summary statistics for difference (columnA - columnB) */
     private SummaryStatistics m_statsDiff;
 
     /** number of rows in column A with missing values */
     private MutableInteger m_missingA;
-
     /** number of rows in column B with missing values */
     private MutableInteger m_missingB;
-
     /** the number of rows with missing values */
     private MutableInteger m_missing;
 
@@ -143,10 +129,13 @@ public class PairedTTestStatistics {
      * @param pair an identifier for the pair
      * @param columnA the left column of the pair
      * @param columnB the right column of the pair
-     * @param confindeceIntervalProb the probability used to compute confidence intervals (Typically 0.95)
+     * @param confindeceIntervalProb the probability used to compute
+     * confidence intervals (Typically 0.95)
      */
-    public PairedTTestStatistics(final String pair, final String columnA, final String columnB,
-        final double confindeceIntervalProb) {
+    public PairedTTestStatistics(final String pair,
+            final String columnA,
+            final String columnB,
+            final double confindeceIntervalProb) {
         super();
         m_pair = pair;
         m_columnA = columnA;
@@ -177,9 +166,10 @@ public class PairedTTestStatistics {
 
     /**
      * Increment missing value counter per column
-     *
-     * @param columnA true when the counter for the left column of the pair should be incremented
-     * @param columnB true when the counter for the right column of the pair should be incremented
+     * @param columnA true when the counter for the left column of the pair
+     * should be incremented
+     * @param columnB true when the counter for the right column of the pair
+     * should be incremented
      */
     public void addMissing(final boolean columnA, final boolean columnB) {
         if (columnA) {
@@ -195,19 +185,30 @@ public class PairedTTestStatistics {
 
     /**
      * Get the spec of the group statistics table.
-     *
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getDescStatsSpec() {
-        return new DataTableSpec(
-            new String[]{PAIR, COLUMN, N, MISSING_COUNT, MEAN, STANDARD_DEVIATION, STANDARD_ERROR_MEAN},
-            new DataType[]{StringCell.TYPE, StringCell.TYPE, IntCell.TYPE, IntCell.TYPE, DoubleCell.TYPE,
-                DoubleCell.TYPE, DoubleCell.TYPE});
+        return new DataTableSpec(new String[] {
+                PAIR
+                , COLUMN
+                , N
+                , MISSING_COUNT
+                , MEAN
+                , STANDARD_DEVIATION
+                , STANDARD_ERROR_MEAN},
+                new DataType[] {
+                StringCell.TYPE
+                ,StringCell.TYPE
+                , IntCell.TYPE
+                , IntCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+        });
     }
 
     /**
      * Get descriptive statistics
-     *
      * @param exec the execution context
      * @return the descriptive statistics for each column of the pair
      */
@@ -227,8 +228,8 @@ public class PairedTTestStatistics {
     }
 
     /**
-     * Get descriptive statistics. The cells of the table that is returned by getDescStatsTable(exec).
-     *
+     * Get descriptive statistics. The cells of the table that is returned by
+     * getDescStatsTable(exec).
      * @return the descriptive statistics for each column of the pair
      */
     public List<List<DataCell>> getDescStatsCells() {
@@ -241,14 +242,13 @@ public class PairedTTestStatistics {
 
     /**
      * Get descriptive statistics for the given column
-     *
      * @param column the name of the column
      * @param stats the statistics of the column
      * @param missing the missing values in this column
      * @return a DataRow with descriptive statistics
      */
-    private List<DataCell> getDescStats(final String column, final SummaryStatistics stats,
-        final MutableInteger missing) {
+    private List<DataCell> getDescStats(final String column,
+            final SummaryStatistics stats, final MutableInteger missing) {
         List<DataCell> cells = new ArrayList<DataCell>();
         cells.add(new StringCell(m_pair));
         cells.add(new StringCell(column));
@@ -264,7 +264,6 @@ public class PairedTTestStatistics {
 
     /**
      * Get the spec of the group statistics table.
-     *
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getTableSpec() {
@@ -286,7 +285,6 @@ public class PairedTTestStatistics {
 
     /**
      * Get the test result of the t-test.
-     *
      * @param exec the execution context
      * @return the t-test results
      */
@@ -307,7 +305,6 @@ public class PairedTTestStatistics {
 
     /**
      * Get the test result of the t-test.
-     *
      * @return the t-test results
      */
     public List<List<DataCell>> getTTestCells() {
@@ -317,28 +314,31 @@ public class PairedTTestStatistics {
         return cells;
     }
 
+
     /** A wrapper to the TTest class to access protected methods. */
     private class KnimeTTest extends TTest {
 
         /**
-         * Returns the paired, two-sample, two-tailed t-test
-         *
+         * Returns the  paired, two-sample, two-tailed t-test
          * @return the test results
          */
         public List<DataCell> getPairedTTest() {
             double mean = m_statsDiff.getMean();
             double stdDeviation = m_statsDiff.getStandardDeviation();
-            double stdErrorMean = stdDeviation / FastMath.sqrt(m_statsDiff.getN());
+            double stdErrorMean =
+                stdDeviation / FastMath.sqrt(m_statsDiff.getN());
             long df = m_statsDiff.getN() - 1;
             TDistribution distribution = new TDistribution(df);
-            double tValue =
-                FastMath.abs(distribution.inverseCumulativeProbability((1.0 - m_confidenceIntervalProp) / 2.0));
+            double tValue = FastMath.abs(
+                    distribution.inverseCumulativeProbability(
+                            (1.0 - m_confidenceIntervalProp) / 2.0));
             double confidenceDelta = tValue * stdErrorMean;
             double confidenceLowerBound = mean - confidenceDelta;
             double confidenceUpperBound = mean + confidenceDelta;
 
             double t = mean / stdErrorMean;
-            double pValue = 2.0 * distribution.cumulativeProbability(-FastMath.abs(t));
+            double pValue = 2.0 * distribution.cumulativeProbability(
+                    -FastMath.abs(t));
 
             List<DataCell> cells = new ArrayList<DataCell>();
             cells.add(new StringCell(m_pair));

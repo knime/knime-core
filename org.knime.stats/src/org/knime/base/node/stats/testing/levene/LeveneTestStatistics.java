@@ -58,6 +58,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -76,25 +77,19 @@ import org.knime.stats.StatsUtil;
  */
 public class LeveneTestStatistics {
     public static final String TEST_COLUMN = "Test Column";
-
     public static final String F_VALUE = "test statistic (Levene)";
-
     public static final String DF1_VALUE = "df 1";
-
     public static final String DF2_VALUE = "df 2";
-
     public static final String P_VALUE = "p-value (Levene)";
 
     /** the test column. */
     private String m_column;
-
     /** the group identifiers. */
     private List<String> m_groups;
 
-    /**
-     * summary statistics per group (levence test). Z_ij - Z_idot^bar in (the term in the denominator)
-     * http://www.itl.nist.gov/div898/handbook/eda/section3/eda35a.htm.
-     */
+    /** summary statistics per group (levence test).
+     * Z_ij - Z_idot^bar in (the term in the denominator)
+     * http://www.itl.nist.gov/div898/handbook/eda/section3/eda35a.htm. */
     private List<SummaryStatistics> m_denStats;
 
     /** summary statistics across groups (levence test). */
@@ -102,21 +97,21 @@ public class LeveneTestStatistics {
 
     /** number of missing values per group. */
     private List<MutableInteger> m_missing;
-
     /** number of missing values in the grouping column */
     private MutableInteger m_missingGroup;
 
     LeveneTestPreProcessing m_levenePre;
 
     /**
-     * A Levene-Test used in the context of a two sample t-test for comparing the equality of mean.
-     *
+     * A Levene-Test used in the context of a two sample t-test for comparing
+     * the equality of mean.
      * @param column the test column
      * @param groups the group identifiers
      * @param gstats summary statistics per group
      */
-    public LeveneTestStatistics(final String column, final List<String> groups,
-        final LeveneTestPreProcessing levenePre) {
+    public LeveneTestStatistics(final String column,
+            final List<String> groups,
+            final LeveneTestPreProcessing levenePre) {
         super();
         m_column = column;
         m_groups = groups;
@@ -138,13 +133,13 @@ public class LeveneTestStatistics {
 
     /**
      * Add value to the test.
-     *
      * @param value the value
      * @param gIndex the group of the value
      */
     public void addValue(final double value, final int gIndex) {
         // Z_ij in http://en.wikipedia.org/wiki/Levene's_test
-        double Zij = FastMath.abs(value - m_levenePre.getGstats().get(gIndex).getMean());
+        double Zij = FastMath.abs(value -
+                m_levenePre.getGstats().get(gIndex).getMean());
 
         m_lstats.addValue(Zij);
 
@@ -156,7 +151,6 @@ public class LeveneTestStatistics {
 
     /**
      * Notify about a missing value in the given group.
-     *
      * @param gIndex the group
      */
     public void addMissing(final int gIndex) {
@@ -172,11 +166,9 @@ public class LeveneTestStatistics {
 
     /**
      * Get the spec of the group statistics table.
-     *
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getTableSpec() {
-
         final List<DataColumnSpec> allColSpecs = new ArrayList<>(5);
         allColSpecs.add(new DataColumnSpecCreator(TEST_COLUMN, StringCell.TYPE).createSpec());
         allColSpecs.add(new DataColumnSpecCreator(F_VALUE, DoubleCell.TYPE).createSpec());
@@ -188,8 +180,8 @@ public class LeveneTestStatistics {
     }
 
     /**
-     * Get the test result of the t-test, for the assumption of equal variance and the assumption of unequal variances.
-     *
+     * Get the test result of the t-test, for the assumption of equal
+     * variance and the assumption of unequal variances.
      * @param exec the execution context
      * @return the t-test results
      */
@@ -208,9 +200,9 @@ public class LeveneTestStatistics {
         return outTable;
     }
 
+
     /**
      * Get the test result of the Levene test.
-     *
      * @return the Levene test
      */
     public List<List<DataCell>> getTTestCells() {
@@ -219,6 +211,7 @@ public class LeveneTestStatistics {
             return getLeveneTestTwoGroupsCells();
         }
 
+
         double num = 0;
         double Zdd = m_lstats.getMean();
         int k = m_groups.size();
@@ -226,7 +219,7 @@ public class LeveneTestStatistics {
             SummaryStatistics statsGi = m_levenePre.getLgstats().get(i);
             double ni = statsGi.getN();
             double Zidot = statsGi.getMean();
-            num += ni * (Zidot - Zdd) * (Zidot - Zdd);
+            num += ni * (Zidot - Zdd) * (Zidot - Zdd) ;
         }
         double den = 0;
         for (int i = 0; i < k; i++) {
@@ -235,10 +228,11 @@ public class LeveneTestStatistics {
         }
         double L = (m_lstats.getN() - k) / (double)(k - 1) * num / den;
 
-        long df1 = k - 1;
+        long df1 = k - 1 ;
         long df2 = m_lstats.getN() - k;
         FDistribution distribution = new FDistribution(df1, df2);
-        double pValue = 1 - distribution.cumulativeProbability(L);
+        double pValue = 1 -
+            distribution.cumulativeProbability(L);
 
         List<DataCell> cells = new ArrayList<DataCell>();
         cells.add(new StringCell(m_column));
@@ -251,8 +245,8 @@ public class LeveneTestStatistics {
     }
 
     /**
-     * Get the test result of the Levene test. This is an optimized version for two groups.
-     *
+     * Get the test result of the Levene test. This is an optimized version for
+     * two groups.
      * @return the Levene test
      */
     public List<List<DataCell>> getLeveneTestTwoGroupsCells() {
@@ -275,14 +269,16 @@ public class LeveneTestStatistics {
         double n2 = statsY.getN();
 
         // Levene's test
-        double num = n1 * (m1 - m) * (m1 - m) + n2 * (m2 - m) * (m2 - m);
+        double num = n1 * (m1 - m) * (m1 - m)
+            + n2 * (m2 - m) * (m2 - m);
         double den = (n1 - 1) * v1 + (n2 - 1) * v2;
         double L = (n1 + n2 - 2) / den * num;
 
         long df1 = 1;
         long df2 = (long)n1 + (long)n2 - 2;
         FDistribution distribution = new FDistribution(df1, df2);
-        double pValue = 1 - distribution.cumulativeProbability(L);
+        double pValue = 1 -
+            distribution.cumulativeProbability(L);
 
         List<DataCell> cells = new ArrayList<DataCell>();
         cells.add(new StringCell(m_column));

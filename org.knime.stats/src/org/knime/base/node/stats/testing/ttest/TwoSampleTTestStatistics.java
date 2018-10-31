@@ -74,88 +74,74 @@ import org.knime.core.util.MutableInteger;
 import org.knime.stats.StatsUtil;
 
 /**
- * The independent samples tow tailed T-test. Test statistics are computed for the assumption the variances are equal
- * and for the case that this assumption is not made.
+ * The independent samples tow tailed T-test. Test statistics are computed for
+ * the assumption the variances are equal and for the case that this assumption
+ * is not made.
  *
  * @author Heiko Hofer
  */
 public class TwoSampleTTestStatistics {
     public static final String VARIANCE_ASSUMPTION = "Variance Assumption";
-
-    public static final StringCell EQUAL_VARIANCES_ASSUMED = new StringCell("Equal variances assumed");
-
-    public static final StringCell EQUAL_VARIANCES_NOT_ASSUMED = new StringCell("Equal variances not assumed");
-
+    public static final StringCell EQUAL_VARIANCES_ASSUMED =
+        new StringCell("Equal variances assumed");
+    public static final StringCell EQUAL_VARIANCES_NOT_ASSUMED =
+        new StringCell("Equal variances not assumed");
     public static final String T_VALUE = "t";
-
     public static final String DEGREES_OF_FREEDOM = "df";
-
     public static final String P_VALUE = "p-value (2-tailed)";
 
     public static final String TEST_COLUMN = "Test Column";
-
     public static final String GROUP = "Group";
-
     public static final String N = "N";
-
     public static final String MISSING_COUNT = "Missing Count";
-
-    public static final String MISSING_COUNT_GROUP_COL = "Missing Count (Group Column)";
-
-    public static final String IGNORED_COUNT_GROUP_COL = "Ignored Count (Group Column)";
-
+    public static final String MISSING_COUNT_GROUP_COL =
+        "Missing Count (Group Column)";
+    public static final String IGNORED_COUNT_GROUP_COL =
+        "Ignored Count (Group Column)";
     public static final String MEAN = "Mean";
-
     public static final String STANDARD_DEVIATION = "Standard Deviation";
-
     public static final String STANDARD_ERROR = "Standard Error Mean";
 
     public static final String MEAN_DIFFERENCE = "Mean Difference";
-
-    public static final String STANDARD_ERROR_DIFFERENCE = "Standard Error Difference";
-
-    public static final String CONFIDENCE_INTERVAL_PROBABILITY = "Confidence Interval Probability";
-
-    public static final String CONFIDENCE_INTERVAL_LOWER_BOUND = "Confidence Interval of the Difference (Lower Bound)";
-
-    public static final String CONFIDENCE_INTERVAL_UPPER_BOUND = "Confidence Interval of the Difference (Upper Bound)";
+    public static final String STANDARD_ERROR_DIFFERENCE =
+        "Standard Error Difference";
+    public static final String CONFIDENCE_INTERVAL_PROBABILITY =
+        "Confidence Interval Probability";
+    public static final String CONFIDENCE_INTERVAL_LOWER_BOUND =
+        "Confidence Interval of the Difference (Lower Bound)";
+    public static final String CONFIDENCE_INTERVAL_UPPER_BOUND =
+        "Confidence Interval of the Difference (Upper Bound)";
 
     /** the test column. */
     private String m_column;
-
     /** The alpha used for the confidence interval. */
     private double m_confidenceIntervalProp;
-
     /** the group identifiers. */
     private Map<Group, String> m_groups;
-
     /** summary statistics per group. */
     private Map<Group, SummaryStatistics> m_gstats;
-
     /** summary statistics across groups. */
     private SummaryStatistics m_stats;
-
     /** number of missing values per group. */
     private Map<Group, MutableInteger> m_missing;
-
     /** number of missing values in the grouping column. */
     private MutableInteger m_missingGroup;
-
     /** Dummy object to access protected methods of {@link TTest}. */
     private KnimeTTest m_tTest;
-
-    /**
-     * Number of ignored cells in the group column. Ignored are all values which are not in m_groups.
+    /** Number of ignored cells in the group column. Ignored are all values
+     * which are not in m_groups.
      */
     private MutableInteger m_ignoredGroup;
 
     /**
      * @param column the test column
      * @param groups the group identifiers
-     * @param confindeceIntervalProb the probability used to compute confidence intervals (Typically 0.95)
+     * @param confindeceIntervalProb the probability used to compute
+     * confidence intervals (Typically 0.95)
      */
-    public TwoSampleTTestStatistics(final String column, final Map<Group, String> groups,
-        final double confindeceIntervalProb) {
+    public TwoSampleTTestStatistics(final String column,
+            final Map<Group, String> groups,
+            final double confindeceIntervalProb) {
         super();
         m_column = column;
         m_confidenceIntervalProp = confindeceIntervalProb;
@@ -175,7 +161,6 @@ public class TwoSampleTTestStatistics {
 
     /**
      * Add value to the test.
-     *
      * @param value the value
      * @param group the group of the value
      */
@@ -186,7 +171,6 @@ public class TwoSampleTTestStatistics {
 
     /**
      * Notify about a missing value in the given group.
-     *
      * @param group the group
      */
     public void addMissing(final Group group) {
@@ -209,20 +193,34 @@ public class TwoSampleTTestStatistics {
 
     /**
      * Get the spec of the group statistics table.
-     *
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getGroupStatisticsSpec() {
-        return new DataTableSpec(
-            new String[]{TEST_COLUMN, GROUP, N, MISSING_COUNT, MISSING_COUNT_GROUP_COL, IGNORED_COUNT_GROUP_COL, MEAN,
-                STANDARD_DEVIATION, STANDARD_ERROR},
-            new DataType[]{StringCell.TYPE, StringCell.TYPE, IntCell.TYPE, IntCell.TYPE, IntCell.TYPE, IntCell.TYPE,
-                DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE});
+        return new DataTableSpec(new String[] {
+                TEST_COLUMN
+                , GROUP
+                , N
+                , MISSING_COUNT
+                , MISSING_COUNT_GROUP_COL
+                , IGNORED_COUNT_GROUP_COL
+                , MEAN
+                , STANDARD_DEVIATION
+                , STANDARD_ERROR},
+                new DataType[] {
+                StringCell.TYPE
+                , StringCell.TYPE
+                , IntCell.TYPE
+                , IntCell.TYPE
+                , IntCell.TYPE
+                , IntCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+                , DoubleCell.TYPE
+        });
     }
 
     /**
      * Get descriptive statistics.
-     *
      * @param exec the execution context
      * @return the descriptive statistics for each group
      */
@@ -242,8 +240,8 @@ public class TwoSampleTTestStatistics {
     }
 
     /**
-     * Get descriptive statistics. The cells of the table that is returned by getGroupTable(exec).
-     *
+     * Get descriptive statistics. The cells of the table that is returned by
+     * getGroupTable(exec).
      * @return the descriptive statistics for each group
      */
     public List<List<DataCell>> getGroupStatisticsCells() {
@@ -258,7 +256,6 @@ public class TwoSampleTTestStatistics {
 
     /**
      * Get descriptive statistics for the given Group.
-     *
      * @param group the group
      * @return the
      */
@@ -279,7 +276,6 @@ public class TwoSampleTTestStatistics {
 
     /**
      * Get the spec of the group statistics table.
-     *
      * @return the spec of the group statistics table
      */
     public static DataTableSpec getTableSpec() {
@@ -299,8 +295,8 @@ public class TwoSampleTTestStatistics {
     }
 
     /**
-     * Get the test result of the t-test, for the assumption of equal variance and the assumption of unequal variances.
-     *
+     * Get the test result of the t-test, for the assumption of equal
+     * variance and the assumption of unequal variances.
      * @param exec the execution context
      * @return the t-test results
      */
@@ -308,20 +304,22 @@ public class TwoSampleTTestStatistics {
         DataTableSpec outSpec = getTableSpec();
         BufferedDataContainer cont = exec.createDataContainer(outSpec);
 
+
         int r = 0;
         for (List<DataCell> cells : getTTestCells()) {
             cont.addRowToTable(new DefaultRow(RowKey.createRowKey(r), cells));
             r++;
         }
 
+
         cont.close();
         BufferedDataTable outTable = cont.getTable();
         return outTable;
     }
 
+
     /**
      * Get the test result of the t-test.
-     *
      * @return the t-test results
      */
     public List<List<DataCell>> getTTestCells() {
@@ -336,7 +334,8 @@ public class TwoSampleTTestStatistics {
     private class KnimeTTest extends TTest {
 
         /**
-         * Computes p-value for 2-sided, 2-sample t-test. Does not assume that subpopulation variances are equal.
+         * Computes p-value for 2-sided, 2-sample t-test.
+         * Does not assume that subpopulation variances are equal.
          *
          * @return the row with t-Test statistics
          */
@@ -363,12 +362,15 @@ public class TwoSampleTTestStatistics {
             // approximate degrees of freedom for 2-sample t-test
             double df = df(v1, v2, n1, n2);
             TDistribution distribution = new TDistribution(df);
-            double pValue = 2.0 * distribution.cumulativeProbability(-FastMath.abs(t));
+            double pValue = 2.0
+                * distribution.cumulativeProbability(-FastMath.abs(t));
 
             double meanDifference = m1 - m2;
 
             double standardErrorDiff = FastMath.sqrt((v1 / n1) + (v2 / n2));
-            double tValue = FastMath.abs(distribution.inverseCumulativeProbability((1 - m_confidenceIntervalProp) / 2));
+            double tValue = FastMath.abs(
+                    distribution.inverseCumulativeProbability(
+                            (1 - m_confidenceIntervalProp) / 2));
             double confidenceDelta = tValue * standardErrorDiff;
             double confidenceLowerBound = meanDifference - confidenceDelta;
             double confidenceUpperBound = meanDifference + confidenceDelta;
@@ -388,8 +390,9 @@ public class TwoSampleTTestStatistics {
         }
 
         /**
-         * Computes p-value for 2-sided, 2-sample t-test, under the assumption of equal subpopulation variances. The sum
-         * of the sample sizes minus 2 is used as degrees of freedom.
+         * Computes p-value for 2-sided, 2-sample t-test, under the assumption
+         * of equal subpopulation variances.
+         * The sum of the sample sizes minus 2 is used as degrees of freedom.
          *
          * @return the row with t-Test statistics
          */
@@ -415,13 +418,18 @@ public class TwoSampleTTestStatistics {
             double t = homoscedasticT(m1, m2, v1, v2, n1, n2);
             double df = n1 + n2 - 2;
             TDistribution distribution = new TDistribution(df);
-            double pValue = 2.0 * distribution.cumulativeProbability(-FastMath.abs(t));
+            double pValue = 2.0
+                * distribution.cumulativeProbability(-FastMath.abs(t));
 
             double meanDifference = m1 - m2;
 
-            double pooledVariance = ((n1 - 1) * v1 + (n2 - 1) * v2) / (n1 + n2 - 2);
-            double standardErrorDiff = FastMath.sqrt(pooledVariance * (1d / n1 + 1d / n2));
-            double tValue = FastMath.abs(distribution.inverseCumulativeProbability((1 - m_confidenceIntervalProp) / 2));
+            double pooledVariance =
+                ((n1  - 1) * v1 + (n2 - 1) * v2) / (n1 + n2 - 2);
+            double standardErrorDiff =
+                FastMath.sqrt(pooledVariance * (1d / n1 + 1d / n2));
+            double tValue = FastMath.abs(
+                    distribution.inverseCumulativeProbability(
+                            (1 - m_confidenceIntervalProp) / 2));
             double confidenceDelta = tValue * standardErrorDiff;
             double confidenceLowerBound = meanDifference - confidenceDelta;
             double confidenceUpperBound = meanDifference + confidenceDelta;
@@ -444,7 +452,6 @@ public class TwoSampleTTestStatistics {
 
     /**
      * Get summary statistics per group.
-     *
      * @return the summary statistics
      */
     public Map<Group, SummaryStatistics> getGroupSummaryStatistics() {
@@ -453,7 +460,6 @@ public class TwoSampleTTestStatistics {
 
     /**
      * Get summary statistics across groups.
-     *
      * @return the summary statistics
      */
     public SummaryStatistics getSummaryStatistics() {
