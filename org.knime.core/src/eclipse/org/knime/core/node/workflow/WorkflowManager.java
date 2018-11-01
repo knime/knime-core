@@ -4341,13 +4341,18 @@ public final class WorkflowManager extends NodeContainer
     /** {@inheritDoc} */
     @Override
     void markForExecution(final boolean flag) {
-        assert !isLocalWFM() : "Setting execution mark on metanode not allowed" + " for locally executing (sub-)flows";
-        if (getInternalState().isExecutionInProgress()) {
-            throw new IllegalStateException(
-                "Execution of (sub-)flow already " + "in progress, current state is " + getInternalState());
+        assert !isLocalWFM() : "Setting execution mark on metanode not allowed for locally executing (sub-)flows";
+        // lock the wfm to reduce unnecessary listener notifications
+        try (WorkflowLock lock = lock()) {
+            if (flag) {
+                CheckUtils.checkState(!getInternalState().isExecutionInProgress(),
+                    "Execution of (sub-)flow already in progress, current state is %s", getInternalState());
+            } else {
+                CheckUtils.checkState(getInternalState().isExecutionInProgress(),
+                    "Execution of (sub-)flow not in progress, current state is %s", getInternalState());
+            }
+            markForExecutionAllNodesInWorkflow(flag);
         }
-        markForExecutionAllNodesInWorkflow(flag);
-        setInternalState(CONFIGURED_MARKEDFOREXEC);
     }
 
     /** {@inheritDoc} */
