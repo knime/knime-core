@@ -187,7 +187,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      */
     protected SubnodeLayoutJSONEditorPage(final String pageName) {
         super(pageName);
-        setDescription("Specifiy in what way the contained view and Quickform nodes are allowed to be used and define "
+        setDescription("Specify in what way the contained view and Quickform nodes are allowed to be used and define "
             + "a layout. \nThe layout is used in the KNIME WebPortal and the Wrapped Metanode View.");
         m_jsonDocument = "";
         m_basicMap = new LinkedHashMap<NodeIDSuffix, BasicLayoutInfo>();
