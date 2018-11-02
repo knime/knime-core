@@ -48,6 +48,7 @@
  */
 package org.knime.workbench.editor2.subnode;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.knime.js.core.layout.LayoutTemplateProvider;
 import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutViewContent;
@@ -83,8 +84,8 @@ public class VisualLayoutEditorJSONNode {
     public VisualLayoutEditorJSONNode(final int nodeID, final String name, final String description, final JSONLayoutContent layout,
         final String icon, final boolean availableInView, final String type) {
         m_nodeID = nodeID + "";
-        m_name = name;
-        m_description = description;
+        m_name = StringEscapeUtils.escapeJava(name);
+        m_description = StringEscapeUtils.escapeJava(description);
         m_layout = layout;
         m_icon = icon;
         m_availableInView = availableInView;
