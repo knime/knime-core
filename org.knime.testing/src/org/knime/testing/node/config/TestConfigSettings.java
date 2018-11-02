@@ -59,9 +59,9 @@ import java.util.Set;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.LoadVersion;
 import org.knime.testing.core.FullWorkflowTest;
 import org.knime.testing.core.TestrunConfiguration;
 
