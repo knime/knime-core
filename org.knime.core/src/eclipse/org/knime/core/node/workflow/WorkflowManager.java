@@ -8683,7 +8683,7 @@ public final class WorkflowManager extends NodeContainer
      * The version as read from workflow.knime file during load (or <code>null</code> if not loaded but newly created).
      *
      * @return the workflow {@link LoadVersion}
-     * @since 3.3
+     * @since 3.7
      */
     public LoadVersion getLoadVersion() {
         return m_loadVersion;

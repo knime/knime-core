@@ -77,6 +77,7 @@ public interface UIInformation extends Cloneable {
      *             in the NodeSettings.
      *
      * @see #save
+     * @since 3.7
      */
     void load(final NodeSettingsRO config, final LoadVersion loadVersion)
         throws InvalidSettingsException;

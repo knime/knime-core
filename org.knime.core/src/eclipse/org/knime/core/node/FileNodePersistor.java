@@ -189,6 +189,7 @@ public class FileNodePersistor implements NodePersistor {
      * @param nncPersistor The corresponding node container persistor.
      * @param version The version string, see {@link #getLoadVersion()} for details
      * @param settings The settings from the settings file stored in the node folder (not null).
+     * @since 3.7
      */
     public FileNodePersistor(final FileNativeNodeContainerPersistor nncPersistor,
         final LoadVersion version, final NodeSettingsRO settings) {
@@ -208,6 +209,7 @@ public class FileNodePersistor implements NodePersistor {
      * Version being loaded. This is given by the SNC-Persistor.
      *
      * @return Version being loaded. Can also be null unless enforced in constructor of subclass.
+     * @since 3.7
      */
     public LoadVersion getLoadVersion() {
         return m_loadVersion;

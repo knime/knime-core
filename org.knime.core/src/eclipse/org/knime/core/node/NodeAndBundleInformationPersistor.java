@@ -68,7 +68,7 @@ import org.osgi.framework.Bundle;
  * information.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @since 2.6
+ * @since 3.7
  */
 public final class NodeAndBundleInformationPersistor extends NodeAndBundleInformation
     implements KNIMEComponentInformation {

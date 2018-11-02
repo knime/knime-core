@@ -8,6 +8,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.NodeAndBundleInformation">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeAndBundleInformation"/>
+                <message_argument value="org.knime.core_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/Buffer.java" type="org.knime.core.data.container.Buffer">
         <filter id="338792546">
             <message_arguments>
@@ -296,6 +304,12 @@
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.FileNodePersistor"/>
+                <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.FileNodePersistor"/>
                 <message_argument value="load(Node, WorkflowPersistor, ExecutionMonitor, Map&lt;Integer,BufferedDataTable&gt;, HashMap&lt;Integer,ContainerTable&gt;, WorkflowFileStoreHandlerRepository, WorkflowPersistor.LoadResult)"/>
             </message_arguments>
         </filter>
@@ -356,10 +370,34 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/Annotation.java" type="org.knime.core.node.workflow.Annotation">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.Annotation"/>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/AnnotationData.java" type="org.knime.core.node.workflow.AnnotationData">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.AnnotationData"/>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/ConnectionUIInformation.java" type="org.knime.core.node.workflow.ConnectionUIInformation$Builder">
         <filter id="1143996420">
             <message_arguments>
                 <message_argument value="setBendpoints(int[][])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/CopyNativeNodeContainerPersistor.java" type="org.knime.core.node.workflow.CopyNativeNodeContainerPersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.CopyNativeNodeContainerPersistor"/>
+                <message_argument value="getNodeAndBundleInformation()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -390,8 +428,19 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/FileSubNodeContainerPersistor.java">
-        <filter id="0"/>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FileNativeNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileNativeNodeContainerPersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileNativeNodeContainerPersistor"/>
+                <message_argument value="getNodeAndBundleInformation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileNativeNodeContainerPersistor"/>
+                <message_argument value="guessPortTypesFromConnectedNodes(NodeAndBundleInformation, NodeSettingsRO, ArrayList&lt;FromFileNodeContainerPersistor.PersistorWithPortIndex&gt;, ArrayList&lt;List&lt;FromFileNodeContainerPersistor.PersistorWithPortIndex&gt;&gt;)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileSubNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSubNodeContainerPersistor">
         <filter id="338722907">
@@ -406,8 +455,26 @@
                 <message_argument value="getLayoutInfo()"/>
             </message_arguments>
         </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileSubNodeContainerPersistor"/>
+                <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileSubNodeContainerPersistor"/>
+                <message_argument value="guessPortTypesFromConnectedNodes(NodeAndBundleInformation, NodeSettingsRO, ArrayList&lt;FromFileNodeContainerPersistor.PersistorWithPortIndex&gt;, ArrayList&lt;List&lt;FromFileNodeContainerPersistor.PersistorWithPortIndex&gt;&gt;)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileWorkflowPersistor.java" type="org.knime.core.node.workflow.FileWorkflowPersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="getAuthorInformation()"/>
+            </message_arguments>
+        </filter>
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
@@ -418,6 +485,44 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
                 <message_argument value="getGlobalTableRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="getSaveVersion()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="guessPortTypesFromConnectedNodes(NodeAndBundleInformation, NodeSettingsRO, ArrayList&lt;FromFileNodeContainerPersistor.PersistorWithPortIndex&gt;, ArrayList&lt;List&lt;FromFileNodeContainerPersistor.PersistorWithPortIndex&gt;&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="saveAuthorInformation(WorkflowManager.AuthorInformation, NodeSettingsWO)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion"/>
+                <message_argument value="org.knime.core_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/MetaNodeTemplateInformation.java" type="org.knime.core.node.workflow.MetaNodeTemplateInformation">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.MetaNodeTemplateInformation"/>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -428,8 +533,20 @@
                 <message_argument value="getCopyPersistor(HashMap&lt;Integer,ContainerTable&gt;, FileStoreHandlerRepository, boolean, boolean)"/>
             </message_arguments>
         </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NativeNodeContainer"/>
+                <message_argument value="getNodeAndBundleInformation()"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/PasteWorkflowContentPersistor.java" type="org.knime.core.node.workflow.PasteWorkflowContentPersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
+                <message_argument value="getAuthorInformation()"/>
+            </message_arguments>
+        </filter>
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
@@ -440,6 +557,12 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
                 <message_argument value="getGlobalTableRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
+                <message_argument value="getLoadVersion()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -462,6 +585,28 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.SubNodeContainerPersistor"/>
                 <message_argument value="getLayoutInfo()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/TemplateNodeContainerPersistor.java" type="org.knime.core.node.workflow.TemplateNodeContainerPersistor">
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.TemplateNodeContainerPersistor"/>
+                <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/UIInformation.java" type="org.knime.core.node.workflow.UIInformation">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.UIInformation"/>
+                <message_argument value="load(NodeSettingsRO, LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.UIInformation"/>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -534,11 +679,25 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowLoadHelper.java" type="org.knime.core.node.workflow.WorkflowLoadHelper">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowLoadHelper"/>
+                <message_argument value="getUnknownKNIMEVersionLoadPolicy(FileWorkflowPersistor.LoadVersion, Version, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="addWorkflowAnnotation(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="getAuthorInformation()"/>
             </message_arguments>
         </filter>
         <filter id="338792546">
@@ -551,6 +710,18 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="getGlobalTableRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager.AuthorInformation"/>
+                <message_argument value="org.knime.core_3.7.0"/>
             </message_arguments>
         </filter>
         <filter id="1141899266">
@@ -580,7 +751,25 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getAuthorInformation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
                 <message_argument value="getWorkflowDataRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getAuthorInformation()"/>
             </message_arguments>
         </filter>
         <filter id="405901410">
@@ -593,6 +782,12 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
                 <message_argument value="getGlobalTableRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getLoadVersion()"/>
             </message_arguments>
         </filter>
     </resource>

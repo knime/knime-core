@@ -176,6 +176,7 @@ public class WorkflowLoadHelper {
      * @param isNightlyBuild Whether the workflow was saved using a nightly build
      *            {@link KNIMEConstants#isNightlyBuild()}.
      * @return A non-null policy (this implementation returns "Abort").
+     * @since 3.7
      */
     // see also org.knime.core.node.workflow.FileWorkflowPersistor.saveHeader(NodeSettings)
     public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(final LoadVersion workflowKNIMEVersion,

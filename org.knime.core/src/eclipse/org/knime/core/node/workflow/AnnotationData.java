@@ -427,7 +427,8 @@ public class AnnotationData implements Cloneable {
     /** loads new values.
      * @param config To load from
      * @param loadVersion Version to load
-     * @throws InvalidSettingsException If fails*/
+     * @throws InvalidSettingsException If fails
+     * @since 3.7*/
     public void load(final NodeSettingsRO config, final LoadVersion loadVersion)
             throws InvalidSettingsException {
         setText(config.getString("text"));

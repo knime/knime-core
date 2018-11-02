@@ -7,6 +7,12 @@
                 <message_argument value="3.3.0"/>
             </message_arguments>
         </filter>
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="3.7.0"/>
+                <message_argument value="3.6.0"/>
+            </message_arguments>
+        </filter>
         <filter id="924844039">
             <message_arguments>
                 <message_argument value="3.3.1"/>

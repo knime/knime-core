@@ -1800,7 +1800,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return null;
     }
 
-    /** @return version that is saved */
+    /** @return version that is saved
+     * @since 3.7*/
     protected static LoadVersion getSaveVersion() {
         return VERSION_LATEST;
     }
@@ -2050,7 +2051,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
     }
 
-    /** @since 2.8 */
+    /** @since 3.7*/
     protected static void saveAuthorInformation(final AuthorInformation aI, final NodeSettingsWO settings) {
         if (aI != null) {
             final NodeSettingsWO sub = settings.addNodeSettings(CFG_AUTHOR_INFORMATION);

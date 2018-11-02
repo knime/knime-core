@@ -339,6 +339,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @param version The version this workflow is loading from
      * @return a new template loading from the argument settings.
      * @throws InvalidSettingsException If that fails.
+     * @since 3.7
      */
     public static MetaNodeTemplateInformation load(final NodeSettingsRO settings,
         final LoadVersion version) throws InvalidSettingsException {
