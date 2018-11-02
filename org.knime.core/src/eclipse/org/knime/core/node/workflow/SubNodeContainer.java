@@ -1340,8 +1340,10 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     public void setInPorts(final PortType[] portTypes) {
         m_inports = new NodeInPort[portTypes.length + 1];
+        m_inHiliteHandler = new HiLiteHandler[portTypes.length];
         for (int i = 0; i < portTypes.length; i++) {
             m_inports[i + 1] = new NodeInPort(i + 1, portTypes[i]);
+            m_inHiliteHandler[i] = new HiLiteHandler();
         }
         NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
         m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
@@ -1495,6 +1497,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @since 3.7
      */
     public HiLiteHandler getInHiliteHandler(final int portIndex) {
+        assert 0 <= portIndex && portIndex < getNrInPorts();
         return m_inHiliteHandler[portIndex];
     }
 
