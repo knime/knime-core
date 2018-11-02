@@ -152,6 +152,7 @@ public class SubnodeLayoutAction extends AbstractNodeAction {
         SubNodeContainer subnode = (SubNodeContainer)manager.getDirectNCParent();
         SubnodeLayoutWizard wizard = new SubnodeLayoutWizard(subnode);
         WizardDialog dlg = new WizardDialog(SWTUtilities.getActiveShell(), wizard);
+        dlg.setMinimumPageSize(1000, 600);
         dlg.create();
         dlg.open();
     }
