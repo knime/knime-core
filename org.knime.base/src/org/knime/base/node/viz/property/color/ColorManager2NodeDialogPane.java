@@ -50,6 +50,8 @@ import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -60,6 +62,7 @@ import javax.swing.JRadioButton;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.colorchooser.DefaultColorSelectionModel;
 
+import org.knime.base.node.viz.property.color.ColorManager2NodeModel.PaletteOption;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -91,7 +94,7 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
     private static final NodeLogger LOGGER = NodeLogger.getLogger(ColorManager2NodeDialogPane.class);
 
     /** Keeps all columns. */
-    private final JComboBox m_columns = new JComboBox();
+    private final JComboBox<DataColumnSpec> m_columns = new JComboBox<DataColumnSpec>();
 
     /** Nominal column. */
     private final JRadioButton m_buttonNominal = new JRadioButton("Nominal");
@@ -121,12 +124,17 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
     /** Colorblind safe palette, contributed from Color Universal Design, http://jfly.iam.u-tokyo.ac.jp/color/. */
     static final String[] PALETTE_SET3 = {"#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"};
 
+    /** Stores the palette option settings for the columns.*/
+    private final Map<String, PaletteOption> m_columnPaletteOptions;
+
     /**
      * Creates a new color manager dialog; all color settings are empty.
      */
     ColorManager2NodeDialogPane() {
         // create new super node dialog with name
         super();
+
+        m_columnPaletteOptions = new LinkedHashMap<String, PaletteOption>();
 
         m_columns.setRenderer(new DataColumnSpecListCellRenderer());
         JPanel columnPanel = new JPanel(new BorderLayout());
@@ -137,6 +145,8 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(m_buttonNominal);
         buttonGroup.add(m_buttonRange);
+        m_buttonNominal.doClick();
+
 
         // Overwrite default color selection model to throw color event even if the color is the same and no
         // event was created.
@@ -162,7 +172,13 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
         final ActionListener al1 = e -> m_nominal.updateWithPalette(getSelectedColumn(), PALETTE_SET1);
         final ActionListener al2 = e -> m_nominal.updateWithPalette(getSelectedColumn(), PALETTE_SET2);
         final ActionListener al3 = e -> m_nominal.updateWithPalette(getSelectedColumn(), PALETTE_SET3);
-        m_palettesPanel.addActionListeners(al1, al2, al3);
+        final ActionListener al4 = e -> m_columnPaletteOptions.put(getSelectedColumn(), PaletteOption.SET1);
+        final ActionListener al5 = e -> m_columnPaletteOptions.put(getSelectedColumn(), PaletteOption.SET2);
+        final ActionListener al6 = e -> m_columnPaletteOptions.put(getSelectedColumn(), PaletteOption.SET3);
+        final ActionListener al7 = e -> m_columnPaletteOptions.put(getSelectedColumn(), PaletteOption.CUSTOM_SET);
+        m_palettesPanel.addListeners(al1, al2, al3, al4, al5, al6, al7);
+        m_buttonNominal.addItemListener(
+            l -> m_palettesPanel.setChooserEnabled(l.getStateChange() == ItemEvent.SELECTED));
         // rearrange order of panels
         AbstractColorChooserPanel[] oldPanels = jcc.getChooserPanels();
         AbstractColorChooserPanel[] newPanels = new AbstractColorChooserPanel[oldPanels.length + 2];
@@ -210,11 +226,11 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
             return;
         }
         if (m_buttonNominal.isSelected()) {
-            m_nominal.update(column, ColorAttr.getInstance(color));
-        } else {
-            if (m_buttonRange.isSelected()) {
-                m_range.update(column, color);
+            if (m_nominal.update(column, ColorAttr.getInstance(color))) {
+                m_palettesPanel.setPaletteOption(PaletteOption.CUSTOM_SET);
             }
+        } else if (m_buttonRange.isSelected()) {
+            m_range.update(column, color);
         }
     }
 
@@ -251,8 +267,18 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
         try {
             nominalSelected = settings.getBoolean(ColorManager2NodeModel.IS_NOMINAL);
         } catch (InvalidSettingsException ise) {
-            LOGGER.debug("Nominal/Range selection flag" + " not available.");
+            LOGGER.debug("Nominal/Range selection flag not available.");
         }
+
+        PaletteOption po = ColorManager2NodeModel.MISSING_CFG_OPTION;
+        try {
+            // get color mapping for unassigned colors
+            po = PaletteOption.getEnum(settings.getString(ColorManager2NodeModel.CFG_PALETTE_OPTION,
+                ColorManager2NodeModel.MISSING_CFG_OPTION.getSettingsName()));
+        } catch (InvalidSettingsException e) {
+        }
+
+        m_palettesPanel.setPaletteOption(po);
 
         // find last columns for nominal values and numeric ranges defined
         for (int i = 0; i < specs[0].getNumColumns(); i++) {
@@ -260,7 +286,7 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
             DataColumnDomain domain = cspec.getDomain();
             // nominal values defined
             if (domain.hasValues()) {
-                m_nominal.add(cspec.getName(), domain.getValues());
+                m_nominal.add(cspec.getName(), domain.getValues(), po);
                 // select last possible nominal column
                 hasNominals = i;
             }
@@ -279,7 +305,7 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
         // check for not configurable: no column found
         if (hasNominals == -1 && hasRanges == -1) {
             throw new NotConfigurableException("Please provide input table"
-                + " with at least one column with either nominal and/or" + " lower and upper bounds defined.");
+                + " with at least one column with either nominal and/or lower and upper bounds defined.");
         }
 
         // update target column if: (1) null, (2) not in spec, (3+4) does not
@@ -346,10 +372,14 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
             }
         }
 
+        // set column palette option
+        m_columnPaletteOptions.put(target, m_palettesPanel.getPaletteOption());
+
         // inform about column change
         columnChanged(target, nominalSelected);
         // register column change listener
         m_columns.addItemListener(this);
+
     }
 
     /**
@@ -360,22 +390,29 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        assert (settings != null);
-        String cell = getSelectedColumn();
-        settings.addString(ColorManager2NodeModel.SELECTED_COLUMN, cell);
-        if (cell != null) {
+        String column = getSelectedColumn();
+        settings.addString(ColorManager2NodeModel.SELECTED_COLUMN, column);
+        if (column != null) {
             if (m_buttonNominal.isSelected() && m_buttonNominal.isEnabled()) {
                 settings.addBoolean(ColorManager2NodeModel.IS_NOMINAL, true);
-                m_nominal.setAlpha(m_alphaPanel.getAlpha());
-                m_nominal.saveSettings(settings);
-            } else {
-                if (m_buttonRange.isSelected() && m_buttonRange.isEnabled()) {
-                    settings.addBoolean(ColorManager2NodeModel.IS_NOMINAL, false);
-                    m_range.setAlpha(m_alphaPanel.getAlpha());
-                    m_range.saveSettings(settings);
-                } else {
-                    throw new InvalidSettingsException("No color settings for " + cell + " available.");
+                PaletteOption paletteOption = m_palettesPanel.getPaletteOption();
+                settings.addString(ColorManager2NodeModel.CFG_PALETTE_OPTION, paletteOption.getSettingsName());
+                switch (paletteOption) {
+                    case CUSTOM_SET:
+                        m_nominal.setAlpha(m_alphaPanel.getAlpha());
+                        m_nominal.saveSettings(settings);
+                        break;
+                    default:
+                        break;
+                        // pre-defined palette; don't store colors
+
                 }
+            } else if (m_buttonRange.isSelected() && m_buttonRange.isEnabled()) {
+                settings.addBoolean(ColorManager2NodeModel.IS_NOMINAL, false);
+                m_range.setAlpha(m_alphaPanel.getAlpha());
+                m_range.saveSettings(settings);
+            } else {
+                throw new InvalidSettingsException("No color settings for " + column + " available.");
             }
         }
     }
@@ -386,17 +423,20 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
      */
     @Override
     public void itemStateChanged(final ItemEvent e) {
-        Object o = e.getItem();
-        if (o == null) {
-            return;
+        if (e.getStateChange() == ItemEvent.SELECTED) {
+            String column = ((DataColumnSpec)e.getItem()).getName();
+            columnChanged(column, true);
         }
-        String cell = ((DataColumnSpec)o).getName();
-        columnChanged(cell, true);
     }
 
-    private void columnChanged(final String cell, final boolean nominal) {
-        boolean hasRanges = m_range.select(cell);
-        boolean hasNominal = m_nominal.select(cell);
+    /**
+     * Switches the nominal and range radiobuttons if needed and updates the buttons in the palettes panel.
+     * @param column name of the column to switch to
+     * @param nominal if the column is nominal (true) or range (false)
+     */
+    private void columnChanged(final String column, final boolean nominal) {
+        boolean hasRanges = m_range.select(column);
+        boolean hasNominal = m_nominal.select(column);
         if (hasRanges) {
             m_buttonRange.setEnabled(true);
             if (!nominal || !hasNominal) {
@@ -407,13 +447,19 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
         }
         if (hasNominal) {
             m_buttonNominal.setEnabled(true);
-            m_palettesPanel.setEnabled(true);
+            // get palette option of the new column and store it in map
+            PaletteOption po = m_columnPaletteOptions.get(column);
+            // palette option not stored, default to 'Set1'
+            if (po == null) {
+                po = PaletteOption.SET1;
+            }
+            m_palettesPanel.setPaletteOption(po);
+
             if (nominal || !hasRanges) {
                 m_buttonNominal.setSelected(true);
             }
         } else {
             m_buttonNominal.setEnabled(false);
-            m_palettesPanel.setEnabled(false);
         }
     }
 
@@ -425,4 +471,6 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
         }
         return ((DataColumnSpec)o).getName();
     }
+
+
 }

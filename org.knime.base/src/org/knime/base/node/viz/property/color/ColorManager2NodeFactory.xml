@@ -23,7 +23,10 @@
     </option>
     <option name="Nominal: ">
 	    Assigns colors based on the possible attribute values of the selected 
-	    column. The colors are set independently for each attribute value.
+	    column. Colors can be set individually per value ('Custom') or via predefined palettes (Set 1-3). 
+	    The latter will apply colors also to new values present at execution time 
+	    (as opposed to 'Custom' palette which will cause the node to fail). If there are more distinct values in the 
+	    data than defined in the palette, colors will be re-used.
     </option>
     <option name="Range: ">
 	    Assigns a color gradient based on a numeric attribute. If 

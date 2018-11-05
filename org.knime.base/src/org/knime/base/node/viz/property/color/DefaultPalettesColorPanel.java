@@ -49,6 +49,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -56,24 +58,29 @@ import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.Icon;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 
+import org.knime.base.node.viz.property.color.ColorManager2NodeModel.PaletteOption;
+
 /**
- * A default panel to show two color palettes.
+ * A default panel to show some color palettes.
  *
  * @author Johannes Schweig, KNIME AG
  */
 final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
 
-    private final JButton m_set1Button = new JButton("Apply to columns");
+    private final JRadioButton m_customSetRadioButton;
 
-    private final JButton m_set2Button = new JButton("Apply to columns");
+    private final JRadioButton m_set1RadioButton;
 
-    private final JButton m_set3Button = new JButton("Apply to columns");
+    private final JRadioButton m_set2RadioButton;
+
+    private final JRadioButton m_set3RadioButton;
 
     private final String[] m_paletteSet1;
 
@@ -95,12 +102,65 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         m_paletteSet1 = paletteSet1;
         m_paletteSet2 = paletteSet2;
         m_paletteSet3 = paletteSet3;
+        m_customSetRadioButton = new JRadioButton("Custom");
+        m_set1RadioButton = new JRadioButton("Set 1");
+        m_set2RadioButton = new JRadioButton("Set 2");
+        m_set3RadioButton = new JRadioButton("Set 3 (colorblind safe)");
+    }
+
+    void setChooserEnabled(final boolean enabled) {
+        m_customSetRadioButton.setEnabled(enabled);
+        m_set1RadioButton.setEnabled(enabled);
+        m_set2RadioButton.setEnabled(enabled);
+        m_set3RadioButton.setEnabled(enabled);
+        if (!enabled) {
+            m_customSetRadioButton.setSelected(true);
+        }
+    }
+
+    /**
+     * @return the palette option of the currently selected column
+     */
+    PaletteOption getPaletteOption() {
+        if (m_set1RadioButton.isSelected()) {
+            return PaletteOption.SET1;
+        } else if (m_set2RadioButton.isSelected()) {
+            return PaletteOption.SET2;
+        } else if (m_set3RadioButton.isSelected()) {
+            return PaletteOption.SET3;
+        } else {
+            return PaletteOption.CUSTOM_SET;
+        }
+    }
+
+    /**
+     * Updates the palette option with a new palette option, updates state of radio button
+     * @param po new palette option
+     */
+    void setPaletteOption(final PaletteOption po) {
+        switch (po) {
+            case SET1:
+                setChooserEnabled(true);
+                m_set1RadioButton.doClick();
+                break;
+            case SET2:
+                setChooserEnabled(true);
+                m_set2RadioButton.doClick();
+                break;
+            case SET3:
+                setChooserEnabled(true);
+                m_set3RadioButton.doClick();
+                break;
+            default:
+                m_customSetRadioButton.doClick();
+                break;
+        }
     }
 
     /**
      * Overwrites the default JPanel to notify the ColorSelectionModel of changes.
      */
-    private class PaletteElement extends JPanel {
+    private final class PaletteElement extends JPanel {
 
         private Color m_color;
 
@@ -139,7 +199,6 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
     @Override
     protected void buildChooser() {
         super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        //JPanels
         JPanel set1Panel = new JPanel(new FlowLayout(FlowLayout.LEFT, PALETTE_ELEMENT_SPACING, 0));
         set1Panel.setAlignmentX(LEFT_ALIGNMENT);
         JPanel set2Panel = new JPanel(new FlowLayout(FlowLayout.LEFT, PALETTE_ELEMENT_SPACING, 0));
@@ -147,75 +206,74 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         JPanel set3Panel = new JPanel(new FlowLayout(FlowLayout.LEFT, PALETTE_ELEMENT_SPACING, 0));
         set3Panel.setAlignmentX(LEFT_ALIGNMENT);
 
+        // add radiobuttons
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(m_set1RadioButton);
+        bg.add(m_set2RadioButton);
+        bg.add(m_set3RadioButton);
+        bg.add(m_customSetRadioButton);
         //add colored Panels
+        String blankSpace = "   ";
+        set1Panel.add(new JLabel(blankSpace));
         for (String s : m_paletteSet1) {
             set1Panel.add(new PaletteElement(s, PALETTE_ELEMENT_SIZE));
         }
+        set2Panel.add(new JLabel(blankSpace));
         for (String s : m_paletteSet2) {
             set2Panel.add(new PaletteElement(s, PALETTE_ELEMENT_SIZE));
         }
+        set3Panel.add(new JLabel(blankSpace));
         for (String s : m_paletteSet3) {
             set3Panel.add(new PaletteElement(s, PALETTE_ELEMENT_SIZE));
         }
 
-        //JButtons Apply
-        set1Panel.add(new JPanel());
-        m_set1Button.setFont(new Font(m_set1Button.getFont().getName(), Font.PLAIN, m_set1Button.getFont().getSize()));
-        set1Panel.add(m_set1Button);
-        set2Panel.add(new JPanel());
-        m_set2Button.setFont(new Font(m_set2Button.getFont().getName(), Font.PLAIN, m_set2Button.getFont().getSize()));
-        set2Panel.add(m_set2Button);
-        JPanel whitespace = new JPanel();
-        whitespace.setPreferredSize(
-            new Dimension(5 * (PALETTE_ELEMENT_SIZE + PALETTE_ELEMENT_SPACING) + 10, PALETTE_ELEMENT_SIZE));
-        set3Panel.add(whitespace);
-
-        m_set3Button.setFont(new Font(m_set3Button.getFont().getName(), Font.PLAIN, m_set3Button.getFont().getSize()));
-        set3Panel.add(m_set3Button);
-
-        //JLabels
-        JLabel set1Label = new JLabel("Set 1");
-        set1Label.setFont(new Font(set1Label.getFont().getName(), Font.PLAIN, set1Label.getFont().getSize() + 2));
-        JLabel set2Label = new JLabel("Set 2");
-        set2Label.setFont(new Font(set2Label.getFont().getName(), Font.PLAIN, set2Label.getFont().getSize() + 2));
-        JLabel set3Label = new JLabel("Set 3 (colorblind safe)");
-        set3Label.setFont(new Font(set3Label.getFont().getName(), Font.PLAIN, set3Label.getFont().getSize() + 2));
+        Font font = new Font(getFont().getName(), Font.PLAIN, getFont().getSize() + 2);
+        m_customSetRadioButton.setFont(font);
+        m_set1RadioButton.setFont(font);
+        m_set2RadioButton.setFont(font);
+        m_set3RadioButton.setFont(font);
 
         //add panels to layout
-        super.add(set1Label);
+        super.add(Box.createVerticalStrut(5));
+
+        super.add(m_set1RadioButton);
         super.add(Box.createVerticalStrut(5));
         super.add(set1Panel);
+
         super.add(Box.createVerticalStrut(20));
-        super.add(set2Label);
+        super.add(m_set2RadioButton);
         super.add(Box.createVerticalStrut(5));
         super.add(set2Panel);
+
         super.add(Box.createVerticalStrut(20));
-        super.add(set3Label);
+        super.add(m_set3RadioButton);
         super.add(Box.createVerticalStrut(5));
         super.add(set3Panel);
 
+        super.add(Box.createVerticalStrut(20));
+        super.add(m_customSetRadioButton);
+
     }
+
 
     /**
      * @param al1 the action listener for the first button
      * @param al2 the action listener for the second button
      * @param al3 the action listener for the third button
+     * @param al4 the action listener for the first radio button
+     * @param al5 the action listener for the second radio button
+     * @param al6 the action listener for the third radio button
+     * @param al7 the action listener for the fourt radio button ('custom')
      */
-    void addActionListeners(final ActionListener al1, final ActionListener al2, final ActionListener al3) {
-        m_set1Button.addActionListener(al1);
-        m_set2Button.addActionListener(al2);
-        m_set3Button.addActionListener(al3);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setEnabled(final boolean enabled) {
-        super.setEnabled(enabled);
-        m_set1Button.setVisible(enabled);
-        m_set2Button.setVisible(enabled);
-        m_set3Button.setVisible(enabled);
+    void addListeners(final ActionListener al1, final ActionListener al2, final ActionListener al3,
+        final ActionListener al4, final ActionListener al5, final ActionListener al6, final ActionListener al7) {
+        m_set1RadioButton.addActionListener(al1);
+        m_set2RadioButton.addActionListener(al2);
+        m_set3RadioButton.addActionListener(al3);
+        m_set1RadioButton.addActionListener(al4);
+        m_set2RadioButton.addActionListener(al5);
+        m_set3RadioButton.addActionListener(al6);
+        m_customSetRadioButton.addActionListener(al7);
     }
 
     /**
@@ -265,4 +323,22 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
     public void updateChooser() {
 
     }
+
+    /** Listener added to the radio buttons in the south -- it will apply the palette to the list in the north. */
+    final class MyItemListener implements ItemListener {
+
+        private final PaletteOption m_selectPaletteOption;
+
+        MyItemListener(final PaletteOption selectPaletteOption) {
+            m_selectPaletteOption = selectPaletteOption;
+        }
+
+        @Override
+        public void itemStateChanged(final ItemEvent e) {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                setPaletteOption(m_selectPaletteOption);
+            }
+        }
+    }
+
 }
