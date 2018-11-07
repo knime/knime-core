@@ -759,7 +759,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                                 props.put(key, null);
                             }
                         }
-                        cells.add(new CrosstabCell(props));
+                        cells.add(new CrosstabCell(props, naming));
                         // one step further in the output table of the
                         // cross tab node
                         row = iter.hasNext() ? iter.next() : null;
@@ -788,7 +788,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                             / totals.getTotal() * 100);
                 }
                 if (!props.isEmpty()) {
-                    totalCell = new CrosstabCell(props);
+                    totalCell = new CrosstabCell(props, naming);
                 }
                 CrosstabRow crosstabRow = new CrosstabRow(rowVar.toString(),
                         cells, totalCell, propIndices.keySet());
@@ -843,7 +843,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                             / totals.getTotal() * 100);
                 }
                 if (!props.isEmpty()) {
-                    totalCell = new CrosstabCell(props);
+                    totalCell = new CrosstabCell(props, naming);
                 }
                 cells.add(totalCell);
             }
@@ -864,7 +864,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                 props.put(naming.getPercentName(), 100.0);
             }
             if (!props.isEmpty()) {
-                totalCell = new CrosstabCell(props);
+                totalCell = new CrosstabCell(props, naming);
             }
             CrosstabRow crosstabRow = new CrosstabRow("Total",
                     cells, totalCell, propIndices.keySet());
@@ -988,16 +988,19 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
      */
     private static class CrosstabCell {
         private final Map<String, Double> m_props;
+        private CrosstabProperties m_naming;
 
         public CrosstabCell() {
-            this(new HashMap<String, Double>());
+            this(new HashMap<String, Double>(), null);
         }
         /**
          * @param props the properties that are provided by this cell.
+         * @param naming the crosstabproperties to get the names of the names
          */
-        public CrosstabCell(final Map<String, Double> props) {
+        public CrosstabCell(final Map<String, Double> props, final CrosstabProperties naming) {
             super();
             m_props = props;
+            m_naming = naming;
         }
 
         /**
@@ -1009,6 +1012,11 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                 Double value = m_props.get(prop);
                 if (null != value) {
                     String formatted = DoubleFormat.formatDouble(value);
+                    if (m_naming != null && (prop.equals(m_naming.getPercentName())
+                            || prop.equals(m_naming.getRowPercentName())
+                            || prop.equals(m_naming.getColPercentName()))) {
+                        formatted += "%";
+                    }
                     return formatted;
                 } else {
                     return "?";
