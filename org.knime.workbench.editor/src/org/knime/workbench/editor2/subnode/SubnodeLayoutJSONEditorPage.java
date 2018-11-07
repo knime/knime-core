@@ -200,13 +200,13 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     public void createControl(final Composite parent) {
         TabFolder tabs = new TabFolder(parent, SWT.BORDER);
 
-        TabItem visualTab = new TabItem(tabs, SWT.NONE);
-        visualTab.setText("Visual Layout");
-
         TabItem usageTab = new TabItem(tabs, SWT.NONE);
         usageTab.setText("Node Usage");
         m_nodeUsageComposite = new NodeUsageComposite(tabs, m_viewNodes, m_subNodeContainer);
         usageTab.setControl(m_nodeUsageComposite);
+
+        TabItem visualTab = new TabItem(tabs, SWT.NONE);
+        visualTab.setText("Visual Layout");
 
         TabItem basicTab = new TabItem(tabs, SWT.NONE);
         basicTab.setText("Basic Layout");
@@ -216,7 +216,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         jsonTab.setText("Advanced Layout");
         jsonTab.setControl(createJSONEditorComposite(tabs));
 
-        // The visual layout tab should be the first tab, but its control should be made
+        // The visual layout tab should be the second tab, but its control should be made
         // after the Advanced tab. This ensures that the JSON document is created before
         // it is used in the creation of the visual layout tab
         visualTab.setControl(createVisualLayoutComposite(tabs));
@@ -257,6 +257,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 // Do nothing
             }
         });
+
+        tabs.setSelection(1);
         setControl(tabs);
     }
 
