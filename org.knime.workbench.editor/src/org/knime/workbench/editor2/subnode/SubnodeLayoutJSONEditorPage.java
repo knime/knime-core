@@ -297,7 +297,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
         // Web resources
         final WebTemplate template = WebResourceController.getWebTemplateFromBundleID("knimeLayoutEditor_1.0.0");
-        VisualLayoutViewCreator creator = new VisualLayoutViewCreator(template);
+        final WebTemplate dT = WebResourceController.getWebTemplateFromBundleID("knimeLayoutEditor_1.0.0_Debug");
+        VisualLayoutViewCreator creator = new VisualLayoutViewCreator(template, dT);
         String html = "";
         try {
             html = creator.createWebResources("visual layout editor", null, null, "");
@@ -1382,9 +1383,9 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     }
 
     private static final class VisualLayoutViewCreator extends JavaScriptViewCreator<WebViewContent, WebViewContent> {
-        VisualLayoutViewCreator(final WebTemplate template) {
+        VisualLayoutViewCreator(final WebTemplate template, final WebTemplate debugTemplate) {
             super(null);
-            setWebTemplate(template);
+            setWebTemplate(isDebug() ? debugTemplate : template);
         }
     }
 
