@@ -988,33 +988,33 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
      */
     private static class CrosstabCell {
         private final Map<String, Double> m_props;
-        private CrosstabProperties m_naming;
+        private final CrosstabProperties m_crosstabValueNames;
 
-        public CrosstabCell() {
-            this(new HashMap<String, Double>(), null);
+        private CrosstabCell() {
+            this(new HashMap<String, Double>(), CrosstabProperties.create(""));
         }
         /**
          * @param props the properties that are provided by this cell.
-         * @param naming the crosstabproperties to get the names of the names
+         * @param crosstabValueNames the crosstabproperties to get the names of the values to show
          */
-        public CrosstabCell(final Map<String, Double> props, final CrosstabProperties naming) {
+        private CrosstabCell(final Map<String, Double> props, final CrosstabProperties crosstabValueNames) {
             super();
             m_props = props;
-            m_naming = naming;
+            m_crosstabValueNames = crosstabValueNames;
         }
 
         /**
          * @param prop the property e.g. Frequency, Percent, Row Percent
          * @return the formatted value of the property
          */
-        public String getFormatted(final String prop) {
+        private String getFormatted(final String prop) {
             if (m_props.containsKey(prop)) {
                 Double value = m_props.get(prop);
                 if (null != value) {
                     String formatted = DoubleFormat.formatDouble(value);
-                    if (m_naming != null && (prop.equals(m_naming.getPercentName())
-                            || prop.equals(m_naming.getRowPercentName())
-                            || prop.equals(m_naming.getColPercentName()))) {
+                    if (m_crosstabValueNames != null && (prop.equals(m_crosstabValueNames.getPercentName())
+                            || prop.equals(m_crosstabValueNames.getRowPercentName())
+                            || prop.equals(m_crosstabValueNames.getColPercentName()))) {
                         formatted += "%";
                     }
                     return formatted;
