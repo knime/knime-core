@@ -765,12 +765,12 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                         row = iter.hasNext() ? iter.next() : null;
                     } else {
                         // create empty cell
-                        cells.add(new CrosstabCell());
+                        cells.add(new CrosstabCell(naming));
                     }
                 }
                 if (colsSkipped) {
                     // create empty cell
-                    cells.add(new CrosstabCell());
+                    cells.add(new CrosstabCell(naming));
                 }
                 // Create the total cell
                 CrosstabCell totalCell = null;
@@ -849,7 +849,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             }
             if (colsSkipped) {
                 // create empty cell
-                cells.add(new CrosstabCell());
+                cells.add(new CrosstabCell(naming));
             }
             // Create the total cell
             CrosstabCell totalCell = null;
@@ -990,8 +990,8 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         private final Map<String, Double> m_props;
         private final CrosstabProperties m_crosstabValueNames;
 
-        private CrosstabCell() {
-            this(new HashMap<String, Double>(), CrosstabProperties.create(""));
+        private CrosstabCell(final CrosstabProperties crosstabValueNames) {
+            this(new HashMap<String, Double>(), crosstabValueNames);
         }
         /**
          * @param props the properties that are provided by this cell.
