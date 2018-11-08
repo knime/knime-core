@@ -985,12 +985,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             }
             JSONLayoutColumn column = columns.get(basicLayoutInfo.getCol() - 1);
             int colWidth = basicLayoutInfo.getColWidth();
-            // avoid creating responsive layout from basic editor, set the same for all screen sizes
+            // avoid creating responsive layout from basic editor, set only smallest col
             column.setWidthXS(colWidth);
-            column.setWidthSM(colWidth);
-            column.setWidthMD(colWidth);
-            column.setWidthLG(colWidth);
-            column.setWidthXL(colWidth);
             List<JSONLayoutContent> contentList = column.getContent();
             if (contentList == null) {
                 contentList = new ArrayList<JSONLayoutContent>(1);

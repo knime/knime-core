@@ -448,7 +448,8 @@ public abstract class WebResourceController {
         LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo> infoMap = new LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo>();
         Set<HiLiteHandler> initialHiliteHandlerSet = new HashSet<HiLiteHandler>();
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
-        findNestedViewNodes(subNC, resultMap, infoMap, initialHiliteHandlerSet);
+        LinkedHashMap<NodeIDSuffix, SubNodeContainer> sncMap = new LinkedHashMap<NodeIDSuffix, SubNodeContainer>();
+        findNestedViewNodes(subNC, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
         NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subNC.getID());
         String pageLayout = subNC.getLayoutJSONString();
         if (StringUtils.isEmpty(pageLayout)) {
@@ -470,6 +471,13 @@ public abstract class WebResourceController {
         } catch (IOException ex) {
             LOGGER.error("Nested layouts could not be expanded: " + ex.getMessage(), ex);
         }
+        try {
+            NodeID containerID = NodeID
+                .fromString(NodeIDSuffix.create(m_manager.getID(), subNC.getWorkflowManager().getID()).toString());
+            pageLayout = LayoutUtil.addUnreferencedViews(pageLayout, resultMap, sncMap, containerID);
+        } catch (IOException ex) {
+            LOGGER.error("Layout could not be amended by unreferenced views: " + ex.getMessage(), ex);
+        }
         Set<HiLiteHandler> knownHiLiteHandlers = new HashSet<HiLiteHandler>();
         Set<HiLiteTranslator> knownTranslators = new HashSet<HiLiteTranslator>();
         Set<HiLiteManager> knownManagers = new HashSet<HiLiteManager>();
@@ -487,7 +495,7 @@ public abstract class WebResourceController {
     @SuppressWarnings("rawtypes")
     private void findNestedViewNodes(final SubNodeContainer subNC,
         final Map<NodeIDSuffix, WizardNode> resultMap, final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap,
-        final Set<HiLiteHandler> initialHiliteHandlerSet) {
+        final Map<NodeIDSuffix, SubNodeContainer>sncMap, final Set<HiLiteHandler> initialHiliteHandlerSet) {
         WorkflowManager subWFM = subNC.getWorkflowManager();
         Map<NodeID, WizardNode> wizardNodeMap = subWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
         for (Map.Entry<NodeID, WizardNode> entry : wizardNodeMap.entrySet()) {
@@ -518,7 +526,9 @@ public abstract class WebResourceController {
         for (Entry<NodeID, SubNodeContainer> entry : subnodeContainers.entrySet()) {
             SubNodeContainer snc = entry.getValue();
             if (isSubnodeViewAvailable(snc.getID(), subWFM)) {
-                findNestedViewNodes(snc, resultMap, infoMap, initialHiliteHandlerSet);
+                NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(m_manager.getID(), snc.getID());
+                sncMap.put(idSuffix, snc);
+                findNestedViewNodes(snc, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
             }
         }
     }

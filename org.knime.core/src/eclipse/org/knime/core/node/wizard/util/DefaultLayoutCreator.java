@@ -53,6 +53,7 @@ import java.util.Map;
 
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -81,5 +82,18 @@ public interface DefaultLayoutCreator {
      * @since 3.7
      */
     public String expandNestedLayout(final String originalLayout, final WorkflowManager wfm);
+
+    /**
+     * Creates extra rows/columns at the bottom of the layout for all unreferenced nodes
+     * @param originalLayout the original layout, which needs to be already expanded
+     * @param allNodes a map of all viewable nodes
+     * @param allNestedViews a map of all {@link SubNodeContainer} which contain nested views
+     * @param containerID the {@link NodeID} of the containing subnode container
+     * @return The amended layout as a JSON serialized string
+     * @since 3.7
+     */
+    @SuppressWarnings("rawtypes")
+    public String addUnreferencedViews(final String originalLayout, final Map<NodeIDSuffix, WizardNode> allNodes,
+        final Map<NodeIDSuffix, SubNodeContainer> allNestedViews, final NodeID containerID);
 
 }

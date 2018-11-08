@@ -52,6 +52,8 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.knime.core.node.wizard.ViewHideable;
+import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -106,7 +108,7 @@ public final class LayoutUtil {
      */
     public static String expandNestedLayout(final String originalLayout, final WorkflowManager wfm) throws IOException {
         if (serviceTracker == null) {
-            throw new IOException("Core bundle is not active, can't create default layout.");
+            throw new IOException("Core bundle is not active, can't expand nested layout.");
         }
         DefaultLayoutCreator creator = (DefaultLayoutCreator)serviceTracker.getService();
         if (creator == null) {
@@ -115,4 +117,25 @@ public final class LayoutUtil {
         return creator.expandNestedLayout(originalLayout, wfm);
     }
 
+    /**
+     * Creates extra rows/columns at the bottom of the layout for all unreferenced nodes
+     * @param originalLayout the original layout, which needs to be already expanded
+     * @param allNodes a map of all viewable nodes
+     * @param allNestedViews a map of all {@link SubNodeContainer} which contain nested views
+     * @param containerID the {@link NodeID} of the containing subnode container
+     * @return The amended layout as a JSON serialized string
+     * @throws IOException If no service is registered or the layout cannot be amended.
+     * @since 3.7
+     */
+    public static String addUnreferencedViews(final String originalLayout, final Map<NodeIDSuffix, WizardNode> allNodes,
+        final Map<NodeIDSuffix, SubNodeContainer> allNestedViews, final NodeID containerID) throws IOException {
+        if (serviceTracker == null) {
+            throw new IOException("Core bundle is not active, can't add unreferenced views to layout.");
+        }
+        DefaultLayoutCreator creator = (DefaultLayoutCreator)serviceTracker.getService();
+        if (creator == null) {
+            throw new IOException("Can't add unreferenced views to layout; no appropriate service registered.");
+        }
+        return creator.addUnreferencedViews(originalLayout, allNodes, allNestedViews, containerID);
+    }
 }

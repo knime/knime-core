@@ -366,6 +366,12 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.util.DefaultLayoutCreator"/>
+                <message_argument value="addUnreferencedViews(String, Map&lt;NodeID.NodeIDSuffix,WizardNode&gt;, Map&lt;NodeID.NodeIDSuffix,SubNodeContainer&gt;, NodeID)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.util.DefaultLayoutCreator"/>
                 <message_argument value="expandNestedLayout(String, WorkflowManager)"/>
             </message_arguments>
         </filter>
