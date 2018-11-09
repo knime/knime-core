@@ -52,6 +52,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,6 +89,7 @@ import org.eclipse.gef.requests.CreateConnectionRequest;
 import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -129,6 +132,7 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.NodePortUI;
 import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.lazy.LazyWorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -143,6 +147,7 @@ import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.async.AsyncUtil;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
@@ -870,6 +875,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
                 return;
             }
         }
+
+        if (!checkAndLoadIfLazyWorkflowManager(wm)) {
+            return;
+        }
+
         // open new editor for subworkflow
         LOGGER.debug("opening new editor for sub-workflow");
         try {
@@ -882,6 +892,31 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             LOGGER.error("Error while opening new editor", e);
         }
         return;
+    }
+
+    /**
+     * @param wfm
+     * @return <code>true</code> if loading was successful or not necessary, <code>false</code> if loading failed
+     */
+    private static boolean checkAndLoadIfLazyWorkflowManager(final WorkflowManagerUI wm) {
+        if (wm instanceof LazyWorkflowManagerUI && !((LazyWorkflowManagerUI)wm).isLoaded()) {
+            CompletableFuture<Void> future = ((LazyWorkflowManagerUI)wm).load();
+            try {
+                AsyncUtil.waitForTerminationOrThrowException(future, "Opening metanode");
+                return true;
+            } catch (CompletionException e) {
+                String message = "A problem occurred while opening metanode: " + e.getMessage();
+                final Display display = Display.getDefault();
+                display.syncExec(() -> {
+                    final Shell shell = SWTUtilities.getActiveShell(display);
+                    MessageDialog.openError(shell, "Problem", message + "\nSee log for more details.");
+                    LOGGER.error(message, e);
+                });
+                return false;
+            }
+        } else {
+            return true;
+        }
     }
 
     /** {@inheritDoc} */
