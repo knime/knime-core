@@ -47,7 +47,7 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.workbench.ui.async.AsyncUtil.waitForTermination;
+import static org.knime.workbench.ui.async.AsyncUtil.waitForTerminationAndOpenDialogWhenFailed;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -116,7 +116,7 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand implemen
     @Override
     public void execute() {
         if (shallExecuteAsync()) {
-            waitForTermination(executeAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)),
+            waitForTerminationAndOpenDialogWhenFailed(executeAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)),
                 "Changing annotation bounds ...");
         } else {
             Annotation annotation = m_annotationEditPart.getModel();
@@ -145,7 +145,7 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand implemen
     @Override
     public void undo() {
         if (shallExecuteAsync()) {
-            waitForTermination(undoAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)),
+            waitForTerminationAndOpenDialogWhenFailed(undoAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)),
                 "Undo change of annotations bounds ...");
         } else {
             Annotation annotation = m_annotationEditPart.getModel();

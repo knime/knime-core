@@ -47,7 +47,7 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.workbench.ui.async.AsyncUtil.waitForTermination;
+import static org.knime.workbench.ui.async.AsyncUtil.waitForTerminationAndOpenDialogWhenFailed;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -126,7 +126,7 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand implements Asy
     @Override
     public void execute() {
         if (shallExecuteAsync()) {
-            waitForTermination(executeAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)), "Moving node ...");
+            waitForTerminationAndOpenDialogWhenFailed(executeAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)), "Moving node ...");
         } else {
             if (!Arrays.equals(m_oldBounds, m_newBounds)) {
                 WorkflowManagerUI wm = getHostWFMUI();
@@ -164,7 +164,7 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand implements Asy
     @Override
     public void undo() {
         if (shallExecuteAsync()) {
-            waitForTermination(undoAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)), "Undo moving node ...");
+            waitForTerminationAndOpenDialogWhenFailed(undoAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)), "Undo moving node ...");
         } else {
             if (!Arrays.equals(m_oldBounds, m_newBounds)) {
                 NodeUIInformation information = NodeUIInformation.builder()

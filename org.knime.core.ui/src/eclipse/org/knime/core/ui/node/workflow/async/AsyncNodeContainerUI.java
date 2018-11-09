@@ -115,17 +115,4 @@ public interface AsyncNodeContainerUI extends NodeContainerUI, AsyncUI {
     public static <U> CompletableFuture<U> future(final Supplier<U> sup) {
         return CompletableFuture.supplyAsync(sup);
     }
-
-    /**
-     * Creates a new {@link CompletableFutureEx}.
-     *
-     * @param sup the actual stuff to run
-     * @param exceptionClass the exception class that the future potentially throws on
-     *            {@link CompletableFutureEx#getOrThrow()}
-     * @return a new future
-     */
-    public static <U, E extends Exception> CompletableFutureEx<U, E> futureEx(final Supplier<U> sup,
-        final Class<E> exceptionClass) {
-        return new CompletableFutureEx<U, E>(CompletableFuture.supplyAsync(sup), exceptionClass);
-    }
 }

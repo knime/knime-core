@@ -50,6 +50,7 @@ package org.knime.workbench.ui.async;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
@@ -124,7 +125,7 @@ public class AsyncUtil {
         final Function<AsyncWorkflowManagerUI, CompletableFuture<? extends T>> asyncWfm, final WorkflowManagerUI wfm,
         final String waitingMessage) {
         if (wfm instanceof AsyncWorkflowManagerUI) {
-            return waitForTermination(asyncWfm.apply((AsyncWorkflowManagerUI)wfm), waitingMessage);
+            return waitForTerminationAndOpenDialogWhenFailed(asyncWfm.apply((AsyncWorkflowManagerUI)wfm), waitingMessage);
         } else {
             return syncWfm.apply(wfm);
         }
@@ -145,7 +146,7 @@ public class AsyncUtil {
         final Function<AsyncNodeContainerUI, CompletableFuture<T>> asyncNc, final NodeContainerUI nc,
         final String waitingMessage) {
         if (nc instanceof AsyncNodeContainerUI) {
-            return waitForTermination(asyncNc.apply((AsyncNodeContainerUI)nc), waitingMessage);
+            return waitForTerminationAndOpenDialogWhenFailed(asyncNc.apply((AsyncNodeContainerUI)nc), waitingMessage);
         } else {
             return syncNc.apply(nc);
         }
@@ -154,6 +155,8 @@ public class AsyncUtil {
     /**
      * Almost the same as {@link #wfmAsyncSwitch(Function, Function, WorkflowManagerUI, String)} but additionally
      * re-throws a specified exception caught from {@link CompletableFutureEx#getOrThrow()}.
+     *
+     * If the caught exception is not of the expected type <code>E</code> an error dialog will be opened.
      *
      * @param syncWfm
      * @param asyncWfm
@@ -199,7 +202,7 @@ public class AsyncUtil {
     }
 
     /**
-     * Almost the same as {@link #wfmAsyncSwitchRethrow(Function, Function, WorkflowManagerUI, String)} but for
+     * Almost the same as {@link #wfmAsyncSwitchRethrow(RethrowFunction, Function, WorkflowManagerUI, String)} but for
      * {@link NodeContainerUI}/{@link AsyncNodeContainerUI}.
      *
      *
@@ -259,7 +262,7 @@ public class AsyncUtil {
         final Function<AsyncWorkflowAnnotationUI, CompletableFuture<T>> asyncWa, final WorkflowAnnotation wa,
         final String waitingMessage) {
         if (wa instanceof AsyncWorkflowAnnotationUI) {
-            return waitForTermination(asyncWa.apply((AsyncWorkflowAnnotationUI)wa), waitingMessage);
+            return waitForTerminationAndOpenDialogWhenFailed(asyncWa.apply((AsyncWorkflowAnnotationUI)wa), waitingMessage);
         } else {
             return syncWa.apply(wa);
         }
@@ -280,20 +283,22 @@ public class AsyncUtil {
         final Function<AsyncNodeOutPortUI, CompletableFuture<T>> asyncNop, final NodeOutPortUI nop,
         final String waitingMessage) {
         if (nop instanceof AsyncNodeOutPortUI) {
-            return waitForTermination(asyncNop.apply((AsyncNodeOutPortUI)nop), waitingMessage);
+            return waitForTerminationAndOpenDialogWhenFailed(asyncNop.apply((AsyncNodeOutPortUI)nop), waitingMessage);
         } else {
             return syncNop.apply(nop);
         }
     }
 
     /**
-     * Waits for the provided future to complete while showing a busy cursor and later a 'waiting'-dialog.
+     * Waits for the provided future to complete while showing a busy cursor and later a 'waiting'-dialog. If an
+     * exception is thrown, an error dialog will be opened and <code>null</code> returned.
      *
      * @param future future to wait to be completed
      * @param waitingMessage the message to be displayed in the waiting dialog
      * @return the future's result when done
      */
-    public static <T> T waitForTermination(final CompletableFuture<T> future, final String waitingMessage) {
+    public static <T> T waitForTerminationAndOpenDialogWhenFailed(final CompletableFuture<T> future,
+        final String waitingMessage) {
         final AtomicReference<T> ref = new AtomicReference<T>();
         final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
         try {
@@ -315,6 +320,37 @@ public class AsyncUtil {
     }
 
     /**
+     * Waits for the provided future to complete while showing a busy cursor and later a 'waiting'-dialog. If the future
+     * fails to terminate, a {@link CompletionException} will be thrown that wraps the respective exception.
+     *
+     * @param future future to wait for to be completed
+     * @param waitingMessage the message to be displayed in the waiting dialog
+     * @return the future's result when done
+     * @throws CompletionException wraps the exception thrown by the future if it failed while waiting for termination
+     */
+    public static <T, E extends Exception> T waitForTerminationOrThrowException(final CompletableFuture<T> future,
+        final String waitingMessage) throws CompletionException {
+        final AtomicReference<T> ref = new AtomicReference<T>();
+        final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
+        try {
+            PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
+                monitor.beginTask(waitingMessage, 100);
+                try {
+                    ref.set(future.get());
+                } catch (Throwable e) {
+                    exception.set(e.getCause());
+                }
+            });
+        } catch (InterruptedException | InvocationTargetException ex) {
+            exception.set(ex);
+        }
+        if (exception.get() != null) {
+            throw new CompletionException(exception.get());
+        }
+        return ref.get();
+    }
+
+    /**
      * A function that possibly throws a pre-defined exception on {@link #apply(Object)}.
      */
     @FunctionalInterface
@@ -323,12 +359,12 @@ public class AsyncUtil {
     }
 
     private static void openDialogAndLog(final Throwable e, final String waitingMessage) {
-        String message = "An unexpected problem occurred while '" + waitingMessage + "': " + e.getMessage();
+        String message = "A problem occurred while '" + waitingMessage + "': " + e.getMessage();
         final Display display = Display.getDefault();
         display.syncExec(() -> {
             final Shell shell = SWTUtilities.getActiveShell(display);
             MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
-            mb.setText("Unexpected Problem");
+            mb.setText("Problem");
             mb.setMessage(message + "\nSee log for details.");
             mb.open();
             LOGGER.error(message, e);

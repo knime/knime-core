@@ -48,7 +48,7 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.workbench.ui.async.AsyncUtil.waitForTermination;
+import static org.knime.workbench.ui.async.AsyncUtil.waitForTerminationAndOpenDialogWhenFailed;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -114,7 +114,7 @@ public interface AsyncCommand {
              */
             @Override
             public void execute() {
-                waitForTermination(CompletableFuture
+                waitForTerminationAndOpenDialogWhenFailed(CompletableFuture
                     .allOf(
                         asyncCommands.stream().map(c -> c.executeAsync()).toArray(size -> new CompletableFuture[size]))
                     .thenCompose(f -> asyncWFM.refresh(false)), waitingMessage);
@@ -125,7 +125,7 @@ public interface AsyncCommand {
              */
             @Override
             public void undo() {
-                waitForTermination(CompletableFuture
+                waitForTerminationAndOpenDialogWhenFailed(CompletableFuture
                     .allOf(asyncCommands.stream().map(c -> c.undoAsync()).toArray(size -> new CompletableFuture[size]))
                     .thenCompose(f -> asyncWFM.refresh(false)), waitingMessage);
             }

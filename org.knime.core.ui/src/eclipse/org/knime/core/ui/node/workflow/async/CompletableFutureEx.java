@@ -51,6 +51,7 @@ package org.knime.core.ui.node.workflow.async;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 
 /**
  * Wrapper for {@link CompletableFuture}s that additionally re-throws a predefined exception on calling
@@ -64,6 +65,19 @@ import java.util.concurrent.ExecutionException;
  * @param <E> the exception type to be re-thrown
  */
 public final class CompletableFutureEx<T, E extends Exception> {
+
+    /**
+     * Creates a new {@link CompletableFutureEx}.
+     *
+     * @param sup the actual stuff to run
+     * @param exceptionClass the exception class that the future potentially throws on
+     *            {@link CompletableFutureEx#getOrThrow()}
+     * @return a new future
+     */
+    public static <U, E extends Exception> CompletableFutureEx<U, E> supplyAsync(final Supplier<U> sup,
+        final Class<E> exceptionClass) {
+        return new CompletableFutureEx<U, E>(CompletableFuture.supplyAsync(sup), exceptionClass);
+    }
 
     private final CompletableFuture<T> m_future;
 

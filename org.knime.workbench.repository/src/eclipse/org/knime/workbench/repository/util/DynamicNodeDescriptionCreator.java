@@ -60,6 +60,7 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
 import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.lazy.LazyWorkflowManagerUI;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
@@ -289,6 +290,25 @@ public final class DynamicNodeDescriptionCreator {
         } else {
             wfm = (WorkflowManagerUI)nc;
         }
+        if(wfm instanceof LazyWorkflowManagerUI && !((LazyWorkflowManagerUI)wfm).isLoaded()) {
+            String missingDescMessage = "Description will be available once the node has been opened.";
+            if (!useSingleLine) {
+                bld.append(getHeader());
+                bld.append("<h1>");
+                bld.append(nc.getName());
+                bld.append("</h1>");
+                bld.append("<p>" + missingDescMessage + "</p>");
+                bld.append("</body></html>");
+            } else {
+                bld.append("<dd>");
+                bld.append("<dl>");
+                bld.append(missingDescMessage);
+                bld.append("</dl>");
+                bld.append("</dd>");
+            }
+            return;
+        }
+
         if (!useSingleLine) {
             bld.append(getHeader());
             bld.append("<h1>");
