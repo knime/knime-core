@@ -80,20 +80,13 @@ import org.knime.core.data.convert.map.CellValueConsumerFactory;
 import org.knime.core.data.convert.map.CellValueProducer;
 import org.knime.core.data.convert.map.CellValueProducerFactory;
 import org.knime.core.data.convert.map.ConsumptionPath;
-import org.knime.core.data.convert.map.DataRowConsumer;
-import org.knime.core.data.convert.map.DataRowProducer;
 import org.knime.core.data.convert.map.Destination;
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
-import org.knime.core.data.convert.map.IntCellValueConsumer;
-import org.knime.core.data.convert.map.IntCellValueProducer;
-import org.knime.core.data.convert.map.MappingException;
 import org.knime.core.data.convert.map.MappingFramework;
 import org.knime.core.data.convert.map.ProducerRegistry;
 import org.knime.core.data.convert.map.ProductionPath;
 import org.knime.core.data.convert.map.SimpleCellValueConsumerFactory;
 import org.knime.core.data.convert.map.SimpleCellValueProducerFactory;
 import org.knime.core.data.convert.map.Source;
-import org.knime.core.data.convert.map.Source.ProducerParameters;
 import org.knime.core.data.convert.util.SerializeUtil;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
@@ -136,14 +129,8 @@ public class MappingFrameworkTest {
      * @author Jonathan Hale
      */
     protected static class H2ODestination implements Destination<String> {
-        /** Represents the destiny for all the data (except the ints). */
+        /** Represents the destiny for all the data */
         public ArrayList<Object[]> h2oFrame = new ArrayList<>();
-
-        /** Primitive ints. */
-        public int[][] h2oIntFrame = new int[1][4];
-
-        /** "Missing" mask for each element in the int frame. */
-        public boolean[][] isIntFrameElementMissing = new boolean[1][4];
     }
 
     /**
@@ -152,14 +139,8 @@ public class MappingFrameworkTest {
      * @author Jonathan Hale
      */
     protected static class H2OSource implements Source<String> {
-        /** Represents the source of all the data (except the ints). */
-        public final ArrayList<Object[]> h2oFrame = new ArrayList<>();
 
-        /** Primitive ints. */
-        public int[][] h2oIntFrame = new int[1][4];
-
-        /** "Missing" mask for each element in the int frame. */
-        public boolean[][] isIntFrameElementMissing = new boolean[1][4];
+        final ArrayList<Object[]> h2oFrame = new ArrayList<Object[]>();
     }
 
     /**
@@ -171,13 +152,6 @@ public class MappingFrameworkTest {
     }
 
     /**
-     * Interface to clean up consumer declarations
-     */
-    public static interface H2OPrimitiveIntConsumer extends IntCellValueConsumer<H2ODestination, H2OParameters> {
-
-    }
-
-    /**
      * Interface to clean up producer declarations
      *
      * @param <T> Java type to which the consumer should convert to.
@@ -185,84 +159,25 @@ public class MappingFrameworkTest {
     public static interface H2OProducer<T> extends CellValueProducer<H2OSource, T, H2OParameters> {
     }
 
-    /**
-     * Interface to clean up producer declarations
-     */
-    public static interface H2OPrimitiveIntProducer extends IntCellValueProducer<H2OSource, H2OParameters> {
-
-    }
-
     final SimpleCellValueProducerFactory<H2OSource, String, String, H2OParameters> stringProducer =
-        new SimpleCellValueProducerFactory<>("STR", String.class, (H2OProducer<String>)(c, p) -> {
+        new SimpleCellValueProducerFactory<>("STR", String.class, (c, p) -> {
             return (String)c.h2oFrame.get(p.rowIndex)[p.columnIndex];
         });
 
     final SimpleCellValueConsumerFactory<H2ODestination, String, String, H2OParameters> stringConsumer =
-        new SimpleCellValueConsumerFactory<>(String.class, "STR", (H2OConsumer<String>)(c, v, p) -> {
+        new SimpleCellValueConsumerFactory<>(String.class, "STR", (c, v, p) -> {
             c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
         });
 
     final SimpleCellValueConsumerFactory<H2ODestination, Integer, String, H2OParameters> intConsumer =
-        new SimpleCellValueConsumerFactory<>(Integer.class, "INT", (H2OConsumer<Integer>)(c, v, p) -> {
+        new SimpleCellValueConsumerFactory<>(Integer.class, "INT", (c, v, p) -> {
             c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
         });
 
     final SimpleCellValueProducerFactory<H2OSource, String, Integer, H2OParameters> intProducer =
-        new SimpleCellValueProducerFactory<>("INT", Integer.class, (H2OProducer<Integer>)(c, p) -> {
+        new SimpleCellValueProducerFactory<>("INT", Integer.class, (c, p) -> {
             return (Integer)c.h2oFrame.get(p.rowIndex)[p.columnIndex];
         });
-
-    final SimpleCellValueConsumerFactory<H2ODestination, Integer, String, H2OParameters> primitiveIntConsumer =
-        new SimpleCellValueConsumerFactory<>(int.class, "INT", new H2OPrimitiveIntConsumer() {
-
-            @Override
-            public void consumeMissingCellValue(final H2ODestination destination, final H2OParameters consumerParams)
-                throws MappingException {
-                destination.isIntFrameElementMissing[consumerParams.rowIndex][consumerParams.columnIndex] = true;
-            }
-
-            @Override
-            public void consumeIntCellValue(final H2ODestination destination, final int value,
-                final H2OParameters consumerParams) throws MappingException {
-                destination.h2oIntFrame[consumerParams.rowIndex][consumerParams.columnIndex] = value;
-            }
-
-            @Override
-            public void consumeCellValue(final H2ODestination destination, final Integer value,
-                final H2OParameters consumerParams) throws MappingException {
-                throw new AssertionError(
-                    "Wrapper type method should not be called during test. We want the primitive version.");
-            }
-        });
-
-    final SimpleCellValueProducerFactory<H2OSource, String, Integer, H2OParameters> primitiveIntProducer =
-        new SimpleCellValueProducerFactory<>("INT", int.class, new H2OPrimitiveIntProducer() {
-
-            @Override
-            public boolean producesMissingCellValue(final H2OSource source, final H2OParameters params)
-                throws MappingException {
-                return source.isIntFrameElementMissing[params.rowIndex][params.columnIndex];
-            }
-
-            @Override
-            public int produceIntCellValue(final H2OSource source, final H2OParameters params) throws MappingException {
-                if (producesMissingCellValue(source, params)) {
-                    throw new MappingException(
-                        "Source produced a missing value which cannot be represented by a primitive type.",
-                        new NullPointerException());
-                } else {
-                    return source.h2oIntFrame[params.rowIndex][params.columnIndex];
-                }
-            }
-
-            @Override
-            public Integer produceCellValue(final H2OSource source, final H2OParameters params)
-                throws MappingException {
-                throw new AssertionError(
-                    "Wrapper type method should not be called during test. We want the primitive version.");
-            }
-        });
-
 
     /**
      * Tests {@link ConsumptionPath#equals} and {@link ConsumptionPath#toString()}
@@ -274,17 +189,12 @@ public class MappingFrameworkTest {
         final DataCellToJavaConverterFactory<? extends DataValue, String> stringFactory =
             DataCellToJavaConverterRegistry.getInstance().getConverterFactories(StringCell.TYPE, String.class).stream()
                 .findFirst().get();
-        final DataCellToJavaConverterFactory<? extends DataValue, Integer> primitiveIntFactory =
-            DataCellToJavaConverterRegistry.getInstance().getConverterFactories(IntCell.TYPE, int.class).stream()
-                .findFirst().get();
 
         final ConsumptionPath pathA = new ConsumptionPath(intFactory, intConsumer);
         final ConsumptionPath pathB = new ConsumptionPath(intFactory, intConsumer);
         final ConsumptionPath pathC = new ConsumptionPath(stringFactory, intConsumer);
         final ConsumptionPath pathD = new ConsumptionPath(null, null);
         final ConsumptionPath pathE = new ConsumptionPath(null, intConsumer);
-        final ConsumptionPath pathF = new ConsumptionPath(primitiveIntFactory, primitiveIntConsumer);
-        final ConsumptionPath pathG = new ConsumptionPath(primitiveIntFactory, primitiveIntConsumer);
 
         assertTrue("ConversionPath should equal itself", pathA.equals(pathA));
         assertTrue(pathA.equals(pathB));
@@ -297,18 +207,12 @@ public class MappingFrameworkTest {
         assertFalse(pathD.equals(pathE));
         assertFalse(pathE.equals(pathA));
         assertFalse(pathA.equals(null));
-        assertTrue(pathF.equals(pathF));
-        assertTrue(pathF.equals(pathG));
-        assertTrue(pathG.equals(pathF));
 
         assertEquals("IntValue --(\"Integer\")-> Integer ---> INT", pathA.toString());
 
         assertEquals(pathA.hashCode(), pathA.hashCode());
         assertEquals(pathA.hashCode(), pathB.hashCode());
         assertNotEquals(pathA.hashCode(), pathC.hashCode());
-        assertEquals(pathF.hashCode(), pathF.hashCode());
-        assertEquals(pathF.hashCode(), pathG.hashCode());
-        assertNotEquals(pathA.hashCode(), pathF.hashCode());
 
         assertEquals(pathA.getConsumerFactory(), pathA.m_consumerFactory);
         assertEquals(pathA.getConverterFactory(), pathA.m_converterFactory);
@@ -323,23 +227,16 @@ public class MappingFrameworkTest {
             .getConverterFactories(Integer.class, IntCell.TYPE).stream().findFirst().get();
         final JavaToDataCellConverterFactory<String> stringFactory = JavaToDataCellConverterRegistry.getInstance()
             .getConverterFactories(String.class, StringCell.TYPE).stream().findFirst().get();
-        final JavaToDataCellConverterFactory<Integer> primitiveIntFactory = JavaToDataCellConverterRegistry
-            .getInstance().getConverterFactories(int.class, IntCell.TYPE).stream().findFirst().get();
         final ProductionPath pathA = new ProductionPath(intProducer, intFactory);
         final ProductionPath pathB = new ProductionPath(intProducer, intFactory);
         final ProductionPath pathC = new ProductionPath(intProducer, stringFactory);
         final ProductionPath pathD = new ProductionPath(null, null);
         final ProductionPath pathE = new ProductionPath(intProducer, null);
-        final ProductionPath pathF = new ProductionPath(primitiveIntProducer, primitiveIntFactory);
-        final ProductionPath pathG = new ProductionPath(primitiveIntProducer, primitiveIntFactory);
 
         assertTrue("ConversionPath should equal itself", pathA.equals(pathA));
         assertTrue(pathA.equals(pathB));
         assertTrue(pathB.equals(pathA));
         assertTrue(pathD.equals(pathD));
-        assertTrue(pathF.equals(pathF));
-        assertTrue(pathF.equals(pathG));
-        assertTrue(pathG.equals(pathF));
 
         assertFalse(pathA.equals(pathC));
         assertFalse(pathA.equals(new Integer(42)));
@@ -348,16 +245,12 @@ public class MappingFrameworkTest {
         assertFalse(pathD.equals(pathE));
         assertFalse(pathE.equals(pathA));
         assertFalse(pathA.equals(null));
-        assertFalse(pathA.equals(pathF));
 
         assertEquals("INT ---> Integer --(\"Integer\")-> Number (integer)", pathA.toString());
 
         assertEquals(pathA.hashCode(), pathA.hashCode());
         assertEquals(pathA.hashCode(), pathB.hashCode());
         assertNotEquals(pathA.hashCode(), pathC.hashCode());
-        assertEquals(pathF.hashCode(), pathF.hashCode());
-        assertEquals(pathF.hashCode(), pathG.hashCode());
-        assertNotEquals(pathA.hashCode(), pathF.hashCode());
 
         assertEquals(pathA.getProducerFactory(), pathA.m_producerFactory);
         assertEquals(pathA.getConverterFactory(), pathA.m_converterFactory);
@@ -381,22 +274,18 @@ public class MappingFrameworkTest {
             .register(new SimpleCellValueConsumerFactory<>(Float.class, "FLOAT", generalConsumer)) //
             .register(new SimpleCellValueConsumerFactory<>(Double.class, "DOUBLE", generalConsumer)) //
             .register(stringConsumer) //
-            .register(stringConsumer) // Will display a CODING error, but should not succeed
-            .register(primitiveIntConsumer);
+            .register(stringConsumer); // Will display a CODING error, but should not succeed
 
         assertEquals(intConsumer, MappingFramework.forDestinationType(H2ODestination.class)
             .getFactories(Integer.class, "INT").stream().findFirst().get());
 
-        assertEquals(primitiveIntConsumer, MappingFramework.forDestinationType(H2ODestination.class)
-            .getFactories(int.class, "INT").stream().findFirst().get());
-
         final List<ConsumptionPath> paths =
             MappingFramework.forDestinationType(H2ODestination.class).getAvailableConsumptionPaths(IntCell.TYPE);
-        assertEquals(5, paths.size());
+        assertEquals(4, paths.size());
 
         final String[] inTypes =
             paths.stream().map(p -> p.m_consumerFactory.getDestinationType()).toArray(n -> new String[n]);
-        assertEquals(2, Stream.of(inTypes).filter(s -> s.equals("INT")).count()); // + 1 because of primitive consumer
+        assertEquals(1, Stream.of(inTypes).filter(s -> s.equals("INT")).count());
         assertEquals(1, Stream.of(inTypes).filter(s -> s.equals("STR")).count());
         assertEquals(1, Stream.of(inTypes).filter(s -> s.equals("LONG")).count());
         assertEquals(1, Stream.of(inTypes).filter(s -> s.equals("DOUBLE")).count());
@@ -408,11 +297,6 @@ public class MappingFrameworkTest {
         final ConsumptionPath expectedPath = new ConsumptionPath(DataCellToJavaConverterRegistry.getInstance()
             .getConverterFactories(IntCell.TYPE, Integer.class).stream().findFirst().get(), intConsumer);
         assertTrue(paths.contains(expectedPath));
-
-        final ConsumptionPath expectedPrimitiveIntPath =
-            new ConsumptionPath(DataCellToJavaConverterRegistry.getInstance()
-                .getConverterFactories(IntCell.TYPE, int.class).stream().findFirst().get(), primitiveIntConsumer);
-        assertTrue(paths.contains(expectedPrimitiveIntPath));
 
         assertTrue(MappingFramework.forDestinationType(H2ODestination.class).getFactories(ConsumptionPath.class, "INT")
             .isEmpty());
@@ -459,34 +343,6 @@ public class MappingFrameworkTest {
         assertEquals(1, testSink.h2oFrame.size());
         assertEquals(4, testSink.h2oFrame.get(0).length);
         assertArrayEquals(new Object[]{"KNIME", new Integer(42), new Long(42L), null}, testSink.h2oFrame.get(0));
-
-        // Primitive mapping:
-        final DataRow primitiveRow = new DefaultRow(RowKey.createRowKey(0l), new IntCell(42),
-            new MissingCell("missing"), new IntCell(4), new IntCell(2));
-
-        final H2ODestination testPrimitiveSink = new H2ODestination();
-
-        final ConsumptionPath[] primitiveMapping = new ConsumptionPath[4];
-        Arrays.fill(primitiveMapping,
-            new ConsumptionPath(DataCellToJavaConverterRegistry.getInstance()
-                .getPreferredConverterFactory(IntCell.TYPE, int.class).get(),
-                MappingFramework.forDestinationType(H2ODestination.class).getFactory("int->INT").get()));
-
-        final DataRowConsumer<ConsumerParameters<H2ODestination>> primitiveRowConsumer =
-            MappingFramework.createDataRowConsumer(testPrimitiveSink, primitiveMapping);
-
-        primitiveRowConsumer.consumeDataRow(primitiveRow, parameters);
-
-        assertEquals(42, testPrimitiveSink.h2oIntFrame[0][0]);
-        assertFalse(testPrimitiveSink.isIntFrameElementMissing[0][0]);
-
-        assertTrue(testPrimitiveSink.isIntFrameElementMissing[0][1]);
-
-        assertEquals(4, testPrimitiveSink.h2oIntFrame[0][2]);
-        assertFalse(testPrimitiveSink.isIntFrameElementMissing[0][2]);
-
-        assertEquals(2, testPrimitiveSink.h2oIntFrame[0][3]);
-        assertFalse(testPrimitiveSink.isIntFrameElementMissing[0][3]);
     }
 
     /**
@@ -510,33 +366,23 @@ public class MappingFrameworkTest {
             .register(intProducer) //
             .register(longProducer) //
             .register(stringProducer) //
-            .register(intProducerFromBIGINT) //
-            .register(primitiveIntProducer);
+            .register(intProducerFromBIGINT); //
 
         assertEquals(intProducer, MappingFramework.forSourceType(H2OSource.class).getFactories("INT", Integer.class)
             .stream().findFirst().get());
 
-        assertEquals(primitiveIntProducer,
-            MappingFramework.forSourceType(H2OSource.class).getFactories("INT", int.class).stream().findFirst().get());
-
         final List<ProductionPath> paths =
             MappingFramework.forSourceType(H2OSource.class).getAvailableProductionPaths("INT");
-        assertEquals(4, paths.size());
+        assertEquals(2, paths.size());
 
         final DataType[] outTypes =
             paths.stream().map(p -> p.m_converterFactory.getDestinationType()).toArray(n -> new DataType[n]);
-        // + 1 because of primitive producer
-        assertEquals(2, Stream.of(outTypes).filter(s -> s.equals(IntCell.TYPE)).count());
-        assertEquals(2, Stream.of(outTypes).filter(s -> s.equals(LongCell.TYPE)).count());
+        assertEquals(1, Stream.of(outTypes).filter(s -> s.equals(IntCell.TYPE)).count());
+        assertEquals(1, Stream.of(outTypes).filter(s -> s.equals(LongCell.TYPE)).count());
 
         final ProductionPath expectedPath = new ProductionPath(intProducer, JavaToDataCellConverterRegistry
             .getInstance().getConverterFactories(Integer.class, IntCell.TYPE).stream().findFirst().get());
         assertTrue(paths.contains(expectedPath));
-
-        final ProductionPath expectedPrimitiveIntPath =
-            new ProductionPath(primitiveIntProducer, JavaToDataCellConverterRegistry.getInstance()
-                .getConverterFactories(int.class, IntCell.TYPE).stream().findFirst().get());
-        assertTrue(paths.contains(expectedPrimitiveIntPath));
 
         assertTrue(MappingFramework.forDestinationType(H2ODestination.class).getFactories(ConsumptionPath.class, "INT")
             .isEmpty());
@@ -587,40 +433,6 @@ public class MappingFrameworkTest {
         assertEquals(IntCell.TYPE, spec.getColumnSpec(1).getType());
         assertEquals(LongCell.TYPE, spec.getColumnSpec(2).getType());
         assertEquals(LongCell.TYPE, spec.getColumnSpec(2).getType());
-
-        // Primitive mapping:
-        final ProductionPath[] primitiveMapping = new ProductionPath[4];
-        Arrays.fill(primitiveMapping,
-            new ProductionPath(MappingFramework.forSourceType(H2OSource.class).getFactory("INT->int").get(),
-                JavaToDataCellConverterRegistry.getInstance().getConverterFactories(int.class, IntCell.TYPE).stream()
-                    .findFirst().get()));
-
-        final H2OSource testPrimitiveSource = new H2OSource();
-        testPrimitiveSource.h2oIntFrame[0] = new int[]{42, -1, 4, 2};
-        testPrimitiveSource.isIntFrameElementMissing[0] = new boolean[]{false, true, false, false};
-
-        final DataRowProducer<ProducerParameters<H2OSource>> primitiveRowProducer =
-            MappingFramework.createDataRowProducer(testPrimitiveSource, primitiveMapping, null);
-
-        final DataRow primitiveRow = primitiveRowProducer.produceDataRow(RowKey.createRowKey(0L), parameters);
-
-        assertEquals(IntCell.TYPE, primitiveRow.getCell(0).getType());
-        assertEquals(42, ((IntValue)primitiveRow.getCell(0)).getIntValue());
-
-        assertTrue(primitiveRow.getCell(1).isMissing());
-
-        assertEquals(IntCell.TYPE, primitiveRow.getCell(2).getType());
-        assertEquals(4, ((IntValue)primitiveRow.getCell(2)).getIntValue());
-
-        assertEquals(IntCell.TYPE, primitiveRow.getCell(3).getType());
-        assertEquals(2, ((IntValue)primitiveRow.getCell(3)).getIntValue());
-
-        final DataTableSpec primitiveSpec =
-            MappingFramework.createSpec(new String[]{"int0", "missing", "int2", "int3"}, primitiveMapping);
-        assertEquals(IntCell.TYPE, primitiveSpec.getColumnSpec(0).getType());
-        assertEquals(IntCell.TYPE, primitiveSpec.getColumnSpec(1).getType());
-        assertEquals(IntCell.TYPE, primitiveSpec.getColumnSpec(2).getType());
-        assertEquals(IntCell.TYPE, primitiveSpec.getColumnSpec(2).getType());
     }
 
     @Test
@@ -741,22 +553,12 @@ public class MappingFrameworkTest {
         assertTrue(reg.getAvailableProductionPaths().isEmpty());
 
         reg.register(intProducer);
-        List<ProductionPath> paths = reg.getAvailableProductionPaths();
+        final List<ProductionPath> paths = reg.getAvailableProductionPaths();
         assertCollectionEquals(new Object[]{
             new ProductionPath(intProducer,
                 convReg.getConverterFactories(Integer.class, IntCell.TYPE).stream().findFirst().get()),
             new ProductionPath(intProducer,
                 convReg.getConverterFactories(Integer.class, LongCell.TYPE).stream().findFirst().get())},
-            paths);
-
-        reg.unregisterAllProducers();
-        reg.register(primitiveIntProducer);
-        paths = reg.getAvailableProductionPaths();
-        assertCollectionEquals(new Object[]{
-            new ProductionPath(primitiveIntProducer,
-                convReg.getConverterFactories(int.class, IntCell.TYPE).stream().findFirst().get()),
-            new ProductionPath(primitiveIntProducer,
-                convReg.getConverterFactories(int.class, LongCell.TYPE).stream().findFirst().get())},
             paths);
     }
 

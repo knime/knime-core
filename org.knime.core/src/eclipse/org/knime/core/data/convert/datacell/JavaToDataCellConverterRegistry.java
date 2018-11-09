@@ -71,14 +71,6 @@ import org.knime.core.data.convert.DataCellFactoryMethod;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
 import org.knime.core.data.convert.util.ClassUtil;
-import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.IntCell.IntCellFactory;
-import org.knime.core.data.def.LongCell;
-import org.knime.core.data.def.LongCell.LongCellFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.Pair;
 
@@ -352,10 +344,6 @@ public final class JavaToDataCellConverterRegistry extends
                     + e.getMessage(), e);
             }
         }
-
-        // Register special converter implementations that convert Java primitive types.
-        // This is for performance reasons only (by avoiding boxing).
-        registerPrimitiveConverters();
     }
 
     private void parseAnnotations() {
@@ -412,29 +400,6 @@ public final class JavaToDataCellConverterRegistry extends
         final String name = factory.getName();
         final String className = factory.getSourceType().getSimpleName();
         return name.matches(Pattern.quote(className) + "(| \\(.+\\))");
-    }
-
-    /**
-     * Registers primitive converters for all Java primitive types that are represented by a built-in KNIME data cell
-     * type.
-     */
-    private void registerPrimitiveConverters() {
-        // boolean:
-        registerPrimitiveConverter(boolean.class, BooleanCell.TYPE,
-            (BooleanToDataCellConverter)BooleanCellFactory::create);
-        // double:
-        registerPrimitiveConverter(double.class, DoubleCell.TYPE, (DoubleToDataCellConverter)DoubleCellFactory::create);
-        // int:
-        registerPrimitiveConverter(int.class, IntCell.TYPE, (IntToDataCellConverter)IntCellFactory::create);
-        // long:
-        registerPrimitiveConverter(long.class, LongCell.TYPE, (LongToDataCellConverter)LongCellFactory::create);
-        registerPrimitiveConverter(int.class, LongCell.TYPE, (IntToDataCellConverter)LongCellFactory::create);
-    }
-
-    private <S> void registerPrimitiveConverter(final Class<S> sourceType, final DataType destType,
-        final JavaToDataCellConverter<S> converter) {
-        register(new SimpleJavaToDataCellConverterFactory<>(sourceType, destType, converter, //
-            sourceType.getSimpleName()));
     }
 
     /**
