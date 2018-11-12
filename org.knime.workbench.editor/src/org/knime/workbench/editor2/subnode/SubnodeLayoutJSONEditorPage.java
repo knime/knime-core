@@ -943,7 +943,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                             BasicLayoutInfo basicInfo = new BasicLayoutInfo();
                             basicInfo.setRow(rowIndex + 1);
                             basicInfo.setCol(colIndex + 1);
-                            basicInfo.setColWidth(column.getWidthMD());
+                            basicInfo.setColWidth(column.getWidthXS() != null ? column.getWidthXS() : column.getWidthMD());
                             basicInfo.setView(jsonLayoutContent);
 
                             m_basicMap.put(id, basicInfo);
