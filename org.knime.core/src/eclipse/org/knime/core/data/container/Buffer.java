@@ -650,22 +650,30 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     private BlobSupportDataRow saveBlobsAndFileStores(final DataRow row, final boolean isCopyOfExisting,
-                                                      final boolean forceCopyOfBlobs) throws IOException {
+        final boolean forceCopyOfBlobs) throws IOException {
+
         final int cellCount = row.getNumCells();
+        final boolean isBlobRow = row instanceof BlobSupportDataRow;
+        final BlobSupportDataRow blobRow = isBlobRow ? (BlobSupportDataRow)row : null;
+
         DataCell[] cellCopies = null;
-        if (!(row instanceof BlobSupportDataRow)) {
+        if (!isBlobRow) {
             cellCopies = new DataCell[cellCount];
             for (int i = 0; i < cellCount; i++) {
                 cellCopies[i] = row.getCell(i);
             }
         }
+
         // take ownership of unassigned blob cells (if any)
         for (int col = 0; col < cellCount; col++) {
-            DataCell cell =
-                    row instanceof BlobSupportDataRow ? ((BlobSupportDataRow)row).getRawCell(col) : cellCopies[col];
-            DataCell processedCell =
-                    handleIncomingBlob(cell, col, row.getNumCells(), isCopyOfExisting, forceCopyOfBlobs);
-            if (mustBeFlushedPriorSave(processedCell)) {
+            DataCell cell = isBlobRow ? blobRow.getRawCell(col) : cellCopies[col];
+
+            final boolean isWrapperCell = cell instanceof BlobWrapperDataCell;
+            final boolean isCollectionCell = cell instanceof CellCollection;
+
+            DataCell processedCell = handleIncomingBlob(cell, col, cellCount, isCopyOfExisting, forceCopyOfBlobs,
+                isWrapperCell, isCollectionCell);
+            if (mustBeFlushedPriorSave(processedCell, isWrapperCell, isCollectionCell)) {
                 if (m_maxRowsInMem != 0) {
                     LOGGER.debug("Forcing buffer to disc as it contains file store cells that need special handling");
                     m_maxRowsInMem = 0;
@@ -675,21 +683,19 @@ public class Buffer implements KNIMEStreamConstants {
                 if (cellCopies == null) {
                     cellCopies = new DataCell[cellCount];
                     for (int i = 0; i < cellCount; i++) {
-                        cellCopies[i] = ((BlobSupportDataRow)row).getRawCell(i);
+                        // cellCopies can only be null for blob rows
+                        cellCopies[i] = blobRow.getRawCell(i);
                     }
                 }
                 cellCopies[col] = processedCell;
             }
         }
-        return cellCopies == null ? (BlobSupportDataRow)row : new BlobSupportDataRow(row.getKey(), cellCopies);
+        return cellCopies == null ? blobRow : new BlobSupportDataRow(row.getKey(), cellCopies);
     }
 
     private DataCell handleIncomingBlob(final DataCell cell, final int col, final int totalColCount,
-        final boolean copyForVersionHop, final boolean forceCopyOfBlobsArg) throws IOException {
-        // whether the content of the argument row needs to be copied
-        // into a new BlobSupportDataRow (will do that when either this
-        // flag is true or cellCopies != null)
-        boolean isWrapperCell = cell instanceof BlobWrapperDataCell;
+        final boolean copyForVersionHop, final boolean forceCopyOfBlobsArg, final boolean isWrapperCell,
+        final boolean isCollectionCell) throws IOException {
         BlobAddress ad;
         final CellClassInfo cl;
         BlobWrapperDataCell wc;
@@ -701,7 +707,7 @@ public class Buffer implements KNIMEStreamConstants {
             wc = null;
             cl = CellClassInfo.get(cell);
             ad = ((BlobDataCell)cell).getBlobAddress();
-        } else if (cell instanceof CellCollection) {
+        } else if (isCollectionCell) {
             CellCollection cdv = (CellCollection)cell;
             if (cdv.containsBlobWrapperCells()) {
                 Iterator<DataCell> it = cdv.iterator();
@@ -712,11 +718,11 @@ public class Buffer implements KNIMEStreamConstants {
                             + it.getClass().getName() + ")");
                 }
                 while (it.hasNext()) {
-                    DataCell n =
-                            it instanceof BlobSupportDataCellIterator ? ((BlobSupportDataCellIterator)it)
-                                    .nextWithBlobSupport() : it.next();
+                    DataCell n = it instanceof BlobSupportDataCellIterator
+                        ? ((BlobSupportDataCellIterator)it).nextWithBlobSupport() : it.next();
                     DataCell correctedCell =
-                            handleIncomingBlob(n, col, totalColCount, copyForVersionHop, forceCopyOfBlobsArg);
+                        handleIncomingBlob(n, col, totalColCount, copyForVersionHop, forceCopyOfBlobsArg,
+                            n instanceof BlobWrapperDataCell, n instanceof CellCollection);
                     if (correctedCell != n) {
                         if (it instanceof BlobSupportDataCellIterator) {
                             BlobSupportDataCellIterator bsdi = (BlobSupportDataCellIterator)it;
@@ -921,21 +927,25 @@ public class Buffer implements KNIMEStreamConstants {
         }
     }
 
-    private boolean mustBeFlushedPriorSave(final DataCell cell) {
+    private boolean mustBeFlushedPriorSave(final DataCell cell, final boolean isWrapperCell,
+        final boolean isCollectionCell) {
         if (cell instanceof FileStoreCell) {
             FileStore fileStore = FileStoreUtil.getFileStore((FileStoreCell)cell);
             return ((IWriteFileStoreHandler)m_fileStoreHandler).mustBeFlushedPriorSave(fileStore);
-        } else if (cell instanceof CollectionDataValue) {
-            for (DataCell c : (CollectionDataValue)cell) {
-                if (mustBeFlushedPriorSave(c)) {
-                    return true;
+        } else if (isCollectionCell) {
+            if (cell instanceof CollectionDataValue) {
+                for (DataCell c : (CollectionDataValue)cell) {
+                    if (mustBeFlushedPriorSave(c, c instanceof BlobWrapperDataCell, c instanceof CellCollection)) {
+                        return true;
+                    }
                 }
             }
-        } else if (cell instanceof BlobWrapperDataCell) {
+        } else if (isWrapperCell) {
             final BlobWrapperDataCell blobWrapperCell = (BlobWrapperDataCell)cell;
             Class<? extends BlobDataCell> blobClass = blobWrapperCell.getBlobClass();
             if (CollectionDataValue.class.isAssignableFrom(blobClass)) {
-                return mustBeFlushedPriorSave(blobWrapperCell.getCell());
+                DataCell c = blobWrapperCell.getCell();
+                return mustBeFlushedPriorSave(c, c instanceof BlobWrapperDataCell, c instanceof CellCollection);
             }
         }
         return false;
