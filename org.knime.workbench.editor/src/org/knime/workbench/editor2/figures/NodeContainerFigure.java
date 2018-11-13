@@ -69,7 +69,6 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -732,11 +731,7 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
      */
     @Override
     public Color getBackgroundColor() {
-        final WorkflowEditor we =
-                (WorkflowEditor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-        final boolean renderEnabled = (we == null) || WorkflowEditorMode.NODE_EDIT.equals(we.getEditorMode());
-
-        if (!renderEnabled) {
+        if (!WorkflowEditorMode.NODE_EDIT.equals(m_currentEditorMode)) {
             return ColorConstants.lightGray;
         }
 

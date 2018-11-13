@@ -65,6 +65,7 @@ import org.eclipse.draw2d.text.TextFlow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
@@ -113,13 +114,18 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
      */
     protected boolean determineRenderEnabledState(final Annotation annotation) {
         final boolean isNodeAnnotation = (annotation instanceof NodeAnnotation);
-        final WorkflowEditor we =
-                (WorkflowEditor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-        final WorkflowEditorMode wem =
-            isNodeAnnotation ? WorkflowEditorMode.NODE_EDIT : WorkflowEditorMode.ANNOTATION_EDIT;
+        final IEditorPart iep = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
 
-        // If 'we' is null, we're still coming up and so definitely not in the non-default-editor-mode
-        return ((we != null) && wem.equals(we.getEditorMode())) || (!isNodeAnnotation);
+        if (iep instanceof WorkflowEditor) {
+            final WorkflowEditor we = (WorkflowEditor)iep;
+            final WorkflowEditorMode wem =
+                isNodeAnnotation ? WorkflowEditorMode.NODE_EDIT : WorkflowEditorMode.ANNOTATION_EDIT;
+
+            return (wem.equals(we.getEditorMode()) || !isNodeAnnotation);
+        }
+
+        // if we have a null active editor, it's because we're still coming up - so render us enabled for the time being
+        return (iep == null);
     }
 
     /**

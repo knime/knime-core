@@ -146,7 +146,7 @@ public class ToggleEditorModeAction extends AbstractNodeAction {
                 });
             }
         } else {
-            LOGGER.error("Some how we failed to get the workflow editor instance.");
+            LOGGER.error("Somehow we failed to get the workflow editor instance.");
         }
     }
 

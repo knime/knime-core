@@ -553,6 +553,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart
                 Thread.sleep(100);
             } catch (Exception e) { }
 
+            // Only allow the edit if we're in AE mode, or we're editing the node's name annotation
             if (WorkflowEditorMode.ANNOTATION_EDIT.equals(m_currentEditorMode)
                         || (this instanceof NodeAnnotationEditPart)) {
                 Display.getDefault().asyncExec(() -> {
