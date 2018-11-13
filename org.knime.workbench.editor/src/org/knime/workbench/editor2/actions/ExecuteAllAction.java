@@ -52,6 +52,7 @@ import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.WorkflowEditorMode;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -115,14 +116,17 @@ public class ExecuteAllAction extends AbstractNodeAction {
     }
 
     /**
-     * @return always <code>true</code>, as the WFM tries to execute as much
-     *         as possible
-     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
+     * @return proxies to <code>WorkflowManagerUI.canExecuteAll()</code> if we're not in Annotation Edit mode,
+     *              otherwise returns false
+     * @see WorkflowManagerUI#canExecuteAll()
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        WorkflowManagerUI wm = getManagerUI();
-        return wm.canExecuteAll();
+        if (WorkflowEditorMode.ANNOTATION_EDIT.equals(getEditor().getEditorMode())) {
+            return false;
+        }
+
+        return getManagerUI().canExecuteAll();
     }
 
     /**
@@ -135,8 +139,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        WorkflowManagerUI wm = getManagerUI();
-        wm.executeAll();
+        getManagerUI().executeAll();
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.

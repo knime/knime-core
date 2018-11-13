@@ -118,12 +118,12 @@ public abstract class AbstractNodeAction extends SelectionAction {
     }
 
     /**
-     * @return The manager that is edited by the current editor. Subclasses may
-     *         want to have a reference to this.
+     * Note that this return may be <code>null</code> if the editor has not already been created completely!
      *
-     * Note that this value may be <code>null</code> if the editor has not
-     * already been created completely !
-     *
+     * @return The manager that is edited by the current editor. Subclasses may want to have a reference to this.
+     * @throws IllegalStateException if the subclass' implementation of <code>canHandleWorkflowManagerUI()</code>
+     *             returns true
+     * @see #canHandleWorkflowManagerUI()
      */
     protected final WorkflowManager getManager() {
         if (canHandleWorkflowManagerUI()) {
