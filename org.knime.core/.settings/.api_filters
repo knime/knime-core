@@ -16,6 +16,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/DataCell.java" type="org.knime.core.data.DataCell">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.DataCell"/>
+                <message_argument value="isMissing()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/Buffer.java" type="org.knime.core.data.container.Buffer">
         <filter id="338792546">
             <message_arguments>

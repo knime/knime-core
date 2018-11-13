@@ -136,20 +136,6 @@ public abstract class DataCell implements DataValue, Serializable {
     }
 
     /**
-     * Returns <code>true</code> if this represents missing cell,
-     * <code>false</code> otherwise. The default implementation returns
-     * <code>false</code>. If you need a missing cell use the static method
-     * {@link DataType#getMissingCell()}.
-     *
-     * @return <code>true</code> if the cell represents a missing value,
-     *         <code>false</code> otherwise
-     * @see DataType#getMissingCell()
-     */
-    public final boolean isMissing() {
-        return this instanceof MissingValue;
-    }
-
-    /**
      * Returns the String representation of this cell's value.
      *
      * @return a String representation of this cell's value
