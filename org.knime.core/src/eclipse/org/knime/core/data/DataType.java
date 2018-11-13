@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.swing.Icon;
 
@@ -671,6 +672,9 @@ public final class DataType {
 
     private final List<Class<? extends DataValue>> m_adapterValueList;
 
+    /** a map that caches whether certain encountered types are subtypes of this type */
+    private final Map<DataType, Boolean> m_subTypes = new ConcurrentHashMap<>(100, 1 / 3f);
+
     private String m_name;
 
     /** the lazily initialized cached hash code of this type */
@@ -1110,6 +1114,15 @@ public final class DataType {
         if (type == null) {
             throw new NullPointerException("Type argument must not be null.");
         }
+        Boolean isSuperType = m_subTypes.get(type);
+        if (isSuperType == null) {
+            isSuperType = isASuperTypeOfInternal(type);
+            m_subTypes.put(type, isSuperType);
+        }
+        return isSuperType;
+    }
+
+    private boolean isASuperTypeOfInternal(final DataType type) {
         if (type == this) {
             return true;
         }
