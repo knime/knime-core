@@ -81,7 +81,7 @@ public class DataTableDomainCreator {
 
     private final DataCell[] m_maxs;
 
-    private final LinkedHashSet<DataCell>[] m_possVals;
+    private final Set<DataCell>[] m_possVals;
 
     private final DataValueComparator[] m_comparators;
 
@@ -113,9 +113,9 @@ public class DataTableDomainCreator {
                 Set<DataCell> values = colSpec.getDomain().getValues();
 
                 if (!m_domainValuesColumnSelection.dropDomain(colSpec) && (values != null)) {
-                    m_possVals[i] = new LinkedHashSet<DataCell>(values);
+                    m_possVals[i] = new LinkedHashSet<>(values);
                 } else {
-                    m_possVals[i] = new LinkedHashSet<DataCell>();
+                    m_possVals[i] = new LinkedHashSet<>(2 * m_maxPossibleValues, 1 / 3f);
                 }
             }
 
