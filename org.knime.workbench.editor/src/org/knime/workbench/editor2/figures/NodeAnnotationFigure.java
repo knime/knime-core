@@ -124,8 +124,12 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
             return (wem.equals(we.getEditorMode()) || !isNodeAnnotation);
         }
 
-        // if we have a null active editor, it's because we're still coming up - so render us enabled for the time being
-        return (iep == null);
+        // Case 1: if we have a null active editor, it's because the app is still coming up - so render us enabled
+        //          for the time being
+        // Case 2: iep is not null, and not a WorkflowEditor, because the 'active editor' was still the Welcome Page
+        //          while we are switching tabs to a workflow; in this case ensure the workflow annotations are
+        //          rendered correctly
+        return ((iep == null) || !isNodeAnnotation);
     }
 
     /**

@@ -131,9 +131,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart
      *         setting in preference page)
      */
     public static int workflowAnnotationDefaultOneLineHeight() {
-        TextUtilities iNSTANCE = TextUtilities.INSTANCE;
-        Font font = getWorkflowAnnotationDefaultFont();
-        return iNSTANCE.getStringExtents("Agq|_ÊZ", font).height;
+        return TextUtilities.INSTANCE.getStringExtents("Agq|_ÊZ", getWorkflowAnnotationDefaultFont()).height;
     }
 
     /**
@@ -545,36 +543,28 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart
      * annotation from presenting itself.
      */
     public void performEdit() {
-        final Thread t = new Thread(() -> {
-            try {
-                Thread.sleep(100);
-            } catch (Exception e) { }
+        // Only allow the edit if we're in AE mode, or we're editing the node's name annotation
+        if (WorkflowEditorMode.ANNOTATION_EDIT.equals(m_currentEditorMode)
+            || (this instanceof NodeAnnotationEditPart)) {
+            Display.getDefault().asyncExec(() -> {
+                final EditPart parent = getParent();
 
-            // Only allow the edit if we're in AE mode, or we're editing the node's name annotation
-            if (WorkflowEditorMode.ANNOTATION_EDIT.equals(m_currentEditorMode)
-                        || (this instanceof NodeAnnotationEditPart)) {
-                Display.getDefault().asyncExec(() -> {
-                    final EditPart parent = getParent();
-
-                    if (parent instanceof WorkflowRootEditPart) {
-                        final WorkflowRootEditPart wkfRootEdit = (WorkflowRootEditPart)parent;
-                        if (wkfRootEdit.getWorkflowManager().isWriteProtected()
-                            || !Wrapper.wraps(wkfRootEdit.getWorkflowManager(), WorkflowManager.class)) {
-                            return;
-                        }
+                if (parent instanceof WorkflowRootEditPart) {
+                    final WorkflowRootEditPart wkfRootEdit = (WorkflowRootEditPart)parent;
+                    if (wkfRootEdit.getWorkflowManager().isWriteProtected()
+                        || !Wrapper.wraps(wkfRootEdit.getWorkflowManager(), WorkflowManager.class)) {
+                        return;
                     }
+                }
 
-                    if (m_directEditManager == null) {
-                        m_directEditManager = new AnnotationEditManager(this,
-                            new StyledTextEditorLocator((NodeAnnotationFigure)getFigure()));
-                    }
+                if (m_directEditManager == null) {
+                    m_directEditManager =
+                        new AnnotationEditManager(this, new StyledTextEditorLocator((NodeAnnotationFigure)getFigure()));
+                }
 
-                    m_directEditManager.show();
-                });
-            }
-        });
-
-        t.start();
+                m_directEditManager.show();
+            });
+        }
     }
 
     private boolean figureIsForWorkflowAnnotation() {
