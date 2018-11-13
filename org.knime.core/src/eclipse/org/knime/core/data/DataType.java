@@ -673,6 +673,9 @@ public final class DataType {
 
     private String m_name;
 
+    /** the lazily initialized cached hash code of this type */
+    private int m_hashCode;
+
     /**
      * Creates a new, non-native <code>DataType</code>. This method is used
      * from the {@link #load(ConfigRO)} method.
@@ -1066,18 +1069,21 @@ public final class DataType {
      */
     @Override
     public int hashCode() {
-        int result = 0x6172618;
-        for (Class<? extends DataValue> cl : m_valueClasses) {
-            result ^= cl.hashCode();
+        // We lazily initialize our cached hashCode
+        if (m_hashCode == 0) {
+            m_hashCode = 0x6172618;
+            for (Class<? extends DataValue> cl : m_valueClasses) {
+                m_hashCode ^= cl.hashCode();
+            }
+            for (Class<? extends DataValue> cl : m_adapterValueList) {
+                m_hashCode ^= cl.hashCode();
+            }
+            final DataType collectionElementType = getCollectionElementType();
+            if (collectionElementType != null) {
+                m_hashCode ^= collectionElementType.hashCode();
+            }
         }
-        for (Class<? extends DataValue> cl : m_adapterValueList) {
-            result ^= cl.hashCode();
-        }
-        final DataType collectionElementType = getCollectionElementType();
-        if (collectionElementType != null) {
-            result ^= collectionElementType.hashCode();
-        }
-        return result;
+        return m_hashCode;
     }
 
     /**
