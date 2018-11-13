@@ -553,7 +553,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart
                 Thread.sleep(100);
             } catch (Exception e) { }
 
-            if (WorkflowEditorMode.ANNOTATION_EDIT.equals(m_currentEditorMode)) {
+            if (WorkflowEditorMode.ANNOTATION_EDIT.equals(m_currentEditorMode)
+                        || (this instanceof NodeAnnotationEditPart)) {
                 Display.getDefault().asyncExec(() -> {
                     final EditPart parent = getParent();
 
