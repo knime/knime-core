@@ -107,9 +107,9 @@ class BrandingInjector extends AbstractInjector {
                     introText.getDocumentElement(), XPathConstants.NODE)).cloneNode(true);
                 m_newIntro = true;
             } catch (ParserConfigurationException | SAXException | IOException e) {
-                NodeLogger.getLogger(getClass()).coding("Error while reading branded intro-text: " + e.getMessage(), e);
+                NodeLogger.getLogger(getClass()).error("Error while reading branded intro-text: " + e.getMessage(), e);
             } catch (XPathExpressionException e) {
-                NodeLogger.getLogger(getClass()).coding("Branding intro-text mal-formatted: " + e.getMessage(), e);
+                NodeLogger.getLogger(getClass()).error("Branding intro-text mal-formatted: " + e.getMessage(), e);
             }
         }
     }
