@@ -45,12 +45,15 @@
 
 package org.knime.base.node.preproc.columnaggregator;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.NamedAggregationOperator;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -61,10 +64,6 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.node.ExecutionMonitor;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * {@link CellFactory} implementation that aggregates a number of
@@ -86,11 +85,14 @@ public class AggregationCellFactory implements CellFactory {
      * @param colNames the names of the columns to aggregate
      * @param globalSettings the {@link GlobalSettings}
      * @param methods the {@link AggregationMethod}s
+     * @param removedColNames the names of the columns in the original {@link DataTableSpec} that will be removed in
+     *          the outputspec
      */
     public AggregationCellFactory(final DataTableSpec origSpec,
             final List<String> colNames,
             final GlobalSettings globalSettings,
-            final List<NamedAggregationOperator> methods) {
+            final List<NamedAggregationOperator> methods,
+            final List<String> removedColNames) {
         m_origSpec = origSpec;
         m_colIdxs = new int[colNames.size()];
         final Set<String> inclCols =
@@ -120,7 +122,11 @@ public class AggregationCellFactory implements CellFactory {
                         m_dummyOrigSpec);
             m_operators[i] = method.getMethodTemplate().createOperator(
                     globalSettings, operatorSettings);
-            m_colNames[i] = method.getName();
+            if (removedColNames.contains(method.getName())) {
+                m_colNames[i] = method.getName();
+            } else {
+                m_colNames[i] = DataTableSpec.getUniqueColumnName(origSpec, method.getName());
+            }
             i++;
         }
     }

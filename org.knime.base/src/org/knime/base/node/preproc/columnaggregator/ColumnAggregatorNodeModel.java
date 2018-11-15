@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.GlobalSettings.AggregationContext;
@@ -196,7 +197,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         //applied to the given input table
         NamedAggregationOperator.configure(inSpec, m_methods);
         final AggregationCellFactory cellFactory = new AggregationCellFactory(
-                inSpec, selectedCols, GlobalSettings.DEFAULT, m_methods);
+                inSpec, selectedCols, GlobalSettings.DEFAULT, m_methods, Arrays.asList(getColsToRemove(inSpec)));
         return new DataTableSpec[]{
                 createRearranger(inSpec, cellFactory).createSpec()};
     }
@@ -222,7 +223,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
                 .setNoOfRows(table.size())
                 .setAggregationContext(AggregationContext.COLUMN_AGGREGATION).build();
         final AggregationCellFactory cellFactory = new AggregationCellFactory(
-                origSpec, selectedCols, globalSettings, m_methods);
+                origSpec, selectedCols, globalSettings, m_methods, Arrays.asList(getColsToRemove(origSpec)));
         final ColumnRearranger cr =
             createRearranger(origSpec, cellFactory);
         final BufferedDataTable out =
@@ -234,14 +235,23 @@ public class ColumnAggregatorNodeModel extends NodeModel {
             final CellFactory cellFactory) {
         final ColumnRearranger cr = new ColumnRearranger(oSpec);
         cr.append(cellFactory);
-        final FilterResult filterResult = m_aggregationCols.applyTo(oSpec);
-        if (m_removeAggregationCols.getBooleanValue()) {
-            cr.remove(filterResult.getIncludes());
-        }
-        if (m_removeRetainedCols.getBooleanValue()) {
-            cr.remove(filterResult.getExcludes());
+        final String[] colsToRemove = getColsToRemove(oSpec);
+        if (colsToRemove.length != 0) {
+            cr.remove(colsToRemove);
         }
         return cr;
+    }
+
+    private String[] getColsToRemove(final DataTableSpec inSpec) {
+        final FilterResult filterResult = m_aggregationCols.applyTo(inSpec);
+        if (m_removeAggregationCols.getBooleanValue() && m_removeRetainedCols.getBooleanValue()) {
+            return Stream.of(filterResult.getIncludes(), filterResult.getExcludes()).flatMap(Stream::of).toArray(String[]::new);
+        } else if (m_removeAggregationCols.getBooleanValue()) {
+            return filterResult.getIncludes();
+        } else if (m_removeRetainedCols.getBooleanValue()) {
+            return filterResult.getExcludes();
+        }
+        return new String[0];
     }
 
     private String getDefaultValueDelimiter() {
@@ -384,7 +394,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
                         .setNoOfRows(-1)
                         .setAggregationContext(AggregationContext.COLUMN_AGGREGATION).build();
                 final AggregationCellFactory cellFactory = new AggregationCellFactory(origSpec,
-                    selectedCols, globalSettings, m_methods);
+                    selectedCols, globalSettings, m_methods, Arrays.asList(getColsToRemove(origSpec)));
                 final ColumnRearranger cr = createRearranger(origSpec, cellFactory);
                 cr.createStreamableFunction().runFinal(inputs, outputs, exec);
             }
