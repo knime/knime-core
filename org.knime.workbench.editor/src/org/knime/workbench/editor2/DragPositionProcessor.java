@@ -60,6 +60,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
@@ -181,15 +182,19 @@ class DragPositionProcessor {
         EditPart ep = null;
 
         if (encouragedReselects != null) {
+            final ZoomManager zoomManager = (ZoomManager)m_parentViewer.getProperty(ZoomManager.class.toString());
             final Iterator<?> it = encouragedReselects.iterator();
+
             while (it.hasNext()) {
                 Object o = it.next();
 
                 if (o instanceof AbstractGraphicalEditPart) {
                     final AbstractGraphicalEditPart encouragedReselect = (AbstractGraphicalEditPart)o;
                     final IFigure f = encouragedReselect.getFigure();
-                    final Rectangle bounds =
-                        f.getBounds().getExpanded(USER_DRAG_SLOP_FOR_BOUNDS, USER_DRAG_SLOP_FOR_BOUNDS);
+                    final Rectangle bounds = f.getBounds().getCopy();
+
+                    bounds.performScale(zoomManager.getZoom());
+                    bounds.expand(USER_DRAG_SLOP_FOR_BOUNDS, USER_DRAG_SLOP_FOR_BOUNDS);
 
                     translateFigureLocation(bounds);
 
