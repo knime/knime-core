@@ -103,9 +103,14 @@ public class StyledTextEditor extends CellEditor {
     private static final boolean PLATFORM_IS_MAC = Platform.OS_MACOSX.equals(Platform.getOS());
 
     /**
+     * This value was originally 90ms, and 90ms still works fine when running this launched out of Eclipse, but there
+     * was a report (AP-10744) that nightly builds have reverted to previous behaviour. Investigating a nightly build, i
+     * saw times in the 200-250ms range; i have no idea what's to account for this greater-than-90ms timings now present
+     * in the 3.7.0 nightlies (but not in the 3.6.2 release.)
+     *
      * @see #workflowContextMenuShouldBeVetoed()
      */
-    private static final long INHUMANLY_QUICK_INTER_EVENT_TIME = 90;
+    private static final long INHUMANLY_QUICK_INTER_EVENT_TIME = 300;
 
     // Perfectly fine that this is shared across all instances as the amount of time it would take to switch workflow
     // editors falls very far outside our "inhumanly quick" boundary.
