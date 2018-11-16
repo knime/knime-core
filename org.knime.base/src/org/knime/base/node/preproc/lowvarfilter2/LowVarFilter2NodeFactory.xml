@@ -15,7 +15,9 @@
 			distance based) and are therefore better removed.
 		  </p>
 		  <p>
-			Note, the input table should not be normalized.
+			Note, the input table should not be normalized with a Gaussian 
+			normalization or any other normalization technique which changes
+			the variances of the input.
 		  </p>		
 		</intro>
 
