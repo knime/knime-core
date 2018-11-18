@@ -467,6 +467,10 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
 
         final ImageData id = i.getImageData();
         id.alpha = 32;
+        if (id.getTransparencyType() != SWT.TRANSPARENCY_ALPHA) {
+            id.transparentPixel = -1;
+            id.maskData = null;
+        }
 
         return new Image(Display.getCurrent(), id);
     }
