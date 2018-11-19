@@ -48,7 +48,6 @@
 package org.knime.workbench.editor2.editparts;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.draw2d.ColorConstants;
@@ -66,7 +65,6 @@ import org.eclipse.gef.requests.LocationRequest;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
@@ -87,7 +85,6 @@ import org.knime.workbench.editor2.AnnotationModeExitEnabler;
 import org.knime.workbench.editor2.EditorModeParticipant;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowEditorMode;
-import org.knime.workbench.editor2.WorkflowMarqueeSelectionTool;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.WorkflowSelectionTool;
 import org.knime.workbench.editor2.directannotationedit.AnnotationEditManager;
@@ -620,14 +617,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart
         if (!WorkflowEditorMode.ANNOTATION_EDIT.equals(m_currentEditorMode)) {
             final Object o = request.getExtendedData().get(WorkflowSelectionTool.DRAG_START_LOCATION);
 
-            if ((o instanceof Point) && figureIsForWorkflowAnnotation()) {
-                if (!((WorkflowAnnotationFigure)getFigure()).getEditIconBounds().contains((Point)o)
-                            && !partIsSelected()) {
-                    return new WorkflowMarqueeSelectionTool();
-                }
-            }
-
-            if (!partIsSelected()) {
+            if ((o instanceof Point) && ((WorkflowAnnotationFigure)getFigure()).getEditIconBounds().contains((Point)o)
+                && figureIsForWorkflowAnnotation()) {
                 return null;
             }
         }
@@ -658,20 +649,6 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart
         }
 
         return super.getTargetEditPart(request);
-    }
-
-    private boolean partIsSelected() {
-        final SelectionManager sm = getViewer().getSelectionManager();
-        final StructuredSelection ss = (StructuredSelection)sm.getSelection();
-        final Iterator<?> it = ss.iterator();
-
-        while (it.hasNext()) {
-            if (this == it.next()) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
