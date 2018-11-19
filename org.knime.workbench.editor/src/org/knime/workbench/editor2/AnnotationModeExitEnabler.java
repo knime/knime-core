@@ -112,12 +112,6 @@ public class AnnotationModeExitEnabler implements MouseListener {
      * @param editor The editor containing the graphical viewer from which we'll track mouse events.
      */
     public AnnotationModeExitEnabler(final WorkflowEditor editor) {
-        if (!editor.getWorkflowManager().isPresent()) {
-            //doesn't work with other than the ordinary workflow manager, yet
-            m_dragPositionProcessor = null;
-            m_workflowEditor = null;
-            return;
-        }
         final GraphicalViewer viewer = editor.getGraphicalViewer();
 
         m_workflowEditor = editor;
