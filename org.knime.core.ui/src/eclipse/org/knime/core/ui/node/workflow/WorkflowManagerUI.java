@@ -243,10 +243,10 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     /**
      * Check if a connection can safely be removed.
      *
-     * @param connectionID
+     * @param connection
      * @return true if connection is removable.
      */
-    boolean canRemoveConnection(ConnectionID connectionID);
+    boolean canRemoveConnection(ConnectionContainerUI connection);
 
 //    /** Remove connection.
 //     *
@@ -286,12 +286,12 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     Set<ConnectionContainerUI> getOutgoingConnectionsFor(NodeID id);
 
     /**
-     * Returns the incoming connection of the node with the passed node id at
-     * the specified port.
+     * Returns the incoming connection of the node with the passed node id at the specified port.
+     *
      * @param id id of the node of interest
      * @param portIdx port index
-     * @return incoming connection at that port of the given node or null if it
-     *     doesn't exist
+     * @return incoming connection at that port of the given node or null if it doesn't exist
+     * @throws IllegalArgumentException If node is not contained in workflow, nor is it the ID of this WFM
      */
     ConnectionContainerUI getIncomingConnectionFor(NodeID id, int portIdx);
 

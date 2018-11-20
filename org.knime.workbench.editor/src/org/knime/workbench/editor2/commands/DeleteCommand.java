@@ -219,15 +219,8 @@ public class DeleteCommand extends AbstractKNIMECommand {
             }
         }
 
-        final WorkflowManager wm = getHostWFM();
         for (ConnectionContainerUI cc : m_connections) {
-            final ConnectionID ccId = cc.getID();
-
-            // hostWFM.canRemoveConnection(ccId) will throw an exception instead of returning false due to
-            //      it eventually calling WorkflowManager.getIncomingConnectionFor(NodeID, int); we pre-emptively
-            //      do the check it would do for containment
-            if (((wm != null) && (!wm.containsNodeContainer(ccId.getDestinationNode())))
-                || (!hostWFM.canRemoveConnection(ccId))) {
+            if (!hostWFM.canRemoveConnection(cc)) {
                 return false;
             }
         }

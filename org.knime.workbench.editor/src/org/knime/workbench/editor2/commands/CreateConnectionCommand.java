@@ -258,7 +258,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
         // check whether an existing connection can be removed
         ConnectionContainerUI conn = wm.getIncomingConnectionFor(
                 m_targetNode.getNodeContainer().getID(), m_targetPortID);
-        boolean canRemove = conn == null || wm.canRemoveConnection(conn.getID());
+        boolean canRemove = conn == null || wm.canRemoveConnection(conn);
         // let the workflow manager check if the connection can be created
         // or removed
         boolean canAdd = wm.canAddConnection(
@@ -279,7 +279,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
         if (m_connection == null) {
             return false;
         }
-        return getHostWFMUI().canRemoveConnection(m_connection.getID());
+        return getHostWFMUI().canRemoveConnection(m_connection);
     }
 
     /**

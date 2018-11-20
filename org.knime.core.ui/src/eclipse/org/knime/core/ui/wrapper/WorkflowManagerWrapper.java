@@ -173,8 +173,8 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     }
 
     @Override
-    public boolean canRemoveConnection(final ConnectionID connectionID) {
-        return unwrap().canRemoveConnection(unwrap().getConnection(connectionID));
+    public boolean canRemoveConnection(final ConnectionContainerUI connection) {
+        return unwrap().canRemoveConnection(Wrapper.unwrapCC(connection));
     }
 
     @Override
