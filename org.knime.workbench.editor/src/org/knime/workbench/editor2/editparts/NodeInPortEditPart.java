@@ -103,6 +103,9 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
+        if (!getManager().containsNodeContainer(getID())) {
+            return EMPTY_LIST;
+        }
         ConnectionContainerUI container =
                 getManager().getIncomingConnectionFor(
                         getNodeContainer().getID(), getIndex());

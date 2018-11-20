@@ -193,6 +193,9 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         if (manager == null) {
             return false;
         }
+        if (!manager.containsNodeContainer(getID())) {
+            return false;
+        }
         if (m_isInPort) {
             return (manager.getIncomingConnectionFor(
                     getID(), getIndex()) != null);
