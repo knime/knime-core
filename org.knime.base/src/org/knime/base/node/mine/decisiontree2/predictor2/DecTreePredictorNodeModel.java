@@ -99,6 +99,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.pmml.PMMLModelType;
 import org.knime.core.util.Pair;
+import org.knime.core.util.UniqueNameGenerator;
 import org.w3c.dom.Node;
 
 /**
@@ -467,11 +468,12 @@ public final class DecTreePredictorNodeModel extends NodeModel {
 
         PredictorHelper predictorHelper = PredictorHelper.getInstance();
         String trainingColumnName = ((PMMLPortObjectSpec)inSpecs[INMODELPORT]).getTargetFields().iterator().next();
+        UniqueNameGenerator nameGen = new UniqueNameGenerator(inSpec);
         // add all distribution columns
         for (int i = 0; i < numCols - 1; i++) {
             assert predValues != null;
-            DataColumnSpecCreator colSpecCreator =
-                new DataColumnSpecCreator(predictorHelper.probabilityColumnName(trainingColumnName, predValues.get(i)
+            DataColumnSpecCreator colSpecCreator = nameGen.newCreator(
+                predictorHelper.probabilityColumnName(trainingColumnName, predValues.get(i)
                     .toString(), m_probabilitySuffix.getStringValue()), DoubleCell.TYPE);
             //            colSpecCreator.setProperties(propsRendering);
             colSpecCreator.setDomain(domain);
@@ -481,7 +483,8 @@ public final class DecTreePredictorNodeModel extends NodeModel {
         String predictionColumnName =
             predictorHelper.computePredictionColumnName(m_predictionColumn.getStringValue(),
                 m_overridePrediction.getBooleanValue(), trainingColumnName);
-        newCols[numCols - 1] = new DataColumnSpecCreator(predictionColumnName, StringCell.TYPE).createSpec();
+
+        newCols[numCols - 1] = nameGen.newColumn(predictionColumnName, StringCell.TYPE);
         DataTableSpec newColSpec =
                 new DataTableSpec(newCols);
         return new DataTableSpec(inSpec, newColSpec);
