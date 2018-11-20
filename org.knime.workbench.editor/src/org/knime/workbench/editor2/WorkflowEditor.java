@@ -2458,8 +2458,11 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
-        // update available actions
-        updateActions();
+        if (this == part) {
+            // update available actions
+            // but only if selection change happens within this workflow editor
+            updateActions();
+        }
     }
 
     /**
