@@ -58,6 +58,7 @@ import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -91,7 +92,12 @@ public class ReplaceHelper {
 
         if ((!aWarnableStateExists) && (connections != null)) {
             for (final ConnectionContainerUI connectionContainer : connections) {
-                if (wm.findNodeContainer(connectionContainer.getDest()).getNodeContainerState().isExecuted()) {
+                WorkflowManager wmToFindDestNode = wm;
+                if (doesConnectionLeaveWorkflow(connectionContainer)) {
+                    wmToFindDestNode = wm.getParent();
+                }
+                if (wmToFindDestNode.findNodeContainer(connectionContainer.getDest()).getNodeContainerState()
+                    .isExecuted()) {
                     aWarnableStateExists = true;
 
                     break;
@@ -117,6 +123,10 @@ public class ReplaceHelper {
         }
 
         return true;
+    }
+
+    private static final boolean doesConnectionLeaveWorkflow(final ConnectionContainerUI connection) {
+        return connection.getType() == ConnectionType.WFMOUT;
     }
 
     private static final Comparator<ConnectionContainerUI> DEST_PORT_SORTER = (o1, o2) -> {
