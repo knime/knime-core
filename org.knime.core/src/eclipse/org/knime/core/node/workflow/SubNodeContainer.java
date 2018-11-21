@@ -1356,6 +1356,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_virtualInNodeIDSuffix = m_wfm.addNode(new VirtualSubNodeInputNodeFactory(this, portTypes)).getIndex();
         NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
         newVNode.setUIInformation(oldVNode.getUIInformation());
+        newVNode.setDeletable(false);
         // copy settings from old to new node
         try {
             m_wfm.loadNodeSettings(newVNode.getID(), settings);
@@ -1411,6 +1412,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_virtualOutNodeIDSuffix = m_wfm.addNode(new VirtualSubNodeOutputNodeFactory(portTypes)).getIndex();
         NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
         newVNode.setUIInformation(oldVNode.getUIInformation());
+        newVNode.setDeletable(false);
         // copy settings from old to new node
         try {
             m_wfm.loadNodeSettings(newVNode.getID(), settings);
