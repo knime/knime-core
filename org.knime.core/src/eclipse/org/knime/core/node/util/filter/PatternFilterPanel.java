@@ -55,6 +55,7 @@ import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -368,7 +369,7 @@ public class PatternFilterPanel<T> extends JPanel {
     /**
      * Updates the preview lists and the error message.
      */
-    private void update() {
+    void update() {
         List<T> includes = new ArrayList<T>();
         List<T> excludes = new ArrayList<T>();
         boolean patternInvalid = false;
@@ -377,6 +378,7 @@ public class PatternFilterPanel<T> extends JPanel {
             Pattern regex = PatternFilterConfiguration.compilePattern(m_patternValue, m_typeValue,
                 m_caseSensitiveValue);
             // Fill lists
+            Set<T> hiddenNames = m_parentFilter.getHiddenNames();
             for (String name : m_names) {
                 T t = m_parentFilter.getTforName(name);
                 // Skip Ts that are filtered out
@@ -384,6 +386,9 @@ public class PatternFilterPanel<T> extends JPanel {
                     if (!m_filter.include(t)) {
                         continue;
                     }
+                }
+                if (hiddenNames.contains(t)) {
+                    continue;
                 }
                 if (regex.matcher(name).matches()) {
                     includes.add(t);

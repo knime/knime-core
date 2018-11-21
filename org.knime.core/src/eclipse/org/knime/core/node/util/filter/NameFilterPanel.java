@@ -241,15 +241,15 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * additional checkbox for the middle button panel
      * @since 3.4
      */
-    private JCheckBox m_additionalCheckbox;
+    private final JCheckBox m_additionalCheckbox;
 
-    private PatternFilterPanel<T> m_patternPanel;
+    private final PatternFilterPanel<T> m_patternPanel;
+
+    private final JRadioButton m_patternButton;
+
+    private final TreeMap<Integer, String> m_typePriorities = new TreeMap<Integer, String>();
 
     private JRadioButton m_nameButton;
-
-    private JRadioButton m_patternButton;
-
-    private TreeMap<Integer, String> m_typePriorities = new TreeMap<Integer, String>();
 
     private List<String> m_invalidIncludes = new ArrayList<String>(0);
 
@@ -1154,6 +1154,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         }
         if (changed) {
             fireFilteringChangedEvent();
+            m_patternPanel.update();
         }
     }
 
@@ -1176,6 +1177,17 @@ public abstract class NameFilterPanel<T> extends JPanel {
             }
         }
         m_hideNames.clear();
+        updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+        updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
+        m_patternPanel.update();
+    }
+
+    /** Get the set of hidden elements as previously set in {@link #hideNames(Object...)}.
+     * @return that collection (don't modify)
+     * @since 3.7
+     */
+    protected Set<T> getHiddenNames() {
+        return m_hideNames;
     }
 
     /**

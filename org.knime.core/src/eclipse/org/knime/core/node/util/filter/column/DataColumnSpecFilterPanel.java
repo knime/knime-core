@@ -45,6 +45,7 @@
 package org.knime.core.node.util.filter.column;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -207,6 +208,25 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
             m_typePanel.saveConfiguration(((DataColumnSpecFilterConfiguration)config).getTypeConfig());
         }
         super.saveConfiguration(config);
+    }
+
+    @Override
+    protected Set<DataColumnSpec> getHiddenNames() {
+        return super.getHiddenNames();
+    }
+
+    @Override
+    public void resetHiding() {
+        super.resetHiding();
+        m_typePanel.update();
+    }
+
+    /** {@inheritDoc}
+     * @since 3.7 */
+    @Override
+    public void hideNames(final DataColumnSpec... names) {
+        super.hideNames(names);
+        m_typePanel.update();
     }
 
     /**

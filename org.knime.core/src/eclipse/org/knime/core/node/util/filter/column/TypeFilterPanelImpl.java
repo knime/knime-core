@@ -394,7 +394,7 @@ final class TypeFilterPanelImpl extends JPanel {
     /**
      * Update the preview.
      */
-    private void update() {
+    void update() {
         List<DataColumnSpec> includes = new ArrayList<DataColumnSpec>();
         List<DataColumnSpec> excludes = new ArrayList<DataColumnSpec>();
         for (DataColumnSpec spec : m_tableSpec) {
@@ -403,6 +403,9 @@ final class TypeFilterPanelImpl extends JPanel {
                 if (!m_filter.include(spec)) {
                     continue;
                 }
+            }
+            if (m_parent.getHiddenNames().contains(spec)) {
+                continue;
             }
             final Class<? extends DataValue> preferredValueClass = spec.getType().getPreferredValueClass();
             // Check if type would be included with the current settings
