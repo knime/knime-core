@@ -177,7 +177,9 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
                         //      the workbench is not re-focusing and already focus'd view, which temporarily robs
                         //      the SWT focus of its subcomponent...)
                         Display.getDefault().asyncExec(() -> {
-                            m_text.setFocus();
+                            if (!m_text.isDisposed()) {
+                                m_text.setFocus();
+                            }
                         });
                     } catch (PartInitException e) {
                         LOGGER.warn("Exception encountered attempting to give focus to node repository view.", e);
