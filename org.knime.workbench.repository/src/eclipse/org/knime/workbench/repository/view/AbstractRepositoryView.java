@@ -58,6 +58,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.SWTGraphics;
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -78,6 +81,8 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Font;
@@ -85,12 +90,9 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IPartListener;
@@ -139,6 +141,9 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
 
     private static final int[] OBSCURING_LAYER_RGB = { 255, 255, 255 };
     private static final int OBSCURING_LAYER_PARTIAL_OPACITY = 188;
+
+    // It's unclear to me why SWT couldn't just copy AWT's FontMetrics for functionality like actual String bounds
+    private static float LABEL_WIDTH_FUDGE_MULTIPLIER = 1.15f;
 
     /**
      * The key to store/access the additional information about the streaming-ability of a node, as stored optionally
@@ -259,9 +264,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
 
 
         m_obscureLayer = new Composite(parent, SWT.NONE);
-        m_obscureLayerLabel = new Label(m_obscureLayer, SWT.WRAP);
-        m_obscureLayer.setLayout(new GridLayout(1, false));
-        m_obscureLayerLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+        m_obscureLayer.addPaintListener(new ObscuringLayerPainter());
         m_obscureLayer.addDisposeListener(new DisposeListener() {
             /**
              * {@inheritDoc}
@@ -272,12 +275,12 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                 m_totallyObscuredFill.dispose();
             }
         });
-
         m_obscureLayer.setVisible(false);
         m_currentObscuringState = new ObscuringState();
 
+        m_obscureLayerLabel = new Label("");
         final Display display = Display.getDefault();
-        final FontData[] fD = m_obscureLayerLabel.getFont().getFontData();
+        final FontData[] fD = m_obscureLayer.getFont().getFontData();
         fD[0].setHeight(14);
         m_obscureLayerLabel.setFont(new Font(display, fD[0]));
 
@@ -340,7 +343,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     }
 
     /**
-     * This shows or hides the obscuring layer over the tree view display. This must be call on the SWT thread.
+     * This shows or hides the obscuring layer over the tree view display. This must be called on the SWT thread.
      *
      * @param obscuringState an instance defining the how the obscuring layer should be rendered or not; this should be non-null
      */
@@ -351,8 +354,8 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
 
         final Point parentSize = m_obscureLayer.getParent().getSize();
 
-        if (m_currentObscuringState.equals(obscuringState)
-            && m_currentObscuringState.lastParentSizeEquals(parentSize)) {
+        if (m_currentObscuringState.equals(obscuringState) && m_currentObscuringState.lastParentSizeEquals(parentSize)
+            && (m_obscureLayer.isVisible() == obscuringState.shouldShowObscuringLayer())) {
             return;
         }
 
@@ -386,17 +389,21 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
         final String statusMessage = obscuringState.getStatusMessage();
         final String textToSet = (statusMessage == null) ? "" : statusMessage;
         m_obscureLayerLabel.setText(textToSet);
-        m_obscureLayerLabel.pack();
 
         treeControl.setLocation(0, 0);
         treeControl.setSize(parentSize);
 
         if (obscuringState.shouldShowObscuringLayer() && (textToSet.length() > 0)) {
-            final GC gc = new GC(m_obscureLayerLabel);
+            final GC gc = new GC(m_obscureLayer);
             final FontMetrics fm = gc.getFontMetrics();
-            final int labelWidth = textToSet.length() * fm.getAverageCharWidth();
+            final int labelWidth =
+                (int)((float)textToSet.length() * (float)fm.getAverageCharWidth() * LABEL_WIDTH_FUDGE_MULTIPLIER);
+            final int labelHeight = fm.getHeight();
+            final int x = (parentSize.x - labelWidth) / 2;
+            final int y = parentSize.y / 3;
+            final Rectangle labelBounds = new Rectangle(x, y, labelWidth, labelHeight);
 
-            m_obscureLayerLabel.setLocation((parentSize.x - labelWidth) / 2, parentSize.y / 3);
+            m_obscureLayerLabel.setBounds(labelBounds);
 
             gc.dispose();
         }
@@ -436,27 +443,32 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     }
 
     /**
-     * This methods recursively retrieves and enriches the repository objects with additional information,
-     * e.g. number of ports, whether the node is streamable and/or distributable, etc.
-     * Should be called only after the repository content was already loaded with {@link #readRepository(Composite, IProgressMonitor)}.
+     * This methods recursively retrieves and enriches the repository objects with additional information, e.g. number
+     * of ports, whether the node is streamable and/or distributable, etc. Should be called only after the repository
+     * content was already loaded with {@link #readRepository(Composite, IProgressMonitor)}.
+     *
+     * @param parent the parent repository object
+     * @param monitor the progress monitor
+     * @param updateTreeStructure whether we should update the tree structure as well
      */
-    protected void enrichWithAdditionalInfo(final IRepositoryObject parent, final IProgressMonitor monitor, final boolean updateTreeStructure) {
-        if(monitor.isCanceled()) {
+    protected void enrichWithAdditionalInfo(final IRepositoryObject parent, final IProgressMonitor monitor,
+        final boolean updateTreeStructure) {
+        if (monitor.isCanceled()) {
             return;
         }
         if (!m_additionalInfoAvailable) {
             if (parent instanceof IContainerObject) {
-                IRepositoryObject[] children = ((IContainerObject)parent).getChildren();
-                for (IRepositoryObject child : children) {
+                final IRepositoryObject[] children = ((IContainerObject)parent).getChildren();
+                for (final IRepositoryObject child : children) {
                     enrichWithAdditionalInfo(child, monitor, updateTreeStructure);
                 }
             } else if (parent instanceof NodeTemplate) {
-                NodeTemplate nodeTemplate = (NodeTemplate)parent;
+                final NodeTemplate nodeTemplate = (NodeTemplate)parent;
                 try {
-                    NodeFactory<? extends NodeModel> nf = nodeTemplate.createFactoryInstance();
-                    NodeModel nm = nf.createNodeModel();
+                    final NodeFactory<? extends NodeModel> nf = nodeTemplate.createFactoryInstance();
+                    final NodeModel nm = nf.createNodeModel();
                     //check whether the current node model overrides the #createStreamableOperator-method
-                    Method m = nm.getClass().getMethod("createStreamableOperator", PartitionInfo.class,
+                    final Method m = nm.getClass().getMethod("createStreamableOperator", PartitionInfo.class,
                         PortObjectSpec[].class);
                     if (m.getDeclaringClass() != NodeModel.class) {
                         //method has been overriden -> node is probably streamable or distributable
@@ -466,7 +478,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                     //possible TODO: parse xml description and get some more additional information (e.g. short description, ...)
                     //                    nodeTemplate.addAdditionalInfo(KEY_INFO_SHORT_DESCRIPTION,
                     //                        "this could be the short description, number of ports etc.");
-                } catch (Throwable t) {
+                } catch (final Throwable t) {
                     LOGGER.error("Unable to instantiate the node " + nodeTemplate.getFactory().getName(), t);
                     return;
                 }
@@ -783,6 +795,8 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
      */
     @Override
     public void setFocus() {
+        setObscuringDisplay(m_currentObscuringState);
+
         m_viewer.getControl().setFocus();
     }
 
@@ -1010,6 +1024,31 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
             return "Show obscuring layer: " + m_showObscuringLayer + "; opaque: " + m_obscureLayerIsTotallyOpaque + "; "
                 + ((m_statusMessage != null) ? ("Message :[" + m_statusMessage + "]; ") : "") + "parent size: "
                 + m_lastParentSize;
+        }
+    }
+
+
+    private class ObscuringLayerPainter implements PaintListener {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void paintControl(final PaintEvent pe) {
+            final Point location = m_obscureLayer.getLocation();
+
+            final GC gc = pe.gc;
+            gc.setAdvanced(true);
+            gc.setAntialias(SWT.ON);
+            gc.setTextAntialias(SWT.ON);
+
+            final SWTGraphics g = new SWTGraphics(gc);
+            try {
+                g.translate(0, -location.y);
+
+                m_obscureLayerLabel.paint(g);
+            } finally {
+                g.dispose();
+            }
         }
     }
 }
