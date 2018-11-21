@@ -52,8 +52,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.GlobalSettings.AggregationContext;
 import org.knime.base.data.aggregation.NamedAggregationOperator;
@@ -242,16 +242,17 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         return cr;
     }
 
+    /** Determines which columns are not retained in the output according to the user configuration. */
     private String[] getColsToRemove(final DataTableSpec inSpec) {
         final FilterResult filterResult = m_aggregationCols.applyTo(inSpec);
         if (m_removeAggregationCols.getBooleanValue() && m_removeRetainedCols.getBooleanValue()) {
-            return Stream.of(filterResult.getIncludes(), filterResult.getExcludes()).flatMap(Stream::of).toArray(String[]::new);
+            return ArrayUtils.addAll(filterResult.getIncludes(), filterResult.getExcludes());
         } else if (m_removeAggregationCols.getBooleanValue()) {
             return filterResult.getIncludes();
         } else if (m_removeRetainedCols.getBooleanValue()) {
             return filterResult.getExcludes();
         }
-        return new String[0];
+        return ArrayUtils.EMPTY_STRING_ARRAY;
     }
 
     private String getDefaultValueDelimiter() {

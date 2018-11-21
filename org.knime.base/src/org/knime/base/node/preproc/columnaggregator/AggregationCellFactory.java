@@ -45,6 +45,7 @@
 
 package org.knime.base.node.preproc.columnaggregator;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,6 +65,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.util.UniqueNameGenerator;
 
 /**
  * {@link CellFactory} implementation that aggregates a number of
@@ -94,6 +96,9 @@ public class AggregationCellFactory implements CellFactory {
             final List<NamedAggregationOperator> methods,
             final List<String> removedColNames) {
         m_origSpec = origSpec;
+        Set<String> reservedNames = new HashSet<>(Arrays.asList(origSpec.getColumnNames()));
+        reservedNames.removeAll(removedColNames);
+        UniqueNameGenerator nameGen = new UniqueNameGenerator(reservedNames);
         m_colIdxs = new int[colNames.size()];
         final Set<String> inclCols =
             new HashSet<String>(colNames);
@@ -122,11 +127,7 @@ public class AggregationCellFactory implements CellFactory {
                         m_dummyOrigSpec);
             m_operators[i] = method.getMethodTemplate().createOperator(
                     globalSettings, operatorSettings);
-            if (removedColNames.contains(method.getName())) {
-                m_colNames[i] = method.getName();
-            } else {
-                m_colNames[i] = DataTableSpec.getUniqueColumnName(origSpec, method.getName());
-            }
+            m_colNames[i] = nameGen.newName(method.getName());
             i++;
         }
     }
