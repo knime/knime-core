@@ -56,7 +56,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.Set;
 
@@ -85,7 +84,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
-import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
@@ -97,8 +95,6 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 import org.knime.core.node.util.DataValueColumnFilter;
 import org.knime.core.node.util.ViewUtils;
-import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
@@ -125,8 +121,6 @@ public final class OptionsPanel extends JPanel {
 
     private final ColumnSelectionComboxBox m_fingerprintColumnBox;
 
-    //    private final ColumnFilterPanel m_includeColumnsFilterPanel;
-
     private final DataColumnSpecFilterPanel m_includeColumnsFilterPanel2;
 
     private final JCheckBox m_enableHiliteChecker;
@@ -137,7 +131,7 @@ public final class OptionsPanel extends JPanel {
 
     // Tree Options
 
-    private final JComboBox m_splitCriterionsBox;
+    private final JComboBox<SplitCriterion> m_splitCriterionsBox;
 
     private final JCheckBox m_maxLevelChecker;
 
@@ -156,9 +150,6 @@ public final class OptionsPanel extends JPanel {
     private final JButton m_newSeedButton;
 
     private final JTextField m_seedTextField;
-
-    // other members
-    private DataTableSpec m_lastTableSpec;
 
     private final boolean m_isRegression;
 
@@ -180,8 +171,6 @@ public final class OptionsPanel extends JPanel {
         });
         m_fingerprintColumnBox = new ColumnSelectionComboxBox((Border)null,
             new DataValueColumnFilter(BitVectorValue.class, ByteVectorValue.class, DoubleVectorValue.class));
-        //        m_byteVectorColumnBox = new ColumnSelectionComboxBox((Border)null, ByteVectorValue.class);
-        //        m_includeColumnsFilterPanel = new ColumnFilterPanel(true, NominalValue.class, DoubleValue.class);
         m_includeColumnsFilterPanel2 = new DataColumnSpecFilterPanel();
 
         m_useFingerprintColumnRadio = new JRadioButton("Use fingerprint attribute");
@@ -194,14 +183,12 @@ public final class OptionsPanel extends JPanel {
             public void actionPerformed(final ActionEvent e) {
                 boolean isFP = bg.getSelection() == m_useFingerprintColumnRadio.getModel();
                 m_fingerprintColumnBox.setEnabled(isFP);
-                //                m_includeColumnsFilterPanel.setEnabled(!isFP);
                 m_includeColumnsFilterPanel2.setEnabled(!isFP);
             }
         };
         m_useFingerprintColumnRadio.addActionListener(actListener);
         m_useOrdinaryColumnsRadio.addActionListener(actListener);
         m_useFingerprintColumnRadio.doClick();
-        //        m_ignoreColumnsWithoutDomainChecker = new JCheckBox("Ignore columns without domain information");
         m_hiliteCountSpinner = new JSpinner(new SpinnerNumberModel(2000, 1, Integer.MAX_VALUE, 100));
         m_enableHiliteChecker = new JCheckBox("Enable Hilighting (#patterns to store)", true);
         m_enableHiliteChecker.addItemListener(new ItemListener() {
@@ -305,14 +292,6 @@ public final class OptionsPanel extends JPanel {
         gbc.weightx = 1.0;
         add(m_fingerprintColumnBox, gbc);
 
-        //        gbc.gridy += 1;
-        //        gbc.gridx = 0;
-        //        gbc.weightx = 0.0;
-        //        add(m_useByteVectorColumnRadio, gbc);
-        //        gbc.gridx += 1;
-        //        gbc.weightx = 1.0;
-        //        add(m_byteVectorColumnBox, gbc);
-
         gbc.gridy += 1;
         gbc.gridx = 0;
         gbc.weightx = 0.0;
@@ -324,7 +303,6 @@ public final class OptionsPanel extends JPanel {
         gbc.weighty = 1.0;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.BOTH;
-        //        add(m_includeColumnsFilterPanel, gbc);
         add(m_includeColumnsFilterPanel2, gbc);
 
         gbc.gridy += 1;
@@ -337,12 +315,6 @@ public final class OptionsPanel extends JPanel {
         gbc.gridy += 1;
         add(new JLabel("Misc Options"), gbc);
         gbc.gridwidth = 1;
-
-        //        gbc.gridy += 1;
-        //        gbc.gridx = 0;
-        //        gbc.weightx = 0.0;
-        //        gbc.weighty = 0.0;
-        //        add(m_ignoreColumnsWithoutDomainChecker, gbc);
 
         gbc.gridy += 1;
         add(m_enableHiliteChecker, gbc);
@@ -453,7 +425,6 @@ public final class OptionsPanel extends JPanel {
      */
     public void loadSettingsFrom(final DataTableSpec inSpec, final TreeEnsembleLearnerConfiguration cfg)
         throws NotConfigurableException {
-        m_lastTableSpec = null; // disabled automatic propagation of table specs
         int nrNominalCols = 0;
         int nrNumericCols = 0;
         for (DataColumnSpec col : inSpec) {
@@ -468,23 +439,16 @@ public final class OptionsPanel extends JPanel {
         boolean hasFPColumnInInput =
             inSpec.containsCompatibleType(BitVectorValue.class) || inSpec.containsCompatibleType(ByteVectorValue.class)
                 || inSpec.containsCompatibleType(DoubleVectorValue.class);
-        m_targetColumnBox.update(inSpec, cfg.getTargetColumn());
-        DataTableSpec attSpec = removeColumn(inSpec, m_targetColumnBox.getSelectedColumn());
+
         String fpColumn = cfg.getFingerprintColumn();
-        //        boolean includeAll = cfg.isIncludeAllColumns();
         m_useOrdinaryColumnsRadio.setEnabled(true);
         m_useFingerprintColumnRadio.setEnabled(true);
-        //        m_useByteVectorColumnRadio.setEnabled(true);
         m_useOrdinaryColumnsRadio.doClick(); // default, fix later
-        //        m_includeColumnsFilterPanel.setKeepAllSelected(includeAll);
         if (hasOrdinaryColumnsInInput) {
-            //            m_includeColumnsFilterPanel.update(attSpec, false, includeCols);
-            //            m_includeColumnsFilterPanel.setKeepAllSelected(includeAll);
-            m_includeColumnsFilterPanel2.loadConfiguration(cfg.getColumnFilterConfig(), attSpec);
+            m_includeColumnsFilterPanel2.loadConfiguration(cfg.getColumnFilterConfig(), inSpec);
         } else {
             m_useOrdinaryColumnsRadio.setEnabled(false);
             m_useFingerprintColumnRadio.doClick();
-            //            m_includeColumnsFilterPanel.update(NO_VALID_INPUT_SPEC, true);
             m_includeColumnsFilterPanel2.loadConfiguration(cfg.getColumnFilterConfig(), NO_VALID_INPUT_SPEC);
         }
         if (hasFPColumnInInput) {
@@ -502,8 +466,8 @@ public final class OptionsPanel extends JPanel {
             m_useOrdinaryColumnsRadio.doClick();
         }
 
-        //        boolean ignoreColsNoDomain = cfg.isIgnoreColumnsWithoutDomain();
-        //        m_ignoreColumnsWithoutDomainChecker.setSelected(ignoreColsNoDomain);
+        m_targetColumnBox.update(inSpec, cfg.getTargetColumn());
+
         int hiliteCount = cfg.getNrHilitePatterns();
         if (hiliteCount > 0) {
             m_enableHiliteChecker.setSelected(true);
@@ -551,9 +515,6 @@ public final class OptionsPanel extends JPanel {
             m_seedChecker.doClick();
         }
         m_seedTextField.setText(Long.toString(seed != null ? seed : System.currentTimeMillis()));
-
-        // Other
-        m_lastTableSpec = inSpec;
     }
 
     /**
@@ -627,79 +588,17 @@ public final class OptionsPanel extends JPanel {
 
     }
 
-    /**
-     * Get table spec excluding the currently selected target column.
-     *
-     * @return table spec with learn attributes
-     */
-    DataTableSpec getCurrentAttributeSpec() {
-        if (m_lastTableSpec == null) {
-            throw new IllegalStateException("Not to be called during load");
-        }
-        return removeColumn(m_lastTableSpec, m_targetColumnBox.getSelectedColumn());
-    }
-
-    private static DataTableSpec removeColumn(final DataTableSpec spec, final String col) {
-        ColumnRearranger r = new ColumnRearranger(spec);
-        r.remove(col);
-        return r.createSpec();
-    }
-
-    @SuppressWarnings("null")
-    private static String getMissingColSpecName(final DataTableSpec spec, final String[] includedNames,
-        final String[] excludedNames) {
-        ColumnRearranger r = new ColumnRearranger(spec);
-        // remove columns we know from the include list
-        for (String colName : includedNames) {
-            if (spec.containsName(colName)) {
-                r.remove(colName);
-            }
-        }
-        // remove columns we know from the exclude list
-        for (String colName : excludedNames) {
-            if (spec.containsName(colName)) {
-                r.remove(colName);
-            }
-        }
-        DataTableSpec tableSpecWithMissing = r.createSpec();
-        DataColumnSpec formerTargetSpec = null;
-        // find the remaining compatible column
-        // this must be the former target because all other compatible columns
-        // were either in the include or exclude list
-        for (DataColumnSpec colSpec : tableSpecWithMissing) {
-            DataType colType = colSpec.getType();
-            if (colType.isCompatible(NominalValue.class) || colType.isCompatible(DoubleValue.class)) {
-                formerTargetSpec = colSpec;
-                break;
-            }
-        }
-        assert formerTargetSpec != null : "The former target spec is no longer part of the table, please check.";
-        return formerTargetSpec.getName();
-    }
 
     /**
      * @param item
      */
     private void newTargetSelected(final DataColumnSpec item) {
-        String col = m_targetColumnBox.getSelectedColumn();
-        if (m_lastTableSpec == null || col == null) {
+        DataColumnSpec col = (DataColumnSpec)m_targetColumnBox.getSelectedItem();
+        if (col == null) {
             return;
         }
-        DataTableSpec filtered = getCurrentAttributeSpec();
-        //        Set<String> prevIn = m_includeColumnsFilterPanel.getIncludedColumnSet();
-        //        m_includeColumnsFilterPanel.update(filtered, false, prevIn);
-        Set<String> prevIn = m_includeColumnsFilterPanel2.getIncludedNamesAsSet();
-        String[] prevInArray = prevIn.toArray(new String[prevIn.size()]);
-        Set<String> prevEx = m_includeColumnsFilterPanel2.getExcludedNamesAsSet();
-        String[] prevExArray = prevEx.toArray(new String[prevEx.size()]);
-        DataColumnSpecFilterConfiguration conf = TreeEnsembleLearnerConfiguration.createColSpecFilterConfig();
-        m_includeColumnsFilterPanel2.saveConfiguration(conf);
-        EnforceOption prevEnforceOption =
-            conf.isEnforceInclusion() ? EnforceOption.EnforceInclusion : EnforceOption.EnforceExclusion;
-        String[] prevExWithFormerTarget = Arrays.copyOf(prevExArray, prevEx.size() + 1);
-        prevExWithFormerTarget[prevEx.size()] = getMissingColSpecName(filtered, prevInArray, prevExArray);
-        conf.loadDefaults(prevInArray, prevExWithFormerTarget, prevEnforceOption);
-        m_includeColumnsFilterPanel2.loadConfiguration(conf, filtered);
+        m_includeColumnsFilterPanel2.resetHiding();
+        m_includeColumnsFilterPanel2.hideNames(col);
 
         ChangeEvent e = new ChangeEvent(this);
         for (ChangeListener l : m_changeListenerList) {
