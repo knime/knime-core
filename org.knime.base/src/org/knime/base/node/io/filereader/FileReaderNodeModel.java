@@ -73,6 +73,7 @@ import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.DuplicateKeyException;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.tokenizer.SettingsStatus;
 
 /**
@@ -132,9 +133,7 @@ public class FileReaderNodeModel extends NodeModel {
                 // doesn't have the XML extension - consider it a data file
                 m_frSettings = new FileReaderNodeSettings();
                 try {
-                    m_frSettings
-                            .setDataFileLocationAndUpdateTableName(FileReaderNodeDialog
-                                    .textToURL(filename));
+                    m_frSettings.setDataFileLocationAndUpdateTableName(FileUtil.toURL(filename));
                 } catch (MalformedURLException mue) {
                     LOGGER.error("FileReader: " + mue.getMessage());
                     LOGGER.error("FileReader: Data file location not set.");

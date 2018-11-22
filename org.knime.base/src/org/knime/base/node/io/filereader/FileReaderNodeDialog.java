@@ -111,6 +111,7 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.util.FileReaderFileFilter;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.MutableBoolean;
 import org.knime.core.util.ThreadUtils;
 import org.knime.core.util.tokenizer.Comment;
@@ -1281,7 +1282,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         URL newURL;
 
         try {
-            newURL = textToURL(m_filePanel.getSelectedFile());
+            newURL = FileUtil.toURL(m_filePanel.getSelectedFile());
         } catch (Exception e) {
             m_frSettings.setDataFileLocationAndUpdateTableName(null);
             throw new InvalidSettingsException("Invalid URL entered.");
@@ -1798,8 +1799,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
     private void saveSettings(final FileReaderNodeSettings settings)
             throws InvalidSettingsException {
         try {
-            URL dataURL =
-                    textToURL(m_filePanel.getSelectedFile());
+            URL dataURL = FileUtil.toURL(m_filePanel.getSelectedFile());
             settings.setDataFileLocationAndUpdateTableName(dataURL);
         } catch (MalformedURLException mfue) {
 //            throw new InvalidSettingsException("Invalid (malformed) URL for "
@@ -1949,7 +1949,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
         String startingDir = "";
         try {
-            URL newURL = textToURL(startingPath);
+            URL newURL = FileUtil.toURL(startingPath);
             if (newURL.getProtocol().equals("file")) {
                 File tmpFile = new File(newURL.toURI().getPath());
                 startingDir = tmpFile.getAbsolutePath();
@@ -1990,7 +1990,9 @@ class FileReaderNodeDialog extends NodeDialogPane {
      * @param url the string to transform into an URL
      * @return URL if entered value could be properly tranformed, or
      * @throws MalformedURLException if the value passed was invalid
+     * @deprecated Use {@link FileUtil#toURL(String)} instead.
      */
+    @Deprecated
     static URL textToURL(final String url) throws MalformedURLException {
 
         if ((url == null) || (url.equals(""))) {
