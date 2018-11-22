@@ -350,7 +350,7 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
                         // ignore
                 }
             }
-            if (availableFlowVariables.containsValue(newName)){
+            if (availableFlowVariables.containsKey(newName)){
                 m_replaceVariableCombo.setSelectedItem(availableFlowVariables.get(newName));
             }
         } else {
