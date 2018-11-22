@@ -264,20 +264,15 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMESt
             outStream.writeFileStoreKeys(fileStoreKeys);
         }
 
-        // DataCell is datacell-serializable
-        if (ser == null) {
+        if (isBlob) {
+            BlobWrapperDataCell bc = (BlobWrapperDataCell)cell;
+            outStream.writeBlobAddress(bc.getAddress());
+        } else if (ser == null) {
             // serialize using Java serialization
             outStream.writeDataCellPerJavaSerialization(cell);
-
         } else {
-
             // serialize using KNIME serialization
-            if (isBlob) {
-                BlobWrapperDataCell bc = (BlobWrapperDataCell)cell;
-                outStream.writeBlobAddress(bc.getAddress());
-            } else {
-                outStream.writeDataCellPerKNIMESerializer(ser, cell);
-            }
+            outStream.writeDataCellPerKNIMESerializer(ser, cell);
         }
     }
 }
