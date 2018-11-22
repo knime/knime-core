@@ -53,8 +53,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -255,7 +253,7 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
     /**
      * @return
      */
-    private JPanel verticalFlow(final JComponent... components) {
+    private static JPanel verticalFlow(final JComponent... components) {
         JPanel nochPanel = new JPanel(new BorderLayout());
         nochPanel.setLayout(new GridLayout(components.length, 0, HORIZONTAL_VERTICAL_GAB, HORIZONTAL_VERTICAL_GAB));
         for (JComponent component : components) {
@@ -265,23 +263,18 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * @param replaceColumnRadio
+     * @param replaceColumnRadio the radio component to connect
+     * @param panel the panel component to connect
      */
-    private void connectRadioAndComponent(final JRadioButton replaceColumnRadio, final Component panel) {
-        replaceColumnRadio.addItemListener(new ItemListener() {
+    private static void connectRadioAndComponent(final JRadioButton replaceColumnRadio, final Component panel) {
+        replaceColumnRadio.addItemListener(e -> panel.setEnabled(replaceColumnRadio.isSelected()));
 
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                panel.setEnabled(replaceColumnRadio.isSelected());
-            }
-        });
-        panel.addPropertyChangeListener("enabled", new PropertyChangeListener() {
-
-            @Override
-            public void propertyChange(final PropertyChangeEvent evt) {
-                replaceColumnRadio.setSelected(panel.isEnabled());
-            }
-        });
+        if (panel instanceof ColumnSelectionPanel) {
+            ((ColumnSelectionPanel) panel).addUnderlyingPropertyChangeListener("enabled",
+                evt -> replaceColumnRadio.setSelected(panel.isEnabled()));
+        } else {
+            panel.addPropertyChangeListener("enabled", evt -> replaceColumnRadio.setSelected(panel.isEnabled()));
+        }
     }
 
     /** {@inheritDoc} */
@@ -298,7 +291,11 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
         m_value.setText(StringUtils.defaultString(config.getValue(), ""));
 
         m_fieldType.setSelectedItem(config.getCellFactory().getDataType());
+
         setText(m_columnName, config.getNewColumnName());
+        if (config.getNewColumnName() == null) {
+            m_columnPanel.setEnabled(true);
+        }
 
         m_dateTemplates.removeAllElements();
         Collection<String> createPredefinedFormats = createPredefinedFormats();

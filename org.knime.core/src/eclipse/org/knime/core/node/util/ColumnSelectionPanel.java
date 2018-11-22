@@ -47,6 +47,7 @@ package org.knime.core.node.util;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -581,6 +582,19 @@ public class ColumnSelectionPanel extends JPanel {
     @Override
     public boolean isEnabled() {
         return m_chooser.isEnabled();
+    }
+
+    /**
+     * Adds an item listener to the underlying combo box.
+     * @param propertyName The name of the property
+     * @param listener The listener to be registered
+     * @see JComboBox#addPropertyChangeListener(String, PropertyChangeListener)
+     * @since 3.7
+     */
+    public void addUnderlyingPropertyChangeListener(
+        final String propertyName,
+        final PropertyChangeListener listener) {
+        m_chooser.addPropertyChangeListener(propertyName, listener);
     }
 
     /**
