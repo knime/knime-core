@@ -1167,13 +1167,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
         // add all selected elements from the include to the exclude list
         HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(m_hideNames);
-        for (Object o : m_exclMdl) {
+        NameFilterTableModel mdlToUpdate = m_enforceExclusion.isSelected() ? m_inclMdl : m_exclMdl;
+        for (Object o : mdlToUpdate) {
             hash.add(o);
         }
-        m_exclMdl.clear();
+        mdlToUpdate.clear();
         for (T name : m_order) {
             if (hash.contains(name)) {
-                m_exclMdl.add(name);
+                mdlToUpdate.add(name);
             }
         }
         m_hideNames.clear();
