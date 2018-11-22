@@ -925,7 +925,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements C
                 AsyncUtil.waitForTerminationOrThrowException(future, "Opening metanode");
                 return true;
             } catch (CompletionException e) {
-                String message = "A problem occurred while opening metanode: " + e.getMessage();
+                Throwable cause = e.getCause();
+                String message = "A problem occurred while opening metanode: "
+                    + (cause != null ? cause.getMessage() : e.getMessage());
                 final Display display = Display.getDefault();
                 display.syncExec(() -> {
                     final Shell shell = SWTUtilities.getActiveShell(display);
