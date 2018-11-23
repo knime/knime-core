@@ -413,6 +413,11 @@ public class RuleSetToTable {
             return new LongCell(Long.parseLong(outcome));
         }
         if (outcomeType.isCompatible(DoubleValue.class)) {
+            // Change boolean string representation since an exception is thrown when string boolean value
+            // (f.e. "true") is converted to double value. https://knime-com.atlassian.net/browse/AP-10638
+            if (outcome.equalsIgnoreCase("true") || outcome.equalsIgnoreCase("false")) {
+                return new DoubleCell(Double.parseDouble(Boolean.valueOf(outcome) ? "1.0" : "0.0"));
+            }
             return new DoubleCell(Double.parseDouble(outcome));
         }
         return new StringCell(outcome);
