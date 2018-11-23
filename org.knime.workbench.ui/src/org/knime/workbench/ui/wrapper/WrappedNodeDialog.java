@@ -99,6 +99,7 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
+import org.knime.core.ui.wrapper.NodeOutPortWrapper;
 import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
@@ -568,7 +569,7 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                         if (wraps(port, NodeOutPort.class)) {
                             java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x,
                                 knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
-                            ((NodeOutPort)port).openPortView(port.getPortName(), bounds);
+                            ((NodeOutPortWrapper)port).openPortView(port.getPortName(), bounds);
                         }
                     }
                 });
