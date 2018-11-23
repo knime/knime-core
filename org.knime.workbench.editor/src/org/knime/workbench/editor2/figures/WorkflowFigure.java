@@ -54,6 +54,8 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.widgets.Display;
 
 /**
  * The root figure, containing potentially a progress tool tip helper and an image representing the job manager.
@@ -61,9 +63,17 @@ import org.eclipse.swt.graphics.Image;
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowFigure extends FreeformLayeredPane {
+    private static final int WATERMARK_TRANSPARENCY = 10;
+
     private ProgressToolTipHelper m_progressToolTipHelper;
 
     private Image m_jobManagerFigure;
+
+    private Image m_backgroundWatermark;
+
+    int m_backgroundWatermarkImageWidth;
+
+    int m_backgroundWatermarkImageHeight;
 
     private final TentStakeFigure m_tentStakeFigure;
 
@@ -71,11 +81,29 @@ public class WorkflowFigure extends FreeformLayeredPane {
      * New workflow root figure.
      */
     public WorkflowFigure() {
+        this(null);
+    }
+
+    /**
+     * New workflow root figure.
+     *
+     * @param backgroundWatermark an image set as a repeated background (wallpaper-like) or <code>null</code> if no
+     *            background
+     */
+    public WorkflowFigure(final Image backgroundWatermark) {
         // not opaque, so that we can directly select on the "background" layer
         setOpaque(false);
 
         m_tentStakeFigure = new TentStakeFigure();
         add(m_tentStakeFigure);
+
+        if (backgroundWatermark != null) {
+            ImageData imgData = backgroundWatermark.getImageData();
+            imgData.alpha = WATERMARK_TRANSPARENCY;
+            m_backgroundWatermark = new Image(Display.getDefault(), imgData);
+            m_backgroundWatermarkImageWidth = backgroundWatermark.getBounds().width;
+            m_backgroundWatermarkImageHeight = backgroundWatermark.getBounds().height;
+        }
     }
 
     /**
@@ -99,6 +127,25 @@ public class WorkflowFigure extends FreeformLayeredPane {
             final Rectangle bounds2 = getBounds();
             graphics.drawImage(m_jobManagerFigure, 0, 0, imgBox.width, imgBox.height, bounds2.width - imgBox.width, 5,
                 imgBox.width, imgBox.height + 5);
+        }
+        paintWatermarkWallpaper(graphics);
+    }
+
+    private void paintWatermarkWallpaper(final Graphics graphics) {
+        if (m_backgroundWatermark != null) {
+            Rectangle b = getBounds();
+            int fromX = b.x / m_backgroundWatermarkImageWidth;
+            int fromY = b.y / m_backgroundWatermarkImageHeight;
+            int toX = fromX + b.width / m_backgroundWatermarkImageWidth;
+            int toY = fromY + b.height / m_backgroundWatermarkImageHeight;
+            for (int y = fromY; y <= toY; y++) {
+                for (int x = fromX; x <= toX + y % 2; x++) {
+                    //don't put the images in a grid but displace them by half the image-width in every row
+                    int x_offset = y % 2 * -(m_backgroundWatermarkImageWidth / 2);
+                    graphics.drawImage(m_backgroundWatermark, x * m_backgroundWatermarkImageWidth + x_offset,
+                        y * m_backgroundWatermarkImageHeight);
+                }
+            }
         }
     }
 

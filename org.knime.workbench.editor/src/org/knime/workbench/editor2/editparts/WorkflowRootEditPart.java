@@ -69,6 +69,7 @@ import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.rulers.RulerProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -85,6 +86,9 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditorMode;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
@@ -339,13 +343,23 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     protected WorkflowFigure createFigure() {
-
-        WorkflowFigure backgroundFigure = new WorkflowFigure();
+        WorkflowFigure backgroundFigure;
+        if (isWorkflowOnServer()) {
+            Image watermark =
+                ImageRepository.getUnscaledImage(KNIMEEditorPlugin.PLUGIN_ID, "/icons/workflow/background_server.png");
+            backgroundFigure = new WorkflowFigure(watermark);
+        } else {
+            backgroundFigure = new WorkflowFigure();
+        }
 
         LayoutManager l = new WorkflowLayout();
         backgroundFigure.setLayoutManager(l);
 
         return backgroundFigure;
+    }
+
+    private boolean isWorkflowOnServer() {
+        return getWorkflowManager() instanceof AsyncWorkflowManagerUI;
     }
 
     /**
