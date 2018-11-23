@@ -46,21 +46,21 @@
  * History
  *   May 21, 2016 (Ferry Abt): created
  */
-package org.knime.product.branding;
+package org.knime.product.customizations;
 
 import java.util.Map;
 
 /**
- * The Interface for a Branding Service. Do not implement.
+ * The Interface for a Customization Service. Do not implement.
  *
  * @author Ferry Abt
  * @noimplement This interface is not intended for implementation
  */
-public interface IBrandingService {
+public interface ICustomizationService {
     /**
-     * Returns a map containing the branding information provided via com.knime.branding extension point.
+     * Returns a map containing the customization information provided by a KNIME Server.
      *
      * @return a (possibly empty) map but not <code>null</code>
      */
-    Map<String, String> getBrandingInfo();
+    Map<String, String> getCustomizationInfo();
 }

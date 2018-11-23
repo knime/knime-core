@@ -97,26 +97,26 @@ class TipsAndNewsInjector extends AbstractInjector {
     TipsAndNewsInjector(final File templateFile, final ReentrantLock introFileLock,
         final IEclipsePreferences preferences, final boolean isFreshWorkspace,
         final DocumentBuilderFactory parserFactory, final XPathFactory xpathFactory,
-        final TransformerFactory transformerFactory, final Map<String, String> brandingInfo) {
+        final TransformerFactory transformerFactory, final Map<String, String> customizationInfo) {
         super(templateFile, introFileLock, preferences, isFreshWorkspace, parserFactory, xpathFactory,
             transformerFactory);
         URL tipsTricksUrl = null;
         try {
-            //Retrieve branding information
-            if (brandingInfo.containsKey("CustomTips")) {
+            //Retrieve customization information
+            if (customizationInfo.containsKey("CustomTips")) {
                 //If there is a URL for custom tips replace the standard URL.
-                tipsTricksUrl = new URL(brandingInfo.get("CustomTips"));
+                tipsTricksUrl = new URL(customizationInfo.get("CustomTips"));
             } else {
                 //If there is no custom URL use the standard one
-                String branding = "";
-                if (brandingInfo.containsKey("PartnerName")) {
-                    //Add the partner name to the URL
-                    branding = "&brand=" + URLEncoder.encode(brandingInfo.get("PartnerName"), "UTF-8");
+                String customization = "";
+                if (customizationInfo.containsKey("companyName")) {
+                    //Add the customizers name to the URL
+                    customization = "&brand=" + URLEncoder.encode(customizationInfo.get("companyName"), "UTF-8");
                 }
                 tipsTricksUrl =
                     new URL(("https://www.knime.com/tips-and-tricks?knid=" + KNIMEConstants.getKNIMEInstanceID()
                         + "&version=" + KNIMEConstants.VERSION + "&os=" + Platform.getOS() + "&osname="
-                        + KNIMEConstants.getOSVariant() + "&arch=" + Platform.getOSArch() + branding).replace(" ",
+                        + KNIMEConstants.getOSVariant() + "&arch=" + Platform.getOSArch() + customization).replace(" ",
                             "%20"));
             }
         } catch (MalformedURLException | UnsupportedEncodingException ex) {

@@ -69,17 +69,17 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
-class BrandingInjector extends AbstractInjector {
+class CustomizationInjector extends AbstractInjector {
 
-    private final Map<String, String> m_brandingInfo;
+    private final Map<String, String> m_customizationInfo;
 
     private Node m_newIntroNode;
 
     private boolean m_newIntro;
 
     /**
-     * Brands the Welcome Page, i.e. adds a partner-logo and a link to the "Where to go from here"-section and replaces
-     * the text with a custom user text.
+     * Customizes the Welcome Page, i.e. adds a custom logo and a link to the "Where to go from here"-section and
+     * replaces the text with a custom user text.
      *
      * @param templateFile
      * @param introFileLock
@@ -88,28 +88,29 @@ class BrandingInjector extends AbstractInjector {
      * @param parserFactory
      * @param xpathFactory
      * @param transformerFactory
-     * @param brandingInfo
+     * @param customizationInfo
      */
-    BrandingInjector(final File templateFile, final ReentrantLock introFileLock, final IEclipsePreferences preferences,
-        final boolean isFreshWorkspace, final DocumentBuilderFactory parserFactory, final XPathFactory xpathFactory,
-        final TransformerFactory transformerFactory, final Map<String, String> brandingInfo) {
+    CustomizationInjector(final File templateFile, final ReentrantLock introFileLock,
+        final IEclipsePreferences preferences, final boolean isFreshWorkspace,
+        final DocumentBuilderFactory parserFactory, final XPathFactory xpathFactory,
+        final TransformerFactory transformerFactory, final Map<String, String> customizationInfo) {
         super(templateFile, introFileLock, preferences, isFreshWorkspace, parserFactory, xpathFactory,
             transformerFactory);
-        m_brandingInfo = brandingInfo;
+        m_customizationInfo = customizationInfo;
 
-        if (m_brandingInfo.containsKey("IntroText")) {
+        if (m_customizationInfo.containsKey("IntroText")) {
             //try to parse the provided replacement text
             try {
                 DocumentBuilder parser = parserFactory.newDocumentBuilder();
                 parser.setEntityResolver(EmptyDoctypeResolver.INSTANCE);
-                Document introText = parser.parse(m_brandingInfo.get("IntroText"));
+                Document introText = parser.parse(m_customizationInfo.get("IntroText"));
                 m_newIntroNode = ((Element)xpathFactory.newXPath().evaluate("//div[@id='intro-text']",
                     introText.getDocumentElement(), XPathConstants.NODE)).cloneNode(true);
                 m_newIntro = true;
             } catch (ParserConfigurationException | SAXException | IOException e) {
-                NodeLogger.getLogger(getClass()).error("Error while reading branded intro-text: " + e.getMessage(), e);
+                NodeLogger.getLogger(getClass()).error("Error while reading custom intro-text: " + e.getMessage(), e);
             } catch (XPathExpressionException e) {
-                NodeLogger.getLogger(getClass()).error("Branding intro-text mal-formatted: " + e.getMessage(), e);
+                NodeLogger.getLogger(getClass()).error("Custom intro-text malformed: " + e.getMessage(), e);
             }
         }
     }
@@ -119,11 +120,11 @@ class BrandingInjector extends AbstractInjector {
      */
     @Override
     protected void injectData(final Document doc, final XPath xpath) throws XPathExpressionException {
-        if (m_brandingInfo.containsKey("Logo")) {
+        if (m_customizationInfo.containsKey("Logo")) {
             injectLogo(doc, xpath);
         }
-        if (m_brandingInfo.containsKey("WhereToGoFromHereLink")
-            && m_brandingInfo.containsKey("WhereToGoFromHereText")) {
+        if (m_customizationInfo.containsKey("WhereToGoFromHereLink")
+            && m_customizationInfo.containsKey("WhereToGoFromHereText")) {
             injectLink(doc, xpath);
         }
         if (m_newIntro) {
@@ -132,7 +133,7 @@ class BrandingInjector extends AbstractInjector {
     }
 
     /**
-     * Adds the provided logo into the welcome page.
+     * Adds the provided logo to the welcome page.
      *
      * @param doc
      * @param xpath
@@ -144,7 +145,7 @@ class BrandingInjector extends AbstractInjector {
             (Element)xpath.evaluate("//div[@id='welcome-page-header']", doc.getDocumentElement(), XPathConstants.NODE);
         Element logo = doc.createElement("img");
         logo.setAttribute("style", "float:right;");
-        logo.setAttribute("src", m_brandingInfo.get("Logo"));
+        logo.setAttribute("src", m_customizationInfo.get("Logo"));
         logo.setAttribute("width", "200");
         logo.setAttribute("height", "52");
         welcomePageHeader.appendChild(logo);
@@ -165,13 +166,13 @@ class BrandingInjector extends AbstractInjector {
         linkWrapper.setAttribute("class", "floating-link");
 
         Element newLink = doc.createElement("a");
-        newLink.setAttribute("href", m_brandingInfo.get("WhereToGoFromHereLink"));
+        newLink.setAttribute("href", m_customizationInfo.get("WhereToGoFromHereLink"));
         newLink.setAttribute("class", "useful-links");
 
         Element iconSpanNode = doc.createElement("span");
         iconSpanNode.setAttribute("class", "icon-angle-circled-right");
 
-        Text linkText = doc.createTextNode(m_brandingInfo.get("WhereToGoFromHereText"));
+        Text linkText = doc.createTextNode(m_customizationInfo.get("WhereToGoFromHereText"));
 
         Element textSpanNode = doc.createElement("span");
         textSpanNode.appendChild(linkText);

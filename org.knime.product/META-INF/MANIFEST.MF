@@ -9,7 +9,7 @@ Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Bundle-Localization: plugin
 Export-Package: org.knime.product,
-  org.knime.product.branding,
+  org.knime.product.customizations,
   org.knime.product.headless,
   org.knime.product.profiles,
   org.knime.product.rcp

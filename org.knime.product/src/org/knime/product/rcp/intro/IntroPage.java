@@ -103,7 +103,7 @@ import org.eclipse.ui.internal.browser.SystemBrowserInstance;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
-import org.knime.product.branding.IBrandingService;
+import org.knime.product.customizations.ICustomizationService;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.explorer.ExplorerMountTable;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
@@ -187,13 +187,13 @@ public class IntroPage implements LocationListener {
             KNIMEConstants.GLOBAL_THREAD_POOL.submit(new NewReleaseMessageInjector(m_introFile, introFileLock, m_prefs,
                 m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory));
 
-            Map<String, String> brandingInfo = getBrandingInfo();
+            Map<String, String> customizationInfo = getBrandingInfo();
             KNIMEConstants.GLOBAL_THREAD_POOL.submit(new TipsAndNewsInjector(m_introFile, introFileLock, m_prefs,
-                m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory, brandingInfo));
+                m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory, customizationInfo));
 
-            if (!brandingInfo.isEmpty()) {
-                KNIMEConstants.GLOBAL_THREAD_POOL.submit(new BrandingInjector(m_introFile, introFileLock, m_prefs,
-                    m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory, brandingInfo));
+            if (!customizationInfo.isEmpty()) {
+                KNIMEConstants.GLOBAL_THREAD_POOL.submit(new CustomizationInjector(m_introFile, introFileLock, m_prefs,
+                    m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory, customizationInfo));
             }
         } catch (IOException | ParserConfigurationException | SAXException | XPathExpressionException
                 | TransformerFactoryConfigurationError | TransformerException ex) {
@@ -205,19 +205,19 @@ public class IntroPage implements LocationListener {
     }
 
     private Map<String, String> getBrandingInfo() {
-        //retrieve the branding information from the service
+        //retrieve the customization information from the service
         BundleContext context = FrameworkUtil.getBundle(IntroPage.class).getBundleContext();
-        ServiceReference<?> serviceReference = context.getServiceReference(IBrandingService.class.getName());
+        ServiceReference<?> serviceReference = context.getServiceReference(ICustomizationService.class.getName());
         if (serviceReference == null) {
             return Collections.emptyMap();
         }
 
         try {
-            IBrandingService service = (IBrandingService)context.getService(serviceReference);
+            ICustomizationService service = (ICustomizationService)context.getService(serviceReference);
             if (service == null) {
                 return Collections.emptyMap();
-            } else if ("com.knime.branding.BrandingService".equals(service.getClass().getName())) {
-                return service.getBrandingInfo();
+            } else if ("com.knime.customizations.CustomizationService".equals(service.getClass().getName())) {
+                return service.getCustomizationInfo();
             } else {
                 return Collections.emptyMap();
             }
