@@ -55,7 +55,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.Set;
 
@@ -71,8 +70,6 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.ColumnSamplingMode;
@@ -108,8 +105,6 @@ public final class OptionsPanel extends JPanel {
     static final DataTableSpec NO_VALID_INPUT_SPEC =
         new DataTableSpec(new DataColumnSpecCreator("<no valid input>", StringCell.TYPE).createSpec(),
             new DataColumnSpecCreator("<no valid fingerprint input>", DenseBitVectorCell.TYPE).createSpec());
-
-    private final ArrayList<ChangeListener> m_changeListenerList;
 
     // Attribute selection
 
@@ -254,7 +249,6 @@ public final class OptionsPanel extends JPanel {
         });
         m_seedChecker.doClick();
 
-        m_changeListenerList = new ArrayList<ChangeListener>();
         m_isRegression = isRegression;
         initPanel();
     }
@@ -408,14 +402,6 @@ public final class OptionsPanel extends JPanel {
 
     }
 
-    void addChangeListener(final ChangeListener listener) {
-        m_changeListenerList.add(listener);
-    }
-
-    void removeChangeListener(final ChangeListener listener) {
-        m_changeListenerList.remove(listener);
-    }
-
     /**
      * Load settings from config <b>cfg</b> and table spec <b>inSpec</b>
      *
@@ -528,11 +514,10 @@ public final class OptionsPanel extends JPanel {
         if (m_useFingerprintColumnRadio.isSelected()) {
             String fpColumn = m_fingerprintColumnBox.getSelectedColumn();
             cfg.setFingerprintColumn(fpColumn);
-            //            cfg.setIncludeAllColumns(false);
         } else {
             assert m_useOrdinaryColumnsRadio.isSelected();
             Set<String> incls = m_includeColumnsFilterPanel2.getIncludedNamesAsSet();
-            if (incls.size() == 0) {
+            if (incls.isEmpty()) {
                 throw new InvalidSettingsException("No learn columns selected");
             }
         }
@@ -599,11 +584,6 @@ public final class OptionsPanel extends JPanel {
         }
         m_includeColumnsFilterPanel2.resetHiding();
         m_includeColumnsFilterPanel2.hideNames(col);
-
-        ChangeEvent e = new ChangeEvent(this);
-        for (ChangeListener l : m_changeListenerList) {
-            l.stateChanged(e);
-        }
     }
 
     /**
