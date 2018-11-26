@@ -1153,6 +1153,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
             }
         }
         if (changed) {
+            updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+            updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
             fireFilteringChangedEvent();
             m_patternPanel.update();
         }
