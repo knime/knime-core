@@ -196,14 +196,12 @@ public class ColumnCalculator implements CellFactory {
                 if (m_settings.isInsertMissingAsNull()) {
                     // leave value as null
                 } else {
-                    String message = "Row \"" + row.getKey() + "\" "
-                        + "contains missing value in column \""
-                        + columnSpec.getName() + "\" - returning missing";
                     if (!m_hasReportedMissing) {
                         m_hasReportedMissing = true;
+                        String message = "Row \"" + row.getKey() + "\" "
+                                + "contains missing value in column \""
+                                + columnSpec.getName() + "\" - returning missing";
                         LOGGER.warn(message + " (omitting further warnings)");
-                    } else {
-                        LOGGER.debug(message);
                     }
                     return DataType.getMissingCell();
                 }
