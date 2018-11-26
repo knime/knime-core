@@ -333,6 +333,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @return the calculated probability or null if the cell was a missing one and missing values should be skipped
      */
     Double getProbability(final String classValue, final DataCell attributeValue, final double probabilityThreshold) {
+        // TODO: can be removed
         if (!isCompatible(attributeValue.getType())) {
             throw new IllegalArgumentException(String.format(
                 "Value in column '%s' (%s) is not " + "compatible with attribute model %s (Column type %s)",

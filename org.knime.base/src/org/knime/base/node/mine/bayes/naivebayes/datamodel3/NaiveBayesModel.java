@@ -1059,6 +1059,7 @@ public class NaiveBayesModel {
                         // TODO: we want that the method of the model returns the log probability
                         combinedProbability += probability;
                     } else {
+                        // TODO: is this correct
                         //set the probability to the given corrector if the probability is zero and the pmml threshold
                         //method should be used
                         combinedProbability += probabilityThreshold;

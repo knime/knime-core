@@ -75,16 +75,14 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
 
-
-
 /**
- * This {@link AttributeModel} implementation calculates the probability for
- * all nominal attributes.
+ * This {@link AttributeModel} implementation calculates the probability for all nominal attributes.
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 class NominalAttributeModel extends AttributeModel {
 
-//    private static final int HTML_VIEW_SIZE = 1;
+    //    private static final int HTML_VIEW_SIZE = 1;
 
     /**
      * The unique type of this model used for saving/loading.
@@ -92,10 +90,12 @@ class NominalAttributeModel extends AttributeModel {
     static final String MODEL_TYPE = "NominalModel";
 
     private static final String MAX_NO_OF_ATTRS = "maxNoOfAttrs";
-    private static final String CLASS_VALUE_COUNTER = "noOfClasses";
-    private static final String ATTRIBUTE_VALUES = "attributeValues";
-    private static final String CLASS_VALUE_SECTION = "classValueData_";
 
+    private static final String CLASS_VALUE_COUNTER = "noOfClasses";
+
+    private static final String ATTRIBUTE_VALUES = "attributeValues";
+
+    private static final String CLASS_VALUE_SECTION = "classValueData_";
 
     private final class NominalClassValue {
 
@@ -117,8 +117,9 @@ class NominalAttributeModel extends AttributeModel {
 
         private final MutableInteger m_missingValueRecs;
 
-
-        /**Constructor for class NominalRowValue.NominalClassValue.
+        /**
+         * Constructor for class NominalRowValue.NominalClassValue.
+         *
          * @param classValue the class value
          */
         private NominalClassValue(final String classValue, final int missingValueRecs) {
@@ -127,12 +128,13 @@ class NominalAttributeModel extends AttributeModel {
             m_noOfRows = missingValueRecs;
         }
 
-        /**Constructor for class NominalClassValue.
+        /**
+         * Constructor for class NominalClassValue.
+         *
          * @param config the <code>Config</code> object to read from
          * @throws InvalidSettingsException if the settings are invalid
          */
-        private NominalClassValue(final Config config)
-            throws InvalidSettingsException {
+        private NominalClassValue(final Config config) throws InvalidSettingsException {
             m_classValue = config.getString(CLASS_VALUE);
             m_noOfRows = config.getInt(NO_OF_ROWS);
             m_missingValueRecs = new MutableInteger(config.getInt(MISSING_VALUE_COUNTER));
@@ -172,8 +174,7 @@ class NominalAttributeModel extends AttributeModel {
             if (attrVal.isMissing()) {
                 m_missingValueRecs.inc();
             } else {
-                MutableInteger attrRowCounter =
-                    m_recsByAttrValue.get(attrVal.toString());
+                MutableInteger attrRowCounter = m_recsByAttrValue.get(attrVal.toString());
                 if (attrRowCounter == null) {
                     attrRowCounter = new MutableInteger(0);
                     m_recsByAttrValue.put(attrVal.toString(), attrRowCounter);
@@ -212,8 +213,7 @@ class NominalAttributeModel extends AttributeModel {
         }
 
         /**
-         * @param attributeValue the attribute value we wan't the number of
-         * rows for
+         * @param attributeValue the attribute value we wan't the number of rows for
          * @return the number of rows with this class and the given attribute
          */
         private int getNoOfRows4AttributeValue(final DataCell attributeValue) {
@@ -224,8 +224,7 @@ class NominalAttributeModel extends AttributeModel {
         }
 
         /**
-         * @param attributeValue the attribute value we wan't the number of
-         * rows for
+         * @param attributeValue the attribute value we wan't the number of rows for
          * @return the number of rows with this class and the given attribute
          */
         private int getNoOfRows4AttributeValue(final String attributeValue) {
@@ -239,15 +238,16 @@ class NominalAttributeModel extends AttributeModel {
         /**
          * @param attrVal the attribute value to calculate the probability for
          * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
-         * categorical fields or when the calculated probability of the distribution falls below the threshold for
-         * continuous fields.
+         *            categorical fields or when the calculated probability of the distribution falls below the
+         *            threshold for continuous fields.
          * @return the probability for the given attribute value
          */
         private double getProbability(final DataCell attrVal, final double probabilityThreshold) {
+            // TODO: can be removed
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
-                throw new IllegalStateException("Model for attribute " + getAttributeName()
-                    + " contains no rows for class " + m_classValue);
+                throw new IllegalStateException(
+                    "Model for attribute " + getAttributeName() + " contains no rows for class " + m_classValue);
             }
             final double noOfRows = getNoOfRows4AttributeValue(attrVal);
             if (noOfRows == 0) {
@@ -255,6 +255,30 @@ class NominalAttributeModel extends AttributeModel {
             }
             return noOfRows / noOfRows4Class;
         }
+
+        /**
+         * @param attributeValue
+         * @param probabilityThreshold
+         * @return
+         */
+        private double getLogProbability(final DataCell attributeValue, final double probabilityThreshold) {
+            // TODO: long
+            final int noOfRows4Class = getNoOfRows();
+            if (noOfRows4Class == 0) {
+                throw new IllegalStateException(
+                    "Model for attribute " + getAttributeName() + " contains no rows for class " + m_classValue);
+            }
+            // TODO: long
+            final double noOfRows = getNoOfRows4AttributeValue(attributeValue);
+            final double prob;
+            if (noOfRows > 0) {
+                prob = noOfRows / noOfRows4Class;
+            } else {
+                prob = probabilityThreshold;
+            }
+            return Math.log(prob);
+        }
+
         /**
          * @return the missingValueRecs
          */
@@ -279,6 +303,7 @@ class NominalAttributeModel extends AttributeModel {
             }
             return buf.toString();
         }
+
     }
 
     /**
@@ -290,55 +315,55 @@ class NominalAttributeModel extends AttributeModel {
 
     private final Set<String> m_attributeVals = new LinkedHashSet<>();
 
-    /**Constructor for class NominalRowValue.
+    /**
+     * Constructor for class NominalRowValue.
+     *
      * @param attributeName the name of the attribute
-     * @param skipMissingVals set to <code>true</code> if the missing values
-     * should be skipped during learning and prediction
+     * @param skipMissingVals set to <code>true</code> if the missing values should be skipped during learning and
+     *            prediction
      * @param maxNoOfNominalVals the maximum number of nominal values
      */
-    NominalAttributeModel(final String attributeName,
-            final boolean skipMissingVals, final int maxNoOfNominalVals) {
+    NominalAttributeModel(final String attributeName, final boolean skipMissingVals, final int maxNoOfNominalVals) {
         super(attributeName, 0, skipMissingVals);
         m_maxNoOfAttrVals = maxNoOfNominalVals;
     }
 
-    /**Constructor for class NominalAttributeModel.
+    /**
+     * Constructor for class NominalAttributeModel.
+     *
      * @param attributeName the name of this attribute
      * @param noOfMissingVals the number of missing values
-     * @param skipMissingVals set to <code>true</code> if the missing values
-     * should be skipped during learning and prediction
+     * @param skipMissingVals set to <code>true</code> if the missing values should be skipped during learning and
+     *            prediction
      * @param config the <code>Config</code> object to read from
      * @throws InvalidSettingsException if the settings are invalid
      */
-    NominalAttributeModel(final String attributeName,
-            final int noOfMissingVals, final boolean skipMissingVals,
-            final Config config)
-        throws InvalidSettingsException {
+    NominalAttributeModel(final String attributeName, final int noOfMissingVals, final boolean skipMissingVals,
+        final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
         m_maxNoOfAttrVals = config.getInt(MAX_NO_OF_ATTRS);
         final int noOfClassVals = config.getInt(CLASS_VALUE_COUNTER);
         final String[] attrVals = config.getStringArray(ATTRIBUTE_VALUES);
         m_attributeVals.addAll(Arrays.asList(attrVals));
         for (int i = 0; i < noOfClassVals; i++) {
-            final Config classConfig =
-                config.getConfig(CLASS_VALUE_SECTION + i);
-            final NominalClassValue classVal =
-                new NominalClassValue(classConfig);
+            final Config classConfig = config.getConfig(CLASS_VALUE_SECTION + i);
+            final NominalClassValue classVal = new NominalClassValue(classConfig);
             m_classValues.put(classVal.getClassValue(), classVal);
         }
     }
 
-
-    /**Constructor for class NominalAttributeModel.
+    /**
+     * Constructor for class NominalAttributeModel.
+     *
      * @param attributeName the name of this attribute
      * @param noOfMissingVals the number of missing values
-     * @param ignoreMissingVals set to <code>true</code> if the missing values
-     * should be ignored during learning and prediction
+     * @param ignoreMissingVals set to <code>true</code> if the missing values should be ignored during learning and
+     *            prediction
      * @param bayesInput the <code>BayesInput</code> object to read from
      * @throws InvalidSettingsException if the settings are invalid
      */
-    NominalAttributeModel(final String attributeName, final int noOfMissingVals,
-        final boolean ignoreMissingVals, final BayesInput bayesInput) throws InvalidSettingsException {
+    NominalAttributeModel(final String attributeName, final int noOfMissingVals, final boolean ignoreMissingVals,
+        final BayesInput bayesInput) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, ignoreMissingVals);
         m_maxNoOfAttrVals = Integer.MAX_VALUE;
         final List<PairCounts> pairCounts = bayesInput.getPairCountsList();
@@ -351,11 +376,11 @@ class NominalAttributeModel extends AttributeModel {
                 NominalClassValue classVal = m_classValues.get(classValue);
                 if (classVal == null) {
                     final Map<String, String> extensionMap =
-                            PMMLNaiveBayesModelTranslator.convertToMap(targetCount.getExtensionList());
+                        PMMLNaiveBayesModelTranslator.convertToMap(targetCount.getExtensionList());
                     int missingValueRecs = 0;
                     if (extensionMap.containsKey(NominalClassValue.MISSING_VALUE_COUNTER)) {
-                        missingValueRecs = PMMLNaiveBayesModelTranslator.getIntExtension(
-                            extensionMap, NominalClassValue.MISSING_VALUE_COUNTER);
+                        missingValueRecs = PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap,
+                            NominalClassValue.MISSING_VALUE_COUNTER);
                     }
                     classVal = new NominalClassValue(classValue, missingValueRecs);
                     m_classValues.put(classValue, classVal);
@@ -401,7 +426,7 @@ class NominalAttributeModel extends AttributeModel {
     void saveModelInternal(final Config config) {
         config.addInt(MAX_NO_OF_ATTRS, getMaxNoOfAttrVals());
         config.addInt(CLASS_VALUE_COUNTER, m_classValues.size());
-        final String[] attrVals = m_attributeVals.toArray(new String[] {});
+        final String[] attrVals = m_attributeVals.toArray(new String[]{});
         config.addStringArray(ATTRIBUTE_VALUES, attrVals);
         int i = 0;
         for (final NominalClassValue classVal : m_classValues.values()) {
@@ -433,8 +458,7 @@ class NominalAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    void addValueInternal(final String classValue,
-            final DataCell attrValue) throws TooManyValuesException {
+    void addValueInternal(final String classValue, final DataCell attrValue) throws TooManyValuesException {
         NominalClassValue classObject = m_classValues.get(classValue);
         if (classObject == null) {
             classObject = new NominalClassValue(classValue, 0);
@@ -444,6 +468,7 @@ class NominalAttributeModel extends AttributeModel {
             final String attrValString = attrValue.toString();
             if (!m_attributeVals.contains(attrValString)) {
                 //check the different number of attribute values
+                // TODO: why do we have this line of code?
                 if (m_attributeVals.size() >= getMaxNoOfAttrVals()) {
                     throw new TooManyValuesException("Attribute value " + attrValString + " doesn't fit into model");
                 }
@@ -460,15 +485,16 @@ class NominalAttributeModel extends AttributeModel {
     void validate() throws InvalidSettingsException {
         if (m_attributeVals.size() == 0) {
             setInvalidCause(MODEL_CONTAINS_NO_RECORDS);
-            throw new InvalidSettingsException("Model for attribute "
-                    + getAttributeName() + " contains no attribute values");
+            throw new InvalidSettingsException(
+                "Model for attribute " + getAttributeName() + " contains no attribute values");
         }
         if (m_classValues.size() == 0) {
             setInvalidCause(MODEL_CONTAINS_NO_CLASS_VALUES);
-            throw new InvalidSettingsException("Model for attribute "
-                    + getAttributeName() + " contains no class values");
+            throw new InvalidSettingsException(
+                "Model for attribute " + getAttributeName() + " contains no class values");
         }
     }
+
     /**
      * {@inheritDoc}
      */
@@ -495,6 +521,7 @@ class NominalAttributeModel extends AttributeModel {
     @Override
     double getProbabilityInternal(final String classValue, final DataCell attributeValue,
         final double probabilityThreshold) {
+        // TODO: can be removed
         final NominalClassValue classVal = m_classValues.get(classValue);
         if (classVal == null) {
             return 0;
@@ -524,45 +551,43 @@ class NominalAttributeModel extends AttributeModel {
     @Override
     void createDataRows(final ExecutionMonitor exec, final BufferedDataContainer dc, final boolean ignoreMissing,
         final AtomicInteger rowId) throws CanceledExecutionException {
-            final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
-            if (sortedClassVal == null) {
-                return;
-            }
-            final List<String> sortedAttrValues = AttributeModel.sortCollection(m_attributeVals);
-            final StringCell attributeNameCell = new StringCell(getAttributeName());
-            for (final String attrVal : sortedAttrValues) {
-                final StringCell attributeValueCell = new StringCell(attrVal);
-                for (final String classVal : sortedClassVal) {
-                    final StringCell classCell = new StringCell(classVal);
-                    final NominalClassValue classValue = m_classValues.get(classVal);
-                    final List<DataCell> cells = new LinkedList<>();
-                    cells.add(attributeNameCell);
-                    cells.add(attributeValueCell);
-                    cells.add(classCell);
-                    cells.add(new IntCell(classValue.getNoOfRows4AttributeValue(attrVal)));
-                    if (!ignoreMissing) {
-                        cells.add(new IntCell(classValue.getNoOfMissingValueRecs()));
-                    }
-                    cells.add(DataType.getMissingCell());
-                    cells.add(DataType.getMissingCell());
-                    dc.addRowToTable(
-                        new DefaultRow(RowKey.createRowKey(rowId.getAndIncrement()), cells.toArray(new DataCell[0])));
+        final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
+        if (sortedClassVal == null) {
+            return;
+        }
+        final List<String> sortedAttrValues = AttributeModel.sortCollection(m_attributeVals);
+        final StringCell attributeNameCell = new StringCell(getAttributeName());
+        for (final String attrVal : sortedAttrValues) {
+            final StringCell attributeValueCell = new StringCell(attrVal);
+            for (final String classVal : sortedClassVal) {
+                final StringCell classCell = new StringCell(classVal);
+                final NominalClassValue classValue = m_classValues.get(classVal);
+                final List<DataCell> cells = new LinkedList<>();
+                cells.add(attributeNameCell);
+                cells.add(attributeValueCell);
+                cells.add(classCell);
+                cells.add(new IntCell(classValue.getNoOfRows4AttributeValue(attrVal)));
+                if (!ignoreMissing) {
+                    cells.add(new IntCell(classValue.getNoOfMissingValueRecs()));
                 }
+                cells.add(DataType.getMissingCell());
+                cells.add(DataType.getMissingCell());
+                dc.addRowToTable(
+                    new DefaultRow(RowKey.createRowKey(rowId.getAndIncrement()), cells.toArray(new DataCell[0])));
             }
         }
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     String getHTMLView(final int totalNoOfRecs) {
-        final List<String> sortedClassVal =
-            AttributeModel.sortCollection(m_classValues.keySet());
+        final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
         if (sortedClassVal == null) {
             return "";
         }
-        final List<String> sortedAttrValues =
-            AttributeModel.sortCollection(m_attributeVals);
+        final List<String> sortedAttrValues = AttributeModel.sortCollection(m_attributeVals);
         final String classHeading = "Class/" + getAttributeName();
         final String missingHeading = getMissingValueHeader(m_attributeVals);
         final int arraySize;
@@ -573,8 +598,7 @@ class NominalAttributeModel extends AttributeModel {
         }
         final StringBuilder buf = new StringBuilder();
         buf.append("<table width='100%'>");
-        buf.append(createTableHeader(classHeading , sortedAttrValues,
-                missingHeading));
+        buf.append(createTableHeader(classHeading, sortedAttrValues, missingHeading));
         final int[] rowsPerValCounts = new int[arraySize];
         Arrays.fill(rowsPerValCounts, 0);
         //create the value section
@@ -606,8 +630,7 @@ class NominalAttributeModel extends AttributeModel {
         return buf.toString();
     }
 
-    private static String createSummarySection(final int totalRowCount,
-            final int[] rowsPerValCounts) {
+    private static String createSummarySection(final int totalRowCount, final int[] rowsPerValCounts) {
         final NumberFormat nf = NumberFormat.getPercentInstance();
         final StringBuilder buf = new StringBuilder();
         buf.append("<tr>");
@@ -638,5 +661,30 @@ class NominalAttributeModel extends AttributeModel {
             buf.append("\n");
         }
         return buf.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
+        final double probabilityThreshold) {
+        final NominalClassValue classVal = m_classValues.get(classValue);
+        if (classVal == null) {
+            return 0;
+        }
+        return classVal.getLogProbability(attributeValue, probabilityThreshold);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    boolean hasRecs4ClassValue(final String classValue) {
+        final NominalClassValue classVal = m_classValues.get(classValue);
+        if (classVal == null || classVal.getNoOfRows() == 0) {
+            return false;
+        }
+        return true;
     }
 }

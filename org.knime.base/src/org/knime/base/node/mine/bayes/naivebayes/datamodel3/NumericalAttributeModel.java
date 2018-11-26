@@ -72,11 +72,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
 
-
-
 /**
- *This {@link AttributeModel} implementation calculates the probability for
- *numerical attributes by assuming a Gaussian distribution of the data.
+ * This {@link AttributeModel} implementation calculates the probability for numerical attributes by assuming a Gaussian
+ * distribution of the data.
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 class NumericalAttributeModel extends AttributeModel {
@@ -90,9 +89,11 @@ class NumericalAttributeModel extends AttributeModel {
 
     private static final String CLASS_VALUE_SECTION = "classValueData_";
 
-//    private static final int HTML_VIEW_SIZE = 5;
+    //    private static final int HTML_VIEW_SIZE = 5;
 
     private final class NumericalClassValue {
+
+        private static final double TWO_PI = 2 * Math.PI;
 
         private static final String CLASS_VALUE = "classValue";
 
@@ -114,15 +115,15 @@ class NumericalAttributeModel extends AttributeModel {
 
         private double m_mean;
 
-        private double m_stdDeviation = 0;
-
-        private double m_probabilityDenominator = 0;
+        private double m_variance = 0;
 
         private final MutableInteger m_missingValueRecs = new MutableInteger(0);
 
         private boolean m_recompute = true;
 
-        /**Constructor for class NumericalRowValue.NumericalClassValue.
+        /**
+         * Constructor for class NumericalRowValue.NumericalClassValue.
+         *
          * @param classValue the value of this class
          *
          */
@@ -130,12 +131,13 @@ class NumericalAttributeModel extends AttributeModel {
             m_classValue = classValue;
         }
 
-        /**Constructor for class NumericalClassValue.
+        /**
+         * Constructor for class NumericalClassValue.
+         *
          * @param config the <code>Config</code> object to read from
          * @throws InvalidSettingsException if the settings are invalid
          */
-        private NumericalClassValue(final Config config)
-            throws InvalidSettingsException {
+        private NumericalClassValue(final Config config) throws InvalidSettingsException {
             m_classValue = config.getString(CLASS_VALUE);
             m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
             m_noOfRows = config.getInt(NO_OF_ROWS);
@@ -143,7 +145,9 @@ class NumericalAttributeModel extends AttributeModel {
             m_squareSum = config.getDouble(SQUARE_SUM);
         }
 
-        /**Constructor for class NumericalClassValue.
+        /**
+         * Constructor for class NumericalClassValue.
+         *
          * @param targetValueStat the <code>TargetValueStat</code> object to read from
          * @throws InvalidSettingsException if the settings are invalid
          */
@@ -152,10 +156,10 @@ class NumericalAttributeModel extends AttributeModel {
             final GaussianDistribution distribution = targetValueStat.getGaussianDistribution();
             m_mean = distribution.getMean();
             final Map<String, String> extensionMap =
-                    PMMLNaiveBayesModelTranslator.convertToMap(targetValueStat.getExtensionList());
+                PMMLNaiveBayesModelTranslator.convertToMap(targetValueStat.getExtensionList());
             if (extensionMap.containsKey(MISSING_VALUE_COUNTER)) {
-                m_missingValueRecs.setValue(
-                    PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, MISSING_VALUE_COUNTER));
+                m_missingValueRecs
+                    .setValue(PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, MISSING_VALUE_COUNTER));
                 m_noOfRows = PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, NO_OF_ROWS);
             }
             if (extensionMap.containsKey(SUM)) {
@@ -163,13 +167,7 @@ class NumericalAttributeModel extends AttributeModel {
                 m_squareSum = PMMLNaiveBayesModelTranslator.getDoubleExtension(extensionMap, SQUARE_SUM);
                 calculateProbabilityValues();
             } else {
-                final double variance = distribution.getVariance();
-                m_stdDeviation = Math.sqrt(variance);
-                if (m_stdDeviation == 0) {
-                    m_probabilityDenominator = 0;
-                } else {
-                    m_probabilityDenominator = 2 * variance;
-                }
+                m_variance = distribution.getVariance();
             }
             m_recompute = false;
         }
@@ -208,7 +206,6 @@ class NumericalAttributeModel extends AttributeModel {
             return m_classValue;
         }
 
-
         /**
          * @return the noOfRows
          */
@@ -230,7 +227,6 @@ class NumericalAttributeModel extends AttributeModel {
             return m_mean;
         }
 
-
         /**
          * @return the standard deviation
          */
@@ -238,7 +234,7 @@ class NumericalAttributeModel extends AttributeModel {
             if (m_recompute) {
                 calculateProbabilityValues();
             }
-            return m_stdDeviation;
+            return Math.sqrt(m_variance);
         }
 
         /**
@@ -266,11 +262,12 @@ class NumericalAttributeModel extends AttributeModel {
         /**
          * @param attrVal the attribute value to calculate the probability for
          * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
-         * categorical fields or when the calculated probability of the distribution falls below the threshold for
-         * continuous fields.
+         *            categorical fields or when the calculated probability of the distribution falls below the
+         *            threshold for continuous fields.
          * @return the calculated probability for the given attribute
          */
         private double getProbability(final DataCell attrVal, final double probabilityThreshold) {
+            // TODO: can be removed
             if (m_recompute) {
                 calculateProbabilityValues();
             }
@@ -282,8 +279,8 @@ class NumericalAttributeModel extends AttributeModel {
             }
             final double attrValue = ((DoubleValue)attrVal).getDoubleValue();
             final double diff = attrValue - m_mean;
-            if (m_stdDeviation == 0) {
-                //if the standard deviation is 0 which means that
+            if (m_variance == 0) {
+                //if the variance is 0 which means that
                 //the probability is 1 if this attribute value
                 //is equal the mean (which is equal to the only observed)
                 //otherwise it is 0
@@ -292,11 +289,11 @@ class NumericalAttributeModel extends AttributeModel {
                 }
                 return 0;
             }
-            if (m_probabilityDenominator == 0) {
-                //this should never happen since we check the standard deviation
-                throw new IllegalStateException("Error while calculating probability for attribute "
-                + getAttributeName() + ": Probability denominator was zero");
-            }
+            //            if (m_probabilityDenominator == 0) {
+            //this should never happen since we check the standard deviation
+            //                throw new IllegalStateException("Error while calculating probability for attribute "
+            //                    + getAttributeName() + ": Probability denominator was zero");
+            //            }
             //we do not use the probability factor
             //1 / (PROB_FACT_DEN * m_stdDeviation) which ensures that the area
             //under the distribution function is 1 to have a probability result
@@ -304,61 +301,113 @@ class NumericalAttributeModel extends AttributeModel {
             //with a very low variance the probability is > 1 which might result
             //in a number overflow for many of such columns like described
             //in forum post http://www.knime.org/node/949
-            final double prob = Math.exp(-(diff * diff / m_probabilityDenominator));
-            if (prob < probabilityThreshold) {
-                return probabilityThreshold;
-            }
-            return prob;
+            //            final double prob = Math.exp(-(diff * diff / m_probabilityDenominator));
+            //            if (prob < probabilityThreshold) {
+            //                return probabilityThreshold;
+            //            }
+            return -19301249;
         }
 
+        private double getLogProbability(final DataCell attributeValue, final double probabilityThreshold) {
+            if (m_recompute) {
+                calculateProbabilityValues();
+            }
+            if (attributeValue.isMissing() || getNoOfNotMissingRows() == 0) {
+                // TODO: has to be long
+                // TODO: is this correct?
+                if (m_noOfRows == 0) {
+                    throw new IllegalStateException(
+                        "Model for attribute " + getAttributeName() + " contains no rows for class " + m_classValue);
+                }
+                // TODO: check if this is correct
+                return Math.log(probabilityThreshold);
+                // TODO: has to be long
+                // return Math.log((double)getNoOfMissingValueRecs() / m_noOfRows);
+            }
+            final double attrValue = ((DoubleValue)attributeValue).getDoubleValue();
+            final double diff = attrValue - m_mean;
+
+            // TODO: actually the standard deviation should be set as the probability threshold
+            // This is in line with R e1071 package
+            // TODO: double-check the else case ... is it really NaN
+            final double variance;
+            if (m_variance != 0 && Double.isFinite(m_variance) && !Double.isNaN(m_variance)) {
+                variance = m_variance;
+            } else {
+                /* TODO: if threshold is 0 we have a problem cause this will cause that our denominator becomes
+                 * + Infinity, since Math.log(0) = - Infinity
+                 */
+                // this is in line with R
+                variance = probabilityThreshold * probabilityThreshold;
+            }
+            if (variance == 0) {
+                // and set a warning message ... or shall we return default prob?
+                return Double.NaN;
+            }
+
+            /*
+             * Gaussian prob, see https://en.wikipedia.org/wiki/Naive_Bayes_classifier#Gaussian_naive_Bayes
+             * p(x = v | C_k) = exp(-((x - mean) * (x -mean) / (2*variance))))  /  sqrt(2 \pi variance)
+             * Note that for logs it holds that x * y = exp(log(x) + log(y))
+             * denominator: log(sqrt(2 \pi variance)) = log((2 \pi variance)^{1/2}) = 0.5 * log(2 \pi variance)
+             * numerator: log(exp(-((x - mean) * (x -mean) / (2*variance)))) = 1/2 * ((x - mean) * (x -mean) / variance)
+             *
+             * the denominator can't be negative infinite since we checked the variance for 0 and infinite before,
+             * however it can be positive infinity since TWO_PI * variance can leave the double range => denom can be
+             * Double.NEGATIVE_INFINITY
+             * the numerator can be Double.POSITIVE_INFINITY if diff very large and/or variance really small. Note that
+             * it holds that variance != 0. We can substract - Double.NEGATIVE_INFINITY from Double.NEGATIVE_INFINITY
+             * without any problems
+             */
+            // TODO: add sanity checks
+            // prob can only be (-) Infinity
+            double prob = -0.5 * (Math.log(TWO_PI * variance));
+            // prob can only be (-) Infinity
+            prob -= 0.5 * ((diff * diff) / variance);
+
+            // return the probability only if we didn't have any overflows
+            if (prob != Double.NEGATIVE_INFINITY) {
+                return prob;
+            }
+            // return the probability threshold
+            return Math.log(probabilityThreshold);
+        }
 
         /**
          * Called after all training rows where added to validate the model.
+         *
          * @throws InvalidSettingsException if the model isn't valid
          */
         private void validate() throws InvalidSettingsException {
             if (m_noOfRows == 0) {
                 setInvalidCause(MODEL_CONTAINS_NO_RECORDS);
-                throw new InvalidSettingsException("Model for attribute "
-                        + getAttributeName() + " contains no rows.");
+                throw new InvalidSettingsException("Model for attribute " + getAttributeName() + " contains no rows.");
             }
             calculateProbabilityValues();
         }
 
         private void calculateProbabilityValues() {
             if (m_noOfRows == 0) {
-                throw new IllegalStateException("Model for attribute "
-                        + getAttributeName() + " contains no rows.");
+                throw new IllegalStateException("Model for attribute " + getAttributeName() + " contains no rows.");
             }
+            // TODO: long
             final int noOfRowsNonMissing = getNoOfNotMissingRows();
             // TODO Verify this! What if training data only contains missing values
             if (noOfRowsNonMissing == 0) {
-                throw new IllegalStateException("Model for attribute "
-                        + getAttributeName() + " and class \""
-                        + getClassValue() + "\" contains only missing values");
+                throw new IllegalStateException("Model for attribute " + getAttributeName() + " and class \""
+                    + getClassValue() + "\" contains only missing values");
             }
             m_mean = m_sum / noOfRowsNonMissing;
+
+            // TODO: should we use a variance if there are no data
             if (noOfRowsNonMissing == 1) {
-                m_stdDeviation = 0;
+                m_variance = 0;
             } else {
-                final double intermediateResult = (m_squareSum
-                        - ((m_sum * m_sum) / noOfRowsNonMissing))
-                        / (noOfRowsNonMissing - 1);
-                if (intermediateResult <= 0) {
-                    //this should never happen but could be a rounding problem
-                    m_stdDeviation = 0;
-                } else {
-                    m_stdDeviation = Math.sqrt(intermediateResult);
-                }
-            }
-            if (m_stdDeviation == 0) {
-                m_probabilityDenominator = 0;
-            } else {
-                m_probabilityDenominator = 2 * m_stdDeviation * m_stdDeviation;
+                // TODO: double check that square sum is double positive infinity
+                m_variance = (m_squareSum - ((m_sum * m_sum) / noOfRowsNonMissing)) / (noOfRowsNonMissing - 1);
             }
             m_recompute = false;
         }
-
 
         /**
          * @return the missingValueRecs
@@ -378,8 +427,9 @@ class NumericalAttributeModel extends AttributeModel {
             final StringBuilder buf = new StringBuilder();
             buf.append(m_classValue);
             buf.append("\n");
+            // TODO: double check that we want std
             buf.append("Standard deviation: ");
-            buf.append(m_stdDeviation);
+            buf.append(Math.sqrt(m_variance));
             buf.append("\n");
             buf.append("Mean: ");
             buf.append(m_mean);
@@ -393,63 +443,66 @@ class NumericalAttributeModel extends AttributeModel {
             buf.append("SquareSum: ");
             buf.append(m_squareSum);
             buf.append("\n");
-            buf.append("Probability denominator: ");
-            buf.append(m_probabilityDenominator);
+            // TODO: ensure this is correct
+            //            buf.append("Probability denominator: ");
+            //            buf.append(m_probabilityDenominator);
             buf.append("\n");
             buf.append("Missing values: ");
             buf.append(getNoOfMissingValueRecs());
             buf.append("\n");
             return buf.toString();
         }
+
     }
 
     private final Map<String, NumericalClassValue> m_classValues;
 
-    /**Constructor for class NumericalRowValue.
+    /**
+     * Constructor for class NumericalRowValue.
+     *
      * @param attributeName the row caption
-     * @param skipMissingVals set to <code>true</code> if the missing values
-     * should be skipped during learning and prediction
+     * @param skipMissingVals set to <code>true</code> if the missing values should be skipped during learning and
+     *            prediction
      */
-    NumericalAttributeModel(final String attributeName,
-            final boolean skipMissingVals) {
+    NumericalAttributeModel(final String attributeName, final boolean skipMissingVals) {
         super(attributeName, 0, skipMissingVals);
         m_classValues = new HashMap<>();
     }
 
-    /**Constructor for class NumericalAttributeModel.
+    /**
+     * Constructor for class NumericalAttributeModel.
+     *
      * @param attributeName the name of the attribute
-     * @param skipMissingVals set to <code>true</code> if the missing values
-     * should be skipped during learning and prediction
+     * @param skipMissingVals set to <code>true</code> if the missing values should be skipped during learning and
+     *            prediction
      * @param noOfMissingVals the number of missing values
      * @param config the <code>Config</code> object to read from
      * @throws InvalidSettingsException if the settings are invalid
      */
-    NumericalAttributeModel(final String attributeName,
-            final boolean skipMissingVals, final int noOfMissingVals,
-            final Config config)
-    throws InvalidSettingsException {
+    NumericalAttributeModel(final String attributeName, final boolean skipMissingVals, final int noOfMissingVals,
+        final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
         final int noOfClasses = config.getInt(CLASS_VALUE_COUNTER);
         m_classValues = new HashMap<>(noOfClasses);
         for (int i = 0; i < noOfClasses; i++) {
-            final Config classConfig =
-                config.getConfig(CLASS_VALUE_SECTION + i);
-            final NumericalClassValue classVal =
-                new NumericalClassValue(classConfig);
+            final Config classConfig = config.getConfig(CLASS_VALUE_SECTION + i);
+            final NumericalClassValue classVal = new NumericalClassValue(classConfig);
             m_classValues.put(classVal.getClassValue(), classVal);
         }
     }
 
-    /**Constructor for class NumericalAttributeModel.
+    /**
+     * Constructor for class NumericalAttributeModel.
+     *
      * @param attributeName the name of the attribute
-     * @param ignoreMissingVals set to <code>true</code> if the missing values
-     * should be skipped during learning and prediction
+     * @param ignoreMissingVals set to <code>true</code> if the missing values should be skipped during learning and
+     *            prediction
      * @param noOfMissingVals the number of missing values
      * @param bayesInput the <code>BayesInput</code> object to read from
      * @throws InvalidSettingsException if the settings are invalid
      */
-    NumericalAttributeModel(final String attributeName, final boolean ignoreMissingVals,
-        final int noOfMissingVals, final BayesInput bayesInput)  throws InvalidSettingsException {
+    NumericalAttributeModel(final String attributeName, final boolean ignoreMissingVals, final int noOfMissingVals,
+        final BayesInput bayesInput) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, ignoreMissingVals);
         TargetValueStats targetValueStats = bayesInput.getTargetValueStats();
         List<TargetValueStat> targetValueStatList = targetValueStats.getTargetValueStatList();
@@ -468,8 +521,7 @@ class NumericalAttributeModel extends AttributeModel {
         config.addInt(CLASS_VALUE_COUNTER, m_classValues.size());
         int i = 0;
         for (final NumericalClassValue classVal : m_classValues.values()) {
-            final Config classConfig =
-                config.addConfig(CLASS_VALUE_SECTION + i);
+            final Config classConfig = config.addConfig(CLASS_VALUE_SECTION + i);
             classVal.saveModel(classConfig);
             i++;
         }
@@ -491,8 +543,7 @@ class NumericalAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    void addValueInternal(final String classValue,
-            final DataCell attrValue) {
+    void addValueInternal(final String classValue, final DataCell attrValue) {
         NumericalClassValue classObject = m_classValues.get(classValue);
         if (classObject == null) {
             classObject = new NumericalClassValue(classValue);
@@ -508,11 +559,10 @@ class NumericalAttributeModel extends AttributeModel {
     void validate() throws InvalidSettingsException {
         if (m_classValues.size() == 0) {
             setInvalidCause(MODEL_CONTAINS_NO_CLASS_VALUES);
-            throw new InvalidSettingsException("Model for attribute "
-                    + getAttributeName() + " contains no class values");
+            throw new InvalidSettingsException(
+                "Model for attribute " + getAttributeName() + " contains no class values");
         }
-        final Collection<NumericalClassValue> classVals =
-            m_classValues.values();
+        final Collection<NumericalClassValue> classVals = m_classValues.values();
         for (final NumericalClassValue value : classVals) {
             value.validate();
         }
@@ -555,6 +605,7 @@ class NumericalAttributeModel extends AttributeModel {
     @Override
     double getProbabilityInternal(final String classValue, final DataCell attributeValue,
         final double probabilityThreshold) {
+        // TODO: can be removed
         final NumericalClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
             return 0;
@@ -567,8 +618,7 @@ class NumericalAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLViewHeadLine() {
-        return "Gaussian distribution for " + getAttributeName()
-        + " per class value";
+        return "Gaussian distribution for " + getAttributeName() + " per class value";
     }
 
     /**
@@ -584,8 +634,7 @@ class NumericalAttributeModel extends AttributeModel {
      */
     @Override
     void createDataRows(final ExecutionMonitor exec, final BufferedDataContainer dc, final boolean ignoreMissing,
-        final AtomicInteger rowId)
-            throws CanceledExecutionException {
+        final AtomicInteger rowId) throws CanceledExecutionException {
         final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
         if (sortedClassVal == null) {
             return;
@@ -632,13 +681,11 @@ class NumericalAttributeModel extends AttributeModel {
             countRow.append("</td>");
 
             meanRow.append("<td align='center'>");
-            meanRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(
-                    classValue.getMean()));
+            meanRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(classValue.getMean()));
             meanRow.append("</td>");
 
             stdDevRow.append("<td align='center'>");
-            stdDevRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(
-                    classValue.getStdDeviation()));
+            stdDevRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(classValue.getStdDeviation()));
             stdDevRow.append("</td>");
 
             rateRow.append("<td align='center'>");
@@ -679,13 +726,13 @@ class NumericalAttributeModel extends AttributeModel {
 
         //append the missing val row
         if (missingHeader != null) {
-              buf.append("<tr>");
-              buf.append("<th>");
-              buf.append("Missing values:");
-              buf.append("</th>");
-              buf.append(missingRow);
-              buf.append("</tr>");
-          }
+            buf.append("<tr>");
+            buf.append("<th>");
+            buf.append("Missing values:");
+            buf.append("</th>");
+            buf.append(missingRow);
+            buf.append("</tr>");
+        }
 
         //append the rate row
         buf.append("<tr>");
@@ -714,5 +761,30 @@ class NumericalAttributeModel extends AttributeModel {
             buf.append("\n");
         }
         return buf.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
+        final double probabilityThreshold) {
+        final NumericalClassValue classModel = m_classValues.get(classValue);
+        if (classModel == null) {
+            return 0;
+        }
+        return classModel.getLogProbability(attributeValue, probabilityThreshold);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    boolean hasRecs4ClassValue(final String classValue) {
+        final NumericalClassValue classModel = m_classValues.get(classValue);
+        if (classModel == null || classModel.getNoOfRows() == 0) {
+            return false;
+        }
+        return true;
     }
 }

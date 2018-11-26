@@ -75,11 +75,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
 
-
-
 /**
- * This {@link AttributeModel} implementation holds the class attribute
- * information like the number of rows per class value.
+ * This {@link AttributeModel} implementation holds the class attribute information like the number of rows per class
+ * value.
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 class ClassAttributeModel extends AttributeModel {
@@ -95,7 +94,6 @@ class ClassAttributeModel extends AttributeModel {
     private static final String CLASS_NAMES = "classValues";
 
     private static final String CLASS_RECS_COUNTER = "classRecordCounter";
-
 
     /*
      *Saves the number of rows per class attribute.
@@ -113,50 +111,48 @@ class ClassAttributeModel extends AttributeModel {
 
     private int m_totalNoOfRecs = 0;
 
-    /**The compatible {@link DataValue} classes.*/
+    /** The compatible {@link DataValue} classes. */
     @SuppressWarnings("unchecked")
-    public static final Class<? extends DataValue>[] COMPATIBLE_DATA_VALUE_CLASSES = new Class[] {NominalValue.class,
-        IntValue.class, LongValue.class, DoubleValue.class, BooleanValue.class};
+    public static final Class<? extends DataValue>[] COMPATIBLE_DATA_VALUE_CLASSES =
+        new Class[]{NominalValue.class, IntValue.class, LongValue.class, DoubleValue.class, BooleanValue.class};
 
-
-    /**Constructor for class ClassRowValue.
+    /**
+     * Constructor for class ClassRowValue.
+     *
      * @param rowCaption the row caption
-     * @param skipMissingVals set to <code>true</code> if the missing values
-     * should be skipped during learning and prediction
+     * @param skipMissingVals set to <code>true</code> if the missing values should be skipped during learning and
+     *            prediction
      * @param maxNoOfClassVals the maximum supported number of class values
      */
-    ClassAttributeModel(final String rowCaption,
-            final boolean skipMissingVals, final int maxNoOfClassVals) {
+    ClassAttributeModel(final String rowCaption, final boolean skipMissingVals, final int maxNoOfClassVals) {
         super(rowCaption, 0, skipMissingVals);
         m_maxNoOfClassVals = maxNoOfClassVals;
         m_recsCounterByClassVal = new LinkedHashMap<>(maxNoOfClassVals);
     }
 
-    /**Constructor for class ClassModel.
+    /**
+     * Constructor for class ClassModel.
+     *
      * @param attributeName the name of the attribute
      * @param noOfMissingVals the number of missing values
-     * @param skipMissingVals set to <code>true</code> if the missing values
-     * should be skipped during learning and prediction
+     * @param skipMissingVals set to <code>true</code> if the missing values should be skipped during learning and
+     *            prediction
      * @param config the <code>Config</code> object to read from
      * @throws InvalidSettingsException if the settings are invalid
      */
-    ClassAttributeModel(final String attributeName,
-            final int noOfMissingVals, final boolean skipMissingVals,
-            final Config config)
-        throws InvalidSettingsException {
+    ClassAttributeModel(final String attributeName, final int noOfMissingVals, final boolean skipMissingVals,
+        final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
         m_totalNoOfRecs = config.getInt(TOTAL_NO_OF_RECORDS);
         m_maxNoOfClassVals = config.getInt(MAX_NO_OF_CLASS_VALUES);
         final String[] classVals = config.getStringArray(CLASS_NAMES);
         final int[] recsCounter = config.getIntArray(CLASS_RECS_COUNTER);
         if (classVals.length != recsCounter.length) {
-            throw new InvalidSettingsException(
-                    "Class names and counter must be of equal size");
+            throw new InvalidSettingsException("Class names and counter must be of equal size");
         }
         m_recsCounterByClassVal = new LinkedHashMap<>(classVals.length);
         for (int i = 0, length = classVals.length; i < length; i++) {
-            m_recsCounterByClassVal.put(classVals[i],
-                    new MutableInteger(recsCounter[i]));
+            m_recsCounterByClassVal.put(classVals[i], new MutableInteger(recsCounter[i]));
         }
     }
 
@@ -179,17 +175,18 @@ class ClassAttributeModel extends AttributeModel {
         config.addIntArray(CLASS_RECS_COUNTER, recsCounter);
     }
 
-
-    /**Constructor for class ClassModel.
+    /**
+     * Constructor for class ClassModel.
+     *
      * @param attributeName the name of the attribute
      * @param noOfMissingVals the number of missing values
-     * @param ignoreMissingVals set to <code>true</code> if the missing values
-     * should be ignored during learning and prediction
+     * @param ignoreMissingVals set to <code>true</code> if the missing values should be ignored during learning and
+     *            prediction
      * @param out the <code>BayesOutput</code> object to read from
      * @throws InvalidSettingsException if the settings are invalid
      */
     private ClassAttributeModel(final String attributeName, final int noOfMissingVals, final boolean ignoreMissingVals,
-            final BayesOutput out) throws InvalidSettingsException {
+        final BayesOutput out) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, ignoreMissingVals);
         final TargetValueCounts targetValueCounts = out.getTargetValueCounts();
         m_maxNoOfClassVals = Integer.MAX_VALUE;
@@ -237,6 +234,7 @@ class ClassAttributeModel extends AttributeModel {
 
     /**
      * {@inheritDoc}
+     *
      * @see #exportClassAttributeToPMML(BayesOutput)
      */
     @Override
@@ -248,17 +246,14 @@ class ClassAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    void addValueInternal(final String classValue,
-            final DataCell attrValue) throws TooManyValuesException {
+    void addValueInternal(final String classValue, final DataCell attrValue) throws TooManyValuesException {
         if (attrValue.isMissing()) {
-            throw new IllegalArgumentException(
-                    "Missing value not allowed as class value");
+            throw new IllegalArgumentException("Missing value not allowed as class value");
         }
         MutableInteger classCounter = m_recsCounterByClassVal.get(classValue);
         if (classCounter == null) {
             if (m_recsCounterByClassVal.size() > m_maxNoOfClassVals) {
-                throw new TooManyValuesException("Class value "
-                        + classValue + " doesn't fit into model");
+                throw new TooManyValuesException("Class value " + classValue + " doesn't fit into model");
             }
             classCounter = new MutableInteger(0);
             m_recsCounterByClassVal.put(classValue, classCounter);
@@ -274,15 +269,15 @@ class ClassAttributeModel extends AttributeModel {
     void validate() throws InvalidSettingsException {
         if (m_totalNoOfRecs == 0) {
             setInvalidCause(MODEL_CONTAINS_NO_RECORDS);
-            throw new InvalidSettingsException("Model for attribute "
-                    + getAttributeName() + " contains no records");
+            throw new InvalidSettingsException("Model for attribute " + getAttributeName() + " contains no records");
         }
         if (m_recsCounterByClassVal.size() == 0) {
             setInvalidCause(MODEL_CONTAINS_NO_CLASS_VALUES);
-            throw new InvalidSettingsException("Model for attribute "
-                    + getAttributeName() + " contains no class values");
+            throw new InvalidSettingsException(
+                "Model for attribute " + getAttributeName() + " contains no class values");
         }
     }
+
     /**
      * {@inheritDoc}
      */
@@ -332,9 +327,9 @@ class ClassAttributeModel extends AttributeModel {
     @Override
     double getProbabilityInternal(final String classValue, final DataCell attributeValue,
         final double probabilityThreshold) {
+        // TODO: can be removed
         if (attributeValue.isMissing()) {
-            throw new IllegalArgumentException(
-                    "Missing value not allowed as class value");
+            throw new IllegalArgumentException("Missing value not allowed as class value");
         }
         if (m_totalNoOfRecs == 0) {
             //this should not happen
@@ -342,8 +337,8 @@ class ClassAttributeModel extends AttributeModel {
         }
         final MutableInteger noOfRecs = m_recsCounterByClassVal.get(classValue);
         if (noOfRecs == null) {
-            throw new IllegalStateException("No record counter object found for attribute "
-                    + getAttributeName() + " and class value " + classValue);
+            throw new IllegalStateException("No record counter object found for attribute " + getAttributeName()
+                + " and class value " + classValue);
         }
         return (double)noOfRecs.intValue() / m_totalNoOfRecs;
     }
@@ -378,8 +373,9 @@ class ClassAttributeModel extends AttributeModel {
     /**
      * {@inheritDoc}
      */
-    @Override void createDataRows(final ExecutionMonitor exec, final BufferedDataContainer dc,
-        final boolean ignoreMissing, final AtomicInteger rowId) throws CanceledExecutionException {
+    @Override
+    void createDataRows(final ExecutionMonitor exec, final BufferedDataContainer dc, final boolean ignoreMissing,
+        final AtomicInteger rowId) throws CanceledExecutionException {
         final List<String> sortedClassVal = AttributeModel.sortCollection(m_recsCounterByClassVal.keySet());
         if (sortedClassVal == null) {
             return;
@@ -415,13 +411,51 @@ class ClassAttributeModel extends AttributeModel {
         buf.append(m_totalNoOfRecs);
         buf.append("\n");
         for (final String classVal : m_recsCounterByClassVal.keySet()) {
-            final MutableInteger integer =
-                m_recsCounterByClassVal.get(classVal);
+            final MutableInteger integer = m_recsCounterByClassVal.get(classVal);
             buf.append(classVal);
             buf.append("|");
             buf.append(integer.intValue());
             buf.append("\n");
         }
         return buf.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
+        final double probabilityThreshold) {
+        if (attributeValue.isMissing()) {
+            throw new IllegalArgumentException("Missing value not allowed as class value");
+        }
+        // TODO: long
+        if (m_totalNoOfRecs == 0) {
+            //this should not happen
+            throw new IllegalStateException("Model for attribute " + getAttributeName() + " contains no records");
+        }
+        // TODO: long
+        final MutableInteger noOfRecs = m_recsCounterByClassVal.get(classValue);
+        // TODO: long
+        if (noOfRecs == null) {
+            throw new IllegalStateException("No record counter object found for attribute " + getAttributeName()
+                + " and class value " + classValue);
+        }
+        return Math.log((double)noOfRecs.intValue() / m_totalNoOfRecs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    boolean hasRecs4ClassValue(final String classValue) {
+        if (m_totalNoOfRecs == 0) {
+            throw new IllegalStateException("Model for attribute " + getAttributeName() + " contains no records");
+        }
+        if (m_recsCounterByClassVal.get(classValue) == null) {
+            throw new IllegalStateException("No record counter object found for attribute " + getAttributeName()
+                + " and class value " + classValue);
+        }
+        return true;
     }
 }
