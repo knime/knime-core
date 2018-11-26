@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -66,6 +67,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -573,6 +575,14 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 // future is running in thread pool, use ordinary cancel policy
                 getProgressMonitor().setExecuteCanceled();
                 job = getExecutionJob();
+                // temporary debug output to diagnose problem on instrumentation server, to be removed (BW - 2018-11-26)
+                Supplier<String> statePrinter = () -> {
+                    WorkflowManager projectWFM = getParent().getProjectWFM();
+                    return projectWFM.printNodeSummary(projectWFM.getID(), 0);
+                };
+                CheckUtils.checkState(job != null,
+                        "Exec Job on node '%s' is null, job manager on node '%s', on parent '%s'; state of project: ",
+                        getNameWithID(), getJobManager(), findJobManager(), statePrinter.get());
                 assert job != null : "node is executing but no job represents the execution task (is null)";
                 job.cancel();
                 break;
