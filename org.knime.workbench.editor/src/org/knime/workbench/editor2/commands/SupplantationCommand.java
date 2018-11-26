@@ -350,9 +350,12 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                 }
                 m_replacementEdges.add(newCC);
 
-                final NodeContainer sourceNode = wm.getNodeContainer(sourceNID);
-                final NodeContainer destinationNode = wm.getNodeContainer(destinationNID);
-                NodeTimer.GLOBAL_TIMER.addConnectionCreation(sourceNode, destinationNode);
+                //don't track connections to source/destination nodes leaving the workflow (metanodes)
+                if (wm.containsNodeContainer(sourceNID) && wm.containsNodeContainer(destinationNID)) {
+                    final NodeContainer sourceNode = wm.getNodeContainer(sourceNID);
+                    final NodeContainer destinationNode = wm.getNodeContainer(destinationNID);
+                    NodeTimer.GLOBAL_TIMER.addConnectionCreation(sourceNode, destinationNode);
+                }
             }
         }
     }
