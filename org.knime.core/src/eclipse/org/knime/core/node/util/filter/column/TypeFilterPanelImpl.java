@@ -395,6 +395,9 @@ final class TypeFilterPanelImpl extends JPanel {
      * Update the preview.
      */
     void update() {
+        if (m_tableSpec == null) {
+            return; // nothing to render (yet)
+        }
         List<DataColumnSpec> includes = new ArrayList<DataColumnSpec>();
         List<DataColumnSpec> excludes = new ArrayList<DataColumnSpec>();
         for (DataColumnSpec spec : m_tableSpec) {
