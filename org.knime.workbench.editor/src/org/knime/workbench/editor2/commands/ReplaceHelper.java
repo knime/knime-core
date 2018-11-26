@@ -65,8 +65,6 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.ConnectionContainerUI;
-import org.knime.core.ui.node.workflow.WorkflowManagerUI;
-import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -86,12 +84,12 @@ public class ReplaceHelper {
      * @return true if the replacement can occur
      */
     public static boolean executedStateAllowsReplace(final WorkflowManager wm, final NodeContainer node,
-        final ConnectionContainerUI... connections) {
+        final ConnectionContainer... connections) {
         boolean aWarnableStateExists =
             (node != null) ? (node.getNodeContainerState().isExecuted() || (!wm.canRemoveNode(node.getID()))) : false;
 
         if ((!aWarnableStateExists) && (connections != null)) {
-            for (final ConnectionContainerUI connectionContainer : connections) {
+            for (final ConnectionContainer connectionContainer : connections) {
                 WorkflowManager wmToFindDestNode = wm;
                 if (doesConnectionLeaveWorkflow(connectionContainer)) {
                     wmToFindDestNode = wm.getParent();
@@ -125,23 +123,23 @@ public class ReplaceHelper {
         return true;
     }
 
-    private static final boolean doesConnectionLeaveWorkflow(final ConnectionContainerUI connection) {
+    private static final boolean doesConnectionLeaveWorkflow(final ConnectionContainer connection) {
         return connection.getType() == ConnectionType.WFMOUT;
     }
 
-    private static final Comparator<ConnectionContainerUI> DEST_PORT_SORTER = (o1, o2) -> {
+    private static final Comparator<ConnectionContainer> DEST_PORT_SORTER = (o1, o2) -> {
         return Integer.compare(o1.getDestPort(), o2.getDestPort());
     };
 
-    private static final Comparator<ConnectionContainerUI> SOURCE_PORT_SORTER = (o1, o2) -> {
+    private static final Comparator<ConnectionContainer> SOURCE_PORT_SORTER = (o1, o2) -> {
         return Integer.compare(o1.getSourcePort(), o2.getSourcePort());
     };
 
     private WorkflowManager m_wfm;
 
-    private ArrayList<ConnectionContainerUI> m_incomingConnections;
+    private ArrayList<ConnectionContainer> m_incomingConnections;
 
-    private ArrayList<ConnectionContainerUI> m_outgoingConnections;
+    private ArrayList<ConnectionContainer> m_outgoingConnections;
 
     private NodeContainer m_oldNode;
 
@@ -155,10 +153,9 @@ public class ReplaceHelper {
         m_wfm = wfm;
         m_oldNode = oldNode;
 
-        final WorkflowManagerUI wfmUI = WorkflowManagerWrapper.wrap(wfm);
         final NodeID oldNodeId = m_oldNode.getID();
-        m_incomingConnections = new ArrayList<>(wfmUI.getIncomingConnectionsFor(oldNodeId));
-        m_outgoingConnections = new ArrayList<>(wfmUI.getOutgoingConnectionsFor(oldNodeId));
+        m_incomingConnections = new ArrayList<>(wfm.getIncomingConnectionsFor(oldNodeId));
+        m_outgoingConnections = new ArrayList<>(wfm.getOutgoingConnectionsFor(oldNodeId));
 
         // sort according to ports
         Collections.sort(m_incomingConnections, DEST_PORT_SORTER);
@@ -171,8 +168,8 @@ public class ReplaceHelper {
      * @return if new node can be replaced
      */
     public boolean replaceNode() {
-        final ConnectionContainerUI[] connections =
-            m_outgoingConnections.toArray(new ConnectionContainerUI[m_outgoingConnections.size()]);
+        final ConnectionContainer[] connections =
+            m_outgoingConnections.toArray(new ConnectionContainer[m_outgoingConnections.size()]);
 
         return executedStateAllowsReplace(m_wfm, m_oldNode, connections);
     }
@@ -230,7 +227,7 @@ public class ReplaceHelper {
         } else if (!(m_oldNode instanceof WorkflowManager) && (container instanceof WorkflowManager)) {
             // replacing a "normal" node with a metanode
             inShift = -1;
-            for (final ConnectionContainerUI cc : m_incomingConnections) {
+            for (final ConnectionContainer cc : m_incomingConnections) {
                 if (cc.getDestPort() == 0) {
                     inShift = 0;
                     break;
@@ -238,7 +235,7 @@ public class ReplaceHelper {
             }
 
             outShift = -1;
-            for (final ConnectionContainerUI cc : m_outgoingConnections) {
+            for (final ConnectionContainer cc : m_outgoingConnections) {
                 if (cc.getSourcePort() == 0) {
                     outShift = 0;
                     break;
@@ -251,7 +248,7 @@ public class ReplaceHelper {
 
         // set incoming connections
         final NodeID newId = container.getID();
-        for (final ConnectionContainerUI c : m_incomingConnections) {
+        for (final ConnectionContainer c : m_incomingConnections) {
             if (m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), newId, c.getDestPort() + inShift)) {
                 final ConnectionContainer cc =
                     m_wfm.addConnection(c.getSource(), c.getSourcePort(), newId, c.getDestPort() + inShift);
@@ -269,7 +266,7 @@ public class ReplaceHelper {
         }
 
         // set outgoing connections
-        for (final ConnectionContainerUI c : m_outgoingConnections) {
+        for (final ConnectionContainer c : m_outgoingConnections) {
             if (m_wfm.canAddConnection(newId, c.getSourcePort() + outShift, c.getDest(), c.getDestPort())) {
                 final ConnectionContainer cc =
                     m_wfm.addConnection(newId, c.getSourcePort() + outShift, c.getDest(), c.getDestPort());

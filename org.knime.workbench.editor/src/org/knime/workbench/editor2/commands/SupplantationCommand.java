@@ -60,15 +60,14 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
-import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.ConnectionManifest;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -180,20 +179,19 @@ public class SupplantationCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         final WorkflowManager wm = getHostWFM();
-        final WorkflowManagerUI wmUI = getHostWFMUI();
         if (m_edgeTargetId != null) {
-            final ConnectionContainerUI targetCCUI = wmUI.getConnection(m_edgeTargetId);
+            final ConnectionContainer targetCC = wm.getConnection(m_edgeTargetId);
 
-            if (!ReplaceHelper.executedStateAllowsReplace(wm, null, targetCCUI)) {
+            if (!ReplaceHelper.executedStateAllowsReplace(wm, null, targetCC)) {
                 returnNodeToOriginalLocation();
 
                 return;
             }
 
-            final NodeID sourceNodeId = targetCCUI.getSource();
-            final NodeContainerUI sourceNodeUI =
-                sourceNodeId.equals(wm.getID()) ? wmUI : wmUI.getNodeContainer(sourceNodeId);
-            final PortType portType = sourceNodeUI.getOutPort(targetCCUI.getSourcePort()).getPortType();
+            final NodeID sourceNodeId = targetCC.getSource();
+            final NodeContainer sourceNode =
+                sourceNodeId.equals(wm.getID()) ? wm : wm.getNodeContainer(sourceNodeId);
+            final PortType portType = sourceNode.getOutPort(targetCC.getSourcePort()).getPortType();
             final ConnectionManifest inportManifest = m_supplantingNodeInportManifest.clone();
             final ConnectionManifest outportManifest = m_supplantingNodeOutportManifest.clone();
             final int dragNodeInPortToUse = inportManifest.consumePortForPortType(portType, true);
@@ -211,7 +209,6 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                 }
             }
 
-            final ConnectionContainer targetCC = wm.getConnection(m_edgeTargetId);
             wm.removeConnection(targetCC);
             m_originalEdges.add(targetCC);
 
@@ -226,15 +223,15 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                     wm.addConnection(dragNodeId, dragNodeOutPortToUse, targetCC.getDest(), targetCC.getDestPort()));
             }
 
-            final NodeContainerUI dragNodeUI = m_supplantingNode.getNodeContainer();
+            final NodeContainer dragNode = Wrapper.unwrapNC(m_supplantingNode.getNodeContainer());
             final NodeID targetNodeId = targetCC.getDest();
-            final NodeContainerUI destinationNodeUI =
-                targetNodeId.equals(wm.getID()) ? wmUI : wmUI.getNodeContainer(targetCC.getDest());
+            final NodeContainer destinationNode =
+                targetNodeId.equals(wm.getID()) ? wm : wm.getNodeContainer(targetCC.getDest());
 
             // If this is a first execute, and not a redo, grab the dragged node's end location so that
             //  we can set it on a redo as seen in the else block.
             if (m_redoNodeBounds == null) {
-                m_redoNodeBounds = dragNodeUI.getUIInformation().getBounds();
+                m_redoNodeBounds = dragNode.getUIInformation().getBounds();
             } else {
                 final NodeUIInformation.Builder builder =
                     NodeUIInformation.builder(m_supplantingNode.getNodeContainer().getUIInformation());
@@ -244,16 +241,14 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                 m_supplantingNode.getNodeContainer().setUIInformation(builder.build());
             }
 
-            NodeTimer.GLOBAL_TIMER.addConnectionCreation(Wrapper.unwrapNC(sourceNodeUI),
-                Wrapper.unwrapNC(dragNodeUI));
-            NodeTimer.GLOBAL_TIMER.addConnectionCreation(Wrapper.unwrapNC(dragNodeUI),
-                Wrapper.unwrapNC(destinationNodeUI));
+            NodeTimer.GLOBAL_TIMER.addConnectionCreation(sourceNode, dragNode);
+            NodeTimer.GLOBAL_TIMER.addConnectionCreation(dragNode, destinationNode);
         } else {
-            final NodeContainerUI toRemoveNodeUI = m_nodeTarget.getNodeContainer();
-            final NodeID toRemoveNodeId = toRemoveNodeUI.getID();
-            final ArrayList<ConnectionContainerUI> ccs =
-                new ArrayList<>(wmUI.getOutgoingConnectionsFor(toRemoveNodeId));
-            final ConnectionContainerUI[] connections = ccs.toArray(new ConnectionContainerUI[ccs.size()]);
+            final NodeContainer toRemoveNode = Wrapper.unwrapNC(m_nodeTarget.getNodeContainer());
+            final NodeID toRemoveNodeId = toRemoveNode.getID();
+            final ArrayList<ConnectionContainer> ccs =
+                new ArrayList<>(wm.getOutgoingConnectionsFor(toRemoveNodeId));
+            final ConnectionContainer[] connections = ccs.toArray(new ConnectionContainer[ccs.size()]);
 
             if (!ReplaceHelper.executedStateAllowsReplace(wm, wm.getNodeContainer(toRemoveNodeId), connections)) {
                 returnNodeToOriginalLocation();
@@ -264,7 +259,7 @@ public class SupplantationCommand extends AbstractKNIMECommand {
             final NodeID[] removeIds = new NodeID[1];
             final Set<ScheduledConnection> pendingConnections = new HashSet<>();
 
-            removeIds[0] = toRemoveNodeUI.getID();
+            removeIds[0] = toRemoveNode.getID();
 
             m_originalEdges = new HashSet<>();
             try {
@@ -275,7 +270,7 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                 for (ConnectionContainer cc : wm.getIncomingConnectionsFor(removeIds[0])) {
                     try {
                         pendingConnections
-                            .add(new ScheduledConnection(toRemoveNodeUI, wm, cc, true, inportManifest, null));
+                            .add(new ScheduledConnection(toRemoveNode, cc, true, inportManifest, null));
                     } catch (IllegalStateException e) { } // NOPMD  acceptable for no ports on drag node available
 
                     m_originalEdges.add(cc);
@@ -285,7 +280,7 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                 for (ConnectionContainer cc : wm.getOutgoingConnectionsFor(removeIds[0])) {
                     try {
                         pendingConnections
-                            .add(new ScheduledConnection(toRemoveNodeUI, wm, cc, false, outportManifest, outportMap));
+                            .add(new ScheduledConnection(toRemoveNode, cc, false, outportManifest, outportMap));
                     } catch (IllegalStateException e) { } // NOPMD  acceptable for no ports on drag node available
 
                     m_originalEdges.add(cc);
@@ -313,7 +308,7 @@ public class SupplantationCommand extends AbstractKNIMECommand {
             // If this is a first execute, and not a redo, set the dragged node's location as the replacement node's
             //  location, and hang on to it so that we can set it on a redo as seen in the else block.
             if (m_redoNodeBounds == null) {
-                final NodeUIInformation.Builder builder = NodeUIInformation.builder(toRemoveNodeUI.getUIInformation());
+                final NodeUIInformation.Builder builder = NodeUIInformation.builder(toRemoveNode.getUIInformation());
 
                 m_supplantingNode.getNodeContainer().setUIInformation(builder.build());
                 m_redoNodeBounds = m_supplantingNode.getNodeContainer().getUIInformation().getBounds();
@@ -355,10 +350,9 @@ public class SupplantationCommand extends AbstractKNIMECommand {
                 }
                 m_replacementEdges.add(newCC);
 
-                final NodeContainerUI sourceNodeUI = wmUI.getNodeContainer(sourceNID);
-                final NodeContainerUI destinationNodeUI = wmUI.getNodeContainer(destinationNID);
-                NodeTimer.GLOBAL_TIMER.addConnectionCreation(Wrapper.unwrapNC(sourceNodeUI),
-                    Wrapper.unwrapNC(destinationNodeUI));
+                final NodeContainer sourceNode = wm.getNodeContainer(sourceNID);
+                final NodeContainer destinationNode = wm.getNodeContainer(destinationNID);
+                NodeTimer.GLOBAL_TIMER.addConnectionCreation(sourceNode, destinationNode);
             }
         }
     }
@@ -426,9 +420,8 @@ public class SupplantationCommand extends AbstractKNIMECommand {
          * @throws IllegalArgumentException if <code>input == false</code> and <code>outportMap == null</code>, or
          *             <code>input == true</code> and <code>outportMap != null</code>
          */
-        private ScheduledConnection(final NodeContainerUI node, final WorkflowManager wm,
-            final ConnectionContainer connection, final boolean input, final ConnectionManifest nidConnectionManifest,
-            final Map<Integer, Integer> outportMap) {
+        private ScheduledConnection(final NodeContainer node, final ConnectionContainer connection, final boolean input,
+            final ConnectionManifest nidConnectionManifest, final Map<Integer, Integer> outportMap) {
             if ((!input) && (outportMap == null)) {
                 throw new IllegalArgumentException("outportMap cannot be null if input is false.");
             }
