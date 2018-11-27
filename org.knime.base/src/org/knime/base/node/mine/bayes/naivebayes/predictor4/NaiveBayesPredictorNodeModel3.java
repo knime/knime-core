@@ -89,8 +89,9 @@ import org.w3c.dom.Node;
 /**
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @since 3.7
  */
-final class NaiveBayesPredictorNodeModel3 extends NodeModel {
+public final class NaiveBayesPredictorNodeModel3 extends NodeModel {
 
     // our logger instance
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NaiveBayesPredictorNodeModel3.class);

@@ -55,6 +55,7 @@ import org.knime.core.node.NodeView;
 /**
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @since 3.7
  */
 public class NaiveBayesPredictorNodeFactory3 extends NodeFactory<NaiveBayesPredictorNodeModel3> {
     /**
