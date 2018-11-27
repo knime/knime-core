@@ -53,6 +53,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
+import org.apache.commons.math3.stat.descriptive.moment.Variance;
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.GaussianDistributionDocument.GaussianDistribution;
 import org.dmg.pmml.TargetValueStatDocument.TargetValueStat;
@@ -93,6 +95,11 @@ class NumericalAttributeModel extends AttributeModel {
 
     private final class NumericalClassValue {
 
+        /**
+         *
+         */
+        private static final boolean CALC_SAMPLING_VAR = true;
+
         private static final double TWO_PI = 2 * Math.PI;
 
         private static final String CLASS_VALUE = "classValue";
@@ -101,25 +108,19 @@ class NumericalAttributeModel extends AttributeModel {
 
         private static final String NO_OF_ROWS = "noOfRows";
 
-        private static final String SUM = "sum";
-
-        private static final String SQUARE_SUM = "squareSum";
-
         private final String m_classValue;
 
         private int m_noOfRows = 0;
 
-        private double m_sum = 0;
+        private final Mean m_incMean;
 
-        private double m_squareSum = 0;
+        private final Variance m_incVar;
 
-        private double m_mean;
+        private double m_mean = Double.NaN;
 
-        private double m_variance = 0;
+        private double m_variance = Double.NaN;
 
         private final MutableInteger m_missingValueRecs = new MutableInteger(0);
-
-        private boolean m_recompute = true;
 
         /**
          * Constructor for class NumericalRowValue.NumericalClassValue.
@@ -129,6 +130,8 @@ class NumericalAttributeModel extends AttributeModel {
          */
         private NumericalClassValue(final String classValue) {
             m_classValue = classValue;
+            m_incMean = new Mean();
+            m_incVar = new Variance(CALC_SAMPLING_VAR);
         }
 
         /**
@@ -136,13 +139,15 @@ class NumericalAttributeModel extends AttributeModel {
          *
          * @param config the <code>Config</code> object to read from
          * @throws InvalidSettingsException if the settings are invalid
+         * @deprecated
          */
+        @Deprecated
         private NumericalClassValue(final Config config) throws InvalidSettingsException {
-            m_classValue = config.getString(CLASS_VALUE);
-            m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
-            m_noOfRows = config.getInt(NO_OF_ROWS);
-            m_sum = config.getDouble(SUM);
-            m_squareSum = config.getDouble(SQUARE_SUM);
+            throw new RuntimeException("This constructor is forbidden");
+            //            m_classValue = config.getString(CLASS_VALUE);
+            //            m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
+            //            m_noOfRows = config.getInt(NO_OF_ROWS);
+            //            m_incVar = null;
         }
 
         /**
@@ -154,7 +159,10 @@ class NumericalAttributeModel extends AttributeModel {
         private NumericalClassValue(final TargetValueStat targetValueStat) throws InvalidSettingsException {
             m_classValue = targetValueStat.getValue();
             final GaussianDistribution distribution = targetValueStat.getGaussianDistribution();
+            m_variance = distribution.getVariance();
             m_mean = distribution.getMean();
+
+            // load mssing value counters
             final Map<String, String> extensionMap =
                 PMMLNaiveBayesModelTranslator.convertToMap(targetValueStat.getExtensionList());
             if (extensionMap.containsKey(MISSING_VALUE_COUNTER)) {
@@ -162,14 +170,8 @@ class NumericalAttributeModel extends AttributeModel {
                     .setValue(PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, MISSING_VALUE_COUNTER));
                 m_noOfRows = PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, NO_OF_ROWS);
             }
-            if (extensionMap.containsKey(SUM)) {
-                m_sum = PMMLNaiveBayesModelTranslator.getDoubleExtension(extensionMap, SUM);
-                m_squareSum = PMMLNaiveBayesModelTranslator.getDoubleExtension(extensionMap, SQUARE_SUM);
-                calculateProbabilityValues();
-            } else {
-                m_variance = distribution.getVariance();
-            }
-            m_recompute = false;
+            m_incMean = null;
+            m_incVar = null;
         }
 
         /**
@@ -179,8 +181,6 @@ class NumericalAttributeModel extends AttributeModel {
             config.addString(CLASS_VALUE, m_classValue);
             config.addInt(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
             config.addInt(NO_OF_ROWS, m_noOfRows);
-            config.addDouble(SUM, m_sum);
-            config.addDouble(SQUARE_SUM, m_squareSum);
         }
 
         /**
@@ -221,8 +221,8 @@ class NumericalAttributeModel extends AttributeModel {
          * @return the mean
          */
         private double getMean() {
-            if (m_recompute) {
-                calculateProbabilityValues();
+            if (m_incMean != null) {
+                return m_incMean.getResult();
             }
             return m_mean;
         }
@@ -231,17 +231,17 @@ class NumericalAttributeModel extends AttributeModel {
          * @return the standard deviation
          */
         private double getStdDeviation() {
-            if (m_recompute) {
-                calculateProbabilityValues();
-            }
-            return Math.sqrt(m_variance);
+            return Math.sqrt(getVariance());
         }
 
         /**
          * @return the variance
          */
         private double getVariance() {
-            return Math.pow(getStdDeviation(), 2);
+            if (m_incVar != null) {
+                return m_incVar.getResult();
+            }
+            return m_variance;
         }
 
         /**
@@ -250,11 +250,6 @@ class NumericalAttributeModel extends AttributeModel {
         private void addValue(final DataCell attrVal) {
             if (attrVal.isMissing()) {
                 m_missingValueRecs.inc();
-            } else {
-                final double doubleValue = ((DoubleValue)attrVal).getDoubleValue();
-                m_sum += doubleValue;
-                m_squareSum += (doubleValue * doubleValue);
-                m_recompute = true;
             }
             m_noOfRows++;
         }
@@ -268,9 +263,9 @@ class NumericalAttributeModel extends AttributeModel {
          */
         private double getProbability(final DataCell attrVal, final double probabilityThreshold) {
             // TODO: can be removed
-            if (m_recompute) {
-                calculateProbabilityValues();
-            }
+            //            if (m_recompute) {
+            //                calculateProbabilityValues();
+            //            }
             if (attrVal.isMissing()) {
                 if (m_noOfRows == 0) {
                     return 0;
@@ -309,9 +304,13 @@ class NumericalAttributeModel extends AttributeModel {
         }
 
         private double getLogProbability(final DataCell attributeValue, final double probabilityThreshold) {
-            if (m_recompute) {
-                calculateProbabilityValues();
+            /* TODO: This is soo wrong ... but actually we cannot call this method except we have loaded the
+             * model from PMML => this should ever happen.
+             */
+            if (m_mean == Double.NaN || m_incMean != null) {
+                throw new RuntimeException("Mean hasn't been calculated");
             }
+            // TODO: double-check this ...
             if (attributeValue.isMissing() || getNoOfNotMissingRows() == 0) {
                 // TODO: has to be long
                 // TODO: is this correct?
@@ -383,30 +382,12 @@ class NumericalAttributeModel extends AttributeModel {
                 setInvalidCause(MODEL_CONTAINS_NO_RECORDS);
                 throw new InvalidSettingsException("Model for attribute " + getAttributeName() + " contains no rows.");
             }
-            calculateProbabilityValues();
-        }
-
-        private void calculateProbabilityValues() {
-            if (m_noOfRows == 0) {
-                throw new IllegalStateException("Model for attribute " + getAttributeName() + " contains no rows.");
-            }
-            // TODO: long
             final int noOfRowsNonMissing = getNoOfNotMissingRows();
-            // TODO Verify this! What if training data only contains missing values
-            if (noOfRowsNonMissing == 0) {
-                throw new IllegalStateException("Model for attribute " + getAttributeName() + " and class \""
-                    + getClassValue() + "\" contains only missing values");
-            }
-            m_mean = m_sum / noOfRowsNonMissing;
-
-            // TODO: should we use a variance if there are no data
-            if (noOfRowsNonMissing == 1) {
-                m_variance = 0;
-            } else {
-                // TODO: double check that square sum is double positive infinity
-                m_variance = (m_squareSum - ((m_sum * m_sum) / noOfRowsNonMissing)) / (noOfRowsNonMissing - 1);
-            }
-            m_recompute = false;
+            // TODO: Think this is not a prob anymore
+            //            if (noOfRowsNonMissing == 0) {
+            //                throw new IllegalStateException("Model for attribute " + getAttributeName() + " and class \""
+            //                    + getClassValue() + "\" contains only missing values");
+            //            }
         }
 
         /**
@@ -421,31 +402,17 @@ class NumericalAttributeModel extends AttributeModel {
          */
         @Override
         public String toString() {
-            if (m_recompute) {
-                calculateProbabilityValues();
-            }
             final StringBuilder buf = new StringBuilder();
             buf.append(m_classValue);
             buf.append("\n");
-            // TODO: double check that we want std
             buf.append("Standard deviation: ");
-            buf.append(Math.sqrt(m_variance));
+            buf.append(getStdDeviation());
             buf.append("\n");
             buf.append("Mean: ");
-            buf.append(m_mean);
+            buf.append(getMean());
             buf.append("\n");
             buf.append("No of rows: ");
-            buf.append(m_noOfRows);
-            buf.append("\n");
-            buf.append("Sum: ");
-            buf.append(m_sum);
-            buf.append("\n");
-            buf.append("SquareSum: ");
-            buf.append(m_squareSum);
-            buf.append("\n");
-            // TODO: ensure this is correct
-            //            buf.append("Probability denominator: ");
-            //            buf.append(m_probabilityDenominator);
+            buf.append(getNoOfRows());
             buf.append("\n");
             buf.append("Missing values: ");
             buf.append(getNoOfMissingValueRecs());
@@ -782,7 +749,7 @@ class NumericalAttributeModel extends AttributeModel {
     @Override
     boolean hasRecs4ClassValue(final String classValue) {
         final NumericalClassValue classModel = m_classValues.get(classValue);
-        if (classModel == null || classModel.getNoOfRows() == 0) {
+        if (classModel == null) {
             return false;
         }
         return true;
