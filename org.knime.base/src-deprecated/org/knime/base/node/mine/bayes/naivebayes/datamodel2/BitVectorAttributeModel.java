@@ -76,8 +76,11 @@ import org.knime.core.util.MutableInteger;
 
 /**
  * {@link AttributeModel} implementation that can handle {@link BitVectorValue}s.
+ *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 public class BitVectorAttributeModel extends AttributeModel {
 
     /**

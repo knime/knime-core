@@ -831,6 +831,7 @@
             factory-class="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"/>
       <node
             category-path="/analytics/mining/bayes"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor3.NaiveBayesPredictorNodeFactory2"/>
       <node deprecated="true"
             category-path="/analytics/mining/bayes"
@@ -1834,7 +1835,7 @@
       </node>
       <node
             category-path="/analytics/mining/bayes"
-            deprecated="false"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory3"
             >
       </node>
@@ -1963,6 +1964,16 @@
             category-path="/analytics/mining/miscClass"
             deprecated="false"
             factory-class="org.knime.base.node.mine.knn.KnnNodeFactory2">
+      </node>
+      <node
+            category-path="/analytics/mining/bayes"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.bayes.naivebayes.learner3.NaiveBayesLearnerNodeFactory4">
+      </node>
+      <node
+            category-path="/analytics/mining/bayes"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor4.NaiveBayesPredictorNodeFactory3">
       </node>
    </extension>
    

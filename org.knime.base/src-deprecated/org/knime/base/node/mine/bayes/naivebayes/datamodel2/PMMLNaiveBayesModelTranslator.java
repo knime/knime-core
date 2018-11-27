@@ -70,10 +70,13 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
- * Helper class translate between the internal used naive Bayes model and the PMML standard.
- * The class also provides helper methods to read/write extensions.
+ * Helper class translate between the internal used naive Bayes model and the PMML standard. The class also provides
+ * helper methods to read/write extensions.
+ *
  * @author Tobias Koetter
+ * @deprecated
  */
+@Deprecated
 public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
 
     private NaiveBayesModel m_model;

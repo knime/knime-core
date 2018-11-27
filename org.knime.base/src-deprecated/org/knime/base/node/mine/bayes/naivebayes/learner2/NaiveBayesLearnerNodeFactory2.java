@@ -42,45 +42,61 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.base.node.mine.bayes.naivebayes.predictor3;
+package org.knime.base.node.mine.bayes.naivebayes.learner2;
 
-import java.util.List;
-
-import org.knime.base.node.mine.util.PredictorNodeDialog;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
-
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
 
 /**
- * <code>NodeDialog</code> for the "Naive Bayes Predictor" Node.
+ * <code>NodeFactory</code> for the "Naive Bayes Learner" node.
  *
- * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
+ * @author Tobias Koetter
+ * @deprecated
  */
-class NaiveBayesPredictorNodeDialog2 extends PredictorNodeDialog {
-
+@Deprecated
+public class NaiveBayesLearnerNodeFactory2
+    extends NodeFactory<NaiveBayesLearnerNodeModel2> {
     /**
-     * New pane for configuring BayesianClassifier node dialog.
+     * {@inheritDoc}
      */
-    NaiveBayesPredictorNodeDialog2() {
-        super(NaiveBayesPredictorNodeModel2.createProbabilityColumnModel());
+    @Override
+    public NaiveBayesLearnerNodeModel2 createNodeModel() {
+        return new NaiveBayesLearnerNodeModel2();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void extractTargetColumn(final PortObjectSpec[] specs) {
-        if (specs[0] instanceof PMMLPortObjectSpec) {
-            PMMLPortObjectSpec spec = (PMMLPortObjectSpec)specs[0];
-            final List<DataColumnSpec> targetCols = spec.getTargetCols();
-            if (targetCols.size() != 1) {
-                throw new IllegalStateException("No valid class column found");
-            }
-            final DataColumnSpec targetColumn = targetCols.get(0);
-            setLastTargetColumn(targetColumn);
-        } else {
-            throw new IllegalStateException(specs[0].getClass().toString());
+    public int getNrNodeViews() {
+        return 1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NaiveBayesLearnerNodeView2 createNodeView(final int viewIndex,
+            final NaiveBayesLearnerNodeModel2 nodeModel) {
+        if (viewIndex != 0) {
+            throw new IllegalArgumentException();
         }
+        return new NaiveBayesLearnerNodeView2(nodeModel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new NaiveBayesLearnerNodeDialog2();
     }
 }

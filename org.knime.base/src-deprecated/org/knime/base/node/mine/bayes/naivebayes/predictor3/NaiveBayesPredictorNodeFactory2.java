@@ -42,81 +42,61 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.base.node.mine.bayes.naivebayes.predictor3;
 
-package org.knime.base.node.mine.bayes.naivebayes.learner2;
-
-import javax.swing.JEditorPane;
-import javax.swing.JScrollPane;
-
-import org.knime.base.node.mine.bayes.naivebayes.datamodel2.NaiveBayesModel;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
-
 /**
- * <code>NodeView</code> for the "Naive Bayes Learner" Node.
+ * <code>NodeFactory</code> for the "Naive Bayes Predictor" node.
  *
- * @author Tobias Koetter
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
+ * @since 2.10
+ * @deprecated
  */
-public class NaiveBayesLearnerNodeView2
-extends NodeView<NaiveBayesLearnerNodeModel2> {
-
-
-    private NaiveBayesModel m_model;
-    private final JEditorPane m_htmlPane;
-
+@Deprecated
+public class NaiveBayesPredictorNodeFactory2 extends NodeFactory<NaiveBayesPredictorNodeModel2> {
     /**
-     * Creates a new view.
-     *
-     * @param nodeModel The model (
-     * class: <code>NaiveBayesLearnerNodeModel</code>)
+     * {@inheritDoc}
      */
-    protected NaiveBayesLearnerNodeView2(
-            final NaiveBayesLearnerNodeModel2 nodeModel) {
-        super(nodeModel);
-        m_model = (nodeModel).getNaiveBayesModel();
-        //The output as HTML
-        m_htmlPane = new JEditorPane("text/html", "");
-//        m_htmlPane.setText(m_model.getHTMLTable());
-        m_htmlPane.setEditable(false);
-        final JScrollPane scrollPane = new JScrollPane(m_htmlPane);
-/*
-        //The output as a JTABLE
-        final String[] captions = m_model.getDataTableCaptions();
-        final String[][] dataTable = m_model.getDataTable();
-        JTable table = new JTable(dataTable, captions);
-        JScrollPane scrollPane = new JScrollPane(table);
-        table.setPreferredScrollableViewportSize(new Dimension(540, 400));
-        */
-        setComponent(scrollPane);
+    @Override
+    public NaiveBayesPredictorNodeModel2 createNodeModel() {
+        return new NaiveBayesPredictorNodeModel2();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void modelChanged() {
-        final NaiveBayesLearnerNodeModel2 nodeModel = getNodeModel();
-        m_model = nodeModel.getNaiveBayesModel();
-        if (m_model != null) {
-            m_htmlPane.setText(m_model.getHTMLView());
-        } else {
-            m_htmlPane.setText("No model available");
-        }
+    public int getNrNodeViews() {
+        return 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void onClose() {
-        //nothing to do
+    public NodeView<NaiveBayesPredictorNodeModel2> createNodeView(
+            final int viewIndex, final NaiveBayesPredictorNodeModel2 nodeModel) {
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void onOpen() {
-//        nothing to do
+    public boolean hasDialog() {
+        return true;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new NaiveBayesPredictorNodeDialog2();
+    }
+
+
 }

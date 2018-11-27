@@ -49,9 +49,11 @@ import org.knime.core.node.NodeFactory;
 
 /**
  * <code>NodeFactory</code> for the "Naive Bayes Learner" node.
-
+ *
  * @author Tobias Koetter
+ * @deprecated
  */
+@Deprecated
 public class NaiveBayesLearnerNodeFactory3
     extends NodeFactory<NaiveBayesLearnerNodeModel2> {
     /**

@@ -94,11 +94,13 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 
 /**
- * This class represents the learned Naive Bayes model. This basic model
- * holds for each attribute an {@link AttributeModel}. Which provides the
- * probability information for each class value.
+ * This class represents the learned Naive Bayes model. This basic model holds for each attribute an
+ * {@link AttributeModel}. Which provides the probability information for each class value.
+ *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 public class NaiveBayesModel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NaiveBayesModel.class);

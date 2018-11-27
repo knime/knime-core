@@ -76,12 +76,14 @@ import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
 
 
-
 /**
- * This {@link AttributeModel} implementation holds the class attribute
- * information like the number of rows per class value.
+ * This {@link AttributeModel} implementation holds the class attribute information like the number of rows per class
+ * value.
+ *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 class ClassAttributeModel extends AttributeModel {
     /**
      * The unique type of this model used for saving/loading.

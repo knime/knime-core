@@ -69,10 +69,13 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 
 /**
- * This abstract class needs to be implemented by all attribute models and
- * provides missing value handling and some common methods.
+ * This abstract class needs to be implemented by all attribute models and provides missing value handling and some
+ * common methods.
+ *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 public abstract class AttributeModel implements Comparable<AttributeModel> {
 
     /**Config key for the attribute name.*/

@@ -44,57 +44,45 @@
  */
 package org.knime.base.node.mine.bayes.naivebayes.predictor3;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.util.List;
+
+import org.knime.base.node.mine.util.PredictorNodeDialog;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+
 
 /**
- * <code>NodeFactory</code> for the "Naive Bayes Predictor" node.
-
+ * <code>NodeDialog</code> for the "Naive Bayes Predictor" Node.
+ *
  * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
- * @since 2.10
+ * @deprecated
  */
-public class NaiveBayesPredictorNodeFactory2 extends NodeFactory<NaiveBayesPredictorNodeModel2> {
+@Deprecated
+class NaiveBayesPredictorNodeDialog2 extends PredictorNodeDialog {
+
     /**
-     * {@inheritDoc}
+     * New pane for configuring BayesianClassifier node dialog.
      */
-    @Override
-    public NaiveBayesPredictorNodeModel2 createNodeModel() {
-        return new NaiveBayesPredictorNodeModel2();
+    NaiveBayesPredictorNodeDialog2() {
+        super(NaiveBayesPredictorNodeModel2.createProbabilityColumnModel());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrNodeViews() {
-        return 0;
+    protected void extractTargetColumn(final PortObjectSpec[] specs) {
+        if (specs[0] instanceof PMMLPortObjectSpec) {
+            PMMLPortObjectSpec spec = (PMMLPortObjectSpec)specs[0];
+            final List<DataColumnSpec> targetCols = spec.getTargetCols();
+            if (targetCols.size() != 1) {
+                throw new IllegalStateException("No valid class column found");
+            }
+            final DataColumnSpec targetColumn = targetCols.get(0);
+            setLastTargetColumn(targetColumn);
+        } else {
+            throw new IllegalStateException(specs[0].getClass().toString());
+        }
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<NaiveBayesPredictorNodeModel2> createNodeView(
-            final int viewIndex, final NaiveBayesPredictorNodeModel2 nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new NaiveBayesPredictorNodeDialog2();
-    }
-
-
 }

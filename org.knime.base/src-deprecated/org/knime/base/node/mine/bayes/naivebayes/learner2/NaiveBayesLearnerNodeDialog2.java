@@ -62,7 +62,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * <code>NodeDialog</code> for the "Naive Bayes Learner" node.
  *
  * @author Tobias Koetter
+ * @deprecated
  */
+@Deprecated
 public class NaiveBayesLearnerNodeDialog2 extends DefaultNodeSettingsPane {
 
     private SettingsModelBoolean m_pmmlCompatible = NaiveBayesLearnerNodeModel2.createPMMLCompatibilityFlagModel();

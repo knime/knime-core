@@ -64,10 +64,13 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
 
 /**
- * Naive Bayes <code>AppendCellFactory</code> class which uses the given
- * <code>NaiveBayesModel</code> to predict the class membership of each row.
+ * Naive Bayes <code>AppendCellFactory</code> class which uses the given <code>NaiveBayesModel</code> to predict the
+ * class membership of each row.
+ *
  * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
+ * @deprecated
  */
+@Deprecated
 class NaiveBayesCellFactory implements AppendedCellFactory, CellFactory {
 
     /**

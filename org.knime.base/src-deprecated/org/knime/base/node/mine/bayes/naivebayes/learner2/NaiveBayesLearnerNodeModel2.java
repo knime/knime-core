@@ -86,11 +86,12 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
- * This is the <code>NodeModel</code> implementation of the
- * "Naive Bayes Learner" node.
+ * This is the <code>NodeModel</code> implementation of the "Naive Bayes Learner" node.
  *
  * @author Tobias Koetter
+ * @deprecated
  */
+@Deprecated
 public class NaiveBayesLearnerNodeModel2 extends NodeModel {
 
     // our logger instance

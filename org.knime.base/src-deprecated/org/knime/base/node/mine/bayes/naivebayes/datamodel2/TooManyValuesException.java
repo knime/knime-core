@@ -51,8 +51,11 @@ package org.knime.base.node.mine.bayes.naivebayes.datamodel2;
 
 /**
  * Exception if the maximum number of different values is exceeded.
+ *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 public class TooManyValuesException extends Exception {
 
     private static final long serialVersionUID = 2;

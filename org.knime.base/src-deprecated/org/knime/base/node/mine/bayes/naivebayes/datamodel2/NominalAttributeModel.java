@@ -78,10 +78,12 @@ import org.knime.core.util.MutableInteger;
 
 
 /**
- * This {@link AttributeModel} implementation calculates the probability for
- * all nominal attributes.
+ * This {@link AttributeModel} implementation calculates the probability for all nominal attributes.
+ *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated
  */
+@Deprecated
 class NominalAttributeModel extends AttributeModel {
 
 //    private static final int HTML_VIEW_SIZE = 1;
