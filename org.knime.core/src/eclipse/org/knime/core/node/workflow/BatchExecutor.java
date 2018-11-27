@@ -903,6 +903,7 @@ public class BatchExecutor {
         WorkflowManager wfm;
         try {
             wfm = loadWorkflow(config);
+            NodeTimer.GLOBAL_TIMER.incWorkflowOpening();
         } catch (IOException ex) {
             LOGGER.error("IO error while loading the workflow: " + ex.getMessage());
             return EXIT_ERR_LOAD;

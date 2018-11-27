@@ -373,6 +373,7 @@ public final class NodeTimer {
             job.add("workflowsOpened", m_workflowsOpened);
             job.add("remoteWorkflowsOpened", m_remoteWorkflowsOpened);
             job.add("launches", getNrLaunches());
+            job.add("lastApplicationID", System.getProperty("eclipse.application")); // batch, standard KNIME AP, ...
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
             job.add("crashes", getNrCrashes());
             job.add("properlyShutDown", properShutdown);

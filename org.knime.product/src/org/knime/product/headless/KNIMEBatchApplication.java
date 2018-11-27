@@ -48,6 +48,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.workflow.BatchExecutor;
+import org.knime.core.node.workflow.NodeTimer;
 import org.knime.product.profiles.ProfileManager;
 import org.osgi.framework.Bundle;
 
@@ -78,7 +79,18 @@ public class KNIMEBatchApplication implements IApplication {
         // this actually returns with a non-0 value when failed,
         // we ignore it here
 
-        return runBatchExecutor(stringArgs);
+        int exit = runBatchExecutor(stringArgs);
+        switch (exit) {
+            // only report usage when the batch executor actually ran
+            case BatchExecutor.EXIT_ERR_EXECUTION:
+            case BatchExecutor.EXIT_WARN:
+            case BatchExecutor.EXIT_SUCCESS:
+                NodeTimer.GLOBAL_TIMER.performShutdown();
+                break;
+            default:
+                // don't report errors during workflow load and/or batch executor usage problem (cmd line errors)
+        }
+        return exit;
     }
 
     /**
