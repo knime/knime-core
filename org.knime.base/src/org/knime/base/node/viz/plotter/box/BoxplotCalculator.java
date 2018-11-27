@@ -49,7 +49,6 @@
 package org.knime.base.node.viz.plotter.box;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -101,7 +100,6 @@ public class BoxplotCalculator {
      * Map of "classN -> K missing values" for each data column.
      */
     private LinkedHashMap<String, LinkedHashMap<String, Long>> m_ignoredMissVals;
-
 
     /**
      * @return the excludedDataCols
@@ -156,6 +154,26 @@ public class BoxplotCalculator {
         calculateMultipleConditional(final BufferedDataTable table, final String catCol,
                                             final String[] numCol, final ExecutionContext exec)
                                                     throws CanceledExecutionException, InvalidSettingsException {
+        return calculateMultipleConditional(table, catCol, numCol, false, exec);
+    }
+
+    /**
+     * Calculates statistics for a conditional box plot.
+     *
+     * @param table the data table
+     * @param catCol the column with the category values
+     * @param numCol the numeric column
+     * @param failOnSpecialDoubles true if the execution should throw an {@link IllegalArgumentException} when a special
+     *            double is encountered (e.g. Double.Nan), false if the corresponding values should be skipped
+     * @param exec an execution context
+     * @return A linked hash map with BoxplotStatistics for each category
+     * @throws CanceledExecutionException when the user cancels the execution
+     * @throws InvalidSettingsException when the category column has no domain values
+     * @since 3.7
+     */
+    public LinkedHashMap<String, LinkedHashMap<String, BoxplotStatistics>> calculateMultipleConditional(
+        final BufferedDataTable table, final String catCol, final String[] numCol, final boolean failOnSpecialDoubles,
+        final ExecutionContext exec) throws CanceledExecutionException, InvalidSettingsException {
         DataTableSpec spec = table.getSpec();
         int catColIdx = spec.findColumnIndex(catCol);
         int[] numColIdxs = new int[numCol.length];
@@ -208,7 +226,8 @@ public class BoxplotCalculator {
             String catName = catCell.isMissing() ? MISSING_VALUES_CLASS : catCell.toString();
             for (int i = 0; i < numCol.length; i++) {
                 DataCell cell = row.getCell(numColIdxs[i]);
-                if (!cell.isMissing()) {
+                boolean isSpecialDouble = cellContainsSpecialDouble(failOnSpecialDoubles, cell);
+                if (!cell.isMissing() && !isSpecialDouble) {
                     containers.get(numCol[i]).get(catName).addRowToTable(
                         new DefaultRow(row.getKey(), cell));
                 } else {
@@ -222,7 +241,6 @@ public class BoxplotCalculator {
         LinkedHashMap<String, LinkedHashMap<String, BoxplotStatistics>> statsMap
         = new LinkedHashMap<>();
         excludedClasses = new LinkedHashMap<>();
-        List<String> colList = Arrays.asList(numCol);
 
         ExecutionContext subExec2 = exec.createSubExecutionContext(1.0);
         int count2 = 0;
@@ -234,7 +252,6 @@ public class BoxplotCalculator {
             String colName = entry.getKey();
 
             List<String> excludedColClassesList = new ArrayList<>();
-            LinkedHashMap<String, Long> ignoredColMissVals = new LinkedHashMap<>();
 
             for (Entry<String, DataContainer> entry2 : containers2.entrySet()) {
                 Set<Outlier> extremeOutliers = new HashSet<Outlier>();
@@ -358,6 +375,19 @@ public class BoxplotCalculator {
         return statsMap;
     }
 
+    private static boolean cellContainsSpecialDouble(final boolean failOnSpecialDoubles, final DataCell cell) {
+        boolean isSpecialDouble = false;
+        if (!cell.isMissing() && cell.getType().isCompatible(DoubleValue.class)) {
+            double dValue = ((DoubleValue)cell).getDoubleValue();
+            isSpecialDouble = Double.isNaN(dValue) || Double.isInfinite(dValue);
+            if (isSpecialDouble && failOnSpecialDoubles) {
+                throw new IllegalArgumentException(
+                    "Incompatible value encountered: " + Double.toString(dValue));
+            }
+        }
+        return isSpecialDouble;
+    }
+
     /**
      * Calculates the necessary statistics for a non-conditional boxplot.
      * @param table the input data
@@ -366,9 +396,25 @@ public class BoxplotCalculator {
      * @return LinkedHashMap with the column name as key and statistics as value
      * @throws CanceledExecutionException when the user cancels the execution
      */
-    public LinkedHashMap<String, BoxplotStatistics>
-    calculateMultiple(final BufferedDataTable table, final String[] numCol, final ExecutionContext exec)
-                                                throws CanceledExecutionException {
+    public LinkedHashMap<String, BoxplotStatistics> calculateMultiple(final BufferedDataTable table,
+        final String[] numCol, final ExecutionContext exec) throws CanceledExecutionException {
+        return calculateMultiple(table, numCol, false, exec);
+    }
+
+    /**
+     * Calculates the necessary statistics for a non-conditional boxplot.
+     * @param table the input data
+     * @param numCol array of names of numeric columns to plot
+     * @param failOnSpecialDoubles true if the execution should throw an {@link IllegalArgumentException} when a special
+     *            double is encountered (e.g. Double.Nan), false if the corresponding values should be skipped
+     * @param exec Execution context to report progress to
+     * @return LinkedHashMap with the column name as key and statistics as value
+     * @throws CanceledExecutionException when the user cancels the execution
+     * @since 3.7
+     */
+    public LinkedHashMap<String, BoxplotStatistics> calculateMultiple(final BufferedDataTable table,
+        final String[] numCol, final boolean failOnSpecialDoubles, final ExecutionContext exec)
+        throws CanceledExecutionException {
         DataTableSpec spec = table.getSpec();
         int[] numColIdxs = new int[numCol.length];
         for (int i = 0; i < numCol.length; i++) {
@@ -389,7 +435,8 @@ public class BoxplotCalculator {
             subExec.setProgress((double)count++ / table.size());
             for (int i = 0; i < numCol.length; i++) {
                 DataCell cell = row.getCell(numColIdxs[i]);
-                if (!cell.isMissing()) {
+                boolean isSpecialDouble = cellContainsSpecialDouble(failOnSpecialDoubles, cell);
+                if (!cell.isMissing() && !isSpecialDouble) {
                     containers.get(numCol[i]).addRowToTable(
                         new DefaultRow(row.getKey(), cell));
                 } else {
@@ -398,8 +445,7 @@ public class BoxplotCalculator {
             }
         }
 
-        LinkedHashMap<String, BoxplotStatistics> statsMap
-        = new LinkedHashMap<>();
+        LinkedHashMap<String, BoxplotStatistics> statsMap = new LinkedHashMap<>();
 
         ExecutionContext subExec2 = exec.createSilentSubExecutionContext(1.0);
         count = 0;
