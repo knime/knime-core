@@ -42,16 +42,60 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 27, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.base.node.mine.bayes.naivebayes.learner3;
 
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+
 /**
- * 
+ *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class NaiveBayesLearnerNodeFactory4 {
+public final class NaiveBayesLearnerNodeFactory4 extends NodeFactory<NaiveBayesLearnerNodeModel3> {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NaiveBayesLearnerNodeModel3 createNodeModel() {
+        return new NaiveBayesLearnerNodeModel3(false);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NaiveBayesLearnerNodeView3 createNodeView(final int viewIndex, final NaiveBayesLearnerNodeModel3 nodeModel) {
+        if (viewIndex != 0) {
+            throw new IllegalArgumentException();
+        }
+        return new NaiveBayesLearnerNodeView3(nodeModel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new NaiveBayesLearnerNodeDialog3();
+    }
 }

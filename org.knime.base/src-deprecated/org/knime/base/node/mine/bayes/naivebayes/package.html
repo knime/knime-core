@@ -1,6 +1,5 @@
-/*
- * ------------------------------------------------------------------------
- *
+<!--
+========================================================================
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -41,49 +40,9 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   Nov 27, 2018 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
- */
-package org.knime.base.node.mine.bayes.naivebayes.predictor4;
-
-import java.util.List;
-
-import org.knime.base.node.mine.util.PredictorNodeDialog;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
-
-/**
- *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
- */
-final class NaiveBayesPredictorNodeDialog3 extends PredictorNodeDialog {
-
-    /**
-     * New pane for configuring BayesianClassifier node dialog.
-     */
-    NaiveBayesPredictorNodeDialog3() {
-        super(NaiveBayesPredictorNodeModel3.createProbabilityColumnModel());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void extractTargetColumn(final PortObjectSpec[] specs) {
-        if (specs[0] instanceof PMMLPortObjectSpec) {
-            PMMLPortObjectSpec spec = (PMMLPortObjectSpec)specs[0];
-            final List<DataColumnSpec> targetCols = spec.getTargetCols();
-            if (targetCols.size() != 1) {
-                throw new IllegalStateException("No valid class column found");
-            }
-            final DataColumnSpec targetColumn = targetCols.get(0);
-            setLastTargetColumn(targetColumn);
-        } else {
-            throw new IllegalStateException(specs[0].getClass().toString());
-        }
-    }
-
-}
+====================================================================
+-->
+<body>
+This package contains the classes of the naive bayes learner and predictor
+and the algorithm classes.
+</body>

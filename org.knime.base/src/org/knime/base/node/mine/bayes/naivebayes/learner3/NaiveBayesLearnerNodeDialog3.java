@@ -65,7 +65,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class NaiveBayesLearnerNodeDialog3 extends DefaultNodeSettingsPane {
+final class NaiveBayesLearnerNodeDialog3 extends DefaultNodeSettingsPane {
 
     private SettingsModelBoolean m_pmmlCompatible = NaiveBayesLearnerNodeModel3.createPMMLCompatibilityFlagModel();
 
