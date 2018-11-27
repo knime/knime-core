@@ -48,11 +48,15 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.text.ParseException;
 
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.SpinnerNumberModel;
@@ -85,6 +89,9 @@ public class DialogComponentNumber extends DialogComponent {
     private final FlowVariableModelButton m_fvmButton;
 
     private final JLabel m_label;
+
+    private final JLabel m_warning;
+    private final String m_customErrorMsg;
 
     /**
      * Constructor puts a label and spinner (with default width) into a panel.
@@ -130,6 +137,7 @@ public class DialogComponentNumber extends DialogComponent {
         this (numberModel, label, stepSize, compWidth, null);
     }
 
+
     /**
      * Constructor puts label and spinner into panel and allows to specify
      * width (in #characters) of component.
@@ -142,17 +150,40 @@ public class DialogComponentNumber extends DialogComponent {
      * @param fvm The variable model (for displaying a little icon next to the
      * component to overwrite the settings with variables). Can be null.
      */
-    public DialogComponentNumber(final SettingsModelNumber numberModel,
-            final String label, final Number stepSize, final int compWidth,
-            final FlowVariableModel fvm) {
+    public DialogComponentNumber(final SettingsModelNumber numberModel, final String label, final Number stepSize,
+        final int compWidth, final FlowVariableModel fvm) {
+        this(numberModel, label, stepSize, compWidth, fvm, false, null);
+    }
+
+    /**
+     * A spinner with a label and, potentially, an error message
+     *
+     * @param numberModel the SettingsModel determining the number type (double
+     *            or int)
+     * @param label label for dialog in front of the spinner
+     * @param stepSize step size for the spinner
+     * @param compWidth the width (number of columns/characters) of the spinner
+     * @param fvm The variable model (for displaying a little icon next to the
+     * @param showWarning if {@code true} a warning will be shown in the dialog for out of range values
+     * @param customErrorMsg a custom error message to display when values are out of range
+     * @since 3.7
+     */
+    @SuppressWarnings("null")
+    public DialogComponentNumber(final SettingsModelNumber numberModel, final String label, final Number stepSize,
+        final int compWidth, final FlowVariableModel fvm, final boolean showWarning, final String customErrorMsg) {
         super(numberModel);
+        GridBagConstraints gbc = null;
+        m_customErrorMsg = customErrorMsg;
+        if (showWarning) {
+            getComponentPanel().setLayout(new GridBagLayout());
+            gbc = new GridBagConstraints();
+        }
 
         if (compWidth < 1) {
             throw new IllegalArgumentException("Width of component can't be "
                     + "smaller than 1");
         }
         m_label = new JLabel(label);
-        getComponentPanel().add(m_label);
 
         SpinnerNumberModel spinnerModel;
         if (numberModel instanceof SettingsModelDouble) {
@@ -160,7 +191,8 @@ public class DialogComponentNumber extends DialogComponent {
                 (SettingsModelDouble)numberModel;
             Double min = null;
             Double max = null;
-            if (dblModel instanceof SettingsModelDoubleBounded) {
+            // can't have min/max otherwise change listener is not notified if the value is out of range
+            if ((dblModel instanceof SettingsModelDoubleBounded) && !showWarning) {
                 min = ((SettingsModelDoubleBounded)dblModel).getLowerBound();
                 max = ((SettingsModelDoubleBounded)dblModel).getUpperBound();
             }
@@ -172,7 +204,8 @@ public class DialogComponentNumber extends DialogComponent {
                 (SettingsModelInteger)numberModel;
             Integer min = null;
             Integer max = null;
-            if (intModel instanceof SettingsModelIntegerBounded) {
+            // can't have min/max otherwise change listener is not notified if the value is out of range
+            if ((intModel instanceof SettingsModelIntegerBounded) && !showWarning) {
                 min = ((SettingsModelIntegerBounded)intModel).getLowerBound();
                 max = ((SettingsModelIntegerBounded)intModel).getUpperBound();
             }
@@ -184,7 +217,8 @@ public class DialogComponentNumber extends DialogComponent {
                     (SettingsModelLong)numberModel;
                 Long min = null;
                 Long max = null;
-                if (longModel instanceof SettingsModelLongBounded) {
+                // can't have min/max otherwise change listener is not notified if the value is out of range
+                if ((longModel instanceof SettingsModelLongBounded) && !showWarning) {
                     min = ((SettingsModelLongBounded)longModel).getLowerBound();
                     max = ((SettingsModelLongBounded)longModel).getUpperBound();
                 }
@@ -210,8 +244,17 @@ public class DialogComponentNumber extends DialogComponent {
             public void stateChanged(final ChangeEvent e) {
                 try {
                     updateModel();
+                    if (showWarning) {
+                        m_warning.setText("");
+                        m_warning.setVisible(false);
+                    }
                 } catch (final InvalidSettingsException ise) {
-                    // ignore it here.
+                    if (showWarning) {
+                        m_warning.setText(ise.getMessage());
+                        m_warning.setVisible(true);
+                    } else {
+                        // ignore it here.
+                    }
                 }
             }
         });
@@ -227,8 +270,6 @@ public class DialogComponentNumber extends DialogComponent {
             }
         });
 
-        getComponentPanel().add(m_spinner);
-
         // add variable editor button if so desired
         if (fvm != null) {
             fvm.addChangeListener(new ChangeListener() {
@@ -241,6 +282,40 @@ public class DialogComponentNumber extends DialogComponent {
             getComponentPanel().add(m_fvmButton);
         } else {
             m_fvmButton = null;
+        }
+
+        if (showWarning) {
+            m_warning = new JLabel("");
+            m_warning.setForeground(Color.RED);
+            m_warning.setVisible(false);
+
+            int span = 2;
+            final JPanel comp = getComponentPanel();
+            gbc.gridwidth = 1;
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            comp.add(m_label, gbc);
+            gbc.gridx++;
+            comp.add(m_spinner, gbc);
+            if (m_fvmButton != null) {
+                span = 3;
+                gbc.gridx++;
+                comp.add(m_fvmButton, gbc);
+            }
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.weightx = 1;
+            gbc.gridx = 0;
+            gbc.gridy++;
+            gbc.gridwidth = span;
+            comp.add(m_warning, gbc);
+        } else {
+            final JPanel comp = getComponentPanel();
+            comp.add(m_label);
+            comp.add(m_spinner);
+            if (m_fvmButton != null) {
+                comp.add(m_fvmButton);
+            }
+            m_warning = null;
         }
 
         // call this method to be in sync with the settings model
@@ -355,18 +430,14 @@ public class DialogComponentNumber extends DialogComponent {
         try {
             m_spinner.commitEdit();
             if (getModel() instanceof SettingsModelDouble) {
-                final SettingsModelDouble model =
-                    (SettingsModelDouble)getModel();
-                model.setDoubleValue(((Double)m_spinner.getValue())
-                        .doubleValue());
+                final SettingsModelDouble model = (SettingsModelDouble)getModel();
+                model.setDoubleValue(((Double)m_spinner.getValue()).doubleValue());
             } else if (getModel() instanceof SettingsModelLong) {
-                final SettingsModelLong model =
-                    (SettingsModelLong)getModel();
+                final SettingsModelLong model = (SettingsModelLong)getModel();
                 model.setLongValue(((Long)m_spinner.getValue()).longValue());
             } else {
-                final SettingsModelInteger model =
-                        (SettingsModelInteger)getModel();
-                    model.setIntValue(((Integer)m_spinner.getValue()).intValue());
+                final SettingsModelInteger model = (SettingsModelInteger)getModel();
+                model.setIntValue(((Integer)m_spinner.getValue()).intValue());
             }
         } catch (final ParseException e) {
             final JComponent editor = m_spinner.getEditor();
@@ -384,6 +455,15 @@ public class DialogComponentNumber extends DialogComponent {
                 errMsg += "Please enter a valid long number.";
             }
             throw new InvalidSettingsException(errMsg);
+        } catch (final IllegalArgumentException e) {
+            if (m_warning != null) {
+                if (m_customErrorMsg != null && !m_customErrorMsg.isEmpty()) {
+                    throw new InvalidSettingsException(m_customErrorMsg);
+                }
+                throw new InvalidSettingsException(e.getMessage());
+            } else {
+                throw e;
+            }
         }
     }
 
@@ -420,6 +500,13 @@ public class DialogComponentNumber extends DialogComponent {
             m_fvmButton.setEnabled(enabled);
         }
         m_spinner.setEnabled(spinnerEnabled);
+        if (m_warning != null) {
+            if (m_warning.getText() == null || m_warning.getText().isEmpty()) {
+                m_warning.setVisible(false);
+            } else {
+                m_warning.setVisible(spinnerEnabled);
+            }
+        }
     }
 
     /**
@@ -430,5 +517,4 @@ public class DialogComponentNumber extends DialogComponent {
         m_spinner.setToolTipText(text);
         m_label.setToolTipText(text);
     }
-
 }
