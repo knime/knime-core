@@ -527,7 +527,7 @@ public class NaiveBayesModel {
         m_modelByAttrName.put(m_classColName, classModel);
     }
 
-    private DataType getDataType(final DataDictionary dataDictionary, final String classColName) {
+    private static DataType getDataType(final DataDictionary dataDictionary, final String classColName) {
         List<DataField> fieldList = dataDictionary.getDataFieldList();
         for (DataField field : fieldList) {
             if (field.getName().equals(classColName)) {
@@ -655,7 +655,7 @@ public class NaiveBayesModel {
         if (classModel == null) {
             throw new IllegalArgumentException("Class model not found");
         }
-        if (classModel.hasRecs4ClassValue(classValue)) {
+        if (!classModel.hasRecs4ClassValue(classValue)) {
             throw new IllegalArgumentException("Class value: " + classValue + " not found");
         }
         final long noOfRecs4Class = classModel.getNoOfRecs4ClassValue(classValue);
@@ -979,51 +979,6 @@ public class NaiveBayesModel {
             return DoubleCellFactory.create(Double.parseDouble(val));
         }
         return StringCellFactory.create(val);
-    }
-
-    /**
-     * Returns the probability of the row to be member of the given class. All not known attributes are skipped. If none
-     * of the given attributes is known the method returns the class prior probability.
-     *
-     * @param attrNames the name of the attributes
-     * @param row the row with the value per attribute in the same order like the attribute names
-     * @param classValue the class value to compute the probability for
-     * @param useLog <code>true</code> if probabilities should be combined by adding the logs
-     * @return the probability of this row to belong to the given class value
-     */
-    private double getClassProbability(final String[] attrNames, final DataRow row, final String classValue) {
-        // TODO: to be deleted
-        double combinedProbability = Math.log(getClassPriorProbability(classValue));
-        for (int i = 0, length = row.getNumCells(); i < length; i++) {
-            final String attrName = attrNames[i];
-            final AttributeModel model = m_modelByAttrName.get(attrName);
-            if (model == null) {
-                //skip unknown attributes
-                continue;
-            }
-            if (model instanceof ClassAttributeModel) {
-                //skip the class value column
-                continue;
-            }
-            final double probabilityThreshold;
-            if (m_pmmlZeroProbThreshold.isNaN()) {
-                probabilityThreshold = 0;
-            } else {
-                probabilityThreshold = m_pmmlZeroProbThreshold.doubleValue();
-            }
-            final DataCell cell = row.getCell(i);
-            Double probability = model.getProbability(classValue, cell, probabilityThreshold);
-            if (probability != null) {
-                if (probability.doubleValue() <= 0) {
-                    //set the probability to the given corrector if the probability is zero and the pmml threshold
-                    //method should be used
-                    probability = m_pmmlZeroProbThreshold;
-                }
-                combinedProbability += Math.log(probability.doubleValue());
-            }
-        }
-        combinedProbability = Math.exp(combinedProbability);
-        return combinedProbability;
     }
 
     /**

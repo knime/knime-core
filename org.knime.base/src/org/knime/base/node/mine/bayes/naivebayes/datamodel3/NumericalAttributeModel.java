@@ -108,6 +108,10 @@ class NumericalAttributeModel extends AttributeModel {
 
         private static final String NO_OF_ROWS = "noOfRows";
 
+        private static final String MEAN_CFG = "mean";
+
+        private static final String VARIANCE_CFG = "variance";
+
         private final String m_classValue;
 
         private int m_noOfRows = 0;
@@ -139,15 +143,16 @@ class NumericalAttributeModel extends AttributeModel {
          *
          * @param config the <code>Config</code> object to read from
          * @throws InvalidSettingsException if the settings are invalid
-         * @deprecated
          */
-        @Deprecated
         private NumericalClassValue(final Config config) throws InvalidSettingsException {
-            throw new RuntimeException("This constructor is forbidden");
-            //            m_classValue = config.getString(CLASS_VALUE);
-            //            m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
-            //            m_noOfRows = config.getInt(NO_OF_ROWS);
-            //            m_incVar = null;
+            //            throw new RuntimeException("This constructor is forbidden");
+            m_classValue = config.getString(CLASS_VALUE);
+            m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
+            m_noOfRows = config.getInt(NO_OF_ROWS);
+            m_mean = config.getDouble(MEAN_CFG);
+            m_variance = config.getDouble(VARIANCE_CFG);
+            m_incVar = null;
+            m_incMean = null;
         }
 
         /**
@@ -181,6 +186,8 @@ class NumericalAttributeModel extends AttributeModel {
             config.addString(CLASS_VALUE, m_classValue);
             config.addInt(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
             config.addInt(NO_OF_ROWS, m_noOfRows);
+            config.addDouble(MEAN_CFG, getMean());
+            config.addDouble(VARIANCE_CFG, getVariance());
         }
 
         /**
@@ -250,7 +257,12 @@ class NumericalAttributeModel extends AttributeModel {
         private void addValue(final DataCell attrVal) {
             if (attrVal.isMissing()) {
                 m_missingValueRecs.inc();
+            } else {
+                final double val = ((DoubleValue)attrVal).getDoubleValue();
+                m_incMean.increment(val);
+                m_incVar.increment(val);
             }
+
             m_noOfRows++;
         }
 
