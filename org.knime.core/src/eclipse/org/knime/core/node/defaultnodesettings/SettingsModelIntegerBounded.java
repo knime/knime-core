@@ -136,7 +136,7 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
 
     private void checkBounds(final double val) {
         if ((val < m_minValue) || (m_maxValue < val)) {
-            throw new IllegalArgumentException("value (=" + val
+            throw new IllegalArgumentException("Value (=" + val
                     + ") must be within the range [" + m_minValue + "..."
                     + m_maxValue + "].");
         }

@@ -187,47 +187,50 @@ public class DialogComponentNumber extends DialogComponent {
 
         SpinnerNumberModel spinnerModel;
         if (numberModel instanceof SettingsModelDouble) {
-            final SettingsModelDouble dblModel =
-                (SettingsModelDouble)numberModel;
+            final SettingsModelDouble dblModel = (SettingsModelDouble)numberModel;
+            final double initialValue = dblModel.getDoubleValue();
             Double min = null;
             Double max = null;
-            // can't have min/max otherwise change listener is not notified if the value is out of range
-            if ((dblModel instanceof SettingsModelDoubleBounded) && !showWarning) {
+            if (dblModel instanceof SettingsModelDoubleBounded) {
                 min = ((SettingsModelDoubleBounded)dblModel).getLowerBound();
                 max = ((SettingsModelDoubleBounded)dblModel).getUpperBound();
             }
-            spinnerModel =
-                    new SpinnerNumberModel(dblModel.getDoubleValue(), min, max,
-                            stepSize);
+            if (showWarning) {
+                spinnerModel = new SpinnerNumberModelWarning<>(initialValue, max, min, stepSize);
+            } else {
+                spinnerModel = new SpinnerNumberModel(initialValue, min, max, stepSize);
+            }
         } else if (numberModel instanceof SettingsModelInteger) {
-            final SettingsModelInteger intModel =
-                (SettingsModelInteger)numberModel;
+            final SettingsModelInteger intModel = (SettingsModelInteger)numberModel;
+            final int initialValue = intModel.getIntValue();
             Integer min = null;
             Integer max = null;
-            // can't have min/max otherwise change listener is not notified if the value is out of range
-            if ((intModel instanceof SettingsModelIntegerBounded) && !showWarning) {
+            if (intModel instanceof SettingsModelIntegerBounded) {
                 min = ((SettingsModelIntegerBounded)intModel).getLowerBound();
                 max = ((SettingsModelIntegerBounded)intModel).getUpperBound();
             }
-            spinnerModel =
-                    new SpinnerNumberModel(intModel.getIntValue(), min, max,
-                            stepSize);
-        } else if (numberModel instanceof SettingsModelLong) {
-            final SettingsModelLong longModel =
-                    (SettingsModelLong)numberModel;
-                Long min = null;
-                Long max = null;
-                // can't have min/max otherwise change listener is not notified if the value is out of range
-                if ((longModel instanceof SettingsModelLongBounded) && !showWarning) {
-                    min = ((SettingsModelLongBounded)longModel).getLowerBound();
-                    max = ((SettingsModelLongBounded)longModel).getUpperBound();
-                }
-                spinnerModel =
-                        new SpinnerNumberModel(longModel.getLongValue(), min, max,
-                                stepSize);
+            if (showWarning) {
+                spinnerModel = new SpinnerNumberModelWarning<>(initialValue, max, min, stepSize);
             } else {
-            throw new IllegalArgumentException("Only Double, Long and Integer are "
-                    + "currently supported by the NumberComponent");
+                spinnerModel = new SpinnerNumberModel(initialValue, min, max, stepSize);
+            }
+        } else if (numberModel instanceof SettingsModelLong) {
+            final SettingsModelLong longModel = (SettingsModelLong)numberModel;
+            final long initialValue = longModel.getLongValue();
+            Long min = null;
+            Long max = null;
+            if (longModel instanceof SettingsModelLongBounded) {
+                min = ((SettingsModelLongBounded)longModel).getLowerBound();
+                max = ((SettingsModelLongBounded)longModel).getUpperBound();
+            }
+            if (showWarning) {
+                spinnerModel = new SpinnerNumberModelWarning<>(initialValue, max, min, stepSize);
+            } else {
+                spinnerModel = new SpinnerNumberModel(initialValue, min, max, stepSize);
+            }
+        } else {
+            throw new IllegalArgumentException(
+                "Only Double, Long and Integer are " + "currently supported by the NumberComponent");
         }
         m_spinner = new JSpinner(spinnerModel);
         if (numberModel instanceof SettingsModelDouble) {
@@ -291,6 +294,8 @@ public class DialogComponentNumber extends DialogComponent {
 
             int span = 2;
             final JPanel comp = getComponentPanel();
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.weightx = 1;
             gbc.gridwidth = 1;
             gbc.gridx = 0;
             gbc.gridy = 0;
@@ -302,8 +307,6 @@ public class DialogComponentNumber extends DialogComponent {
                 gbc.gridx++;
                 comp.add(m_fvmButton, gbc);
             }
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.weightx = 1;
             gbc.gridx = 0;
             gbc.gridy++;
             gbc.gridwidth = span;
@@ -516,5 +519,54 @@ public class DialogComponentNumber extends DialogComponent {
     public void setToolTipText(final String text) {
         m_spinner.setToolTipText(text);
         m_label.setToolTipText(text);
+    }
+
+    private static final class SpinnerNumberModelWarning<N extends Number> extends SpinnerNumberModel {
+
+        private static final long serialVersionUID = -4033155327436356001L;
+
+        private final Comparable<N> maximum;
+        private final Comparable<N> minimum;
+
+        SpinnerNumberModelWarning(final N initialValue, final Comparable<N> max, final Comparable<N> min,
+            final Number stepSize) {
+            super(initialValue, null, null, stepSize);
+            maximum = max;
+            minimum = min;
+        }
+
+        @Override
+        public Object getNextValue() {
+            final Object o = super.getNextValue();
+            return compare(o);
+        }
+
+        @Override
+        public Object getPreviousValue() {
+            final Object o = super.getPreviousValue();
+            return compare(o);
+        }
+
+        @SuppressWarnings("unchecked")
+        private Object compare(final Object value) {
+            try {
+                final N v = (N)value;
+                final N currentValue = (N)getNumber();
+                // if the value is already out of range you can only change it manually,
+                // this is consistent with other spinners
+                if (maximum.compareTo(currentValue) < 0 || minimum.compareTo(currentValue) > 0) {
+                    return currentValue;
+                }
+                if (maximum.compareTo(v) < 0) {
+                    return maximum;
+                }
+                if (minimum.compareTo(v) > 0) {
+                    return minimum;
+                }
+                return value;
+            } catch (ClassCastException ex) {
+                return value;
+            }
+        }
     }
 }
