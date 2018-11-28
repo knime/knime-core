@@ -269,12 +269,7 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
     private static void connectRadioAndComponent(final JRadioButton replaceColumnRadio, final Component panel) {
         replaceColumnRadio.addItemListener(e -> panel.setEnabled(replaceColumnRadio.isSelected()));
 
-        if (panel instanceof ColumnSelectionPanel) {
-            ((ColumnSelectionPanel) panel).addUnderlyingPropertyChangeListener("enabled",
-                evt -> replaceColumnRadio.setSelected(panel.isEnabled()));
-        } else {
-            panel.addPropertyChangeListener("enabled", evt -> replaceColumnRadio.setSelected(panel.isEnabled()));
-        }
+         panel.addPropertyChangeListener("enabled", evt -> replaceColumnRadio.setSelected(panel.isEnabled()));
     }
 
     /** {@inheritDoc} */

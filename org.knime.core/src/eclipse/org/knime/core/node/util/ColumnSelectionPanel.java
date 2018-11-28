@@ -589,9 +589,9 @@ public class ColumnSelectionPanel extends JPanel {
      * @param propertyName The name of the property
      * @param listener The listener to be registered
      * @see JComboBox#addPropertyChangeListener(String, PropertyChangeListener)
-     * @since 3.7
      */
-    public void addUnderlyingPropertyChangeListener(
+    @Override
+    public void addPropertyChangeListener(
         final String propertyName,
         final PropertyChangeListener listener) {
         m_chooser.addPropertyChangeListener(propertyName, listener);
