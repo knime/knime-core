@@ -585,7 +585,7 @@ public class ColumnSelectionPanel extends JPanel {
     }
 
     /**
-     * Adds an item listener to the underlying combo box.
+     * Adds an property listener to the underlying combo box.
      * @param propertyName The name of the property
      * @param listener The listener to be registered
      * @see JComboBox#addPropertyChangeListener(String, PropertyChangeListener)
