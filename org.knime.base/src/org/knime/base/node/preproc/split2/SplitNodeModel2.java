@@ -49,8 +49,8 @@ package org.knime.base.node.preproc.split2;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -243,10 +243,9 @@ public class SplitNodeModel2 extends NodeModel {
         int maxToReport = 3;
         final String[] unknownsIncl = filter.getRemovedFromIncludes();
         final String[] unknownsExcl = filter.getRemovedFromExcludes();
-        final ArrayList<String> unknowns = new ArrayList<String>();
-        unknowns.addAll(Arrays.asList(unknownsIncl));
-        unknowns.addAll(Arrays.asList(unknownsExcl));
-        if (unknowns.size() > 0) {
+        final List<String> unknowns = m_conf.isEnforceInclusion()
+                ? Arrays.asList(unknownsIncl) : Arrays.asList(unknownsExcl);
+        if (!unknowns.isEmpty()) {
             warn.append("Some columns are no longer available: ");
             for (int i = 0; i < unknowns.size(); i++) {
                 warn.append(i > 0 ? ", " : "");
