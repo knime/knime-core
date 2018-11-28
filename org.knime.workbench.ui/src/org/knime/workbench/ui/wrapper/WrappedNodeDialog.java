@@ -100,6 +100,7 @@ import org.knime.core.ui.node.workflow.NodeOutPortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
 import org.knime.core.ui.wrapper.NodeOutPortWrapper;
+import org.knime.core.ui.wrapper.SingleNodeContainerWrapper;
 import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
@@ -559,7 +560,8 @@ public class WrappedNodeDialog extends AbstractWrappedDialog {
                     // variable port for SingleNodeContainer), otherwise
                     // handle meta node (without flow variable port)
                     final int pIndex;
-                    if (m_nodeContainer instanceof SingleNodeContainer) {
+                    if (m_nodeContainer instanceof SingleNodeContainerWrapper
+                            || m_nodeContainer instanceof SingleNodeContainer) {
                         pIndex = 1;
                     } else {
                         pIndex = 0;
