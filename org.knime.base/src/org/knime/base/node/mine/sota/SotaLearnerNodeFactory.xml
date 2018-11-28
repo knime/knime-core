@@ -10,7 +10,7 @@
 	<fullDescription>
 	<intro>		
 	<p>Clusters numerical and fuzzy data hierarchically with the self organizing 
-	tree algorithm and visualizes the cluster tree similarly like a dendogram.
+	tree algorithm and visualizes the cluster tree similarly like a dendrogram.
 	Additionally it builds a model for class prediction of new data. The model can be
 	load into the SOTA Predictor node.
 	</p>	
@@ -20,7 +20,7 @@
 	minimal error, to end a cycle and the distance metric (cosinus, euclidean).
 	The node will cluster the given data hierarchically by use of the self
 	organizing tree algorithm and will produce a cluster tree, which is
-	visualized by the view afterwards, similar to a dendogram.
+	visualized by the view afterwards, similar to a dendrogram.
 	The data is also displayed and can be hilit, as well as each cluster 
 	representative.
 	Class information can be trained too by selecting the "Use class column"
