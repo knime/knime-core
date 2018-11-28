@@ -230,8 +230,18 @@ public class MappingFramework {
             final JavaToDataCellConverter<?> converter = path.m_converterFactory.create(context);
             @SuppressWarnings("unchecked")
             final CellValueProducer<S, ?, PP> producer = (CellValueProducer<S, ?, PP>)path.m_producerFactory.create();
-
-            cells[i] = converter.convertUnsafe(producer.produceCellValue(source, params[i]));
+            try {
+                cells[i] = converter.convertUnsafe(producer.produceCellValue(source, params[i]));
+            } catch (final Exception e) {
+                final Throwable cause = e.getCause();
+                final String message;
+                if (cause != null) {
+                    message = cause.getMessage();
+                } else {
+                    message = "Data type mapping exception";
+                }
+                throw new MappingException(message, cause);
+            }
             ++i;
         }
 
@@ -276,11 +286,22 @@ public class MappingFramework {
             @SuppressWarnings("unchecked")
             final CellValueConsumer<D, Object, CP> consumer =
                 (CellValueConsumer<D, Object, CP>)mapping[i].m_consumerFactory.create();
-
-            final Object cellValue = cell.isMissing() ? null : converter.convertUnsafe(cell);
-            consumer.consumeCellValue(dest, cellValue, params[i]);
+            try {
+                final Object cellValue = cell.isMissing() ? null : converter.convertUnsafe(cell);
+                consumer.consumeCellValue(dest, cellValue, params[i]);
+            } catch (final Exception e) {
+                final Throwable cause = e.getCause();
+                final String message;
+                if (cause != null) {
+                    message = cause.getMessage();
+                } else {
+                    message = "Data type mapping exception";
+                }
+                throw new MappingException(message, cause);
+            }
             ++i;
         }
+
     }
 
     /**
