@@ -238,11 +238,15 @@ final class DataValidatorColConfiguration {
                 }
                 return nameShouldBeChanged || includesDomainCheck(referenceColSpec) || m_rejectOnMissingValue;
             case CONVERT_FAIL:
-                return nameShouldBeChanged || isNotCompatible(referenceColSpec, inputColSpec)
+                return nameShouldBeChanged || isNotEqualType(referenceColSpec, inputColSpec)
                     || includesDomainCheck(referenceColSpec) || m_rejectOnMissingValue;
             default:
                 throw new IllegalArgumentException("Unkown type...");
         }
+    }
+
+    private static boolean isNotEqualType(final DataColumnSpec referenceColSpec, final DataColumnSpec inputColSpec) {
+        return !referenceColSpec.getType().equals(inputColSpec.getType());
     }
 
     /**
@@ -270,14 +274,14 @@ final class DataValidatorColConfiguration {
     /**
      * @param specs
      */
-    private boolean isCheckDomainMinMax(final DataColumnSpec spec) {
+    private static boolean isCheckDomainMinMax(final DataColumnSpec spec) {
         return spec.getDomain().hasLowerBound() || spec.getDomain().hasUpperBound();
     }
 
     /**
      * @param specs
      */
-    private boolean checkDomainPossibleValues(final DataColumnSpec spec) {
+    private static boolean checkDomainPossibleValues(final DataColumnSpec spec) {
         return spec.getDomain().hasValues();
     }
 
@@ -354,7 +358,8 @@ final class DataValidatorColConfiguration {
 
         if (!rejectButDomainCheck
             && !EnumSet.of(DataTypeHandling.NONE, DataTypeHandling.FAIL).contains(m_dataTypeHandling)
-            && isNotCompatible(refColumnSpec, originalColumnSpec)) {
+            && isNotEqualType(refColumnSpec, originalColumnSpec)
+            ) {
             decorator =
                 DataValidatorCellDecorator.convertionCellDecorator(decorator, m_dataTypeHandling,
                     getConvertionType(refColumnSpec), refColumnSpec, conflicts);
@@ -382,7 +387,7 @@ final class DataValidatorColConfiguration {
      * @param originalColumnSpec
      * @return
      */
-    private boolean isNotCompatible(final DataColumnSpec refColumnSpec, final DataColumnSpec originalColumnSpec) {
+    private static boolean isNotCompatible(final DataColumnSpec refColumnSpec, final DataColumnSpec originalColumnSpec) {
         return !refColumnSpec.getType().isASuperTypeOf(originalColumnSpec.getType());
     }
 
@@ -390,7 +395,7 @@ final class DataValidatorColConfiguration {
      * @param refColumnSpec
      * @return
      */
-    private ConvertionType getConvertionType(final DataColumnSpec refColumnSpec) {
+    private static ConvertionType getConvertionType(final DataColumnSpec refColumnSpec) {
         DataType type = refColumnSpec.getType();
 
         // NOTE: The sequence here is important as we go from the most smallest general type to the most general one
