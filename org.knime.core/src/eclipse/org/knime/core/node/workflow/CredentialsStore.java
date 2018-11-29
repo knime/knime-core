@@ -48,14 +48,18 @@
 package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -166,20 +170,31 @@ public final class CredentialsStore implements Observer {
     }
 
     /**
-     * Update the {@link Credentials} with the names from the given
-     * credentials list. Only the login and password are updated.
+     * Set the credentials as defined in the argument list (all others are removed).
      * @param credentialsList the list of credentials to change
      * @return true, if there were changes in any of the fields
-     * @throws IllegalArgumentException If the identifier is unknown
      */
     synchronized boolean update(final Credentials... credentialsList) {
-        for (Credentials credentials : credentialsList) {
-            Credentials c = get(credentials.getName());
-            c.setPassword(credentials.getPassword());
-            c.setLogin(credentials.getLogin());
+        Map<String, Credentials> asMap = Arrays.stream(credentialsList)//
+                .collect(Collectors.toMap(Credentials::getName, Function.identity()));
+        List<String> obsoleteCredentials = new ArrayList<>();
+        boolean hasChanged = false;
+        for (Credentials c : m_credentials.values()) {
+            Credentials updatedCred = asMap.remove(c.getName());
+            if (updatedCred == null) { // entry is no longer part of the updated list, remove it from store
+                obsoleteCredentials.add(c.getName());
+                hasChanged = true;
+            } else {
+                hasChanged = !Objects.equals(c.getLogin(), updatedCred.getLogin()) || hasChanged;
+                hasChanged = !Objects.equals(c.getPassword(), updatedCred.getPassword()) || hasChanged;
+                c.setLogin(updatedCred.getLogin());
+                c.setPassword(updatedCred.getPassword());
+            }
         }
-        // this could be done smarter, e.g. only notify when things change
-        return credentialsList.length > 0;
+        obsoleteCredentials.stream().forEach(name -> remove(name));
+        hasChanged = !asMap.isEmpty() || hasChanged;
+        asMap.values().stream().forEach(cred -> add(cred));
+        return hasChanged;
     }
 
     /** Get iterable for credentials. Used internally (load/save). Caller

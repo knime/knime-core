@@ -8511,7 +8511,7 @@ public final class WorkflowManager extends NodeContainer
                         credNodeEntry.getValue().onWorkfowCredentialsChanged(Arrays.asList(credentialsList));
                     }
                 }
-                configureAllNodesInWFM(false);
+                reconfigureAllNodesOnlyInThisWFM(false);
             }
         }
     }
