@@ -194,14 +194,21 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
      */
     public void clearAllMessages() {
         Display.getDefault().asyncExec(() -> {
+            boolean shouldUpdateView = false;
+
             for (int i = 0; i < m_messages.length; i++) {
-                removeMessageFromView(i, false);
+                if (removeMessageFromView(i, false)) {
+                    shouldUpdateView = true;
+                }
             }
 
             m_currentMessageViewHeight.set(0);
-            updateTopWhitespaceBuffer();
 
-            repaint();
+            if (shouldUpdateView) {
+                updateTopWhitespaceBuffer();
+
+                repaint();
+            }
         });
     }
 
@@ -224,7 +231,10 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
         layoutMessages(true);
     }
 
-    private void removeMessageFromView(final int index, final boolean triggerRepaint) {
+    /**
+     * @return true if a there was a message for the given index which was removed
+     */
+    private boolean removeMessageFromView(final int index, final boolean triggerRepaint) {
         if (m_messages[index] != null) {
             m_messages[index] = null;
 
@@ -234,7 +244,11 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
             if (triggerRepaint) {
                 repaint();
             }
+
+            return true;
         }
+
+        return false;
     }
 
     private void repaint() {
@@ -252,7 +266,7 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
             //      tent-stake so that the messages are not covering any of the canvas elements.
             // We asyncExec again to give *something* a pause, for invoking this immediately rarely seems to work :-/
             Display.getDefault().asyncExec(() -> {
-                fc.scrollTo(0, -yOffset);
+                fc.scrollToY(-yOffset);
             });
         }
     }
