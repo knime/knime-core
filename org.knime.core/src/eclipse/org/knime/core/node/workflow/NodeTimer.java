@@ -79,6 +79,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -97,7 +98,12 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EclipseUtil;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.osgi.service.application.ApplicationHandle;
 import org.osgi.service.prefs.Preferences;
 
 /**
@@ -373,12 +379,34 @@ public final class NodeTimer {
             job.add("workflowsOpened", m_workflowsOpened);
             job.add("remoteWorkflowsOpened", m_remoteWorkflowsOpened);
             job.add("launches", getNrLaunches());
-            job.add("lastApplicationID", System.getProperty("eclipse.application")); // batch, standard KNIME AP, ...
+            job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
             job.add("crashes", getNrCrashes());
             job.add("properlyShutDown", properShutdown);
             JsonObject jo = job.build();
             return jo;
+        }
+
+        private static String getApplicationID() {
+            if (!StringUtils.isEmpty(System.getProperty("eclipse.application"))) {
+                return System.getProperty("eclipse.application");
+            }
+
+            Bundle myself = FrameworkUtil.getBundle(NodeTimer.class);
+            if (myself != null) {
+                BundleContext ctx = myself.getBundleContext();
+                ServiceReference<ApplicationHandle> ser = ctx.getServiceReference(ApplicationHandle.class);
+                if (ser != null) {
+                    try {
+                        ApplicationHandle appHandle = ctx.getService(ser);
+                        return appHandle.getInstanceId();
+                    } finally {
+                        ctx.ungetService(ser);
+                    }
+                }
+            }
+
+            return "<unknown>";
         }
 
         private void writeToFile(final boolean properShutdown) {
