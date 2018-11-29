@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.math3.util.FastMath;
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.BayesInputsDocument.BayesInputs;
 import org.dmg.pmml.BayesOutputDocument.BayesOutput;
@@ -892,12 +893,12 @@ public class NaiveBayesModel {
             final double[] normProbs = new double[logProbs.length];
             for (int i = 0, length = logProbs.length; i < length; i++) {
                 final int idx = i;
-                normProbs[i] = 1d / Arrays.stream(logProbs).map(prob -> Math.exp(prob - logProbs[idx])).sum();
+                normProbs[i] = 1d / Arrays.stream(logProbs).map(prob -> FastMath.exp(prob - logProbs[idx])).sum();
             }
             return normProbs;
         } else {
             for (int i = 0; i < logProbs.length; i++) {
-                logProbs[i] = Math.exp(logProbs[i]);
+                logProbs[i] = FastMath.exp(logProbs[i]);
             }
             return logProbs;
         }
@@ -993,7 +994,7 @@ public class NaiveBayesModel {
      */
     private double getLogClassProbability(final String[] attrNames, final DataRow row, final String classValue) {
         // the prior probability
-        double combinedProbability = Math.log(getClassPriorProbability(classValue));
+        double combinedProbability = FastMath.log(getClassPriorProbability(classValue));
 
         for (int i = 0, length = row.getNumCells(); i < length; i++) {
             final String attrName = attrNames[i];
@@ -1006,21 +1007,26 @@ public class NaiveBayesModel {
                 } else {
                     probabilityThreshold = m_pmmlZeroProbThreshold.doubleValue();
                 }
-                final double probability = model.getLogProbability(classValue, row.getCell(i), probabilityThreshold);
-                // TODO: null should not happen
-                if (probability != Double.NaN) {
-                    // TODO: is this necessary? we have getProbability already with this threshold
-                    if (Double.isFinite(probability)) {
-                        // TODO: we want that the method of the model returns the log probability
-                        combinedProbability += probability;
-                    } else {
-                        // TODO: is this correct
-                        //set the probability to the given corrector if the probability is zero and the pmml threshold
-                        //method should be used
-                        combinedProbability += probabilityThreshold;
+                //TODO: check this
+                final double logProbThreshold = FastMath.log(probabilityThreshold);
+                //                final double probability = model.getLogProbability(classValue, row.getCell(i), logProbThreshold);
+                // TODO: Double check this
+                combinedProbability += model.getLogProbability(classValue, row.getCell(i), logProbThreshold);
 
-                    }
-                }
+                //                // TODO: null should not happen
+                //                if (probability != Double.NaN) {
+                //                    // TODO: is this necessary? we have getProbability already with this threshold
+                //                    if (Double.isFinite(probability)) {
+                //                        // TODO: we want that the method of the model returns the log probability
+                //                        combinedProbability += probability;
+                //                    } else {
+                //                        // TODO: is this correct
+                //                        //set the probability to the given corrector if the probability is zero and the pmml threshold
+                //                        //method should be used
+                //                        combinedProbability += probabilityThreshold;
+                //
+                //                    }
+                //                }
             }
         }
         // TODO: check if this is right

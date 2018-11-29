@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.math3.util.FastMath;
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.BayesInputsDocument.BayesInputs;
 import org.knime.core.data.DataCell;
@@ -211,6 +212,8 @@ public class BitVectorAttributeModel extends AttributeModel {
                     }
                 }
             }
+            // no need to check other counter since m_noOfRows always >=
+            checkLimits(m_noOfRows);
             m_noOfRows++;
         }
 
@@ -244,7 +247,7 @@ public class BitVectorAttributeModel extends AttributeModel {
             return combinedProbability;
         }
 
-        private double getLogProbability(final DataCell attributeValue, final double probabilityThreshold) {
+        private double getLogProbability(final DataCell attributeValue, final double logProbThreshold) {
             // TODO: long
             final int noOfRows4Class = getNoOfRows();
             // TODO: can and should this happen?
@@ -254,13 +257,11 @@ public class BitVectorAttributeModel extends AttributeModel {
             }
             if (attributeValue.isMissing()) {
                 // TODO: long
-                final double prob;
+                double prob = logProbThreshold;
                 if (m_missingValueRecs.intValue() > 0) {
-                    prob = (double)m_missingValueRecs.intValue() / noOfRows4Class;
-                } else {
-                    prob = probabilityThreshold;
+                    prob = FastMath.max(prob, FastMath.log((double)m_missingValueRecs.intValue() / noOfRows4Class));
                 }
-                return m_bitCounts.length * Math.log(prob);
+                return m_bitCounts.length * prob;
             }
             final BitVectorValue bitVec = (BitVectorValue)attributeValue;
             if (bitVec.length() != m_bitCounts.length) {
@@ -270,13 +271,11 @@ public class BitVectorAttributeModel extends AttributeModel {
             for (int i = 0, length = (int)bitVec.length(); i < length; i++) {
                 // TODO: long / double
                 final double noOfRows = getNoOfRows4AttributeValue(i, bitVec.get(i));
-                final double probability;
+                double prob = logProbThreshold;
                 if (noOfRows > 0) {
-                    probability = noOfRows / noOfRows4Class;
-                } else {
-                    probability = probabilityThreshold;
+                    prob = FastMath.max(prob, FastMath.log(noOfRows / noOfRows4Class));
                 }
-                combinedProbability += Math.log(probability);
+                combinedProbability += prob;
             }
             return combinedProbability;
         }
@@ -700,12 +699,12 @@ public class BitVectorAttributeModel extends AttributeModel {
      */
     @Override
     double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
-        final double probabilityThreshold) {
+        final double logProbThreshold) {
         final BitVectorClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
             return 0;
         }
-        return classModel.getLogProbability(attributeValue, probabilityThreshold);
+        return classModel.getLogProbability(attributeValue, logProbThreshold);
     }
 
     /**

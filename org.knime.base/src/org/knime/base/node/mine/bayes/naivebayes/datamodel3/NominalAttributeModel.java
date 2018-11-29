@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.math3.util.FastMath;
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.PairCountsDocument.PairCounts;
 import org.dmg.pmml.TargetValueCountDocument.TargetValueCount;
@@ -181,6 +182,8 @@ class NominalAttributeModel extends AttributeModel {
                 }
                 attrRowCounter.inc();
             }
+            // no need to check other counter since m_noOfRows always >=
+            checkLimits(m_noOfRows);
             m_noOfRows++;
         }
 
@@ -194,7 +197,12 @@ class NominalAttributeModel extends AttributeModel {
                 counter = new MutableInteger(0);
                 m_recsByAttrValue.put(attributeValue, counter);
             }
+            // no need to check counter since m_noOfRows >= counter
             counter.add(rowCount);
+            if(Integer.MAX_VALUE - m_noOfRows < rowCount) {
+                // throws an exception
+                checkLimits(Integer.MAX_VALUE);
+            }
             m_noOfRows += rowCount;
         }
 
@@ -258,10 +266,10 @@ class NominalAttributeModel extends AttributeModel {
 
         /**
          * @param attributeValue
-         * @param probabilityThreshold
+         * @param logProbThreshold
          * @return
          */
-        private double getLogProbability(final DataCell attributeValue, final double probabilityThreshold) {
+        private double getLogProbability(final DataCell attributeValue, final double logProbThreshold) {
             // TODO: long
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
@@ -270,13 +278,11 @@ class NominalAttributeModel extends AttributeModel {
             }
             // TODO: long
             final double noOfRows = getNoOfRows4AttributeValue(attributeValue);
-            final double prob;
+            double prob = logProbThreshold;
             if (noOfRows > 0) {
-                prob = noOfRows / noOfRows4Class;
-            } else {
-                prob = probabilityThreshold;
+                prob = FastMath.max(prob, FastMath.log(noOfRows / noOfRows4Class));
             }
-            return Math.log(prob);
+            return prob;
         }
 
         /**
@@ -668,12 +674,12 @@ class NominalAttributeModel extends AttributeModel {
      */
     @Override
     double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
-        final double probabilityThreshold) {
+        final double logProbThreshold) {
         final NominalClassValue classVal = m_classValues.get(classValue);
         if (classVal == null) {
             return 0;
         }
-        return classVal.getLogProbability(attributeValue, probabilityThreshold);
+        return classVal.getLogProbability(attributeValue, logProbThreshold);
     }
 
     /**

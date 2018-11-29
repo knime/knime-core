@@ -55,6 +55,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;
+import org.apache.commons.math3.util.FastMath;
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.GaussianDistributionDocument.GaussianDistribution;
 import org.dmg.pmml.TargetValueStatDocument.TargetValueStat;
@@ -100,7 +101,7 @@ class NumericalAttributeModel extends AttributeModel {
          */
         private static final boolean CALC_SAMPLING_VAR = true;
 
-        private static final double TWO_PI = 2 * Math.PI;
+        private static final double TWO_PI = 2 * FastMath.PI;
 
         private static final String CLASS_VALUE = "classValue";
 
@@ -110,7 +111,9 @@ class NumericalAttributeModel extends AttributeModel {
 
         private static final String MEAN_CFG = "mean";
 
-        private static final String VARIANCE_CFG = "variance";
+        //        private static final String VARIANCE_CFG = "variance";
+
+        private static final String SD_CFG = "sd";
 
         private final String m_classValue;
 
@@ -122,7 +125,11 @@ class NumericalAttributeModel extends AttributeModel {
 
         private double m_mean = Double.NaN;
 
-        private double m_variance = Double.NaN;
+        //        private double m_variance = Double.NaN;
+
+        private double m_sd = Double.NaN;
+
+        private double logSdTwoPi = Double.NaN;
 
         private final MutableInteger m_missingValueRecs = new MutableInteger(0);
 
@@ -150,7 +157,7 @@ class NumericalAttributeModel extends AttributeModel {
             m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
             m_noOfRows = config.getInt(NO_OF_ROWS);
             m_mean = config.getDouble(MEAN_CFG);
-            m_variance = config.getDouble(VARIANCE_CFG);
+            m_sd = config.getDouble(SD_CFG);
             m_incVar = null;
             m_incMean = null;
         }
@@ -164,9 +171,9 @@ class NumericalAttributeModel extends AttributeModel {
         private NumericalClassValue(final TargetValueStat targetValueStat) throws InvalidSettingsException {
             m_classValue = targetValueStat.getValue();
             final GaussianDistribution distribution = targetValueStat.getGaussianDistribution();
-            m_variance = distribution.getVariance();
+            m_sd = FastMath.sqrt(distribution.getVariance());
             m_mean = distribution.getMean();
-
+            logSdTwoPi = FastMath.log(m_sd) + 0.5 * FastMath.log(TWO_PI);
             // load mssing value counters
             final Map<String, String> extensionMap =
                 PMMLNaiveBayesModelTranslator.convertToMap(targetValueStat.getExtensionList());
@@ -187,7 +194,7 @@ class NumericalAttributeModel extends AttributeModel {
             config.addInt(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
             config.addInt(NO_OF_ROWS, m_noOfRows);
             config.addDouble(MEAN_CFG, getMean());
-            config.addDouble(VARIANCE_CFG, getVariance());
+            config.addDouble(SD_CFG, getStdDeviation());
         }
 
         /**
@@ -238,7 +245,10 @@ class NumericalAttributeModel extends AttributeModel {
          * @return the standard deviation
          */
         private double getStdDeviation() {
-            return Math.sqrt(getVariance());
+            if (m_incVar != null) {
+                return FastMath.sqrt(m_incVar.getResult());
+            }
+            return m_sd;
         }
 
         /**
@@ -248,7 +258,7 @@ class NumericalAttributeModel extends AttributeModel {
             if (m_incVar != null) {
                 return m_incVar.getResult();
             }
-            return m_variance;
+            return m_sd * m_sd;
         }
 
         /**
@@ -262,7 +272,8 @@ class NumericalAttributeModel extends AttributeModel {
                 m_incMean.increment(val);
                 m_incVar.increment(val);
             }
-
+            // no need to check missingValuesRecs since m_noOfRows >= missingValuesRecs
+            checkLimits(m_noOfRows);
             m_noOfRows++;
         }
 
@@ -286,7 +297,7 @@ class NumericalAttributeModel extends AttributeModel {
             }
             final double attrValue = ((DoubleValue)attrVal).getDoubleValue();
             final double diff = attrValue - m_mean;
-            if (m_variance == 0) {
+            if (m_sd == 0) {
                 //if the variance is 0 which means that
                 //the probability is 1 if this attribute value
                 //is equal the mean (which is equal to the only observed)
@@ -315,14 +326,14 @@ class NumericalAttributeModel extends AttributeModel {
             return -19301249;
         }
 
-        private double getLogProbability(final DataCell attributeValue, final double probabilityThreshold) {
+        private double getLogProbability(final DataCell attributeValue, final double logProbThreshold) {
             /* TODO: This is soo wrong ... but actually we cannot call this method except we have loaded the
              * model from PMML => this should ever happen.
              */
-            if (m_mean == Double.NaN || m_incMean != null) {
+            if (Double.isNaN(m_mean) || m_incMean != null) {
                 throw new RuntimeException("Mean hasn't been calculated");
             }
-            // TODO: double-check this ...
+            // TODO: double-check this ... its about number of not missing rows after load from the stupid model
             if (attributeValue.isMissing() || getNoOfNotMissingRows() == 0) {
                 // TODO: has to be long
                 // TODO: is this correct?
@@ -331,7 +342,7 @@ class NumericalAttributeModel extends AttributeModel {
                         "Model for attribute " + getAttributeName() + " contains no rows for class " + m_classValue);
                 }
                 // TODO: check if this is correct
-                return Math.log(probabilityThreshold);
+                return logProbThreshold;
                 // TODO: has to be long
                 // return Math.log((double)getNoOfMissingValueRecs() / m_noOfRows);
             }
@@ -341,21 +352,26 @@ class NumericalAttributeModel extends AttributeModel {
             // TODO: actually the standard deviation should be set as the probability threshold
             // This is in line with R e1071 package
             // TODO: double-check the else case ... is it really NaN
-            final double variance;
-            if (m_variance != 0 && Double.isFinite(m_variance) && !Double.isNaN(m_variance)) {
-                variance = m_variance;
-            } else {
-                /* TODO: if threshold is 0 we have a problem cause this will cause that our denominator becomes
-                 * + Infinity, since Math.log(0) = - Infinity
-                 */
-                // this is in line with R
-                variance = probabilityThreshold * probabilityThreshold;
-            }
-            if (variance == 0) {
-                // and set a warning message ... or shall we return default prob?
-                return Double.NaN;
-            }
+            //            final double variance;
+            //            if (m_variance != 0 && Double.isFinite(m_variance) && !Double.isNaN(m_variance)) {
+            //                variance = m_variance;
+            //            } else {
+            //                /* TODO: if threshold is 0 we have a problem cause this will cause that our denominator becomes
+            //                 * + Infinity, since Math.log(0) = - Infinity
+            //                 */
+            //                // this is in line with R
+            //                variance = logProbThreshold * logProbThreshold;
+            //            }
+            //            if (variance == 0) {
+            //                // and set a warning message ... or shall we return default prob?
+            //                return Double.NaN;
+            //            }
 
+            // TODO: check this ... this was var before
+            if (Double.isInfinite(m_sd) || Double.isNaN(m_sd) || m_sd == 0) {
+                return logProbThreshold;
+            }
+            // TODO: needs to be updated
             /*
              * Gaussian prob, see https://en.wikipedia.org/wiki/Naive_Bayes_classifier#Gaussian_naive_Bayes
              * p(x = v | C_k) = exp(-((x - mean) * (x -mean) / (2*variance))))  /  sqrt(2 \pi variance)
@@ -372,16 +388,20 @@ class NumericalAttributeModel extends AttributeModel {
              */
             // TODO: add sanity checks
             // prob can only be (-) Infinity
-            double prob = -0.5 * (Math.log(TWO_PI * variance));
+            //            double prob = -0.5 * (FastMath.log(TWO_PI));
             // prob can only be (-) Infinity
-            prob -= 0.5 * ((diff * diff) / variance);
+            //            prob -= 0.5 * ((diff * diff) / m_variance);
+            final double frac = diff / m_sd;
+            final double prob = -0.5 * (frac * frac) - logSdTwoPi;
 
-            // return the probability only if we didn't have any overflows
-            if (prob != Double.NEGATIVE_INFINITY) {
-                return prob;
-            }
-            // return the probability threshold
-            return Math.log(probabilityThreshold);
+            // TODO: double-check this
+            return FastMath.max(logProbThreshold, prob);
+            //            // return the probability only if we didn't have any overflows
+            //            if (prob != Double.NEGATIVE_INFINITY) {
+            //                return prob;
+            //            }
+            //            // return the probability threshold
+            //            return Math.log(logProbThreshold);
         }
 
         /**
@@ -747,12 +767,12 @@ class NumericalAttributeModel extends AttributeModel {
      */
     @Override
     double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
-        final double probabilityThreshold) {
+        final double logProbThreshold) {
         final NumericalClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
             return 0;
         }
-        return classModel.getLogProbability(attributeValue, probabilityThreshold);
+        return classModel.getLogProbability(attributeValue, logProbThreshold);
     }
 
     /**

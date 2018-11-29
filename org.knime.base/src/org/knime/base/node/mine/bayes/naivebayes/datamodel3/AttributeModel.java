@@ -345,8 +345,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         return new Double(getProbabilityInternal(classValue, attributeValue, probabilityThreshold));
     }
 
-    double getLogProbability(final String classValue, final DataCell attributeValue,
-        final double probabilityThreshold) {
+    double getLogProbability(final String classValue, final DataCell attributeValue, final double logProbThreshold) {
         if (!isCompatible(attributeValue.getType())) {
             throw new IllegalArgumentException(String.format(
                 "Value in column '%s' (%s) is not " + "compatible with attribute model %s (Column type %s)",
@@ -356,7 +355,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         if (attributeValue.isMissing() && m_ignoreMissingVals) {
             return Double.NaN;
         }
-        return getLogProbabilityInternal(classValue, attributeValue, probabilityThreshold);
+        return getLogProbabilityInternal(classValue, attributeValue, logProbThreshold);
     }
 
     /**
@@ -377,13 +376,13 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      *
      * @param classValue the class value to calculate the probability for
      * @param attributeValue the attribute value to calculate the probability for. Could be a missing value.
-     * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for categorical
+     * @param logProbThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for categorical
      *            fields or when the calculated probability of the distribution falls below the threshold for continuous
      *            fields.
      * @return the logarithm of the calculated probability
      */
     abstract double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
-        double probabilityThreshold);
+        double logProbThreshold);
 
     /**
      * @param totalNoOfRecs the total number of records in the training data
@@ -583,5 +582,12 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @return {@code true} if the model contains records for the given class
      */
     abstract boolean hasRecs4ClassValue(final String classValue);
+
+    static void checkLimits(final int val) {
+        if (val == Integer.MAX_VALUE) {
+            // TODO: we need some proper text here
+            throw new IllegalArgumentException("Naive Bayes cannot be calculated due to a number overflow.");
+        }
+    }
 
 }

@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.math3.util.FastMath;
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.BayesOutputDocument.BayesOutput;
 import org.dmg.pmml.TargetValueCountDocument.TargetValueCount;
@@ -258,8 +259,10 @@ class ClassAttributeModel extends AttributeModel {
             classCounter = new MutableInteger(0);
             m_recsCounterByClassVal.put(classValue, classCounter);
         }
+        // no need to check classCounter since m_noOfRows >= classCounter
         classCounter.inc();
-        m_totalNoOfRecs++;
+        checkLimits(m_totalNoOfRecs);
+        ++m_totalNoOfRecs;
     }
 
     /**
@@ -425,7 +428,7 @@ class ClassAttributeModel extends AttributeModel {
      */
     @Override
     double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
-        final double probabilityThreshold) {
+        final double logProbThreshold) {
         if (attributeValue.isMissing()) {
             throw new IllegalArgumentException("Missing value not allowed as class value");
         }
@@ -441,7 +444,7 @@ class ClassAttributeModel extends AttributeModel {
             throw new IllegalStateException("No record counter object found for attribute " + getAttributeName()
                 + " and class value " + classValue);
         }
-        return Math.log((double)noOfRecs.intValue() / m_totalNoOfRecs);
+        return FastMath.log((double)noOfRecs.intValue() / m_totalNoOfRecs);
     }
 
     /**
