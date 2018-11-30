@@ -144,10 +144,9 @@ class ClassAttributeModel extends AttributeModel {
     ClassAttributeModel(final String attributeName, final int noOfMissingVals, final boolean skipMissingVals,
         final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
-        m_totalNoOfRecs = (int) config.getLong(TOTAL_NO_OF_RECORDS);
-        m_maxNoOfClassVals = (int) config.getLong(MAX_NO_OF_CLASS_VALUES);
+        m_totalNoOfRecs = (int)config.getLong(TOTAL_NO_OF_RECORDS);
+        m_maxNoOfClassVals = (int)config.getLong(MAX_NO_OF_CLASS_VALUES);
         final String[] classVals = config.getStringArray(CLASS_NAMES);
-        // TODO: has to be long
         final int[] recsCounter = longToIntArr(config.getLongArray(CLASS_RECS_COUNTER));
         if (classVals.length != recsCounter.length) {
             throw new InvalidSettingsException("Class names and counter must be of equal size");
@@ -408,22 +407,19 @@ class ClassAttributeModel extends AttributeModel {
     @Override
     double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
         final double logProbThreshold) {
-        // TODO: check if the prior is also replaced by mind probability
         if (attributeValue.isMissing()) {
             throw new IllegalArgumentException("Missing value not allowed as class value");
         }
-        // TODO: long
         if (m_totalNoOfRecs == 0) {
             //this should not happen
             throw new IllegalStateException("Model for attribute " + getAttributeName() + " contains no records");
         }
-        // TODO: long
         final MutableInteger noOfRecs = m_recsCounterByClassVal.get(classValue);
-        // TODO: long
         if (noOfRecs == null) {
             throw new IllegalStateException("No record counter object found for attribute " + getAttributeName()
                 + " and class value " + classValue);
         }
+        // prior is not adapted to be at least logProbThreshold
         return FastMath.log((double)noOfRecs.intValue() / m_totalNoOfRecs);
     }
 
