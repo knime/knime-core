@@ -332,9 +332,9 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
                 "Value in column '%s' (%s) is not " + "compatible with attribute model %s (Column type %s)",
                 getAttributeName(), attributeValue, getType(), attributeValue.getType()));
         }
-        // TODO: double check this
         if (attributeValue.isMissing() && m_ignoreMissingVals) {
-            return Double.NaN;
+            // we add 0, i.e., we multiply by 1
+            return 0;
         }
         return getLogProbabilityInternal(classValue, attributeValue, logProbThreshold);
     }
@@ -553,7 +553,6 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
 
     static void checkLimits(final int val) {
         if (val == Integer.MAX_VALUE) {
-            // TODO: we need some proper text here
             throw new ArithmeticException("Naive Bayes cannot be calculated due to a number overflow.");
         }
     }
