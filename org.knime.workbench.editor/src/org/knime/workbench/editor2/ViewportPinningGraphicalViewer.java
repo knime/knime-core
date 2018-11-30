@@ -150,7 +150,7 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
     public void setInfoMessage(final String msg) {
         Display.getDefault().asyncExec(() -> {
             if (msg != null) {
-                setMessage(msg, MessageAttributes.INFO);
+                removeAndSetMessage(msg, MessageAttributes.INFO);
             } else {
                 removeMessageFromView(MessageAttributes.INFO);
             }
@@ -166,7 +166,7 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
     public void setWarningMessage(final String msg) {
         Display.getDefault().asyncExec(() -> {
             if (msg != null) {
-                setMessage(msg, MessageAttributes.WARNING);
+                removeAndSetMessage(msg, MessageAttributes.WARNING);
             } else {
                 removeMessageFromView(MessageAttributes.WARNING);
             }
@@ -182,7 +182,7 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
     public void setErrorMessage(final String msg) {
         Display.getDefault().asyncExec(() -> {
             if (msg != null) {
-                setMessage(msg, MessageAttributes.ERROR);
+                removeAndSetMessage(msg, MessageAttributes.ERROR);
             } else {
                 removeMessageFromView(MessageAttributes.ERROR);
             }
@@ -257,7 +257,7 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
         }
     }
 
-    private void setMessage(final String msg, final MessageAttributes attributes) {
+    private void removeAndSetMessage(final String msg, final MessageAttributes attributes) {
         assert(msg != null);
 
         final int index = attributes.getIndex();
@@ -265,6 +265,11 @@ public class ViewportPinningGraphicalViewer extends ScrollingGraphicalViewer {
         if ((m_messages[index] != null) && msg.equals(m_messages[index].getText())) {
             //nothing has changed
             return;
+        }
+
+        if (m_messages[index] != null) {
+            //remove an already present message first
+            removeMessageFromView(attributes);
         }
 
         final Composite messageRectangle = new Composite(m_parent, SWT.NONE);
