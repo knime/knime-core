@@ -46,6 +46,7 @@
 package org.knime.base.node.mine.bayes.naivebayes.datamodel3;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -588,6 +589,30 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             // TODO: we need some proper text here
             throw new ArithmeticException("Naive Bayes cannot be calculated due to a number overflow.");
         }
+    }
+
+    /**
+     * Converts an int to a long array.
+     *
+     * @param arr the array to convert
+     * @return the converted array
+     */
+    static long[] intToLongArr(final int[] arr) {
+        return Arrays.stream(arr)//
+            .asLongStream()//
+            .toArray();
+    }
+
+    /**
+     * Converts a long to an int array.
+     *
+     * @param arr the array to convert
+     * @return the converted array
+     */
+    static int[] longToIntArr(final long[] arr) {
+        return Arrays.stream(arr)//
+            .mapToInt(l -> (int)l)//
+            .toArray();
     }
 
 }

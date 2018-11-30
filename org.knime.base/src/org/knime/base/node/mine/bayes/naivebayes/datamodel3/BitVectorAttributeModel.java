@@ -130,7 +130,7 @@ public class BitVectorAttributeModel extends AttributeModel {
             m_missingValueRecs.setValue((int)config.getLong(MISSING_VALUE_COUNTER));
             m_noOfRows = (int)config.getLong(NO_OF_ROWS);
             // TODO: has to be long
-            m_bitCounts = config.getIntArray(BIT_COUNTS);
+            m_bitCounts = longToIntArr(config.getLongArray(BIT_COUNTS));
         }
 
         /**
@@ -141,21 +141,21 @@ public class BitVectorAttributeModel extends AttributeModel {
             config.addLong(MISSING_VALUE_COUNTER, m_missingValueRecs.intValue());
             config.addLong(NO_OF_ROWS, m_noOfRows);
             // TODO: has to be long
-            config.addIntArray(BIT_COUNTS, m_bitCounts);
+            config.addLongArray(BIT_COUNTS, intToLongArr(m_bitCounts));
         }
 
         private void writeObject(final java.io.ObjectOutputStream out) throws IOException {
             out.writeObject(m_classValue);
             out.writeObject(m_missingValueRecs);
             out.writeInt(m_noOfRows);
-            out.writeObject(m_bitCounts);
+            out.writeObject(intToLongArr(m_bitCounts));
         }
 
         private void readObject(final java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
             m_classValue = (String)in.readObject();
             m_missingValueRecs = (MutableInteger)in.readObject();
             m_noOfRows = in.readInt();
-            m_bitCounts = (int[])in.readObject();
+            m_bitCounts = longToIntArr((long[])in.readObject());
         }
 
         /**

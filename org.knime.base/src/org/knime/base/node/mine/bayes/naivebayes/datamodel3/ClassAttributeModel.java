@@ -148,7 +148,7 @@ class ClassAttributeModel extends AttributeModel {
         m_maxNoOfClassVals = (int) config.getLong(MAX_NO_OF_CLASS_VALUES);
         final String[] classVals = config.getStringArray(CLASS_NAMES);
         // TODO: has to be long
-        final int[] recsCounter = config.getIntArray(CLASS_RECS_COUNTER);
+        final int[] recsCounter = longToIntArr(config.getLongArray(CLASS_RECS_COUNTER));
         if (classVals.length != recsCounter.length) {
             throw new InvalidSettingsException("Class names and counter must be of equal size");
         }
@@ -166,7 +166,7 @@ class ClassAttributeModel extends AttributeModel {
         config.addLong(TOTAL_NO_OF_RECORDS, m_totalNoOfRecs);
         config.addLong(MAX_NO_OF_CLASS_VALUES, m_maxNoOfClassVals);
         final String[] classVals = new String[m_recsCounterByClassVal.size()];
-        final int[] recsCounter = new int[m_recsCounterByClassVal.size()];
+        final long[] recsCounter = new long[m_recsCounterByClassVal.size()];
         int i = 0;
         for (final String classVal : m_recsCounterByClassVal.keySet()) {
             classVals[i] = classVal;
@@ -174,7 +174,7 @@ class ClassAttributeModel extends AttributeModel {
             i++;
         }
         config.addStringArray(CLASS_NAMES, classVals);
-        config.addIntArray(CLASS_RECS_COUNTER, recsCounter);
+        config.addLongArray(CLASS_RECS_COUNTER, recsCounter);
     }
 
     /**
@@ -212,7 +212,7 @@ class ClassAttributeModel extends AttributeModel {
         int noOfMissing = 0;
         if (extensionMap.containsKey(NO_OF_MISSING_VALUES)) {
             skipMissing = false;
-            noOfMissing = (int) PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap, NO_OF_MISSING_VALUES);
+            noOfMissing = (int)PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap, NO_OF_MISSING_VALUES);
         }
         return new ClassAttributeModel(out.getFieldName(), noOfMissing, skipMissing, out);
     }

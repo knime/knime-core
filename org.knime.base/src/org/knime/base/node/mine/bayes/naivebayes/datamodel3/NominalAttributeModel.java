@@ -141,7 +141,7 @@ class NominalAttributeModel extends AttributeModel {
             m_missingValueRecs = new MutableInteger((int) config.getLong(MISSING_VALUE_COUNTER));
             final String[] attrVals = config.getStringArray(ATTRIBUTE_VALS);
             // TODO: has to be a long array
-            final int[] recsCounter = config.getIntArray(ATTR_VAL_COUNTER);
+            final int[] recsCounter = longToIntArr(config.getLongArray(ATTR_VAL_COUNTER));
             if (attrVals.length != recsCounter.length) {
                 throw new InvalidSettingsException("Attribute and counter array must be of equal size");
             }
@@ -160,7 +160,7 @@ class NominalAttributeModel extends AttributeModel {
             config.addLong(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
             final String[] attrVals = new String[m_recsByAttrValue.size()];
             // TODO: has to be long
-            final int[] recsCounter = new int[m_recsByAttrValue.size()];
+            final long[] recsCounter = new long[m_recsByAttrValue.size()];
             int i = 0;
             for (final String classVal : m_recsByAttrValue.keySet()) {
                 attrVals[i] = classVal;
@@ -169,7 +169,7 @@ class NominalAttributeModel extends AttributeModel {
             }
             config.addStringArray(ATTRIBUTE_VALS, attrVals);
             // TODO: has to be long
-            config.addIntArray(ATTR_VAL_COUNTER, recsCounter);
+            config.addLongArray(ATTR_VAL_COUNTER, recsCounter);
         }
 
         /**
