@@ -48,37 +48,45 @@
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel3;
 
-
 /**
  * Exception if the maximum number of different values is exceeded.
+ *
  * @author Tobias Koetter, University of Konstanz
+ * @noreference This class is not intended to be referenced by clients.
  */
-public class TooManyValuesException extends Exception {
+final class TooManyValuesException extends Exception {
 
     private static final long serialVersionUID = 2;
 
-    /**Constructor for class TooManyValuesException.
+    /**
+     * Constructor for class TooManyValuesException.
      *
      */
     public TooManyValuesException() {
         //nothing to do
     }
 
-    /**Constructor for class TooManyValuesException.
+    /**
+     * Constructor for class TooManyValuesException.
+     *
      * @param message the message
      */
     public TooManyValuesException(final String message) {
         super(message);
     }
 
-    /**Constructor for class TooManyValuesException.
+    /**
+     * Constructor for class TooManyValuesException.
+     *
      * @param cause the cause
      */
     public TooManyValuesException(final Throwable cause) {
         super(cause);
     }
 
-    /**Constructor for class TooManyValuesException.
+    /**
+     * Constructor for class TooManyValuesException.
+     *
      * @param message the message
      * @param cause the cause
      */

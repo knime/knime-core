@@ -80,8 +80,9 @@ import org.knime.core.util.MutableInteger;
  * distribution of the data.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @noreference This class is not intended to be referenced by clients.
  */
-class NumericalAttributeModel extends AttributeModel {
+final class NumericalAttributeModel extends AttributeModel {
 
     /**
      * The unique type of this model used for saving/loading.
@@ -288,18 +289,16 @@ class NumericalAttributeModel extends AttributeModel {
             if (Double.isNaN(m_mean) || m_incMean != null) {
                 throw new RuntimeException("Mean hasn't been calculated");
             }
-            // TODO: double-check this ... its about number of not missing rows after load from the stupid model
+            /* m_noOfRows == 0 & therefore getNoOfNotMissingRows() == 0 if we have read from PMML without missing
+             * entries => however, we should not run into this case, since we this model implies that
+             * skip missings is enabled
+             */
             if (attributeValue.isMissing() || getNoOfNotMissingRows() == 0) {
-                // TODO: has to be long
-                // TODO: is this correct?
                 if (m_noOfRows == 0) {
                     throw new IllegalStateException(
                         "Model for attribute " + getAttributeName() + " contains no rows for class " + m_classValue);
                 }
-                // TODO: check if this is correct
                 return logProbThreshold;
-                // TODO: has to be long
-                // return Math.log((double)getNoOfMissingValueRecs() / m_noOfRows);
             }
             final double attrValue = ((DoubleValue)attributeValue).getDoubleValue();
             final double diff = attrValue - m_mean;
@@ -349,7 +348,6 @@ class NumericalAttributeModel extends AttributeModel {
             final double frac = diff / m_sd;
             final double prob = -0.5 * (frac * frac) - logSdTwoPi;
 
-            // TODO: double-check this
             return FastMath.max(logProbThreshold, prob);
             //            // return the probability only if we didn't have any overflows
             //            if (prob != Double.NEGATIVE_INFINITY) {

@@ -72,6 +72,7 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  * common methods.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @noreference This class is not intended to be referenced by clients.
  */
 public abstract class AttributeModel implements Comparable<AttributeModel> {
 
@@ -324,7 +325,6 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      *         this row for the given class value or the class value wasn't found at all
      */
     abstract Integer getNoOfRecs4ClassValue(final String classValue);
-
 
     double getLogProbability(final String classValue, final DataCell attributeValue, final double logProbThreshold) {
         if (!isCompatible(attributeValue.getType())) {

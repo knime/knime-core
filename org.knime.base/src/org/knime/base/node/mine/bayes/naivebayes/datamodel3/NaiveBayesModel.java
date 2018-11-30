@@ -102,8 +102,14 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  * {@link AttributeModel}. Which provides the probability information for each class value.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @noreference This class is not intended to be referenced by clients.
  */
-public class NaiveBayesModel {
+public final class NaiveBayesModel {
+
+    /**
+     *
+     */
+    private static final String ZERO_PROB_EXCEPTION = "All potential classes have a 0 probability";
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NaiveBayesModel.class);
 
@@ -885,7 +891,10 @@ public class NaiveBayesModel {
             .mapToDouble(c -> getLogClassProbability(attributeNames, row, c))//
             .toArray();
 
-        // TODO: here we used the prior probs if all probs are 0
+        // check if there exists a class with probability > 0
+        if (Arrays.stream(logProbs).noneMatch(p -> p > Double.NEGATIVE_INFINITY)) {
+            throw new IllegalStateException(ZERO_PROB_EXCEPTION);
+        }
         if (normalize) {
             /* p(x_k) / \sum_{i = 0}^n p(x_i) = 1 / \sum_{i = 0}^n p(x_i) / p(x_k)
              * since p(x_k) is actually the log probability "p(x_i)/ p(x_k)" becomes exp(p(x_i)-p(x_k))
@@ -926,28 +935,15 @@ public class NaiveBayesModel {
 
         for (final String classValue : getClassValues()) {
             final double classProbability = getLogClassProbability(attributeNames, row, classValue);
-            if (classProbability >= maxProbability) {
+            if (classProbability > maxProbability) {
                 maxProbability = classProbability;
                 mostLikelyClass = classValue;
             }
         }
 
-        // TODO: check if this is still necessary
-        //        if (maxProbability == 0) {
-        //            //all classes have a combined probability of zero for this row ->
-        //            //use only the prior probability
-        //            for (final String classValue : classValues) {
-        //                final double classPriorProbability = getClassPriorProbability(classValue);
-        //                if (classPriorProbability >= maxProbability) {
-        //                    maxProbability = classPriorProbability;
-        //                    mostLikelyClass = classValue;
-        //                }
-        //            }
-        //        }
-
-        // TODO: Check if we have NaN's
-        if (mostLikelyClass == null) {
-            throw new IllegalStateException("Most likely class must not be null");
+        // TODO: Ask Michael about this
+        if (maxProbability == Double.NEGATIVE_INFINITY) {
+            throw new IllegalStateException(ZERO_PROB_EXCEPTION);
         }
         return mostLikelyClass;
     }
@@ -1007,31 +1003,10 @@ public class NaiveBayesModel {
                 } else {
                     probabilityThreshold = m_pmmlZeroProbThreshold.doubleValue();
                 }
-                //TODO: check this
                 final double logProbThreshold = FastMath.log(probabilityThreshold);
-                //                final double probability = model.getLogProbability(classValue, row.getCell(i), logProbThreshold);
-                // TODO: Double check this
                 combinedProbability += model.getLogProbability(classValue, row.getCell(i), logProbThreshold);
-
-                //                // TODO: null should not happen
-                //                if (probability != Double.NaN) {
-                //                    // TODO: is this necessary? we have getProbability already with this threshold
-                //                    if (Double.isFinite(probability)) {
-                //                        // TODO: we want that the method of the model returns the log probability
-                //                        combinedProbability += probability;
-                //                    } else {
-                //                        // TODO: is this correct
-                //                        //set the probability to the given corrector if the probability is zero and the pmml threshold
-                //                        //method should be used
-                //                        combinedProbability += probabilityThreshold;
-                //
-                //                    }
-                //                }
             }
         }
-        // TODO: check if this is right
-        // we don't return the exp but the log probability
-        //        combinedProbability = Math.exp(combinedProbability);
         return combinedProbability;
     }
 

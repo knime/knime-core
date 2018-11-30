@@ -20,6 +20,46 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/datamodel2/AttributeModel.java" type="org.knime.base.node.mine.bayes.naivebayes.datamodel2.AttributeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel2.AttributeModel"/>
+                <message_argument value="org.knime.base_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/datamodel2/BitVectorAttributeModel.java" type="org.knime.base.node.mine.bayes.naivebayes.datamodel2.BitVectorAttributeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel2.BitVectorAttributeModel"/>
+                <message_argument value="org.knime.base_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/datamodel2/NaiveBayesModel.java" type="org.knime.base.node.mine.bayes.naivebayes.datamodel2.NaiveBayesModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel2.NaiveBayesModel"/>
+                <message_argument value="org.knime.base_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/datamodel2/PMMLNaiveBayesModelTranslator.java" type="org.knime.base.node.mine.bayes.naivebayes.datamodel2.PMMLNaiveBayesModelTranslator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel2.PMMLNaiveBayesModelTranslator"/>
+                <message_argument value="org.knime.base_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/datamodel2/TooManyValuesException.java" type="org.knime.base.node.mine.bayes.naivebayes.datamodel2.TooManyValuesException">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel2.TooManyValuesException"/>
+                <message_argument value="org.knime.base_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src-deprecated/org/knime/base/node/mine/regression/linear/view/LinRegLineNodeView.java" type="org.knime.base.node.mine.regression.linear.view.LinRegLineNodeView">
         <filter id="338722907">
             <message_arguments>

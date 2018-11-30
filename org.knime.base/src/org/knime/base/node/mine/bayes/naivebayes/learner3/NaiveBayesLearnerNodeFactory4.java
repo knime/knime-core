@@ -61,7 +61,7 @@ public final class NaiveBayesLearnerNodeFactory4 extends NodeFactory<NaiveBayesL
      */
     @Override
     public NaiveBayesLearnerNodeModel3 createNodeModel() {
-        return new NaiveBayesLearnerNodeModel3(false);
+        return new NaiveBayesLearnerNodeModel3();
     }
 
     /**

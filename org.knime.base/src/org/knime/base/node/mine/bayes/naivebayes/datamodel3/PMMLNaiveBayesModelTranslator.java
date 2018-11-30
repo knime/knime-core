@@ -74,6 +74,7 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  * helper methods to read/write extensions.
  *
  * @author Tobias Koetter
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
 

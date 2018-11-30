@@ -81,8 +81,9 @@ import org.knime.core.util.MutableInteger;
  * value.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @noreference This class is not intended to be referenced by clients.
  */
-class ClassAttributeModel extends AttributeModel {
+final class ClassAttributeModel extends AttributeModel {
     /**
      * The unique type of this model used for saving/loading.
      */
