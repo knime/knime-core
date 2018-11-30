@@ -129,7 +129,6 @@ public class BitVectorAttributeModel extends AttributeModel {
             m_classValue = config.getString(CLASS_VALUE);
             m_missingValueRecs.setValue((int)config.getLong(MISSING_VALUE_COUNTER));
             m_noOfRows = (int)config.getLong(NO_OF_ROWS);
-            // TODO: has to be long
             m_bitCounts = longToIntArr(config.getLongArray(BIT_COUNTS));
         }
 
@@ -140,7 +139,6 @@ public class BitVectorAttributeModel extends AttributeModel {
             config.addString(CLASS_VALUE, m_classValue);
             config.addLong(MISSING_VALUE_COUNTER, m_missingValueRecs.intValue());
             config.addLong(NO_OF_ROWS, m_noOfRows);
-            // TODO: has to be long
             config.addLongArray(BIT_COUNTS, intToLongArr(m_bitCounts));
         }
 
@@ -220,15 +218,12 @@ public class BitVectorAttributeModel extends AttributeModel {
         }
 
         private double getLogProbability(final DataCell attributeValue, final double logProbThreshold) {
-            // TODO: long
             final int noOfRows4Class = getNoOfRows();
-            // TODO: can and should this happen?
             if (noOfRows4Class == 0) {
                 throw new IllegalStateException(
                     "Model for attribute " + getAttributeName() + " contains no rows for class " + m_classValue);
             }
             if (attributeValue.isMissing()) {
-                // TODO: long
                 double prob = logProbThreshold;
                 if (m_missingValueRecs.intValue() > 0) {
                     prob = FastMath.max(prob, FastMath.log((double)m_missingValueRecs.intValue() / noOfRows4Class));
@@ -241,7 +236,6 @@ public class BitVectorAttributeModel extends AttributeModel {
             }
             double combinedProbability = 0;
             for (int i = 0, length = (int)bitVec.length(); i < length; i++) {
-                // TODO: long / double
                 final double noOfRows = getNoOfRows4AttributeValue(i, bitVec.get(i));
                 double prob = logProbThreshold;
                 if (noOfRows > 0) {
