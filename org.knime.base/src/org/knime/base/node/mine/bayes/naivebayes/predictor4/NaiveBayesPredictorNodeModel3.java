@@ -290,7 +290,7 @@ public final class NaiveBayesPredictorNodeModel3 extends NodeModel {
         }
     }
 
-    private List<String> check4MissingCols(final DataTableSpec trainingSpec, final String classCol,
+    private static List<String> check4MissingCols(final DataTableSpec trainingSpec, final String classCol,
         final DataTableSpec spec) {
         final List<String> missingInputCols = new ArrayList<>();
         for (final DataColumnSpec trainColSpec : trainingSpec) {
@@ -304,7 +304,7 @@ public final class NaiveBayesPredictorNodeModel3 extends NodeModel {
         return missingInputCols;
     }
 
-    private List<String> check4UnknownCols(final DataTableSpec trainingSpec, final DataTableSpec spec) {
+    private static List<String> check4UnknownCols(final DataTableSpec trainingSpec, final DataTableSpec spec) {
         if (spec == null) {
             throw new NullPointerException("TableSpec must not be null");
         }

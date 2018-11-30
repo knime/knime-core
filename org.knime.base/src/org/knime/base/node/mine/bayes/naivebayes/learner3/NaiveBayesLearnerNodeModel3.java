@@ -386,7 +386,7 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
         m_model = null;
     }
 
-    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec, final PMMLPortObjectSpec modelSpec,
+    private static PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec, final PMMLPortObjectSpec modelSpec,
         final List<String> learnCols, final String classColumn) {
         final PMMLPortObjectSpecCreator pmmlSpecCreator = new PMMLPortObjectSpecCreator(modelSpec, tableSpec);
         pmmlSpecCreator.setLearningColsNames(learnCols);
@@ -442,11 +442,10 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException {
         final File modelFile = new File(nodeInternDir, CFG_DATA);
-        final FileInputStream modelIn = new FileInputStream(modelFile);
-        //        because the loadFromXML method returns the content of the root tag
-        //        we don't need to ask for the content of the root tag
-        final ModelContentRO myModel = ModelContent.loadFromXML(modelIn);
-        try {
+        try (final FileInputStream modelIn = new FileInputStream(modelFile)) {
+            //        because the loadFromXML method returns the content of the root tag
+            //        we don't need to ask for the content of the root tag
+            final ModelContentRO myModel = ModelContent.loadFromXML(modelIn);
             m_model = new NaiveBayesModel(myModel);
         } catch (final Exception e) {
             throw new IOException(e.getMessage());
@@ -459,9 +458,10 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException {
         final File modelFile = new File(nodeInternDir, CFG_DATA);
-        final FileOutputStream modelOut = new FileOutputStream(modelFile);
-        final ModelContent myModel = new ModelContent(CFG_DATA_MODEL);
-        m_model.savePredictorParams(myModel);
-        myModel.saveToXML(modelOut);
+        try (final FileOutputStream modelOut = new FileOutputStream(modelFile)) {
+            final ModelContent myModel = new ModelContent(CFG_DATA_MODEL);
+            m_model.savePredictorParams(myModel);
+            myModel.saveToXML(modelOut);
+        }
     }
 }
