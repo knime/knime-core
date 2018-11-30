@@ -2377,17 +2377,16 @@ public class WorkflowEditor extends GraphicalEditor implements
             assert m_refresher != null;
             if ((m_fileResource != null) && (m_parentEditor == null)) {
                 //root workflow
-                sb.append("This is a view on the remote job running on KNIME Server (" + m_fileResource.getAuthority()
+                sb.append("This is a job running on KNIME Server (" + m_fileResource.getAuthority()
                     + ").");
             } else {
                 //metanode editor
-                sb.append("This is a view on a metanode of a remote job running on KNIME Server.");
+                sb.append("This is a metanode of a job running on KNIME Server.");
             }
             if (!m_refresher.isAutoRefreshEnabled()) {
                 sb.append("\nIt just represents a static snapshot of the job and won't get updated automatically. Use "
                     + "context menu to refresh or the preferences to activate the auto-refresh and edit operations.");
             } else {
-                sb.append(" It refreshes every " + m_refresher.getAutoRefreshInterval() + " ms.");
                 if (!m_refresher.isJobEditEnabled()) {
                     sb.append("\nJob locked for edits. Enable edit operations in the preferences.");
                 }
