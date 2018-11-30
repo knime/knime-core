@@ -137,14 +137,16 @@ class NominalAttributeModel extends AttributeModel {
          */
         private NominalClassValue(final Config config) throws InvalidSettingsException {
             m_classValue = config.getString(CLASS_VALUE);
-            m_noOfRows = config.getInt(NO_OF_ROWS);
-            m_missingValueRecs = new MutableInteger(config.getInt(MISSING_VALUE_COUNTER));
+            m_noOfRows = (int) config.getLong(NO_OF_ROWS);
+            m_missingValueRecs = new MutableInteger((int) config.getLong(MISSING_VALUE_COUNTER));
             final String[] attrVals = config.getStringArray(ATTRIBUTE_VALS);
+            // TODO: has to be a long array
             final int[] recsCounter = config.getIntArray(ATTR_VAL_COUNTER);
             if (attrVals.length != recsCounter.length) {
                 throw new InvalidSettingsException("Attribute and counter array must be of equal size");
             }
             for (int i = 0, length = attrVals.length; i < length; i++) {
+                // TODO: cast to int
                 m_recsByAttrValue.put(attrVals[i], new MutableInteger(recsCounter[i]));
             }
         }
@@ -154,9 +156,10 @@ class NominalAttributeModel extends AttributeModel {
          */
         private void saveModel(final Config config) {
             config.addString(CLASS_VALUE, m_classValue);
-            config.addInt(NO_OF_ROWS, m_noOfRows);
-            config.addInt(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
+            config.addLong(NO_OF_ROWS, m_noOfRows);
+            config.addLong(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
             final String[] attrVals = new String[m_recsByAttrValue.size()];
+            // TODO: has to be long
             final int[] recsCounter = new int[m_recsByAttrValue.size()];
             int i = 0;
             for (final String classVal : m_recsByAttrValue.keySet()) {
@@ -165,6 +168,7 @@ class NominalAttributeModel extends AttributeModel {
                 i++;
             }
             config.addStringArray(ATTRIBUTE_VALS, attrVals);
+            // TODO: has to be long
             config.addIntArray(ATTR_VAL_COUNTER, recsCounter);
         }
 
@@ -199,6 +203,7 @@ class NominalAttributeModel extends AttributeModel {
             }
             // no need to check counter since m_noOfRows >= counter
             counter.add(rowCount);
+            // TODO: has to be updated once we switch to long
             if(Integer.MAX_VALUE - m_noOfRows < rowCount) {
                 // throws an exception
                 checkLimits(Integer.MAX_VALUE);
@@ -347,8 +352,8 @@ class NominalAttributeModel extends AttributeModel {
     NominalAttributeModel(final String attributeName, final int noOfMissingVals, final boolean skipMissingVals,
         final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
-        m_maxNoOfAttrVals = config.getInt(MAX_NO_OF_ATTRS);
-        final int noOfClassVals = config.getInt(CLASS_VALUE_COUNTER);
+        m_maxNoOfAttrVals = (int) config.getLong(MAX_NO_OF_ATTRS);
+        final int noOfClassVals = (int) config.getLong(CLASS_VALUE_COUNTER);
         final String[] attrVals = config.getStringArray(ATTRIBUTE_VALUES);
         m_attributeVals.addAll(Arrays.asList(attrVals));
         for (int i = 0; i < noOfClassVals; i++) {
@@ -385,7 +390,7 @@ class NominalAttributeModel extends AttributeModel {
                         PMMLNaiveBayesModelTranslator.convertToMap(targetCount.getExtensionList());
                     int missingValueRecs = 0;
                     if (extensionMap.containsKey(NominalClassValue.MISSING_VALUE_COUNTER)) {
-                        missingValueRecs = PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap,
+                        missingValueRecs = (int) PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap,
                             NominalClassValue.MISSING_VALUE_COUNTER);
                     }
                     classVal = new NominalClassValue(classValue, missingValueRecs);
@@ -409,7 +414,7 @@ class NominalAttributeModel extends AttributeModel {
             for (final NominalClassValue classVal : m_classValues.values()) {
                 final TargetValueCount targetValueCount = targetValueCounts.addNewTargetValueCount();
                 if (!ignoreMissingVals()) {
-                    PMMLNaiveBayesModelTranslator.setIntExtension(targetValueCount.addNewExtension(),
+                    PMMLNaiveBayesModelTranslator.setLongExtension(targetValueCount.addNewExtension(),
                         NominalClassValue.MISSING_VALUE_COUNTER, classVal.getNoOfMissingValueRecs());
                 }
                 targetValueCount.setValue(classVal.getClassValue());
@@ -430,8 +435,8 @@ class NominalAttributeModel extends AttributeModel {
      */
     @Override
     void saveModelInternal(final Config config) {
-        config.addInt(MAX_NO_OF_ATTRS, getMaxNoOfAttrVals());
-        config.addInt(CLASS_VALUE_COUNTER, m_classValues.size());
+        config.addLong(MAX_NO_OF_ATTRS, getMaxNoOfAttrVals());
+        config.addLong(CLASS_VALUE_COUNTER, m_classValues.size());
         final String[] attrVals = m_attributeVals.toArray(new String[]{});
         config.addStringArray(ATTRIBUTE_VALUES, attrVals);
         int i = 0;

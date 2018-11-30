@@ -154,8 +154,8 @@ class NumericalAttributeModel extends AttributeModel {
         private NumericalClassValue(final Config config) throws InvalidSettingsException {
             //            throw new RuntimeException("This constructor is forbidden");
             m_classValue = config.getString(CLASS_VALUE);
-            m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
-            m_noOfRows = config.getInt(NO_OF_ROWS);
+            m_missingValueRecs.setValue((int)config.getLong(MISSING_VALUE_COUNTER));
+            m_noOfRows = (int)config.getLong(NO_OF_ROWS);
             m_mean = config.getDouble(MEAN_CFG);
             m_sd = config.getDouble(SD_CFG);
             m_incVar = null;
@@ -179,8 +179,8 @@ class NumericalAttributeModel extends AttributeModel {
                 PMMLNaiveBayesModelTranslator.convertToMap(targetValueStat.getExtensionList());
             if (extensionMap.containsKey(MISSING_VALUE_COUNTER)) {
                 m_missingValueRecs
-                    .setValue(PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, MISSING_VALUE_COUNTER));
-                m_noOfRows = PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, NO_OF_ROWS);
+                    .setValue((int) PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap, MISSING_VALUE_COUNTER));
+                m_noOfRows = (int) PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap, NO_OF_ROWS);
             }
             m_incMean = null;
             m_incVar = null;
@@ -191,8 +191,8 @@ class NumericalAttributeModel extends AttributeModel {
          */
         private void saveModel(final Config config) {
             config.addString(CLASS_VALUE, m_classValue);
-            config.addInt(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
-            config.addInt(NO_OF_ROWS, m_noOfRows);
+            config.addLong(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
+            config.addLong(NO_OF_ROWS, m_noOfRows);
             config.addDouble(MEAN_CFG, getMean());
             config.addDouble(SD_CFG, getStdDeviation());
         }
@@ -203,9 +203,9 @@ class NumericalAttributeModel extends AttributeModel {
         private void exportToPMML(final TargetValueStat targetValueStat) {
             targetValueStat.setValue(getClassValue());
             if (!ignoreMissingVals()) {
-                PMMLNaiveBayesModelTranslator.setIntExtension(targetValueStat.addNewExtension(), MISSING_VALUE_COUNTER,
+                PMMLNaiveBayesModelTranslator.setLongExtension(targetValueStat.addNewExtension(), MISSING_VALUE_COUNTER,
                     getNoOfMissingValueRecs());
-                PMMLNaiveBayesModelTranslator.setIntExtension(targetValueStat.addNewExtension(), NO_OF_ROWS,
+                PMMLNaiveBayesModelTranslator.setLongExtension(targetValueStat.addNewExtension(), NO_OF_ROWS,
                     getNoOfRows());
             }
             final GaussianDistribution distribution = targetValueStat.addNewGaussianDistribution();
@@ -271,6 +271,10 @@ class NumericalAttributeModel extends AttributeModel {
                 final double val = ((DoubleValue)attrVal).getDoubleValue();
                 m_incMean.increment(val);
                 m_incVar.increment(val);
+                if (Double.isNaN(m_incVar.getResult())) {
+                    throw new ArithmeticException(
+                        "Cannot compute the variance for " + m_classValue + " due to number overflow");
+                }
             }
             // no need to check missingValuesRecs since m_noOfRows >= missingValuesRecs
             checkLimits(m_noOfRows);
@@ -481,7 +485,7 @@ class NumericalAttributeModel extends AttributeModel {
     NumericalAttributeModel(final String attributeName, final boolean skipMissingVals, final int noOfMissingVals,
         final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
-        final int noOfClasses = config.getInt(CLASS_VALUE_COUNTER);
+        final int noOfClasses = (int) config.getLong(CLASS_VALUE_COUNTER);
         m_classValues = new HashMap<>(noOfClasses);
         for (int i = 0; i < noOfClasses; i++) {
             final Config classConfig = config.getConfig(CLASS_VALUE_SECTION + i);
@@ -517,7 +521,7 @@ class NumericalAttributeModel extends AttributeModel {
      */
     @Override
     void saveModelInternal(final Config config) {
-        config.addInt(CLASS_VALUE_COUNTER, m_classValues.size());
+        config.addLong(CLASS_VALUE_COUNTER, m_classValues.size());
         int i = 0;
         for (final NumericalClassValue classVal : m_classValues.values()) {
             final Config classConfig = config.addConfig(CLASS_VALUE_SECTION + i);

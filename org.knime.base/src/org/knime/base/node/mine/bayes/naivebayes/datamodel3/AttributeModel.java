@@ -586,7 +586,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     static void checkLimits(final int val) {
         if (val == Integer.MAX_VALUE) {
             // TODO: we need some proper text here
-            throw new IllegalArgumentException("Naive Bayes cannot be calculated due to a number overflow.");
+            throw new ArithmeticException("Naive Bayes cannot be calculated due to a number overflow.");
         }
     }
 

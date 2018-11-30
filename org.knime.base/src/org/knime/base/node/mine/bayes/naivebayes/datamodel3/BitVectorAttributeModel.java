@@ -127,8 +127,9 @@ public class BitVectorAttributeModel extends AttributeModel {
          */
         private BitVectorClassValue(final Config config) throws InvalidSettingsException {
             m_classValue = config.getString(CLASS_VALUE);
-            m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
-            m_noOfRows = config.getInt(NO_OF_ROWS);
+            m_missingValueRecs.setValue((int)config.getLong(MISSING_VALUE_COUNTER));
+            m_noOfRows = (int)config.getLong(NO_OF_ROWS);
+            // TODO: has to be long
             m_bitCounts = config.getIntArray(BIT_COUNTS);
         }
 
@@ -137,8 +138,9 @@ public class BitVectorAttributeModel extends AttributeModel {
          */
         private void saveModel(final Config config) {
             config.addString(CLASS_VALUE, m_classValue);
-            config.addInt(MISSING_VALUE_COUNTER, m_missingValueRecs.intValue());
-            config.addInt(NO_OF_ROWS, m_noOfRows);
+            config.addLong(MISSING_VALUE_COUNTER, m_missingValueRecs.intValue());
+            config.addLong(NO_OF_ROWS, m_noOfRows);
+            // TODO: has to be long
             config.addIntArray(BIT_COUNTS, m_bitCounts);
         }
 
@@ -347,9 +349,9 @@ public class BitVectorAttributeModel extends AttributeModel {
     BitVectorAttributeModel(final String attributeName, final boolean skipMissingVals, final int noOfMissingVals,
         final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
-        final int noOfClasses = config.getInt(CLASS_VALUE_COUNTER);
+        final int noOfClasses = (int)config.getLong(CLASS_VALUE_COUNTER);
         m_classValues = new LinkedHashMap<>(noOfClasses);
-        final int noOfClassVals = config.getInt(CLASS_VALUE_COUNTER);
+        final int noOfClassVals = (int)config.getLong(CLASS_VALUE_COUNTER);
         for (int i = 0; i < noOfClassVals; i++) {
             final Config classConfig = config.getConfig(CLASS_VALUE_SECTION + i);
             final BitVectorClassValue classVal = new BitVectorClassValue(classConfig);
@@ -368,7 +370,7 @@ public class BitVectorAttributeModel extends AttributeModel {
      */
     @Override
     void saveModelInternal(final Config config) {
-        config.addInt(CLASS_VALUE_COUNTER, m_classValues.size());
+        config.addLong(CLASS_VALUE_COUNTER, m_classValues.size());
         int i = 0;
         for (final BitVectorClassValue classVal : m_classValues.values()) {
             final Config classConfig = config.addConfig(CLASS_VALUE_SECTION + i);
@@ -398,7 +400,7 @@ public class BitVectorAttributeModel extends AttributeModel {
             getAttributeName());
         PMMLNaiveBayesModelTranslator.setBooleanExtension(inputs.addNewExtension(), prefix + IGNORE_MISSING_VALUES,
             ignoreMissingVals());
-        PMMLNaiveBayesModelTranslator.setIntExtension(inputs.addNewExtension(), prefix + NO_OF_MISSING_VALUES,
+        PMMLNaiveBayesModelTranslator.setLongExtension(inputs.addNewExtension(), prefix + NO_OF_MISSING_VALUES,
             getNoOfMissingVals());
         PMMLNaiveBayesModelTranslator.setObjectExtension(inputs.addNewExtension(), prefix + CLASS_VALUE_SECTION,
             m_classValues);
@@ -420,7 +422,8 @@ public class BitVectorAttributeModel extends AttributeModel {
         final boolean ignoreMissingVals =
             PMMLNaiveBayesModelTranslator.getBooleanExtension(extensionMap, prefix + IGNORE_MISSING_VALUES);
         final int missingVals =
-            PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, prefix + NO_OF_MISSING_VALUES);
+            (int)PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap, prefix + NO_OF_MISSING_VALUES);
+        @SuppressWarnings("unchecked")
         Map<String, BitVectorClassValue> classVals = (Map<String, BitVectorClassValue>)PMMLNaiveBayesModelTranslator
             .getObjectExtension(extensionMap, prefix + CLASS_VALUE_SECTION);
         return new BitVectorAttributeModel(attributeName, ignoreMissingVals, missingVals, classVals);

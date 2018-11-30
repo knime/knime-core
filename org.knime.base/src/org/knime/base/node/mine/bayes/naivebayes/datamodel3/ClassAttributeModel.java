@@ -144,9 +144,10 @@ class ClassAttributeModel extends AttributeModel {
     ClassAttributeModel(final String attributeName, final int noOfMissingVals, final boolean skipMissingVals,
         final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
-        m_totalNoOfRecs = config.getInt(TOTAL_NO_OF_RECORDS);
-        m_maxNoOfClassVals = config.getInt(MAX_NO_OF_CLASS_VALUES);
+        m_totalNoOfRecs = (int) config.getLong(TOTAL_NO_OF_RECORDS);
+        m_maxNoOfClassVals = (int) config.getLong(MAX_NO_OF_CLASS_VALUES);
         final String[] classVals = config.getStringArray(CLASS_NAMES);
+        // TODO: has to be long
         final int[] recsCounter = config.getIntArray(CLASS_RECS_COUNTER);
         if (classVals.length != recsCounter.length) {
             throw new InvalidSettingsException("Class names and counter must be of equal size");
@@ -162,8 +163,8 @@ class ClassAttributeModel extends AttributeModel {
      */
     @Override
     void saveModelInternal(final Config config) {
-        config.addInt(TOTAL_NO_OF_RECORDS, m_totalNoOfRecs);
-        config.addInt(MAX_NO_OF_CLASS_VALUES, m_maxNoOfClassVals);
+        config.addLong(TOTAL_NO_OF_RECORDS, m_totalNoOfRecs);
+        config.addLong(MAX_NO_OF_CLASS_VALUES, m_maxNoOfClassVals);
         final String[] classVals = new String[m_recsCounterByClassVal.size()];
         final int[] recsCounter = new int[m_recsCounterByClassVal.size()];
         int i = 0;
@@ -211,7 +212,7 @@ class ClassAttributeModel extends AttributeModel {
         int noOfMissing = 0;
         if (extensionMap.containsKey(NO_OF_MISSING_VALUES)) {
             skipMissing = false;
-            noOfMissing = PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, NO_OF_MISSING_VALUES);
+            noOfMissing = (int) PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap, NO_OF_MISSING_VALUES);
         }
         return new ClassAttributeModel(out.getFieldName(), noOfMissing, skipMissing, out);
     }
@@ -222,7 +223,7 @@ class ClassAttributeModel extends AttributeModel {
     void exportClassAttributeToPMML(final BayesOutput out) {
         out.setFieldName(getAttributeName());
         if (!ignoreMissingVals()) {
-            PMMLNaiveBayesModelTranslator.setIntExtension(out.addNewExtension(), NO_OF_MISSING_VALUES,
+            PMMLNaiveBayesModelTranslator.setLongExtension(out.addNewExtension(), NO_OF_MISSING_VALUES,
                 getNoOfMissingVals());
         }
         final TargetValueCounts targetValueCounts = out.addNewTargetValueCounts();
@@ -429,6 +430,7 @@ class ClassAttributeModel extends AttributeModel {
     @Override
     double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
         final double logProbThreshold) {
+        // TODO: check if the prior is also replaced by mind probability
         if (attributeValue.isMissing()) {
             throw new IllegalArgumentException("Missing value not allowed as class value");
         }
