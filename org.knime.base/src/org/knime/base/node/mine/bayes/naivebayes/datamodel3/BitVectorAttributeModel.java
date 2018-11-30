@@ -227,7 +227,7 @@ final class BitVectorAttributeModel extends AttributeModel {
             if (attributeValue.isMissing()) {
                 double prob = logProbThreshold;
                 if (m_missingValueRecs.intValue() > 0) {
-                    prob = FastMath.max(prob, FastMath.log((double)m_missingValueRecs.intValue() / noOfRows4Class));
+                    prob = FastMath.log((double)m_missingValueRecs.intValue() / noOfRows4Class);
                 }
                 return m_bitCounts.length * prob;
             }
@@ -240,7 +240,7 @@ final class BitVectorAttributeModel extends AttributeModel {
                 final double noOfRows = getNoOfRows4AttributeValue(i, bitVec.get(i));
                 double prob = logProbThreshold;
                 if (noOfRows > 0) {
-                    prob = FastMath.max(prob, FastMath.log(noOfRows / noOfRows4Class));
+                    prob = FastMath.log(noOfRows / noOfRows4Class);
                 }
                 combinedProbability += prob;
             }

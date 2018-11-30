@@ -259,7 +259,7 @@ final class NominalAttributeModel extends AttributeModel {
             final double noOfRows = getNoOfRows4AttributeValue(attributeValue);
             double prob = logProbThreshold;
             if (noOfRows > 0) {
-                prob = FastMath.max(prob, FastMath.log(noOfRows / noOfRows4Class));
+                prob = FastMath.log(noOfRows / noOfRows4Class);
             }
             return prob;
         }
