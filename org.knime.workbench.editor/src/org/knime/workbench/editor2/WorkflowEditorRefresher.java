@@ -90,8 +90,8 @@ class WorkflowEditorRefresher {
     /** The auto-refresh interval */
     private long m_autoRefreshInterval;
 
-    /** Flag whether edit operations are enabled */
-    private boolean m_isEditEnabled;
+    /** Flag whether edit operations are disabled */
+    private boolean m_isEditDisabled;
 
     /** Whether the workflow has been refreshed recently. */
     private AtomicBoolean m_hasBeenRefreshed = new AtomicBoolean(true);
@@ -174,9 +174,9 @@ class WorkflowEditorRefresher {
             IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
             prefStore.addPropertyChangeListener(e -> {
                 switch (e.getProperty()) {
-                    case PreferenceConstants.P_AUTO_REFRESH_JOB:
-                    case PreferenceConstants.P_AUTO_REFRESH_JOB_INTERVAL_MS:
-                    case PreferenceConstants.P_JOB_EDITS_ENABLED:
+                    case PreferenceConstants.P_REMOTE_WORKFLOW_EDITOR_AUTO_REFRESH:
+                    case PreferenceConstants.P_REMOTE_WORKFLOW_EDITOR_AUTO_REFRESH_INTERVAL_MS:
+                    case PreferenceConstants.P_REMOTE_WORKFLOW_EDITOR_EDITS_DISABLED:
                         setup();
                         break;
                     default:
@@ -191,21 +191,21 @@ class WorkflowEditorRefresher {
      */
     void setup() {
         IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
-        m_isAutoRefreshEnabled = prefStore.getBoolean(PreferenceConstants.P_AUTO_REFRESH_JOB);
+        m_isAutoRefreshEnabled = prefStore.getBoolean(PreferenceConstants.P_REMOTE_WORKFLOW_EDITOR_AUTO_REFRESH);
         if (!m_isAutoRefreshEnabled && m_refreshTimerTask != null) {
             cancelTimers();
         }
 
-        long autoRefreshInterval = prefStore.getLong(PreferenceConstants.P_AUTO_REFRESH_JOB_INTERVAL_MS);
+        long autoRefreshInterval = prefStore.getLong(PreferenceConstants.P_REMOTE_WORKFLOW_EDITOR_AUTO_REFRESH_INTERVAL_MS);
         if (m_autoRefreshInterval != autoRefreshInterval) {
             m_autoRefreshInterval = autoRefreshInterval;
             //restart the timer if its running
             cancelTimers();
         }
 
-        boolean isEditEnabled = prefStore.getBoolean(PreferenceConstants.P_JOB_EDITS_ENABLED);
-        if (m_isEditEnabled != isEditEnabled) {
-            m_isEditEnabled = isEditEnabled;
+        boolean isEditDisabled = prefStore.getBoolean(PreferenceConstants.P_REMOTE_WORKFLOW_EDITOR_EDITS_DISABLED);
+        if (m_isEditDisabled != isEditDisabled) {
+            m_isEditDisabled = isEditDisabled;
             cancelTimers();
         }
 
@@ -253,7 +253,7 @@ class WorkflowEditorRefresher {
 
             //start timer that checks whether the workflow has been refreshed within a certain time interval
             //otherwise the workflow and workflow editor is regarded as disconnected
-            if (isJobEditEnabled()) {
+            if (!isWorkflowEditDisabled()) {
                 synchronized (WorkflowEditor.class) {
                     if (CONNECTED_TIMER == null) {
                         CONNECTED_TIMER = new Timer("Workflow Connection-Test Timer", true);
@@ -302,14 +302,14 @@ class WorkflowEditorRefresher {
     }
 
     /**
-     * Job edit operations are only enabled if the auto-refresh is enabled, the refresh rate is high enough and the
-     * job-edit option in the preferences is enabled. Indicates whether editing is allowed.
+     * Indicates whether editing is allowed. Workflow edit operations are disabled if the auto-refresh is disabled, the
+     * refresh rate is too low, or the workflow-edit option in the preferences is disabled.
      *
-     * @return <code>true</code> if job edits are enabled
+     * @return <code>true</code> if workflow edits are disabled
      */
-    boolean isJobEditEnabled() {
-        return isAutoRefreshEnabled() && m_autoRefreshInterval <= KNIMEConstants.WORKFLOW_EDITOR_CONNECTION_TIMEOUT
-            && m_isEditEnabled;
+    boolean isWorkflowEditDisabled() {
+        return !isAutoRefreshEnabled() || m_autoRefreshInterval > KNIMEConstants.WORKFLOW_EDITOR_CONNECTION_TIMEOUT
+            || m_isEditDisabled;
     }
 
     /**

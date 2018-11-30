@@ -171,17 +171,16 @@ public interface PreferenceConstants {
     /** Preference constant for omitting the missing browser warning during startup. */
     public static final String P_OMIT_MISSING_BROWSER_WARNING = "knime.ui.omit-missing-browser-warning";
 
-    /** Preference constant for enabling/disabling the auto-refresh for (most likely remote) jobs in the workflow
-     * editor */
-    public static final String P_AUTO_REFRESH_JOB = "knime.job.autorefresh.enable";
+    /** Preference constant for enabling/disabling the auto-refresh for the remote workflow editor */
+    public static final String P_REMOTE_WORKFLOW_EDITOR_AUTO_REFRESH = "knime.remoteworkfloweditor.autorefresh.enable";
     /** Preference constant for the auto-workflow-refresh interval in milliseconds */
-    public static final String P_AUTO_REFRESH_JOB_INTERVAL_MS = "knime.job.autorefresh.interval";
-    /** Preference constant for the enabling/disabling workflow job edits. */
-    public static final String P_JOB_EDITS_ENABLED = "knime.job.edits.allowed";
+    public static final String P_REMOTE_WORKFLOW_EDITOR_AUTO_REFRESH_INTERVAL_MS = "knime.remoteworkfloweditor.autorefresh.interval";
+    /** Preference constant for the enabling/disabling remote workflow edits. */
+    public static final String P_REMOTE_WORKFLOW_EDITOR_EDITS_DISABLED = "knime.remoteworkfloweditor.edits.disabled";
     /** Default whether auto-refresh is enabled */
-    public static final boolean P_DEFAULT_AUTO_REFRESH_JOB = true;
+    public static final boolean P_DEFAULT_REMOTE_WORKFLOW_EDITOR_AUTO_REFRESH = true;
     /** Default milliseconds the auto-refresh interval for workflows */
-    public static final long P_DEFAULT_AUTO_REFRESH_JOB_INTERVAL_MS = 1000;
-    /** Default whether job edits are enabled */
-    public static final boolean P_DEFAULT_WORKFLOW_JOB_EDITS_ENABLED = true;
+    public static final long P_DEFAULT_REMOTE_WORKFLOW_EDITOR_AUTO_REFRESH_INTERVAL_MS = 1000;
+    /** Default whether remote workflow edits are enabled */
+    public static final boolean P_DEFAULT_REMOTE_WORKFLOW_EDITOR_EDITS_DISABLED = false;
 }

@@ -1554,7 +1554,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         final Color color;
         if (m_manager instanceof AsyncWorkflowManagerUI) {
             assert m_refresher != null;
-            if (m_manager.isWriteProtected() || !m_refresher.isConnected() || !m_refresher.isJobEditEnabled()) {
+            if (m_manager.isWriteProtected() || !m_refresher.isConnected() || m_refresher.isWorkflowEditDisabled()) {
                 color = BG_COLOR_WRITE_LOCK;
             } else {
                 color = BG_COLOR_DEFAULT;
@@ -2387,15 +2387,15 @@ public class WorkflowEditor extends GraphicalEditor implements
                 sb.append("\nIt just represents a static snapshot of the job and won't get updated automatically. Use "
                     + "context menu to refresh or the preferences to activate the auto-refresh and edit operations.");
             } else {
-                if (!m_refresher.isJobEditEnabled()) {
-                    sb.append("\nJob locked for edits. Enable edit operations in the preferences.");
+                if (m_refresher.isWorkflowEditDisabled()) {
+                    sb.append("\nWorkflow locked for edits. Enable edit operations in the preferences.");
                 }
             }
             viewer.setInfoMessage(sb.toString());
 
-            if (!m_refresher.isConnected() && m_refresher.isJobEditEnabled()) {
+            if (!m_refresher.isConnected() && !m_refresher.isWorkflowEditDisabled()) {
                 sb.setLength(0);
-                sb.append("Server not responding, either the server is overloaded or the connection is lost. Job "
+                sb.append("Server not responding, either the server is overloaded or the connection is lost. Workflow "
                     + "will not refresh and no changes can be made until connection is restored.");
                 viewer.setErrorMessage(sb.toString());
             } else {
@@ -3454,9 +3454,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             case PreferenceConstants.P_AUTO_SAVE_INTERVAL:
                 setupAutoSaveSchedule();
                 break;
-            case PreferenceConstants.P_AUTO_REFRESH_JOB:
-            case PreferenceConstants.P_AUTO_REFRESH_JOB_INTERVAL_MS:
-            case PreferenceConstants.P_JOB_EDITS_ENABLED:
+            case PreferenceConstants.P_REMOTE_WORKFLOW_EDITOR_AUTO_REFRESH:
+            case PreferenceConstants.P_REMOTE_WORKFLOW_EDITOR_AUTO_REFRESH_INTERVAL_MS:
+            case PreferenceConstants.P_REMOTE_WORKFLOW_EDITOR_EDITS_DISABLED:
                 updateWorkflowMessages();
                 updateEditorBackgroundColor();
                 break;
