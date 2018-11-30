@@ -106,9 +106,13 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  */
 public final class NaiveBayesModel {
 
-    /**
-     *
-     */
+    /** The default minimum probability threshold. */
+    public static final double DEFAULT_MIN_PROB_THRESHOLD = 0.0001;
+
+    /** This most likely class exception. */
+    private static final String MOST_LIKELY_CLASS_EXCEPTION = "Most likely class must not be null";
+
+    /** All classes have zero probability exception. */
     private static final String ZERO_PROB_EXCEPTION = "All potential classes have a 0 probability";
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NaiveBayesModel.class);
@@ -941,7 +945,7 @@ public final class NaiveBayesModel {
             }
         }
 
-        // TODO: Ask Michael about this
+        // If this happens we have a bug!
         if (maxProbability == Double.NEGATIVE_INFINITY) {
             throw new IllegalStateException(ZERO_PROB_EXCEPTION);
         }
@@ -968,6 +972,10 @@ public final class NaiveBayesModel {
      * @see PMMLDataDictionaryTranslator#getKNIMEDataType(Enum)
      */
     private static DataCell createPredictedClassCell(final DataType dataType, final String val) {
+        // If this happens we have a bug!
+        if (val == null) {
+            throw new IllegalStateException(MOST_LIKELY_CLASS_EXCEPTION);
+        }
         if (dataType.isCompatible(BooleanValue.class)) {
             return BooleanCellFactory.create(Boolean.parseBoolean(val));
         } else if (dataType.isCompatible(IntValue.class)) {
@@ -998,16 +1006,27 @@ public final class NaiveBayesModel {
             //skip unknown attributes and the class value column
             if (model != null && !(model instanceof ClassAttributeModel)) {
                 final double probabilityThreshold;
-                if (m_pmmlZeroProbThreshold.isNaN()) {
-                    probabilityThreshold = 0;
-                } else {
+                if (isValidPMMLThreshold()) {
                     probabilityThreshold = m_pmmlZeroProbThreshold.doubleValue();
+                } else {
+                    probabilityThreshold = DEFAULT_MIN_PROB_THRESHOLD;
                 }
                 final double logProbThreshold = FastMath.log(probabilityThreshold);
                 combinedProbability += model.getLogProbability(classValue, row.getCell(i), logProbThreshold);
             }
         }
         return combinedProbability;
+    }
+
+    /**
+     * Returns true if a proper probability threshold has been set.
+     *
+     * @return {@code} if the pmml threshold is greater than 0
+     */
+    public boolean isValidPMMLThreshold() {
+        final double threshold = m_pmmlZeroProbThreshold.doubleValue();
+        // TODO: actually <= 1 would also be fine
+        return !Double.isNaN(threshold) && threshold > 0 && Double.isFinite(threshold);
     }
 
     /**

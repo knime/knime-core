@@ -32,7 +32,13 @@
             Without adjustment, a probability of zero would exercise an absolute veto over a likelihood in which that 
             probability appears as a factor. Therefore, the Bayes model incorporates a default probability parameter 
             that specifies a default (usually very small) probability to use in lieu of zero probability for a 
-            given attribute/class value pair. Set to zero for no correction.
+            given attribute/class value pair. The default probability is used if the attribute is:
+           	<ul>
+           		<li>nominal and was not seen by the learner
+           		</li>
+           		<li>continuous and its probability is smaller than the default probability
+          		</li>
+           	</ul>
         </option>
         <option name="Ignore missing values">
             By default the node uses the missing value information to improve the prediction result.

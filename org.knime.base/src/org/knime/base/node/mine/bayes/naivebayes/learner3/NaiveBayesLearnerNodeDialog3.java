@@ -51,6 +51,7 @@ package org.knime.base.node.mine.bayes.naivebayes.learner3;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.mine.bayes.naivebayes.datamodel3.NaiveBayesModel;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -94,13 +95,13 @@ final class NaiveBayesLearnerNodeDialog3 extends DefaultNodeSettingsPane {
         final DialogComponentColumnNameSelection selectionBox = new DialogComponentColumnNameSelection(columnName,
             "Classification Column:", NaiveBayesLearnerNodeModel3.TRAINING_DATA_PORT, NominalValue.class);
         addDialogComponent(selectionBox);
-        final DialogComponentNumber laplaceCorrectorComponent =
-            new DialogComponentNumber(m_threshold, "Default probability: ", new Double(0.001), 5);
+        final DialogComponentNumber laplaceCorrectorComponent = new DialogComponentNumber(m_threshold,
+            "Default probability:", NaiveBayesModel.DEFAULT_MIN_PROB_THRESHOLD, 5);
         laplaceCorrectorComponent.setToolTipText("Set to zero for no correction");
         addDialogComponent(laplaceCorrectorComponent);
         final SettingsModelInteger noMo = NaiveBayesLearnerNodeModel3.createMaxNominalValsModel();
         final DialogComponentNumber maxNomVals =
-            new DialogComponentNumber(noMo, "Maximum number of unique nominal values per attribute: ", 1);
+            new DialogComponentNumber(noMo, "Maximum number of unique nominal values per attribute:", 1);
         maxNomVals
             .setToolTipText("Nominal attributes with more than " + "the specified number of unique values are skipped");
         addDialogComponent(maxNomVals);

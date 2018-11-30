@@ -167,6 +167,10 @@ public final class NaiveBayesPredictorNodeModel3 extends NodeModel {
         final PMMLNaiveBayesModelTranslator translator = new PMMLNaiveBayesModelTranslator();
         pmmlPortObj.initializeModelTranslator(translator);
         final NaiveBayesModel model = translator.getModel();
+        if (!model.isValidPMMLThreshold()) {
+            setWarningMessage("The provided PMML model misses a proper default probability threshold, "
+                + NaiveBayesModel.DEFAULT_MIN_PROB_THRESHOLD + " is used instead.");
+        }
         PredictorHelper predictorHelper = PredictorHelper.getInstance();
         final String classColumnName = model.getClassColumnName();
         final String predictionColName = m_overridePredicted.getBooleanValue() ? m_predictionColumnName.getStringValue()
