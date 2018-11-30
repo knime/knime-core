@@ -140,13 +140,11 @@ class NominalAttributeModel extends AttributeModel {
             m_noOfRows = (int)config.getLong(NO_OF_ROWS);
             m_missingValueRecs = new MutableInteger((int)config.getLong(MISSING_VALUE_COUNTER));
             final String[] attrVals = config.getStringArray(ATTRIBUTE_VALS);
-            // TODO: has to be a long array
             final int[] recsCounter = longToIntArr(config.getLongArray(ATTR_VAL_COUNTER));
             if (attrVals.length != recsCounter.length) {
                 throw new InvalidSettingsException("Attribute and counter array must be of equal size");
             }
             for (int i = 0, length = attrVals.length; i < length; i++) {
-                // TODO: cast to int
                 m_recsByAttrValue.put(attrVals[i], new MutableInteger(recsCounter[i]));
             }
         }
@@ -159,7 +157,6 @@ class NominalAttributeModel extends AttributeModel {
             config.addLong(NO_OF_ROWS, m_noOfRows);
             config.addLong(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
             final String[] attrVals = new String[m_recsByAttrValue.size()];
-            // TODO: has to be long
             final long[] recsCounter = new long[m_recsByAttrValue.size()];
             int i = 0;
             for (final String classVal : m_recsByAttrValue.keySet()) {
@@ -168,7 +165,6 @@ class NominalAttributeModel extends AttributeModel {
                 i++;
             }
             config.addStringArray(ATTRIBUTE_VALS, attrVals);
-            // TODO: has to be long
             config.addLongArray(ATTR_VAL_COUNTER, recsCounter);
         }
 
@@ -254,13 +250,11 @@ class NominalAttributeModel extends AttributeModel {
          * @return
          */
         private double getLogProbability(final DataCell attributeValue, final double logProbThreshold) {
-            // TODO: long
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
                 throw new IllegalStateException(
                     "Model for attribute " + getAttributeName() + " contains no rows for class " + m_classValue);
             }
-            // TODO: long
             final double noOfRows = getNoOfRows4AttributeValue(attributeValue);
             double prob = logProbThreshold;
             if (noOfRows > 0) {
@@ -458,7 +452,6 @@ class NominalAttributeModel extends AttributeModel {
             final String attrValString = attrValue.toString();
             if (!m_attributeVals.contains(attrValString)) {
                 //check the different number of attribute values
-                // TODO: why do we have this line of code?
                 if (m_attributeVals.size() >= getMaxNoOfAttrVals()) {
                     throw new TooManyValuesException("Attribute value " + attrValString + " doesn't fit into model");
                 }
