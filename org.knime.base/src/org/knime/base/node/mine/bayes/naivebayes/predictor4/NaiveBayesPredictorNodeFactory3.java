@@ -53,9 +53,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
+ * <code>NodeFactory</code> for the "Naive Bayes Predictor" node.
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
- * @since 3.7
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class NaiveBayesPredictorNodeFactory3 extends NodeFactory<NaiveBayesPredictorNodeModel3> {
     /**

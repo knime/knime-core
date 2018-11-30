@@ -87,9 +87,10 @@ import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
 /**
+ * This is the <code>NodeModel</code> implementation of the "Naive Bayes Predictor" node.
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
- * @since 3.7
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class NaiveBayesPredictorNodeModel3 extends NodeModel {
 

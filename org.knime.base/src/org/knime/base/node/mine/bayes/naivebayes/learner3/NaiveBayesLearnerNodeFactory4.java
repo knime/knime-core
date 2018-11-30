@@ -52,8 +52,9 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 
 /**
+ * <code>NodeFactory</code> for the "Naive Bayes Learner" node.
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author Tobias Koetter
  */
 public final class NaiveBayesLearnerNodeFactory4 extends NodeFactory<NaiveBayesLearnerNodeModel3> {
     /**

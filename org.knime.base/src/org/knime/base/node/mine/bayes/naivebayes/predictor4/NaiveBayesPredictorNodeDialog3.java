@@ -56,8 +56,9 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
+ * <code>NodeDialog</code> for the "Naive Bayes Predictor" Node.
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  */
 final class NaiveBayesPredictorNodeDialog3 extends PredictorNodeDialog {
 

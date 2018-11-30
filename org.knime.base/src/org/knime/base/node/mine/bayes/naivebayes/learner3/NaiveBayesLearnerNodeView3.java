@@ -55,8 +55,9 @@ import org.knime.base.node.mine.bayes.naivebayes.datamodel3.NaiveBayesModel;
 import org.knime.core.node.NodeView;
 
 /**
+ * <code>NodeView</code> for the "Naive Bayes Learner" Node.
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author Tobias Koetter
  */
 final class NaiveBayesLearnerNodeView3 extends NodeView<NaiveBayesLearnerNodeModel3> {
 

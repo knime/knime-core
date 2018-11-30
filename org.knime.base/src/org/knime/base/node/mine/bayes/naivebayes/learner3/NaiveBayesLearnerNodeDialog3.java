@@ -63,8 +63,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
+ * <code>NodeDialog</code> for the "Naive Bayes Learner" node.
  *
- * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author Tobias Koetter
  */
 final class NaiveBayesLearnerNodeDialog3 extends DefaultNodeSettingsPane {
 
