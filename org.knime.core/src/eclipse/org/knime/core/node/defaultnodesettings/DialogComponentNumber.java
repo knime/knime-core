@@ -52,6 +52,7 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.text.ParseException;
+import java.util.Optional;
 
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
@@ -323,6 +324,38 @@ public class DialogComponentNumber extends DialogComponent {
 
         // call this method to be in sync with the settings model
         updateComponent();
+    }
+
+    /**
+     * @return the spinner component
+     * @since 3.7
+     */
+    public JSpinner getSpinner() {
+        return m_spinner;
+    }
+
+    /**
+     * @return the label component
+     * @since 3.7
+     */
+    public JLabel getLabel() {
+        return m_label;
+    }
+
+    /**
+     * @return the warning label, which may be {@code null}
+     * @since 3.7
+     */
+    public Optional<JLabel> getWarningLabel() {
+        return Optional.of(m_warning);
+    }
+
+    /**
+     * @return the {@link FlowVariableModelButton}, which may be {@code null}
+     * @since 3.7
+     */
+    public Optional<FlowVariableModelButton> getFlowVariableModelButton() {
+        return Optional.of(m_fvmButton);
     }
 
     /**
