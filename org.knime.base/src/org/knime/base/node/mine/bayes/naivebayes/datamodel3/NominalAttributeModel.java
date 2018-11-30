@@ -137,8 +137,8 @@ class NominalAttributeModel extends AttributeModel {
          */
         private NominalClassValue(final Config config) throws InvalidSettingsException {
             m_classValue = config.getString(CLASS_VALUE);
-            m_noOfRows = (int) config.getLong(NO_OF_ROWS);
-            m_missingValueRecs = new MutableInteger((int) config.getLong(MISSING_VALUE_COUNTER));
+            m_noOfRows = (int)config.getLong(NO_OF_ROWS);
+            m_missingValueRecs = new MutableInteger((int)config.getLong(MISSING_VALUE_COUNTER));
             final String[] attrVals = config.getStringArray(ATTRIBUTE_VALS);
             // TODO: has to be a long array
             final int[] recsCounter = longToIntArr(config.getLongArray(ATTR_VAL_COUNTER));
@@ -204,7 +204,7 @@ class NominalAttributeModel extends AttributeModel {
             // no need to check counter since m_noOfRows >= counter
             counter.add(rowCount);
             // TODO: has to be updated once we switch to long
-            if(Integer.MAX_VALUE - m_noOfRows < rowCount) {
+            if (Integer.MAX_VALUE - m_noOfRows < rowCount) {
                 // throws an exception
                 checkLimits(Integer.MAX_VALUE);
             }
@@ -246,27 +246,6 @@ class NominalAttributeModel extends AttributeModel {
                 return counter.intValue();
             }
             return 0;
-        }
-
-        /**
-         * @param attrVal the attribute value to calculate the probability for
-         * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
-         *            categorical fields or when the calculated probability of the distribution falls below the
-         *            threshold for continuous fields.
-         * @return the probability for the given attribute value
-         */
-        private double getProbability(final DataCell attrVal, final double probabilityThreshold) {
-            // TODO: can be removed
-            final int noOfRows4Class = getNoOfRows();
-            if (noOfRows4Class == 0) {
-                throw new IllegalStateException(
-                    "Model for attribute " + getAttributeName() + " contains no rows for class " + m_classValue);
-            }
-            final double noOfRows = getNoOfRows4AttributeValue(attrVal);
-            if (noOfRows == 0) {
-                return probabilityThreshold;
-            }
-            return noOfRows / noOfRows4Class;
         }
 
         /**
@@ -352,8 +331,8 @@ class NominalAttributeModel extends AttributeModel {
     NominalAttributeModel(final String attributeName, final int noOfMissingVals, final boolean skipMissingVals,
         final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
-        m_maxNoOfAttrVals = (int) config.getLong(MAX_NO_OF_ATTRS);
-        final int noOfClassVals = (int) config.getLong(CLASS_VALUE_COUNTER);
+        m_maxNoOfAttrVals = (int)config.getLong(MAX_NO_OF_ATTRS);
+        final int noOfClassVals = (int)config.getLong(CLASS_VALUE_COUNTER);
         final String[] attrVals = config.getStringArray(ATTRIBUTE_VALUES);
         m_attributeVals.addAll(Arrays.asList(attrVals));
         for (int i = 0; i < noOfClassVals; i++) {
@@ -390,7 +369,7 @@ class NominalAttributeModel extends AttributeModel {
                         PMMLNaiveBayesModelTranslator.convertToMap(targetCount.getExtensionList());
                     int missingValueRecs = 0;
                     if (extensionMap.containsKey(NominalClassValue.MISSING_VALUE_COUNTER)) {
-                        missingValueRecs = (int) PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap,
+                        missingValueRecs = (int)PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap,
                             NominalClassValue.MISSING_VALUE_COUNTER);
                     }
                     classVal = new NominalClassValue(classValue, missingValueRecs);
@@ -524,20 +503,6 @@ class NominalAttributeModel extends AttributeModel {
             return null;
         }
         return new Integer(value.getNoOfRows());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    double getProbabilityInternal(final String classValue, final DataCell attributeValue,
-        final double probabilityThreshold) {
-        // TODO: can be removed
-        final NominalClassValue classVal = m_classValues.get(classValue);
-        if (classVal == null) {
-            return 0;
-        }
-        return classVal.getProbability(attributeValue, probabilityThreshold);
     }
 
     /**

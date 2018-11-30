@@ -179,8 +179,8 @@ class NumericalAttributeModel extends AttributeModel {
                 PMMLNaiveBayesModelTranslator.convertToMap(targetValueStat.getExtensionList());
             if (extensionMap.containsKey(MISSING_VALUE_COUNTER)) {
                 m_missingValueRecs
-                    .setValue((int) PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap, MISSING_VALUE_COUNTER));
-                m_noOfRows = (int) PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap, NO_OF_ROWS);
+                    .setValue((int)PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap, MISSING_VALUE_COUNTER));
+                m_noOfRows = (int)PMMLNaiveBayesModelTranslator.getLongExtension(extensionMap, NO_OF_ROWS);
             }
             m_incMean = null;
             m_incVar = null;
@@ -279,55 +279,6 @@ class NumericalAttributeModel extends AttributeModel {
             // no need to check missingValuesRecs since m_noOfRows >= missingValuesRecs
             checkLimits(m_noOfRows);
             m_noOfRows++;
-        }
-
-        /**
-         * @param attrVal the attribute value to calculate the probability for
-         * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
-         *            categorical fields or when the calculated probability of the distribution falls below the
-         *            threshold for continuous fields.
-         * @return the calculated probability for the given attribute
-         */
-        private double getProbability(final DataCell attrVal, final double probabilityThreshold) {
-            // TODO: can be removed
-            //            if (m_recompute) {
-            //                calculateProbabilityValues();
-            //            }
-            if (attrVal.isMissing()) {
-                if (m_noOfRows == 0) {
-                    return 0;
-                }
-                return (double)getNoOfMissingValueRecs() / m_noOfRows;
-            }
-            final double attrValue = ((DoubleValue)attrVal).getDoubleValue();
-            final double diff = attrValue - m_mean;
-            if (m_sd == 0) {
-                //if the variance is 0 which means that
-                //the probability is 1 if this attribute value
-                //is equal the mean (which is equal to the only observed)
-                //otherwise it is 0
-                if (diff == 0) {
-                    return 1;
-                }
-                return 0;
-            }
-            //            if (m_probabilityDenominator == 0) {
-            //this should never happen since we check the standard deviation
-            //                throw new IllegalStateException("Error while calculating probability for attribute "
-            //                    + getAttributeName() + ": Probability denominator was zero");
-            //            }
-            //we do not use the probability factor
-            //1 / (PROB_FACT_DEN * m_stdDeviation) which ensures that the area
-            //under the distribution function is 1 to have a probability result
-            //between 1 and 0. If we use the probability factor for columns
-            //with a very low variance the probability is > 1 which might result
-            //in a number overflow for many of such columns like described
-            //in forum post http://www.knime.org/node/949
-            //            final double prob = Math.exp(-(diff * diff / m_probabilityDenominator));
-            //            if (prob < probabilityThreshold) {
-            //                return probabilityThreshold;
-            //            }
-            return -19301249;
         }
 
         private double getLogProbability(final DataCell attributeValue, final double logProbThreshold) {
@@ -485,7 +436,7 @@ class NumericalAttributeModel extends AttributeModel {
     NumericalAttributeModel(final String attributeName, final boolean skipMissingVals, final int noOfMissingVals,
         final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
-        final int noOfClasses = (int) config.getLong(CLASS_VALUE_COUNTER);
+        final int noOfClasses = (int)config.getLong(CLASS_VALUE_COUNTER);
         m_classValues = new HashMap<>(noOfClasses);
         for (int i = 0; i < noOfClasses; i++) {
             final Config classConfig = config.getConfig(CLASS_VALUE_SECTION + i);
@@ -600,20 +551,6 @@ class NumericalAttributeModel extends AttributeModel {
             return null;
         }
         return new Integer(value.getNoOfRows());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    double getProbabilityInternal(final String classValue, final DataCell attributeValue,
-        final double probabilityThreshold) {
-        // TODO: can be removed
-        final NumericalClassValue classModel = m_classValues.get(classValue);
-        if (classModel == null) {
-            return 0;
-        }
-        return classModel.getProbability(attributeValue, probabilityThreshold);
     }
 
     /**

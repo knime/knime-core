@@ -219,36 +219,6 @@ public class BitVectorAttributeModel extends AttributeModel {
             m_noOfRows++;
         }
 
-        /**
-         * @param attributeValue the attribute value to calculate the probability for
-         * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
-         *            categorical fields or when the calculated probability of the distribution falls below the
-         *            threshold for continuous fields.
-         * @return the probability for the given attribute value
-         */
-        private double getProbability(final DataCell attributeValue, final double probabilityThreshold) {
-            // TODO: can be removed
-            final int noOfRows4Class = getNoOfRows();
-            if (noOfRows4Class == 0) {
-                return 0;
-            }
-            if (attributeValue.isMissing()) {
-                return (double)m_missingValueRecs.intValue() / noOfRows4Class;
-            }
-            final BitVectorValue bitVec = (BitVectorValue)attributeValue;
-            if (bitVec.length() != m_bitCounts.length) {
-                throw new IllegalArgumentException("Illegal bit vector length");
-            }
-            double combinedProbability = 0;
-            for (int i = 0, length = (int)bitVec.length(); i < length; i++) {
-                final double noOfRows = getNoOfRows4AttributeValue(i, bitVec.get(i));
-                final double probability = noOfRows / noOfRows4Class;
-                combinedProbability += Math.log(probability);
-            }
-            combinedProbability = Math.exp(combinedProbability);
-            return combinedProbability;
-        }
-
         private double getLogProbability(final DataCell attributeValue, final double logProbThreshold) {
             // TODO: long
             final int noOfRows4Class = getNoOfRows();
@@ -506,20 +476,6 @@ public class BitVectorAttributeModel extends AttributeModel {
             return null;
         }
         return value.getNoOfRows();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    double getProbabilityInternal(final String classValue, final DataCell attributeValue,
-        final double probabilityThreshold) {
-        // TODO: can be removed
-        final BitVectorClassValue classModel = m_classValues.get(classValue);
-        if (classModel == null) {
-            return 0;
-        }
-        return classModel.getProbability(attributeValue, probabilityThreshold);
     }
 
     /**
