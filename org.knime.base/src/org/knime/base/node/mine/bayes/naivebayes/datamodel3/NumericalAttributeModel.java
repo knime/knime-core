@@ -272,7 +272,7 @@ final class NumericalAttributeModel extends AttributeModel {
                 final double val = ((DoubleValue)attrVal).getDoubleValue();
                 m_incMean.increment(val);
                 m_incVar.increment(val);
-                if (Double.isNaN(m_incVar.getResult())) {
+                if (Double.isInfinite(m_incVar.getResult())) {
                     throw new ArithmeticException(
                         "Cannot compute the variance for " + m_classValue + " due to number overflow");
                 }
