@@ -48,6 +48,7 @@
 package org.knime.core.data.convert.java;
 
 import java.lang.reflect.Array;
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.knime.core.data.DataCell;
@@ -385,5 +386,40 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
     @Override
     public String getName() {
         return "Array of " + m_elementConverterFactory.getName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_destType, m_elementConverterFactory);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final CollectionConverterFactory<?,?,?> other = (CollectionConverterFactory<?,?,?>)obj;
+        if (!Objects.equals(m_destType, other.m_destType)) {
+            return false;
+        }
+        if (!Objects.equals(m_elementConverterFactory, other.m_elementConverterFactory)) {
+            return false;
+        }
+        //we do not compare the m_converterCreator since it directly depends on the m_elementConverterFactory
+        //and can not be compared since it only allows an object equal which fails even though the
+        //m_elementConverterFactory is the same
+        return true;
     }
 }
