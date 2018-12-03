@@ -97,7 +97,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 final class NaiveBayesLearnerNodeModel3 extends NodeModel {
 
     /** The minimum default probability threshold. */
-    private static final double MIN_DEF_PROB_THRESHOLD = 1e-5;
+    static final double MIN_DEF_PROB_THRESHOLD = 1e-5;
 
     // our logger instance
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NaiveBayesLearnerNodeModel3.class);
