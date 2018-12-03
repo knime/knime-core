@@ -109,11 +109,8 @@ public final class NaiveBayesModel {
     /** The default minimum probability threshold. */
     public static final double DEFAULT_MIN_PROB_THRESHOLD = 0.0001;
 
-    /** This most likely class exception. */
-    private static final String MOST_LIKELY_CLASS_EXCEPTION = "Most likely class must not be null";
-
     /** All classes have zero probability exception. */
-    private static final String ZERO_PROB_EXCEPTION = "All potential classes have a 0 probability";
+    private static final String ZERO_PROB_EXCEPTION = "All potential classes have a zero probability";
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NaiveBayesModel.class);
 
@@ -1008,7 +1005,7 @@ public final class NaiveBayesModel {
             //skip unknown attributes and the class value column
             if (model != null && !(model instanceof ClassAttributeModel)) {
                 final double probabilityThreshold;
-                if (!Double.isNaN(m_pmmlZeroProbThreshold.doubleValue())) {
+                if (hasPMMLThreshold()) {
                     probabilityThreshold = m_pmmlZeroProbThreshold.doubleValue();
                 } else {
                     probabilityThreshold = DEFAULT_MIN_PROB_THRESHOLD;
@@ -1027,17 +1024,17 @@ public final class NaiveBayesModel {
      */
     public boolean hasPMMLThreshold() {
         final double threshold = m_pmmlZeroProbThreshold.doubleValue();
-        return !Double.isNaN(threshold);
+        return !Double.isNaN(threshold) && threshold >= 0.0 && Double.isFinite(threshold);
     }
 
     /**
-     * Returns true if a proper probability threshold has been set.
+     * Returns true if a default probability threshold is larger than 0.
      *
      * @return {@code} if the pmml threshold is greater than 0
      */
     public boolean hasStablePMMLThreshold() {
         final double threshold = m_pmmlZeroProbThreshold.doubleValue();
-        return threshold > 0.0 && Double.isFinite(threshold);
+        return threshold != 0.0;
     }
 
     /**

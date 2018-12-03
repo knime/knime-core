@@ -154,7 +154,7 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
      */
     static SettingsModelDoubleBounded createThresholdModel() {
         return new SettingsModelDoubleBounded("threshold", NaiveBayesModel.DEFAULT_MIN_PROB_THRESHOLD,
-            MIN_DEF_PROB_THRESHOLD, 1);
+            MIN_DEF_PROB_THRESHOLD, Double.MAX_VALUE);
     }
 
     /**
