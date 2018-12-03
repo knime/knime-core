@@ -424,7 +424,7 @@
 <text font-size="20" id="text803" style="font-size:20px;fill:#7d7d7d;font-family:Calibri-Bold" transform="translate(431.9344,50.8442)"/>
 <text font-size="12" id="text805" style="font-size:12px;font-family:Calibri" transform="translate(330.7644,66.9167)"/>
 <text font-size="12" id="KNIME-Builddate" style="font-size:12px;text-align:end;text-anchor:end;fill:#7d7d7d;font-family:Calibri" x="443.28003" y="60.916702">
-<tspan id="tspan413" style="text-align:end;text-anchor:end">(Nightly-Build)</tspan>
+<tspan id="tspan413" style="text-align:end;text-anchor:end">(Build December 06, 2018)</tspan>
 </text>
 <text font-size="12" id="text809" style="font-size:12px;font-family:Calibri" transform="translate(435.2604,66.9167)"/>
 <g id="g5015" transform="matrix(0.86955575,0,0,0.86955575,6.9089035,-118.28292)">
