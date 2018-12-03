@@ -126,11 +126,9 @@ final class NumericalAttributeModel extends AttributeModel {
 
         private double m_mean = Double.NaN;
 
-        //        private double m_variance = Double.NaN;
-
         private double m_sd = Double.NaN;
 
-        private double logSdTwoPi = Double.NaN;
+        private double m_logSdTwoPi = Double.NaN;
 
         private final MutableInteger m_missingValueRecs = new MutableInteger(0);
 
@@ -174,7 +172,7 @@ final class NumericalAttributeModel extends AttributeModel {
             final GaussianDistribution distribution = targetValueStat.getGaussianDistribution();
             m_sd = FastMath.sqrt(distribution.getVariance());
             m_mean = distribution.getMean();
-            logSdTwoPi = FastMath.log(m_sd) + 0.5 * FastMath.log(TWO_PI);
+            m_logSdTwoPi = FastMath.log(m_sd) + 0.5 * FastMath.log(TWO_PI);
             // load mssing value counters
             final Map<String, String> extensionMap =
                 PMMLNaiveBayesModelTranslator.convertToMap(targetValueStat.getExtensionList());
@@ -272,60 +270,36 @@ final class NumericalAttributeModel extends AttributeModel {
                 final double val = ((DoubleValue)attrVal).getDoubleValue();
                 m_incMean.increment(val);
                 m_incVar.increment(val);
-                if (Double.isInfinite(m_incVar.getResult())) {
-                    throw new ArithmeticException(
-                        "Cannot compute the variance for " + m_classValue + " due to number overflow");
-                }
             }
             // no need to check missingValuesRecs since m_noOfRows >= missingValuesRecs
-            checkLimits(m_noOfRows);
-            m_noOfRows++;
+            m_noOfRows = exactInc(m_noOfRows);
         }
 
         private double getLogProbability(final DataCell attributeValue, final double logProbThreshold) {
-            /* TODO: This is soo wrong ... but actually we cannot call this method except we have loaded the
+            /* This is soo wrong ... but actually we cannot call this method except we have loaded the
              * model from PMML => this should ever happen.
              */
             if (Double.isNaN(m_mean) || m_incMean != null) {
                 throw new RuntimeException("Mean hasn't been calculated");
             }
             /* m_noOfRows == 0 & therefore getNoOfNotMissingRows() == 0 if we have read from PMML without missing
-             * entries => however, we should not run into this case, since we this model implies that
-             * skip missings is enabled
+             * entries => however, we should not run into this case, since it is ensure by the calling method
              */
-            if (attributeValue.isMissing() || getNoOfNotMissingRows() == 0) {
+            if (attributeValue.isMissing()) {
                 if (m_noOfRows == 0) {
                     throw new IllegalStateException(
                         "Model for attribute " + getAttributeName() + " contains no rows for class " + m_classValue);
                 }
                 return logProbThreshold;
             }
+
+            if (Double.isInfinite(m_sd) || Double.isNaN(m_sd) || m_sd == 0.0) {
+                return logProbThreshold;
+            }
+
             final double attrValue = ((DoubleValue)attributeValue).getDoubleValue();
             final double diff = attrValue - m_mean;
 
-            // TODO: actually the standard deviation should be set as the probability threshold
-            // This is in line with R e1071 package
-            // TODO: double-check the else case ... is it really NaN
-            //            final double variance;
-            //            if (m_variance != 0 && Double.isFinite(m_variance) && !Double.isNaN(m_variance)) {
-            //                variance = m_variance;
-            //            } else {
-            //                /* TODO: if threshold is 0 we have a problem cause this will cause that our denominator becomes
-            //                 * + Infinity, since Math.log(0) = - Infinity
-            //                 */
-            //                // this is in line with R
-            //                variance = logProbThreshold * logProbThreshold;
-            //            }
-            //            if (variance == 0) {
-            //                // and set a warning message ... or shall we return default prob?
-            //                return Double.NaN;
-            //            }
-
-            // TODO: check this ... this was var before
-            if (Double.isInfinite(m_sd) || Double.isNaN(m_sd) || m_sd == 0) {
-                return logProbThreshold;
-            }
-            // TODO: needs to be updated
             /*
              * Gaussian prob, see https://en.wikipedia.org/wiki/Naive_Bayes_classifier#Gaussian_naive_Bayes
              * p(x = v | C_k) = exp(-((x - mean) * (x -mean) / (2*variance))))  /  sqrt(2 \pi variance)
@@ -340,21 +314,10 @@ final class NumericalAttributeModel extends AttributeModel {
              * it holds that variance != 0. We can substract - Double.NEGATIVE_INFINITY from Double.NEGATIVE_INFINITY
              * without any problems
              */
-            // TODO: add sanity checks
-            // prob can only be (-) Infinity
-            //            double prob = -0.5 * (FastMath.log(TWO_PI));
-            // prob can only be (-) Infinity
-            //            prob -= 0.5 * ((diff * diff) / m_variance);
             final double frac = diff / m_sd;
-            final double prob = -0.5 * (frac * frac) - logSdTwoPi;
+            final double prob = -0.5 * (frac * frac) - m_logSdTwoPi;
 
             return FastMath.max(logProbThreshold, prob);
-            //            // return the probability only if we didn't have any overflows
-            //            if (prob != Double.NEGATIVE_INFINITY) {
-            //                return prob;
-            //            }
-            //            // return the probability threshold
-            //            return Math.log(logProbThreshold);
         }
 
         /**
@@ -367,12 +330,6 @@ final class NumericalAttributeModel extends AttributeModel {
                 setInvalidCause(MODEL_CONTAINS_NO_RECORDS);
                 throw new InvalidSettingsException("Model for attribute " + getAttributeName() + " contains no rows.");
             }
-            final int noOfRowsNonMissing = getNoOfNotMissingRows();
-            // TODO: Think this is not a prob anymore
-            //            if (noOfRowsNonMissing == 0) {
-            //                throw new IllegalStateException("Model for attribute " + getAttributeName() + " and class \""
-            //                    + getClassValue() + "\" contains only missing values");
-            //            }
         }
 
         /**
@@ -709,7 +666,7 @@ final class NumericalAttributeModel extends AttributeModel {
         final double logProbThreshold) {
         final NumericalClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
-            return 0;
+            return logProbThreshold;
         }
         return classModel.getLogProbability(attributeValue, logProbThreshold);
     }

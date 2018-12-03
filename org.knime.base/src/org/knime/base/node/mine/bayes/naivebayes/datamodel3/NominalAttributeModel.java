@@ -184,8 +184,7 @@ final class NominalAttributeModel extends AttributeModel {
                 attrRowCounter.inc();
             }
             // no need to check other counter since m_noOfRows always >=
-            checkLimits(m_noOfRows);
-            m_noOfRows++;
+            m_noOfRows = exactInc(m_noOfRows);
         }
 
         /**
@@ -200,10 +199,9 @@ final class NominalAttributeModel extends AttributeModel {
             }
             // no need to check counter since m_noOfRows >= counter
             counter.add(rowCount);
-            // TODO: has to be updated once we switch to long
             if (Integer.MAX_VALUE - m_noOfRows < rowCount) {
                 // throws an exception
-                checkLimits(Integer.MAX_VALUE);
+                exactInc(Integer.MAX_VALUE);
             }
             m_noOfRows += rowCount;
         }
@@ -640,8 +638,9 @@ final class NominalAttributeModel extends AttributeModel {
     double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
         final double logProbThreshold) {
         final NominalClassValue classVal = m_classValues.get(classValue);
+        // TODO: double check what was here before
         if (classVal == null) {
-            return 0;
+            return logProbThreshold;
         }
         return classVal.getLogProbability(attributeValue, logProbThreshold);
     }

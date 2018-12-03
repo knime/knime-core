@@ -262,8 +262,7 @@ final class ClassAttributeModel extends AttributeModel {
         }
         // no need to check classCounter since m_noOfRows >= classCounter
         classCounter.inc();
-        checkLimits(m_totalNoOfRecs);
-        ++m_totalNoOfRecs;
+        m_totalNoOfRecs = exactInc(m_totalNoOfRecs);
     }
 
     /**

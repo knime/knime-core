@@ -334,7 +334,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         }
         if (attributeValue.isMissing() && m_ignoreMissingVals) {
             // we add 0, i.e., we multiply by 1
-            return 0;
+            return 0.0;
         }
         return getLogProbabilityInternal(classValue, attributeValue, logProbThreshold);
     }
@@ -551,10 +551,11 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      */
     abstract boolean hasRecs4ClassValue(final String classValue);
 
-    static void checkLimits(final int val) {
+    static int exactInc(final int val) {
         if (val == Integer.MAX_VALUE) {
             throw new ArithmeticException("Naive Bayes cannot be calculated due to a number overflow.");
         }
+        return val + 1;
     }
 
     /**

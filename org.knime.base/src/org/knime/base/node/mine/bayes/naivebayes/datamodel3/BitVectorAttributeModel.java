@@ -214,8 +214,7 @@ final class BitVectorAttributeModel extends AttributeModel {
                 }
             }
             // no need to check other counter since m_noOfRows always >=
-            checkLimits(m_noOfRows);
-            m_noOfRows++;
+            m_noOfRows = exactInc(m_noOfRows);
         }
 
         private double getLogProbability(final DataCell attributeValue, final double logProbThreshold) {
@@ -655,8 +654,12 @@ final class BitVectorAttributeModel extends AttributeModel {
     double getLogProbabilityInternal(final String classValue, final DataCell attributeValue,
         final double logProbThreshold) {
         final BitVectorClassValue classModel = m_classValues.get(classValue);
+        /* TODO: this should not happen, because this would mean we want to predict a class
+         * that we have never seen. If model == null then we return a wrong probability
+         * (should be multiplied by bitvector length)!
+         */
         if (classModel == null) {
-            return 0;
+            return logProbThreshold;
         }
         return classModel.getLogProbability(attributeValue, logProbThreshold);
     }

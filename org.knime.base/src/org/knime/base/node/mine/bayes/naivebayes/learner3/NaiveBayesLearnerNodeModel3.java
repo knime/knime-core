@@ -96,6 +96,9 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  */
 final class NaiveBayesLearnerNodeModel3 extends NodeModel {
 
+    /** The minimum default probability threshold. */
+    private static final double MIN_DEF_PROB_THRESHOLD = 1e-5;
+
     // our logger instance
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NaiveBayesLearnerNodeModel3.class);
 
@@ -150,8 +153,8 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
      * @return the Laplace corrector model
      */
     static SettingsModelDoubleBounded createThresholdModel() {
-        return new SettingsModelDoubleBounded("threshold", NaiveBayesModel.DEFAULT_MIN_PROB_THRESHOLD, Double.MIN_VALUE,
-            1);
+        return new SettingsModelDoubleBounded("threshold", NaiveBayesModel.DEFAULT_MIN_PROB_THRESHOLD,
+            MIN_DEF_PROB_THRESHOLD, 1);
     }
 
     /**

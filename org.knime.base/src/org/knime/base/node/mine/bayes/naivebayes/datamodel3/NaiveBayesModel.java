@@ -897,16 +897,22 @@ public final class NaiveBayesModel {
 
         // check if there exists a class with probability > 0
         if (Arrays.stream(logProbs).noneMatch(p -> p > Double.NEGATIVE_INFINITY)) {
-            throw new IllegalStateException(ZERO_PROB_EXCEPTION);
+            throw new IllegalStateException(ZERO_PROB_EXCEPTION + " for row " + row.getKey().getString());
         }
         if (normalize) {
             /* p(x_k) / \sum_{i = 0}^n p(x_i) = 1 / \sum_{i = 0}^n p(x_i) / p(x_k)
              * since p(x_k) is actually the log probability "p(x_i)/ p(x_k)" becomes exp(p(x_i)-p(x_k))
+             *            a_k               1
+             *           ------  =     ------------
+             *            sum(A)           a_1 + a_2 + a_3 + a_4
+             *                             ----  ---   ----  ---
+             *                             a_k   a_k   a_k   a_k
              */
+
             final double[] normProbs = new double[logProbs.length];
             for (int i = 0, length = logProbs.length; i < length; i++) {
                 final int idx = i;
-                normProbs[i] = 1d / Arrays.stream(logProbs).map(prob -> FastMath.exp(prob - logProbs[idx])).sum();
+                normProbs[i] = 1.0 / Arrays.stream(logProbs).map(prob -> FastMath.exp(prob - logProbs[idx])).sum();
             }
             return normProbs;
         } else {
@@ -945,9 +951,9 @@ public final class NaiveBayesModel {
             }
         }
 
-        // If this happens we have a bug!
-        if (maxProbability == Double.NEGATIVE_INFINITY) {
-            throw new IllegalStateException(ZERO_PROB_EXCEPTION);
+        // If this happens we have a bug, or the pmml threshold is 0
+        if (Double.isInfinite(maxProbability) && maxProbability < 0.0) {
+            throw new IllegalStateException(ZERO_PROB_EXCEPTION + " for row " + row.getKey().getString());
         }
         return mostLikelyClass;
     }
@@ -972,10 +978,6 @@ public final class NaiveBayesModel {
      * @see PMMLDataDictionaryTranslator#getKNIMEDataType(Enum)
      */
     private static DataCell createPredictedClassCell(final DataType dataType, final String val) {
-        // If this happens we have a bug!
-        if (val == null) {
-            throw new IllegalStateException(MOST_LIKELY_CLASS_EXCEPTION);
-        }
         if (dataType.isCompatible(BooleanValue.class)) {
             return BooleanCellFactory.create(Boolean.parseBoolean(val));
         } else if (dataType.isCompatible(IntValue.class)) {
@@ -1006,7 +1008,7 @@ public final class NaiveBayesModel {
             //skip unknown attributes and the class value column
             if (model != null && !(model instanceof ClassAttributeModel)) {
                 final double probabilityThreshold;
-                if (isValidPMMLThreshold()) {
+                if (!Double.isNaN(m_pmmlZeroProbThreshold.doubleValue())) {
                     probabilityThreshold = m_pmmlZeroProbThreshold.doubleValue();
                 } else {
                     probabilityThreshold = DEFAULT_MIN_PROB_THRESHOLD;
@@ -1023,10 +1025,19 @@ public final class NaiveBayesModel {
      *
      * @return {@code} if the pmml threshold is greater than 0
      */
-    public boolean isValidPMMLThreshold() {
+    public boolean hasPMMLThreshold() {
         final double threshold = m_pmmlZeroProbThreshold.doubleValue();
-        // TODO: actually <= 1 would also be fine
-        return !Double.isNaN(threshold) && threshold > 0 && Double.isFinite(threshold);
+        return !Double.isNaN(threshold);
+    }
+
+    /**
+     * Returns true if a proper probability threshold has been set.
+     *
+     * @return {@code} if the pmml threshold is greater than 0
+     */
+    public boolean hasStablePMMLThreshold() {
+        final double threshold = m_pmmlZeroProbThreshold.doubleValue();
+        return threshold > 0.0 && Double.isFinite(threshold);
     }
 
     /**
