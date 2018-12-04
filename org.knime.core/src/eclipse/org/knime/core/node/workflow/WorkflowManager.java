@@ -3630,7 +3630,8 @@ public final class WorkflowManager extends NodeContainer
             }
             // retrieve all workflow annotations
             Collection<WorkflowAnnotation> annos = subWFM.getWorkflowAnnotations();
-            WorkflowAnnotationID[] orgAnnos = annos.toArray(new WorkflowAnnotationID[annos.size()]);
+            WorkflowAnnotationID[] orgAnnos =
+                annos.stream().map(WorkflowAnnotation::getID).toArray(WorkflowAnnotationID[]::new);
             // copy the nodes from the sub workflow manager:
             WorkflowCopyContent.Builder orgContent = WorkflowCopyContent.builder();
             orgContent.setNodeIDs(orgIDs);
