@@ -54,6 +54,8 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import java.util.Collection;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
@@ -120,6 +122,19 @@ public class Bug6029_ExpandSubnode extends WorkflowTestCase {
 
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_tableDiffer7, m_subnode8);
 
+    }
+
+    /** Tests AP-10946 - expansion of metanodes with workflow annotations is broken. */
+    @Test
+    public void testExpandAndCheckWorkflowAnnotationBugAP10946() throws Exception {
+        WorkflowManager mgr = getManager();
+        ExpandSubnodeResult expandSubWorkflowResult = mgr.expandSubWorkflow(m_subnode8);
+        assertThat("Number of workflow annotations in copy content",
+            expandSubWorkflowResult.getExpandedCopyContent().getAnnotationIDs().length, is(1));
+        Collection<WorkflowAnnotation> workflowAnnotations = mgr.getWorkflowAnnotations();
+        assertThat("Number of workflow annotations in workflow", workflowAnnotations.size(), is(1));
+        WorkflowAnnotation annotation = workflowAnnotations.stream().findFirst().get();
+        assertThat("Text in workflow annotation", annotation.getText(), is("Some Workflow Annotation"));
     }
 
 
