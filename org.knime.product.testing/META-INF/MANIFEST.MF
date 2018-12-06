@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Testcase for org.knime.product
 Bundle-SymbolicName: org.knime.product.testing;singleton:=true
-Bundle-Version: 3.7.0.qualifier
+Bundle-Version: 3.8.0.qualifier
 Bundle-ClassPath: product-test.jar
 Fragment-Host: org.knime.product;bundle-version="[3.6.0,4.0.0)"
 Require-Bundle: org.knime.testing;bundle-version="[3.6.0,4.0.0)",
