@@ -414,7 +414,8 @@ public final class NodeTimer {
                 JsonObject jo = constructJSONObject(properShutdown);
                 File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
                 Map<String, Boolean> cfg = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
-                try (JsonWriter jw = Json.createWriterFactory(cfg).createWriter(new FileOutputStream(propfile))) {
+                try (FileOutputStream outStream = new FileOutputStream(propfile);
+                        JsonWriter jw = Json.createWriterFactory(cfg).createWriter(outStream)) {
                     jw.write(jo);
                 }
                 LOGGER.debug("Successfully wrote node usage stats to file: " + propfile.getCanonicalPath());
@@ -426,9 +427,13 @@ public final class NodeTimer {
 
 
         private void sendToServer(final boolean properShutdown) {
-            // Only send if user chose to do so
+            // Send statistics based on user preferences. If there are no prefs available,  don't send them in a
+            // full KNIME AP desktop application (because the user was prompted and the default value, false,
+            // was confirmed); all other applications (e.g. batch) will send stats - user can suppress that by providing
+            // a workspace containing preferences
+            final boolean defaultSendStats = !"org.knime.product.KNIME_APPLICATION".equals(getApplicationID());
             Preferences preferences = InstanceScope.INSTANCE.getNode("org.knime.workbench.core");
-            boolean sendStatistics = preferences.getBoolean("knime.sendAnonymousStatistics", false)
+            boolean sendStatistics = preferences.getBoolean("knime.sendAnonymousStatistics", defaultSendStats)
                     && !EclipseUtil.isRunFromSDK();
             if (!sendStatistics) {
                 LOGGER.debug("Sending of usage stats disabled.");
