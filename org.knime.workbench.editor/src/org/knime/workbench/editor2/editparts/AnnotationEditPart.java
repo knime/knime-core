@@ -523,24 +523,18 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart
 
     @Override
     public void performRequest(final Request request) {
-        if (request.getType() == RequestConstants.REQ_OPEN) {
-            // caused by a double click on this edit part
+        if ((request.getType() == RequestConstants.REQ_OPEN)
+            || (WorkflowEditorMode.ANNOTATION_EDIT.equals(m_currentEditorMode) && (getSelected() != SELECTED_NONE))) {
+            // REQ_OPEN is caused by a double click on this edit part
             performEdit();
-            // we ignore REQ_DIRECT_EDIT as we want to allow editing only after a double-click
+            // we ignore REQ_DIRECT_EDIT as we want to allow editing only after a double-click, or click on selected
         } else {
             super.performRequest(request);
         }
     }
 
     /**
-     * Opens the editor to directoy edit the annotation in place.
-     *
-     * This is slightly hacky with the thread sleeping for the following reason: in Annotation Edit mode, it is possible
-     * to double click on a node that sits atop of an annotation; we pickup this double click as an indication to change
-     * to Node Edit mode, but since the node in AE mode passes through mouse events, the underlying annotation picks up
-     * the double click as an indication to edit the contents of the annotation. So we are giving the concurrent
-     * notification hopefully enough time to work its way through such that we can prevent the style edit mode of the
-     * annotation from presenting itself.
+     * Opens the editor to directly edit the annotation in place.
      */
     public void performEdit() {
         // Only allow the edit if we're in AE mode, or we're editing the node's name annotation
@@ -630,11 +624,10 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart
      * We don't want to be selected if:
      * . we're in Annotation Edit mode, but our figure is not an instance of WorkflowAnnotationFigure (because that sort
      * of annotation figure is semantically actually part of a node.)
-     * . we're not in Annotation Edit mode and the request is part of a marquee drag selection
      */
     @Override
     public EditPart getTargetEditPart(final Request request) {
-        if (m_currentEditorMode.equals(WorkflowEditorMode.ANNOTATION_EDIT) && (!figureIsForWorkflowAnnotation())) {
+        if (m_currentEditorMode.equals(WorkflowEditorMode.ANNOTATION_EDIT) && !figureIsForWorkflowAnnotation()) {
             return null;
         }
 
