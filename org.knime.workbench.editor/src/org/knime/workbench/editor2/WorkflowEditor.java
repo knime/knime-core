@@ -1368,7 +1368,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         // -> add a prefix to the title
         String prefix = Wrapper.wraps(m_manager, WorkflowManager.class) ? "" : "Job ";
         if (m_parentEditor == null) {
-            return prefix + m_manager.getID().toString() + ": " + new Path(m_fileResource.getPath()).lastSegment();
+            final String path =
+                m_origRemoteLocation == null ? m_fileResource.getPath() : m_origRemoteLocation.getPath();
+            return prefix + m_manager.getID().toString() + ": " + new Path(path).lastSegment();
         } else {
             // we are a metanode editor
             // return id and node name (custom name)
@@ -1894,7 +1896,13 @@ public class WorkflowEditor extends GraphicalEditor implements
                 LOGGER.error(msg, e);
                 MessageDialog.openError(activeShell, "\"Save As...\" failed.", msg);
             }
-            // no need to change any registered locations as this was a save+upload (didn't change flow location)
+            // update the location and the link to the workflow as part of SRV-1326
+            if (m_manager.getContext().isTemporaryCopy()) {
+                m_manuallySetToolTip = null;
+                m_origRemoteLocation = newWorkflowDir.toURI();
+                updateWorkflowMessages();
+                updatePartName();
+            }
         } else {
 
             // this is messy. Some methods want the URI with the folder, others the file store denoting workflow.knime
@@ -2021,7 +2029,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (currentStore != null) {
             currentParent = currentStore.getParent();
         }
-        String currentName = new Path(currentLocation.getPath()).lastSegment();
+        String currentName = m_origRemoteLocation == null ? new Path(currentLocation.getPath()).lastSegment()
+            : new Path(m_origRemoteLocation.getPath()).lastSegment();
         List<String> selIDs = new LinkedList<String>();
         for (String id : ExplorerMountTable.getAllVisibleMountIDs()) {
             AbstractContentProvider provider = ExplorerMountTable.getMountPoint(id).getProvider();
