@@ -45,6 +45,7 @@
  */
 package org.knime.workbench.editor2;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -244,6 +245,14 @@ class WorkflowEditorRefresher {
                         //refresh not possible because, e.g., underlying job has been swapped to disk
                         String message = "The job has been swapped to disk or wasn't accessed for a while."
                             + "Try re-opening the job-workflow.";
+                        cancelTimers();
+                        disconnect(true, message);
+                        Display.getDefault().syncExec(() -> MessageDialog.openWarning(SWTUtilities.getActiveShell(),
+                            "Auto-refresh failed", message));
+                    } catch (NoSuchElementException e) {
+                        //job-workflow is not available anymore
+                        //job has mostly likely been deleted on the server
+                        String message = "The job has been discarded.";
                         cancelTimers();
                         disconnect(true, message);
                         Display.getDefault().syncExec(() -> MessageDialog.openWarning(SWTUtilities.getActiveShell(),
