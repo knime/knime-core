@@ -117,7 +117,7 @@ public interface AsyncCommand {
                 waitForTerminationAndOpenDialogWhenFailed(CompletableFuture
                     .allOf(
                         asyncCommands.stream().map(c -> c.executeAsync()).toArray(size -> new CompletableFuture[size]))
-                    .thenCompose(f -> asyncWFM.refresh(false)), waitingMessage);
+                    .thenCompose(f -> asyncWFM.refreshAsync(false)), waitingMessage);
             }
 
             /**
@@ -127,7 +127,7 @@ public interface AsyncCommand {
             public void undo() {
                 waitForTerminationAndOpenDialogWhenFailed(CompletableFuture
                     .allOf(asyncCommands.stream().map(c -> c.undoAsync()).toArray(size -> new CompletableFuture[size]))
-                    .thenCompose(f -> asyncWFM.refresh(false)), waitingMessage);
+                    .thenCompose(f -> asyncWFM.refreshAsync(false)), waitingMessage);
             }
         };
     }

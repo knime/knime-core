@@ -49,7 +49,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -57,6 +59,8 @@ import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.ui.node.workflow.async.AsyncWorkflowManagerUI;
+import org.knime.core.ui.node.workflow.async.SnapshotNotFoundException;
+import org.knime.core.util.SWTUtilities;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -230,9 +234,17 @@ class WorkflowEditorRefresher {
                 @Override
                 public void run() {
                     try {
-                        getAsyncWFM().refresh(false).get();
+                        getAsyncWFM().refreshOrFail(false);
                         m_hasBeenRefreshed.set(true);
                         m_lastRefreshSuccessful = true;
+                    } catch (SnapshotNotFoundException e) {
+                        //refresh not possible because, e.g., underlying job has been swapped to disk
+                        Display.getDefault().syncExec(() -> MessageDialog.openWarning(SWTUtilities.getActiveShell(),
+                            "Auto-refresh not possible",
+                            "The job has been deleted, swapped to disk or wasn't accessed for a while."
+                                + "Try re-opening the job-workflow."));
+                        cancelTimers();
+                        setConnected(false, true);
                     } catch (Exception e) {
                         //if something went wrong refreshing the workflow (e.g. timeout)
                         //-> just log it, continue refreshing and hope for the best

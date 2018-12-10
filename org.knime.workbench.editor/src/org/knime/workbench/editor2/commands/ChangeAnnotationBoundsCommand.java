@@ -116,7 +116,8 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand implemen
     @Override
     public void execute() {
         if (shallExecuteAsync()) {
-            waitForTerminationAndOpenDialogWhenFailed(executeAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)),
+            waitForTerminationAndOpenDialogWhenFailed(
+                executeAsync().thenCompose(f -> getAsyncHostWFM().refreshAsync(false)),
                 "Changing annotation bounds ...");
         } else {
             Annotation annotation = m_annotationEditPart.getModel();
@@ -145,7 +146,8 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand implemen
     @Override
     public void undo() {
         if (shallExecuteAsync()) {
-            waitForTerminationAndOpenDialogWhenFailed(undoAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)),
+            waitForTerminationAndOpenDialogWhenFailed(
+                undoAsync().thenCompose(f -> getAsyncHostWFM().refreshAsync(false)),
                 "Undo change of annotations bounds ...");
         } else {
             Annotation annotation = m_annotationEditPart.getModel();

@@ -305,7 +305,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
                     futures[i] = future;
                 }
                 //combine futures and refresh workflow when all are completed
-                return CompletableFuture.allOf(futures).thenCompose(f -> wfm.refresh(false));
+                return CompletableFuture.allOf(futures).thenCompose(f -> wfm.refreshAsync(false));
             };
             if (pasteFuture != null) {
                 return pasteFuture.thenCompose(c -> addConnections.get());

@@ -202,13 +202,26 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
      * -------- */
 
     /**
-     * Refreshes the workflow (e.g. downloads the new state).
+     * Refreshes the workflow (e.g. downloads the new state) asynchronously.
+     *
+     * If a job is swapped it will be copied back to memory.
+     *
+     * @param deepRefresh if <code>true</code> the workflow itself and all contained sub-workflows (i.e. metanodes) will
+     *            be refreshed, if <code>false</code> only the top level workflow will be refreshed.
+     * @return a future for async use
+     */
+    CompletableFuture<Void> refreshAsync(final boolean deepRefresh);
+
+    /**
+     * Refreshes the workflow (e.g. downloads the new state) and returns when done or fails with an
+     * {@link SnapshotNotFoundException}.
      *
      * @param deepRefresh if <code>true</code> the workflow itself and all contained sub-workflows (i.e. metanodes) will
      *            be refreshed, if <code>false</code> only the top level workflow will be refreshed
-     * @return a future for async use
+     * @throws SnapshotNotFoundException if refresh is not possible because the locally hold snapshot is not known to the
+     *             server (anymore), see {@link SnapshotNotFoundException} for possible reasons
      */
-    CompletableFuture<Void> refresh(final boolean deepRefresh);
+    void refreshOrFail(final boolean deepRefresh) throws SnapshotNotFoundException;
 
     /**
      * Sets the disconnected-status of the workflow manager. I.e. in case the workflow manager implementation is just a

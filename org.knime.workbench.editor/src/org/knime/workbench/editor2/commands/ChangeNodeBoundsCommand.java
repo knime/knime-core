@@ -126,7 +126,8 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand implements Asy
     @Override
     public void execute() {
         if (shallExecuteAsync()) {
-            waitForTerminationAndOpenDialogWhenFailed(executeAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)), "Moving node ...");
+            waitForTerminationAndOpenDialogWhenFailed(
+                executeAsync().thenCompose(f -> getAsyncHostWFM().refreshAsync(false)),               "Moving node ...");
         } else {
             if (!Arrays.equals(m_oldBounds, m_newBounds)) {
                 WorkflowManagerUI wm = getHostWFMUI();
@@ -164,7 +165,8 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand implements Asy
     @Override
     public void undo() {
         if (shallExecuteAsync()) {
-            waitForTerminationAndOpenDialogWhenFailed(undoAsync().thenCompose(f -> getAsyncHostWFM().refresh(false)), "Undo moving node ...");
+            waitForTerminationAndOpenDialogWhenFailed(
+                undoAsync().thenCompose(f -> getAsyncHostWFM().refreshAsync(false)), "Undo moving node ...");
         } else {
             if (!Arrays.equals(m_oldBounds, m_newBounds)) {
                 NodeUIInformation information = NodeUIInformation.builder()
