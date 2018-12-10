@@ -2403,9 +2403,10 @@ public class WorkflowEditor extends GraphicalEditor implements
             viewer.setInfoMessage(sb.toString());
 
             if (!m_refresher.isConnected() && !m_refresher.isWorkflowEditDisabled()) {
+                Optional<String> disconnectedMessage = m_refresher.getDisconnectedMessage();
                 sb.setLength(0);
-                sb.append("Server not responding, either the server is overloaded or the connection is lost. Workflow "
-                    + "will not refresh and no changes can be made until connection is restored.");
+                sb.append("Remote Workflow Editor disconnected: " + disconnectedMessage.get()
+                    + "\nWorkflow will not refresh and no changes can be made.");
                 viewer.setErrorMessage(sb.toString());
             } else {
                 viewer.setErrorMessage(null);

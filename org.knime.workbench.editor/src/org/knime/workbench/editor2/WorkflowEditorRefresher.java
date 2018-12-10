@@ -45,6 +45,7 @@
  */
 package org.knime.workbench.editor2;
 
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -113,6 +114,8 @@ class WorkflowEditorRefresher {
 
     /** Called whenever the connection status changes */
     private Runnable m_connectedCallback;
+
+    private String m_disconnectedMessage = null;
 
     /**
      * Creates a new refresher.
@@ -239,12 +242,12 @@ class WorkflowEditorRefresher {
                         m_lastRefreshSuccessful = true;
                     } catch (SnapshotNotFoundException e) {
                         //refresh not possible because, e.g., underlying job has been swapped to disk
-                        Display.getDefault().syncExec(() -> MessageDialog.openWarning(SWTUtilities.getActiveShell(),
-                            "Auto-refresh not possible",
-                            "The job has been deleted, swapped to disk or wasn't accessed for a while."
-                                + "Try re-opening the job-workflow."));
+                        String message = "The job has been swapped to disk or wasn't accessed for a while."
+                            + "Try re-opening the job-workflow.";
                         cancelTimers();
-                        setConnected(false, true);
+                        disconnect(true, message);
+                        Display.getDefault().syncExec(() -> MessageDialog.openWarning(SWTUtilities.getActiveShell(),
+                            "Auto-refresh failed", message));
                     } catch (Exception e) {
                         //if something went wrong refreshing the workflow (e.g. timeout)
                         //-> just log it, continue refreshing and hope for the best
@@ -277,11 +280,12 @@ class WorkflowEditorRefresher {
                         if (m_hasBeenRefreshed.getAndSet(false)) {
                             //everything fine
                             if (!isConnected()) {
-                                setConnected(true, true);
+                                connect(true);
                             }
                         } else {
                             if (isConnected()) {
-                                setConnected(false, true);
+                                disconnect(true,
+                                    "Server not responding, either the server is overloaded or the connection is lost.");
                             }
                         }
                     }
@@ -290,10 +294,10 @@ class WorkflowEditorRefresher {
                 CONNECTED_TIMER.schedule(m_connectedTimerTask, 500,
                     KNIMEConstants.WORKFLOW_EDITOR_CONNECTION_TIMEOUT);
             } else {
-                setConnected(false, false);
+                disconnect(false, "Edit operations are disabled.");
             }
         } else {
-            setConnected(false, false);
+            disconnect(false, "Auto-refresh turned off.");
         }
     }
 
@@ -334,6 +338,18 @@ class WorkflowEditorRefresher {
     }
 
     /**
+     * @return the reason why the remote workflow editor is disconnected or an empty optional if connected
+     */
+    Optional<String> getDisconnectedMessage() {
+        if (isConnected()) {
+            assert m_disconnectedMessage == null;
+            return Optional.empty();
+        } else {
+            return Optional.of(m_disconnectedMessage);
+        }
+    }
+
+    /**
      * Disposes the refresher, i.e. unregisters listeners, stops the refresh timer etc.
      */
     void dispose() {
@@ -343,6 +359,18 @@ class WorkflowEditorRefresher {
         window.getPartService().removePartListener(m_partListener);
 
         cancelTimers();
+    }
+
+    private void disconnect(final boolean callback, final String message) {
+        if (m_disconnectedMessage == null) {
+            m_disconnectedMessage = message;
+        }
+        setConnected(false, callback);
+    }
+
+    private void connect(final boolean callback) {
+        m_disconnectedMessage = null;
+        setConnected(true, callback);
     }
 
     private void setConnected(final boolean isConnected, final boolean callback) {
