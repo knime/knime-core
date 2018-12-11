@@ -82,20 +82,6 @@ public interface DataValue {
     public static final UtilityFactory UTILITY = new UtilityFactory();
 
     /**
-     * Returns <code>true</code> if this represents a missing value, <code>false</code> otherwise. The default
-     * implementation returns <code>false</code>. If you need a missing cell use the static method
-     * {@link DataType#getMissingCell()}.
-     *
-     * @return <code>true</code> if the value is missing, <code>false</code> otherwise
-     * @see DataType#getMissingCell()
-     *
-     * @since 3.7
-     */
-    default boolean isMissing() {
-        return false;
-    }
-
-    /**
      * Implementation of the meta information to a <code>DataValue</code>.
      * <code>DataValue</code> implementations with customized meta information
      * must provide a static final member called <code>UTILTIY</code> of this

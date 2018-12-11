@@ -16,14 +16,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/data/DataCell.java" type="org.knime.core.data.DataCell">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.DataCell"/>
-                <message_argument value="isMissing()"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/Buffer.java" type="org.knime.core.data.container.Buffer">
         <filter id="338792546">
             <message_arguments>
@@ -83,13 +75,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.DataContainer"/>
                 <message_argument value="readFromZipDelayed(ReferencedFile, DataTableSpec, int, Map&lt;Integer,ContainerTable&gt;, FileStoreHandlerRepository)"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.container.DataContainer"/>
-                <message_argument value="DEF_ASYNC_CACHE_SIZE"/>
-                <message_argument value="10"/>
             </message_arguments>
         </filter>
         <filter id="1143996420">

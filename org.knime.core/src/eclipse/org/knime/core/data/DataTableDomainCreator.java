@@ -115,6 +115,9 @@ public class DataTableDomainCreator {
                 if (!m_domainValuesColumnSelection.dropDomain(colSpec) && (values != null)) {
                     m_possVals[i] = new LinkedHashSet<>(values);
                 } else {
+                	// since we're doing a lot of checks for whether a DataCell is contained in the set of possible
+                	// values, we should reduce the amount of expected hash collisions by creating a sufficiently
+                	// large hash set with a low load factor.
                     m_possVals[i] = new LinkedHashSet<>(2 * m_maxPossibleValues, 1 / 3f);
                 }
             }
@@ -312,16 +315,24 @@ public class DataTableDomainCreator {
             throw new IllegalArgumentException("Spec of table to scan does not match spec given in constructor");
         }
 
-        if (rowCount > 0) {
-            long row = 1;
-            for (DataRow r : table) {
-                final long finalRow = row++;
-                if (exec != null) {
-                    exec.checkCanceled();
-                    exec.setProgress(row / (double)rowCount, () -> String.format("Row %,d/%,d", finalRow, rowCount));
+        long row = 0;
+        for (final DataRow r : table) {
+            if (exec != null) {
+                exec.checkCanceled();
+                if (rowCount > 0) {
+                    final double progress = row / (double)rowCount;
+                    exec.setProgress(Math.min(progress, 1.0), () -> String.format("Row %,d/%,d", r, rowCount));
+                } else {
+                    exec.setMessage("Row " + row + "/" + rowCount);
                 }
-                updateDomain(r);
             }
+
+            updateDomain(r);
+        }
+
+        if (exec != null) {
+            exec.checkCanceled();
+            exec.setProgress(1.0);
         }
     }
 

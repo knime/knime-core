@@ -170,6 +170,14 @@ public final class DataType {
         }
 
         /**
+         * {@inheritDoc}
+         */
+        @Override
+        boolean isMissingInternal() {
+            return true;
+        }
+
+        /**
          * Overridden here to return the singleton. This method is being
          * called  by the java reflection mechanism.
          */
@@ -677,8 +685,8 @@ public final class DataType {
 
     private String m_name;
 
-    /** the lazily initialized cached hash code of this type */
-    private int m_hashCode;
+    /** the cached hash code of this type */
+    private final int m_hashCode;
 
     /**
      * Creates a new, non-native <code>DataType</code>. This method is used
@@ -709,6 +717,7 @@ public final class DataType {
         }
         m_collectionElementType = collectionElementType;
         m_adapterValueList = adapterClasses;
+        m_hashCode = computeHashCode();
     }
 
     /**
@@ -775,6 +784,7 @@ public final class DataType {
         } else {
             m_name = null;
         }
+        m_hashCode = computeHashCode();
     }
 
     /**
@@ -805,6 +815,7 @@ public final class DataType {
         }
         m_collectionElementType = type.m_collectionElementType;
         m_adapterValueList = type.m_adapterValueList;
+        m_hashCode = computeHashCode();
     }
 
     /**
@@ -844,6 +855,7 @@ public final class DataType {
             m_collectionElementType = null;
         }
         m_cellClass = null;
+        m_hashCode = computeHashCode();
     }
 
     /** @true if value classes list contains {@link MissingValue} class. */
@@ -1073,21 +1085,22 @@ public final class DataType {
      */
     @Override
     public int hashCode() {
-        // We lazily initialize our cached hashCode
-        if (m_hashCode == 0) {
-            m_hashCode = 0x6172618;
-            for (Class<? extends DataValue> cl : m_valueClasses) {
-                m_hashCode ^= cl.hashCode();
-            }
-            for (Class<? extends DataValue> cl : m_adapterValueList) {
-                m_hashCode ^= cl.hashCode();
-            }
-            final DataType collectionElementType = getCollectionElementType();
-            if (collectionElementType != null) {
-                m_hashCode ^= collectionElementType.hashCode();
-            }
-        }
         return m_hashCode;
+    }
+
+    private int computeHashCode() {
+        int result = 0x6172618;
+        for (Class<? extends DataValue> cl : m_valueClasses) {
+            result ^= cl.hashCode();
+        }
+        for (Class<? extends DataValue> cl : m_adapterValueList) {
+            result ^= cl.hashCode();
+        }
+        final DataType collectionElementType = getCollectionElementType();
+        if (collectionElementType != null) {
+            result ^= collectionElementType.hashCode();
+        }
+        return result;
     }
 
     /**
@@ -1114,12 +1127,7 @@ public final class DataType {
         if (type == null) {
             throw new NullPointerException("Type argument must not be null.");
         }
-        Boolean isSuperType = m_subTypes.get(type);
-        if (isSuperType == null) {
-            isSuperType = isASuperTypeOfInternal(type);
-            m_subTypes.put(type, isSuperType);
-        }
-        return isSuperType;
+        return m_subTypes.computeIfAbsent(type, t -> isASuperTypeOfInternal(t));
     }
 
     private boolean isASuperTypeOfInternal(final DataType type) {

@@ -150,7 +150,7 @@ public class DataContainer implements RowAppender {
      *
      * @see KNIMEConstants#PROPERTY_ASYNC_WRITE_CACHE_SIZE
      */
-    public static final int DEF_ASYNC_CACHE_SIZE = 100;
+    public static final int DEF_ASYNC_CACHE_SIZE = 10;
 
     /**
      * The default number of possible values being kept at most. If the number of possible values in a column exceeds
