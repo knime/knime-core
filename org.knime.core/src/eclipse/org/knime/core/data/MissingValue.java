@@ -63,12 +63,4 @@ public interface MissingValue extends DataValue {
     /** @return an error message that explains why the cell is missing (possibly null). */
     public String getError();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default boolean isMissing() {
-        return true;
-    }
-
 }
