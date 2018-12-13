@@ -24,7 +24,7 @@
 			run configuration 'Environment' tab with a file:// or http:// URL value pointing 
 			to the desired P2 update site.
 		-->
-		<knime.target.platform.p2>${env.KNIME_TARGET_PLATFORM_P2}</knime.target.platform.p2>
+		<knime.target.platform.p2>${env.KNIME_TP_P2}</knime.target.platform.p2>
 		<knime.shared.p2>${env.KNIME_SHARED_P2}</knime.shared.p2>
 	</properties>
 
