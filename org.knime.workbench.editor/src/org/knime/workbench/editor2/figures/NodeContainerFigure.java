@@ -472,7 +472,10 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
             id.maskData = null;
         }
 
-        return new Image(Display.getCurrent(), id);
+        final Image ghostlyImage = new Image(Display.getCurrent(), id);
+        i.dispose();
+
+        return ghostlyImage;
     }
 
     /**
@@ -1420,6 +1423,10 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
             } else {
                 m_loopStatusFigure = LOOP_NO_STATUS;
             }
+        }
+
+        if (m_loopStatusGhostlyFigure != null) {
+            m_loopStatusGhostlyFigure.dispose();
         }
 
         if (m_loopStatusFigure != null) {
