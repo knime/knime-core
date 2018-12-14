@@ -126,6 +126,9 @@ public abstract class AbstractPortFigure extends Shape implements EditorModePart
 
     private int m_portIdx;
 
+    private int m_cachedPortTypeColor;
+    private Color m_cachedBackgroundColor;
+
     private final boolean m_isMetaNodePort;
 
     private WorkflowEditorMode m_currentEditorMode = WorkflowEditor.INITIAL_EDITOR_MODE;
@@ -142,6 +145,8 @@ public abstract class AbstractPortFigure extends Shape implements EditorModePart
         m_portIdx = portIdx;
         m_isMetaNodePort = metaNodePort;
         m_isConnected = false;
+        m_cachedPortTypeColor = Integer.MIN_VALUE;
+        m_cachedBackgroundColor = null;
         setFill(true);
         setOutline(true);
         setOpaque(true);
@@ -214,9 +219,9 @@ public abstract class AbstractPortFigure extends Shape implements EditorModePart
     /**
      * {@inheritDoc}
      *
-     * We need to set the colors explicitly dependend on the {@link PortType}.
+     * We need to set the colors explicitly depending on the {@link PortType}.
      *
-     * @return the background color, dependend on the {@link PortType}
+     * @return the background color, depending on the {@link PortType}
      */
     @Override
     public Color getBackgroundColor() {
@@ -224,8 +229,28 @@ public abstract class AbstractPortFigure extends Shape implements EditorModePart
         final int c = getType().getColor();
         final boolean erasePort = getType().equals(FlowVariablePortObject.TYPE) && !m_isMetaNodePort && (m_portIdx == 0)
             && !m_isConnected && !showFlowVarPorts();
-        Color color = erasePort ? Display.getCurrent().getSystemColor(SWT.COLOR_WHITE)
-            : new Color(Display.getCurrent(), (c & 0xff0000) >> 16, (c & 0x00ff00) >> 8, (c & 0x0000ff));
+
+        if (c != m_cachedPortTypeColor) {
+            if (m_cachedBackgroundColor != null) {
+                m_cachedBackgroundColor.dispose();
+
+                m_cachedBackgroundColor = null;
+            }
+
+            m_cachedPortTypeColor = c;
+        }
+
+        Color color;
+        if (erasePort) {
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_WHITE);
+        } else {
+            if (m_cachedBackgroundColor == null) {
+                m_cachedBackgroundColor =
+                    new Color(Display.getCurrent(), (c & 0xff0000) >> 16, (c & 0x00ff00) >> 8, (c & 0x0000ff));
+            }
+            color = m_cachedBackgroundColor;
+        }
+
 
         if (!WorkflowEditorMode.NODE_EDIT.equals(m_currentEditorMode) && !erasePort) {
             color = ColorConstants.lightGray;

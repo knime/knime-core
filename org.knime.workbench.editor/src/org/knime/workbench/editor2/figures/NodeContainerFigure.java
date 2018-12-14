@@ -143,14 +143,20 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
     /** Loop End Node extra icon: In Progress. */
     public static final Image LOOP_IN_PROGRESS_SIGN =
         ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/loop_in_progress.png");
+    /** Loop End Node extra icon: In Progress - for use in AE mode */
+    public static final Image LOOP_IN_PROGRESS_SIGN_GHOSTLY = makeImageGhostly(LOOP_IN_PROGRESS_SIGN);
 
     /** Loop End Node extra icon: Done. */
     public static final Image LOOP_DONE_SIGN =
         ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/loop_done.png");
+    /** Loop End Node extra icon: Done - for use in AE mode */
+    public static final Image LOOP_DONE_SIGN_GHOSTLY = makeImageGhostly(LOOP_DONE_SIGN);
 
     /** Loop End Node extra icon: No Status. */
     public static final Image LOOP_NO_STATUS =
         ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/loop_nostatus.png");
+    /** Loop End Node extra icon: No Status - for use in AE mode */
+    public static final Image LOOP_NO_STATUS_GHOSTLY = makeImageGhostly(LOOP_NO_STATUS);
 
     /** Replace-node sign. */
     public static final Image REPLACE_SIGN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/replace-node.png");
@@ -1414,25 +1420,19 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
     private void setLoopStatus(final LoopStatus loopStatus, final boolean isExecuted) {
         if (loopStatus.equals(LoopStatus.NONE)) {
             m_loopStatusFigure = null;
+            m_loopStatusGhostlyFigure = null;
         } else if (loopStatus.equals(LoopStatus.RUNNING) || loopStatus.equals(LoopStatus.PAUSED)) {
             m_loopStatusFigure = LOOP_IN_PROGRESS_SIGN;
+            m_loopStatusGhostlyFigure = LOOP_IN_PROGRESS_SIGN_GHOSTLY;
         } else {
             assert loopStatus.equals(LoopStatus.FINISHED);
             if (isExecuted) {
                 m_loopStatusFigure = LOOP_DONE_SIGN;
+                m_loopStatusGhostlyFigure = LOOP_DONE_SIGN_GHOSTLY;
             } else {
                 m_loopStatusFigure = LOOP_NO_STATUS;
+                m_loopStatusGhostlyFigure = LOOP_NO_STATUS_GHOSTLY;
             }
-        }
-
-        if (m_loopStatusGhostlyFigure != null) {
-            m_loopStatusGhostlyFigure.dispose();
-        }
-
-        if (m_loopStatusFigure != null) {
-            m_loopStatusGhostlyFigure = makeImageGhostly(m_loopStatusFigure);
-        } else {
-            m_loopStatusGhostlyFigure = null;
         }
     }
 
