@@ -66,6 +66,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
@@ -110,11 +112,20 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
 
     /**
      * @param annotation the annotation being rendered
-     * @return true if the annotation should be rendered as "enabled" or "disabled"
+     * @return true if the annotation should be rendered as "enabled", false for "disabled"
      */
     protected boolean determineRenderEnabledState(final Annotation annotation) {
         final boolean isNodeAnnotation = (annotation instanceof NodeAnnotation);
-        final IEditorPart iep = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+        final IWorkbenchWindow iww = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        IEditorPart iep = null;
+
+        if (iww != null) {
+            final IWorkbenchPage iwp = iww.getActivePage();
+
+            if (iwp != null) {
+                iep = iwp.getActiveEditor();
+            }
+        }
 
         if (iep instanceof WorkflowEditor) {
             final WorkflowEditor we = (WorkflowEditor)iep;
@@ -124,8 +135,8 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
             return (wem.equals(we.getEditorMode()) || !isNodeAnnotation);
         }
 
-        // Case 1: if we have a null active editor, it's because the app is still coming up - so render us enabled
-        //          for the time being
+        // Case 1: if we have a null active editor, it's because the app is still coming up, or the active page is being
+        //          reset - so render us enabled for the time being because we should be consulted again later
         // Case 2: iep is not null, and not a WorkflowEditor, because the 'active editor' was still the Welcome Page
         //          while we are switching tabs to a workflow; in this case ensure the workflow annotations are
         //          rendered correctly
