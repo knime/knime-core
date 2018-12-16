@@ -99,7 +99,8 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
      */
     public NodeAnnotationFigure(final Annotation annotation) {
         setLayoutManager(new BorderLayout());
-        Color bg = AnnotationEditPart.getWorkflowAnnotationDefaultBackgroundColor();
+
+        final Color bg = AnnotationEditPart.getWorkflowAnnotationDefaultBackgroundColor();
         m_page = new FlowPage();
         m_page.setLayoutManager(new PageFlowLayout(m_page));
         m_page.setBackgroundColor(bg);
@@ -283,8 +284,10 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
     private static TextFlow getNodeAnnotationSystemDefaultStyled(final String text, final Font font1, final Color bg,
         final boolean enabled) {
         final WiderTextFlow unstyledText = new WiderTextFlow();
-        Color fg = AnnotationEditPart.getAnnotationDefaultForegroundColor();
-        if (!enabled) {
+        Color fg;
+        if (enabled) {
+            fg = AnnotationEditPart.getAnnotationDefaultForegroundColor();
+        } else {
             fg = ColorConstants.lightGray;
         }
         unstyledText.setForegroundColor(fg);
@@ -297,8 +300,10 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
     private static TextFlow getWorkflowAnnotationSystemDefaultStyled(final String text, final Font font1,
         final Color bg, final boolean enabled) {
         final WiderTextFlow unstyledText = new WiderTextFlow();
-        Color fg = AnnotationEditPart.getAnnotationDefaultForegroundColor();
-        if (!enabled) {
+        Color fg;
+        if (enabled) {
+            fg = AnnotationEditPart.getAnnotationDefaultForegroundColor();
+        } else {
             fg = ColorConstants.lightGray;
         }
         unstyledText.setForegroundColor(fg);
@@ -312,8 +317,10 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
         final Font defaultFont, final boolean enabled) {
         final Font styledFont = FontStore.INSTANCE.getAnnotationFont(style, defaultFont);
         final WiderTextFlow styledText = new WiderTextFlow(text);
-        Color fg = new Color(null, AnnotationEditPart.RGBintToRGBObj(style.getFgColor()));
-        if (!enabled) {
+        Color fg;
+        if (enabled) {
+            fg = AnnotationEditPart.RGBintToColor(style.getFgColor());
+        } else {
             fg = ColorConstants.lightGray;
         }
         styledText.setFont(styledFont);

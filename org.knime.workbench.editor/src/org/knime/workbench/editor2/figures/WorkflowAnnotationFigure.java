@@ -48,6 +48,7 @@
  */
 package org.knime.workbench.editor2.figures;
 
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.draw2d.ColorConstants;
@@ -59,6 +60,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
@@ -82,11 +84,15 @@ public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
 
     private ToggleEditorModeAction m_toggleAction;
 
+    private final ArrayList<Color> m_currentContentDisposableColors;
+
     /**
      * @param anno the annotation which serves as the model backing this figure
      */
     public WorkflowAnnotationFigure(final Annotation anno) {
         super(anno);
+
+        m_currentContentDisposableColors = new ArrayList<>();
 
         final ImageData d = SWITCH_MODE_ICON.getImageData();
         m_modeIcon = new Label(SWITCH_MODE_ICON);
@@ -154,11 +160,15 @@ public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
     public void newContent(final Annotation annotation) {
         super.newContent(annotation);
 
+        final ArrayList<Color> disposableColors = new ArrayList<>();
         final boolean renderEnabled = determineRenderEnabledState(annotation);
         final AnnotationData data = annotation.getData();
 
-        Color bg = AnnotationEditPart.RGBintToColor(data.getBgColor());
-        if (!renderEnabled) {
+        Color bg;
+        if (renderEnabled) {
+            bg = AnnotationEditPart.RGBintToColor(data.getBgColor());
+            disposableColors.add(bg);
+        } else {
             bg = ColorConstants.lightGray;
         }
         setBackgroundColor(bg);
@@ -167,20 +177,34 @@ public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
         Color fg = AnnotationEditPart.getAnnotationDefaultForegroundColor();
         if (!renderEnabled) {
             fg = AnnotationEditPart.convertToGrayscale(fg, 32);
+            disposableColors.add(fg);
         }
         setForegroundColor(fg);
         m_page.setForegroundColor(fg);
 
         // set border with specified annotation color
         if (data.getBorderSize() > 0) {
-            Color col = AnnotationEditPart.RGBintToColor(data.getBorderColor());
+            Color borderColor = AnnotationEditPart.RGBintToColor(data.getBorderColor());
             if (!renderEnabled) {
-                col = AnnotationEditPart.convertToGrayscale(col, 32);
+                final Color grayscale = AnnotationEditPart.convertToGrayscale(borderColor, 32);
+                // dispose of it ~ now
+                m_currentContentDisposableColors.add(borderColor);
+                borderColor = grayscale;
             }
-            m_page.setBorder(new LineBorder(col, data.getBorderSize()));
+            disposableColors.add(borderColor);
+            m_page.setBorder(new LineBorder(borderColor, data.getBorderSize()));
         } else {
             m_page.setBorder(null);
         }
+
+        Display.getCurrent().asyncExec(() -> {
+            m_currentContentDisposableColors.stream().forEach((c) -> {
+                c.dispose();
+            });
+
+            m_currentContentDisposableColors.clear();
+            m_currentContentDisposableColors.addAll(disposableColors);
+        });
     }
 
     /**
