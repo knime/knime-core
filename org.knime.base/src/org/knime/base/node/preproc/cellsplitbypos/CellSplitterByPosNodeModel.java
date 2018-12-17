@@ -181,7 +181,7 @@ public class CellSplitterByPosNodeModel extends SimpleStreamableFunctionNodeMode
         }
 
         // make sure the specified columns are not already in the input table
-        String[] newCols = m_splitPoints.getStringValue().split(",");
+        String[] newCols = m_newColNames.getStringValue().split(",");
         for (String c : newCols) {
             if (inSpecs[0].containsName(c)) {
                 throw new InvalidSettingsException(
