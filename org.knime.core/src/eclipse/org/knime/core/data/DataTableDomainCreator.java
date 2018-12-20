@@ -321,9 +321,9 @@ public class DataTableDomainCreator {
                 exec.checkCanceled();
                 if (rowCount > 0) {
                     final double progress = row / (double)rowCount;
-                    exec.setProgress(Math.min(progress, 1.0), () -> String.format("Row %,d/%,d", r, rowCount));
+                    exec.setProgress(Math.min(progress, 1.0), () -> String.format("Row %,d/%,d", row, rowCount));
                 } else {
-                    exec.setMessage("Row " + row + "/" + rowCount);
+                    exec.setMessage(() -> String.format("Row %,d (\"%s\")", row, r.getKey()));
                 }
             }
 
