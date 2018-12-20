@@ -317,17 +317,19 @@ public class DataTableDomainCreator {
 
         long row = 0;
         for (final DataRow r : table) {
+            final long finalRow = row;
             if (exec != null) {
                 exec.checkCanceled();
                 if (rowCount > 0) {
                     final double progress = row / (double)rowCount;
-                    exec.setProgress(Math.min(progress, 1.0), () -> String.format("Row %,d/%,d", row, rowCount));
+                    exec.setProgress(Math.min(progress, 1.0), () -> String.format("Row %,d/%,d", finalRow, rowCount));
                 } else {
-                    exec.setMessage(() -> String.format("Row %,d (\"%s\")", row, r.getKey()));
+                    exec.setMessage(() -> String.format("Row %,d (\"%s\")", finalRow, r.getKey()));
                 }
             }
 
             updateDomain(r);
+            row++;
         }
 
         if (exec != null) {
