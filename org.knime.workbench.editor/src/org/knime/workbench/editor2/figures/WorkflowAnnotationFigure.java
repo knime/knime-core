@@ -77,6 +77,14 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
     private static final Image SWITCH_MODE_ICON = ImageRepository.getImage(SharedImages.AnnotationEditModeHover);
 
+    private static final Rectangle MODE_ICON_BOUNDS;
+
+    static {
+        final ImageData d = SWITCH_MODE_ICON.getImageData();
+
+        MODE_ICON_BOUNDS = new Rectangle(2, 2, d.width, d.height);
+    }
+
 
     private final Label m_modeIcon;
 
@@ -94,9 +102,8 @@ public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
 
         m_currentContentDisposableColors = new ArrayList<>();
 
-        final ImageData d = SWITCH_MODE_ICON.getImageData();
         m_modeIcon = new Label(SWITCH_MODE_ICON);
-        m_modeIcon.setBounds(new Rectangle(2, 2, d.width, d.height));
+        m_modeIcon.setBounds(MODE_ICON_BOUNDS);
         m_modeIcon.setVisible(false); // visible only when mouse enters
         add(m_modeIcon);
 

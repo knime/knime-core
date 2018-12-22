@@ -94,6 +94,8 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
      */
     protected Annotation m_annotation;
 
+    private final ArrayList<Color> m_disposableForegroundStyledTextColors;
+
     /**
      * @param annotation the annotation to display
      */
@@ -104,6 +106,8 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
         m_page = new FlowPage();
         m_page.setLayoutManager(new PageFlowLayout(m_page));
         m_page.setBackgroundColor(bg);
+
+        m_disposableForegroundStyledTextColors = new ArrayList<>();
 
         add(m_page);
         setConstraint(m_page, BorderLayout.CENTER);
@@ -183,6 +187,17 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
                 }
             }
         });
+
+        final Color previousBackgroundColor = getBackgroundColor();
+        if ((previousBackgroundColor != null)
+            && !AnnotationEditPart.getWorkflowAnnotationDefaultBackgroundColor().equals(previousBackgroundColor)) {
+            previousBackgroundColor.dispose();
+        }
+        m_disposableForegroundStyledTextColors.stream().forEach((c) -> {
+            c.dispose();
+        });
+        m_disposableForegroundStyledTextColors.clear();
+
         final Color bg = AnnotationEditPart.RGBintToColor(annotation.getBgColor());
         setBackgroundColor(bg);
         m_page.setBackgroundColor(bg);
@@ -222,7 +237,7 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
                 i = r.getStart();
             }
             String styled = text.substring(i, r.getStart() + r.getLength());
-            segments.add(getStyled(styled, r, bg, defaultFont, renderEnabled));
+            segments.add(getStyled(styled, r, bg, defaultFont, renderEnabled, m_disposableForegroundStyledTextColors));
             i = r.getStart() + r.getLength();
         }
         if (i < text.length()) {
@@ -314,12 +329,13 @@ public class NodeAnnotationFigure extends Figure implements EditorModeParticipan
     }
 
     private static TextFlow getStyled(final String text, final AnnotationData.StyleRange style, final Color bg,
-        final Font defaultFont, final boolean enabled) {
+        final Font defaultFont, final boolean enabled, final List<Color> disposableForegroundColors) {
         final Font styledFont = FontStore.INSTANCE.getAnnotationFont(style, defaultFont);
         final WiderTextFlow styledText = new WiderTextFlow(text);
         Color fg;
         if (enabled) {
             fg = AnnotationEditPart.RGBintToColor(style.getFgColor());
+            disposableForegroundColors.add(fg);
         } else {
             fg = ColorConstants.lightGray;
         }

@@ -354,6 +354,10 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
      * @param jobExecIcon the icon associated with job execution
      */
     public void setJobExecutorIcon(final Image jobExecIcon) {
+        if (m_jobExec != null) {
+            m_jobExec.dispose();
+        }
+
         m_jobExec = jobExecIcon;
         m_symbolFigure.refreshJobManagerIcon();
     }
@@ -580,9 +584,9 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
         }
     }
 
-    private Image affectImageReflectingEditModeAsNecessary(final Image image) {
+    private Image affectImageReflectingEditModeAsNecessary(final Image image, final Image ghostlyImage) {
         if (!WorkflowEditorMode.NODE_EDIT.equals(m_currentEditorMode)) {
-            return makeImageGhostly(image);
+            return (ghostlyImage == null) ? makeImageGhostly(image) : ghostlyImage;
         }
 
         return image;
@@ -812,6 +816,7 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
     private abstract class GhostlySupportingFigure extends Figure {
         protected Label m_figureLabel;
         protected Image m_originalIcon;
+        protected Image m_ghostlyIcon;
 
         /**
          * Sets the icon to display.
@@ -821,12 +826,17 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
         void setIcon(final Image icon) {
             m_originalIcon = icon;
 
+            if (m_ghostlyIcon != null) {
+                m_ghostlyIcon.dispose();
+            }
+            m_ghostlyIcon = makeImageGhostly(icon);
+
             updateFigure();
         }
 
         void updateFigure() {
-            final Image icon =
-                (m_originalIcon != null) ? affectImageReflectingEditModeAsNecessary(m_originalIcon) : null;
+            final Image icon = (m_originalIcon != null)
+                ? affectImageReflectingEditModeAsNecessary(m_originalIcon, m_ghostlyIcon) : null;
 
             m_figureLabel.setIcon(icon);
 
@@ -842,64 +852,48 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
 
         private static final int SYMBOL_FIG_WIDTH = 32;
 
+        private static final String BACKGROUND_OTHER = "icons/node/" + "background_other.png";
+
+        private static final String BACKGROUND_MISSING = "icons/node/" + "background_missing.png";
+
+        private static final String BACKGROUND_SOURCE = "icons/node/" + "background_source.png";
+
+        private static final String BACKGROUND_SINK = "icons/node/" + "background_sink.png";
+
+        private static final String BACKGROUND_LEARNER = "icons/node/" + "background_learner.png";
+
+        private static final String BACKGROUND_PREDICTOR = "icons/node/" + "background_predictor.png";
+
+        private static final String BACKGROUND_MANIPULATOR = "icons/node/" + "background_manipulator.png";
+
+        private static final String BACKGROUND_META = "icons/node/" + "background_meta.png";
+
+        private static final String BACKGROUND_VIEWER = "icons/node/" + "background_viewer.png";
+
+        private static final String BACKGROUND_UNKNOWN = "icons/node/" + "background_unknown.png";
+
+        private static final String BACKGROUND_LOOPER_START = "icons/node/background_looper_start.png";
+
+        private static final String BACKGROUND_LOOPER_END = "icons/node/background_looper_end.png";
+
+        private static final String BACKGROUND_SCOPE_START = "icons/node/background_scope_start.png";
+
+        private static final String BACKGROUND_SCOPE_END = "icons/node/background_scope_end.png";
+
+        private static final String BACKGROUND_QUICKFORM = "icons/node/background_quickform.png";
+
+        private static final String BACKGROUND_SUBNODE = "icons/node/background_subnode.png";
+
+        private static final String BACKGROUND_VIRTUAL_IN = "icons/node/background_virtual_in.png";
+
+        private static final String BACKGROUND_VIRTUAL_OUT = "icons/node/background_virtual_out.png";
+
         private final Label m_deleteIcon;
         private final Label m_replaceIcon;
 
-        private static final String BACKGROUND_OTHER = "icons/node/"
-                + "background_other.png";
-
-        private static final String BACKGROUND_MISSING = "icons/node/"
-                + "background_missing.png";
-
-        private static final String BACKGROUND_SOURCE = "icons/node/"
-                + "background_source.png";
-
-        private static final String BACKGROUND_SINK = "icons/node/"
-                + "background_sink.png";
-
-        private static final String BACKGROUND_LEARNER = "icons/node/"
-                + "background_learner.png";
-
-        private static final String BACKGROUND_PREDICTOR = "icons/node/"
-                + "background_predictor.png";
-
-        private static final String BACKGROUND_MANIPULATOR = "icons/node/"
-                + "background_manipulator.png";
-
-        private static final String BACKGROUND_META = "icons/node/"
-                + "background_meta.png";
-
-        private static final String BACKGROUND_VIEWER = "icons/node/"
-                + "background_viewer.png";
-
-        private static final String BACKGROUND_UNKNOWN = "icons/node/"
-                + "background_unknown.png";
-
-        private static final String BACKGROUND_LOOPER_START =
-                "icons/node/background_looper_start.png";
-
-        private static final String BACKGROUND_LOOPER_END =
-                "icons/node/background_looper_end.png";
-
-        private static final String BACKGROUND_SCOPE_START =
-                "icons/node/background_scope_start.png";
-
-        private static final String BACKGROUND_SCOPE_END =
-                "icons/node/background_scope_end.png";
-
-        private static final String BACKGROUND_QUICKFORM =
-            "icons/node/background_quickform.png";
-
-        private static final String BACKGROUND_SUBNODE =
-            "icons/node/background_subnode.png";
-
-        private static final String BACKGROUND_VIRTUAL_IN =
-            "icons/node/background_virtual_in.png";
-
-        private static final String BACKGROUND_VIRTUAL_OUT =
-            "icons/node/background_virtual_out.png";
-
         private final Label m_backgroundIcon;
+        private Image m_originalBackgroundIcon;
+        private Image m_ghostlyBackgroundIcon;
 
         private Label m_jobExecutorLabel;
 
@@ -1095,13 +1089,25 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
          */
         void setType(final NodeType type) {
             m_nodeType = type;
+
+            if (m_originalBackgroundIcon != null) {
+                m_originalBackgroundIcon.dispose();
+            }
+            if (m_ghostlyBackgroundIcon != null) {
+                m_ghostlyBackgroundIcon.dispose();
+            }
+
+            m_originalBackgroundIcon = getBackgroundImage();
+            m_ghostlyBackgroundIcon = makeImageGhostly(m_originalBackgroundIcon);
+
             updateFigure();
         }
 
         @Override
         void updateFigure() {
             super.updateFigure();
-            setBackgroundIcon(affectImageReflectingEditModeAsNecessary(getBackgroundImage()));
+            setBackgroundIcon(
+                affectImageReflectingEditModeAsNecessary(m_originalBackgroundIcon, m_ghostlyBackgroundIcon));
         }
 
         void setBackgroundIcon(final Image icon) {

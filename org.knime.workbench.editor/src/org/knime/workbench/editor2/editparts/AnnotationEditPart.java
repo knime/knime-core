@@ -440,8 +440,6 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart
 
     /**
      * {@inheritDoc}
-     *
-     * Subclasses should make sure to set the instance variable <code>m_figure</code>.
      */
     @Override
     protected IFigure createFigure() {

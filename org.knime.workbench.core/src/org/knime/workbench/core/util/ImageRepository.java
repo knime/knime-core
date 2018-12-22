@@ -497,7 +497,7 @@ public final class ImageRepository {
       * <b>NOTE:</b> even though this method says mot-par-mot that it is returning an Unscaled image, it is
       *     indeed scaling the image via <code>KNIMENonscalingIconProvider</code>
       *
-      * @param resourceURL to the icon image; if this is null, null will be returned
+      * @param image to the icon image; if this is null, null will be returned
       * @return a potentially scaled image
       */
      public static Image getUnscaledIconImage(final SharedImages image) {
