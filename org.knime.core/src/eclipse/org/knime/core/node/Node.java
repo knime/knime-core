@@ -1453,10 +1453,7 @@ public final class Node implements NodeModelWarningListener {
      */
     public void createErrorMessageAndNotify(final String errorMessage, final
             Throwable t) {
-        LOGGER.error(errorMessage);
-        if (t != null) {
-            LOGGER.debug(errorMessage, t);
-        }
+        LOGGER.error(errorMessage, t);
         notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
                 errorMessage));
     }

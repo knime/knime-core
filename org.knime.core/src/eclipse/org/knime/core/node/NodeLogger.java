@@ -64,15 +64,18 @@ import org.apache.log4j.Appender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.helpers.LogLog;
+import org.apache.log4j.helpers.OptionConverter;
 import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggerRepository;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.RendererSupport;
+import org.apache.log4j.varia.LevelMatchFilter;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 import org.apache.log4j.xml.DOMConfigurator;
@@ -789,10 +792,7 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void warn(final Object o, final Throwable t) {
-        this.warn(o);
-        if (t != null) {
-            this.debug(o, t);
-        }
+        getLoggerInternal().warn(getLogObject(o), t);
     }
 
     /**
@@ -812,10 +812,7 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void info(final Object o, final Throwable t) {
-        this.info(o);
-        if (t != null) {
-            this.debug(o, t);
-        }
+        getLoggerInternal().info(getLogObject(o), t);
     }
 
     /**
@@ -825,10 +822,7 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void error(final Object o, final Throwable t) {
-        this.error(o);
-        if (t != null) {
-            this.debug(o, t);
-        }
+        getLoggerInternal().error(getLogObject(o), t);
     }
 
     /**
@@ -869,7 +863,7 @@ public final class NodeLogger {
      */
     public void coding(final Object o) {
         if (KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK()) {
-            getLoggerInternal().error("CODING PROBLEM\t" + o);
+            getLoggerInternal().error(getLogObject("CODING PROBLEM\t" + o));
         }
     }
 
@@ -882,10 +876,7 @@ public final class NodeLogger {
      */
     public void coding(final Object o, final Throwable t) {
         if (KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK()) {
-            this.coding(o);
-            if (t != null) {
-                this.debug(o, t);
-            }
+            getLoggerInternal().error(getLogObject("CODING PROBLEM\t" + o), t);
         }
     }
 
@@ -896,10 +887,7 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void fatal(final Object o, final Throwable t) {
-        this.fatal(o);
-        if (t != null) {
-            this.debug(o, t);
-        }
+        getLoggerInternal().fatal(getLogObject(o), t);
     }
 
     /**
@@ -1022,7 +1010,28 @@ public final class NodeLogger {
         } else {
             layout = WF_DIR_LOG_FILE_LAYOUT;
         }
-        addWriter(writer, layout, minLevel, maxLevel);
+        // no stack traces in KNIME's console view:
+        // a custom layout that pretends Throwable information is baked into the log message
+        final Layout suppressThrowableLayout = new Layout() {
+
+            @Override
+            public void activateOptions() {
+                layout.activateOptions();
+            }
+
+            @Override
+            public String format(final LoggingEvent event) {
+                return layout.format(event);
+            }
+
+            @Override
+            public boolean ignoresThrowable() {
+                // PatternLayout returns true (which makes the appender to log the Throwable)
+                return false;
+            }
+
+        };
+        addWriter(writer, suppressThrowableLayout, minLevel, maxLevel);
     }
 
     /**
