@@ -54,6 +54,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -285,6 +286,10 @@ public final class NodeLogger {
 
     private static Layout WF_DIR_LOG_FILE_LAYOUT = new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n");
 
+    /** As per log4j3.xml we only log 'knime' log out -- the loggers with these prefixes are the parents of all
+     * 'knime' logger.  */
+    private static final String[] KNIME_LOGGER_PREFIXES = new String[] {"com.knime", "org.knime"};
+
     /**
      * Inits Log4J logger and appends <code>System.out</code>,
      * <code>System.err</code>, and <i>knime.log</i> to it.
@@ -370,6 +375,32 @@ public final class NodeLogger {
                 PropertyConfigurator.configure(file);
             }
         }
+        updateLog4JKNIMELoggerLevel();
+    }
+
+    /** Adjusts log level of 'knime' loggers so that it matches the minimum level of all registered appenders.
+     * Called after initialization and after the log level is changed for individual appenders.
+     */
+    private static void updateLog4JKNIMELoggerLevel() {
+        final Logger rootLogger = LogManager.getRootLogger();
+        Level minimumLevel = rootLogger.getLevel(); // by default this is 'ERROR' but may be changed in log4j.xml
+        for (@SuppressWarnings("unchecked")
+        Enumeration<Appender> appenderEnum = rootLogger.getAllAppenders(); appenderEnum.hasMoreElements();) {
+            Appender next = appenderEnum.nextElement();
+            for (Filter filter = next.getFilter(); filter != null; filter = filter.getNext()) {
+                Level l = null;
+                if (filter instanceof LevelMatchFilter) {
+                    l = OptionConverter.toLevel(((LevelMatchFilter)filter).getLevelToMatch(), Level.FATAL);
+                } else if (filter instanceof LevelRangeFilter) {
+                    l = ((LevelRangeFilter)filter).getLevelMin();
+                }
+                if (l != null && minimumLevel.isGreaterOrEqual(l)) {
+                    minimumLevel = l;
+                }
+            }
+        }
+        final Level minimumLevelFinal = minimumLevel;
+        Arrays.stream(KNIME_LOGGER_PREFIXES).map(LogManager::getLogger).forEach(l -> l.setLevel(minimumLevelFinal));
     }
 
     private static void copyCurrentLog4j(final File dest, final String latestLog4jConfig) throws IOException {
@@ -525,8 +556,6 @@ public final class NodeLogger {
      */
     private NodeLogger(final Logger logger) {
         m_logger = logger;
-        // this overrides the default ERROR level from the configuration file
-        m_logger.setLevel(Level.ALL);
     }
 
     /**
@@ -1064,6 +1093,7 @@ public final class NodeLogger {
         }
         Logger.getRootLogger().addAppender(app);
         checkLayoutFlags(layout);
+        updateLog4JKNIMELoggerLevel();
     }
 
     /**
@@ -1084,6 +1114,7 @@ public final class NodeLogger {
                         "Could not delete writer: " + writer);
             }
         }
+        updateLog4JKNIMELoggerLevel();
     }
 
     /**
@@ -1249,6 +1280,7 @@ public final class NodeLogger {
             ((LevelRangeFilter) filter).setLevelMin(transLEVEL(min));
             ((LevelRangeFilter) filter).setLevelMax(transLEVEL(max));
         }
+        updateLog4JKNIMELoggerLevel();
     }
 
     /**
