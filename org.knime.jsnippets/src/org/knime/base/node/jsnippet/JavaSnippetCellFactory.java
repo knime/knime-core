@@ -50,9 +50,9 @@ package org.knime.base.node.jsnippet;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.knime.base.node.jsnippet.expression.Abort;
@@ -94,42 +94,44 @@ import org.knime.core.node.workflow.FlowVariable.Type;
 public class JavaSnippetCellFactory extends AbstractCellFactory {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(JavaSnippetCellFactory.class);
 
-    private JavaSnippet m_snippet;
+    private final JavaSnippet m_snippet;
 
-    private DataTableSpec m_spec;
+    private final DataTableSpec m_spec;
 
-    private AbstractJSnippet m_jsnippet;
+    private final AbstractJSnippet m_jsnippet;
 
-    private FlowVariableRepository m_flowVars;
+    private final FlowVariableRepository m_flowVars;
 
-    private int m_rowIndex;
+    private final int m_rowCount;
 
-    private int m_rowCount;
+    private final List<String> m_columns;
 
-    private List<String> m_columns;
+    private final ExecutionContext m_context;
 
-    private ExecutionContext m_context;
+    private final List<DataCellToJavaConverter<?, ?>> m_inConverters = new ArrayList<>();
 
-    private final LinkedHashMap<String, Cell> m_cellsMap;
+    private final List<JavaToDataCellConverter<?>> m_outConverters = new ArrayList<>();
 
-    private final ArrayList<DataCellToJavaConverter<?, ?>> m_inConverters = new ArrayList<>();
-
-    private final ArrayList<JavaToDataCellConverter<?>> m_outConverters = new ArrayList<>();
-
-    private final ArrayList<Field> m_inJavaFields = new ArrayList<>();
-    private final ArrayList<Field> m_outJavaFields = new ArrayList<>();
-    private final ArrayList<Integer> m_inColIndices = new ArrayList<>();
+    private final List<Field> m_inJavaFields = new ArrayList<>();
+    private final List<Field> m_outJavaFields = new ArrayList<>();
+    private final List<Integer> m_inColIndices = new ArrayList<>();
     private final int m_numInFields;
     private final int m_numOutFields;
 
     private static final Field FIELD_CELLS;
+    private static final Field FIELD_CELLSMAP;
     private static final Field FIELD_ROWID;
     private static final Field FIELD_ROWINDEX;
+
+    private int m_rowIndex;
 
     static {
         try {
             FIELD_CELLS = AbstractJSnippet.class.getDeclaredField("m_cells");
             FIELD_CELLS.setAccessible(true);
+
+            FIELD_CELLSMAP = AbstractJSnippet.class.getDeclaredField("m_cellsMap");
+            FIELD_CELLSMAP.setAccessible(true);
 
             FIELD_ROWID = AbstractJSnippet.class.getDeclaredField(JavaSnippet.ROWID);
             FIELD_ROWID.setAccessible(true);
@@ -165,33 +167,25 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
 
         /* One time snippet instance preparation */
         try {
-            if (null == m_jsnippet) {
-                m_jsnippet = m_snippet.createSnippetInstance();
-                // populate the fields in the m_jsnippet that are constant
-                // across the rows.
-                Field[] fs = m_jsnippet.getClass().getSuperclass().getDeclaredFields();
-                for (Field field : fs) {
-                    if (field.getName().equals("m_flowVars")) {
-                        field.setAccessible(true);
-                        field.set(m_jsnippet, m_flowVars);
-                    }
-                    if (field.getName().equals(JavaSnippet.ROWCOUNT)) {
-                        field.setAccessible(true);
-                        field.set(m_jsnippet, m_rowCount);
-                    }
+            m_jsnippet = m_snippet.createSnippetInstance();
+            // populate the fields in the m_jsnippet that are constant
+            // across the rows.
+            Field[] fs = m_jsnippet.getClass().getSuperclass().getDeclaredFields();
+            for (Field field : fs) {
+                if (field.getName().equals("m_flowVars")) {
+                    field.setAccessible(true);
+                    field.set(m_jsnippet, m_flowVars);
+                }
+                if (field.getName().equals(JavaSnippet.ROWCOUNT)) {
+                    field.setAccessible(true);
+                    field.set(m_jsnippet, m_rowCount);
                 }
             }
             // populate data structure with the input cells
-            m_cellsMap = new LinkedHashMap<>(spec.getNumColumns());
-            m_columns = new ArrayList<>(m_cellsMap.keySet());
 
-            Field field = m_jsnippet.getClass().getSuperclass().getDeclaredField("m_cellsMap");
-            field.setAccessible(true);
-            /* The map is private and never modified by AbstractJSnippet,
-             * Making it unmodifiable ensures that stays that way. */
-            field.set(m_jsnippet, Collections.unmodifiableMap(m_cellsMap));
+            m_columns = Arrays.asList(m_spec.getColumnNames());
 
-            field = m_jsnippet.getClass().getSuperclass().getDeclaredField("m_columns");
+            Field field = m_jsnippet.getClass().getSuperclass().getDeclaredField("m_columns");
             field.setAccessible(true);
             field.set(m_jsnippet, m_columns);
 
@@ -258,8 +252,14 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
     @Override
     public DataCell[] getCells(final DataRow row) {
         try {
-            fillCellsMap(row);
-            FIELD_CELLS.set(m_jsnippet, new ArrayList<>(m_cellsMap.values()));
+            final int numCells = row.getNumCells();
+            final Map<String, Cell> cellsMap = new LinkedHashMap<>(numCells);
+            for (int i = 0; i < numCells; i++) {
+                cellsMap.put(m_columns.get(i), new DataCellProxy(row, i));
+            }
+
+            FIELD_CELLSMAP.set(m_jsnippet, cellsMap);
+            FIELD_CELLS.set(m_jsnippet, new ArrayList<>(cellsMap.values()));
             FIELD_ROWID.set(m_jsnippet, row.getKey().getString());
             FIELD_ROWINDEX.set(m_jsnippet, m_rowIndex);
 
@@ -402,19 +402,6 @@ public class JavaSnippetCellFactory extends AbstractCellFactory {
     @Override
     public void afterProcessing() {
         m_snippet.close();
-    }
-
-    /**
-     * Fill m_cellsMap with {@link DataCellProxy} of the given rows.
-     *
-     * @param row Example row to create the map for.
-     */
-    private void fillCellsMap(final DataRow row) {
-        m_cellsMap.clear();
-        for (int i = 0; i < row.getNumCells(); i++) {
-            String name = m_spec.getColumnSpec(i).getName();
-            m_cellsMap.put(name, new DataCellProxy(row, i));
-        }
     }
 
     @Override
