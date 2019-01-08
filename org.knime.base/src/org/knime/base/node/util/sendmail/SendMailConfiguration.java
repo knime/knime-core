@@ -98,6 +98,9 @@ final class SendMailConfiguration {
      */
     public static final String PROPERTY_ALLOWED_RECIPIENT_DOMAINS = "knime.sendmail.allowed_domains";
 
+    private static final int DEFAULT_SMTP_CONNECTION_TIMEOUT = 2000;
+    private static final int DEFAULT_SMTP_READ_TIMEOUT = 30000;
+
 
     /** EMail format. */
     enum EMailFormat {
@@ -160,6 +163,9 @@ final class SendMailConfiguration {
     private String m_text;
     private URL[] m_attachedURLs = new URL[0];
 
+    private int m_smtpConnectionTimeout = DEFAULT_SMTP_CONNECTION_TIMEOUT;
+    private int m_smtpReadTimeout = DEFAULT_SMTP_READ_TIMEOUT;
+
     /** Save to argument settings.
      * @param settings ...
      */
@@ -186,6 +192,9 @@ final class SendMailConfiguration {
                 urlsAsArray[i] = m_attachedURLs[i].toString();
             }
             settings.addStringArray("attachedURLs", urlsAsArray);
+
+            settings.addInt("smtpConnectionTimeout", m_smtpConnectionTimeout);
+            settings.addInt("smtpReadTimeout", m_smtpReadTimeout);
         }
     }
 
@@ -260,6 +269,9 @@ final class SendMailConfiguration {
             attachedURLsList.add(url);
         }
         m_attachedURLs = attachedURLsList.toArray(new URL[attachedURLsList.size()]);
+
+        m_smtpConnectionTimeout = settings.getInt("smtpConnectionTimeout", DEFAULT_SMTP_CONNECTION_TIMEOUT);
+        m_smtpReadTimeout = settings.getInt("smtpReadTimeout", DEFAULT_SMTP_READ_TIMEOUT);
     }
 
     /** Load in model.
@@ -322,6 +334,9 @@ final class SendMailConfiguration {
             }
             m_attachedURLs[i] = url;
         }
+
+        m_smtpConnectionTimeout = settings.getInt("smtpConnectionTimeout", DEFAULT_SMTP_CONNECTION_TIMEOUT);
+        m_smtpReadTimeout = settings.getInt("smtpReadTimeout", DEFAULT_SMTP_READ_TIMEOUT);
     }
 
     /** @return the smtpHost */
@@ -755,6 +770,30 @@ final class SendMailConfiguration {
 
     private static String getStringHistoryID(final String field) {
         return SendMailConfiguration.class.getPackage().getName() + "-" + field;
+    }
+
+    /** @return the smtp connection timeout */
+    int getSmptConnectionTimeout() {
+        return m_smtpConnectionTimeout ;
+    }
+
+    /** sets the smtp connection timeout
+     * @param smtpConnectionTimeout the connection timeout
+     * */
+    void setSmptConnectionTimeout(final int smtpConnectionTimeout) {
+        m_smtpConnectionTimeout = smtpConnectionTimeout;
+    }
+
+    /** @return the smtp read timeout */
+    int getSmptReadTimeout() {
+        return m_smtpReadTimeout;
+    }
+
+    /** sets the smtp read timeout
+     * @param smtpReadTimeout the connection timeout
+     * */
+    void setSmptReadTimeout(final int smtpReadTimeout) {
+        m_smtpReadTimeout = smtpReadTimeout;
     }
 
 }

@@ -415,6 +415,9 @@ final class SendMailNodeDialog extends NodeDialogPane {
         }
         URL[] attachedURLs = config.getAttachedURLs();
         m_attachmentList.setSelectedURLs(Arrays.asList(attachedURLs));
+
+        m_smtpConnectionTimeout.setValue(config.getSmptConnectionTimeout());
+        m_smtpReadTimeout.setValue(config.getSmptReadTimeout());
     }
 
     /** {@inheritDoc} */
@@ -454,6 +457,10 @@ final class SendMailNodeDialog extends NodeDialogPane {
             }
         }
         config.setAttachedURLs(urls.toArray(new URL[urls.size()]));
+
+        config.setSmptConnectionTimeout((Integer) m_smtpConnectionTimeout.getValue());
+        config.setSmptReadTimeout((Integer) m_smtpReadTimeout.getValue());
+
         config.saveConfiguration(settings);
         m_smtpHostPanel.commitSelectedToHistory();
         m_smtpPortPanel.commitSelectedToHistory();
