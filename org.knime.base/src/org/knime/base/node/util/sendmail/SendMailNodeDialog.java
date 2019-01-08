@@ -75,10 +75,13 @@ import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
 
 import org.knime.base.node.util.FlowVariableResolvable.FlowVariableResolver;
 import org.knime.base.node.util.sendmail.SendMailConfiguration.ConnectionSecurity;
@@ -120,6 +123,9 @@ final class SendMailNodeDialog extends NodeDialogPane {
     private final JRadioButton m_formatTextButton;
     private final JRadioButton m_formatHTMLButton;
     private final MultipleURLList m_attachmentList;
+
+    private final JSpinner m_smtpConnectionTimeout;
+    private final JSpinner m_smtpReadTimeout;
 
     /** Inits GUI. */
     public SendMailNodeDialog() {
@@ -172,6 +178,13 @@ final class SendMailNodeDialog extends NodeDialogPane {
         });
         m_attachmentList = new MultipleURLList(
             SendMailConfiguration.getAttachmentListStringHistoryID(), true, new String[0]);
+
+        SpinnerModel connectTimeoutModel = new SpinnerNumberModel(2000, 0, Integer.MAX_VALUE, 1000);
+        m_smtpConnectionTimeout = new JSpinner(connectTimeoutModel );
+
+        SpinnerModel readTimeoutModel = new SpinnerNumberModel(30000, 0, Integer.MAX_VALUE, 1000);
+        m_smtpReadTimeout = new JSpinner(readTimeoutModel );
+
         addTab("Mail", initMailLayout());
         addTab("Attachments", initAttachmentLayout());
         addTab("Mail Host (SMTP)", initSMTPLayout());
@@ -294,6 +307,23 @@ final class SendMailNodeDialog extends NodeDialogPane {
         gbc.gridx += 1;
         gbc.weightx = 1.0;
         p.add(m_connectionSecurityCombo, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        gbc.weightx = 0.0;
+        gbc.gridwidth = 1;
+        p.add(new JLabel("Connection Timeout (ms)"), gbc);
+        gbc.gridx += 1;
+        gbc.fill = GridBagConstraints.NONE;
+        p.add(m_smtpConnectionTimeout, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        gbc.weightx = 0.0;
+        gbc.gridwidth = 1;
+        p.add(new JLabel("Read Timeout (ms)"), gbc);
+        gbc.gridx += 1;
+        p.add(m_smtpReadTimeout, gbc);
 
         return p;
     }
