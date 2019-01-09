@@ -49,6 +49,7 @@ package org.knime.base.node.util.sendmail;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -611,6 +612,14 @@ final class SendMailConfiguration {
         properties.setProperty("mail." + protocol + ".host", getSmtpHost());
         properties.setProperty("mail." + protocol + ".port", Integer.toString(getSmtpPort()));
         properties.setProperty("mail." + protocol + ".auth", Boolean.toString(isUseAuthentication()));
+
+        /*
+         * Use the string value of the timeouts, as some forum posts suggest there are bugs in older JavaMail versions
+         * when setting the property with integers.
+         */
+        properties.setProperty("mail." + protocol + ".connectiontimeout", String.valueOf(getSmptConnectionTimeout()));
+        properties.setProperty("mail." + protocol + ".timeout", String.valueOf(getSmptReadTimeout()));
+
         Session session = Session.getInstance(properties, null);
 
         MimeMessage message = new MimeMessage(session);
@@ -709,6 +718,13 @@ final class SendMailConfiguration {
             }
             message.setContent(mp);
             t.sendMessage(message, message.getAllRecipients());
+        } catch (MessagingException e) {
+            if (e.getCause() instanceof SocketTimeoutException) {
+                String timeoutMessage = e.getMessage();
+                throw new InvalidSettingsException(timeoutMessage + ", try adjusting the smtp timeout settings");
+            } else {
+                throw new InvalidSettingsException("Error while communicating with the smtp server: " + e, e);
+            }
         } finally {
             Thread.currentThread().setContextClassLoader(oldContextClassLoader);
             for (File d : tempDirs) {
