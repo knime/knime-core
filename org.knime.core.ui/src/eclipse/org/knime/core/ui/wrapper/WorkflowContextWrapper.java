@@ -70,6 +70,9 @@ public class WorkflowContextWrapper extends AbstractWrapper<WorkflowContext> imp
      * @return a new wrapper instance
      */
     public static WorkflowContextWrapper wrap(final WorkflowContext workflowContext) {
+        if(workflowContext == null) {
+            return null;
+        }
         return new WorkflowContextWrapper(workflowContext);
     }
 }
