@@ -76,7 +76,6 @@ import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowAnnotationID;
-import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
@@ -1437,9 +1436,8 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * Returns the current workflow context or <code>null</code> if no context is available.
      *
      * @return a workflow context or <code>null</code>
-     * @since 2.8
      */
-    WorkflowContext getContext();
+    WorkflowContextUI getContext();
 
     /**
      * Returns whether the workflow is executed in wizard execution or in regular execution mode.
