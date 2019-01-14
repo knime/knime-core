@@ -77,6 +77,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -426,6 +427,11 @@ public class Buffer implements KNIMEStreamConstants {
      * null if this buffer is not in write-mode or it does not need to copy blobs.
      */
     private HashMap<BlobAddress, BlobAddress> m_copiedBlobsMap;
+
+    /** To debug AP-8469 -- leaking Buffer objects when running text processing test workflows. */
+    private final String m_fullStackTraceAtConstructionTime = Arrays.stream(Thread.currentThread().getStackTrace())
+            .map(s -> s.toString()).collect(Collectors.joining("\n  "));
+
 
     /**
      * Creates new buffer for <strong>writing</strong>. It has assigned a given spec, and a max row count that may
@@ -1680,6 +1686,8 @@ public class Buffer implements KNIMEStreamConstants {
         try {
             writeAllRowsFromListToFile();
             m_list = null; // don't write to internal cache any more
+        } catch (IllegalStateException ise) {
+            LOGGER.error(ise.getMessage() + "; Construction time call stack:\n" + m_fullStackTraceAtConstructionTime);
         } catch (IOException ioe) {
             LOGGER.error("Failed to swap to disc while freeing memory", ioe);
         }
