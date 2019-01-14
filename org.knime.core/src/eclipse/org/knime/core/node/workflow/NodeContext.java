@@ -48,8 +48,13 @@ package org.knime.core.node.workflow;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
+<<<<<<< HEAD
 import java.util.Arrays;
+=======
+import java.util.ArrayList;
+>>>>>>> SRV-1502: NodeContext extended to work with arbitrary context objects
 import java.util.Deque;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -73,6 +78,14 @@ import org.knime.core.node.NodeLogger;
  * }
  * </pre>
  *
+ * With 3.8 the node context has been extended to be able to hold other objects then {@link NodeContainer} (and
+ * {@link WorkflowManager}), too. The other objects are usually the implementations of, e.g., the
+ * NodeContainerUI-interface for the remote workflow editor. These objects are pushed on the stack via
+ * {@link #pushContext(Object)} and retrieved with {@link #getContextObjectForClass(Class)}. A
+ * {@link ContextObjectSupplier} is responsible to turn the pushed objects into an object of the request class, if
+ * possible (and the requested class differs from the one pushed). A context object supplier can be registered via
+ * {@link #addContextObjectSupplier(ContextObjectSupplier)}.
+ *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.8
  * @noreference
@@ -82,7 +95,9 @@ public final class NodeContext {
 
     private static final NodeLogger logger = NodeLogger.getLogger(NodeContext.class);
 
-    private final WeakReference<NodeContainer> m_nodeContainerRef;
+    private static final List<ContextObjectSupplier> CONTEXT_OBJECT_SUPPLIERS = new ArrayList<ContextObjectSupplier>();
+
+    private final WeakReference<Object> m_contextObjectRef;
 
     private static final NodeContext NO_CONTEXT = new NodeContext(null);
 
@@ -92,8 +107,16 @@ public final class NodeContext {
     @SuppressWarnings("unused")
     private StackTraceElement[] m_callStack; // only used for debugging
 
+    static {
+        CONTEXT_OBJECT_SUPPLIERS.add(new DefaultContextObjectSupplier());
+    }
+
     private NodeContext(final NodeContainer nodeContainer) {
-        m_nodeContainerRef = new WeakReference<NodeContainer>(nodeContainer);
+        this((Object)nodeContainer);
+    }
+
+    private NodeContext(final Object contextObject) {
+        m_contextObjectRef = new WeakReference<Object>(contextObject);
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_callStack = Thread.currentThread().getStackTrace();
         }
@@ -110,6 +133,50 @@ public final class NodeContext {
     }
 
     /**
+     * Registered a new context object suppliers to be used for object retrieval via
+     * #{@link NodeContext#getContextObjectForClass(Class)}.
+     *
+     * @param supplier object to register
+     */
+    public static void addContextObjectSupplier(final ContextObjectSupplier supplier) {
+        CONTEXT_OBJECT_SUPPLIERS.add(supplier);
+        if(CONTEXT_OBJECT_SUPPLIERS.size() > 2) {
+            logger.coding("There are more than 2 context object suppliers registered which is likely not necessary.");
+        }
+    }
+
+    /**
+     * Returns the context object, usually a node which is currently executing or the (root) workflow the node is
+     * contained in.
+     *
+     * Returns an empty optional if the context is not available or it cannot be turned into the request class by any of
+     * the register {@link ContextObjectSupplier}s.
+     *
+     * @param contextObjectClass the class of the context object to retrieve or to be turned into
+     * @return the context object or an empty optional if not available or cannot be turned into the requested class
+     */
+    public <C> Optional<C> getContextObjectForClass(final Class<C> contextObjectClass) {
+        Object obj = getContextObject();
+        if (obj == null) {
+            return Optional.empty();
+        }
+
+        Optional<C> res = Optional.empty();
+        for(ContextObjectSupplier cos : CONTEXT_OBJECT_SUPPLIERS) {
+           res = cos.getObjOfClass(contextObjectClass, obj);
+           if(res.isPresent()) {
+               break;
+           }
+        }
+
+        if (!res.isPresent()) {
+            logger.coding("Context object is available but cannot be turned into an object of class "
+                + contextObjectClass.getSimpleName() + ". Most likely an implementation error.");
+        }
+        return res;
+    }
+
+    /**
      * Returns the workflow manager which currently does an operation on a node. The result may be <code>null</code> if
      * the workflow manager does not exist any more, i.e. its workflow has been closed. This is very likely an
      * implementation error because nobody should hold a node context for a closed workflow.
@@ -117,19 +184,7 @@ public final class NodeContext {
      * @return the workflow manager associated with the current node or <code>null</code>
      */
     public WorkflowManager getWorkflowManager() {
-        NodeContainer nc = getNodeContainer();
-        if (nc == null) {
-            return null;
-        }
-
-        // find the actual workflow and not the metanode the container may be in
-        NodeContainerParent parent = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getDirectNCParent();
-
-        while (!(parent instanceof WorkflowManager && ((WorkflowManager)parent).isProject())) {
-            assert parent != null : "Parent item can't be null as a project parent is expected";
-            parent = parent.getDirectNCParent();
-        }
-        return (WorkflowManager)parent;
+        return getContextObjectForClass(WorkflowManager.class).orElse(null);
     }
 
     /**
@@ -140,13 +195,17 @@ public final class NodeContext {
      * @return a node container or <code>null</code>
      */
     public NodeContainer getNodeContainer() {
-        NodeContainer cont = m_nodeContainerRef.get();
-        if (KNIMEConstants.ASSERTIONS_ENABLED && cont == null) {
+        return getContextObjectForClass(NodeContainer.class).orElse(null);
+    }
+
+    private final Object getContextObject() {
+        Object obj = m_contextObjectRef.get();
+        if (KNIMEConstants.ASSERTIONS_ENABLED && obj == null) {
             logger.debugWithoutContext(
-                "Node container has been garbage collected, you should not have such a context available");
+                "The context object has been garbage collected, you should not have such a context available");
             logger.debugWithoutContext(m_fullStackTraceAtConstructionTime);
         }
-        return cont;
+        return obj;
     }
 
     /**
@@ -170,8 +229,19 @@ public final class NodeContext {
      */
     public static void pushContext(final NodeContainer nodeContainer) {
         assert (nodeContainer != null) : "Node container must not be null";
+        pushContext((Object)nodeContainer);
+    }
+
+    /**
+     * Pushes a new context on the context stack for the current thread using the given context object. The context
+     * object can be retrieved with the {@link #getContextObjectForClass(Class)}.
+     *
+     * @param contextObject the context object for the current thread, must not be <code>null</code>
+     */
+    public static void pushContext(final Object contextObject) {
+        assert (contextObject != null) : "Context object must not be null";
         Deque<NodeContext> stack = getContextStack();
-        stack.push(new NodeContext(nodeContainer));
+        stack.push(new NodeContext(contextObject));
     }
 
     /**
@@ -228,11 +298,11 @@ public final class NodeContext {
         if (this == NO_CONTEXT) {
             return "NO CONTEXT";
         } else {
-            NodeContainer cont = m_nodeContainerRef.get();
-            if (cont == null) {
-                return "Node Container (garbage collected)";
+            Object obj = m_contextObjectRef.get();
+            if (obj == null) {
+                return "Context Object (garbage collected)";
             } else {
-                return cont.toString();
+                return obj.toString();
             }
         }
     }
@@ -262,5 +332,67 @@ public final class NodeContext {
             logger.warn("Node context not available");
         }
         return Optional.empty();
+    }
+
+    /**
+     * Turns a context object into an object of expected class.
+     *
+     * TODO priorities could be added, but not necessary, yet
+     * TODO supplier could return list of supported classes
+     */
+    public static interface ContextObjectSupplier {
+
+        /**
+         * Turns the given context object into the expected class.
+         *
+         * @param contextObjClass the class expected
+         * @param srcObj the actual context object
+         * @return the object for the given class or an empty optional if there is no mapping
+         */
+        <C> Optional<C> getObjOfClass(Class<C> contextObjClass, Object srcObj);
+    }
+
+    /**
+     * The default context object supplier for {@link NodeContainer} and {@link WorkflowManager}.
+     */
+    private static final class DefaultContextObjectSupplier implements ContextObjectSupplier {
+
+        /**
+         * Determines the 'upper-most' parent of the given node container.
+         *
+         * @param nc the node container to find the parent for
+         *
+         * @return the root workflow manager of the give node container
+         */
+        private static WorkflowManager getRootParent(final NodeContainer nc) {
+            // find the actual workflow and not the metanode the container may be in
+            NodeContainerParent parent = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getDirectNCParent();
+
+            while (!(parent instanceof WorkflowManager && ((WorkflowManager)parent).isProject())) {
+                assert parent != null : "Parent item can't be null as a project parent is expected";
+                parent = parent.getDirectNCParent();
+            }
+            return (WorkflowManager)parent;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @SuppressWarnings("unchecked")
+        @Override
+        public <C> Optional<C> getObjOfClass(final Class<C> contextObjClass, final Object srcObj) {
+            if (srcObj instanceof NodeContainer) {
+                //order of checking important
+                if (WorkflowManager.class.isAssignableFrom(contextObjClass)) {
+                    return Optional.of((C)getRootParent((NodeContainer)srcObj));
+                } else if (NodeContainer.class.isAssignableFrom(contextObjClass)) {
+                    return Optional.of((C)srcObj);
+                } else {
+                    return Optional.empty();
+                }
+            } else {
+                return Optional.empty();
+            }
+        }
     }
 }
