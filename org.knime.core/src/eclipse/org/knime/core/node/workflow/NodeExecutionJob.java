@@ -187,21 +187,29 @@ public abstract class NodeExecutionJob implements Runnable {
             status = NodeContainerExecutionStatus.FAILURE;
             logError(throwable);
         }
-        try {
-            // sets state POSTEXECUTE
-            m_nc.notifyParentPostExecuteStart(status);
-            if (!executeInactive) {
-                afterExecute();
+        try (WorkflowLock lock = m_nc.getParent().lock()) {
+            try {
+                // node might have been canceled meanwhile
+                m_nc.getProgressMonitor().checkCanceled();
+            } catch (CanceledExecutionException cee) {
+                status = NodeContainerExecutionStatus.FAILURE;
             }
-        } catch (Throwable throwable) {
-            status = NodeContainerExecutionStatus.FAILURE;
-            logError(throwable);
-        }
-        try {
-            // sets state EXECUTED
-            m_nc.notifyParentExecuteFinished(status);
-        } catch (Exception e) {
-            logError(e);
+            try {
+                // sets state POSTEXECUTE
+                m_nc.notifyParentPostExecuteStart(status);
+                if (!executeInactive) {
+                    afterExecute();
+                }
+            } catch (Throwable throwable) {
+                status = NodeContainerExecutionStatus.FAILURE;
+                logError(throwable);
+            }
+            try {
+                // sets state EXECUTED
+                m_nc.notifyParentExecuteFinished(status);
+            } catch (Exception e) {
+                logError(e);
+            }
         }
     }
 
