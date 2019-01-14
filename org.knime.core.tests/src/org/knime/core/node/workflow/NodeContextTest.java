@@ -60,6 +60,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -82,6 +83,7 @@ import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.NodeContext.ContextObjectSupplier;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.SwingWorkerWithContext;
@@ -204,6 +206,26 @@ public class NodeContextTest {
         assertThat("Unexpected node container on top of context stack", NodeContext.getContext().getNodeContainer(),
                    is(containers.get(0)));
         assertThat("Unexpected workflow manager", NodeContext.getContext().getWorkflowManager(), is(wfm));
+        NodeContext.removeLastContext();
+    }
+
+    /**
+     * Tests the node context with other objects than {@link NodeContainer} or {@link WorkflowManager}.
+     */
+    @Test
+    public void testStackWithObject() {
+        String contextObj = "ctx obj";
+        NodeContext.pushContext(contextObj);
+        assertThat("Empty optional expected due to missing context object supplier",
+            NodeContext.getContext().getContextObjectForClass(String.class), is(Optional.empty()));
+        NodeContext.addContextObjectSupplier(new ContextObjectSupplier() {
+            @Override
+            public <C> Optional<C> getObjOfClass(final Class<C> contextObjClass, final Object srcObj) {
+                return Optional.of((C)srcObj);
+            }
+        });
+        assertThat("Unexpected context object", NodeContext.getContext().getContextObjectForClass(String.class).get(),
+            is(contextObj));
         NodeContext.removeLastContext();
     }
 
