@@ -50,14 +50,12 @@ package org.knime.core.data.container;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.zip.GZIPOutputStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DCObjectOutputVersion2.BlockableDCObjectOutputVersion2;
-import org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -66,8 +64,6 @@ import org.knime.core.node.NodeSettingsWO;
  * @author wiswedel
  */
 final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements KNIMEStreamConstants {
-
-    private final CompressionFormat m_compressionFormat;
 
     /**
      * the stream that writes to the file, it's a special object output stream, in which we can mark the end of an entry
@@ -86,7 +82,6 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
     public DefaultTableStoreWriter(final DataTableSpec spec, final OutputStream outputStream, final boolean writeRowKey)
         throws IOException {
         super(spec, writeRowKey);
-        m_compressionFormat = DefaultTableStoreFormat.IS_USE_GZIP ? CompressionFormat.Gzip : CompressionFormat.None;
         m_outStream = initOutFile(new BufferedOutputStream(outputStream));
     }
 
@@ -126,31 +121,16 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
     /**
      * Creates short cut array and wraps the argument stream in a {@link DCObjectOutputVersion2}.
      */
+    @SuppressWarnings("resource")
     private BlockableDCObjectOutputVersion2 initOutFile(final OutputStream outStream) throws IOException {
-        BlockableOutputStream bos;
-        OutputStream wrap;
-        switch (m_compressionFormat) {
-            case Gzip:
-                wrap = new GZIPOutputStream(outStream);
-                // buffering the input stream is important as the blockable
-                // stream, which will be put on top of it, reads bytes individually
-                // (had a table, on which a single read-scan took ~6min without
-                // and ~30s with buffering)
-                wrap = new BufferedOutputStream(wrap);
-                break;
-            case None:
-                wrap = outStream;
-                break;
-            default:
-                throw new IOException("Unsupported compression format: " + m_compressionFormat);
-        }
-        return new BlockableDCObjectOutputVersion2(wrap, this);
+        final OutputStream out = DefaultTableStoreFormat.COMPRESSION.getOutputStream(outStream);
+        return new BlockableDCObjectOutputVersion2(out, this);
     }
 
     /** {@inheritDoc} */
     @Override
     public void writeMetaInfoAfterWrite(final NodeSettingsWO settings) {
-        settings.addString(DefaultTableStoreFormat.CFG_COMPRESSION, m_compressionFormat.name());
+        settings.addString(DefaultTableStoreFormat.CFG_COMPRESSION, DefaultTableStoreFormat.COMPRESSION.name());
         super.writeMetaInfoAfterWrite(settings);
     }
 

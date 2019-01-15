@@ -162,6 +162,7 @@ public final class KNIMEConstants {
      * <p><strong>Warning:</strong> Changing this property will result in KNIME
      * not being able to read workflows written previously (with a
      * different compression property). */
+    // TODO: can be renamed
     public static final String PROPERTY_TABLE_GZIP_COMPRESSION =
         "knime.compress.io";
 

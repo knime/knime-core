@@ -93,34 +93,26 @@ final class BufferFromFileIteratorVersion1x extends FromFileIterator {
     /** Stream reading from the binary file. */
     private DCObjectInputStream m_inStream;
 
-    /** Inits the iterator by opening the input stream.
+    /**
+     * Inits the iterator by opening the input stream.
+     *
      * @param tableFormatReader Associated buffer.
-     * @throws IOException If stream can't be opened. */
+     * @throws IOException If stream can't be opened.
+     */
     BufferFromFileIteratorVersion1x(final DefaultTableStoreReader tableFormatReader) throws IOException {
+        // init the pointer
         m_pointer = 0;
+
+        // check for file existence
         if (tableFormatReader.getBinFile() == null) {
-            throw new IOException("Unable to read table from file, "
-                    + "table has been cleared.");
+            throw new IOException("Unable to read table from file, " + "table has been cleared.");
         }
+
+        // init the format reader
         m_tableFormatReader = tableFormatReader;
-        BufferedInputStream bufferedStream =
-            new BufferedInputStream(new FileInputStream(tableFormatReader.getBinFile()));
-        InputStream in;
-        switch (tableFormatReader.getBinFileCompressionFormat()) {
-            case Gzip:
-                in = new GZIPInputStream(bufferedStream);
-                // buffering is important when reading gzip streams
-                in = new BufferedInputStream(in);
-                break;
-            case None:
-                in = bufferedStream;
-                break;
-            default:
-                bufferedStream.close();
-                throw new IOException("Unsupported compression format: "
-                        + tableFormatReader.getBinFileCompressionFormat());
-        }
-        m_inStream = new DCObjectInputStream(in);
+
+        // open the input stream
+        m_inStream = new DCObjectInputStream(getInputStream(tableFormatReader));
     }
 
     /** {@inheritDoc} */

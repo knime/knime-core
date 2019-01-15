@@ -49,9 +49,10 @@ package org.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.Buffer.CompressionFormat;
+import org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
 import org.knime.core.node.InvalidSettingsException;
@@ -64,8 +65,11 @@ import org.knime.core.node.NodeSettingsRO;
 final class DefaultTableStoreReader extends AbstractTableStoreReader {
 
     private CompressionFormat m_compressionFormat;
+
     private final File m_binFile;
+
     private final DataTableSpec m_spec;
+
     private final boolean m_isReadRowKey;
 
     /**
@@ -82,8 +86,7 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
      *             of a writer has been used which hasn't been installed on the current system.
      */
     DefaultTableStoreReader(final File binFile, final DataTableSpec spec, final NodeSettingsRO settings,
-        final int version, final boolean isReadRowKey)
-                throws IOException, InvalidSettingsException {
+        final int version, final boolean isReadRowKey) throws IOException, InvalidSettingsException {
         super(binFile, spec, settings, version);
         if (version <= 6) {
             readCellClassInfoArrayFromMetaVersion1x(settings);
@@ -97,18 +100,20 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
 
         final CompressionFormat cF;
         if (version < 3) { // stream was not zipped in KNIME 1.1.x
-            cF = CompressionFormat.None;
+            cF = CompressionFormat.NONE;
         } else if (version >= 8) { // added sometime between format 8 and 9 - no increment of version number
             String compFormat =
-                settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, CompressionFormat.Gzip.name());
+                settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, DataContainer.DEF_COMPRESSION.name());
             try {
-                cF = CompressionFormat.valueOf(compFormat);
-            } catch (Exception e) {
+                // backwards compatible since #getCompressionFormat uses upper-case comparison
+                cF = CompressionFormat.getCompressionFormat(compFormat);
+            } catch (final IllegalArgumentException iea) {
                 throw new InvalidSettingsException(String.format("Unable to parse \"%s\" property (\"%s\"): %s",
-                    DefaultTableStoreFormat.CFG_COMPRESSION, compFormat, e.getMessage()), e);
+                    DefaultTableStoreFormat.CFG_COMPRESSION, compFormat, iea.getMessage()), iea);
             }
         } else {
-            cF = CompressionFormat.Gzip;
+            // use gzip compression
+            cF = CompressionFormat.GZIP;
         }
         m_compressionFormat = cF;
     }
@@ -172,6 +177,23 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
         /** {@inheritDoc} */
         @Override
         public abstract BlobSupportDataRow next();
+
+        /**
+         * Opens the (decompressed) input stream.
+         *
+         * @param tableFormatReader the table format reader
+         * @return the (decompressed) input stream
+         * @throws IOException - If the file could not be opened or the an error occurred creating the (decompressed)
+         *             stream
+         */
+        protected static final InputStream getInputStream(final DefaultTableStoreReader tableFormatReader)
+            throws IOException {
+            // get the decompression format
+            final CompressionFormat cType = tableFormatReader.getBinFileCompressionFormat();
+            // return the (decompressed) stream
+            return cType.getInputStream(tableFormatReader.getBinFile());
+        }
+
     }
 
 }

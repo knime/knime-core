@@ -107,33 +107,24 @@ public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
      * @throws IOException If stream reading fails.
      */
     BufferFromFileIteratorVersion20(final DefaultTableStoreReader tableFormatReader) throws IOException {
+        // init the pointer
         m_pointer = 0;
+
+        // check for file existence
         if (tableFormatReader.getBinFile() == null) {
-            throw new IOException("Unable to read table from file, "
-                    + "table has been cleared.");
+            throw new IOException("Unable to read table from file, " + "table has been cleared.");
         }
+
+        // init the format reader
         m_tableFormatReader = tableFormatReader;
-        assert m_tableFormatReader.getReadVersion() >= 6 : "Iterator is not backward "
-            + "compatible, use instead "
+        assert m_tableFormatReader.getReadVersion() >= 6 : "Iterator is not backward " + "compatible, use instead "
             + BufferFromFileIteratorVersion1x.class.getSimpleName();
-        BufferedInputStream bufferedStream =
-            new BufferedInputStream(new FileInputStream(tableFormatReader.getBinFile()));
-        InputStream in;
-        switch (tableFormatReader.getBinFileCompressionFormat()) {
-            case Gzip:
-                in = new GZIPInputStream(bufferedStream);
-                // buffering is important when reading gzip streams
-                in = new BufferedInputStream(in);
-                break;
-            case None:
-                in = bufferedStream;
-                break;
-            default:
-                throw new IOException("Unsupported compression format: " + tableFormatReader.getBinFileCompressionFormat());
-        }
+
+        // open the input stream
         m_dataCellStreamReader = new DataCellStreamReader(tableFormatReader);
-        m_inStream = new BlockableDCObjectInputVersion2(in, m_dataCellStreamReader);
+        m_inStream = new BlockableDCObjectInputVersion2(getInputStream(tableFormatReader), m_dataCellStreamReader);
     }
+
 
     /** {@inheritDoc} */
     @Override

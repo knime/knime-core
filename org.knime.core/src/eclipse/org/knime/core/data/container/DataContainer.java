@@ -80,6 +80,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
@@ -125,9 +126,15 @@ public class DataContainer implements RowAppender {
     /**
      * Whether compression is enabled by default.
      *
-     * @see KNIMEConstants#PROPERTY_TABLE_GZIP_COMPRESSION
+     * @see KNIMEConstants#PROPERTY_TABLE_COMPRESSION
      */
+    // TODO: useless only used in docs see KNIMEConstants#PROPERTY_TABLE_GZIP_COMPRESSION
     public static final boolean DEF_GZIP_COMPRESSION = true;
+
+    /**
+     * The default compression format.
+     */
+    static final CompressionFormat DEF_COMPRESSION = CompressionFormat.LZ4;
 
     /** See {@link KNIMEConstants#PROPERTY_CELLS_IN_MEMORY}. */
     public static final String PROPERTY_CELLS_IN_MEMORY = KNIMEConstants.PROPERTY_CELLS_IN_MEMORY;

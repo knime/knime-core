@@ -302,7 +302,6 @@ public class Buffer implements KNIMEStreamConstants {
         if (result != null) {
             return result;
         }
-        Exception exception = null;
         try {
             // Java will fetch a static field that is public, if you
             // declare it to be non-static or give it the wrong scope, it
@@ -315,29 +314,14 @@ public class Buffer implements KNIMEStreamConstants {
             if (result == null) {
                 throw new NullPointerException("USE_COMPRESSION is null.");
             }
-        } catch (NoSuchFieldException nsfe) {
-            exception = nsfe;
-        } catch (NullPointerException npe) {
-            exception = npe;
-        } catch (IllegalAccessException iae) {
-            exception = iae;
-        } catch (ClassCastException cce) {
-            exception = cce;
-        }
-        if (exception != null) {
+        } catch (final NoSuchFieldException | NullPointerException | IllegalAccessException | ClassCastException e) {
             LOGGER.coding("BlobDataCell interface \"" + cl.getSimpleName()
-                    + "\" seems to have a problem with the static field " + "\"USE_COMPRESSION\"", exception);
+            + "\" seems to have a problem with the static field " + "\"USE_COMPRESSION\"", e);
             // fall back - no meta information available
-            result = false;
+            result = Boolean.FALSE;
         }
         BLOB_COMPRESS_MAP.put(cl, result);
-        return result;
-    }
-
-    /** Compression on the binary (main) file. */
-    enum CompressionFormat {
-        Gzip,
-        None;
+        return result.booleanValue();
     }
 
     /** the file to write to. */

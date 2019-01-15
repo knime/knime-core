@@ -47,10 +47,16 @@
  */
 package org.knime.core.data.container;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
@@ -61,6 +67,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
+import org.xerial.snappy.SnappyInputStream;
+import org.xerial.snappy.SnappyOutputStream;
+
+import net.jpountz.lz4.LZ4BlockInputStream;
+import net.jpountz.lz4.LZ4BlockOutputStream;
 
 /**
  *
@@ -76,38 +87,155 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
     static final String CFG_COMPRESSION = "container.compression";
 
     /**
-     * Static field to enable/disable the usage of a GZipInput/OutpuStream when writing the binary data. This option
-     * defaults to {@value DataContainer#DEF_GZIP_COMPRESSION}. */
-    static final boolean IS_USE_GZIP;
+     * Checked function interface throwing an IOException.
+     *
+     *
+     * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+     */
+    @FunctionalInterface
+    private static interface CheckedIOFunction<T, R> {
 
-    static {
-        // prefer this block over Boolean.getBoolean(...) to cover typos
-        // on command line (warn on console)
-        String isUseGzipString = System.getProperty(KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION);
-        boolean debugLog = true;
-        if (isUseGzipString == null) {
-            isUseGzipString = Boolean.toString(DataContainer.DEF_GZIP_COMPRESSION);
-            debugLog = false;
+        /**
+         * Applies an I/O function to the given argument.
+         *
+         * @param t the I/O function argument
+         * @return the function result
+         * @throws IOException - If the I/O function fails
+         *
+         */
+        R apply(T t) throws IOException;
+    }
+
+    /**
+     * Various compression formats for KNIME datatables.
+     *
+     * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+     */
+    static enum CompressionFormat {
+
+            /** No compression. */
+            NONE(".bin", //
+                i -> new BufferedInputStream(i), //
+                o -> o),
+
+            /** GZip compression. */
+            GZIP(".bin.gz", //
+                i -> new BufferedInputStream(new GZIPInputStream(i)), //
+                o -> new BufferedOutputStream(new GZIPOutputStream(o))),
+
+            /** LZ4 compression. */
+            LZ4(".bin.lz4", //
+                i -> new BufferedInputStream(new LZ4BlockInputStream(i)), //
+                o -> new BufferedOutputStream(new LZ4BlockOutputStream(o))),
+
+            /** Snappy compression. */
+            SNAPPY(".bin.snappy", //
+                i -> new BufferedInputStream(new SnappyInputStream(i)), //
+                o -> new BufferedOutputStream(new SnappyOutputStream(o)));
+
+        /** The file name extension. */
+        private final String m_fileNameExtension;
+
+        /** The input stream create function. */
+        private final CheckedIOFunction<InputStream, InputStream> m_inFunc;
+
+        /** The output stream create function. */
+        private final CheckedIOFunction<OutputStream, OutputStream> m_outFunc;
+
+        /**
+         * Constructor.
+         *
+         * @param fileNameExtension the file name extension
+         */
+        private CompressionFormat(final String fileNameExtension,
+            final CheckedIOFunction<InputStream, InputStream> inFunc,
+            final CheckedIOFunction<OutputStream, OutputStream> outFunc) {
+            m_fileNameExtension = fileNameExtension;
+            m_inFunc = inFunc;
+            m_outFunc = outFunc;
         }
-        if ("true".equals(isUseGzipString)) {
-            IS_USE_GZIP = true;
-        } else if ("false".equals(isUseGzipString)) {
-            IS_USE_GZIP = false;
-        } else {
-            debugLog = false;
-            LOGGER.warn("Unable to read property " + KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION + " (\""
-                    + isUseGzipString + "\"); defaulting to " + DataContainer.DEF_GZIP_COMPRESSION);
-            IS_USE_GZIP = DataContainer.DEF_GZIP_COMPRESSION;
+
+        /**
+         * Returns the file name extension.
+         *
+         * @return the file name extension
+         */
+        String getFileExtension() {
+            return m_fileNameExtension;
         }
-        if (debugLog) {
-            LOGGER.debug("Setting table stream compression to " + IS_USE_GZIP);
+
+        /**
+         * Returns the compressed output stream.
+         *
+         * @param out the output stream
+         * @return the compressed output stream
+         * @throws IOException - If GZip compression fails
+         */
+        OutputStream getOutputStream(final OutputStream out) throws IOException {
+            try {
+                return m_outFunc.apply(out);
+            } catch (final IOException e) {
+                out.close();
+                throw e;
+            }
+        }
+
+        /**
+         * Returns the uncompressed input stream.
+         *
+         * @param file the file to be written to
+         * @return the compressed input stream
+         * @throws IOException - If the input file does not exist or GZip compression fails
+         */
+        @SuppressWarnings("resource")
+        public InputStream getInputStream(final File file) throws IOException {
+            final FileInputStream fis = new FileInputStream(file);
+            try {
+                return m_inFunc.apply(fis);
+            } catch (final IOException e) {
+                fis.close();
+                throw e;
+            }
+        }
+
+        /**
+         * Returns the {@link CompressionFormat} constant associated with the specified name. Case-sensitivity is
+         * ignored to match an identifier used to declare an enum constant of this type.
+         *
+         * @param arg0 the enum constant name
+         * @return the associated enum constant
+         */
+        static CompressionFormat getCompressionFormat(final String arg0) {
+            final String upperCase = arg0.toUpperCase();
+            // backwards compatibility
+            if (upperCase.equals("TRUE")) {
+                return CompressionFormat.GZIP;
+            } else if (upperCase.equals("FALSE")) {
+                return CompressionFormat.NONE;
+            }
+            return valueOf(upperCase);
         }
     }
 
-    /** Compression on the binary (main) file. */
-    enum CompressionFormat {
-            Gzip,
-            None;
+    /** The compression type. */
+    static final CompressionFormat COMPRESSION;
+
+    // Initialize the compression according to the user settings.
+    static {
+        final String compName = System.getProperty(KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION);
+        if (compName == null) {
+            COMPRESSION = DataContainer.DEF_COMPRESSION;
+        } else {
+            CompressionFormat compType = DataContainer.DEF_COMPRESSION;
+            try {
+                compType = CompressionFormat.getCompressionFormat(compName);
+                LOGGER.debug("Setting table stream compression to " + compType);
+            } catch (final IllegalArgumentException iae) {
+                LOGGER.warn("Unable to read property " + KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION + " (\""
+                    + compName + "\"); defaulting to " + DataContainer.DEF_COMPRESSION);
+            }
+            COMPRESSION = compType;
+        }
     }
 
     @Override
@@ -117,7 +245,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
 
     @Override
     public String getFilenameSuffix() {
-        return ".bin.gz";
+        return COMPRESSION.getFileExtension();
     }
 
     /** {@inheritDoc} */
@@ -143,8 +271,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
     @Override
     public AbstractTableStoreReader createReader(final File binFile, final DataTableSpec spec,
         final IDataRepository dataRepository, final NodeSettingsRO settings, final int version,
-        final boolean isReadRowKey)
-                throws IOException, InvalidSettingsException {
+        final boolean isReadRowKey) throws IOException, InvalidSettingsException {
         return new DefaultTableStoreReader(binFile, spec, settings, version, isReadRowKey);
     }
 
