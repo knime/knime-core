@@ -47,8 +47,8 @@
 package org.knime.core.ui.node.workflow.async;
 
 /**
- * Thrown when when a workflow snapshot is not known by the server (anymore). Reasons are either because the respective
- * job has been swapped to disk, it has been deleted, or the locally hold snapshot is too old.
+ * Thrown when a workflow snapshot is not known by the server (anymore). Reasons are either because the respective
+ * job has been swapped to disk, it has been deleted, or the locally held snapshot is too old.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
