@@ -188,7 +188,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
          * @throws IOException - If the input file does not exist or GZip compression fails
          */
         @SuppressWarnings("resource")
-        public InputStream getInputStream(final File file) throws IOException {
+        InputStream getInputStream(final File file) throws IOException {
             final FileInputStream fis = new FileInputStream(file);
             try {
                 return m_inFunc.apply(fis);
@@ -222,7 +222,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
 
     // Initialize the compression according to the user settings.
     static {
-        final String compName = System.getProperty(KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION);
+        final String compName = System.getProperty(KNIMEConstants.PROPERTY_TABLE_COMPRESSION);
         if (compName == null) {
             COMPRESSION = DataContainer.DEF_COMPRESSION;
         } else {
@@ -231,7 +231,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
                 compType = CompressionFormat.getCompressionFormat(compName);
                 LOGGER.debug("Setting table stream compression to " + compType);
             } catch (final IllegalArgumentException iae) {
-                LOGGER.warn("Unable to read property " + KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION + " (\""
+                LOGGER.warn("Unable to read property " + KNIMEConstants.PROPERTY_TABLE_COMPRESSION + " (\""
                     + compName + "\"); defaulting to " + DataContainer.DEF_COMPRESSION);
             }
             COMPRESSION = compType;

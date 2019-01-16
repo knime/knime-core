@@ -124,17 +124,9 @@ public class DataContainer implements RowAppender {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DataContainer.class);
 
     /**
-     * Whether compression is enabled by default.
-     *
-     * @see KNIMEConstants#PROPERTY_TABLE_COMPRESSION
-     */
-    // TODO: useless only used in docs see KNIMEConstants#PROPERTY_TABLE_GZIP_COMPRESSION
-    public static final boolean DEF_GZIP_COMPRESSION = true;
-
-    /**
      * The default compression format.
      */
-    static final CompressionFormat DEF_COMPRESSION = CompressionFormat.LZ4;
+    static final CompressionFormat DEF_COMPRESSION = CompressionFormat.GZIP;
 
     /** See {@link KNIMEConstants#PROPERTY_CELLS_IN_MEMORY}. */
     public static final String PROPERTY_CELLS_IN_MEMORY = KNIMEConstants.PROPERTY_CELLS_IN_MEMORY;

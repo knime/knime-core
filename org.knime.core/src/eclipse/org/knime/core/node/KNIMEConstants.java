@@ -155,16 +155,22 @@ public final class KNIMEConstants {
      */
     public static final String PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = "org.knime.container.minspace.temp";
 
-    /** Java property to enable/disable table stream compression. Compression
-     * results in smaller temp-file sizes but also (sometimes significant)
-     * longer runtime. The default is {@value
-     * org.knime.core.data.container.DataContainer#DEF_GZIP_COMPRESSION}.
-     * <p><strong>Warning:</strong> Changing this property will result in KNIME
-     * not being able to read workflows written previously (with a
-     * different compression property). */
-    // TODO: can be renamed
-    public static final String PROPERTY_TABLE_GZIP_COMPRESSION =
-        "knime.compress.io";
+    /**
+     * Java property to enable/disable table stream compression. Compression results in smaller temp-file sizes but also
+     * (sometimes significant) longer runtime. By default {@code Gzip} is used.
+     * <p>
+     * <strong>Warning:</strong> Changing this property will result in KNIME not being able to read workflows written
+     * previously (with a different compression property).
+     * @since 3.8
+     */
+    public static final String PROPERTY_TABLE_COMPRESSION = "knime.compress.io";
+
+    /**
+     * @see #PROPERTY_TABLE_COMPRESSION
+     * @deprecated replaced by {@link #PROPERTY_TABLE_COMPRESSION}
+     */
+    @Deprecated
+    public static final String PROPERTY_TABLE_GZIP_COMPRESSION = PROPERTY_TABLE_COMPRESSION;
 
     /** Java property to enable/disable row ID duplicate checks on tables.
      * Tables in KNIME are supposed to have unique IDs, whereby the uniqueness

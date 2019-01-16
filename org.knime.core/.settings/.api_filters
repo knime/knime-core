@@ -65,29 +65,10 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/DataContainer.java" type="org.knime.core.data.container.DataContainer">
-        <filter id="338792546">
+        <filter id="338755678">
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.DataContainer"/>
-                <message_argument value="getGlobalTableRepository()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.container.DataContainer"/>
-                <message_argument value="readFromZipDelayed(ReferencedFile, DataTableSpec, int, Map&lt;Integer,ContainerTable&gt;, FileStoreHandlerRepository)"/>
-            </message_arguments>
-        </filter>
-        <filter id="1143996420">
-            <message_arguments>
-                <message_argument value="readFromZipDelayed(ReferencedFile, DataTableSpec, int, WorkflowDataRepository)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/container/DefaultTableStoreFormat.java" type="org.knime.core.data.container.DefaultTableStoreFormat">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.container.DefaultTableStoreFormat"/>
-                <message_argument value="createReader(File, DataTableSpec, NodeSettingsRO, Map&lt;Integer,ContainerTable&gt;, int, boolean)"/>
+                <message_argument value="DEF_GZIP_COMPRESSION"/>
             </message_arguments>
         </filter>
     </resource>
