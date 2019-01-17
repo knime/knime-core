@@ -21,3 +21,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Eclipse-BuddyPolicy: dependent
 Eclipse-RegisterBuddy: org.apache.log4j
+Bundle-Activator: org.knime.core.ui.CoreUIPlugin
