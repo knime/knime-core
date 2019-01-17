@@ -197,6 +197,10 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         FileStoreProxy[] otherFileStoreProxies = ((FileStoreCell)dc).m_fileStoreProxies;
+        if (m_fileStoreProxies.length != otherFileStoreProxies.length) {
+            return false;
+        }
+
         for (int fsIdx = 0; fsIdx < m_fileStoreProxies.length; fsIdx++) {
             if (!otherFileStoreProxies[fsIdx].equals(m_fileStoreProxies[fsIdx])) {
                 return false;
