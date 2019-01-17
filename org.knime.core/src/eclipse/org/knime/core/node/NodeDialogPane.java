@@ -108,7 +108,6 @@ import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.ICredentials;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeContext;
@@ -285,8 +284,8 @@ public abstract class NodeDialogPane {
      * @param splitType indicates how table splitting is supported in this node
      */
     public void addJobMgrTab(final SplitType splitType) {
-        NodeContainer nc = Optional.ofNullable(m_nodeContext).map(ctx -> ctx.getNodeContainer()).orElse(null);
-        m_jobMgrTab = new NodeExecutorJobManagerDialogTab(splitType, Optional.ofNullable(nc));
+        m_jobMgrTab =
+            new NodeExecutorJobManagerDialogTab(splitType, Optional.ofNullable(m_nodeContext.getNodeContainer()));
         addTab(m_jobMgrTab.getTabName(), m_jobMgrTab);
     }
 
@@ -1548,17 +1547,10 @@ public abstract class NodeDialogPane {
     /**
      * Returns the node context with which this dialog pane has been created.
      *
-     * @throws UnsupportedOperationException if there is no node context available, e.g. because it's the dialog of a
-     *             remote node
-     *
      * @return a node context
      * @since 2.8
      */
     protected final NodeContext getNodeContext() {
-        if (m_nodeContext == null) {
-            throw new UnsupportedOperationException(
-                "Dialog has no access to the underlying node or workflow. Most likely because it's a remote node.");
-        }
         return m_nodeContext;
     }
 }
