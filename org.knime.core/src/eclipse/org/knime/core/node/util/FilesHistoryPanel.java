@@ -55,8 +55,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
@@ -82,7 +80,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
@@ -105,8 +102,10 @@ import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.FileSystemBrowser.DialogType;
+import org.knime.core.node.util.FileSystemBrowser.FileSelectionMode;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.util.FileUtil;
-import org.knime.core.util.SimpleFileFilter;
 
 /**
  * Panel that contains an editable Combo Box showing the file to write to and a
@@ -661,71 +660,23 @@ public final class FilesHistoryPanel extends JPanel {
 
     private String getOutputFileName() {
         // file chooser triggered by choose button
-        final JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setAcceptAllFileFilterUsed(true);
-        List<SimpleFileFilter> filters = createFiltersFromSuffixes(m_suffixes);
-        for (SimpleFileFilter filter : filters) {
-            fileChooser.addChoosableFileFilter(filter);
-        }
-        if (filters.size() > 0) {
-            fileChooser.setFileFilter(filters.get(0));
-        }
-        fileChooser.setFileSelectionMode(m_selectMode);
-        fileChooser.setDialogType(m_dialogType);
-
-        // AP-2562
-        // It seems only resized event is happening when showing the dialog
-        // Grabbing the focus then makes two clicks to single click selection.
-        fileChooser.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(final ComponentEvent e) {
-                fileChooser.grabFocus();
-            }
-        });
-
-        try {
-            URL url = FileUtil.toURL(getSelectedFileWithPropertiesReplaced());
-            Path localPath = FileUtil.resolveToPath(url);
-            if (localPath != null) {
-                if (Files.isDirectory(localPath)) {
-                    fileChooser.setCurrentDirectory(localPath.toFile());
-                } else {
-                    fileChooser.setSelectedFile(localPath.toFile());
-                }
-            }
-        } catch (IOException | URISyntaxException | InvalidPathException ex) {
-            // ignore
-        }
-        int r;
-
-       /* This if construct is result of a fix for bug 5841.
-        * showDialog does not resolve localized folder names correctly under Mac OS,
-        * so we use the methods showSaveDialog and showOpenDialog if possible.
-        */
-        if (this.m_dialogType == JFileChooser.SAVE_DIALOG) {
-            r = fileChooser.showSaveDialog(FilesHistoryPanel.this);
-        } else if (this.m_dialogType == JFileChooser.OPEN_DIALOG) {
-            r = fileChooser.showOpenDialog(FilesHistoryPanel.this);
+        FileSystemBrowser browser;
+        if (NodeContext.getContext().getNodeContainer() != null) {
+            //if an ordinary node context is available, use default file system browser
+            browser = new LocalFileSystemBrowser();
         } else {
-            r = fileChooser.showDialog(FilesHistoryPanel.this, "OK");
+            browser = FileSystemBrowserExtension.collectFileSystemBrowsers().stream().filter(b -> b.isCompatible())
+                .sorted((b1, b2) -> b1.getPriority() - b2.getPriority()).findFirst()
+                .orElseThrow(() -> new IllegalStateException("No applicable file system browser available"));
         }
-        if (r == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            if (m_dialogType == JFileChooser.SAVE_DIALOG) {
-                String forceFileExtension = StringUtils.defaultString(m_forcedFileExtensionOnSave);
-                final String fileName = file.getName();
-                if (!(StringUtils.endsWithAny(fileName, m_suffixes)
-                        || StringUtils.endsWithIgnoreCase(fileName, m_forcedFileExtensionOnSave))) {
-                    file = new File(file.getParentFile(), fileName.concat(forceFileExtension));
-                }
-            }
-            if (file.exists() && (m_selectMode == JFileChooser.FILES_ONLY) && file.isDirectory()) {
-                    JOptionPane.showMessageDialog(this, "Error: Please select a file, not a directory.");
-                    return null;
-                }
-            return file.getAbsolutePath();
+        String selectedFile;
+        if (m_allowSystemPropertySubstitution) {
+            selectedFile = getSelectedFileWithPropertiesReplaced();
+        } else {
+            selectedFile = getSelectedFile();
         }
-        return null;
+        return browser.openDialogAndGetSelectedFileName(FileSelectionMode.fromJFileChooserCode(m_selectMode),
+            DialogType.fromJFileChooserCode(m_dialogType), this, m_forcedFileExtensionOnSave, selectedFile, m_suffixes);
     }
 
     /**
@@ -1075,19 +1026,6 @@ public final class FilesHistoryPanel extends JPanel {
     @Override
     public void requestFocus() {
         m_textBox.getEditor().getEditorComponent().requestFocus();
-    }
-
-    private static List<SimpleFileFilter> createFiltersFromSuffixes(final String... extensions) {
-        List<SimpleFileFilter> filters = new ArrayList<>(extensions.length);
-
-        for (final String extension : extensions) {
-            if (extension.indexOf('|') > 0) {
-                filters.add(new SimpleFileFilter(extension.split("\\|")));
-            } else {
-                filters.add(new SimpleFileFilter(extension));
-            }
-        }
-        return filters;
     }
 
     /**
