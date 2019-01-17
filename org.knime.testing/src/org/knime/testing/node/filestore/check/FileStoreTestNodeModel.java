@@ -64,6 +64,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.testing.data.filestore.LargeFile;
 import org.knime.testing.data.filestore.LargeFileStoreValue;
 
@@ -75,7 +76,7 @@ final class FileStoreTestNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_allowMissingModel = createAllowMissingModel();
 
-    private final SettingsModelBoolean m_expectTwoFileStoresSettingsModel = createExpectTwoFileStoresSettingsModel();
+    private final SettingsModelIntegerBounded m_expectedNumFileStoresSettingsModel = createExpectedNumFileStoresSettingsModel();
 
     /**
      *  */
@@ -113,12 +114,21 @@ final class FileStoreTestNodeModel extends NodeModel {
                 }
                 LargeFileStoreValue v = (LargeFileStoreValue)c;
                 LargeFile lf = v.getLargeFile();
+                LargeFile lf2 = v.getOtherLargeFile();
+
+                if (m_expectedNumFileStoresSettingsModel.getIntValue() == 0) {
+                    if (lf != null || lf2 != null) {
+                        throw new Exception("Expected no FileStore, but found at least one in row " + r.getKey());
+                    }
+                    continue;
+                }
+
                 long seed = lf.read();
                 if (seed != v.getSeed()) {
                     throw new Exception("Unequal in row " + r.getKey());
                 }
-                LargeFile lf2 = v.getOtherLargeFile();
-                if (m_expectTwoFileStoresSettingsModel.getBooleanValue()) {
+
+                if (m_expectedNumFileStoresSettingsModel.getIntValue() == 2) {
                     if (lf2 == null) {
                         throw new Exception("Expected a second FileStore in row " + r.getKey());
                     }
@@ -175,7 +185,7 @@ final class FileStoreTestNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_allowMissingModel.saveSettingsTo(settings);
-        m_expectTwoFileStoresSettingsModel.saveSettingsTo(settings);
+        m_expectedNumFileStoresSettingsModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
@@ -195,9 +205,9 @@ final class FileStoreTestNodeModel extends NodeModel {
             m_allowMissingModel.setBooleanValue(true);
         }
         try {
-            m_expectTwoFileStoresSettingsModel.loadSettingsFrom(settings);
+            m_expectedNumFileStoresSettingsModel.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ise) {
-            m_expectTwoFileStoresSettingsModel.setBooleanValue(false);
+            m_expectedNumFileStoresSettingsModel.setIntValue(1);
         }
     }
 
@@ -212,8 +222,8 @@ final class FileStoreTestNodeModel extends NodeModel {
         return new SettingsModelBoolean("allowMissings", false);
     }
 
-    static final SettingsModelBoolean createExpectTwoFileStoresSettingsModel() {
-        return new SettingsModelBoolean("expectTwoFileStores", false);
+    static final SettingsModelIntegerBounded createExpectedNumFileStoresSettingsModel() {
+        return new SettingsModelIntegerBounded("expectedNumFileStores", 1, 0, 2);
     }
 
 }

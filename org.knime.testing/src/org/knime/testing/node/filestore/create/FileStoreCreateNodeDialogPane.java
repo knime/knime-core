@@ -49,18 +49,19 @@ package org.knime.testing.node.filestore.create;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
- * 
+ *
  * @author wiswedel
  */
 final public class FileStoreCreateNodeDialogPane extends DefaultNodeSettingsPane {
-    
+
     public FileStoreCreateNodeDialogPane() {
         final SettingsModelBoolean keepInMemorySettingsModel = FileStoreCreateNodeModel.createKeepInMemorySettingsModel();
         addDialogComponent(new DialogComponentBoolean(keepInMemorySettingsModel, "Keep in memory"));
-        addDialogComponent(new DialogComponentBoolean(FileStoreCreateNodeModel.createUseTwoFileStoresSettingsModel(), "Use Two FileStores"));
+        addDialogComponent(new DialogComponentNumberEdit(FileStoreCreateNodeModel.createNumFileStoresSettingsModel(), "Num FileStores in Cell (0-2)"));
     }
 
 }

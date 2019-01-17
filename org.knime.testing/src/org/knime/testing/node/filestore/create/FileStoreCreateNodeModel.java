@@ -64,6 +64,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelLong;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.testing.data.filestore.LargeFile;
@@ -77,7 +78,7 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
 
     private final SettingsModelBoolean m_keepInMemorySettingsModel = createKeepInMemorySettingsModel();
 
-    private final SettingsModelBoolean m_useTwoFileStoresSettingsModel = createUseTwoFileStoresSettingsModel();
+    private final SettingsModelIntegerBounded m_numFileStoresSettingsModel = createNumFileStoresSettingsModel();
 
     /** {@inheritDoc} */
     @Override
@@ -89,6 +90,10 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
         r.append(new SingleCellFactory(s) {
             @Override
             public DataCell getCell(final DataRow row) {
+                if (m_numFileStoresSettingsModel.getIntValue() == 0) {
+                    return new LargeFileStoreCell();
+                }
+
                 LargeFile lf;
                 final long seed = Double.doubleToLongBits(Math.random());
                 try {
@@ -97,7 +102,7 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
                 } catch (final IOException e) {
                     throw new RuntimeException(e);
                 }
-                if (m_useTwoFileStoresSettingsModel.getBooleanValue()) {
+                if (m_numFileStoresSettingsModel.getIntValue() > 1) {
                     try {
                         final FileStore fs2 = getFileStoreFactory().createFileStore("other" + row.getKey().getString());
                         LargeFile lf2 = LargeFile.create(fs2, seed >> 1, keepInMemory);
@@ -123,7 +128,7 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_keepInMemorySettingsModel.saveSettingsTo(settings);
-        m_useTwoFileStoresSettingsModel.saveSettingsTo(settings);
+        m_numFileStoresSettingsModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
@@ -143,9 +148,9 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
             m_keepInMemorySettingsModel.setBooleanValue(false);
         }
         try {
-            m_useTwoFileStoresSettingsModel.loadSettingsFrom(settings);
+            m_numFileStoresSettingsModel.loadSettingsFrom(settings);
         } catch (final InvalidSettingsException e) {
-            m_useTwoFileStoresSettingsModel.setBooleanValue(false);
+            m_numFileStoresSettingsModel.setIntValue(1);
         }
     }
 
@@ -177,7 +182,7 @@ public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel 
     }
 
 
-    static SettingsModelBoolean createUseTwoFileStoresSettingsModel() {
-        return new SettingsModelBoolean("useTwoFileStores", false);
+    static SettingsModelIntegerBounded createNumFileStoresSettingsModel() {
+        return new SettingsModelIntegerBounded("numFileStores", 1, 0, 2);
     }
 }

@@ -46,14 +46,15 @@ package org.knime.testing.node.filestore.check;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 
 final class FileStoreTestNodeDialogPane extends DefaultNodeSettingsPane {
 
     FileStoreTestNodeDialogPane() {
         addDialogComponent(new DialogComponentBoolean(
             FileStoreTestNodeModel.createAllowMissingModel(), "Allow Missing Values"));
-        addDialogComponent(new DialogComponentBoolean(FileStoreTestNodeModel.createExpectTwoFileStoresSettingsModel(),
-            "Expects a second FileStore"));
+        addDialogComponent(new DialogComponentNumberEdit(FileStoreTestNodeModel.createExpectedNumFileStoresSettingsModel(),
+            "Expected num FileStores"));
     }
 
 }
