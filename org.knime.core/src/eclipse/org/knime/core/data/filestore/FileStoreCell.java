@@ -100,6 +100,7 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
      */
     protected FileStoreCell() {
         m_isFlushedToFileStore = true;
+        m_fileStoreProxies = new FileStoreProxy[0];
     }
 
     /** @return the first fileStore */
