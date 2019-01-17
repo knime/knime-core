@@ -77,7 +77,9 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
         /** {@inheritDoc} */
         @Override
         public void serialize(final LargeFileStoreCell cell, final DataCellDataOutput output) throws IOException {
-            cell.m_largeFile.flushToFileStore(); // does nothing if already written (handles "keepInMemory")
+            if (null != cell.m_largeFile) {
+                cell.m_largeFile.flushToFileStore(); // does nothing if already written (handles "keepInMemory")
+            }
             if (null != cell.m_otherLargeFile) {
                 cell.m_otherLargeFile.flushToFileStore();
             }
@@ -145,14 +147,27 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
         m_seed = seed;
     }
 
+    /**
+     * Constructor that creates a LageFileStoreCell with no FileStores to check that
+     * (de)serialization also works in that case.
+     *
+     * @param largeFile
+     * @param seed the expected seed as hidden in largeFile.
+     */
+    public LargeFileStoreCell() {
+        super();
+        m_largeFile = null;
+        m_seed = 0;
+    }
+
     @Override
     protected void postConstruct() throws IOException {
         final FileStore[] fileStores = getFileStores();
         if (fileStores.length < 1) {
-            throw new IOException("At least one file store should be present");
+            return;
         }
-        m_largeFile = LargeFile.restore(fileStores[0]);
 
+        m_largeFile = LargeFile.restore(fileStores[0]);
         if (fileStores.length == 2) {
             m_otherLargeFile = LargeFile.restore(fileStores[1]);
         }
@@ -160,7 +175,9 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
 
     @Override
     protected void flushToFileStore() throws IOException {
-        m_largeFile.flushToFileStore();
+        if (null != m_largeFile) {
+            m_largeFile.flushToFileStore();
+        }
         if (null != m_otherLargeFile) {
             m_otherLargeFile.flushToFileStore();
         }
@@ -175,8 +192,10 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
             if (getOtherLargeFile() != null) {
                 return "Content of LargeFile 1: " + getLargeFile().read() + ", LargeFile 2: "
                     + getOtherLargeFile().read();
-            } else {
+            } else if (getLargeFile() != null) {
                 return "Content of LargeFile: " + getLargeFile().read();
+            } else {
+                return "LargeFile without contents";
             }
         } catch (Exception e) {
             throw new IllegalStateException("Large file not accessible!", e);
@@ -187,7 +206,7 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         final LargeFileStoreCell odc = (LargeFileStoreCell)dc;
-        return odc.m_seed == m_seed;
+        return odc.m_seed == m_seed && super.equalsDataCell(dc);
     }
 
     /** {@inheritDoc} */
