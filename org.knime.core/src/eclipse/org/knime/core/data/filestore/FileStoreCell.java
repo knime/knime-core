@@ -103,7 +103,7 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
         m_fileStoreProxies = new FileStoreProxy[0];
     }
 
-    /** @return the first fileStore */
+    /** @return the first fileStore. Attention: this does not check whether the number of FileStores is > 0. */
     protected FileStore getFileStore() {
         return m_fileStoreProxies[0].getFileStore();
     }
