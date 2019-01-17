@@ -170,8 +170,8 @@ public final class NodeContext {
         }
 
         if (!res.isPresent()) {
-            logger.coding("Context object is available but cannot be turned into an object of class "
-                + contextObjectClass.getSimpleName() + ". Most likely an implementation error.");
+            logger.debugWithoutContext("Context object is available but cannot be turned into an object of class "
+                + contextObjectClass.getSimpleName() + ".");
         }
         return res;
     }
