@@ -314,6 +314,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/AbstractJFileChooserBrowser.java" type="org.knime.core.node.util.AbstractJFileChooserBrowser">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="FileSystemBrowser"/>
+                <message_argument value="AbstractJFileChooserBrowser"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/wizard/AbstractWizardNodeView.java" type="org.knime.core.node.wizard.AbstractWizardNodeView">
         <filter id="336695337">
             <message_arguments>
