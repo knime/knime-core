@@ -316,7 +316,7 @@ public class Buffer implements KNIMEStreamConstants {
             }
         } catch (final NoSuchFieldException | NullPointerException | IllegalAccessException | ClassCastException e) {
             LOGGER.coding("BlobDataCell interface \"" + cl.getSimpleName()
-            + "\" seems to have a problem with the static field " + "\"USE_COMPRESSION\"", e);
+            + "\" seems to have a problem with the static field \"USE_COMPRESSION\"", e);
             // fall back - no meta information available
             result = Boolean.FALSE;
         }
@@ -703,7 +703,7 @@ public class Buffer implements KNIMEStreamConstants {
                 Iterator<DataCell> it = cdv.iterator();
                 if (!(it instanceof BlobSupportDataCellIterator)) {
                     LOGGER.coding("(Collection) DataCell of class \"" + cell.getClass().getSimpleName()
-                            + "\" contains Blobs, but does not " + "return an iterator supporting those "
+                            + "\" contains Blobs, but does not return an iterator supporting those "
                             + "(expected " + BlobSupportDataCellIterator.class.getName() + ", got "
                             + it.getClass().getName() + ")");
                 }
@@ -1112,7 +1112,7 @@ public class Buffer implements KNIMEStreamConstants {
                 // addToZipFile) and saved. Reading these tables will have a
                 // bufferID of -1. 1.0.0 contain no blobs, so that's ok.
                 if (m_containsBlobs && bufferID != m_bufferID) {
-                    LOGGER.error("Table's buffer id is different from what has" + " been passed in constructor ("
+                    LOGGER.error("Table's buffer id is different from what has been passed in constructor ("
                             + bufferID + " vs. " + m_bufferID + "), unpredictable errors may occur");
                 }
             }
@@ -1841,7 +1841,7 @@ public class Buffer implements KNIMEStreamConstants {
                         } catch (InterruptedException ie) {
                             if (!m_filesToDeleteList.isEmpty()) {
                                 THREAD_LOGGER.warn("Deletion of " + m_filesToDeleteList.size() + "files "
-                                        + "or directories failed because " + "deleter thread was interrupted");
+                                        + "or directories failed because deleter thread was interrupted");
                             }
                             return;
                         }

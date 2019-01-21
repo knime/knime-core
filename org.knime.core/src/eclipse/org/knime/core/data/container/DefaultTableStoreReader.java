@@ -186,7 +186,7 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
          * @throws IOException - If the file could not be opened or the an error occurred creating the (decompressed)
          *             stream
          */
-        protected static final InputStream getInputStream(final DefaultTableStoreReader tableFormatReader)
+        static final InputStream getInputStream(final DefaultTableStoreReader tableFormatReader)
             throws IOException {
             // get the decompression format
             final CompressionFormat cType = tableFormatReader.getBinFileCompressionFormat();

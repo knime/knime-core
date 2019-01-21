@@ -53,10 +53,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.Assert;
@@ -79,8 +79,7 @@ import org.knime.core.util.Pair;
 import junit.framework.TestCase;
 
 /**
- * This class test that the different compression formats run properly. This evaluation is done by checking the
- * different file sizes and extensions.
+ * This class test that the different compression formats run properly.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
@@ -90,7 +89,9 @@ public final class DataTableCompressionTest extends TestCase {
     private static final int ROW_COUNT = 500;
 
     /**
-     * Ensures that the different compressions run properly.
+     * Ensures that the different compressions run properly, by testing that the table is written/read using the proper
+     * compression format. The test include (i) writing, (ii) reading, and (iii) finally checking that the written table
+     * matches the input table.
      *
      * @throws NoSuchFieldException
      * @throws SecurityException
@@ -100,10 +101,9 @@ public final class DataTableCompressionTest extends TestCase {
     @Test
     public static void testCompressions()
         throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        final long[] fSize = new long[CompressionFormat.values().length];
-        for (final CompressionFormat compFormat : CompressionFormat.values()) {
+        for (final CompressionFormat cFormat : CompressionFormat.values()) {
             // set the compression format
-            setCompressionFormat(compFormat);
+            setCompressionFormat(cFormat);
 
             // create the data
             final Pair<DataTableSpec, DataRow[]> data = createData(ROW_COUNT);
@@ -118,31 +118,29 @@ public final class DataTableCompressionTest extends TestCase {
             final Buffer b = cont.getBuffer();
             cont.close();
 
+            // check that the proper compressor has been used to write the file
+            testRead(b, cFormat);
+
             // check that file extension is adaquat
             Assert.assertThat("Compressed file has wrong file extension:",
                 b.getBinFile().getName().substring(b.getBinFile().getName().indexOf(".")),
                 equalTo(DefaultTableStoreFormat.COMPRESSION.getFileExtension()));
 
-            // store the file size
-            fSize[DefaultTableStoreFormat.COMPRESSION.ordinal()] = b.getBinFile().length();
-
+            // check that the written table equals the input table
             read(b, data.getSecond());
         }
-
-        // check that all the compressed tables have a different size
-        checkFileSizesDiffer(fSize);
     }
 
     /**
      * Sets the compression format.
      *
-     * @param compFormat the new compression format
+     * @param cFormat the new compression format
      * @throws NoSuchFieldException
      * @throws SecurityException
      * @throws IllegalArgumentException
      * @throws IllegalAccessException
      */
-    private static void setCompressionFormat(final CompressionFormat compFormat)
+    private static void setCompressionFormat(final CompressionFormat cFormat)
         throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
         final Field field = DefaultTableStoreFormat.class.getDeclaredField("COMPRESSION");
         field.setAccessible(true);
@@ -151,10 +149,10 @@ public final class DataTableCompressionTest extends TestCase {
         modifiersField.setAccessible(true);
         modifiersField.set(field, field.getModifiers() & ~Modifier.FINAL);
 
-        field.set(null, compFormat);
+        field.set(null, cFormat);
 
         Assert.assertThat("Problem changing the compression format: ", DefaultTableStoreFormat.COMPRESSION,
-            equalTo(compFormat));
+            equalTo(cFormat));
     }
 
     /**
@@ -189,6 +187,23 @@ public final class DataTableCompressionTest extends TestCase {
     private static void writeData(final DataRow[] dataRows, final DataContainer cont) {
         for (final DataRow r : dataRows) {
             cont.addRowToTable(r);
+        }
+    }
+
+    /**
+     * Reads the compressed file and ensures that the proper compressor has been used.
+     *
+     * @param b the Buffer
+     * @param cFormat the compression format
+     * @throws Error - If the fail does not exists or has been written using the wrong compressor
+     */
+    private static void testRead(final Buffer b, final CompressionFormat cFormat) {
+        try (InputStream inStream = cFormat.getInputStream(b.getBinFile())) {
+            while (inStream.read() != -1) {
+            }
+        } catch (IOException e) {
+            throw new Error(
+                "Either the compressed file was not written or it has been written using the wrong compressor.");
         }
     }
 
@@ -228,22 +243,4 @@ public final class DataTableCompressionTest extends TestCase {
         }
     }
 
-    /**
-     * Checks that {@link CompressionFormat#NONE} create the largest files and that all compressed files have different
-     * sizes
-     *
-     * @param fSize the file sizes
-     */
-    private static void checkFileSizesDiffer(final long[] fSize) {
-        Assert.assertThat("Not all compressions have a different file size:",
-            Arrays.stream(fSize).boxed().collect(Collectors.toSet()).size(), equalTo(fSize.length));
-        final int noneIdx = CompressionFormat.NONE.ordinal();
-        final long uncompFileSize = fSize[noneIdx];
-        for (int i = 0; i < fSize.length; i++) {
-            if (i != noneIdx) {
-                Assert.assertThat("Compression none did not create the largest file: ", uncompFileSize > fSize[i],
-                    is(true));
-            }
-        }
-    }
 }

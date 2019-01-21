@@ -74,7 +74,6 @@ import org.knime.core.node.NodeLogger;
  * @author Bernd Wiswedel, University of Konstanz
  * @since 3.7
  */
-@SuppressWarnings("javadoc")
 public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
 
     private static final NodeLogger LOGGER =
@@ -112,12 +111,12 @@ public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
 
         // check for file existence
         if (tableFormatReader.getBinFile() == null) {
-            throw new IOException("Unable to read table from file, " + "table has been cleared.");
+            throw new IOException("Unable to read table from file, table has been cleared.");
         }
 
         // init the format reader
         m_tableFormatReader = tableFormatReader;
-        assert m_tableFormatReader.getReadVersion() >= 6 : "Iterator is not backward " + "compatible, use instead "
+        assert m_tableFormatReader.getReadVersion() >= 6 : "Iterator is not backward compatible, use instead "
             + BufferFromFileIteratorVersion1x.class.getSimpleName();
 
         // open the input stream
@@ -149,8 +148,7 @@ public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
                 m_missingCellsForClosedTable = new DataCell[colCount];
                 Arrays.fill(m_missingCellsForClosedTable,
                         DataType.getMissingCell());
-                LOGGER.warn("Invalid access on table, "
-                        + "iterator has been closed");
+                LOGGER.warn("Invalid access on table, iterator has been closed");
             }
             RowKey key = new RowKey("INVALID_ROW (table is closed) - (Row " + m_pointer + ")");
             m_pointer++;
@@ -184,8 +182,7 @@ public final class BufferFromFileIteratorVersion20 extends FromFileIterator {
         try {
             byte eoRow = inStream.readControlByte();
             if (eoRow != BYTE_ROW_SEPARATOR) {
-                throw new IOException("Expected end of row byte, "
-                    + "got '" + eoRow + "', (byte " + (int)eoRow + ")");
+                throw new IOException("Expected end of row byte, got '" + eoRow + "', (byte " + (int)eoRow + ")");
             }
         } catch (IOException ioe) {
             handleReadThrowable(ioe);

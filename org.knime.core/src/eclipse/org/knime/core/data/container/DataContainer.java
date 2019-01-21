@@ -451,7 +451,7 @@ public class DataContainer implements RowAppender {
         RowKey key = row.getKey();
         if (numCells != m_spec.getNumColumns()) {
             throw new IllegalArgumentException("Cell count in row \"" + key
-                + "\" is not equal to length of column names " + "array: " + numCells + " vs. "
+                + "\" is not equal to length of column names array: " + numCells + " vs. "
                 + m_spec.getNumColumns());
         }
         for (int c = 0; c < numCells; c++) {
@@ -478,7 +478,7 @@ public class DataContainer implements RowAppender {
                     valString = valString.substring(0, 30) + "...";
                 }
                 throw new IllegalArgumentException("Runtime class of object \"" + valString + "\" (index " + c
-                    + ") in " + "row \"" + key + "\" is " + runtimeType.toString() + " and does "
+                    + ") in row \"" + key + "\" is " + runtimeType.toString() + " and does "
                     + "not comply with its supposed superclass " + columnClass.toString());
             }
         } // for all cells
@@ -533,8 +533,8 @@ public class DataContainer implements RowAppender {
      */
     protected final void setForceCopyOfBlobs(final boolean forceCopyOfBlobs) {
         if (size() > 0) {
-            throw new IllegalStateException("Container already has rows; "
-                + "invocation of this method is only permitted immediately " + "after constructor call.");
+            throw new IllegalStateException("Container already has rows;  invocation of this method is only permitted"
+                + " immediately after constructor call.");
         }
         m_forceCopyOfBlobs = forceCopyOfBlobs;
     }
@@ -735,7 +735,7 @@ public class DataContainer implements RowAppender {
     @Override
     public void addRowToTable(final DataRow row) {
         if (!isOpen()) {
-            throw new IllegalStateException("Cannot add row: container has" + " not been initialized (opened).");
+            throw new IllegalStateException("Cannot add row: container has not been initialized (opened).");
         }
         if (row == null) {
             throw new NullPointerException("Can't add null rows to container");

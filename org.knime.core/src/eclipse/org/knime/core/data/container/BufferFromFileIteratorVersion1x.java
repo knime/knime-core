@@ -105,7 +105,7 @@ final class BufferFromFileIteratorVersion1x extends FromFileIterator {
 
         // check for file existence
         if (tableFormatReader.getBinFile() == null) {
-            throw new IOException("Unable to read table from file, " + "table has been cleared.");
+            throw new IOException("Unable to read table from file, table has been cleared.");
         }
 
         // init the format reader
@@ -158,14 +158,13 @@ final class BufferFromFileIteratorVersion1x extends FromFileIterator {
             if (m_tableFormatReader.getReadVersion() >= 5) {
                 byte eoRow = inStream.readByte();
                 if (eoRow != BYTE_ROW_SEPARATOR) {
-                    throw new IOException("Expected end of row byte, "
-                        + "got '" + eoRow + "', (byte " + (int)eoRow + ")");
+                    throw new IOException("Expected end of row byte, got '" + eoRow + "', (byte " + (int)eoRow + ")");
                 }
             } else {
                 char eoRow = inStream.readChar();
                 if (eoRow != '\n') {
-                    throw new IOException("Expected end of row character, "
-                        + "got '" + eoRow + "', (char " + (int)eoRow + ")");
+                    throw new IOException(
+                        "Expected end of row character, got '" + eoRow + "', (char " + (int)eoRow + ")");
                 }
             }
         } catch (IOException ioe) {
@@ -390,8 +389,8 @@ final class BufferFromFileIteratorVersion1x extends FromFileIterator {
          * {@inheritDoc} */
         @Override
         public DataCell readDataCell() throws IOException {
-            throw new IOException("The stream was written with a version that "
-                    + "does not support reading/writing of encapsulated "
+            throw new IOException(
+                "The stream was written with a version that does not support reading/writing of encapsulated "
                     + "DataCells");
         }
 
