@@ -120,6 +120,11 @@ public final class NodeTimer {
     private static final String SERVER_ADDRESS = "https://www.knime.com/store/rest";
             /*"http://localhost:8080/com.knime.store.server/rest"*/
 
+    /** Preference constant: send anonymous usage statistics to KNIME, yes or no. */
+    public static final String PREF_KEY_SEND_ANONYMOUS_STATISTICS = "knime.sendAnonymousStatistics";
+    /** Preference constant: if KNIME already asked the user to transmit usage statistics, yes or no. */
+    public static final String PREF_KEY_ASKED_ABOUT_STATISTICS = "knime.askedToSendStatistics";
+
     private final NodeContainer m_parent;
     private long m_startTime;
     private long m_lastExecutionDuration;
@@ -425,15 +430,30 @@ public final class NodeTimer {
         }
 
 
-
         private void sendToServer(final boolean properShutdown) {
             // Send statistics based on user preferences. If there are no prefs available,  don't send them in a
             // full KNIME AP desktop application (because the user was prompted and the default value, false,
             // was confirmed); all other applications (e.g. batch) will send stats - user can suppress that by providing
             // a workspace containing preferences
-            final boolean defaultSendStats = !"org.knime.product.KNIME_APPLICATION".equals(getApplicationID());
-            Preferences preferences = InstanceScope.INSTANCE.getNode("org.knime.workbench.core");
-            boolean sendStatistics = preferences.getBoolean("knime.sendAnonymousStatistics", defaultSendStats)
+            final Preferences preferences = InstanceScope.INSTANCE.getNode("org.knime.workbench.core");
+            boolean defaultSendStats;
+            if ("org.knime.product.KNIME_APPLICATION".equals(getApplicationID())) {
+                // running in UI mode -- the user was prompted if he wants to share (and if so, it will have value
+                // 'true' in the preferences)
+                defaultSendStats = false;
+            } else { // non-ui mode
+                // running in batch (or server or ... anything that likely doesn't have a UI) and the user was not
+                // prompted if he wants to share. We assume 'true' for stats submission unless he's using a workspace
+                // from which we know it prompted the 'do you want to share' question
+                defaultSendStats = true;
+                boolean hasPromptedToSendStats = preferences.getBoolean(PREF_KEY_ASKED_ABOUT_STATISTICS, false);
+                if (hasPromptedToSendStats) {
+                    // the value is stored in the preferences if it deviates from the store default (which is false)
+                    defaultSendStats = false;
+                }
+            }
+
+            boolean sendStatistics = preferences.getBoolean(PREF_KEY_SEND_ANONYMOUS_STATISTICS, defaultSendStats)
                     && !EclipseUtil.isRunFromSDK();
             if (!sendStatistics) {
                 LOGGER.debug("Sending of usage stats disabled.");
@@ -513,8 +533,9 @@ public final class NodeTimer {
          */
         public void performShutdown() {
             Thread writeThread = asyncWriteToFile(true);
+            int threadTimeoutsInMS = 5000;
             try {
-                writeThread.join(5000);
+                writeThread.join(threadTimeoutsInMS);
             } catch (InterruptedException ex) {
                 return;
             }
@@ -524,7 +545,7 @@ public final class NodeTimer {
                 Thread sendThread = asyncSendToServer(true);
                 if (sendThread != null) {
                     try {
-                        sendThread.join(5000);
+                        sendThread.join(threadTimeoutsInMS);
                     } catch (InterruptedException ex) { /* silently ignore to not block shutdown */ }
                 }
             }

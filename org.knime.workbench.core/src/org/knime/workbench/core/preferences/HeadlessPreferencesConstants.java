@@ -44,6 +44,8 @@
  */
 package org.knime.workbench.core.preferences;
 
+import org.knime.core.node.workflow.NodeTimer;
+
 /**
  *
  * @author Fabian Dill, University of Konstanz
@@ -67,9 +69,9 @@ public final class HeadlessPreferencesConstants {
     public static final String P_TEMP_DIR = "knime.tempDir";
 
     /** Preference constant: send anonymous usage statistics to KNIME, yes or no. */
-    public static final String P_SEND_ANONYMOUS_STATISTICS = "knime.sendAnonymousStatistics";
+    public static final String P_SEND_ANONYMOUS_STATISTICS = NodeTimer.PREF_KEY_SEND_ANONYMOUS_STATISTICS;
     /** Preference constant: if KNIME already asked the user to transmit usage statistics, yes or no. */
-    public static final String P_ASKED_ABOUT_STATISTICS = "knime.askedToSendStatistics";
+    public static final String P_ASKED_ABOUT_STATISTICS = NodeTimer.PREF_KEY_ASKED_ABOUT_STATISTICS;
 
     /* --- Master Key constants --- */
 
