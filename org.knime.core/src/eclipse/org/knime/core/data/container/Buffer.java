@@ -919,9 +919,13 @@ public class Buffer implements KNIMEStreamConstants {
 
     private boolean mustBeFlushedPriorSave(final DataCell cell, final boolean isWrapperCell,
         final boolean isCollectionCell) {
-        if (cell instanceof FileStoreCell && FileStoreUtil.getNumFileStores((FileStoreCell)cell) > 0) {
-            FileStore fileStore = FileStoreUtil.getFileStore((FileStoreCell)cell);
-            return ((IWriteFileStoreHandler)m_fileStoreHandler).mustBeFlushedPriorSave(fileStore);
+        if (cell instanceof FileStoreCell) {
+            FileStore[] fileStores = FileStoreUtil.getFileStores((FileStoreCell)cell);
+            for (FileStore fs : fileStores) {
+                if (((IWriteFileStoreHandler)m_fileStoreHandler).mustBeFlushedPriorSave(fs)) {
+                    return true;
+                }
+            }
         } else if (isCollectionCell) {
             if (cell instanceof CollectionDataValue) {
                 for (DataCell c : (CollectionDataValue)cell) {
