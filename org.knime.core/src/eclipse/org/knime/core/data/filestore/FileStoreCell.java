@@ -104,6 +104,7 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
     }
 
     /** @return the first fileStore. Attention: this does not check whether the number of FileStores is > 0. */
+    @Deprecated
     protected FileStore getFileStore() {
         return m_fileStoreProxies[0].getFileStore();
     }

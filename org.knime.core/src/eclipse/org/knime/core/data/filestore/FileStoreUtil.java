@@ -87,6 +87,7 @@ public final class FileStoreUtil {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
+    @Deprecated
     public static FileStore getFileStore(final FileStoreCell cell) {
         return cell.getFileStore();
     }
@@ -113,6 +114,7 @@ public final class FileStoreUtil {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
+    @Deprecated
     public static IFileStoreHandler getFileStoreHandler(final FileStoreCell cell) {
         return getFileStoreHandler(cell.getFileStore());
     }
