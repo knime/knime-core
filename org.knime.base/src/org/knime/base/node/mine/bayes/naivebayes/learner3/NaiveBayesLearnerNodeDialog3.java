@@ -72,8 +72,6 @@ final class NaiveBayesLearnerNodeDialog3 extends DefaultNodeSettingsPane {
 
     private SettingsModelBoolean m_ignoreMissingVals = NaiveBayesLearnerNodeModel3.createIgnoreMissingValsModel();
 
-    private final SettingsModelDouble m_threshold = NaiveBayesLearnerNodeModel3.createThresholdModel();
-
     /**
      * New pane for configuring BayesianClassifier node dialog.
      */
@@ -95,10 +93,16 @@ final class NaiveBayesLearnerNodeDialog3 extends DefaultNodeSettingsPane {
         final DialogComponentColumnNameSelection selectionBox = new DialogComponentColumnNameSelection(columnName,
             "Classification Column:", NaiveBayesLearnerNodeModel3.TRAINING_DATA_PORT, NominalValue.class);
         addDialogComponent(selectionBox);
-        final DialogComponentNumber laplaceCorrectorComponent = new DialogComponentNumber(m_threshold,
-            "Default probability:", NaiveBayesLearnerNodeModel3.MIN_DEF_PROB_THRESHOLD, 5);
+        final SettingsModelDouble threshold = NaiveBayesLearnerNodeModel3.createThresholdModel();
+        final DialogComponentNumber laplaceCorrectorComponent = new DialogComponentNumber(threshold,
+            "Default probability:", NaiveBayesLearnerNodeModel3.MIN_PROB_THRESHOLD_DEF, 5);
         laplaceCorrectorComponent.setToolTipText("Set to zero for no correction");
         addDialogComponent(laplaceCorrectorComponent);
+        // add the min standard deviation minimum value
+        final DialogComponentNumber minSdThreshold =
+            new DialogComponentNumber(NaiveBayesLearnerNodeModel3.createMinSdValueModel(), "Minimum standard deviation",
+                NaiveBayesLearnerNodeModel3.MIN_SD_VALUE_DEF, 5);
+        addDialogComponent(minSdThreshold);
         final SettingsModelInteger noMo = NaiveBayesLearnerNodeModel3.createMaxNominalValsModel();
         final DialogComponentNumber maxNomVals =
             new DialogComponentNumber(noMo, "Maximum number of unique nominal values per attribute:", 1);

@@ -23,10 +23,6 @@
 		<option name="Classification Column">
 		    The class value column.
 	    </option>
-        <option name="Maximum number of unique nominal values per attribute">
-            All nominal columns with more unique values than the defined number
-            will be skipped during learning.
-        </option>
         <option name="Default probability">
             A probability of zero for a given attribute/class value pair requires special attention. 
             Without adjustment, a probability of zero would exercise an absolute veto over a likelihood in which that 
@@ -39,6 +35,15 @@
            		<li>continuous and its probability is smaller than the default probability
           		</li>
            	</ul>
+        </option>
+	    <option name="Minimum standard deviation">
+			Specify the minimum standard deviation to use for observations
+			without enough data. The value must be at least 1e-10 and is used to replace standard deviations
+			lower than then the specified value.
+		</option>
+        <option name="Maximum number of unique nominal values per attribute">
+            All nominal columns with more unique values than the defined number
+            will be skipped during learning.
         </option>
         <option name="Ignore missing values">
             By default the node uses the missing value information to improve the prediction result.

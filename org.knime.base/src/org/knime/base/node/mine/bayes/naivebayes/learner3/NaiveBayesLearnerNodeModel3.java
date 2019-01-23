@@ -96,11 +96,17 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  */
 final class NaiveBayesLearnerNodeModel3 extends NodeModel {
 
-    /** The minimum default probability threshold. */
-    static final double MIN_DEF_PROB_THRESHOLD = 1e-5;
-
     // our logger instance
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NaiveBayesLearnerNodeModel3.class);
+
+    /** The default minimum standard deviation value. */
+    public static final double MIN_SD_VALUE_DEF = 1e-4;
+
+    /** The lower bound of the minimum standard deviation value. */
+    private static final double MIN_SD_LOWER_BOUND = 1e-10;
+
+    /** The default minimum probability threshold. */
+    static final double MIN_PROB_THRESHOLD_DEF = 1e-10;
 
     private static final String CFG_DATA = "naivebayesData";
 
@@ -123,6 +129,9 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
 
     /** Key to store the pmml compatibility flag. */
     private static final String CFG_PMML_COMPATIBLE = "compatiblePMML";
+
+    /** Key to store the minimum standard deviation value. */ 
+    private static final String CFG_MIN_SD_VALUE_KEY = "minSdValue";
 
     /**
      * The number of the training data in port.
@@ -149,20 +158,32 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
 
     private final SettingsModelDouble m_threshold = createThresholdModel();
 
+    private final SettingsModelDouble m_minSdValue = createMinSdValueModel();
+
     /**
      * @return the Laplace corrector model
      */
     static SettingsModelDoubleBounded createThresholdModel() {
         return new SettingsModelDoubleBounded("threshold", NaiveBayesModel.DEFAULT_MIN_PROB_THRESHOLD,
-            MIN_DEF_PROB_THRESHOLD, Double.MAX_VALUE);
+            MIN_PROB_THRESHOLD_DEF, Double.MAX_VALUE);
     }
 
     /**
      * @return the maximum number of nominal values
      */
     static SettingsModelIntegerBounded createMaxNominalValsModel() {
-        return new SettingsModelIntegerBounded(NaiveBayesLearnerNodeModel3.CFG_MAX_NO_OF_NOMINAL_VALS_KEY, 20, 0,
+        return new SettingsModelIntegerBounded(CFG_MAX_NO_OF_NOMINAL_VALS_KEY, 20, 0,
             Integer.MAX_VALUE);
+    }
+
+    /**
+     * Creates the minimum standard deviation value model.
+     *
+     * @return the minimum standard deviation value model
+     */
+    static SettingsModelDoubleBounded createMinSdValueModel() {
+        return new SettingsModelDoubleBounded(CFG_MIN_SD_VALUE_KEY, MIN_SD_VALUE_DEF, MIN_SD_LOWER_BOUND,
+            Double.MAX_VALUE);
     }
 
     /**
@@ -248,7 +269,8 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
         final List<String> learnCols = new LinkedList<>();
         for (final DataColumnSpec colSpec : tableSpec) {
             final AttributeModel model = NaiveBayesModel.getCompatibleModel(colSpec, classColumn, maxNoOfNominalVals,
-                m_ignoreMissingVals.getBooleanValue(), m_pmmlCompatible.getBooleanValue());
+                m_ignoreMissingVals.getBooleanValue(), m_pmmlCompatible.getBooleanValue(),
+                m_minSdValue.getDoubleValue());
             if (model == null) {
                 //the column type is not supported by Naive Bayes
                 ignoredColumns.add(colSpec.getName());
@@ -323,7 +345,7 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
         final boolean pmmlCompatible = m_pmmlCompatible.getBooleanValue();
         final int maxNoOfNomVals = m_maxNoOfNominalVals.getIntValue();
         m_model = new NaiveBayesModel(trainingTable, m_classifyColumnName.getStringValue(), exec, maxNoOfNomVals,
-            ignoreMissingVals, pmmlCompatible, m_threshold.getDoubleValue());
+            ignoreMissingVals, pmmlCompatible, m_threshold.getDoubleValue(), m_minSdValue.getDoubleValue());
         final List<String> missingModels = m_model.getAttributesWithMissingVals();
         if (missingModels.size() > 0) {
             final StringBuilder buf = new StringBuilder();
@@ -388,6 +410,7 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
         m_maxNoOfNominalVals.saveSettingsTo(settings);
         m_pmmlCompatible.saveSettingsTo(settings);
         m_threshold.saveSettingsTo(settings);
+        m_minSdValue.saveSettingsTo(settings);
     }
 
     /**
@@ -400,6 +423,13 @@ final class NaiveBayesLearnerNodeModel3 extends NodeModel {
         m_maxNoOfNominalVals.loadSettingsFrom(settings);
         m_pmmlCompatible.loadSettingsFrom(settings);
         m_threshold.loadSettingsFrom(settings);
+        /* (3.7.1) this brakes backwards compatibility since 0 was allowed and the default before.
+         * We, however, decided against backwards compatibility since this node was just released and a
+         * value != 0 ensure that our predictor does not produce NaN's.
+         */
+        if (settings.containsKey(CFG_MIN_SD_VALUE_KEY)) {
+            m_minSdValue.loadSettingsFrom(settings);
+        }
     }
 
     /**

@@ -265,6 +265,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/mine/bayes/naivebayes/datamodel3/NaiveBayesModel.java" type="org.knime.base.node.mine.bayes.naivebayes.datamodel3.NaiveBayesModel">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel3.NaiveBayesModel"/>
+                <message_argument value="NaiveBayesModel(BufferedDataTable, String, ExecutionContext, int, boolean, boolean, double)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel3.NaiveBayesModel"/>
+                <message_argument value="getCompatibleModel(DataColumnSpec, String, int, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/mine/cluster/PMMLClusterTranslator.java" type="org.knime.base.node.mine.cluster.PMMLClusterTranslator">
         <filter id="1141899266">
             <message_arguments>

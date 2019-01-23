@@ -96,6 +96,7 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * This class represents the learned Naive Bayes model. This basic model holds for each attribute an
@@ -107,7 +108,7 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 public final class NaiveBayesModel {
 
     /** The default minimum probability threshold. */
-    public static final double DEFAULT_MIN_PROB_THRESHOLD = 0.0001;
+    public static final double DEFAULT_MIN_PROB_THRESHOLD = 1e-4;
 
     /** All classes have zero probability exception. */
     private static final String ZERO_PROB_EXCEPTION = "All potential classes have a zero probability";
@@ -181,12 +182,15 @@ public final class NaiveBayesModel {
      * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for categorical
      *            fields or when the calculated probability of the distribution falls below the threshold for continuous
      *            fields.
+     * @param minSdValue the minimum standard deviation value used when the actual standard deviation is smaller than
+     *            this value
      * @throws CanceledExecutionException if the user presses the cancel button during model creation
      * @throws InvalidSettingsException if the input data contains no rows
+     * @since 3.7.1
      */
     public NaiveBayesModel(final BufferedDataTable data, final String classColName, final ExecutionContext exec,
         final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible,
-        final double probabilityThreshold) throws CanceledExecutionException, InvalidSettingsException {
+        final double probabilityThreshold, final double minSdValue) throws CanceledExecutionException, InvalidSettingsException {
         if (exec == null) {
             throw new IllegalArgumentException("exec must not be null");
         }
@@ -205,6 +209,8 @@ public final class NaiveBayesModel {
         if (maxNoOfNominalVals < 0) {
             throw new IllegalArgumentException("The maximum number of unique nominal values must be greater zero");
         }
+        CheckUtils.checkSetting(minSdValue > 0,
+            "The minimum standard deviation value has to be greater than 0");
         final DataTableSpec tableSpec = data.getDataTableSpec();
         final int classColIdx = tableSpec.findColumnIndex(classColName);
         if (classColIdx < 0) {
@@ -217,8 +223,8 @@ public final class NaiveBayesModel {
         m_ignoreMissingVals = ignoreMissingVals;
         m_skippedAttributes = new ArrayList<>();
         //initialise the row values
-        m_modelByAttrName =
-            createModelMap(tableSpec, m_classColName, maxNoOfNominalVals, ignoreMissingVals, pmmlCompatible);
+        m_modelByAttrName = createModelMap(tableSpec, m_classColName, maxNoOfNominalVals, ignoreMissingVals,
+            pmmlCompatible, minSdValue);
         m_pmmlZeroProbThreshold = probabilityThreshold;
         //end of initialise all internal variable
         ExecutionMonitor subExec = null;
@@ -292,13 +298,13 @@ public final class NaiveBayesModel {
 
     private static LinkedHashMap<String, AttributeModel> createModelMap(final DataTableSpec tableSpec,
         final String classColName, final int maxNoOfNominalVals, final boolean skipMissingVals,
-        final boolean pmmlCompatible) {
+        final boolean pmmlCompatible, final double minSdValue) {
         final int numColumns = tableSpec.getNumColumns();
         final LinkedHashMap<String, AttributeModel> modelMap = new LinkedHashMap<>(numColumns);
         for (int i = 0; i < numColumns; i++) {
             final DataColumnSpec colSpec = tableSpec.getColumnSpec(i);
-            final AttributeModel model =
-                getCompatibleModel(colSpec, classColName, maxNoOfNominalVals, skipMissingVals, pmmlCompatible);
+            final AttributeModel model = getCompatibleModel(colSpec, classColName, maxNoOfNominalVals, skipMissingVals,
+                pmmlCompatible, minSdValue);
             if (model != null) {
                 modelMap.put(colSpec.getName(), model);
             }
@@ -314,19 +320,22 @@ public final class NaiveBayesModel {
      * @param maxNoOfNominalVals maximum number of nominal values
      * @param ignoreMissingVals flag that indicates if missing values should be ignored
      * @param pmmlCompatible flag that indicates if the model should be PMML compliant
+     * @param minSdValue the minimum standard deviation value used when the actual standard deviation is smaller than
+     *            this value
      * @return the corresponding {@link AttributeModel} or <code>null</code> if the data type of the given column is not
      *         supported
-     * @since 2.10
+     * @since 3.7.1
      */
     public static AttributeModel getCompatibleModel(final DataColumnSpec colSpec, final String classColName,
-        final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible) {
+        final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible,
+        final double minSdValue) {
         final String colName = colSpec.getName();
         final DataType colType = colSpec.getType();
         if (colName.equals(classColName)) {
             return new ClassAttributeModel(colName, ignoreMissingVals, maxNoOfNominalVals);
         }
         if (colType.isCompatible(DoubleValue.class)) {
-            return new NumericalAttributeModel(colName, ignoreMissingVals);
+            return new NumericalAttributeModel(colName, ignoreMissingVals, minSdValue);
         }
         if (colType.isCompatible(NominalValue.class)) {
             return new NominalAttributeModel(colName, ignoreMissingVals, maxNoOfNominalVals);

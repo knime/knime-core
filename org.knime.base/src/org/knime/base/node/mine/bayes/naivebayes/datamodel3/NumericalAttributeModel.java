@@ -73,6 +73,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.MutableInteger;
 
 /**
@@ -97,9 +98,10 @@ final class NumericalAttributeModel extends AttributeModel {
 
     private final class NumericalClassValue {
 
-        /**
-         *
-         */
+        /** The standard deviation is not a number exception text. */
+        private static final String SD_NAN_EXCEPTION = "Cannot handle <NaN> standard deviations";
+
+        /** Defines whether the sampling or population variance has to be computed. */
         private static final boolean CALC_SAMPLING_VAR = true;
 
         private static final double TWO_PI = 2 * FastMath.PI;
@@ -157,6 +159,7 @@ final class NumericalAttributeModel extends AttributeModel {
             m_noOfRows = (int)config.getLong(NO_OF_ROWS);
             m_mean = config.getDouble(MEAN_CFG);
             m_sd = config.getDouble(SD_CFG);
+            CheckUtils.checkArgument(!Double.isNaN(m_sd), SD_NAN_EXCEPTION);
             m_incVar = null;
             m_incMean = null;
         }
@@ -171,6 +174,7 @@ final class NumericalAttributeModel extends AttributeModel {
             m_classValue = targetValueStat.getValue();
             final GaussianDistribution distribution = targetValueStat.getGaussianDistribution();
             m_sd = FastMath.sqrt(distribution.getVariance());
+            CheckUtils.checkArgument(!Double.isNaN(m_sd), SD_NAN_EXCEPTION);
             m_mean = distribution.getMean();
             m_logSdTwoPi = FastMath.log(m_sd) + 0.5 * FastMath.log(TWO_PI);
             // load mssing value counters
@@ -245,7 +249,9 @@ final class NumericalAttributeModel extends AttributeModel {
          */
         private double getStdDeviation() {
             if (m_incVar != null) {
-                return FastMath.sqrt(m_incVar.getResult());
+                assert m_minSdValue != Double.NaN : "The minimum standard deviation value havsn't been set";
+                final double sd = FastMath.sqrt(m_incVar.getResult());
+                return (Double.isNaN(sd) || sd <= m_minSdValue) ? m_minSdValue : sd;
             }
             return m_sd;
         }
@@ -254,10 +260,8 @@ final class NumericalAttributeModel extends AttributeModel {
          * @return the variance
          */
         private double getVariance() {
-            if (m_incVar != null) {
-                return m_incVar.getResult();
-            }
-            return m_sd * m_sd;
+            final double sd = getStdDeviation();
+            return sd * sd;
         }
 
         /**
@@ -293,7 +297,7 @@ final class NumericalAttributeModel extends AttributeModel {
                 return logProbThreshold;
             }
 
-            if (Double.isInfinite(m_sd) || Double.isNaN(m_sd) || m_sd == 0.0) {
+            if (Double.isInfinite(m_sd)) {
                 return logProbThreshold;
             }
 
@@ -307,12 +311,11 @@ final class NumericalAttributeModel extends AttributeModel {
              * denominator: log(sqrt(2 \pi variance)) = log((2 \pi variance)^{1/2}) = 0.5 * log(2 \pi variance)
              * numerator: log(exp(-((x - mean) * (x -mean) / (2*variance)))) = 1/2 * ((x - mean) * (x -mean) / variance)
              *
-             * the denominator can't be negative infinite since we checked the variance for 0 and infinite before,
-             * however it can be positive infinity since TWO_PI * variance can leave the double range => denom can be
-             * Double.NEGATIVE_INFINITY
+             * the denominator can be negative infinite if the variance = 0 and positive infinite if TWO_PI * variance
+             * leaves the double range.
              * the numerator can be Double.POSITIVE_INFINITY if diff very large and/or variance really small. Note that
-             * it holds that variance != 0. We can substract - Double.NEGATIVE_INFINITY from Double.NEGATIVE_INFINITY
-             * without any problems
+             * it holds that variance != 0 if the model has been calculated using KNIME's Naive Bayes Learner.
+             * We can substract - Double.NEGATIVE_INFINITY from Double.NEGATIVE_INFINITY without any problems.
              */
             final double frac = diff / m_sd;
             final double prob = -0.5 * (frac * frac) - m_logSdTwoPi;
@@ -366,15 +369,20 @@ final class NumericalAttributeModel extends AttributeModel {
 
     private final Map<String, NumericalClassValue> m_classValues;
 
+    private double m_minSdValue = Double.NaN;
+
     /**
      * Constructor for class NumericalRowValue.
      *
      * @param attributeName the row caption
      * @param skipMissingVals set to <code>true</code> if the missing values should be skipped during learning and
      *            prediction
+     * @param minSdValue the minimum standard deviation value used when the standard deviation is smaller than this
+     *            value
      */
-    NumericalAttributeModel(final String attributeName, final boolean skipMissingVals) {
+    NumericalAttributeModel(final String attributeName, final boolean skipMissingVals, final double minSdValue) {
         super(attributeName, 0, skipMissingVals);
+        m_minSdValue = minSdValue;
         m_classValues = new HashMap<>();
     }
 
