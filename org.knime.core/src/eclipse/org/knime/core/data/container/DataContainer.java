@@ -756,7 +756,6 @@ public class DataContainer implements RowAppender {
             }
             addRowToTableWrite(row);
         } else {
-            checkAsyncWriteThrowable();
             if (MemoryAlertSystem.getInstance().isMemoryLow()) {
                 offerToAsynchronousQueue(FLUSH_CACHE);
             }
@@ -1202,8 +1201,17 @@ public class DataContainer implements RowAppender {
             final BlockingQueue<Object> queue = d.m_rowBuffer;
             final AtomicReference<Throwable> throwable = d.m_writeThrowable;
             try {
-                do {
-                    final Object obj = queue.take();
+                while (true) {
+                    // give the garbage collector some time to garbage-collect the container if it isn't in use any more
+                    d = null;
+                    final Object obj = queue.poll(30, TimeUnit.SECONDS);
+                    d = m_containerRef.get();
+                    if (d == null) {
+                        break;
+                    }
+                    if (obj == null) {
+                        continue;
+                    }
                     if (obj == CONTAINER_CLOSE) {
                         // table has been closed (some non-DataRow was queued)
                         return null;
@@ -1215,7 +1223,7 @@ public class DataContainer implements RowAppender {
                         final DataRow row = (DataRow)obj;
                         d.addRowToTableWrite(row);
                     }
-                } while ((d = m_containerRef.get()) != null);
+                }
                 // m_containerRef.get() returned null -> close() was never called on the container
                 // (which was garbage collected already); we can end this thread
                 LOGGER.debug("Ending DataContainer write thread since container was garbage collected");
