@@ -126,6 +126,7 @@ final class NumericalAttributeModel extends AttributeModel {
 
         private final Variance m_incVar;
 
+        // these three values are only relevant during prediction; irrelevant during training
         private double m_mean = Double.NaN;
 
         private double m_sd = Double.NaN;
@@ -249,9 +250,11 @@ final class NumericalAttributeModel extends AttributeModel {
          */
         private double getStdDeviation() {
             if (m_incVar != null) {
-                assert m_minSdValue != Double.NaN : "The minimum standard deviation value havsn't been set";
+                assert !Double.isNaN(m_minSdThreshold) && !Double
+                    .isNaN(m_minSdValue) : "The minimum standard deviation value and threshold haven't been set";
                 final double sd = FastMath.sqrt(m_incVar.getResult());
-                return (Double.isNaN(sd) || sd <= m_minSdValue) ? m_minSdValue : sd;
+                // it's NaN if we have seen no rows (devision by (count - 1)), see Variance.getResult()
+                return (Double.isNaN(sd) || sd <= m_minSdThreshold) ? m_minSdValue : sd;
             }
             return m_sd;
         }
@@ -297,6 +300,7 @@ final class NumericalAttributeModel extends AttributeModel {
                 return logProbThreshold;
             }
 
+            // very wide domain (e.g. data values contain Double.INFINITY or such)
             if (Double.isInfinite(m_sd)) {
                 return logProbThreshold;
             }
@@ -369,7 +373,10 @@ final class NumericalAttributeModel extends AttributeModel {
 
     private final Map<String, NumericalClassValue> m_classValues;
 
-    private double m_minSdValue = Double.NaN;
+    // these two values are only relevant during training to limit SD range; irrelevant for view or prediction
+    private final double m_minSdValue;
+
+    private final double m_minSdThreshold;
 
     /**
      * Constructor for class NumericalRowValue.
@@ -377,12 +384,16 @@ final class NumericalAttributeModel extends AttributeModel {
      * @param attributeName the row caption
      * @param skipMissingVals set to <code>true</code> if the missing values should be skipped during learning and
      *            prediction
-     * @param minSdValue the minimum standard deviation value used when the standard deviation is smaller than this
-     *            value
+     * @param minSdValue the minimum standard deviation value used when the standard deviation is smaller than
+     *            {@code minSdThreshold}
+     * @param minSdThreshold enforces that all standard deviations less than or equal to this value are replaced by
+     *            {@code minSdValue}
      */
-    NumericalAttributeModel(final String attributeName, final boolean skipMissingVals, final double minSdValue) {
+    NumericalAttributeModel(final String attributeName, final boolean skipMissingVals, final double minSdValue,
+            final double minSdThreshold) {
         super(attributeName, 0, skipMissingVals);
         m_minSdValue = minSdValue;
+        m_minSdThreshold = minSdThreshold;
         m_classValues = new HashMap<>();
     }
 
@@ -406,6 +417,9 @@ final class NumericalAttributeModel extends AttributeModel {
             final NumericalClassValue classVal = new NumericalClassValue(classConfig);
             m_classValues.put(classVal.getClassValue(), classVal);
         }
+        // not used when run through this cons. -- view only
+        m_minSdValue = Double.NaN;
+        m_minSdThreshold = Double.NaN;
     }
 
     /**
@@ -428,6 +442,9 @@ final class NumericalAttributeModel extends AttributeModel {
             NumericalClassValue classValue = new NumericalClassValue(targetValueStat);
             m_classValues.put(classValue.getClassValue(), classValue);
         }
+        // not used when run through this cons. -- used when loaded into predictor/from PMML
+        m_minSdValue = Double.NaN;
+        m_minSdThreshold = Double.NaN;
     }
 
     /**

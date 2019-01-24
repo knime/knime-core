@@ -38,8 +38,12 @@
         </option>
 	    <option name="Minimum standard deviation">
 			Specify the minimum standard deviation to use for observations
-			without enough data. The value must be at least 1e-10 and is used to replace standard deviations
-			lower than then the specified value.
+			without enough (diverse) data. The value must be at least 1e-10.
+		</option>
+		<option name="Threshold standard deviation">
+			Specify the threshold for standard deviation. The value must be
+			positive. If this threshold is not met, the minimum standard
+			deviation value is used.
 		</option>
         <option name="Maximum number of unique nominal values per attribute">
             All nominal columns with more unique values than the defined number

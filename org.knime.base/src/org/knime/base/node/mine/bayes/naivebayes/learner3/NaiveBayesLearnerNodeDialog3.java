@@ -51,6 +51,7 @@ package org.knime.base.node.mine.bayes.naivebayes.learner3;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.mine.bayes.naivebayes.datamodel3.NaiveBayesModel;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -95,13 +96,17 @@ final class NaiveBayesLearnerNodeDialog3 extends DefaultNodeSettingsPane {
         addDialogComponent(selectionBox);
         final SettingsModelDouble threshold = NaiveBayesLearnerNodeModel3.createThresholdModel();
         final DialogComponentNumber laplaceCorrectorComponent = new DialogComponentNumber(threshold,
-            "Default probability:", NaiveBayesLearnerNodeModel3.MIN_PROB_THRESHOLD_DEF, 5);
+            "Default probability:", NaiveBayesModel.DEFAULT_MIN_PROB_THRESHOLD, 5);
         laplaceCorrectorComponent.setToolTipText("Set to zero for no correction");
         addDialogComponent(laplaceCorrectorComponent);
         // add the min standard deviation minimum value
-        final DialogComponentNumber minSdThreshold =
+        final DialogComponentNumber minSdValue =
             new DialogComponentNumber(NaiveBayesLearnerNodeModel3.createMinSdValueModel(), "Minimum standard deviation",
                 NaiveBayesLearnerNodeModel3.MIN_SD_VALUE_DEF, 5);
+        addDialogComponent(minSdValue);
+        final DialogComponentNumber minSdThreshold =
+            new DialogComponentNumber(NaiveBayesLearnerNodeModel3.createMinSdEpsilonModel(),
+                "Threshold standard deviation", NaiveBayesLearnerNodeModel3.MIN_SD_VALUE_DEF, 5);
         addDialogComponent(minSdThreshold);
         final SettingsModelInteger noMo = NaiveBayesLearnerNodeModel3.createMaxNominalValsModel();
         final DialogComponentNumber maxNomVals =
