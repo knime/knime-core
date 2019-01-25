@@ -150,9 +150,6 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     /**
      * Constructor that creates a LageFileStoreCell with no FileStores to check that
      * (de)serialization also works in that case.
-     *
-     * @param largeFile
-     * @param seed the expected seed as hidden in largeFile.
      */
     public LargeFileStoreCell() {
         super();
