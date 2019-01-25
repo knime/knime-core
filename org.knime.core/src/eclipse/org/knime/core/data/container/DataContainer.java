@@ -834,6 +834,7 @@ public class DataContainer implements RowAppender {
     protected IWriteFileStoreHandler getFileStoreHandler() {
         if (m_fileStoreHandler == null) {
             m_fileStoreHandler = NotInWorkflowWriteFileStoreHandler.create();
+            m_fileStoreHandler.addToRepository(getDataRepository());
         }
         return m_fileStoreHandler;
     }
