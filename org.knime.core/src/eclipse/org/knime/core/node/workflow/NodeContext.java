@@ -48,11 +48,8 @@ package org.knime.core.node.workflow;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
-<<<<<<< HEAD
-import java.util.Arrays;
-=======
 import java.util.ArrayList;
->>>>>>> SRV-1502: NodeContext extended to work with arbitrary context objects
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
