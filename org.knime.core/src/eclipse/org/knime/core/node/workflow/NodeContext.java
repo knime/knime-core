@@ -48,8 +48,10 @@ package org.knime.core.node.workflow;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
@@ -84,6 +86,9 @@ public final class NodeContext {
 
     private static final NodeContext NO_CONTEXT = new NodeContext(null);
 
+    /** To debug AP-11270 -- Runaway NodeContexts pushed but not removed. */
+    private final String m_fullStackTraceAtConstructionTime;
+
     @SuppressWarnings("unused")
     private StackTraceElement[] m_callStack; // only used for debugging
 
@@ -92,6 +97,16 @@ public final class NodeContext {
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_callStack = Thread.currentThread().getStackTrace();
         }
+        Thread thread = Thread.currentThread();
+        m_fullStackTraceAtConstructionTime =
+            new StringBuilder()
+                .append(thread.getName())
+                .append(" (")
+                .append(thread.getId())
+                .append("):\n")
+                .append(
+                    Arrays.stream(thread.getStackTrace()).map(s -> s.toString()).collect(Collectors.joining("\n  ")))
+                .toString();
     }
 
     /**
@@ -129,6 +144,7 @@ public final class NodeContext {
         if (KNIMEConstants.ASSERTIONS_ENABLED && cont == null) {
             logger.debugWithoutContext(
                 "Node container has been garbage collected, you should not have such a context available");
+            logger.debugWithoutContext(m_fullStackTraceAtConstructionTime);
         }
         return cont;
     }
