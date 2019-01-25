@@ -80,7 +80,8 @@ import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.RepositoryManager;
 import org.osgi.framework.FrameworkUtil;
 
-import com.knime.enterprise.client.filesystem.util.WorkflowDownloadApplication;
+import com.knime.enterprise.server.rest.api.DownloadApplication;
+import com.knime.enterprise.utility.PermissionException;
 
 /**
  * This application executes the testflows and writes the results into XML files identical to the one produced by ANT's
@@ -96,6 +97,8 @@ public class TestflowRunnerApplication implements IApplication {
     private final Collection<File> m_rootDirs = new ArrayList<File>();
 
     private String m_serverUri;
+
+    private String m_serverPath;
 
     private String m_xmlResultFile;
 
@@ -131,7 +134,7 @@ public class TestflowRunnerApplication implements IApplication {
 
         Object args = context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
 
-        if (!extractCommandLineArgs(args) || (m_rootDirs.isEmpty() && (m_serverUri == null))
+        if (!extractCommandLineArgs(args) || (m_rootDirs.isEmpty() && (m_serverUri == null || m_serverPath == null))
                 || ((m_xmlResultFile == null) && (m_xmlResultDir == null))) {
             printUsage();
             return EXIT_OK;
@@ -369,6 +372,20 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_serverUri = stringArgs[i++];
+            } else if (stringArgs[i].equals("-serverPath")) {
+                if (m_serverPath != null) {
+                    System.err.println("Multiple -serverPath arguments not allowed");
+                    return false;
+                }
+
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <path> for option -serverPath.");
+                    return false;
+                }
+                m_serverPath = stringArgs[i++];
+
             } else if (stringArgs[i].equals("-xmlResult")) {
                 if (m_xmlResultFile != null) {
                     System.err.println("Multiple -xmlResult arguments not allowed");
@@ -504,9 +521,12 @@ public class TestflowRunnerApplication implements IApplication {
                 + "e.g. '/Misc/Workflow'.");
         System.err.println("    -root <dir_name>: optional, specifies the root dir where all testcases are located in."
                 + " Multiple root arguments may be present.");
-        System.err.println("    -server <uri>: optional, a KNIME server from which workflows should be downloaded"
-                + " first.");
-        System.err.println("                   Example: " + "knimefs://<user>:<password>@host[:port]/workflowGroup1");
+        System.err.println("    -server <uri>: optional, a KNIME server  from which workflows should be downloaded"
+                + " first. Has to be used with -serverPath.");
+        System.err.println("                   Example: " + "http://<user>:<password>@host[:port]/knime/rest");
+        System.err.println("    -serverPath <path>: optional, a path on the KNIME Server that specifies which workflows "
+            + "should be downloaded first.");
+        System.err.println("                   Example: " + "/workflowGroup1/workflowGroup2");
         System.err.println("    -xmlResult <file_name>: specifies a single XML  file where the test results are"
                 + " written to.");
         System.err.println("    -xmlResultDir <directory_name>: specifies the directory "
@@ -544,16 +564,16 @@ public class TestflowRunnerApplication implements IApplication {
         m_stopped = true;
     }
 
-    private File downloadWorkflows() throws IOException, CoreException, URISyntaxException {
-        File tempDir = FileUtil.createTempDir("KNIME Testflow");
-        try {
-            WorkflowDownloadApplication.downloadWorkflows(m_serverUri, tempDir);
-            return tempDir;
-        } catch (NoClassDefFoundError err) {
-            Status status =
-                    new Status(IStatus.ERROR, FrameworkUtil.getBundle(getClass()).getSymbolicName(),
-                            "Workflow download from server not available, it seems no server client is installed", err);
-            throw new CoreException(status);
-        }
+    private File downloadWorkflows() throws IOException, CoreException, URISyntaxException, PermissionException,
+    InstantiationException, IllegalAccessException {
+    File tempDir = FileUtil.createTempDir("KNIME Testflow");
+    try {
+        DownloadApplication.downloadWorkflows(m_serverUri, m_serverPath, tempDir);
+        return tempDir;
+    } catch (NoClassDefFoundError err) {
+        Status status = new Status(IStatus.ERROR, FrameworkUtil.getBundle(getClass()).getSymbolicName(),
+            "Workflow download from server not available, it seems no server client is installed", err);
+        throw new CoreException(status);
     }
+}
 }
