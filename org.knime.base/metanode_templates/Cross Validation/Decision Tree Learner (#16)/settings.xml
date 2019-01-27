@@ -45,7 +45,7 @@
 <entry key="SettingsModelID" type="xstring" value="SMID_integer"/>
 <entry key="EnabledStatus" type="xboolean" value="true"/>
 </config>
-<entry key="numProcessors" type="xint" value="8"/>
+<entry key="numProcessors" type="xint" value="4"/>
 <config key="maxNumNominalValues_Internals">
 <entry key="SettingsModelID" type="xstring" value="SMID_integer"/>
 <entry key="EnabledStatus" type="xboolean" value="false"/>

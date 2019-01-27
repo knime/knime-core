@@ -6,7 +6,7 @@
 <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
 </config>
 <config key="model">
-<entry key="target" type="xstring" isnull="true" value=""/>
+<entry key="target" type="xstring" value="cluster"/>
 <config key="column_filter">
 <entry key="filter-type" type="xstring" value="STANDARD"/>
 <config key="included_names">
@@ -27,7 +27,7 @@
 </config>
 <entry key="include_constant" type="xboolean" value="true"/>
 <entry key="offset_value" type="xdouble" value="0.0"/>
-<entry key="missing_value_handling" type="xstring" value="fail"/>
+<entry key="missing_value_handling" type="xstring" value="ignore"/>
 <entry key="scatter_plot_first_row" type="xint" value="1"/>
 <entry key="scatter_plot_row_count" type="xint" value="20000"/>
 </config>
@@ -52,11 +52,11 @@
 <entry key="node-bundle-name" type="xstring" value="KNIME Base Nodes"/>
 <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.base"/>
 <entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
-<entry key="node-bundle-version" type="xstring" value="3.7.0.v201812031623"/>
+<entry key="node-bundle-version" type="xstring" value="3.7.0.v201901241426"/>
 <entry key="node-feature-name" type="xstring" value="KNIME Core"/>
 <entry key="node-feature-symbolic-name" type="xstring" value="org.knime.features.base.feature.group"/>
 <entry key="node-feature-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
-<entry key="node-feature-version" type="xstring" value="3.7.0.v201812041331"/>
+<entry key="node-feature-version" type="xstring" value="3.7.0.v201901241426"/>
 <config key="factory_settings"/>
 <entry key="name" type="xstring" value="Linear Regression Learner"/>
 <entry key="hasContent" type="xboolean" value="false"/>
