@@ -88,8 +88,12 @@ public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
         final String selectedFile, final String[] suffixes) {
         final JFileChooser fileChooser = new JFileChooser(getFileSystemView());
         setFileView(fileChooser);
+
+        /* Workaround for https://bugs.openjdk.java.net/browse/JDK-8152677. See org.knime.core.util.AcceptAllFileFilter
+         * and AP-6866. */
         fileChooser.setAcceptAllFileFilterUsed(false);
         fileChooser.addChoosableFileFilter(new AcceptAllFileFilter());
+
         List<SimpleFileFilter> filters = createFiltersFromSuffixes(suffixes);
         for (SimpleFileFilter filter : filters) {
             fileChooser.addChoosableFileFilter(filter);

@@ -50,8 +50,13 @@ import java.io.File;
 import javax.swing.filechooser.FileFilter;
 
 /**
+ * A FileFilter that accepts every file and is called "All Files". Workaround for
+ * <a href="https://bugs.openjdk.java.net/browse/JDK-8152677">JDK-8152677</a>, which replaces the Java built-in
+ * AcceptAllFileFilter in {@link org.knime.core.node.util.AbstractJFileChooserBrowser}. This is necessary because the dialog option "All Files"
+ * in the "Open File..."-dialog is broken in Java 8 under Mac. See also
+ * <a href="https://knime-com.atlassian.net/browse/AP-6866">AP-6866</a>.
  *
- * @author Ferry Abt
+ * @author Ferry Abt, KNIME GmbH, Konstanz
  */
 public class AcceptAllFileFilter extends FileFilter {
 
