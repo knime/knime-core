@@ -138,7 +138,7 @@ public final class NodeContext {
     public static void addContextObjectSupplier(final ContextObjectSupplier supplier) {
         CONTEXT_OBJECT_SUPPLIERS.add(supplier);
         if(CONTEXT_OBJECT_SUPPLIERS.size() > 2) {
-            logger.coding("There are more than 2 context object suppliers registered which is likely not necessary.");
+            logger.debugWithoutContext("There are more than 2 context object suppliers registered which is likely not necessary.");
         }
     }
 
