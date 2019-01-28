@@ -60,9 +60,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.BufferedDataTable;
@@ -257,15 +255,14 @@ public final class PortTypeRegistry {
     }
 
     /**
-     * Returns the {@link DataCell} class for the given class name. This method looks through all registered
-     * {@link DataCell} implementations. If no data cell implementation is found, an empty optional is returned. <br>
+     * Returns the {@link PortObjectSpec} class for the given class name. This method looks through all registered
+     * {@link PortObjectSpec} implementations. If port object spec implementation is found, an empty optional is returned. <br>
      * As a fallback mechanism, the {@link GlobalClassCreator} is used. This will be changed with the next major
      * release. <br>
-     * This method should only be used by {@link DataType} for creating data types that were saved to disc.
      *
      * @param className a class name
      * @return an optional containing the requested data cell class
-     * @throws ClassCastException if the loaded class does not extend {@link DataCell}
+     * @throws ClassCastException if the loaded class does not extend {@link PortObjectSpec}
      */
     @SuppressWarnings({"deprecation", "unchecked"})
     public Optional<Class<? extends PortObjectSpec>> getSpecClass(final String className) {

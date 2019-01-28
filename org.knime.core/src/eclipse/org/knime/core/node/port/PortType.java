@@ -139,10 +139,19 @@ public final class PortType {
         return m_color;
     }
 
+    /**
+     * Returns the class of the port object spec. <br>
+     * Use method with care - see {@link #getPortObjectSpecClass(Class)}.
+     *
+     * @return the class of the port object spec
+     */
     public Class<? extends PortObjectSpec> getPortObjectSpecClass() {
         return m_specClass;
     }
 
+    /**
+     * @return the class of the port object this port type is associated with
+     */
     public Class<? extends PortObject> getPortObjectClass() {
         return m_objectClass;
     }
@@ -267,6 +276,16 @@ public final class PortType {
         return PortTypeRegistry.getInstance().getPortType(obClass.asSubclass(PortObject.class));
     }
 
+    /**
+     * Determines for a given port object class the associated spec-class. <br>
+     * This method doesn't guarantee to return the most specific port object spec class and it might return just the
+     * class of {@link PortObjectSpec} itself. Since reflection is used here, the result depends on the implementation
+     * of the respective {@link PortObject#getSpec()}-method and what its return type is (i.e. whether it is
+     * narrowed to a specific type or not).
+     *
+     * @param objectClass the port object class
+     * @return the determined spec class, might be simply {@link PortObjectSpec}
+     */
     public static Class<? extends PortObjectSpec> getPortObjectSpecClass(
             final Class<? extends PortObject> objectClass) {
         Method m;
