@@ -42,8 +42,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   07.07.2006 (gabriel): created
  */
 package org.knime.core.util;
 
