@@ -61,6 +61,7 @@ import javax.swing.filechooser.FileSystemView;
 import javax.swing.filechooser.FileView;
 
 import org.apache.commons.lang3.StringUtils;
+import org.knime.core.util.AcceptAllFileFilter;
 import org.knime.core.util.SimpleFileFilter;
 
 /**
@@ -87,7 +88,8 @@ public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
         final String selectedFile, final String[] suffixes) {
         final JFileChooser fileChooser = new JFileChooser(getFileSystemView());
         setFileView(fileChooser);
-        fileChooser.setAcceptAllFileFilterUsed(true);
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.addChoosableFileFilter(new AcceptAllFileFilter());
         List<SimpleFileFilter> filters = createFiltersFromSuffixes(suffixes);
         for (SimpleFileFilter filter : filters) {
             fileChooser.addChoosableFileFilter(filter);
