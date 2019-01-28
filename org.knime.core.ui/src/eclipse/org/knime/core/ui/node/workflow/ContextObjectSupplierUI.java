@@ -49,12 +49,14 @@ package org.knime.core.ui.node.workflow;
 import java.util.Optional;
 
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainerParent;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeContext.ContextObjectSupplier;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.CoreUIPlugin;
 import org.knime.core.ui.UI;
 import org.knime.core.ui.wrapper.NodeContainerWrapper;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.core.ui.wrapper.Wrapper;
 
 /**
@@ -115,6 +117,10 @@ public class ContextObjectSupplierUI implements ContextObjectSupplier, UI {
             return null;
         }
 
+        if (Wrapper.wraps(nc, NodeContainer.class)) {
+            return WorkflowManagerWrapper.wrap(getRootParent(Wrapper.unwrapNC(nc)));
+        }
+
         // find the actual workflow and not the metanode the container may be in
         WorkflowManagerUI parent = nc instanceof WorkflowManagerUI ? (WorkflowManagerUI)nc : nc.getParent();
         while (!(parent instanceof WorkflowManagerUI && parent.isProject())) {
@@ -122,5 +128,16 @@ public class ContextObjectSupplierUI implements ContextObjectSupplier, UI {
             parent = parent.getParent();
         }
         return parent;
+    }
+
+    private static WorkflowManager getRootParent(final NodeContainer nc) {
+        // find the actual workflow and not the metanode the container may be in
+        NodeContainerParent parent = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getDirectNCParent();
+
+        while (!(parent instanceof WorkflowManager && ((WorkflowManager)parent).isProject())) {
+            assert parent != null : "Parent item can't be null as a project parent is expected";
+            parent = parent.getDirectNCParent();
+        }
+        return (WorkflowManager)parent;
     }
 }
