@@ -58,6 +58,7 @@ import java.io.OutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
@@ -67,6 +68,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.xerial.snappy.SnappyInputStream;
 import org.xerial.snappy.SnappyOutputStream;
 
@@ -83,8 +85,11 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DefaultTableStoreFormat.class);
 
+    /** The default compression format. */
+    private static final CompressionFormat DEF_COMPRESSION = CompressionFormat.GZIP;
+
     /** Compression format. */
-    static final String CFG_COMPRESSION = "container.compression";
+    private static final String CFG_COMPRESSION = "container.compression";
 
     /**
      * Checked function interface throwing an IOException.
@@ -164,6 +169,15 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
             return m_fileNameExtension;
         }
 
+        void saveSettings(final NodeSettingsWO settings) {
+            /* To ensure that GZIP-compressed and uncompressed workflows written with >= 3.8 can be loaded in earlier
+             * versions, we have to camel-case the names of these compresssion formats (None, Gzip), since KNIME AP
+             * <= 3.7 only accepts compression format Strings "Gzip" and "None".
+             */
+            settings.addString(DefaultTableStoreFormat.CFG_COMPRESSION,
+                WordUtils.capitalize(name().toLowerCase()));
+        }
+
         /**
          * Returns the compressed output stream.
          *
@@ -198,6 +212,18 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
             }
         }
 
+        static CompressionFormat loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+            String compFormat =
+                settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, DEF_COMPRESSION.name());
+            try {
+                // backwards compatible since #getCompressionFormat uses upper-case comparison
+                return CompressionFormat.getCompressionFormat(compFormat);
+            } catch (final IllegalArgumentException iea) {
+                throw new InvalidSettingsException(String.format("Unable to parse \"%s\" property (\"%s\"): %s",
+                    DefaultTableStoreFormat.CFG_COMPRESSION, compFormat, iea.getMessage()), iea);
+            }
+        }
+
         /**
          * Returns the {@link CompressionFormat} constant associated with the specified name. Case-sensitivity is
          * ignored to match an identifier used to declare an enum constant of this type.
@@ -224,15 +250,15 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
     static {
         final String compName = System.getProperty(KNIMEConstants.PROPERTY_TABLE_COMPRESSION);
         if (compName == null) {
-            COMPRESSION = DataContainer.DEF_COMPRESSION;
+            COMPRESSION = DEF_COMPRESSION;
         } else {
-            CompressionFormat compType = DataContainer.DEF_COMPRESSION;
+            CompressionFormat compType = DEF_COMPRESSION;
             try {
                 compType = CompressionFormat.getCompressionFormat(compName);
                 LOGGER.debug("Setting table stream compression to " + compType);
             } catch (final IllegalArgumentException iae) {
                 LOGGER.warn("Unable to read property " + KNIMEConstants.PROPERTY_TABLE_COMPRESSION + " (\""
-                    + compName + "\"); defaulting to " + DataContainer.DEF_COMPRESSION);
+                    + compName + "\"); defaulting to " + DEF_COMPRESSION);
             }
             COMPRESSION = compType;
         }

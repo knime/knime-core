@@ -102,15 +102,7 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
         if (version < 3) { // stream was not zipped in KNIME 1.1.x
             cF = CompressionFormat.NONE;
         } else if (version >= 8) { // added sometime between format 8 and 9 - no increment of version number
-            String compFormat =
-                settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, DataContainer.DEF_COMPRESSION.name());
-            try {
-                // backwards compatible since #getCompressionFormat uses upper-case comparison
-                cF = CompressionFormat.getCompressionFormat(compFormat);
-            } catch (final IllegalArgumentException iea) {
-                throw new InvalidSettingsException(String.format("Unable to parse \"%s\" property (\"%s\"): %s",
-                    DefaultTableStoreFormat.CFG_COMPRESSION, compFormat, iea.getMessage()), iea);
-            }
+            cF = CompressionFormat.loadSettings(settings);
         } else {
             // use gzip compression
             cF = CompressionFormat.GZIP;

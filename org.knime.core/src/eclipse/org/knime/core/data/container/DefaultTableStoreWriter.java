@@ -51,7 +51,6 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.apache.commons.lang3.text.WordUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -131,11 +130,7 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
     /** {@inheritDoc} */
     @Override
     public void writeMetaInfoAfterWrite(final NodeSettingsWO settings) {
-        // To ensure that GZIP-compressed and uncompressed workflows written with >= 3.8 can be loaded in earlier
-        // versions, we have to camel-case the names of these compresssion formats (None, Gzip), since KNIME AP <= 3.7
-        // only accepts compression format Strings "Gzip" and "None".
-        settings.addString(DefaultTableStoreFormat.CFG_COMPRESSION,
-        WordUtils.capitalize(DefaultTableStoreFormat.COMPRESSION.name().toLowerCase()));
+        DefaultTableStoreFormat.COMPRESSION.saveSettings(settings);
         super.writeMetaInfoAfterWrite(settings);
     }
 

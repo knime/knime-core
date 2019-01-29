@@ -80,7 +80,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
@@ -122,11 +121,6 @@ import org.knime.core.util.FileUtil;
 public class DataContainer implements RowAppender {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DataContainer.class);
-
-    /**
-     * The default compression format.
-     */
-    static final CompressionFormat DEF_COMPRESSION = CompressionFormat.GZIP;
 
     /** See {@link KNIMEConstants#PROPERTY_CELLS_IN_MEMORY}. */
     public static final String PROPERTY_CELLS_IN_MEMORY = KNIMEConstants.PROPERTY_CELLS_IN_MEMORY;

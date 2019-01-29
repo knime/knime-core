@@ -59,7 +59,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.stream.IntStream;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -87,6 +89,31 @@ public final class DataTableCompressionTest extends TestCase {
 
     /** Number of generated rows. */
     private static final int ROW_COUNT = 500;
+
+    private CompressionFormat m_iniCompFormat;
+
+    /**
+     * Stores the initial compression format.
+     */
+    @Before
+    public void storeInitialCompFormat() {
+        m_iniCompFormat = DefaultTableStoreFormat.COMPRESSION;
+    }
+
+    /**
+     * Restores the initial compression format, such that succeeding tests don't use an alternated I/O setup.
+     *
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
+     * @throws SecurityException
+     * @throws NoSuchFieldException
+     *
+     */
+    @After
+    public void restoreCompFormat()
+        throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+        setCompressionFormat(m_iniCompFormat);
+    }
 
     /**
      * Ensures that the different compressions run properly, by testing that the table is written/read using the proper
