@@ -55,6 +55,8 @@ import org.knime.core.data.DataTableSpec;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 3.8
+ * @noimplement This interface is not intended to be implemented by clients. Pending API!
+ * @noreference This interface is not intended to be referenced by clients. Pending API!
  */
 public interface HasDataTableSpec extends PortObjectSpec {
 
