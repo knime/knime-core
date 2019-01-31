@@ -300,6 +300,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/KNIMEConstants.java" type="org.knime.core.node.KNIMEConstants">
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.KNIMEConstants"/>
+                <message_argument value="KNIME16X16_SWT"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
         <filter id="338792546">
             <message_arguments>

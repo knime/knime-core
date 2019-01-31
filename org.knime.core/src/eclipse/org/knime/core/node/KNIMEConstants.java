@@ -66,8 +66,6 @@ import javax.swing.ImageIcon;
 
 import org.apache.commons.codec.binary.Hex;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.ConfigurationAreaChecker;
 import org.knime.core.internal.KNIMEPath;
@@ -400,9 +398,6 @@ public final class KNIMEConstants {
 
     /** Icon 16 times 16 pixel. */
     public static final ImageIcon KNIME16X16;
-    /** SWT Icon 16 times 16 pixel.
-     * @since 2.10*/
-    public static final Image KNIME16X16_SWT;
 
     /** Load icons. */
     static {
@@ -418,26 +413,8 @@ public final class KNIMEConstants {
                 icon = null;
             }
             KNIME16X16 = icon;
-
-            Image image = null;
-            InputStream iconStream = null;
-            try {
-                ClassLoader loader = KNIMEConstants.class.getClassLoader();
-                iconStream = loader.getResource(KNIME_ICON_PATH).openStream();
-                image = new Image(Display.getCurrent(), iconStream);
-            } catch (Throwable e) {
-                image = null;
-            } finally {
-                if (iconStream != null) {
-                    try {
-                        iconStream.close();
-                   } catch (IOException ex) { /* do nothing */ }
-                }
-            }
-            KNIME16X16_SWT = image;
         } else {
             KNIME16X16 = null;
-            KNIME16X16_SWT = null;
         }
 
         int maxThreads = Runtime.getRuntime().availableProcessors() + 2;
