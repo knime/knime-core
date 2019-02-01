@@ -170,8 +170,13 @@ class DefaultViewResponseMonitor<RES extends WizardViewResponse> implements View
      */
     @Override
     public void cancel() {
-        if (m_future != null && !m_future.isDone()) {
-            m_future.cancel(true);
+        synchronized (m_block) {
+            if (m_future != null && !m_future.isDone()) {
+                m_future.cancel(true);
+            }
+            if (m_monitor != null) {
+                m_monitor.getProgressMonitor().setExecuteCanceled();
+            }
         }
     }
 
@@ -213,10 +218,12 @@ class DefaultViewResponseMonitor<RES extends WizardViewResponse> implements View
      */
     @Override
     public boolean isCancelled() {
-        if (m_future != null) {
-            return m_future.isCancelled();
+        synchronized (m_block) {
+            if (m_future != null) {
+                return m_future.isCancelled();
+            }
+            return false;
         }
-        return false;
     }
 
     /**
