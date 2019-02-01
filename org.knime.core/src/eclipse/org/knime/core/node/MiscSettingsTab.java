@@ -57,7 +57,10 @@ import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
+import org.knime.core.data.container.Buffer;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 
@@ -72,40 +75,68 @@ class MiscSettingsTab extends JPanel {
     public static final String MEMORY_POLICY = "Memory Policy";
 	private final ButtonGroup m_group;
 
+    /**
+     * Some buffer lifecycles (e.g., LRU) support less memory policies than others. To remain backwards compatible and
+     * restore settings made in earlier versions of KNIME where there was only a single lifecycle, we have to
+     * memorize what MemoryPolicy was set when the node was loaded.
+     */
+	private MemoryPolicy m_memoryPolicy;
+
     /** Inits GUI. */
     public MiscSettingsTab() {
         super(new BorderLayout());
         m_group = new ButtonGroup();
-        JRadioButton cacheAll = new JRadioButton("Keep all in memory.");
-        cacheAll.setActionCommand(MemoryPolicy.CacheInMemory.toString());
-        m_group.add(cacheAll);
-        cacheAll.setToolTipText(
-                "All generated output data is kept in main memory, "
+        JPanel center = new JPanel(new GridLayout(0, 1));
+        ChangeListener cl = new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                m_memoryPolicy = MemoryPolicy.valueOf(m_group.getSelection().getActionCommand());
+            }
+        };
+
+        if (Buffer.ENABLE_LRU) {
+            JRadioButton cacheLRU = new JRadioButton("Cache tables in memory.", true);
+            cacheLRU.setActionCommand(MemoryPolicy.CacheSmallInMemory.toString());
+            m_group.add(cacheLRU);
+            cacheLRU.setToolTipText("Try to keep the table in a cache from where it will be dropped"
+                + " if it has not been recently accessed or when memory becomes scarce.");
+            cacheLRU.addChangeListener(cl);
+            center.add(cacheLRU);
+        } else {
+            JRadioButton cacheAll = new JRadioButton("Keep all in memory.");
+            cacheAll.setActionCommand(MemoryPolicy.CacheInMemory.toString());
+            m_group.add(cacheAll);
+            cacheAll.setToolTipText("All generated output data is kept in main memory, "
                 + "resulting in faster execution of successor nodes but "
                 + "also in more memory usage.");
-        JRadioButton cacheSmall = new JRadioButton(
+            cacheAll.addChangeListener(cl);
+            center.add(cacheAll);
+            JRadioButton cacheSmall = new JRadioButton(
                 "Keep only small tables in memory.", true);
-        cacheSmall.setActionCommand(MemoryPolicy.CacheSmallInMemory.toString());
-        m_group.add(cacheSmall);
-        cacheSmall.setToolTipText("Tables with less than "
-                + DataContainer.MAX_CELLS_IN_MEMORY + " cells are kept in "
-                + "main memory, otherwise swapped to disc.");
+            cacheSmall.setActionCommand(MemoryPolicy.CacheSmallInMemory.toString());
+            m_group.add(cacheSmall);
+            cacheSmall.setToolTipText("Tables with less than "
+                    + DataContainer.MAX_CELLS_IN_MEMORY + " cells are kept in "
+                    + "main memory, otherwise swapped to disc.");
+            cacheSmall.addChangeListener(cl);
+            center.add(cacheSmall);
+        }
+
         JRadioButton cacheOnDisc = new JRadioButton(
                 "Write tables to disc.");
         cacheOnDisc.setActionCommand(MemoryPolicy.CacheOnDisc.toString());
         m_group.add(cacheOnDisc);
         cacheOnDisc.setToolTipText("All output is immediately "
                 + "written to disc to save main memory usage.");
+        cacheOnDisc.addChangeListener(cl);
+        center.add(cacheOnDisc);
+
         final int s = 15;
         JPanel north = new JPanel(new FlowLayout(FlowLayout.LEFT, s, s));
         north.add(new JLabel("Select memory policy for data outport(s)"));
         add(north, BorderLayout.NORTH);
         JPanel bigCenter =
             new JPanel(new FlowLayout(FlowLayout.LEFT, s, s));
-        JPanel center = new JPanel(new GridLayout(0, 1));
-        center.add(cacheAll);
-        center.add(cacheSmall);
-        center.add(cacheOnDisc);
         bigCenter.add(center);
         add(bigCenter, BorderLayout.CENTER);
     }
@@ -114,14 +145,14 @@ class MiscSettingsTab extends JPanel {
      * @return The corresponding policy.
      */
     MemoryPolicy getStatus() {
-        String memoryPolicy = m_group.getSelection().getActionCommand();
-        return MemoryPolicy.valueOf(memoryPolicy);
+        return m_memoryPolicy;
     }
 
     /** Select the radio button for the given policy.
      * @param policy The one to use.
      */
     void setStatus(final MemoryPolicy policy) {
+        m_memoryPolicy = policy;
         for (Enumeration<AbstractButton> e = m_group.getElements();
             e.hasMoreElements();) {
             AbstractButton m = e.nextElement();
@@ -130,7 +161,6 @@ class MiscSettingsTab extends JPanel {
                 return;
             }
         }
-        assert false;
     }
 
     String getTabName() {

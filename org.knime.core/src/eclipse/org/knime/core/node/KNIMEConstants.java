@@ -156,6 +156,20 @@ public final class KNIMEConstants {
     public static final String PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = "org.knime.container.minspace.temp";
 
     /**
+     * Java property name to specify the strategy for keeping tables in memory and writing tables to disk. Current
+     * options are {@code LRU} and {@code SMALL}. If {@code LRU} is selected, tables of any size will be cached and
+     * dropped from the cache only if (a) they have not been used recently or (b) memory becomes scarce. Flushing to
+     * disk then happens as specified in {@link KNIMEConstants#PROPERTY_SYNCHRONOUS_IO}. If {@code SMALL} is selected,
+     * tables are cached as in earlier versions of KNIME (&lt;v3.8). Specifically, only "small" tables (i.e., tables
+     * with a maximum of {@link KNIMEConstants#PROPERTY_CELLS_IN_MEMORY} cells) are kept in memory, unless the node
+     * generating the table was specifically configured to flush tables to disk or keep tables in memory. Flushing of
+     * tables to disk then happens synchronously. The default is {@code LRU}.
+     *
+     * @since 3.8
+     */
+    public static final String PROPERTY_TABLE_CACHE = "knime.table.cache";
+
+    /**
      * Java property to enable/disable table stream compression. Compression results in smaller temp-file sizes but also
      * (sometimes significant) longer runtime. By default {@code Gzip} is used.
      * <p>

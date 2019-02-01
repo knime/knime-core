@@ -590,7 +590,7 @@ public class DataContainer implements RowAppender {
         }
         if (m_buffer == null) {
             m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, createInternalBufferID(),
-                getDataRepository(), getLocalTableRepository(), getFileStoreHandler());
+                getDataRepository(), getLocalTableRepository(), getFileStoreHandler(), m_isSynchronousWrite);
         }
         if (!m_isSynchronousWrite) {
             try {
@@ -739,7 +739,7 @@ public class DataContainer implements RowAppender {
             Map<Integer, ContainerTable> localTableRep = getLocalTableRepository();
             IWriteFileStoreHandler fileStoreHandler = getFileStoreHandler();
             m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, bufID, getDataRepository(),
-                localTableRep, fileStoreHandler);
+                localTableRep, fileStoreHandler, m_isSynchronousWrite);
             if (m_buffer == null) {
                 throw new NullPointerException("Implementation error, must not return a null buffer.");
             }
@@ -979,7 +979,7 @@ public class DataContainer implements RowAppender {
             exec.setMessage("Archiving table");
             e = exec.createSubProgress(0.8);
             buf = new Buffer(table.getDataTableSpec(), 0, -1, NotInWorkflowDataRepository.newInstance(),
-                new HashMap<Integer, ContainerTable>(), NotInWorkflowWriteFileStoreHandler.create());
+                new HashMap<Integer, ContainerTable>(), NotInWorkflowWriteFileStoreHandler.create(), true);
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
@@ -1261,13 +1261,15 @@ public class DataContainer implements RowAppender {
          * @param dataRepository repository for blob and filestore (de)serialization and table id handling
          * @param localTableRep Table repository for blob (de)serialization.
          * @param fileStoreHandler ...
+         * @param forceSynchronousWrite whether to force the buffer disk IO thread to write synchronously
          *
          * @return A newly created buffer.
          */
         Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory, final int bufferID,
             final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTableRep,
-            final IWriteFileStoreHandler fileStoreHandler) {
-            return new Buffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler);
+            final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite) {
+            return new Buffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler,
+                forceSynchronousWrite);
         }
 
     }

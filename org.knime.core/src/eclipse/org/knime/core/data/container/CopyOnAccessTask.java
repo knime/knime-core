@@ -251,7 +251,7 @@ final class CopyOnAccessTask {
 //            binFile.renameTo(binFileNew); // we don't bother if that succeeds or not
 //        }
         if (m_needsRestoreIntoMemory) {
-            buffer.restoreIntoMemory();
+            buffer.setRestoreIntoMemoryOnCacheMiss();
         }
         metaIn.close();
         metaTempFile.delete();

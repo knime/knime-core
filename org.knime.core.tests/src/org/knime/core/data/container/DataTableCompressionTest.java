@@ -137,7 +137,7 @@ public final class DataTableCompressionTest extends TestCase {
             final Pair<DataTableSpec, DataRow[]> data = createData(ROW_COUNT);
 
             // store the data to a table that writes its content to a compressed file
-            DataContainer cont = new DataContainer(data.getFirst(), false, 10, false);
+            DataContainer cont = new DataContainer(data.getFirst(), false, 0, false);
 
             // write the data
             writeData(data.getSecond(), cont);

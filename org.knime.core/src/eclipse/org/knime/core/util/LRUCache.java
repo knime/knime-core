@@ -62,19 +62,30 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     private final int m_maxHistory;
 
     /**
-     * @param maxHistory cache size */
-    public LRUCache(final int maxHistory) {
-        super(16, 0.75f, true);
+     * @param initialCapacity the initial capacity of the cache
+     * @param maxHistory the maximum size of the cache
+     * @since 3.8
+     */
+    public LRUCache(final int initialCapacity, final int maxHistory) {
+        super(initialCapacity, 0.75f, true);
         if (maxHistory < 1) {
             throw new IllegalArgumentException("max history must be larger 0: " + maxHistory);
         }
         m_maxHistory = maxHistory;
+
+    }
+
+    /**
+     * @param maxHistory cache size
+     */
+    public LRUCache(final int maxHistory) {
+        this(16, maxHistory);
     }
 
     /** {@inheritDoc} */
     @Override
     protected boolean removeEldestEntry(final Map.Entry<K, V> e) {
-        return size() >= m_maxHistory;
+        return size() > m_maxHistory;
     }
 
 }
