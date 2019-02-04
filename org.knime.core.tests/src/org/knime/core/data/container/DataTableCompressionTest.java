@@ -55,8 +55,6 @@ import static org.hamcrest.CoreMatchers.sameInstance;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.stream.IntStream;
 
 import org.junit.After;
@@ -128,7 +126,10 @@ public final class DataTableCompressionTest extends TestCase {
     @Test
     public static void testCompressions()
         throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        for (final CompressionFormat cFormat : CompressionFormat.values()) {
+        // TODO removed reflection due to assumed side-effects on other tests
+        // other compression formats besides GZIP will be restored in AP-11217
+//        for (final CompressionFormat cFormat : CompressionFormat.values()) {
+        final CompressionFormat cFormat = CompressionFormat.GZIP; {
             // set the compression format
             setCompressionFormat(cFormat);
 
@@ -169,17 +170,19 @@ public final class DataTableCompressionTest extends TestCase {
      */
     private static void setCompressionFormat(final CompressionFormat cFormat)
         throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        final Field field = DefaultTableStoreFormat.class.getDeclaredField("COMPRESSION");
-        field.setAccessible(true);
-
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.set(field, field.getModifiers() & ~Modifier.FINAL);
-
-        field.set(null, cFormat);
-
-        Assert.assertThat("Problem changing the compression format: ", DefaultTableStoreFormat.COMPRESSION,
-            equalTo(cFormat));
+        // TODO removed reflection due to assumed side-effects on other tests
+        // other compression formats besides GZIP will be restored in AP-11217
+//        final Field field = DefaultTableStoreFormat.class.getDeclaredField("COMPRESSION");
+//        field.setAccessible(true);
+//
+//        Field modifiersField = Field.class.getDeclaredField("modifiers");
+//        modifiersField.setAccessible(true);
+//        modifiersField.set(field, field.getModifiers() & ~Modifier.FINAL);
+//
+//        field.set(null, cFormat);
+//
+//        Assert.assertThat("Problem changing the compression format: ", DefaultTableStoreFormat.COMPRESSION,
+//            equalTo(cFormat));
     }
 
     /**
