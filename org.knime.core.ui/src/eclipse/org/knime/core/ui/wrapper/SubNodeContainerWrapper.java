@@ -124,4 +124,12 @@ public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<Su
     public boolean isWriteProtected() {
         return unwrap().isWriteProtected();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasWizardPage() {
+        throw new UnsupportedOperationException();
+    }
 }
