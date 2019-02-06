@@ -203,7 +203,34 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         final LargeFileStoreCell odc = (LargeFileStoreCell)dc;
-        return odc.m_seed == m_seed && super.equalsDataCell(dc);
+
+        // both seeds should be equal
+        if (odc.m_seed != m_seed) {
+            return false;
+        }
+
+        // either both should have a (first) large file, or nobody should have a (first) large file
+        if ((odc.m_largeFile != null) != (m_largeFile != null)) {
+            return false;
+        }
+
+        // if a first large file is present, it should be equal
+        if ((odc.m_largeFile != null) && (m_largeFile != null) && !odc.m_largeFile.equals(m_largeFile)) {
+            return false;
+        }
+
+        // either both should have a (second) large file, or nobody should have a (second) large file
+        if ((odc.m_otherLargeFile != null) != (m_otherLargeFile != null)) {
+            return false;
+        }
+
+        // if a second large file is present, it should be equal
+        if ((odc.m_otherLargeFile != null) && (m_otherLargeFile != null)
+            && !odc.m_otherLargeFile.equals(m_otherLargeFile)) {
+            return false;
+        }
+
+        return true;
     }
 
     /** {@inheritDoc} */

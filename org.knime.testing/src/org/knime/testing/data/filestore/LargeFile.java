@@ -150,4 +150,18 @@ public final class LargeFile {
         return Long.parseLong(identifier);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        if (!(obj instanceof LargeFile)) {
+            return false;
+        }
+
+        try {
+            return ((LargeFile)obj).read() == read();
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
 }
