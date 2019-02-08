@@ -61,8 +61,10 @@ import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.ImageIcon;
+import javax.swing.SwingUtilities;
 
 import org.apache.commons.codec.binary.Hex;
 import org.eclipse.core.runtime.Platform;
@@ -391,31 +393,78 @@ public final class KNIMEConstants {
         WELCOME_MESSAGE = s;
     }
 
+    private static Optional<ImageIcon> KNIME16x16_ICON = null;
+
+    /**
+     * Icon 16 times 16 pixel.
+     *
+     * @return the image icon, or an empty optional if in headless-mode or the loading failed
+     *
+     * @since 3.8
+     */
+    public static Optional<ImageIcon> getKNIMEIcon16X16() {
+        if (KNIME16x16_ICON == null) {
+            KNIME16x16_ICON = loadIcon();
+        }
+        return KNIME16x16_ICON;
+    }
+
+    /**
+     * Loads the KNIME icon from the {@link #KNIME_ICON_PATH} if not in headless mode.
+     *
+     * @return the loaded image icon, or an empty optional if in headless mode or the loading failed
+     */
+    private static Optional<ImageIcon> loadIcon() {
+        if (!Boolean.getBoolean("java.awt.headless")) {
+            final AtomicReference<ImageIcon> icon = new AtomicReference<ImageIcon>();
+            try {
+                ClassLoader loader = KNIMEConstants.class.getClassLoader();
+                URL iconURL = loader.getResource(KNIME_ICON_PATH);
+                if (!SwingUtilities.isEventDispatchThread()) {
+                    //make sure to instantiate the icon in the AWT event dispatch thread
+                    SwingUtilities.invokeAndWait(() -> icon.set(new ImageIcon(iconURL)));
+                } else {
+                    icon.set(new ImageIcon(iconURL));
+                }
+            } catch (Throwable e) {
+                return Optional.empty();
+            }
+            return Optional.of(icon.get());
+        } else {
+            return Optional.empty();
+        }
+    }
+
     /** Path to the <i>knime.png</i> icon. */
     private static final String KNIME_ICON_PATH =
             KNIMEConstants.class.getPackage().getName().replace('.', '/')
                     + "/knime.png";
 
-    /** Icon 16 times 16 pixel. */
-    public static final ImageIcon KNIME16X16;
+    /**
+     * Icon 16 times 16 pixel or <code>null</code> if in headless-mode. {@link #initKNIMEIcon()} might need to be called
+     * first at least once!
+     *
+     * @deprecated Use {@link KNIMEConstants#getKNIMEIcon()} instead.
+     */
+    @Deprecated
+    public static ImageIcon KNIME16X16 = null;
+
+    /**
+     * Initializes the {@link #KNIME16X16} image icon. Workaround to prevent the image icon to be loaded too early (see
+     * AP-11324). Method is called on KNIME startup and usually doesn't need to be called again.
+     *
+     * @deprecated Use {@link KNIMEConstants#getKNIMEIcon()} instead.
+     * @since 3.8
+     */
+    @Deprecated
+    public static void initKNIMEIcon() {
+        KNIME16X16 = loadIcon().orElse(null);
+    }
 
     /** Load icons. */
     static {
         File knimeHome = KNIMEPath.getKNIMEHomeDirPath();
         knimeHomeDir = knimeHome;
-        if (!Boolean.getBoolean("java.awt.headless")) {
-            ImageIcon icon;
-            try {
-                ClassLoader loader = KNIMEConstants.class.getClassLoader();
-                URL iconURL = loader.getResource(KNIME_ICON_PATH);
-                icon = new ImageIcon(iconURL);
-            } catch (Throwable e) {
-                icon = null;
-            }
-            KNIME16X16 = icon;
-        } else {
-            KNIME16X16 = null;
-        }
 
         int maxThreads = Runtime.getRuntime().availableProcessors() + 2;
         String maxThreadsString =
