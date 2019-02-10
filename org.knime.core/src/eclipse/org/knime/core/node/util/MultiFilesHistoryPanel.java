@@ -43,7 +43,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   16.05.2011 (meinl): created
+ *   10.02.2019 (Ferry Abt): created
  */
 package org.knime.core.node.util;
 
@@ -53,11 +53,13 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -70,6 +72,7 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  * This component provides multiple file selection based on the {@link FilesHistoryPanel}. It lets the user selected an
@@ -360,6 +363,46 @@ public class MultiFilesHistoryPanel extends JScrollPane {
         for (FilesHistoryPanelWrapper p : m_filePanels) {
             p.m_filesPanel.setSelectMode(mode);
         }
+    }
+
+    /**
+     * @param urls the URLs to concatenate
+     * @return the URLs as a semicolon-separated String
+     * @since 2.8
+     */
+    public static String urlsToSettingsString(final List<URL> urls) {
+        return urls.stream().map(url -> url.toString()).collect(Collectors.joining(";"));
+    }
+
+    /**
+     * @param urlString the semicolon-separated String of URLs
+     * @return an array containing URLs as Strings
+     * @since 2.8
+     */
+    public static String[] splitURLString(final String urlString) {
+        return urlString != null ? urlString.split(";") : new String[0];
+    }
+
+    /**
+     * @param urlString the semicolon-separated String of URLs
+     * @return the URLs as a List
+     * @throws InvalidSettingsException if one of the Strings is not a valid URL
+     * @since 2.8
+     */
+    public static List<URL> settingsStringToURLList(final String urlString) throws InvalidSettingsException {
+        List<URL> urls = new ArrayList<>();
+        for (String s : splitURLString(urlString)) {
+            try {
+                urls.add(new URL(s));
+            } catch (MalformedURLException ex) {
+                try {
+                    urls.add(new URL("file:" + s));
+                } catch (MalformedURLException ex1) {
+                    throw new InvalidSettingsException("Unparseable URL: " + s, ex);
+                }
+            }
+        }
+        return urls;
     }
 
 }
