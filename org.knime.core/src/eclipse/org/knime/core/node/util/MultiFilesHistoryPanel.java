@@ -53,6 +53,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -403,6 +404,27 @@ public class MultiFilesHistoryPanel extends JScrollPane {
             }
         }
         return urls;
+    }
+
+    /**
+     * Creates an URL from the String
+     *
+     * @param url the file's name, may already be an URL
+     * @return an URL
+     * @throws MalformedURLException if the URL is malformed
+     * @since 2.8
+     */
+    public static URL convertToUrl(final String url) throws MalformedURLException {
+        try {
+            return new URL(url);
+        } catch (MalformedURLException ex) {
+            File f = new File(url);
+            if (f.exists()) {
+                return f.toURI().toURL();
+            } else {
+                throw ex;
+            }
+        }
     }
 
 }
