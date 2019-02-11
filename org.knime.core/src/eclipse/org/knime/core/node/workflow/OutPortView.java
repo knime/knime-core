@@ -124,9 +124,7 @@ public class OutPortView extends JFrame {
         super(portName + " - " + nodeNameWithID);
         // init frame
         super.setName(getTitle());
-        if (KNIMEConstants.KNIME16X16 != null) {
-            super.setIconImage(KNIMEConstants.KNIME16X16.getImage());
-        }
+        KNIMEConstants.getKNIMEIcon16X16().ifPresent(i -> setIconImage(i.getImage()));
         super.setBackground(NodeView.COLOR_BACKGROUND);
 
         // initialize default window width / height

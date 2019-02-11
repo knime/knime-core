@@ -173,9 +173,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         super(nodeModel);
 
         m_frame = new JFrame();
-        if (KNIMEConstants.KNIME16X16 != null) {
-            m_frame.setIconImage(KNIMEConstants.KNIME16X16.getImage());
-        }
+        KNIMEConstants.getKNIMEIcon16X16().ifPresent(i -> m_frame.setIconImage(i.getImage()));
         m_frame.setBackground(COLOR_BACKGROUND);
         // DO_NOTHING sends a windowClosing to window listeners
         m_frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);

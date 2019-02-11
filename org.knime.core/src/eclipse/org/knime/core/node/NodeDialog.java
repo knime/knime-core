@@ -247,9 +247,7 @@ public final class NodeDialog {
      */
     private JDialog initDialog(final String title) {
         JFrame dummy = new JFrame();
-        if (KNIMEConstants.KNIME16X16 != null) {
-            dummy.setIconImage(KNIMEConstants.KNIME16X16.getImage());
-        }
+        KNIMEConstants.getKNIMEIcon16X16().ifPresent(i -> dummy.setIconImage(i.getImage()));
         // init underlying dialog
         JDialog dialog = new JDialog(dummy);
         dialog.setTitle(title);
