@@ -444,7 +444,7 @@ public final class KNIMEConstants {
      * Icon 16 times 16 pixel or <code>null</code> if in headless-mode. {@link #initKNIMEIcon()} might need to be called
      * first at least once!
      *
-     * @deprecated Use {@link KNIMEConstants#getKNIMEIcon()} instead.
+     * @deprecated Use {@link KNIMEConstants#getKNIMEIcon16X16()} instead.
      */
     @Deprecated
     public static ImageIcon KNIME16X16 = null;
@@ -453,7 +453,7 @@ public final class KNIMEConstants {
      * Initializes the {@link #KNIME16X16} image icon. Workaround to prevent the image icon to be loaded too early (see
      * AP-11324). Method is called on KNIME startup and usually doesn't need to be called again.
      *
-     * @deprecated Use {@link KNIMEConstants#getKNIMEIcon()} instead.
+     * @deprecated Use {@link KNIMEConstants#getKNIMEIcon16X16()} instead.
      * @since 3.8
      */
     @Deprecated
