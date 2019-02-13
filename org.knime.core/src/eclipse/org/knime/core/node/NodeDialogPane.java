@@ -60,6 +60,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -1108,7 +1109,6 @@ public abstract class NodeDialogPane {
                 int tabIdx = getTabIndex(pane);
                 if (tabIdx < 0) {
                     // Ooops. Our hash map is out of sync...
-                    m_tabs.remove(pane);
                     throw new IllegalArgumentException(
                             "Tab with the specified title '" + tabTitle
                             + "' doesn't exist.");
@@ -1209,6 +1209,33 @@ public abstract class NodeDialogPane {
      */
     protected final int getTabIndex(final String title) {
         return m_pane.indexOfTab(title);
+    }
+
+    /**
+     * Gets the titles of all the tabs in the tabbed pane, in order.
+     *
+     * @return an unmodifiable list of all the tab titles.
+     * @since 3.8
+     * @see #addTabAt(int, String, Component)
+     * @see #addTabAt(int, String, Component, boolean)
+     * @see #getTabIndex(String)
+     * @see #removeTab(String)
+     * @see #setSelected(String)
+     */
+    protected final List<String> getTabTitles() {
+        final JTabbedPane pane = m_pane;
+        final int tabCount = pane.getTabCount();
+        List<String> result;
+        if (tabCount == 0) {
+            result = Collections.emptyList();
+        } else {
+            result = new ArrayList<>(tabCount);
+            for (int i = 0; i < tabCount; ++i) {
+                result.add(pane.getTitleAt(i));
+            }
+            result = Collections.unmodifiableList(result);
+        }
+        return result;
     }
 
     /** Iterates panels in m_pane and finds the tab pane index representing comp or -1 if not present. Used
