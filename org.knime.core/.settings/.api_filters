@@ -16,6 +16,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/blob/BinaryObjectCellFactory.java" type="org.knime.core.data.blob.BinaryObjectCellFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.blob.BinaryObjectCellFactory"/>
+                <message_argument value="init(ExecutionContext)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/Buffer.java" type="org.knime.core.data.container.Buffer">
         <filter id="338792546">
             <message_arguments>

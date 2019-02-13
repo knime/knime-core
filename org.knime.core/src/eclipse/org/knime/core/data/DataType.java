@@ -68,6 +68,7 @@ import javax.swing.Icon;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataValue.UtilityFactory;
 import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.data.renderer.DataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
@@ -78,6 +79,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -1327,7 +1329,7 @@ public final class DataType {
     }
 
     /**
-     * Returns a cell factory that can create cells of this DataType. If not cell factory is available, an empty
+     * Returns a cell factory that can create cells of this DataType. If no cell factory is available, an empty
      * {@link Optional} is returned.
      * The passed execution context is required by some factories for creating cells, therefore it's recommended to
      * always provide an execution context if available. In case you only want to inspect the factory's capabilities,
@@ -1336,9 +1338,28 @@ public final class DataType {
      * @param exec the current execution context, may be <code>null</code>
      * @return a data cell factory or an empty optional
      * @since 3.0
+     * @see #getCellFactoryFor(FileStoreFactory)
      */
     public Optional<DataCellFactory> getCellFactory(final ExecutionContext exec) {
-        return DataTypeRegistry.getInstance().getFactory(this, exec);
+        if (exec != null) {
+            return getCellFactoryFor(FileStoreFactory.createWorkflowFileStoreFactory(exec));
+        }
+        return getCellFactoryFor(FileStoreFactory.createNotInWorkflowFileStoreFactory());
+    }
+
+    /**
+     * Returns a cell factory that can create cells of this DataType. If no cell factory is available, an empty
+     * {@link Optional} is returned. The passed FileStoreFactory is mandatory.
+     * To avoid ambiguity we called the method getCellFactoryFor.
+     *
+     * @param fileStore the {@link FileStoreFactory} to use
+     * @return a data cell factory or an empty optional
+     * @since 3.8
+     * @see #getCellFactory(ExecutionContext)
+     */
+    public Optional<DataCellFactory> getCellFactoryFor(final FileStoreFactory fileStore) {
+        CheckUtils.checkNotNull(fileStore);
+        return DataTypeRegistry.getInstance().getFactory(this, fileStore);
     }
 
     /**

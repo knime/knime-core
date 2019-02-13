@@ -53,13 +53,15 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.text.ParseException;
 
+import org.knime.core.data.filestore.FileStoreFactory;
+import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.node.ExecutionContext;
 
 /**
  * Interface for a factory that can create data cells from certain input formats. The factory is free to create any
  * compatible cell, e.g. normal or blob cell. Such factories are mainly used by reader node in order to create arbitrary
  * cells based on the user-supplied node configuration. A new factory is created every time a node requests one via the
- * {@link DataType#getCellFactory(ExecutionContext)}.<br>
+ * {@link DataType#getCellFactoryFor(FileStoreFactory)} or {@link DataType#getCellFactory(ExecutionContext)}.<br>
  * <b>Note that you should not implement the {@link DataCellFactory} interface directly. Instead implement any of the
  * sub-interfaces that read from a specific input source.</b>
  *
@@ -145,14 +147,29 @@ public interface DataCellFactory {
 
     /**
      * This method is called once by {@link DataTypeRegistry} when a factory instance is created. The default
-     * implementation does nothing but implementors can override it a make use of the passed execution context. Note
+     * implementation does nothing but implementors can override it and make use of the passed execution context. Note
      * that this method may not be called or called with a <code>null</code> argument. In this case it's allowed to fail
      * when an attempt to create a cell is made and an execution context is required.
      *
      * @param execContext the current node's execution context, may be <code>null</code>
      * @noreference This method is not intended to be referenced by clients.
+     * @deprecated use and overwrite #initFactory(FileStoreFactory) instead
      */
+    @Deprecated
     default void init(final ExecutionContext execContext) {
         // no nothing
+    }
+
+    /**
+     * This method is called once by {@link DataTypeRegistry} when a factory instance is created. The default
+     * implementation does nothing but implementors can override it and make use of the passed {@link FileStoreFactory}.
+     * Note that if this method is called from the framework the {@link FileStoreFactory} is always present.
+     *
+     * @param fileStore {@link FileStoreFactory} to use. Will always be present if called by the framework.
+     * @since 3.8
+     */
+    default void initFactory(final FileStoreFactory fileStore) {
+        // no nothing
+        init(FileStoreUtil.getContextFrom(fileStore).orElse(null));
     }
 }

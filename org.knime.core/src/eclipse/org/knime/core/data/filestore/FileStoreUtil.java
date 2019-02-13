@@ -50,15 +50,18 @@ package org.knime.core.data.filestore;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.filestore.FileStoreFactory.WorkflowFileStoreFactory;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
 /** Internal helper class, not to be used by clients.
@@ -183,6 +186,20 @@ public final class FileStoreUtil {
     public static FileStore createFileStore(
             final WriteFileStoreHandler handler, final FileStoreKey key) {
         return new FileStore(handler, key);
+    }
+
+    /** Resolve the execution context from a file store factory ... only sensible for factories that live in a context
+     * of a workflow.
+     *
+     * @param fileStoreFactory The factory (null is OK).
+     * @return The corresponding execution context.
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static Optional<ExecutionContext> getContextFrom(final FileStoreFactory fileStoreFactory) {
+        if (fileStoreFactory instanceof WorkflowFileStoreFactory) {
+            Optional.of(((WorkflowFileStoreFactory)fileStoreFactory).getExec());
+        }
+        return Optional.empty();
     }
 
 }

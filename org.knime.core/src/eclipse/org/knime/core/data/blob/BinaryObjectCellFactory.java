@@ -109,27 +109,19 @@ public final class BinaryObjectCellFactory implements FromInputStream {
      *             (using {@link ExecutionContext#createFileStore(String)}.
      */
     public BinaryObjectCellFactory(final ExecutionContext exec) {
-        init(exec);
+        initFactory(FileStoreFactory.createWorkflowFileStoreFactory(exec));
     }
 
     /** Factory of binary objects, which are <b>not</b> associated with the workflow. This constructor
      * should only be used if a factory is used for temporary, non-persistent objects (e.g. in views).
      */
     public BinaryObjectCellFactory() {
-        init(null);
+        initFactory(FileStoreFactory.createNotInWorkflowFileStoreFactory());
     }
 
-    /**
-     * {@inheritDoc}
-     * @since 3.0
-     */
     @Override
-    public void init(final ExecutionContext execContext) {
-        if (execContext != null) {
-            m_fileStoreFactory = FileStoreFactory.createWorkflowFileStoreFactory(execContext);
-        } else {
-            m_fileStoreFactory = FileStoreFactory.createNotInWorkflowFileStoreFactory();
-        }
+    public void initFactory(final FileStoreFactory fileStore) {
+        m_fileStoreFactory = fileStore;
     }
 
     /** Creates a new cell given a byte array.

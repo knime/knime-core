@@ -63,10 +63,11 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.SerializerMethodLoader;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.EclipseUtil;
 
 /**
@@ -116,26 +117,25 @@ public final class DataTypeRegistry {
     }
 
     /**
-     * Returns a factory for the given data type. The execution context may be <code>null</code> but then some
-     * factories are not able to create cells.
+     * Returns a factory for the given data type.
      *
      * @param type the data type for which a factory should be returned
-     * @param execContext the current execution context, may be <code>null</code>
+     * @param fileStore the {@link FileStoreFactory} to use
      * @return a new cell factory or an empty optional if not factory is registered
      */
-    Optional<DataCellFactory> getFactory(final DataType type, final ExecutionContext execContext) {
-        return getFactory(type.getCellClass().getName(), execContext);
+    Optional<DataCellFactory> getFactory(final DataType type, final FileStoreFactory fileStore) {
+        return getFactory(type.getCellClass().getName(), fileStore);
     }
 
     /**
-     * Returns a factory for the base cell class. The execution context may be <code>null</code> but then some
-     * factories are not able to create cells.
+     * Returns a factory for the base cell class.
      *
      * @param className the fully qualified name of a cell class
-     * @param execContext the current execution context, may be <code>null</code>
+     * @param fileStore the {@link FileStoreFactory} to use
      * @return a new cell factory or an empty optional if not factory is registered
      */
-    Optional<DataCellFactory> getFactory(final String className, final ExecutionContext execContext) {
+    Optional<DataCellFactory> getFactory(final String className, final FileStoreFactory fileStore) {
+        CheckUtils.checkNotNull(fileStore);
         IConfigurationElement configElement = m_factories.get(className);
         if (configElement == null) {
             return Optional.empty();
@@ -151,7 +151,7 @@ public final class DataTypeRegistry {
                                 + fac.getDataType() + "'. Please fix your implementation.");
                     }
                 }
-                fac.init(execContext);
+                fac.initFactory(fileStore);
 
                 Class<? extends DataCell> cellClass = fac.getDataType().getCellClass();
                 if (m_cellClassMap.put(className, cellClass) == null) {

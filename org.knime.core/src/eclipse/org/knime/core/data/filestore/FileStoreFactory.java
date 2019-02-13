@@ -107,7 +107,7 @@ public abstract class FileStoreFactory {
     }
 
     /** Implementation that creates file stores associated with the workflow (execution context). */
-    private static final class WorkflowFileStoreFactory extends FileStoreFactory {
+    static final class WorkflowFileStoreFactory extends FileStoreFactory {
 
         private ExecutionContext m_exec;
 
@@ -129,6 +129,13 @@ public abstract class FileStoreFactory {
         @Override
         public void close() {
             // empty, leave it to the framework to decide when a node execution is over.
+        }
+
+        /**
+         * @return the exec The execution context, not null.
+         */
+        ExecutionContext getExec() {
+            return m_exec;
         }
     }
 
