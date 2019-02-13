@@ -47,9 +47,15 @@
 package org.knime.core.node.port;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.chunk.DataRowChunks;
 
 /**
  * A port object spec that can provide a {@link DataTableSpec}.
+ *
+ * Will very likely be used together with {@link DataRowChunks}. Since it's pending API we refrained from introducing
+ * another interface that emphasizes the relation to {@link DataRowChunks}.
+ *
+ * Pending API! Will be re-visited with AP-11279.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 3.8

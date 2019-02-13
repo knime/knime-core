@@ -57,6 +57,8 @@ import org.knime.core.data.RowIterator;
 /**
  * A {@link DataTable} whose rows are requested in chunks ({@link DataRowChunks}).
  *
+ * Pending API! Will be re-visited with AP-11279.
+ *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
  * @since 3.8

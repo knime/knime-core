@@ -50,9 +50,16 @@ import java.util.List;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.port.HasDataTableSpec;
+import org.knime.core.node.port.PortObject;
 
 /**
- * Access to chunks of data rows.
+ * Access to chunks of data rows. This interface is used by {@link PortObject}s that have can provide their data as data
+ * row chunks (such as the DB-port objects). Implementing port objects will need to provide a
+ * {@link HasDataTableSpec}-spec, too. Since this is pending API, we refrained from introducing an extra interface to
+ * emphasize this connection.
+ *
+ * Pending API! Will be re-visited with AP-11279.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
