@@ -44,16 +44,18 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.node.port;
+package org.knime.core.data.chunk;
 
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.container.CloseableRowIterator;
 
 /**
- * A port objects that represents a data table where ranges of rows can be requested ('pageable'). Implementations must
- * also be able to provide a {@link DataTableSpec} - see {@link #getSpec()}.
+ * A {@link DataTable} whose rows are requested in chunks ({@link DataRowChunks}).
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
@@ -61,77 +63,74 @@ import org.knime.core.data.container.CloseableRowIterator;
  * @noimplement This interface is not intended to be implemented by clients. Pending API!
  * @noreference This interface is not intended to be referenced by clients. Pending API!
  */
-public interface PageableDataTable extends DataTable, PortObject {
+public class ChunkedDataTable implements DataTable {
+
+    private final int m_chunkSize;
+
+    private final DataRowChunks m_chunks;
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    default DataTableSpec getDataTableSpec() {
-        return getSpec().getDataTableSpec();
-    }
-
-    /**
-     * Creates a 'bounded' iterator with an offset and the number of rows to iterate. If
-     * <code>(from + count) > totalRowCount</code> the returned iterator will iterate till the table end.
+     * Creates a new chunked data table.
      *
-     * @param from the index of the row to initialize the iterator with (minimum 0)
-     * @param count the number of rows to iterate
-     * @return the closable bounded iterator
+     * @param chunkSize the size of each chunks to be retrieved in the {@link #iterator()}-method
+     * @param chunks source of the chunks
      */
-    CloseableRowIterator iterator(long from, long count);
-
-    /**
-     * Calculates the overall number of rows in the data table. Should not be called multiple times if not necessary
-     * (i.e. cache the result).
-     *
-     * @return the total number of rows
-     * @throws UnknownRowCountException if the number of rows could not be determined
-     */
-    long calcTotalRowCount() throws UnknownRowCountException;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default RowIterator iterator() {
-        long size;
-        try {
-            size = calcTotalRowCount();
-        } catch (UnknownRowCountException ex) {
-            size = Long.MAX_VALUE;
-        }
-        return iterator(0, size);
+    public ChunkedDataTable(final int chunkSize, final DataRowChunks chunks) {
+        m_chunkSize = chunkSize;
+        m_chunks = chunks;
     }
 
     /**
      * {@inheritDoc}
-     *
-     * Narrows the return type to {@link HasDataTableSpec}.
      */
     @Override
-    HasDataTableSpec getSpec();
+    public DataTableSpec getDataTableSpec() {
+        return m_chunks.getDataTableSpec();
+    }
 
     /**
-     * Exception thrown when number of rows of a data table could not be determined.
+     * {@inheritDoc}
      */
-    public class UnknownRowCountException extends Exception {
+    @Override
+    public RowIterator iterator() {
+        return new RowIterator() {
+            int m_chunkIndex = 0;
 
-        private static final long serialVersionUID = 2914638262455429737L;
+            int m_rowIndexInChunk = 0;
 
-        /**
-         * see {@link Exception#Exception(String)}
-         */
-        public UnknownRowCountException(final String message) {
-            super(message);
-        }
+            private List<DataRow> m_currentChunk;
 
-        /**
-         * see {@link Exception#Exception(String, Throwable)}
-         */
-        public UnknownRowCountException(final String message, final Throwable cause) {
-            super(message, cause);
-        }
+            @Override
+            public DataRow next() {
+                if(!hasNext()) {
+                    throw new NoSuchElementException("No more rows");
+                }
+                DataRow row = getCurrentChunk().get(m_rowIndexInChunk);
+                m_rowIndexInChunk++;
+                if (m_rowIndexInChunk >= m_currentChunk.size()) {
+                    m_rowIndexInChunk = 0;
+                    m_chunkIndex++;
+                    //load next chunk here rather in 'hasNext'
+                    retrieveChunk(m_chunkIndex);
+                }
+                return row;
+            }
 
+            @Override
+            public boolean hasNext() {
+                return !getCurrentChunk().isEmpty();
+            }
+
+            private List<DataRow> getCurrentChunk() {
+                if (m_currentChunk == null) {
+                    retrieveChunk(m_chunkIndex);
+                }
+                return m_currentChunk;
+            }
+
+            private void retrieveChunk(final int chunkIndex) {
+                m_currentChunk = m_chunks.getChunk(chunkIndex * m_chunkSize, m_chunkSize);
+            }
+        };
     }
 }

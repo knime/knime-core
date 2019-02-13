@@ -44,23 +44,39 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.node.port;
+package org.knime.core.data.chunk;
 
+import java.util.List;
+
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 
 /**
- * A port object spec that can provide a {@link DataTableSpec}.
+ * Access to chunks of data rows.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ *
  * @since 3.8
  * @noimplement This interface is not intended to be implemented by clients. Pending API!
  * @noreference This interface is not intended to be referenced by clients. Pending API!
  */
-public interface HasDataTableSpec extends PortObjectSpec {
+public interface DataRowChunks {
 
     /**
-     * @return the data table spec
+     * Returns the {@link DataTableSpec} object that specifies the structure of the data rows of each provided chunk.
+     *
+     * @return the DataTableSpec of the data row chunks
      */
     DataTableSpec getDataTableSpec();
 
+    /**
+     * Returns a chunk of data rows from the given row index and the maximum row count.
+     *
+     * @param from the index of the first row in the chunk (minimum 0)
+     * @param count the number of rows in the chunk
+     * @return the data rows of the chunk, the maximum number of rows is <code>count</code> or less (if the total number
+     *         of rows has been exceed). Returns an empty list but never <code>null</code> if there are no rows
+     *         available
+     */
+    List<DataRow> getChunk(long from, long count);
 }
