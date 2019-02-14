@@ -76,6 +76,7 @@ import net.jpountz.lz4.LZ4BlockInputStream;
 import net.jpountz.lz4.LZ4BlockOutputStream;
 
 /**
+ * The default table store format used to read data from / write data to disc.
  *
  * @author wiswedel
  * @noextend This class is not intended to be subclassed by clients.
@@ -174,8 +175,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
              * versions, we have to camel-case the names of these compresssion formats (None, Gzip), since KNIME AP
              * <= 3.7 only accepts compression format Strings "Gzip" and "None".
              */
-            settings.addString(DefaultTableStoreFormat.CFG_COMPRESSION,
-                WordUtils.capitalize(name().toLowerCase()));
+            settings.addString(DefaultTableStoreFormat.CFG_COMPRESSION, WordUtils.capitalize(name().toLowerCase()));
         }
 
         /**
@@ -213,8 +213,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
         }
 
         static CompressionFormat loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-            String compFormat =
-                settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, DEF_COMPRESSION.name());
+            String compFormat = settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, DEF_COMPRESSION.name());
             try {
                 // backwards compatible since #getCompressionFormat uses upper-case comparison
                 return CompressionFormat.getCompressionFormat(compFormat);
@@ -226,7 +225,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
 
         /**
          * Returns the {@link CompressionFormat} constant associated with the specified name. Case-sensitivity is
-         * ignored to match an identifier used to declare an enum constant of this type.
+         * ignored to match an identifier used to declare an enum constant of this format.
          *
          * @param arg0 the enum constant name
          * @return the associated enum constant
@@ -243,25 +242,23 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
         }
     }
 
-    /** The compression type. */
-    static final CompressionFormat COMPRESSION;
+    /** The table store settings. */
+    private final DefaultTableStoreSettings m_tableStoreSettings;
 
-    // Initialize the compression according to the user settings.
-    static {
-        final String compName = System.getProperty(KNIMEConstants.PROPERTY_TABLE_COMPRESSION);
-        if (compName == null) {
-            COMPRESSION = DEF_COMPRESSION;
-        } else {
-            CompressionFormat compType = DEF_COMPRESSION;
-            try {
-                compType = CompressionFormat.getCompressionFormat(compName);
-                LOGGER.debug("Setting table stream compression to " + compType);
-            } catch (final IllegalArgumentException iae) {
-                LOGGER.warn("Unable to read property " + KNIMEConstants.PROPERTY_TABLE_COMPRESSION + " (\""
-                    + compName + "\"); defaulting to " + DEF_COMPRESSION);
-            }
-            COMPRESSION = compType;
-        }
+    /**
+     * Constructor using the default table store settings.
+     */
+    public DefaultTableStoreFormat() {
+        this(DefaultTableStoreSettings.getDefault());
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param tableStoreSettings the table store settings
+     */
+    public DefaultTableStoreFormat(final DefaultTableStoreSettings tableStoreSettings) {
+        m_tableStoreSettings = tableStoreSettings;
     }
 
     @Override
@@ -271,7 +268,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
 
     @Override
     public String getFilenameSuffix() {
-        return COMPRESSION.getFileExtension();
+        return m_tableStoreSettings.getCompressionFormat().getFileExtension();
     }
 
     /** {@inheritDoc} */
@@ -291,7 +288,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
     @Override
     public AbstractTableStoreWriter createWriter(final OutputStream output, final DataTableSpec spec,
         final boolean writeRowKey) throws IOException {
-        return new DefaultTableStoreWriter(spec, output, writeRowKey);
+        return new DefaultTableStoreWriter(spec, output, writeRowKey, m_tableStoreSettings.getCompressionFormat());
     }
 
     @Override
@@ -316,6 +313,79 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
     public boolean validateVersion(final String versionString) {
         return true; // this method is really only called for 3rd party types. Actual validation happens in class Buffer
 
+    }
+
+    /**
+     * The table store settings. Solely used for benchmarking.
+     *
+     * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+     * @noreference This class is not intended to be referenced by clients.
+     * @noinstantiate This class is not intended to be instantiated by clients.
+     */
+    public static final class DefaultTableStoreSettings {
+
+        /** The compression format. */
+        private final CompressionFormat m_compType;
+
+        /** The default instance. */
+        private static final DefaultTableStoreSettings DEFAULT_INSTANCE = new DefaultTableStoreSettings();
+
+        /** Default constructor. */
+        private DefaultTableStoreSettings() {
+            final String compName = System.getProperty(KNIMEConstants.PROPERTY_TABLE_COMPRESSION);
+            if (compName == null) {
+                m_compType = DefaultTableStoreFormat.DEF_COMPRESSION;
+            } else {
+                CompressionFormat compFormat = DefaultTableStoreFormat.DEF_COMPRESSION;
+                try {
+                    compFormat = CompressionFormat.getCompressionFormat(compName);
+                    LOGGER.debug("Setting table stream compression to " + compFormat);
+                } catch (final IllegalArgumentException iae) {
+                    LOGGER.warn("Unable to read property " + KNIMEConstants.PROPERTY_TABLE_COMPRESSION + " (\""
+                        + compName + "\"); defaulting to " + DefaultTableStoreFormat.DEF_COMPRESSION);
+                }
+                m_compType = compFormat;
+            }
+
+        }
+
+        /**
+         * Returns the default table store format settings.
+         *
+         * @return default settings
+         */
+        public static DefaultTableStoreSettings getDefault() {
+            return DEFAULT_INSTANCE;
+        }
+
+        /**
+         * Constructor.
+         *
+         * @param compFormat the compression format
+         */
+        private DefaultTableStoreSettings(final CompressionFormat compFormat) {
+            m_compType = compFormat;
+        }
+
+        /**
+         * Returns the compression format.
+         *
+         * @return the compression format
+         */
+        public CompressionFormat getCompressionFormat() {
+            return m_compType;
+        }
+
+        /**
+         * Returns a copy using the new compression format.
+         *
+         * @param compFormat the compression format to be used
+         * @return a copy using the new compression format
+         */
+        @SuppressWarnings("static-method")
+        public DefaultTableStoreSettings withCompression(final CompressionFormat compFormat) {
+            return new DefaultTableStoreSettings(compFormat);
+        }
     }
 
 }

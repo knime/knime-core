@@ -84,7 +84,43 @@
         <filter id="338755678">
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="DEF_ASYNC_CACHE_SIZE"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
                 <message_argument value="DEF_GZIP_COMPRESSION"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="DEF_MAX_CELLS_IN_MEMORY"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="DEF_MAX_POSSIBLE_VALUES"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="PROPERTY_CELLS_IN_MEMORY"/>
             </message_arguments>
         </filter>
     </resource>
@@ -426,6 +462,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.AnnotationData"/>
                 <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ConfigurableWorkflowContext.java" type="org.knime.core.node.workflow.ConfigurableWorkflowContext">
+        <filter id="571473929">
+            <message_arguments>
+                <message_argument value="WorkflowContext"/>
+                <message_argument value="ConfigurableWorkflowContext"/>
             </message_arguments>
         </filter>
     </resource>

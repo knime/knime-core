@@ -53,6 +53,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.internal.ReferencedFile;
@@ -168,7 +169,7 @@ public class BufferedDataContainer extends DataContainer {
         if (memPolicy.equals(MemoryPolicy.CacheInMemory)) {
             return Integer.MAX_VALUE;
         } else if (memPolicy.equals(MemoryPolicy.CacheSmallInMemory)) {
-            return DataContainer.MAX_CELLS_IN_MEMORY;
+            return DataContainerSettings.getDefault().getMaxCellsInMemory();
         } else {
             return 0;
         }

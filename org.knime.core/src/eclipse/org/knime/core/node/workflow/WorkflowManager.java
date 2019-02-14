@@ -7424,7 +7424,7 @@ public final class WorkflowManager extends NodeContainer
         }
         // if we created the temp dir we must clean it up when disposing of the workflow
         m_tmpDir = tempDir;
-        return new WorkflowContext.Factory(context).setTempLocation(tempDir).createContext();
+        return context.createCopy().setTempLocation(tempDir).createContext();
     }
 
     /** {@inheritDoc} */
@@ -9585,6 +9585,10 @@ public final class WorkflowManager extends NodeContainer
      */
     public WorkflowContext getContext() {
         return m_workflowContext;
+    }
+
+    void setContext(final WorkflowContext c){
+        m_workflowContext = c;
     }
 
     /**

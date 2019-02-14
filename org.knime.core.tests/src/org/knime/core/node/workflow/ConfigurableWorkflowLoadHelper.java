@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,47 +41,42 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Feb 18, 2019 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.core.node.workflow;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
 import java.io.File;
 
-import org.junit.Test;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.util.LoadVersion;
-import org.knime.core.util.Version;
-
-import junit.framework.AssertionFailedError;
+import org.knime.core.data.container.DataContainerSettings;
 
 /**
- * Load a workflow created by older version of KNIME and load it. Don't expect any errors on load.
+ * Class extending the functionality of the {@link WorkflowLoadHelper} by additionally allowing the configuration of the
+ * {@link DataContainerSettings}.
  *
- * @author wiswedel, KNIME AG
+ * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class BugAP7982_FutureKNIMEVersion_AllCompatible extends WorkflowTestCase {
+class ConfigurableWorkflowLoadHelper extends WorkflowLoadHelper {
 
-    /** Load workflow, expect no errors. */
-    @Test
-    public void loadWorkflow() throws Exception {
-        File wkfDir = getDefaultWorkflowDirectory();
-        WorkflowLoadResult loadWorkflow =
-            loadWorkflow(wkfDir, new ExecutionMonitor(), new ConfigurableWorkflowLoadHelper(wkfDir) {
-                @Override
-                public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                    final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
-                    final boolean isNightlyBuild) {
-                    throw new AssertionFailedError("Not to be called - workflow is expected to be compatible");
-                }
-            });
-        setManager(loadWorkflow.getWorkflowManager());
-        assertThat("Expected to loaded without errors", loadWorkflow.getType(), is(LoadResultEntryType.Ok));
-        assertThat("Workflow version incorrect", getManager().getLoadVersion(), is(LoadVersion.V280));
+    /**
+     * Constructor using the default {@link DataContainerSettings}.
+     *
+     * @param workflowDir the workflow directory
+     */
+    ConfigurableWorkflowLoadHelper(final File workflowDir) {
+        this(workflowDir, DataContainerSettings.getDefault());
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param workflowDir the workflow directory
+     * @param settings the data container settings
+     */
+    ConfigurableWorkflowLoadHelper(final File workflowDir, final DataContainerSettings settings) {
+        super(false, new ConfigurableWorkflowContext.Factory(workflowDir, settings).createContext());
     }
 
 }

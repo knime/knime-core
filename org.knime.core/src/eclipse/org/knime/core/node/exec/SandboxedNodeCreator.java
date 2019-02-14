@@ -206,7 +206,7 @@ public final class SandboxedNodeCreator {
         // this if-elseif-etc is OK for both streaming in cluster but not 100% certain for other cases
         // (specifically reading knime://knime.workflow files)
         if (!m_copyDataIntoNewContext) {
-            ctxFactory = new WorkflowContext.Factory(origContext);
+            ctxFactory = origContext.createCopy();
             if (m_localWorkflowDir != null) {
                 ctxFactory.setOriginalLocation(origContext.getCurrentLocation())
                     .setCurrentLocation(m_localWorkflowDir);

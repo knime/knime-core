@@ -61,7 +61,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.container.Buffer;
-import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 
 /**
@@ -116,8 +116,8 @@ class MiscSettingsTab extends JPanel {
             cacheSmall.setActionCommand(MemoryPolicy.CacheSmallInMemory.toString());
             m_group.add(cacheSmall);
             cacheSmall.setToolTipText("Tables with less than "
-                    + DataContainer.MAX_CELLS_IN_MEMORY + " cells are kept in "
-                    + "main memory, otherwise swapped to disc.");
+                + DataContainerSettings.getDefault().getMaxCellsInMemory()
+                + " cells are kep in main memory, otherwise swapped to disc.");
             cacheSmall.addChangeListener(cl);
             center.add(cacheSmall);
         }

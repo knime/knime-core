@@ -51,7 +51,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.knime.core.data.container.BlobWrapperDataCell;
-import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -65,7 +65,7 @@ import org.knime.core.node.ExecutionMonitor;
  * @author Heiko Hofer
  * @since 2.10
  */
-public class DataTableDomainCreator {
+public class DataTableDomainCreator implements IDataTableDomainCreator {
     /** Defines columns to recreate or drop domain values. */
     private final DomainCreatorColumnSelection m_domainValuesColumnSelection;
 
@@ -105,7 +105,7 @@ public class DataTableDomainCreator {
         m_comparators = new DataValueComparator[inputSpec.getNumColumns()];
         m_domainValuesColumnSelection = domainValuesColumnSelection;
         m_domainMinMaxColumnSelection = domainMinMaxColumnSelection;
-        m_maxPossibleValues = DataContainer.MAX_POSSIBLE_VALUES;
+        m_maxPossibleValues = DataContainerSettings.getDefault().getMaxDomainValues();
 
         int i = 0;
         for (DataColumnSpec colSpec : inputSpec) {
@@ -174,11 +174,7 @@ public class DataTableDomainCreator {
         });
     }
 
-    /**
-     * Set the maximum number of possible values in the domain of a nominal value columns.
-     *
-     * @param maxValues the maximal number of values, must be &gt;= 0
-     */
+    @Override
     public void setMaxPossibleValues(final int maxValues) {
         if (maxValues < 0) {
             throw new IllegalArgumentException("Maximum possible values must be >= 0 but is " + maxValues);
@@ -226,6 +222,7 @@ public class DataTableDomainCreator {
      *
      * @return an updated table spec
      */
+    @Override
     public DataTableSpec createSpec() {
         DataColumnSpec[] outColSpecs = new DataColumnSpec[m_inputSpec.getNumColumns()];
         for (int i = 0; i < outColSpecs.length; i++) {
@@ -258,12 +255,7 @@ public class DataTableDomainCreator {
         return new DataTableSpec(m_inputSpec.getName(), outColSpecs);
     }
 
-    /**
-     * Updates the domain values with a single row. Note that the row structure must match the table spec that has been
-     * provided to the constructor.
-     *
-     * @param row a data row
-     */
+    @Override
     public void updateDomain(final DataRow row) {
         assert row.getNumCells() == m_inputSpec.getNumColumns() : "Unequal number of columns in spec and row: "
             + m_inputSpec.getNumColumns() + " vs. " + row.getNumCells();

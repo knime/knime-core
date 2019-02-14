@@ -58,6 +58,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 /**
  * Test for workaround described as part of AP-5974. Credentials QF nodes should inherit the info from workflow
  * credentials (for same identifier).
+ *
  * @author wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class BugAP3673_CredentialsQF_InheritFromWkf extends WorkflowTestCase {
@@ -68,8 +69,8 @@ public class BugAP3673_CredentialsQF_InheritFromWkf extends WorkflowTestCase {
         final TestWorkflowLoadHelper lH = new TestWorkflowLoadHelper("some-fixed-password");
         WorkflowLoadResult loadWorkflow = loadWorkflow(getDefaultWorkflowDirectory(), new ExecutionMonitor(), lH);
         setManager(loadWorkflow.getWorkflowManager());
-        assertThat("Invalid prompt count - only workflow variables are expected to be prompted",
-            lH.getPromptCount(), is(1));
+        assertThat("Invalid prompt count - only workflow variables are expected to be prompted", lH.getPromptCount(),
+            is(1));
         executeAllAndWait();
         checkState(getManager(), InternalNodeContainerState.EXECUTED);
     }
@@ -89,9 +90,10 @@ public class BugAP3673_CredentialsQF_InheritFromWkf extends WorkflowTestCase {
         checkState(getManager(), InternalNodeContainerState.EXECUTED);
     }
 
-    private class TestWorkflowLoadHelper extends WorkflowLoadHelper {
+    private class TestWorkflowLoadHelper extends ConfigurableWorkflowLoadHelper {
 
         private final String m_password;
+
         private int m_promptCount;
 
         /** @param workflowLocation */
@@ -120,6 +122,5 @@ public class BugAP3673_CredentialsQF_InheritFromWkf extends WorkflowTestCase {
             return m_promptCount;
         }
     }
-
 
 }

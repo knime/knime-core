@@ -70,14 +70,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
-import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.IDataTableDomainCreator;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -93,11 +92,13 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.IDuplicateChecker;
 
 /**
  * Buffer that collects <code>DataRow</code> objects and creates a <code>DataTable</code> on request. This data
@@ -122,151 +123,72 @@ public class DataContainer implements RowAppender {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DataContainer.class);
 
-    /** See {@link KNIMEConstants#PROPERTY_CELLS_IN_MEMORY}. */
-    public static final String PROPERTY_CELLS_IN_MEMORY = KNIMEConstants.PROPERTY_CELLS_IN_MEMORY;
-
-    /** The default number of cells to be held in memory. */
-    public static final int DEF_MAX_CELLS_IN_MEMORY = 100000;
-
-    /**
-     * Default minimum disc space requirement, see {@link KNIMEConstants#PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB}.
-     *
-     * @since 2.8
-     */
-    public static final int DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = 100;
-
-    /**
-     * For asynchronous table writing (default) the cache size. It's the number of rows that are kept in memory until
-     * handed off to the write routines.
-     *
-     * @see KNIMEConstants#PROPERTY_ASYNC_WRITE_CACHE_SIZE
-     */
-    public static final int DEF_ASYNC_CACHE_SIZE = 10;
-
-    /**
-     * The default number of possible values being kept at most. If the number of possible values in a column exceeds
-     * this values, no values will be memorized. Can be changed via system property
-     * {@link KNIMEConstants#PROPERTY_DOMAIN_MAX_POSSIBLE_VALUES}.
-     *
-     * @since 2.10
-     */
-    public static final int DEF_MAX_POSSIBLE_VALUES = 60;
-
-    static {
-        int size = DEF_MAX_CELLS_IN_MEMORY;
-        String envCellsInMem = PROPERTY_CELLS_IN_MEMORY;
-        String valCellsInMem = System.getProperty(envCellsInMem);
-        if (valCellsInMem != null) {
-            String s = valCellsInMem.trim();
-            try {
-                int newSize = Integer.parseInt(s);
-                if (newSize < 0) {
-                    throw new NumberFormatException("max cell count in memory < 0" + newSize);
-                }
-                size = newSize;
-                LOGGER.debug("Setting max cell count to be held in memory to " + size);
-            } catch (NumberFormatException e) {
-                LOGGER.warn("Unable to parse property " + envCellsInMem + ", using default (" + DEF_MAX_CELLS_IN_MEMORY
-                    + ")", e);
-            }
-        }
-        MAX_CELLS_IN_MEMORY = size;
-
-        int maxPossValues = DEF_MAX_POSSIBLE_VALUES;
-        String envPossValues = KNIMEConstants.PROPERTY_DOMAIN_MAX_POSSIBLE_VALUES;
-        String valPossValues = System.getProperty(envPossValues);
-        if (valPossValues != null) {
-            String s = valPossValues.trim();
-            try {
-                int newSize = Integer.parseInt(s);
-                if (newSize < 0) {
-                    throw new NumberFormatException("max possible value count < 0" + newSize);
-                }
-                maxPossValues = newSize;
-                LOGGER.debug("Setting default count for possible domain values to " + maxPossValues);
-            } catch (NumberFormatException e) {
-                LOGGER.warn("Unable to parse property " + envPossValues + ", using default (" + DEF_MAX_POSSIBLE_VALUES
-                    + ")", e);
-            }
-        }
-        MAX_POSSIBLE_VALUES = maxPossValues;
-
-        int minFreeDiscSpaceMB = DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
-        String minFree = System.getProperty(KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB);
-        if (minFree != null) {
-            String s = minFree.trim();
-            try {
-                int newSize = Integer.parseInt(s);
-                if (newSize < 0) {
-                    throw new NumberFormatException("minFreeDiscSpace < 0" + newSize);
-                }
-                minFreeDiscSpaceMB = newSize;
-                LOGGER.debug("Setting min free disc space to " + minFreeDiscSpaceMB + "MB");
-            } catch (NumberFormatException e) {
-                LOGGER.warn("Unable to parse property \"" + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB
-                    + "\", using default (" + DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB)", e);
-            }
-        }
-        MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = minFreeDiscSpaceMB;
-
-        int asyncCacheSize = DEF_ASYNC_CACHE_SIZE;
-        String envAsyncCache = KNIMEConstants.PROPERTY_ASYNC_WRITE_CACHE_SIZE;
-        String valAsyncCache = System.getProperty(envAsyncCache);
-        if (valAsyncCache != null) {
-            String s = valAsyncCache.trim();
-            try {
-                int newSize = Integer.parseInt(s);
-                if (newSize < 0) {
-                    throw new NumberFormatException("async write cache < 0" + newSize);
-                }
-                asyncCacheSize = newSize;
-                LOGGER.debug("Setting asynchronous write cache to " + asyncCacheSize + " row(s)");
-            } catch (NumberFormatException e) {
-                LOGGER.warn("Unable to parse property " + envAsyncCache + ", using default (" + DEF_ASYNC_CACHE_SIZE
-                    + ")", e);
-            }
-        }
-        ASYNC_CACHE_SIZE = asyncCacheSize;
-        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_SYNCHRONOUS_IO)) {
-            LOGGER.debug("Using synchronous IO; " + KNIMEConstants.PROPERTY_SYNCHRONOUS_IO + " is set");
-            SYNCHRONOUS_IO = true;
-        } else {
-            SYNCHRONOUS_IO = false;
-        }
-
-        // enh 5835: Number of asynchronous write threads to have different limits on different architectures
-        MAX_ASYNC_WRITE_THREADS = Platform.ARCH_X86.equals(Platform.getOSArch()) ? 10 : 50;
-    }
-
     /**
      * Number of cells that are cached without being written to the temp file (see Buffer implementation); It defaults
-     * to the value defined by {@link #DEF_MAX_CELLS_IN_MEMORY} but can be changed using the java property
-     * {@link #PROPERTY_CELLS_IN_MEMORY}.
-     */
-    public static final int MAX_CELLS_IN_MEMORY;
-
-    /**
-     * Minimum disc space requirement, see {@link KNIMEConstants#PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB}.
+     * value can be changed using the java property {@link #PROPERTY_CELLS_IN_MEMORY}.
      *
-     * @since 2.8
+     * @deprecated access via {@link DataContainerSettings#getDefault()}
      */
-    public static final int MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
+    @Deprecated
+    public static final int MAX_CELLS_IN_MEMORY;
 
     /**
      * The actual number of possible values being kept at most. See {@link #DEF_MAX_POSSIBLE_VALUES}.
      *
      * @since 2.10
+     * @deprecated access via {@link DataContainerSettings#getDefault()}
      */
+    @Deprecated
     public static final int MAX_POSSIBLE_VALUES;
 
-    /** Size of buffers. */
+    /**
+     * The cache size for asynchronous table writing. It's the number of rows that are kept in memory before handing it
+     * to the writer routines. The default value can be changed using the java property
+     * {@link KNIMEConstants#PROPERTY_ASYNC_WRITE_CACHE_SIZE}.
+     *
+     * @deprecated access via {@link DataContainerSettings#getDefault()}
+     */
+    @Deprecated
     static final int ASYNC_CACHE_SIZE;
 
+    /**
+     * Whether to use synchronous IO while adding rows to a buffer or reading from an file iterator. The default value
+     * can be changed by setting the appropriate java property {@link KNIMEConstants#PROPERTY_SYNCHRONOUS_IO} at
+     * startup.
+     * @deprecated access via {@link DataContainerSettings#getDefault()}
+     */
+    @Deprecated
+    static final boolean SYNCHRONOUS_IO;
+
+    /**
+     * The maximum number of asynchronous write threads, each additional container will switch to synchronous mode.
+     * @deprecated access via {@link DataContainerSettings#getDefault()}
+     */
+    @Deprecated
+    static final int MAX_ASYNC_WRITE_THREADS;
+
+    /**
+     * The default value for initializing the domain.
+     *
+     * @deprecated access via {@link DataContainerSettings#getDefault()}
+     */
+    @Deprecated
+    static final boolean INIT_DOMAIN;
+
     /** The executor, which runs the IO tasks. Currently used only while writing rows. */
-    static final ThreadPoolExecutor ASYNC_EXECUTORS =
-    // see also Executors.newCachedThreadPool(ThreadFactory)
-        new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-            new ThreadFactory() {
+    static final ThreadPoolExecutor ASYNC_EXECUTORS;
+
+    static {
+        final DataContainerSettings defaults = DataContainerSettings.getDefault();
+        MAX_CELLS_IN_MEMORY = defaults.getMaxCellsInMemory();
+        ASYNC_CACHE_SIZE = defaults.getAsyncCacheSize();
+        SYNCHRONOUS_IO = defaults.useSyncIO();
+        MAX_ASYNC_WRITE_THREADS = defaults.getMaxAsyncWriteThreads();
+        MAX_POSSIBLE_VALUES = defaults.getMaxDomainValues();
+        INIT_DOMAIN = defaults.getInitializeDomain();
+        // see also Executors.newCachedThreadPool(ThreadFactory)
+        ASYNC_EXECUTORS = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+            new SynchronousQueue<Runnable>(), new ThreadFactory() {
                 private final AtomicInteger m_threadCount = new AtomicInteger();
 
                 /** {@inheritDoc} */
@@ -275,21 +197,12 @@ public class DataContainer implements RowAppender {
                     return new Thread(r, "KNIME-TableIO-" + m_threadCount.incrementAndGet());
                 }
             });
-
-    /**
-     * Whether to use synchronous IO while adding rows to a buffer or reading from an file iterator. This is by default
-     * <code>false</code> but can be enabled by setting the appropriate java property at startup.
-     */
-    static final boolean SYNCHRONOUS_IO;
-
-    /**
-     * the maximum number of asynchronous write threads, each additional container will switch to synchronous mode.
-     */
-    static final int MAX_ASYNC_WRITE_THREADS;
+    }
 
     /** Put into write queue to signal end of writing process. */
     private static final Object CONTAINER_CLOSE = new Object();
 
+    /** Put into write queue to trigger the buffer to flush its data. */
     private static final Object FLUSH_CACHE = new Object();
 
     /**
@@ -311,6 +224,7 @@ public class DataContainer implements RowAppender {
      */
     private Future<Void> m_asyncAddFuture;
 
+    /** The write throwable indicating that asynchronous writing failed. */
     private AtomicReference<Throwable> m_writeThrowable;
 
     /**
@@ -327,7 +241,7 @@ public class DataContainer implements RowAppender {
     private int m_maxRowsInMemory;
 
     /** Holds the keys of the added rows to check for duplicates. */
-    private DuplicateChecker m_duplicateChecker;
+    private IDuplicateChecker m_duplicateChecker;
 
     /** The tablespec of the return table. */
     private DataTableSpec m_spec;
@@ -335,7 +249,7 @@ public class DataContainer implements RowAppender {
     /** Table to return. Not null when close() is called. */
     private ContainerTable m_table;
 
-    private DataTableDomainCreator m_domainCreator;
+    private IDataTableDomainCreator m_domainCreator;
 
     /** Local repository map, created lazily. */
     private Map<Integer, ContainerTable> m_localMap;
@@ -378,7 +292,7 @@ public class DataContainer implements RowAppender {
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
     public DataContainer(final DataTableSpec spec, final boolean initDomain) {
-        this(spec, initDomain, MAX_CELLS_IN_MEMORY);
+        this(spec, DataContainerSettings.getDefault().withInitializedDomain(initDomain));
     }
 
     /**
@@ -391,7 +305,8 @@ public class DataContainer implements RowAppender {
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
     public DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory) {
-        this(spec, initDomain, maxCellsInMemory, /*forceSyncIO*/false);
+        this(spec, DataContainerSettings.getDefault().withInitializedDomain(initDomain)
+            .withMaxCellsInMemory(maxCellsInMemory));
     }
 
     /**
@@ -406,17 +321,27 @@ public class DataContainer implements RowAppender {
      */
     protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
         final boolean forceSynchronousIO) {
-        if (maxCellsInMemory < 0) {
-            throw new IllegalArgumentException("Cell count must be positive: " + maxCellsInMemory);
-        }
-        if (spec == null) {
-            throw new IllegalArgumentException("Spec must not be null!");
-        }
+        this(spec,
+            DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
+                .withSyncIO(forceSynchronousIO || DataContainerSettings.getDefault().useSyncIO()));
+    }
+
+    /**
+     * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
+     *
+     * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
+     * @param settings the container settings
+     * @noreference This constructor is not intended to be referenced by clients.
+     */
+    public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
+        CheckUtils.checkArgumentNotNull(spec, "Spec must not be null!");
+        CheckUtils.checkArgument(settings.getMaxCellsInMemory() >= 0, "Cell count must be positive: %s",
+            settings.getMaxCellsInMemory());
         m_spec = spec;
-        m_duplicateChecker = new DuplicateChecker();
-        boolean isSynchronousWrite = forceSynchronousIO || SYNCHRONOUS_IO;
-        if (!isSynchronousWrite && ASYNC_EXECUTORS.getActiveCount() > MAX_ASYNC_WRITE_THREADS) {
-            LOGGER.debug("Number of Table IO write threads exceeds " + MAX_ASYNC_WRITE_THREADS
+        m_duplicateChecker = settings.createDuplicateChecker();
+        boolean isSynchronousWrite = settings.useSyncIO();
+        if (!isSynchronousWrite && ASYNC_EXECUTORS.getActiveCount() > settings.getMaxAsyncWriteThreads()) {
+            LOGGER.debug("Number of Table IO write threads exceeds " + settings.getMaxAsyncWriteThreads()
                 + " -- switching to synchronous write mode");
             isSynchronousWrite = true;
         }
@@ -426,17 +351,17 @@ public class DataContainer implements RowAppender {
             m_writeThrowable = null;
             m_asyncAddFuture = null;
         } else {
-            m_rowBuffer = new ArrayBlockingQueue<>(ASYNC_CACHE_SIZE);
+            m_rowBuffer = new ArrayBlockingQueue<>(settings.getAsyncCacheSize());
             m_writeThrowable = new AtomicReference<Throwable>();
             m_asyncAddFuture = ASYNC_EXECUTORS.submit(new ASyncWriteCallable(this, NodeContext.getContext()));
         }
 
-        m_domainCreator = new DataTableDomainCreator(m_spec, initDomain);
+        m_domainCreator = settings.createDomainCreator(m_spec);
         m_size = 0;
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
-        m_maxRowsInMemory = maxCellsInMemory / ((colCount > 0) ? colCount : 1);
-        m_bufferCreator = new BufferCreator();
+        m_maxRowsInMemory = settings.getMaxCellsInMemory() / ((colCount > 0) ? colCount : 1);
+        m_bufferCreator = new BufferCreator(settings);
     }
 
     private void addRowToTableWrite(final DataRow row) {
@@ -445,8 +370,7 @@ public class DataContainer implements RowAppender {
         RowKey key = row.getKey();
         if (numCells != m_spec.getNumColumns()) {
             throw new IllegalArgumentException("Cell count in row \"" + key
-                + "\" is not equal to length of column names array: " + numCells + " vs. "
-                + m_spec.getNumColumns());
+                + "\" is not equal to length of column names array: " + numCells + " vs. " + m_spec.getNumColumns());
         }
         for (int c = 0; c < numCells; c++) {
             DataType columnClass = m_spec.getColumnSpec(c).getType();
@@ -811,11 +735,12 @@ public class DataContainer implements RowAppender {
         try {
             m_duplicateChecker.addKey(key.toString());
         } catch (IOException ioe) {
-            throw new DataContainerException(ioe.getClass().getSimpleName() + " while checking for duplicate row IDs: "
-                + ioe.getMessage(), ioe);
+            throw new DataContainerException(
+                ioe.getClass().getSimpleName() + " while checking for duplicate row IDs: " + ioe.getMessage(), ioe);
         } catch (DuplicateKeyException dke) {
-            throw new DuplicateKeyException("Encountered duplicate row ID  \"" + dke.getKey() + "\" at row number "
-                + (m_buffer.size() + 1), dke.getKey());
+            throw new DuplicateKeyException(
+                "Encountered duplicate row ID  \"" + dke.getKey() + "\" at row number " + (m_buffer.size() + 1),
+                dke.getKey());
         }
     }
 
@@ -919,8 +844,9 @@ public class DataContainer implements RowAppender {
      * @throws NullPointerException If the argument is <code>null</code>.
      * @throws CanceledExecutionException If the process has been canceled.
      */
-    public static DataTable cache(final DataTable table, final ExecutionMonitor exec) throws CanceledExecutionException {
-        return cache(table, exec, MAX_CELLS_IN_MEMORY);
+    public static DataTable cache(final DataTable table, final ExecutionMonitor exec)
+        throws CanceledExecutionException {
+        return cache(table, exec, DataContainerSettings.getDefault().getMaxCellsInMemory());
     }
 
     /** Used in write/readFromZip: Name of the zip entry containing the spec. */
@@ -1089,8 +1015,7 @@ public class DataContainer implements RowAppender {
      */
     protected static ContainerTable readFromZipDelayed(final ReferencedFile zipFile, final DataTableSpec spec,
         final int bufferID, final WorkflowDataRepository dataRepository) {
-        CopyOnAccessTask t =
-            new CopyOnAccessTask(zipFile, spec, bufferID, dataRepository, new BufferCreator());
+        CopyOnAccessTask t = new CopyOnAccessTask(zipFile, spec, bufferID, dataRepository, new BufferCreator());
         return readFromZipDelayed(t, spec);
     }
 
@@ -1235,6 +1160,25 @@ public class DataContainer implements RowAppender {
      */
     static class BufferCreator {
 
+        /** The settings informing about the output format used by the writing buffer. */
+        final DataContainerSettings m_settings;
+
+        /**
+         * Constructor.
+         */
+        BufferCreator() {
+            this(DataContainerSettings.getDefault());
+        }
+
+        /**
+         * Constructor.
+         *
+         * @param settings the settings informing about the output format used by the writing buffer
+         */
+        BufferCreator(final DataContainerSettings settings) {
+            m_settings = settings;
+        }
+
         /**
          * Creates buffer for reading.
          *
@@ -1260,7 +1204,7 @@ public class DataContainer implements RowAppender {
          * @param bufferID The buffer's id used for blob (de)serialization.
          * @param dataRepository repository for blob and filestore (de)serialization and table id handling
          * @param localTableRep Table repository for blob (de)serialization.
-         * @param fileStoreHandler ...
+         * @param fileStoreHandler the file store handler
          * @param forceSynchronousWrite whether to force the buffer disk IO thread to write synchronously
          *
          * @return A newly created buffer.
@@ -1269,7 +1213,7 @@ public class DataContainer implements RowAppender {
             final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTableRep,
             final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite) {
             return new Buffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler,
-                forceSynchronousWrite);
+                forceSynchronousWrite, m_settings.getOutputFormat(spec));
         }
 
     }

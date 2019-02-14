@@ -83,27 +83,28 @@ public class BugAP7982_FutureKNIMEVersion_FutureVersion extends WorkflowTestCase
     }
 
     /** Load workflow, expect no errors. */
-    @Test(expected=UnsupportedWorkflowVersionException.class)
+    @Test(expected = UnsupportedWorkflowVersionException.class)
     public void loadWorkflowFail() throws Exception {
         loadWorkflow(false);
     }
 
     private WorkflowLoadResult loadWorkflow(final boolean tryToLoadInsteadOfFail) throws Exception {
         File wkfDir = getDefaultWorkflowDirectory();
-        WorkflowLoadResult loadWorkflow = loadWorkflow(wkfDir, new ExecutionMonitor(), new WorkflowLoadHelper(wkfDir) {
-            @Override
-            public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
-                final boolean isNightlyBuild) {
-                assertThat("Unexpected KNIME version in file", workflowKNIMEVersion, is(LoadVersion.FUTURE));
-                assertThat("Nightly flag wrong", isNightlyBuild, is(m_isExpectNightly));
-                if (tryToLoadInsteadOfFail) {
-                    return UnknownKNIMEVersionLoadPolicy.Try;
-                } else {
-                    return UnknownKNIMEVersionLoadPolicy.Abort;
+        WorkflowLoadResult loadWorkflow =
+            loadWorkflow(wkfDir, new ExecutionMonitor(), new ConfigurableWorkflowLoadHelper(wkfDir) {
+                @Override
+                public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                    final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
+                    final boolean isNightlyBuild) {
+                    assertThat("Unexpected KNIME version in file", workflowKNIMEVersion, is(LoadVersion.FUTURE));
+                    assertThat("Nightly flag wrong", isNightlyBuild, is(m_isExpectNightly));
+                    if (tryToLoadInsteadOfFail) {
+                        return UnknownKNIMEVersionLoadPolicy.Try;
+                    } else {
+                        return UnknownKNIMEVersionLoadPolicy.Abort;
+                    }
                 }
-            }
-        });
+            });
         return loadWorkflow;
     }
 

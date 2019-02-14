@@ -249,7 +249,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         FileUtil.deleteRecursively(m_workflowDirTemp);
     }
 
-    private class TestWorkflowLoadHelper extends WorkflowLoadHelper {
+    private class TestWorkflowLoadHelper extends ConfigurableWorkflowLoadHelper {
 
         private final String m_password;
         private boolean m_hasGottenPrompted;

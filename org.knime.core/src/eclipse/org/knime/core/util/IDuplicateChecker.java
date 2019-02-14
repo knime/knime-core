@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,47 +41,43 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Feb 12, 2019 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.util;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.io.File;
-
-import org.junit.Test;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.util.LoadVersion;
-import org.knime.core.util.Version;
-
-import junit.framework.AssertionFailedError;
+import java.io.IOException;
 
 /**
- * Load a workflow created by older version of KNIME and load it. Don't expect any errors on load.
+ * Interface for classes used to check that the columns of a data table don't contain any duplicates.
  *
- * @author wiswedel, KNIME AG
+ * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @since 3.8
  */
-public class BugAP7982_FutureKNIMEVersion_AllCompatible extends WorkflowTestCase {
+public interface IDuplicateChecker {
 
-    /** Load workflow, expect no errors. */
-    @Test
-    public void loadWorkflow() throws Exception {
-        File wkfDir = getDefaultWorkflowDirectory();
-        WorkflowLoadResult loadWorkflow =
-            loadWorkflow(wkfDir, new ExecutionMonitor(), new ConfigurableWorkflowLoadHelper(wkfDir) {
-                @Override
-                public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                    final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
-                    final boolean isNightlyBuild) {
-                    throw new AssertionFailedError("Not to be called - workflow is expected to be compatible");
-                }
-            });
-        setManager(loadWorkflow.getWorkflowManager());
-        assertThat("Expected to loaded without errors", loadWorkflow.getType(), is(LoadResultEntryType.Ok));
-        assertThat("Workflow version incorrect", getManager().getLoadVersion(), is(LoadVersion.V280));
-    }
+    /**
+     * Adds a new key to the duplicate checker.
+     *
+     * @param s the key
+     * @throws DuplicateKeyException if a duplicate within the current chunk has been detected
+     * @throws IOException if an I/O error occurs while writing the chunk to disk
+     */
+    public void addKey(final String s) throws DuplicateKeyException, IOException;
 
+    /**
+     * Checks for duplicates in all added keys. This method must only be called once after all keys have been added!
+     * Multiple calls may lead to exceptions and excessive resource usage.
+     *
+     * @throws DuplicateKeyException if a duplicate key has been detected
+     * @throws IOException if an I/O error occurs
+     */
+    public void checkForDuplicates() throws DuplicateKeyException, IOException;
+
+    /**
+     * Clears the duplicate checker.
+     */
+    public void clear();
 }

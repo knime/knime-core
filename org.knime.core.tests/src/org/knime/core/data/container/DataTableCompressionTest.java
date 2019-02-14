@@ -57,9 +57,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.stream.IntStream;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -68,6 +66,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.MissingValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat;
+import org.knime.core.data.container.DefaultTableStoreFormat.DefaultTableStoreSettings;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -79,7 +78,8 @@ import org.knime.core.util.Pair;
 import junit.framework.TestCase;
 
 /**
- * This class test that the different compression formats run properly.
+ * Class testing that the different compression formats run properly and that changes in the
+ * {@link DataContainerSettings} change the DataContainer writer/reader behavior.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
@@ -87,31 +87,6 @@ public final class DataTableCompressionTest extends TestCase {
 
     /** Number of generated rows. */
     private static final int ROW_COUNT = 500;
-
-    private CompressionFormat m_iniCompFormat;
-
-    /**
-     * Stores the initial compression format.
-     */
-    @Before
-    public void storeInitialCompFormat() {
-        m_iniCompFormat = DefaultTableStoreFormat.COMPRESSION;
-    }
-
-    /**
-     * Restores the initial compression format, such that succeeding tests don't use an alternated I/O setup.
-     *
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
-     * @throws SecurityException
-     * @throws NoSuchFieldException
-     *
-     */
-    @After
-    public void restoreCompFormat()
-        throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        setCompressionFormat(m_iniCompFormat);
-    }
 
     /**
      * Ensures that the different compressions run properly, by testing that the table is written/read using the proper
@@ -123,21 +98,21 @@ public final class DataTableCompressionTest extends TestCase {
      * @throws IllegalArgumentException
      * @throws IllegalAccessException
      */
+    @SuppressWarnings("static-method")
     @Test
-    public static void testCompressions()
+    public void testCompressions()
         throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        // TODO removed reflection due to assumed side-effects on other tests
-        // other compression formats besides GZIP will be restored in AP-11217
-//        for (final CompressionFormat cFormat : CompressionFormat.values()) {
-        final CompressionFormat cFormat = CompressionFormat.GZIP; {
-            // set the compression format
-            setCompressionFormat(cFormat);
+        // initial settings
+        final DataContainerSettings settings =
+            DataContainerSettings.getDefault().withMaxCellsInMemory(10).withInitializedDomain(false).withSyncIO(false);
+        // create the data
+        final Pair<DataTableSpec, DataRow[]> data = createData(ROW_COUNT);
 
-            // create the data
-            final Pair<DataTableSpec, DataRow[]> data = createData(ROW_COUNT);
+        for (final CompressionFormat cFormat : CompressionFormat.values()) {
 
             // store the data to a table that writes its content to a compressed file
-            DataContainer cont = new DataContainer(data.getFirst(), false, 0, false);
+            DataContainer cont = new DataContainer(data.getFirst(), settings.withOutputFormat(
+                new DefaultTableStoreFormat(DefaultTableStoreSettings.getDefault().withCompression(cFormat))));
 
             // write the data
             writeData(data.getSecond(), cont);
@@ -149,40 +124,14 @@ public final class DataTableCompressionTest extends TestCase {
             // check that the proper compressor has been used to write the file
             testRead(b, cFormat);
 
-            // check that file extension is adaquat
+            // check that file extension is adequate
             Assert.assertThat("Compressed file has wrong file extension:",
                 b.getBinFile().getName().substring(b.getBinFile().getName().indexOf(".")),
-                equalTo(DefaultTableStoreFormat.COMPRESSION.getFileExtension()));
+                equalTo(cFormat.getFileExtension()));
 
             // check that the written table equals the input table
             read(b, data.getSecond());
         }
-    }
-
-    /**
-     * Sets the compression format.
-     *
-     * @param cFormat the new compression format
-     * @throws NoSuchFieldException
-     * @throws SecurityException
-     * @throws IllegalArgumentException
-     * @throws IllegalAccessException
-     */
-    private static void setCompressionFormat(final CompressionFormat cFormat)
-        throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        // TODO removed reflection due to assumed side-effects on other tests
-        // other compression formats besides GZIP will be restored in AP-11217
-//        final Field field = DefaultTableStoreFormat.class.getDeclaredField("COMPRESSION");
-//        field.setAccessible(true);
-//
-//        Field modifiersField = Field.class.getDeclaredField("modifiers");
-//        modifiersField.setAccessible(true);
-//        modifiersField.set(field, field.getModifiers() & ~Modifier.FINAL);
-//
-//        field.set(null, cFormat);
-//
-//        Assert.assertThat("Problem changing the compression format: ", DefaultTableStoreFormat.COMPRESSION,
-//            equalTo(cFormat));
     }
 
     /**

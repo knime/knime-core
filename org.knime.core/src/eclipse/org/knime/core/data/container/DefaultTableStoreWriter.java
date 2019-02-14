@@ -56,11 +56,12 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DCObjectOutputVersion2.BlockableDCObjectOutputVersion2;
+import org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- *
+ * The default table store writer used to write tables to disc.
  * @author wiswedel
  */
 final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements KNIMEStreamConstants {
@@ -71,17 +72,22 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
      */
     private final BlockableDCObjectOutputVersion2 m_outStream;
 
+    /** The compression format. */
+    private final CompressionFormat m_compFormat;
+
     /**
-     * Constructs a writer for writing KNIME tables to disk.
+     * Constructs a writer for writing KNIME tables to disk using the given compression format.
      *
      * @param spec the specification of the KNIME table to write to disk
      * @param outputStream
      * @param writeRowKey a flag that determines whether to store the row keys in the Parquet file
+     * @param compFormat the compression format
      * @throws IOException any type of I/O problem
      */
-    public DefaultTableStoreWriter(final DataTableSpec spec, final OutputStream outputStream, final boolean writeRowKey)
-        throws IOException {
+    public DefaultTableStoreWriter(final DataTableSpec spec, final OutputStream outputStream, final boolean writeRowKey,
+        final CompressionFormat compFormat) throws IOException {
         super(spec, writeRowKey);
+        m_compFormat = compFormat;
         m_outStream = initOutFile(new BufferedOutputStream(outputStream));
     }
 
@@ -123,14 +129,14 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
      */
     @SuppressWarnings("resource")
     private BlockableDCObjectOutputVersion2 initOutFile(final OutputStream outStream) throws IOException {
-        final OutputStream out = DefaultTableStoreFormat.COMPRESSION.getOutputStream(outStream);
+        final OutputStream out = m_compFormat.getOutputStream(outStream);
         return new BlockableDCObjectOutputVersion2(out, this);
     }
 
     /** {@inheritDoc} */
     @Override
     public void writeMetaInfoAfterWrite(final NodeSettingsWO settings) {
-        DefaultTableStoreFormat.COMPRESSION.saveSettings(settings);
+        m_compFormat.saveSettings(settings);
         super.writeMetaInfoAfterWrite(settings);
     }
 

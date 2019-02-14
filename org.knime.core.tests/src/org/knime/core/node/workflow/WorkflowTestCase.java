@@ -62,6 +62,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.eclipse.core.runtime.FileLocator;
 import org.junit.After;
 import org.junit.Assert;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
@@ -92,12 +93,25 @@ public abstract class WorkflowTestCase {
         return m.getID();
     }
 
+    protected NodeID loadAndSetWorkflow(final DataContainerSettings settings) throws Exception {
+        WorkflowManager m =
+            loadWorkflow(getDefaultWorkflowDirectory(), new ExecutionMonitor(), settings).getWorkflowManager();
+        setManager(m);
+        return m.getID();
+    }
+
     protected WorkflowLoadResult loadWorkflow(final File workflowDir, final ExecutionMonitor exec) throws Exception {
-        return loadWorkflow(workflowDir, exec, new WorkflowLoadHelper(workflowDir));
+        return loadWorkflow(workflowDir, exec, DataContainerSettings.getDefault());
     }
 
     protected WorkflowLoadResult loadWorkflow(final File workflowDir, final ExecutionMonitor exec,
-        final WorkflowLoadHelper loadHelper) throws Exception {
+        final DataContainerSettings settings) throws Exception {
+        return loadWorkflow(workflowDir, exec, new ConfigurableWorkflowLoadHelper(workflowDir, settings));
+    }
+
+
+    protected WorkflowLoadResult loadWorkflow(final File workflowDir, final ExecutionMonitor exec,
+        final ConfigurableWorkflowLoadHelper loadHelper) throws Exception {
         WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(workflowDir, exec, loadHelper, false);
         WorkflowManager m = loadResult.getWorkflowManager();
         if (m == null) {

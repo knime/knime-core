@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,47 +41,41 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Feb 12, 2019 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
-package org.knime.core.node.workflow;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.io.File;
-
-import org.junit.Test;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.util.LoadVersion;
-import org.knime.core.util.Version;
-
-import junit.framework.AssertionFailedError;
+package org.knime.core.data;
 
 /**
- * Load a workflow created by older version of KNIME and load it. Don't expect any errors on load.
+ * Interface for classes used to create or recreate the domain of a data table.
  *
- * @author wiswedel, KNIME AG
+ * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @since 3.8
  */
-public class BugAP7982_FutureKNIMEVersion_AllCompatible extends WorkflowTestCase {
+public interface IDataTableDomainCreator {
 
-    /** Load workflow, expect no errors. */
-    @Test
-    public void loadWorkflow() throws Exception {
-        File wkfDir = getDefaultWorkflowDirectory();
-        WorkflowLoadResult loadWorkflow =
-            loadWorkflow(wkfDir, new ExecutionMonitor(), new ConfigurableWorkflowLoadHelper(wkfDir) {
-                @Override
-                public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                    final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
-                    final boolean isNightlyBuild) {
-                    throw new AssertionFailedError("Not to be called - workflow is expected to be compatible");
-                }
-            });
-        setManager(loadWorkflow.getWorkflowManager());
-        assertThat("Expected to loaded without errors", loadWorkflow.getType(), is(LoadResultEntryType.Ok));
-        assertThat("Workflow version incorrect", getManager().getLoadVersion(), is(LoadVersion.V280));
-    }
+    /**
+     * Updates the domain values with a single row. Note that the row structure must match the table spec that has been
+     * provided to the constructor.
+     *
+     * @param row a data row
+     */
+    void updateDomain(DataRow row);
+
+    /**
+     * Set the maximum number of possible values in the domain of a nominal value columns.
+     *
+     * @param maxVals the maximal number of values, must be &gt;= 0
+     */
+    void setMaxPossibleValues(final int maxVals);
+
+    /**
+     * Creates an updated version of the input spec.
+     *
+     * @return an updated table spec
+     */
+    DataTableSpec createSpec();
 
 }

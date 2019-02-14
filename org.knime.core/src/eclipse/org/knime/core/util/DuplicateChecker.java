@@ -80,7 +80,7 @@ import org.knime.core.node.KNIMEConstants;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class DuplicateChecker {
+public class DuplicateChecker implements IDuplicateChecker {
     private static class Chunk {
         private final File m_file;
         private DataOutputStream m_out;
@@ -237,15 +237,7 @@ public class DuplicateChecker {
         m_maxStreams = maxStreams;
     }
 
-    /**
-     * Adds a new key to the duplicate checker.
-     *
-     * @param s the key
-     * @throws DuplicateKeyException if a duplicate within the current chunk has
-     *             been detected
-     * @throws IOException if an I/O error occurs while writing the chunk to
-     *             disk
-     */
+    @Override
     public void addKey(final String s) throws DuplicateKeyException,
             IOException {
         if (DISABLE_DUPLICATE_CHECK) {
@@ -261,13 +253,7 @@ public class DuplicateChecker {
         }
     }
 
-    /**
-     * Checks for duplicates in all added keys. This method must only be called once after all keys have been added!
-     * Multiple calls may lead to exceptions and excessive resource usage.
-     *
-     * @throws DuplicateKeyException if a duplicate key has been detected
-     * @throws IOException if an I/O error occurs
-     */
+    @Override
     public void checkForDuplicates() throws DuplicateKeyException, IOException {
         if (m_storedChunks.size() == 0) {
             // less than MAX_CHUNK_SIZE keys, no need to write
@@ -283,6 +269,7 @@ public class DuplicateChecker {
      * Clears the checker, i.e. removes all temporary files and all keys in
      * memory.
      */
+    @Override
     public void clear() {
         for (Chunk c : m_storedChunks) {
             c.dispose();

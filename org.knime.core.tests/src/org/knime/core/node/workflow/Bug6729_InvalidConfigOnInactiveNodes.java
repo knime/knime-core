@@ -83,7 +83,7 @@ public class Bug6729_InvalidConfigOnInactiveNodes extends WorkflowTestCase {
 
     private void init() throws Exception {
         WorkflowLoadResult loadResult = loadWorkflow(m_workflowDirTemp,
-            new ExecutionMonitor(), new WorkflowLoadHelper(m_workflowDirTemp));
+            new ExecutionMonitor(), new ConfigurableWorkflowLoadHelper(m_workflowDirTemp));
         assertThat("Expected non-error/non-warning load result: " + loadResult.getMessage(),
             loadResult.getType(), is(LoadResultEntryType.Ok));
         final WorkflowManager workflowManager = loadResult.getWorkflowManager();
