@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.tableview;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.knime.core.data.DataTable;
@@ -70,5 +71,17 @@ public interface AsyncDataTable extends DataTable {
      *
      * @param rowsAvailableCallback consumer that receives the from- and to-index of the rows that became available
      */
-    void setRowsAvailableCallback(Consumer<long[]> rowsAvailableCallback);
+    void setRowsAvailableCallback(BiConsumer<Long, Long> rowsAvailableCallback);
+
+    /**
+     * Registers a callback that gets called when the end of the table has been reached and/or the row count is known.
+     *
+     * @param rowCountKnownCallback consumer that receives the new row count
+     */
+    void setRowCountKnownCallback(Consumer<Long> rowCountKnownCallback);
+
+    /**
+     * Cancel all loading processes if there are still some running.
+     */
+    void cancel();
 }

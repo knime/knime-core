@@ -55,6 +55,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObjectView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.tableview.AsyncDataTable;
 import org.knime.core.node.tableview.TableView;
 
 /**
@@ -140,6 +141,12 @@ public class BufferedDataTableView extends JComponent implements PortObjectView 
         return result.toString();
     }
 
+    @Override
+    public void close() {
+        if (m_table instanceof AsyncDataTable) {
+            ((AsyncDataTable)m_table).cancel();
+        }
+    }
 
     /** {@inheritDoc}
      * Reset internal data table and reset data out-port view.

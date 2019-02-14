@@ -398,6 +398,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/tableview/AsyncDataTable.java" type="org.knime.core.node.tableview.AsyncDataTable">
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.tableview.AsyncDataTable"/>
+                <message_argument value="setRowsAvailableCallback(Consumer&lt;long[]&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/util/AbstractJFileChooserBrowser.java" type="org.knime.core.node.util.AbstractJFileChooserBrowser">
         <filter id="576725006">
             <message_arguments>

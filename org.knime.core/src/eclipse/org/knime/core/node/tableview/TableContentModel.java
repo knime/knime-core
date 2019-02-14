@@ -410,8 +410,11 @@ public class TableContentModel extends AbstractTableModel
             }
 
             if (data instanceof AsyncDataTable) {
-                ((AsyncDataTable)data).setRowsAvailableCallback((fromto) -> {
-                    fireTableRowsUpdated((int)fromto[0], (int)fromto[1]);
+                ((AsyncDataTable)data).setRowsAvailableCallback((from, to) -> {
+                    fireTableRowsUpdated(from.intValue(), to.intValue());
+                });
+                ((AsyncDataTable)data).setRowCountKnownCallback(count -> {
+                    setRowCount(count.intValue(), true, true);
                 });
             }
 
@@ -1165,7 +1168,7 @@ public class TableContentModel extends AbstractTableModel
      * Clears cache, instantiates new Iterator.
      */
     protected void clearCache() {
-        if (!hasData()) {
+        if (!hasData() || m_cachedRows == null) {
             return;
         }
         if (m_iterator instanceof CloseableRowIterator) {
@@ -1437,31 +1440,36 @@ public class TableContentModel extends AbstractTableModel
     } // fireRowsInCacheUpdated(final int i1, final int i2)
 
     /**
-     * Used by the row counter thread to inform about new rows. An event will
-     * be fired to inform registered listeners.
+     * Used by the row counter thread to inform about new rows. An event will be fired to inform registered listeners.
      *
      * @param newCount the new row count
      * @param isFinal if there are possibly more rows to count
+     * @param removeRows if <code>true</code> and the new row count is smaller than the old one, rows will be removed.
+     *            If <code>false</code> nothing will happen when <code>newCount < oldCount</code>
      */
-    synchronized void setRowCount(final int newCount, final boolean isFinal) {
+    synchronized void setRowCount(final int newCount, final boolean isFinal, final boolean removeRows) {
         final int oldCount = m_maxRowCount;
-        if (oldCount >= newCount) {
+        if (oldCount >= newCount && !removeRows) {
             return;
-        }
-        m_isMaxRowCountFinal = isFinal;
-        m_maxRowCount = newCount;
-        if (!m_tableFilter.performsFiltering()) {
-            m_rowCountOfInterest = m_maxRowCount;
-            m_isRowCountOfInterestFinal = isFinal;
-        }
-        ViewUtils.invokeLaterInEDT(new Runnable() {
-            @Override
-            public void run() {
-                fireTableRowsInserted(oldCount, newCount - 1);
+        } else {
+            m_isMaxRowCountFinal = isFinal;
+            m_maxRowCount = newCount;
+            if (!m_tableFilter.performsFiltering()) {
+                m_rowCountOfInterest = m_maxRowCount;
+                m_isRowCountOfInterestFinal = isFinal;
             }
-        });
+            ViewUtils.invokeLaterInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    if (oldCount >= newCount) {
+                        fireTableRowsDeleted(newCount, oldCount - 1);
+                    } else {
+                        fireTableRowsInserted(oldCount, newCount - 1);
+                    }
+                }
+            });
+        }
     }
-
 
     /**
      * Adds property change listener to this instance.

@@ -366,6 +366,14 @@ public class OutPortView extends JFrame {
      * {@inheritDoc} */
     @Override
     public void setVisible(final boolean b) {
+        if (isVisible() && !b) {
+            //if view has been closed
+            m_tabNameToViewDetailMap.values().forEach(c -> {
+                if (c.getView() instanceof PortObjectView) {
+                    ((PortObjectView)c.getView()).close();
+                }
+            });
+        }
         super.setVisible(b);
         if (b && m_updateObjectReference.get() != null) {
             runUpdateThread();

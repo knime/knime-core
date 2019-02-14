@@ -81,4 +81,10 @@ public interface PortObjectView {
      * @since 3.6 */
     default void dispose() {}
 
+    /**
+     * Called when the view window is closed but could potentially be opened again.
+     * @since 3.8
+     */
+    default void close() {}
+
 }

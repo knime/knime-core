@@ -98,11 +98,11 @@ final class RowCounterThread extends Thread {
             final long now = System.currentTimeMillis();
             if (now - lastNotify >= NOTIFY_DELAY) {
                 lastNotify = now;
-                m_contentModel.setRowCount(rowCount, false);
+                m_contentModel.setRowCount(rowCount, false, false);
             }
             it.next();
             rowCount++;
         }
-        m_contentModel.setRowCount(rowCount, true);
+        m_contentModel.setRowCount(rowCount, true, false);
     }
 }

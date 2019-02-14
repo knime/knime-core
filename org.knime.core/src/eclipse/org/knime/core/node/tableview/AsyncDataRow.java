@@ -108,7 +108,8 @@ public class AsyncDataRow implements DataRow {
         if (m_futureRow.isCompletedExceptionally()) {
             return new RowKey("FAILED LOADING");
         } else if (m_futureRow.isDone()) {
-            return m_futureRow.getNow(null).getKey();
+            DataRow row = m_futureRow.getNow(null);
+            return row != null ? row.getKey() : null;
         } else {
             return new RowKey("Loading ... (" + m_rowIndex + ")");
         }
@@ -120,7 +121,8 @@ public class AsyncDataRow implements DataRow {
     @Override
     public DataCell getCell(final int index) {
         if (m_futureRow.isDone() && !m_futureRow.isCompletedExceptionally()) {
-            return m_futureRow.getNow(null).getCell(index);
+            DataRow row = m_futureRow.getNow(null);
+            return row != null ? row.getCell(index) : null;
         } else {
             return new DataCell() {
 
