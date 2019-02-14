@@ -59,6 +59,8 @@ import org.knime.core.data.RowIterator;
  *
  * Pending API! Will be re-visited with AP-11279.
  *
+ * TODO: use future capability of the row iterator builder to only iterate a range of rows!
+ *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
  * @since 3.8
