@@ -117,25 +117,38 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
 
     /** Red traffic light. */
     public static final Image RED = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/ampel_red.png");
+    /** Ghostly form of the red traffic light. */
+    public static final Image RED_GHOSTLY = makeImageGhostly(RED);
 
-    /** Yellow traffic light. * */
+    /** Yellow traffic light. */
     public static final Image YELLOW = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/ampel_yellow.png");
+    /** Ghostly form of the yello traffic light. */
+    public static final Image YELLOW_GHOSTLY = makeImageGhostly(YELLOW);
 
     /** Green traffic light. */
     public static final Image GREEN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/ampel_green.png");
+    /** Ghostly form of the green traffic light. */
+    public static final Image GREEN_GHOSTLY = makeImageGhostly(GREEN);
 
     /** Inactive traffic light. */
-    public static final Image INACTIVE =
-        ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/ampel_inactive.png");
+    public static final Image INACTIVE = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/ampel_inactive.png");
+    /** Ghostly form of the inactive traffic light. */
+    public static final Image INACTIVE_GHOSTLY = makeImageGhostly(INACTIVE);
 
     /** Info sign. */
     public static final Image INFO_SIGN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/roundInfo.jpg");
+    /** Ghostly form of the info sign. */
+    public static final Image INFO_SIGN_GHOSTLY = makeImageGhostly(INFO_SIGN);
 
     /** Warning sign. */
     public static final Image WARNING_SIGN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/warning.gif");
+    /** Ghostly form of the warning sign. */
+    public static final Image WARNING_SIGN_GHOSTLY = makeImageGhostly(WARNING_SIGN);
 
     /** Error sign. */
     public static final Image ERROR_SIGN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/error.png");
+    /** Ghostly form of the error sign. */
+    public static final Image ERROR_SIGN_GHOSTLY = makeImageGhostly(ERROR_SIGN);
 
     /** Delete sign. */
     public static final Image DELETE_SIGN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/delete.png");
@@ -611,13 +624,13 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
         if (!isInactive) {
             if (state.isIdle()) {
                 setStatusAmple();
-                m_statusFigure.setIcon(RED);
+                m_statusFigure.setIcon(RED, RED_GHOSTLY);
             } else if (state.isConfigured()) {
                 setStatusAmple();
-                m_statusFigure.setIcon(YELLOW);
+                m_statusFigure.setIcon(YELLOW, YELLOW_GHOSTLY);
             } else if (state.isExecuted()) {
                 setStatusAmple();
-                m_statusFigure.setIcon(GREEN);
+                m_statusFigure.setIcon(GREEN, GREEN_GHOSTLY);
             } else if (state.isWaitingToBeExecuted()) {
                 if (LoopStatus.PAUSED.equals(loopStatus)) {
                     setProgressBar(ProgressMode.PAUSED);
@@ -628,11 +641,11 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
                 setProgressBar(ProgressMode.EXECUTING);
             } else {
                 setStatusAmple();
-                m_statusFigure.setIcon(INACTIVE);
+                m_statusFigure.setIcon(INACTIVE, INACTIVE_GHOSTLY);
             }
         } else {
             setStatusAmple();
-            m_statusFigure.setIcon(INACTIVE);
+            m_statusFigure.setIcon(INACTIVE, INACTIVE_GHOSTLY);
         }
         setLoopStatus(loopStatus, state.isExecuted());
         repaint();
@@ -1162,13 +1175,13 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
 
             // create the info/warning/error figures
             m_infoFigure = new InfoWarnErrorFigure();
-            m_infoFigure.setIcon(INFO_SIGN);
+            m_infoFigure.setIcon(INFO_SIGN, INFO_SIGN_GHOSTLY);
 
             m_warningFigure = new InfoWarnErrorFigure();
-            m_warningFigure.setIcon(WARNING_SIGN);
+            m_warningFigure.setIcon(WARNING_SIGN, WARNING_SIGN_GHOSTLY);
 
             m_errorFigure = new InfoWarnErrorFigure();
-            m_errorFigure.setIcon(ERROR_SIGN);
+            m_errorFigure.setIcon(ERROR_SIGN, ERROR_SIGN_GHOSTLY);
 
             setVisible(true);
             repaint();
@@ -1297,7 +1310,22 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
 
             add(m_figureLabel);
             setOpaque(false);
-            setIcon(RED);
+            setIcon(RED, RED_GHOSTLY);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        void setIcon(final Image icon) {
+            throw new IllegalStateException("This method should not be called.");
+        }
+
+        void setIcon(final Image icon, final Image ghostly) {
+            m_originalIcon = icon;
+            m_ghostlyIcon = ghostly;
+
+            updateFigure();
         }
 
         /**
@@ -1325,6 +1353,21 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
 
             add(m_figureLabel);
             setOpaque(false);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        void setIcon(final Image icon) {
+            throw new IllegalStateException("This method should not be called.");
+        }
+
+        void setIcon(final Image icon, final Image ghostly) {
+            m_originalIcon = icon;
+            m_ghostlyIcon = ghostly;
+
+            updateFigure();
         }
 
         /**
