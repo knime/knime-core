@@ -294,6 +294,15 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
     }
 
     /**
+     * This method should be invoked when its parent is being deactivated (in the GEF sense.)
+     */
+    public void figureIsBeingDisposed() {
+        // The other figures containing images contains class-static Image instances, so we are only concerned
+        //      with the SymbolFigure instance.
+        m_symbolFigure.disposeGhostlyImage();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -597,12 +606,8 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
         }
     }
 
-    private Image affectImageReflectingEditModeAsNecessary(final Image image, final Image ghostlyImage) {
-        if (!WorkflowEditorMode.NODE_EDIT.equals(m_currentEditorMode)) {
-            return (ghostlyImage == null) ? makeImageGhostly(image) : ghostlyImage;
-        }
-
-        return image;
+    private Image imageReflectingEditMode(final Image image, final Image ghostlyImage) {
+        return WorkflowEditorMode.NODE_EDIT.equals(m_currentEditorMode) ? image : ghostlyImage;
     }
 
     /**
@@ -831,25 +836,43 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
         protected Image m_originalIcon;
         protected Image m_ghostlyIcon;
 
+        void disposeGhostlyImage() {
+            if (m_ghostlyIcon != null) {
+                m_ghostlyIcon.dispose();
+
+                m_ghostlyIcon = null;
+            }
+        }
+
         /**
          * Sets the icon to display.
          *
-         * @param icon The icon (traffic light) to set
+         * @param icon The icon to set
          */
         void setIcon(final Image icon) {
             m_originalIcon = icon;
 
-            if (m_ghostlyIcon != null) {
-                m_ghostlyIcon.dispose();
-            }
+            disposeGhostlyImage();
             m_ghostlyIcon = makeImageGhostly(icon);
 
             updateFigure();
         }
 
+        /**
+         * Sets the icon and an already-created ghostly form of the icon.
+         *
+         * @param icon The icon to set
+         * @param ghostly The ghostly version of the icon
+         */
+        void setIcon(final Image icon, final Image ghostly) {
+            m_originalIcon = icon;
+            m_ghostlyIcon = ghostly;
+
+            updateFigure();
+        }
+
         void updateFigure() {
-            final Image icon = (m_originalIcon != null)
-                ? affectImageReflectingEditModeAsNecessary(m_originalIcon, m_ghostlyIcon) : null;
+            final Image icon = (m_originalIcon != null) ? imageReflectingEditMode(m_originalIcon, m_ghostlyIcon) : null;
 
             m_figureLabel.setIcon(icon);
 
@@ -1117,10 +1140,19 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
         }
 
         @Override
+        void disposeGhostlyImage() {
+            super.disposeGhostlyImage();
+            if (m_ghostlyBackgroundIcon != null) {
+                m_ghostlyBackgroundIcon.dispose();
+
+                m_ghostlyBackgroundIcon = null;
+            }
+        }
+
+        @Override
         void updateFigure() {
             super.updateFigure();
-            setBackgroundIcon(
-                affectImageReflectingEditModeAsNecessary(m_originalBackgroundIcon, m_ghostlyBackgroundIcon));
+            setBackgroundIcon(imageReflectingEditMode(m_originalBackgroundIcon, m_ghostlyBackgroundIcon));
         }
 
         void setBackgroundIcon(final Image icon) {
@@ -1321,13 +1353,6 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
             throw new IllegalStateException("This method should not be called.");
         }
 
-        void setIcon(final Image icon, final Image ghostly) {
-            m_originalIcon = icon;
-            m_ghostlyIcon = ghostly;
-
-            updateFigure();
-        }
-
         /**
          * {@inheritDoc}
          */
@@ -1361,13 +1386,6 @@ public class NodeContainerFigure extends RectangleFigure implements EditorModePa
         @Override
         void setIcon(final Image icon) {
             throw new IllegalStateException("This method should not be called.");
-        }
-
-        void setIcon(final Image icon, final Image ghostly) {
-            m_originalIcon = icon;
-            m_ghostlyIcon = ghostly;
-
-            updateFigure();
         }
 
         /**

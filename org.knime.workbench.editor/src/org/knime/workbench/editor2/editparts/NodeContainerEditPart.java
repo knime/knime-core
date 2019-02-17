@@ -181,20 +181,20 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements C
             }
         });
 
-    private static final Image META_NODE_LINK_GREEN_ICON = ImageRepository
-        .getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_link_green_decorator.png");
+    private static final Image META_NODE_LINK_GREEN_ICON =
+        ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_link_green_decorator.png");
 
-    private static final Image META_NODE_LINK_RED_ICON = ImageRepository
-        .getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_link_red_decorator.png");
+    private static final Image META_NODE_LINK_RED_ICON =
+        ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_link_red_decorator.png");
 
-    private static final Image META_NODE_LINK_PROBLEM_ICON = ImageRepository
-        .getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_link_problem_decorator.png");
+    private static final Image META_NODE_LINK_PROBLEM_ICON =
+        ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_link_problem_decorator.png");
 
     private static final Image META_NODE_LOCK_ICON =
             ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_lock_decorator.png");
 
-    private static final Image META_NODE_UNLOCK_ICON = ImageRepository
-        .getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_unlock_decorator.png");
+    private static final Image META_NODE_UNLOCK_ICON =
+        ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_unlock_decorator.png");
 
     private static final Image NODE_LOCK_ICON =
             ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_lock_decorator.png");
@@ -295,23 +295,30 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements C
      */
     @Override
     public void deactivate() {
-        NodeContainerUI nc = getNodeContainer();
-        IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        final NodeContainerUI nc = getNodeContainer();
+        final IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
+
         store.removePropertyChangeListener(this);
         nc.removeNodeStateChangeListener(this);
         nc.removeNodeMessageListener(this);
         nc.removeNodeProgressListener(this);
         nc.removeUIInformationListener(this);
         nc.removeNodePropertyChangedListener(this);
+
         removeEditPartListener(this);
-        for (Object o : getChildren()) {
-            EditPart editPart = (EditPart)o;
+
+        for (final Object o : getChildren()) {
+            final EditPart editPart = (EditPart)o;
             editPart.deactivate();
         }
-        EditPolicyIterator editPolicyIterator = getEditPolicyIterator();
+
+        final EditPolicyIterator editPolicyIterator = getEditPolicyIterator();
         while (editPolicyIterator.hasNext()) {
             editPolicyIterator.next().deactivate();
         }
+
+        ((NodeContainerFigure)figure).figureIsBeingDisposed();
+
         super.deactivate();
     }
 
