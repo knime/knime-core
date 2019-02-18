@@ -145,6 +145,19 @@ public class BufferedDataTableView extends JComponent implements PortObjectView 
     public void close() {
         if (m_table instanceof AsyncDataTable) {
             ((AsyncDataTable)m_table).cancel();
+            m_dataView.setDataTable(null);
+        }
+    }
+
+    @Override
+    public void open() {
+        if (m_table instanceof AsyncDataTable) {
+            //the loading process of a async data table might have
+            //been canceled on close -> re-initialize the table to
+            //get rid of rows stuck in the 'loading' state
+            if (!m_dataView.hasData()) {
+                updateDataTable();
+            }
         }
     }
 

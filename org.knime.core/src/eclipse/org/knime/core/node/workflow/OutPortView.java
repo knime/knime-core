@@ -169,6 +169,13 @@ public class OutPortView extends JFrame {
         setExtendedState(NORMAL);
         setVisible(true);
         toFront();
+
+        // inform PortObjectViews that the view-window has been opened
+        m_tabNameToViewDetailMap.values().forEach(c -> {
+            if (c.getView() instanceof PortObjectView) {
+                ((PortObjectView)c.getView()).open();
+            }
+        });
     }
 
     /**
