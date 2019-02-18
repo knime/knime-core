@@ -80,7 +80,7 @@ public class DefaultNodeProgressMonitorTest {
     private static final double PROG_EPSILON = 1E-3;
 
     /** Just a lot of incremental numeric progress updates. */
-    @Test(timeout=1000L)
+    @Test(timeout=2000L)
     public void testManySmallIncrementsDirect() throws Exception {
         DefaultNodeProgressMonitor m = new DefaultNodeProgressMonitor();
         internalTestManySmallIncrements(m, m);
@@ -117,14 +117,14 @@ public class DefaultNodeProgressMonitorTest {
     }
 
     /** Calls internal test message for {@link DefaultNodeProgressMonitor}. */
-    @Test(timeout=1000L)
+    @Test(timeout=2000L)
     public void testManyMessageEventsDirect() throws Exception {
         final DefaultNodeProgressMonitor progMon = new DefaultNodeProgressMonitor();
         internalTestManyMessageEvents(progMon, progMon);
     }
 
     /** Calls internal test message for {@link SubNodeProgressMonitor}. */
-    @Test(timeout=1000L)
+    @Test(timeout=2000L)
     public void testManyMessageEventsSubProgress() throws Exception {
         final DefaultNodeProgressMonitor progMon = new DefaultNodeProgressMonitor();
         internalTestManyMessageEvents(progMon, new SubNodeProgressMonitor(progMon, 1.0));
