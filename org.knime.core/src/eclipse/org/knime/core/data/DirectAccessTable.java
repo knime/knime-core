@@ -50,6 +50,7 @@ package org.knime.core.data;
 
 import java.util.List;
 
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -95,9 +96,11 @@ public interface DirectAccessTable {
      * be empty.
      *
      * @throws IndexOutOfBoundsException if {@code (start < 0 || length < 0 || start + length < 0)}
+     * @throws CanceledExecutionException if execution was cancelled
      * @see DataRow
      */
-    List<DataRow> getRows(long start, int length, ExecutionMonitor exec);
+    List<DataRow> getRows(long start, int length, ExecutionMonitor exec)
+            throws IndexOutOfBoundsException, CanceledExecutionException;
 
     /**
      * Returns the number of rows held by this table, if this number is applicable.
