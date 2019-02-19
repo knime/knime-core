@@ -50,6 +50,8 @@ package org.knime.core.data;
 
 import java.util.List;
 
+import org.knime.core.node.ExecutionMonitor;
+
 /**
  * General data interface in table structure with a fixed number of columns and random access to chunks of rows.
  *
@@ -86,6 +88,8 @@ public interface DirectAccessTable {
      *
      * @param start the start index of the rows to return from this table (inclusive)
      * @param length the maximum number of rows to return
+     * @param exec an {@link ExecutionMonitor} to set progress and check for cancellation, can be null if no execution
+     * monitor is available.
      * @return list of requested {@link DataRow}s. {@link List#size()} might return a smaller number than <br>
      * {@code length} if {@code (start + length > getRowCount())}. If {@code (start > tableSize)} the list will
      * be empty.
@@ -93,7 +97,7 @@ public interface DirectAccessTable {
      * @throws IndexOutOfBoundsException if {@code (start < 0 || length < 0 || start + length < 0)}
      * @see DataRow
      */
-    List<DataRow> getRows(long start, int length);
+    List<DataRow> getRows(long start, int length, ExecutionMonitor exec);
 
     /**
      * Returns the number of rows held by this table, if this number is applicable.
