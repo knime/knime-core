@@ -50,6 +50,7 @@ package org.knime.core.node.tableview;
 
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -106,7 +107,13 @@ public class AsyncDataRow implements DataRow {
     @Override
     public RowKey getKey() {
         if (m_futureRow.isCompletedExceptionally()) {
-            return new RowKey("FAILED LOADING");
+            String cause = "";
+            try {
+                m_futureRow.get();
+            } catch (InterruptedException | ExecutionException ex) {
+                cause = ex.getLocalizedMessage();
+            }
+            return new RowKey("FAILED LOADING (" + cause + ")");
         } else if (m_futureRow.isDone()) {
             DataRow row = m_futureRow.getNow(null);
             return row != null ? row.getKey() : null;
