@@ -87,7 +87,7 @@ public class BufferedDataTableView extends JComponent implements PortObjectView 
 
         m_dataView = new TableView();
         m_dataView.setWrapColumnHeader(CorePlugin.getInstance().isWrapColumnHeaderInTableViews());
-        m_dataView.getContentModel().setSortingAllowed(true);
+        m_dataView.getContentModel().setSortingAllowed(table instanceof AsyncDataTable ? false : true);
         m_dataView.registerNavigationActions();
         updateDataTable();
     }
