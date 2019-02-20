@@ -57,6 +57,7 @@ import javax.swing.filechooser.FileFilter;
  * <a href="https://knime-com.atlassian.net/browse/AP-6866">AP-6866</a>.
  *
  * @author Ferry Abt, KNIME GmbH, Konstanz
+ * @since 3.8
  */
 public class AcceptAllFileFilter extends FileFilter {
 
