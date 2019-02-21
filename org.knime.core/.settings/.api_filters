@@ -24,6 +24,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/cache/WindowCacheTable.java" type="org.knime.core.data.cache.WindowCacheTable">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="DirectAccessTable"/>
+                <message_argument value="WindowCacheTable"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/Buffer.java" type="org.knime.core.data.container.Buffer">
         <filter id="338792546">
             <message_arguments>

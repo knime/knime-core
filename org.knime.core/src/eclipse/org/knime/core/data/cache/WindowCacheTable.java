@@ -67,7 +67,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
- * Wrapper around a {@link DataTable} which supports buffering a window of contiguous {@link DataRow}s for fast access.
+ * Wrapper around a {@link DataTable} which supports caching a window of contiguous {@link DataRow}s in a ring buffer.
+ * This functionality is mainly needed for table views which support scrolling or paging so that rows in the area of
+ * currently visible rows can be accessed quickly.
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @since 3.8
@@ -139,21 +141,32 @@ public class WindowCacheTable implements DirectAccessTable {
      * exceptions to be thrown. An empty or uninitialized set indicates that all columns should be accessible. */
     private Set<String> m_includedColumnIndices;
 
-    /**
-     * @param table
-     */
-    public WindowCacheTable(final DataTable table) {
+    private WindowCacheTable(final DataTable table, final boolean init) {
         m_maxRowCount = 0;
         m_isMaxRowCountFinal = true; // no data seen, assume final row count
         m_lookAheadSize = DEFAULT_LOOK_AHEAD;
         m_cacheSize = DEFAULT_CACHE_SIZE;
         m_table = table;
-        initCache();
+        if (init) {
+            initCache();
+        }
     }
 
+    /**
+     * @param table
+     */
+    public WindowCacheTable(final DataTable table) {
+        this(table, true);
+    }
+
+    /**
+     * @param table
+     * @param includedColumns
+     */
     public WindowCacheTable(final DataTable table, final String... includedColumns) {
-        this(table);
+        this(table, false);
         setIncludedColumns(includedColumns);
+        initCache();
     }
 
     /**
@@ -279,7 +292,7 @@ public class WindowCacheTable implements DirectAccessTable {
      * @return the new cache size (may differ from <code>size</code>, see above)
      * @throws IllegalArgumentException if <code>size</code> <= 0.
      */
-    protected final int setCacheSize(final int size) {
+    public final int setCacheSize(final int size) {
         if (size == getCacheSize()) { // cool, nothing changed
             return size;
         }
@@ -311,7 +324,7 @@ public class WindowCacheTable implements DirectAccessTable {
      * @throws IllegalArgumentException if <code>newSize</code> is &lt;= 0.
      * @see #getCacheSize()
      */
-    protected final int setLookAheadSize(final int newSize) {
+    public final int setLookAheadSize(final int newSize) {
         if (newSize <= 0) {
             throw new IllegalArgumentException(
                 "Chunks must not be <= 0: " + newSize);
@@ -358,9 +371,7 @@ public class WindowCacheTable implements DirectAccessTable {
             // clear cache, init new iterator
             clearCache();
         }
-        assert (start >= m_rowCountOfInterestInIterator - 1);
-
-        boolean wasRowCountFinal = isRowCountFinal();
+        assert (start + length >= m_rowCountOfInterestInIterator - 1);
 
         /* push iterator forward to index lastRow + m_lookAheadSize
          * (ensures when getRows(lastRow+1,...) is called the iterator does not need to be used again) */
@@ -464,7 +475,7 @@ public class WindowCacheTable implements DirectAccessTable {
     private List<DataRow> getRowsFromCache(final long start, final int length) {
         List<DataRow> rowList = new ArrayList<DataRow>(length);
         for (long row = start; row < start + length; row++) {
-            if (row > m_rowCountOfInterest) {
+            if (row >= m_rowCountOfInterest) {
                 break; // row outside of table, may return an empty or partially filled list
             }
             rowList.add(m_cachedRows[indexForRow(row)]);
@@ -530,25 +541,4 @@ public class WindowCacheTable implements DirectAccessTable {
                 + rowIndex + " >= " +  m_maxRowCount);
         }
     }
-
-    /**
-     * Checks if given argument is in range and throws an exception if it is not.
-     *
-     * @param columnIndex column index to check
-     * @throws IndexOutOfBoundsException if argument violates range
-     */
-    private final void boundColumn(final int columnIndex) {
-        if (columnIndex < 0) {
-            throw new IndexOutOfBoundsException(
-                "Column index must not be < 0: " + columnIndex);
-        }
-        if (columnIndex >= getColumnCount()) {
-            throw new IndexOutOfBoundsException(
-                "Column index must not be >= "
-                    + getColumnCount()
-                    + ": "
-                    + columnIndex);
-        }
-    }
-
 }
