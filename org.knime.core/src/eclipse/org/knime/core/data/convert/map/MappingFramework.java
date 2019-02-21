@@ -8,6 +8,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
@@ -18,6 +19,7 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
 import org.knime.core.data.convert.map.Source.ProducerParameters;
 import org.knime.core.data.convert.util.SerializeUtil;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.ExecutionContext;
 
 /**
@@ -188,7 +190,6 @@ public class MappingFramework {
         m_sourceTypes.put(sourceType, registry);
         return registry;
     }
-
     /**
      * Creates a {@link DataRowProducer} that allows to produce data rows from a given {@link Source source} using a
      * given {@link ProductionPath mapping}.
@@ -201,10 +202,28 @@ public class MappingFramework {
      *            none of the converter factories in {@code mapping} require an execution context.
      * @return The data row producer for the given source and the given mapping.
      * @since 3.7
+     * @see #createDataRowProducer(FileStoreFactory, Source, ProductionPath[])
      */
     public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRowProducer<PP>
         createDataRowProducer(final S source, final ProductionPath[] mapping, final ExecutionContext exec) {
-        return new DefaultDataRowProducer<>(source, mapping, exec);
+        return new DefaultDataRowProducer<>(source, mapping, FileStoreFactory.createFileStoreFactory(exec));
+    }
+
+    /**
+     * Creates a {@link DataRowProducer} that allows to produce data rows from a given {@link Source source} using a
+     * given {@link ProductionPath mapping}.
+     * @param fileStoreFactory {@link FileStoreFactory} which may be used for creating {@link CellFactory}s.
+     * @param source The source from which to create data rows.
+     * @param mapping Per-{@link DataCell cell} production paths that describe the mapping from source to data cell.
+     *
+     * @param <S> Type of the source from which to create data rows.
+     * @param <PP> Producer parameters subclass. Specific to the source.
+     * @return The data row producer for the given source and the given mapping.
+     * @since 3.8
+     */
+    public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRowProducer<PP>
+        createDataRowProducer(final FileStoreFactory fileStoreFactory, final S source, final ProductionPath[] mapping) {
+        return new DefaultDataRowProducer<>(source, mapping, fileStoreFactory);
     }
 
     /**
@@ -219,15 +238,36 @@ public class MappingFramework {
      * @throws Exception If conversion fails
      * @param <ST> Source type
      * @param <PP> Producer parameters subclass
+     * @see #map(RowKey, FileStoreFactory, Source, ProductionPath[], ProducerParameters[])
      */
     public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRow map(final RowKey key, final S source,
         final ProductionPath[] mapping, final PP[] params, final ExecutionContext context) throws Exception {
+        return map(key, FileStoreFactory.createFileStoreFactory(context), source, mapping, params);
+    }
+
+    /**
+     * Map a row of input data from the given source to a {@link DataRow}.
+     *
+     * @param key Row key for the created row
+     * @param fileStoreFactory {@link FileStoreFactory} which may be used for creating {@link CellFactory}s.
+     * @param source Source to get data from
+     * @param mapping Production paths to take when reading a column and producing a {@link DataCell} from it.
+     * @param params Per column parameters for the producers used
+     * @return The DataRow which contains the data read from the source
+     * @throws Exception If conversion fails
+     * @param <ST> Source type
+     * @param <PP> Producer parameters subclass
+     * @since 3.8
+     */
+    public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRow map(final RowKey key,
+        final FileStoreFactory fileStoreFactory, final S source, final ProductionPath[] mapping,
+        final PP[] params) throws Exception {
 
         final DataCell[] cells = new DataCell[mapping.length];
 
         int i = 0;
         for (final ProductionPath path : mapping) {
-            final JavaToDataCellConverter<?> converter = path.m_converterFactory.create(context);
+            final JavaToDataCellConverter<?> converter = path.m_converterFactory.create(fileStoreFactory);
             @SuppressWarnings("unchecked")
             final CellValueProducer<S, ?, PP> producer = (CellValueProducer<S, ?, PP>)path.m_producerFactory.create();
             try {

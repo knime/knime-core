@@ -359,8 +359,8 @@ public final class JavaToDataCellConverterRegistry extends
                     final Method method = pair.getFirst();
                     try {
                         final JavaToDataCellConverterFactory<?> factory = new FactoryMethodToDataCellConverterFactory<>(
-                            cellFactoryClass, method, ClassUtil.ensureObjectType(method.getParameterTypes()[0]),
-                            dataType, pair.getSecond().name());
+                            method, ClassUtil.ensureObjectType(method.getParameterTypes()[0]), dataType,
+                            pair.getSecond().name());
                         // Check name of factory
                         if (!validateFactoryName(factory)) {
                             LOGGER.warn("JavaToDataCellFactory name \"" + factory.getName() + "\" of factory with id \""

@@ -48,7 +48,7 @@
  */
 package org.knime.core.data.convert.datacell;
 
-import org.knime.core.node.ExecutionContext;
+import org.knime.core.data.filestore.FileStoreFactory;
 
 /**
  * Converter factory that is typed on the (base) type of the converters that it creates. The type is exposed via
@@ -76,5 +76,5 @@ public interface TypedJavaToDataCellConverterFactory<S, C extends JavaToDataCell
      *         returned by {@link #getConverterType()}.
      */
     @Override
-    C create(ExecutionContext context);
+    C create(FileStoreFactory fileStoreFactory);
 }

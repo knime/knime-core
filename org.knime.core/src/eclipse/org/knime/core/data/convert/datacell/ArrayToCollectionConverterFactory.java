@@ -56,7 +56,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
-import org.knime.core.node.ExecutionContext;
+import org.knime.core.data.filestore.FileStoreFactory;
 
 /**
  * {@link JavaToDataCellConverterFactory} for converting arrays of a type to a collection of a data cell type by
@@ -136,8 +136,8 @@ public class ArrayToCollectionConverterFactory<S, SE> implements JavaToDataCellC
     }
 
     @Override
-    public JavaToDataCellConverter<S> create(final ExecutionContext context) {
-        final JavaToDataCellConverter<SE> elementConverter = m_elementConverterFactory.create(context);
+    public JavaToDataCellConverter<S> create(final FileStoreFactory fileStoreFactory) {
+        final JavaToDataCellConverter<SE> elementConverter = m_elementConverterFactory.create(fileStoreFactory);
         return m_converterCreator.apply(elementConverter);
     }
 

@@ -49,7 +49,7 @@ package org.knime.core.data.convert.datacell;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
-import org.knime.core.node.ExecutionContext;
+import org.knime.core.data.filestore.FileStoreFactory;
 
 /**
  * Easy to use implementation of {@link DataCellToJavaConverterFactory} for simple Converters. All conversion processes
@@ -118,7 +118,7 @@ public class SimpleJavaToDataCellConverterFactory<T>
     }
 
     @Override
-    public JavaToDataCellConverter<T> create(final ExecutionContext context) {
+    public JavaToDataCellConverter<T> create(final FileStoreFactory fileStoreFactory) {
         return m_converter;
     }
 

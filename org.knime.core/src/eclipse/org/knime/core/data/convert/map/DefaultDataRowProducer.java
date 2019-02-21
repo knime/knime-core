@@ -52,6 +52,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.convert.datacell.BooleanToDataCellConverter;
 import org.knime.core.data.convert.datacell.ByteToDataCellConverter;
 import org.knime.core.data.convert.datacell.CharToDataCellConverter;
@@ -65,6 +66,7 @@ import org.knime.core.data.convert.datacell.ShortToDataCellConverter;
 import org.knime.core.data.convert.datacell.TypedJavaToDataCellConverterFactory;
 import org.knime.core.data.convert.map.Source.ProducerParameters;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.ExecutionContext;
 
 /**
@@ -85,11 +87,26 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
 
     private final S m_source;
 
-    private final ExecutionContext m_executionContext;
+    private final FileStoreFactory m_fileStoreFactory;
 
     private final Mapper<PP, ?, ?>[] m_mappers;
 
     private final DataCell[] m_tempCells;
+
+    /**
+    * Creates a new data row producer for the given source and the given mapping.
+    *
+    * @param source The source from which to create data rows.
+    * @param mapping Production paths that describe the mapping from source to {@link DataCell data cells}. The number
+    *            and order of the passed paths must match the ones of the parameters later passed to
+    *            {@link #produceDataRow(RowKey, ProducerParameters[])}.
+    * @param exec Execution context. Potentially required to create converters. May be {@code null} if it is known that
+    *            none of the converter factories in {@code mapping} require an execution context.
+    * @see #DefaultDataRowProducer(Source, ProductionPath[], FileStoreFactory)
+    */
+   public DefaultDataRowProducer(final S source, final ProductionPath[] mapping, final ExecutionContext exec) {
+       this(source, mapping, FileStoreFactory.createFileStoreFactory(exec));
+    }
 
     /**
      * Creates a new data row producer for the given source and the given mapping.
@@ -98,12 +115,13 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
      * @param mapping Production paths that describe the mapping from source to {@link DataCell data cells}. The number
      *            and order of the passed paths must match the ones of the parameters later passed to
      *            {@link #produceDataRow(RowKey, ProducerParameters[])}.
-     * @param exec Execution context. Potentially required to create converters. May be {@code null} if it is known that
-     *            none of the converter factories in {@code mapping} require an execution context.
+     * @param fileStoreFactory {@link FileStoreFactory} which may be used for creating {@link CellFactory}s.
+     * @since 3.8
      */
-    public DefaultDataRowProducer(final S source, final ProductionPath[] mapping, final ExecutionContext exec) {
+    public DefaultDataRowProducer(final S source, final ProductionPath[] mapping,
+        final FileStoreFactory fileStoreFactory) {
         m_source = source;
-        m_executionContext = exec;
+        m_fileStoreFactory = fileStoreFactory;
         m_tempCells = new DataCell[mapping.length];
         @SuppressWarnings("unchecked")
         final Mapper<PP, ?, ?>[] mappers = new Mapper[mapping.length];
@@ -218,7 +236,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             final DoubleCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final DoubleToDataCellConverter converter = m_converterFactory.create(m_executionContext);
+            final DoubleToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
             if (producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
@@ -239,7 +257,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             final IntCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final IntToDataCellConverter converter = m_converterFactory.create(m_executionContext);
+            final IntToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
             if (producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
@@ -261,7 +279,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             final LongCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final LongToDataCellConverter converter = m_converterFactory.create(m_executionContext);
+            final LongToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
             if (producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
@@ -283,7 +301,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             final BooleanCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final BooleanToDataCellConverter converter = m_converterFactory.create(m_executionContext);
+            final BooleanToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
             if (producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
@@ -305,7 +323,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             final FloatCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final FloatToDataCellConverter converter = m_converterFactory.create(m_executionContext);
+            final FloatToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
             if (producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
@@ -327,7 +345,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             final ByteCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final ByteToDataCellConverter converter = m_converterFactory.create(m_executionContext);
+            final ByteToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
             if (producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
@@ -349,7 +367,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             final ShortCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final ShortToDataCellConverter converter = m_converterFactory.create(m_executionContext);
+            final ShortToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
             if (producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
@@ -371,7 +389,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             final CharCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final CharToDataCellConverter converter = m_converterFactory.create(m_executionContext);
+            final CharToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
             if (producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
@@ -392,7 +410,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             final CellValueProducer<S, ?, PP> producer = m_producerFactory.create();
-            final JavaToDataCellConverter<?> converter = m_converterFactory.create(m_executionContext);
+            final JavaToDataCellConverter<?> converter = m_converterFactory.create(m_fileStoreFactory);
             final Object value = producer.produceCellValue(m_source, params);
             if (value == null) {
                 return new MissingCell(null);

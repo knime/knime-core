@@ -85,6 +85,18 @@ public abstract class FileStoreFactory {
      */
     public abstract void close();
 
+    /**
+     * Helper method that either calls the {@link #createNotInWorkflowFileStoreFactory()} if the
+     * {@link ExecutionContext} is not provided or the {@link #createWorkflowFileStoreFactory(ExecutionContext)} if it
+     * is provided.
+     * @param exec (optional) {@link ExecutionContext}
+     * @return {@link FileStoreFactory} to use
+     * @since 3.8
+     */
+    public static final FileStoreFactory createFileStoreFactory(final ExecutionContext exec) {
+        return exec != null ? createWorkflowFileStoreFactory(exec) : createNotInWorkflowFileStoreFactory();
+    }
+
     /** Creates a factory whose file stores are part of the workflow. The factory delegates to
      * {@link ExecutionContext#createFileStore(String)}.
      * @param exec The non-null execution context.

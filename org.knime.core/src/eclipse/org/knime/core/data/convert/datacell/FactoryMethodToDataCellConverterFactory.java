@@ -47,8 +47,6 @@
 
 package org.knime.core.data.convert.datacell;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.knime.core.data.DataCell;
@@ -56,8 +54,7 @@ import org.knime.core.data.DataCellFactory;
 import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.convert.DataCellFactoryMethod;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.NodeLogger;
+import org.knime.core.data.filestore.FileStoreFactory;
 
 /**
  * Implementation of {@link JavaToDataCellConverterFactory} using a {@link DataCellFactory} and one of its methods which
@@ -73,10 +70,6 @@ import org.knime.core.node.NodeLogger;
 class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, S>
     implements JavaToDataCellConverterFactory<S> {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(FactoryMethodToDataCellConverterFactory.class);
-
-    private final Constructor<F> m_factoryConstructor;
-
     private final Method m_method;
 
     private final Class<S> m_srcType;
@@ -87,10 +80,11 @@ class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, S>
 
     private static final MissingCell MISSING = new MissingCell("Value was null.");
 
+    private final String m_cellFactoryClassName;
+
     /**
      * Creates a new converter from an annotated factory method to a data cell converter factory.
      *
-     * @param factoryClass Class of the {@link DataCellFactory} used to create {@link DataCell DataCells}
      * @param method Method of <code>factoryClass</code> which will be called. Its return type must be assignable to
      *            {@link DataCell} and the first parameter should be assignable from <code>sourceType</code>.
      * @param sourceType type which can be converted by the converters produced by this factory.
@@ -99,7 +93,7 @@ class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, S>
      * @throws NoSuchMethodException if an expected constructor of the factory class does not exist
      * @throws SecurityException if the constructor of the factory class cannot be accessed
      */
-    FactoryMethodToDataCellConverterFactory(final Class<F> factoryClass, final Method method, final Class<S> sourceType,
+    FactoryMethodToDataCellConverterFactory(final Method method, final Class<S> sourceType,
         final DataType destDataType, final String type) throws NoSuchMethodException, SecurityException {
         // there should be exactly one parameter to FactoryMethods
         assert method.getParameterTypes().length == 1;
@@ -112,55 +106,20 @@ class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, S>
         m_srcType = sourceType;
         m_destDataType = destDataType;
         m_metaType = type;
-
-        Constructor<F> factoryContructor = null;
-        try {
-            /*
-             * try getting a constructor with ExecutionContext parameter
-             * first
-             */
-            factoryContructor = factoryClass.getConstructor(ExecutionContext.class);
-        } catch (NoSuchMethodException e) {
-            /* some DataCellFactories may only have default constructor */
-            factoryContructor = factoryClass.getConstructor();
-            /* if neither, another NoSuchMethodException will be thrown */
-        }
-        factoryContructor.setAccessible(true);
-        m_factoryConstructor = factoryContructor;
+        m_cellFactoryClassName = m_destDataType.getCellFactoryFor(
+            FileStoreFactory.createNotInWorkflowFileStoreFactory()).orElseThrow(
+                () -> new RuntimeException("No DataCellFactory found for DataType: " + m_destDataType.getName()))
+                .getClass().getName();
     }
 
     @Override
-    public JavaToDataCellConverter<S> create(final ExecutionContext context) {
-        F factory = null;
-        try {
-            if (m_factoryConstructor.getParameterCount() == 0) {
-                // some factories may only have default constructor
-                factory = m_factoryConstructor.newInstance();
-            } else {
-                // call constructor with ExecutionContext parameter
-                factory = m_factoryConstructor.newInstance(context);
-            }
-        } catch (final InstantiationException e) {
-            // we were given a abstract class
-            LOGGER.error("Class '" + m_factoryConstructor.getDeclaringClass().getName() + "' cannot be instantiated: "
-                + e.getClass() + ": " + e.getMessage(), e);
-            throw new RuntimeException(e);
-        } catch (final IllegalAccessException e) {
-            // will not happen since setAccessible was called on constructor
-            LOGGER.error("Unexpected IllegalAccessException: " + e.getMessage(), e);
-        } catch (final IllegalArgumentException e) {
-            // will not happen, since checked in assertions in constructor
-            LOGGER.error("Unexpected IllegalArgumentException: " + e.getMessage(), e);
-        } catch (final InvocationTargetException e) {
-            LOGGER.error("Constructor of '" + m_factoryConstructor.getDeclaringClass().getName()
-                + "' threw an exception: " + e.getClass() + ": " + e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
-        final F finalFactory = factory;
+    public JavaToDataCellConverter<S> create(final FileStoreFactory fileStoreFactory) {
+
+        @SuppressWarnings("unchecked")
+        final F finalFactory = (F)m_destDataType.getCellFactoryFor(fileStoreFactory).orElseThrow(
+            () -> new RuntimeException("No DataCellFactory found for DataType: " + m_destDataType.getName()));
+
         return new JavaToDataCellConverter<S>() {
-
-            private final DataCellFactory m_factory = finalFactory;
-
             @Override
             public DataCell convert(final S source) throws Exception {
                 if (source == null) {
@@ -176,7 +135,7 @@ class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, S>
                  * The following is equivalent to
                  * m_factory.factoryMethod(source)
                  */
-                return (DataCell)m_method.invoke(m_factory, source);
+                return (DataCell)m_method.invoke(finalFactory, source);
             }
         };
     }
@@ -203,7 +162,6 @@ class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, S>
 
     @Override
     public String getIdentifier() {
-        return m_factoryConstructor.getDeclaringClass().getName() + "." + m_method.getName() + "(" + getSourceType()
-            + ")";
+        return m_cellFactoryClassName + "." + m_method.getName() + "(" + getSourceType() + ")";
     }
 }
