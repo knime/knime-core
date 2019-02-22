@@ -82,6 +82,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.data.xml.XMLCell;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -128,7 +129,8 @@ public class JavaToDataCellConversionTest {
             JavaToDataCellConverterRegistry.getInstance().getConverterFactories(sourceType, dataType).stream().findFirst();
         assertTrue(factory.isPresent());
 
-        final JavaToDataCellConverter<S> converter = factory.get().create(null);
+        final JavaToDataCellConverter<S> converter =
+                factory.get().create(FileStoreFactory.createNotInWorkflowFileStoreFactory());
         assertNotNull(converter);
 
         final DataCell converted = converter.convert(sourceValue);
@@ -272,7 +274,8 @@ public class JavaToDataCellConversionTest {
             .getInstance().getConverterFactories(Integer[].class, ListCell.getCollectionType(IntCell.TYPE)).stream().findFirst();
         assertTrue(factory.isPresent());
 
-        final JavaToDataCellConverter<Integer[]> converter = factory.get().create(null);
+        final JavaToDataCellConverter<Integer[]> converter =
+                factory.get().create(FileStoreFactory.createNotInWorkflowFileStoreFactory());
         assertNotNull(converter);
 
         final DataCell cell = converter.convert(coll);

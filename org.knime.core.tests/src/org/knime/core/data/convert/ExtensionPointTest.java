@@ -66,6 +66,7 @@ import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.filestore.FileStoreFactory;
 
 /**
  * Test for the "org.knime.core.JavaToDataCellConverter" and "org.knime.core.DataCellToJavaConverter" extension points,
@@ -89,7 +90,8 @@ public class ExtensionPointTest {
             .getConverterFactories(String.class, IntCell.TYPE).stream().findFirst();
         assertTrue(factory.isPresent());
 
-        final JavaToDataCellConverter<String> converter = factory.get().create(null);
+        final JavaToDataCellConverter<String> converter =
+                factory.get().create(FileStoreFactory.createNotInWorkflowFileStoreFactory());
         assertNotNull(converter);
 
         final IntCell convert = (IntCell)converter.convert("Answer to Life, the Universe, and Everything");
