@@ -224,7 +224,7 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/convert/datacell/ArrayToCollectionConverterFactory.java" type="org.knime.core.data.convert.datacell.ArrayToCollectionConverterFactory">
-        <filter comment="Use FileStoreFactory methods instead" id="338792546">
+        <filter comment="Replaced ExecutionContext based methods with FileStoreFactory based methods" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.data.convert.datacell.ArrayToCollectionConverterFactory"/>
                 <message_argument value="create(ExecutionContext)"/>
@@ -232,31 +232,17 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/convert/datacell/JavaToDataCellConverterFactory.java" type="org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory">
-        <filter comment="Use FileStoreFactory methods instead" id="403804204">
+        <filter comment="Replaced ExecutionContext based methods with FileStoreFactory based methods" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory"/>
                 <message_argument value="create(FileStoreFactory)"/>
             </message_arguments>
         </filter>
-        <filter comment="Use FileStoreFactory methods instead" id="405901410">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory"/>
-                <message_argument value="create(ExecutionContext)"/>
-            </message_arguments>
-        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/convert/datacell/SimpleJavaToDataCellConverterFactory.java" type="org.knime.core.data.convert.datacell.SimpleJavaToDataCellConverterFactory">
-        <filter comment="Use FileStoreFactory methods instead" id="338792546">
+        <filter comment="Replaced ExecutionContext based methods with FileStoreFactory based methods" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.data.convert.datacell.SimpleJavaToDataCellConverterFactory"/>
-                <message_argument value="create(ExecutionContext)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/convert/datacell/TypedJavaToDataCellConverterFactory.java" type="org.knime.core.data.convert.datacell.TypedJavaToDataCellConverterFactory">
-        <filter comment="Use FileStoreFactory methods instead" id="405901410">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.convert.datacell.TypedJavaToDataCellConverterFactory"/>
                 <message_argument value="create(ExecutionContext)"/>
             </message_arguments>
         </filter>

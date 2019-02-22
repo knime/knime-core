@@ -52,6 +52,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.convert.ConverterFactory;
 import org.knime.core.data.filestore.FileStoreFactory;
+import org.knime.core.node.ExecutionContext;
 
 /**
  * Interface for all factory classes which create {@link JavaToDataCellConverter JavaToDataCellConverters}.
@@ -69,6 +70,19 @@ import org.knime.core.data.filestore.FileStoreFactory;
  * @see JavaToDataCellConverterRegistry
  */
 public interface JavaToDataCellConverterFactory<S> extends ConverterFactory<Class<?>, DataType> {
+
+    /**
+     * Create an instance of a {@link JavaToDataCellConverter} which is able to convert instances of <code>S</code> into
+     * {@link DataCell DataCells} with the {@link DataType} returned by {@link #getDestinationType()}.
+     *
+     * @param context {@link ExecutionContext} which may be used for creating {@link CellFactory}s.
+     * @return a {@link JavaToDataCellConverter} instances
+     * @see #create(FileStoreFactory)
+     */
+    public default JavaToDataCellConverter<S> create(final ExecutionContext context) {
+        return create(FileStoreFactory.createFileStoreFactory(context));
+    }
+
     /**
      * Create an instance of a {@link JavaToDataCellConverter} which is able to convert instances of <code>S</code> into
      * {@link DataCell DataCells} with the {@link DataType} returned by {@link #getDestinationType()}.
