@@ -2124,7 +2124,7 @@ public class Buffer implements KNIMEStreamConstants {
         void onSave();
 
         /**
-         * Synchronously called while saving the table held by this buffer to determine whether the table held by this
+         * Asynchronously called while saving the table held by this buffer to determine whether the table held by this
          * buffer should be read back into memory after load.
          *
          * @return <code>true</code> iff table should be read back into memory
@@ -2231,8 +2231,6 @@ public class Buffer implements KNIMEStreamConstants {
         /** {@inheritDoc} */
         @Override
         public boolean shallLoadBackIntoMemory() {
-            assert Thread.holdsLock(Buffer.this);
-
             return !isFlushedToDisk();
         }
 
@@ -2296,8 +2294,6 @@ public class Buffer implements KNIMEStreamConstants {
         /** {@inheritDoc} */
         @Override
         public boolean shallLoadBackIntoMemory() {
-            assert Thread.holdsLock(Buffer.this);
-
             /** Load back into memory on workflow load if it has fit into memory before. Caution: This could entail
              * that a workflow saved on a high-memory machine cannot be loaded on a low-memory machine. However,
              * this behavior is in-line with the behavior of the MemorizeIfSmallLifecycle. */
