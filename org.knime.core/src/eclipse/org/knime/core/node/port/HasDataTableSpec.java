@@ -47,15 +47,15 @@
 package org.knime.core.node.port;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.chunk.DataRowChunks;
+import org.knime.core.data.DirectAccessTable;
 
 /**
  * A port object spec that can provide a {@link DataTableSpec}.
  *
- * Will very likely be used together with {@link DataRowChunks}. Since it's pending API we refrained from introducing
- * another interface that emphasizes the relation to {@link DataRowChunks}.
+ * Will very likely be used together with {@link DirectAccessTable}. Since it's pending API we refrained from
+ * introducing another interface that emphasizes the relation to {@link DirectAccessTable}.
  *
- * Pending API! Will be re-visited with AP-11279.
+ * Pending API! Will be re-visited (and likely removed) with AP-11279.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 3.8
