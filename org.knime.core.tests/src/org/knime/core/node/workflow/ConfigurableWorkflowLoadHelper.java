@@ -58,7 +58,7 @@ import org.knime.core.data.container.DataContainerSettings;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-class ConfigurableWorkflowLoadHelper extends WorkflowLoadHelper {
+public class ConfigurableWorkflowLoadHelper extends WorkflowLoadHelper {
 
     /**
      * Constructor using the default {@link DataContainerSettings}.

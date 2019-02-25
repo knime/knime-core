@@ -116,8 +116,9 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
      * Various compression formats for KNIME datatables.
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+     * @since 3.8
      */
-    static enum CompressionFormat {
+    public static enum CompressionFormat {
 
             /** No compression. */
             NONE(".bin", //

@@ -630,8 +630,9 @@ public class DataContainer implements RowAppender {
      * Used in tests.
      *
      * @return underlying buffer (or null if not initialized after restore).
+     * @noreference This method is not intended to be referenced by clients.
      */
-    Buffer getBuffer() {
+    public final Buffer getBuffer() {
         return m_buffer;
     }
 
