@@ -87,7 +87,7 @@ final class BufferCache {
     /**
      * The time (in seconds) that has to pass at least in between the logging of statistics.
      */
-    private static final int STATISTICS_OUTPUT_INTERVAL = 10;
+    private static final int STATISTICS_OUTPUT_INTERVAL = 300;
 
     /**
      * A map of hard references to tables held in this cache. Caution: the garbage collector will not clear these
