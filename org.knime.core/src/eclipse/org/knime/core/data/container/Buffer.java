@@ -2442,8 +2442,7 @@ public class Buffer implements KNIMEStreamConstants {
         }
 
         /**
-         * Background task that will write the output data. This is kept as static inner class in order to allow for a
-         * garbage collection of the outer class (which indicates an early stopped buffer writing).
+         * Background task that will write the output data.
          */
         private final class ASyncWriteCallable extends CallableWithContext<Void> {
 

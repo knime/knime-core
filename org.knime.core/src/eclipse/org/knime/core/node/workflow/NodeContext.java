@@ -117,16 +117,19 @@ public final class NodeContext {
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_callStack = Thread.currentThread().getStackTrace();
         }
+        m_fullStackTraceAtConstructionTime = getStackTrace();
+    }
+
+    private static String getStackTrace() {
         Thread thread = Thread.currentThread();
-        m_fullStackTraceAtConstructionTime =
-            new StringBuilder()
-                .append(thread.getName())
-                .append(" (")
-                .append(thread.getId())
-                .append("):\n")
-                .append(
-                    Arrays.stream(thread.getStackTrace()).map(s -> s.toString()).collect(Collectors.joining("\n  ")))
-                .toString();
+        return new StringBuilder()
+        .append(thread.getName())
+        .append(" (")
+        .append(thread.getId())
+        .append("):\n")
+        .append(
+            Arrays.stream(thread.getStackTrace()).map(s -> s.toString()).collect(Collectors.joining("\n  ")))
+        .toString();
     }
 
     /**
@@ -200,7 +203,9 @@ public final class NodeContext {
         if (KNIMEConstants.ASSERTIONS_ENABLED && obj == null) {
             logger.debugWithoutContext(
                 "The context object has been garbage collected, you should not have such a context available");
-            logger.debugWithoutContext(m_fullStackTraceAtConstructionTime);
+            logger.debugWithoutContext("Current stacktrace: " + getStackTrace());
+            logger
+                .debugWithoutContext("Stacktrace at context construction time: " + m_fullStackTraceAtConstructionTime);
         }
         return obj;
     }

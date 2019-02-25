@@ -87,7 +87,7 @@ final class BufferCache {
     /**
      * The time (in seconds) that has to pass at least in between the logging of statistics.
      */
-    private static final int STATISTICS_OUTPUT_INTERVAL = 300;
+    private static final int STATISTICS_OUTPUT_INTERVAL = 10;
 
     /**
      * A map of hard references to tables held in this cache. Caution: the garbage collector will not clear these
@@ -116,6 +116,7 @@ final class BufferCache {
 
     /** Some counters for instrumentation / statistics. */
     private long m_nTables = 0;
+    private long m_nInvalidatedTables = 0;
     private long m_nGCedTables = 0;
     private long m_nAccesses = 0;
     private long m_nHardHits = 0;
@@ -130,8 +131,19 @@ final class BufferCache {
         }
         final long time = System.currentTimeMillis();
         if ((time - timeOfLastLog) / 1000 >= STATISTICS_OUTPUT_INTERVAL) {
+
+            long nActiveTables = 0;
+
+            for (WeakReference<List<BlobSupportDataRow>> ref : m_weakCache.values()) {
+                if (ref.get() != null) {
+                    nActiveTables++;
+                }
+            }
+
             LOGGER.debug("KNIME Buffer cache statistics:");
-            LOGGER.debugWithFormat("\t%d tables cached in total", m_nTables);
+            LOGGER.debugWithFormat("\t%d tables currently held in cache", nActiveTables);
+            LOGGER.debugWithFormat("\t%d distinct tables cached", m_nTables);
+            LOGGER.debugWithFormat("\t%d tables invalidated succesfully", m_nInvalidatedTables);
             LOGGER.debugWithFormat("\t%d tables dropped by garbage collector", m_nGCedTables);
             LOGGER.debugWithFormat("\t%d cache hits (hard-referenced)", m_nHardHits);
             LOGGER.debugWithFormat("\t%d cache hits (softly referenced)", m_nSoftHits);
@@ -161,9 +173,12 @@ final class BufferCache {
          * weak references won't be cleared while there is still a hard reference on the object.
          */
         m_LRUCache.put(buffer, new SoftReference<List<BlobSupportDataRow>>(undmodifiableList));
-        m_weakCache.put(buffer, new WeakReference<List<BlobSupportDataRow>>(undmodifiableList, m_weakCacheRefQueue));
+        WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.put(buffer,
+            new WeakReference<List<BlobSupportDataRow>>(undmodifiableList, m_weakCacheRefQueue));
 
-        m_nTables++;
+        if (previousValue == null) {
+            m_nTables++;
+        }
     }
 
     /**
@@ -285,7 +300,11 @@ final class BufferCache {
     synchronized void invalidate(final Buffer buffer) {
         m_hardMap.remove(buffer);
         m_LRUCache.remove(buffer);
-        m_weakCache.remove(buffer);
+        WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.remove(buffer);
+
+        if (previousValue != null && previousValue.get() != null) {
+            m_nInvalidatedTables++;
+        }
     }
 
 }
