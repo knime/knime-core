@@ -51,8 +51,6 @@ package org.knime.core.node.tableview;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.knime.core.data.DataTable;
-
 /**
  * A data table that needs some time to load it's rows (asynchronous).
  *
@@ -64,7 +62,7 @@ import org.knime.core.data.DataTable;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 3.7
  */
-public interface AsyncDataTable extends DataTable {
+public interface AsyncDataTable {
 
     /**
      * Registers a callback that gets called when new rows get available (and their loading is finished).

@@ -399,6 +399,11 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/tableview/AsyncDataTable.java" type="org.knime.core.node.tableview.AsyncDataTable">
+        <filter id="404791350">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.tableview.AsyncDataTable"/>
+            </message_arguments>
+        </filter>
         <filter id="405901410">
             <message_arguments>
                 <message_argument value="org.knime.core.node.tableview.AsyncDataTable"/>
