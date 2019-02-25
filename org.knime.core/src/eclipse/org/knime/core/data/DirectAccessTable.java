@@ -58,9 +58,9 @@ import org.knime.core.node.ExecutionMonitor;
  *
  * <p>
  * Each <code>DirectAccessTable</code> is a read-only container of {@link DataRow} elements which are returned by the
- * {@link #getRows(long, int)} method. Each row must have the same number of {@link DataCell} elements (columns),
- * is read-only, and must provide a unique row identifier. A table also contains a {@link DataTableSpec} member
- * which provides information about the structure of the table. The {@link DataTableSpec} consists of
+ * {@link #getRows(long, int, ExecutionMonitor)} method. Each row must have the same number of {@link DataCell} elements
+ * (columns), is read-only, and must provide a unique row identifier. A table also contains a {@link DataTableSpec}
+ * member which provides information about the structure of the table. The {@link DataTableSpec} consists of
  * {@link DataColumnSpec}s which contain information about the column, e.g. name, type, and possible values etc.
  *
  * @author Christian Albrecht, Martin Horn, Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
@@ -115,6 +115,11 @@ public interface DirectAccessTable {
      * or not yet known to the callee.
      *
      * @author Christian Albrecht, Martin Horn, KNIME GmbH, Konstanz, Germany
+     * @since 3.8
+     *
+     * @noreference This class is not intended to be referenced by clients. Pending API
+     * @noextend This class is not intended to be subclassed by clients. Pending API
+     * @noinstantiate This class is not intended to be instantiated by clients. Pending API
      */
     public static class UnknownRowCountException extends Exception {
 

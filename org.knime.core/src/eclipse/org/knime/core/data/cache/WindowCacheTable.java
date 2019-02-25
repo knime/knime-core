@@ -73,6 +73,10 @@ import org.knime.core.node.ExecutionMonitor;
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @since 3.8
+ *
+ * @noreference This class is not intended to be referenced by clients. Pending API
+ * @noextend This class is not intended to be subclassed by clients. Pending API
+ * @noinstantiate This class is not intended to be instantiated by clients. Pending API
  */
 public class WindowCacheTable implements DirectAccessTable {
 
@@ -107,12 +111,6 @@ public class WindowCacheTable implements DirectAccessTable {
      * to {@link #m_maxRowCount}.
      */
     private long m_rowCountOfInterest;
-
-    /**
-     * Is the current value of {@link #m_rowCountOfInterest} final? If only hilited rows should be shown this field
-     * is equal to {@link #m_isMaxRowCountFinal}.
-     */
-    private boolean m_isRowCountOfInterestFinal;
 
     /** Counter of rows in current iterator. If only hilited rows should be shown, this field is equal to
      * {@link #m_rowCountOfInterestInIterator}. This field is incremented with each <code>m_iterator.next()</code>
@@ -193,11 +191,9 @@ public class WindowCacheTable implements DirectAccessTable {
         m_rowCountOfInterest = 0;
         m_maxRowCount = 0;
         m_isMaxRowCountFinal = true;
-        m_isRowCountOfInterestFinal = true;
         if (m_table != null) {
             // assume that there are rows, may change in cacheNextRow() below
             m_isMaxRowCountFinal = false;
-            m_isRowCountOfInterestFinal = false;
             final long rowCountFromTable;
             if (m_table instanceof BufferedDataTable) {
                 rowCountFromTable = ((BufferedDataTable)m_table).size();
@@ -210,11 +206,10 @@ public class WindowCacheTable implements DirectAccessTable {
                 m_isMaxRowCountFinal = true;
                 m_maxRowCount = rowCountFromTable;
                 m_rowCountOfInterest = m_maxRowCount;
-                m_isRowCountOfInterestFinal = true;
             }
             int cacheSize = getCacheSize();
             m_cachedRows = new DataRow[cacheSize];
-            clearCache();  // will instantiate a new iterator.
+            clearCacheAndInitIterator();  // will instantiate a new iterator.
             // will also set m_isRowCountOfInterestFinal etc. accordingly
             cacheNextRow();
         }
@@ -273,7 +268,7 @@ public class WindowCacheTable implements DirectAccessTable {
      *
      * @return if there are no more unknown rows
      */
-    public boolean isRowCountFinal() {
+    public boolean hasRowCount() {
         return m_isMaxRowCountFinal;
     }
 
@@ -301,7 +296,7 @@ public class WindowCacheTable implements DirectAccessTable {
         }
         m_cacheSize = Math.max(2 * getLookAheadSize(), size);
         m_cachedRows = new DataRow[m_cacheSize];
-        clearCache();
+        clearCacheAndInitIterator();
         return m_cacheSize;
     }
 
@@ -349,17 +344,21 @@ public class WindowCacheTable implements DirectAccessTable {
     @Override
     public List<DataRow> getRows(final long start, final int length, final ExecutionMonitor exec)
             throws IndexOutOfBoundsException, CanceledExecutionException {
-        boundRow(start);
+        checkRowIndex(start);
         if (length < 0 || start + length < 0) {
             throw new IndexOutOfBoundsException("Length can not be negative.");
         }
-        //TODO: check length is smaller than cache - look ahead
+        if (length > m_cacheSize - m_lookAheadSize) {
+            throw new IndexOutOfBoundsException("Length exceeds maximum value of rows that can be returned ("
+                + (m_cacheSize - m_lookAheadSize) + "), but requested was " + length
+                + ". Consider increasing the cache size or decreasing the amount of requested rows.");
+        }
         final int cacheSize = getCacheSize();
         final long oldRowCount = m_rowCountOfInterest;
         final long lastRow = start + length - 1;
 
         // the iterator goes further when the last known row is requested
-        boolean pushIterator = !isRowCountFinal() && (lastRow >= oldRowCount - 1);
+        boolean pushIterator = !hasRowCount() && (lastRow >= oldRowCount - 1);
         if (start >= (m_rowCountOfInterestInIterator - cacheSize)
                 && (lastRow < m_rowCountOfInterestInIterator) && !pushIterator) {
             return getRowsFromCache(start, length);
@@ -369,7 +368,7 @@ public class WindowCacheTable implements DirectAccessTable {
         // some rows already released from cache
         if (start < (m_rowCountOfInterestInIterator - cacheSize)) {
             // clear cache, init new iterator
-            clearCache();
+            clearCacheAndInitIterator();
         }
         assert (start + length >= m_rowCountOfInterestInIterator - 1);
 
@@ -416,8 +415,6 @@ public class WindowCacheTable implements DirectAccessTable {
         if (!m_tableIterator.hasNext()) {
             // set to false with new data
             m_isMaxRowCountFinal = true;
-            // set to false with new highlight event or new data
-            m_isRowCountOfInterestFinal = true;
             return false;
         }
         currentRow = m_tableIterator.next();
@@ -449,7 +446,7 @@ public class WindowCacheTable implements DirectAccessTable {
     /**
      * Clears cache, instantiates a new iterator.
      */
-    private void clearCache() {
+    private void clearCacheAndInitIterator() {
         if (!hasData()) {
             return;
         }
@@ -515,7 +512,6 @@ public class WindowCacheTable implements DirectAccessTable {
         m_isMaxRowCountFinal = isFinal;
         m_maxRowCount = newCount;
         m_rowCountOfInterest = m_maxRowCount;
-        m_isRowCountOfInterestFinal = isFinal;
     }
 
     /**
@@ -524,7 +520,7 @@ public class WindowCacheTable implements DirectAccessTable {
      * @param rowIndex row index to check
      * @throws IndexOutOfBoundsException if argument violates range
      */
-    private final void boundRow(final long rowIndex) {
+    private final void checkRowIndex(final long rowIndex) {
         if (rowIndex < 0) {
             throw new IndexOutOfBoundsException(
                 "Row index must not be < 0: " + rowIndex);
@@ -535,7 +531,7 @@ public class WindowCacheTable implements DirectAccessTable {
         try {
             rowCount = getRowCount();
         } catch (UnknownRowCountException e) { }
-        if (isRowCountFinal() && (rowIndex >= rowCount)) {
+        if (hasRowCount() && (rowIndex >= rowCount)) {
             throw new IndexOutOfBoundsException(
                 "Row index " + rowIndex + " invalid: "
                 + rowIndex + " >= " +  m_maxRowCount);
