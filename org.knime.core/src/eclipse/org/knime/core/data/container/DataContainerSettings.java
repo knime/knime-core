@@ -56,8 +56,6 @@ import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataTableDomainCreator;
-import org.knime.core.data.container.storage.TableStoreFormat;
-import org.knime.core.data.container.storage.TableStoreFormatRegistry;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConfigurableWorkflowContext;
@@ -133,8 +131,8 @@ public final class DataContainerSettings {
         /** The function creating new instances of {@link IDataTableDomainCreator}. */
         private BiFunction<DataTableSpec, Boolean, IDataTableDomainCreator> m_tableDomainCreatorFunction;
 
-        /** The output table store format. */
-        private TableStoreFormat m_outputFormat;
+        /** The {@link BufferSettings}. */
+        private BufferSettings m_bufferSettings;
 
         /**
          * Constructor.
@@ -150,7 +148,7 @@ public final class DataContainerSettings {
             m_maxDomainValues = settings.m_maxDomainValues;
             m_duplicateCheckerCreator = settings.m_duplicateCheckerCreator;
             m_tableDomainCreatorFunction = settings.m_tableDomainCreatorFunction;
-            m_outputFormat = settings.m_outputFormat;
+            m_bufferSettings = settings.m_bufferSettings;
         }
 
         Builder setMaxCellsInMemory(final int maxCellsInMemory) {
@@ -193,8 +191,8 @@ public final class DataContainerSettings {
             return this;
         }
 
-        Builder setOutputFormat(final TableStoreFormat outputFormat) {
-            m_outputFormat = outputFormat;
+        Builder setBufferSettings(final BufferSettings bufferSettings) {
+            m_bufferSettings = bufferSettings;
             return this;
         }
 
@@ -233,14 +231,17 @@ public final class DataContainerSettings {
     /** The function creating new instances of {@link IDataTableDomainCreator}. */
     private final BiFunction<DataTableSpec, Boolean, IDataTableDomainCreator> m_tableDomainCreatorFunction;
 
-    /** The output table store format. */
-    private final TableStoreFormat m_outputFormat;
+    /** The {@link BufferSettings}. */
+    private final BufferSettings m_bufferSettings;
+
+    /** The default {@code BufferSettings} instance. */
+    private static final BufferSettings DEFAULT_BUFFER_INSTANCE = new BufferSettings();
 
     /** The default {@code DataContainerSettings} instance. */
-    private static DataContainerSettings DEFAULT_INSTANCE = new DataContainerSettings();
+    private static final DataContainerSettings DEFAULT_CONTAINER_INSTANCE = new DataContainerSettings();
 
     /**
-     * Constructor.
+     * Default constructor.
      */
     private DataContainerSettings() {
         m_maxCellsInMemory = initMaxCellsInMemory();
@@ -251,7 +252,7 @@ public final class DataContainerSettings {
         m_maxDomainValues = initMaxDomainValues();
         m_duplicateCheckerCreator = () -> new DuplicateChecker();
         m_tableDomainCreatorFunction = (spec, initDomain) -> new DataTableDomainCreator(spec, initDomain);
-        m_outputFormat = TableStoreFormatRegistry.getInstance().getInstanceTableStoreFormat();
+        m_bufferSettings = DEFAULT_BUFFER_INSTANCE;
     }
 
     /**
@@ -268,13 +269,13 @@ public final class DataContainerSettings {
         m_maxDomainValues = builder.m_maxDomainValues;
         m_duplicateCheckerCreator = builder.m_duplicateCheckerCreator;
         m_tableDomainCreatorFunction = builder.m_tableDomainCreatorFunction;
-        m_outputFormat = builder.m_outputFormat;
+        m_bufferSettings = builder.m_bufferSettings;
     }
 
     /**
-     * Returns the default container settings.
+     * Returns the default {@link DataContainerSettings}.
      *
-     * @return the default container settings
+     * @return the default {@code DataContainerSettings}
      */
     public static DataContainerSettings getDefault() {
         Optional<WorkflowContext> optContext = Optional.ofNullable(NodeContext.getContext())//
@@ -283,7 +284,7 @@ public final class DataContainerSettings {
         if (optContext.isPresent() && optContext.get() instanceof ConfigurableWorkflowContext) {
             return ((ConfigurableWorkflowContext)optContext.get()).getContainerSettings();
         }
-        return DEFAULT_INSTANCE;
+        return DEFAULT_CONTAINER_INSTANCE;
     }
 
     /**
@@ -362,21 +363,12 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Returns the {@link TableStoreFormat} used to read and write the {@link Buffer Buffer's} content.
+     * Returns the {@link BufferSettings}.
      *
-     * @param spec the spec of the table to read/write
-     * @return the {@link TableStoreFormat}
+     * @return the {@code BufferSettings}
      */
-    public TableStoreFormat getOutputFormat(final DataTableSpec spec) {
-        if (m_outputFormat.accepts(spec)) {
-            LOGGER.debugWithFormat("Using table format %s", m_outputFormat.getClass().getName());
-            return m_outputFormat;
-        }
-        final TableStoreFormat storeFormat = TableStoreFormatRegistry.getInstance().getFormatFor(spec);
-        LOGGER.debugWithFormat(
-            "Cannot use table format '%s' as it does not support the table schema, " + "using '%s' instead",
-            m_outputFormat.getClass().getName(), storeFormat.getClass().getName());
-        return storeFormat;
+    public BufferSettings getBufferSettings() {
+        return m_bufferSettings;
     }
 
     /**
@@ -490,14 +482,14 @@ public final class DataContainerSettings {
 
     /**
      * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the table store format.
+     * <code>DataContainerSetting</code> instance and solely changes the {@link BufferSettings}.
      *
-     * @param outputFormat the new table store format
+     * @param bufferSettings the {@code BufferSettings}
      * @return a new instance of {@code DataContainerSettings}
      */
-    public DataContainerSettings withOutputFormat(final TableStoreFormat outputFormat) {
+    public DataContainerSettings withBufferSettings(final BufferSettings bufferSettings) {
         final Builder b = new Builder(this);
-        b.setOutputFormat(outputFormat);
+        b.setBufferSettings(bufferSettings);
         return b.build();
     }
 

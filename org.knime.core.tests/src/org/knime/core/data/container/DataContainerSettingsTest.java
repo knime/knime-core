@@ -48,10 +48,7 @@
  */
 package org.knime.core.data.container;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
 import static org.knime.core.data.container.DataContainer.ASYNC_CACHE_SIZE;
 import static org.knime.core.data.container.DataContainer.INIT_DOMAIN;
 import static org.knime.core.data.container.DataContainer.MAX_ASYNC_WRITE_THREADS;
@@ -67,24 +64,23 @@ import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.IDataTableDomainCreator;
-import org.knime.core.data.container.DataContainerSettings;
-import org.knime.core.data.container.DefaultTableStoreFormat;
-import org.knime.core.data.container.storage.TableStoreFormat;
-import org.knime.core.data.container.storage.TableStoreFormatRegistry;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.IDuplicateChecker;
+
+import junit.framework.TestCase;
 
 /**
  * Class testing the immutability of the {@link DataContainerSettings}.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class DataContainerSettingsTest {
+public final class DataContainerSettingsTest extends TestCase {
 
     /**
      * Tests that the default instance of the container settings uses the proper default settings.
      */
+    @SuppressWarnings({"static-method", "deprecation"})
     @Test
     public void testDefault() {
         final DataTableSpec spec = new DataTableSpecCreator().createSpec();
@@ -97,16 +93,18 @@ public class DataContainerSettingsTest {
         assertEquals("Wrong default (intialize domain flag)", INIT_DOMAIN, settings.getInitializeDomain());
         assertEquals("Wrong default (asynchrnous write threads)", MAX_ASYNC_WRITE_THREADS,
             settings.getMaxAsyncWriteThreads());
-        assertEquals("Wrong default (output format)",
-            TableStoreFormatRegistry.getInstance().getInstanceTableStoreFormat(), settings.getOutputFormat(spec));
         assertTrue("Wrong default (domain creator)",
             settings.createDomainCreator(spec) instanceof DataTableDomainCreator);
         assertTrue("Wrong default (duplicate checker)", settings.createDuplicateChecker() instanceof DuplicateChecker);
+        assertNotNull("Wrong default (BufferSettings are null)", settings.getBufferSettings());
+        assertTrue("Wrong default (Default BufferSettings are different to those provided by the DataContainerSettings",
+            settings.getBufferSettings().equals(BufferSettings.getDefault()));
     }
 
     /**
-     * Tests that values can be changed and that the default instance is not changed.
+     * Tests that values can be changed and that the default instance stays unchanged.
      */
+    @SuppressWarnings("static-method")
     @Test
     public void testChangedValues() {
         final DataContainerSettings def = DataContainerSettings.getDefault();
@@ -117,12 +115,17 @@ public class DataContainerSettingsTest {
         final boolean syncIO = !def.useSyncIO();
         final boolean initDomain = !def.getInitializeDomain();
         final int maxAsyncWriteThreads = def.getMaxAsyncWriteThreads() * -1;
-        final TableStoreFormat outputFormat = new DefaultTableStoreFormat();
+        final BufferSettings bSettings =
+            def.getBufferSettings().withLRUCachSize(def.getBufferSettings().getLRUCacheSize() * -1);
 
-        final DataContainerSettings settings =
-            DataContainerSettings.getDefault().withAsyncCacheSize(cacheSize).withMaxCellsInMemory(maxCellsInMemory)
-                .withMaxDomainValues(maxPossibleValues).withSyncIO(syncIO).withInitializedDomain(initDomain)
-                .withOutputFormat(outputFormat).withMaxAsyncWriteThreads(maxAsyncWriteThreads);
+        final DataContainerSettings settings = DataContainerSettings.getDefault()//
+            .withAsyncCacheSize(cacheSize)//
+            .withMaxCellsInMemory(maxCellsInMemory)//
+            .withMaxDomainValues(maxPossibleValues)//
+            .withSyncIO(syncIO)//
+            .withInitializedDomain(initDomain)//
+            .withMaxAsyncWriteThreads(maxAsyncWriteThreads)//
+            .withBufferSettings(bSettings);
 
         assertEquals("Modified settings created wrong cache size", cacheSize, settings.getAsyncCacheSize());
         assertEquals("Modified settings created wrong maximum number of cells in memory", maxCellsInMemory,
@@ -134,9 +137,6 @@ public class DataContainerSettingsTest {
             settings.getInitializeDomain());
         assertEquals("Modified settings created wrong initialize maximum number of asynchronous write threads",
             maxAsyncWriteThreads, settings.getMaxAsyncWriteThreads());
-        assertTrue("Modified settings created wrong output format",
-            outputFormat == settings.getOutputFormat(new DataTableSpecCreator().createSpec()));
-
         assertNotEquals("Default settings has been modified (chache size)", def.getAsyncCacheSize(),
             settings.getAsyncCacheSize());
         assertNotEquals("Default settings has been modified (number of cells in memory)", def.getMaxCellsInMemory(),
@@ -149,9 +149,7 @@ public class DataContainerSettingsTest {
             settings.useSyncIO());
         assertNotEquals("Default settings has been modified (initialize domain flag)", def.getInitializeDomain(),
             settings.getInitializeDomain());
-        assertFalse("Default settings has been modified (output format)",
-            def.getOutputFormat(new DataTableSpecCreator().createSpec()) == settings
-                .getOutputFormat(new DataTableSpecCreator().createSpec()));
+        assertNotEquals("Default BufferSettings have not been modified", def.getBufferSettings().equals(bSettings));
     }
 
     /**

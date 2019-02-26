@@ -153,6 +153,40 @@ public class Buffer implements KNIMEStreamConstants {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Buffer.class);
 
+    /**
+     * Default minimum disc space requirement, see {@link KNIMEConstants#PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB}.
+     *
+     * @since 2.8
+     */
+    private static final int DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = 100;
+    /**
+     * Minimum disc space requirement, see {@link KNIMEConstants#PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB}.
+     *
+     * @since 2.8
+     */
+    private static final int MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
+
+    static {
+        // initialize the min free disc in temp
+        int minFreeDiscSpaceMB = DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
+        String minFree = System.getProperty(KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB);
+        if (minFree != null) {
+            String s = minFree.trim();
+            try {
+                int newSize = Integer.parseInt(s);
+                if (newSize < 0) {
+                    throw new NumberFormatException("minFreeDiscSpace < 0" + newSize);
+                }
+                minFreeDiscSpaceMB = newSize;
+                LOGGER.debug("Setting min free disc space to " + minFreeDiscSpaceMB + "MB");
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Unable to parse property \"" + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB
+                    + "\", using default (" + DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB)", e);
+            }
+        }
+        MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = minFreeDiscSpaceMB;
+    }
+
     /** True if ZipOutputStream / the underlying Zlib library supports changed compression level between entries.
      * This wasn't a problem for a long time (2004-2017) but broke with MacOX 10.13 (Sep '17). Relevant pointers are:
      * bugs.knime.org/AP-8083
@@ -429,6 +463,9 @@ public class Buffer implements KNIMEStreamConstants {
     /** the current row count (how often has addRow been called). */
     private long m_size;
 
+    /** The buffer settings. */
+    private final BufferSettings m_bufferSettings;
+
     /** The lifecycle of this buffer, which specifies when and how tables are cached and flushed to disk. */
     private final Lifecycle m_lifecycle;
 
@@ -482,32 +519,58 @@ public class Buffer implements KNIMEStreamConstants {
     private final String m_fullStackTraceAtConstructionTime = Arrays.stream(Thread.currentThread().getStackTrace())
             .map(s -> s.toString()).collect(Collectors.joining("\n  "));
 
-
     /**
      * Creates new buffer for <strong>writing</strong>. It has assigned a given spec, and a max row count that may
      * resize in memory.
+     *
      * @param spec ... used to define schema (non-KNIME file formats require schema)
      * @param maxRowsInMemory Maximum numbers of rows that are kept in memory until they will be subsequent written to
      *            the temp file. (0 to write immediately to a file)
      * @param bufferID The id of this buffer used for blob (de)serialization.
      * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      * @param localRep Local table repository for blob (de)serialization.
-     * @param fileStoreHandler ...
+     * @param fileStoreHandler the file store handlers
      * @param forceSynchronousWrite whether to force the buffer disk IO thread to write synchronously
+     * @param outputFormat the output table store format
      */
     Buffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
         final IDataRepository dataRepository, final Map<Integer, ContainerTable> localRep,
         final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite) {
+        this(spec, maxRowsInMemory, bufferID, dataRepository, localRep, fileStoreHandler, forceSynchronousWrite,
+            BufferSettings.getDefault());
+    }
+
+    /**
+     * Creates new buffer for <strong>writing</strong>. It has assigned a given spec, and a max row count that may
+     * resize in memory.
+     *
+     * @param spec ... used to define schema (non-KNIME file formats require schema)
+     * @param maxRowsInMemory Maximum numbers of rows that are kept in memory until they will be subsequent written to
+     *            the temp file. (0 to write immediately to a file)
+     * @param bufferID The id of this buffer used for blob (de)serialization.
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
+     * @param localRep Local table repository for blob (de)serialization.
+     * @param fileStoreHandler the file store handlers
+     * @param forceSynchronousWrite whether to force the buffer disk IO thread to write synchronously
+     * @param settings the {@link BufferSettings}
+     */
+    Buffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
+        final IDataRepository dataRepository, final Map<Integer, ContainerTable> localRep,
+        final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite,
+        final BufferSettings settings) {
         assert (maxRowsInMemory >= 0);
         m_flushedToDisk = false;
-        if (ENABLE_LRU) {
+        m_bufferSettings = settings;
+        if (m_bufferSettings.useLRU()) {
             m_lifecycle =
                 forceSynchronousWrite ? new SoftRefLRUSyncWriteLifecycle() : new SoftRefLRUAsyncWriteLifecycle();
         } else {
             m_lifecycle = new MemorizeIfSmallLifecycle(maxRowsInMemory);
         }
-        /** independent of the lifecycle, if maxRowsInMemory is zero, the buffer is expected to flush to disk
-         * (e.g, see {@link org.knime.core.data.sort.DataTableSorter#createDataContainer(DataTableSpec, boolean)}). */
+        /**
+         * independent of the lifecycle, if maxRowsInMemory is zero, the buffer is expected to flush to disk (e.g, see
+         * {@link org.knime.core.data.sort.DataTableSorter#createDataContainer(DataTableSpec, boolean)}).
+         */
         m_listWhileAddRow = maxRowsInMemory > 0 ? new ArrayList<BlobSupportDataRow>() : null;
         m_size = 0;
         m_bufferID = bufferID;
@@ -515,15 +578,7 @@ public class Buffer implements KNIMEStreamConstants {
         m_fileStoreHandler = fileStoreHandler;
         m_dataRepository = dataRepository;
         m_spec = spec;
-        TableStoreFormat storeFormat = TableStoreFormatRegistry.getInstance().getFormatFor(spec);
-        TableStoreFormat prefFormat = TableStoreFormatRegistry.getInstance().getInstanceTableStoreFormat();
-        if (storeFormat == prefFormat) {
-            LOGGER.debugWithFormat("Using table format %s", storeFormat.getClass().getName());
-        } else {
-            LOGGER.debugWithFormat("Cannot use table format '%s' as it does not support the table schema, "
-                    + "using '%s' instead", prefFormat.getClass().getName(), storeFormat.getClass().getName());
-        }
-        m_outputFormat = storeFormat;
+        m_outputFormat = m_bufferSettings.getOutputFormat(m_spec);
         BufferTracker.getInstance().bufferCreated(this);
     }
 
@@ -542,7 +597,28 @@ public class Buffer implements KNIMEStreamConstants {
      * @throws IOException If the header (the spec information) can't be read.
      */
     Buffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
-           final InputStream metaIn, final int bufferID, final IDataRepository dataRepository) throws IOException {
+        final InputStream metaIn, final int bufferID, final IDataRepository dataRepository) throws IOException {
+        this(binFile, blobDir, fileStoreDir, spec, metaIn, bufferID, dataRepository, BufferSettings.getDefault());
+    }
+
+    /**
+     * Creates new buffer for <strong>reading</strong>. The <code>binFile</code> is the binary file as written by this
+     * class, which will be deleted when this buffer is cleared or finalized.
+     *
+     * @param binFile The binary file to read from (will be deleted on exit).
+     * @param blobDir temp directory containing blobs (may be null).
+     * @param fileStoreDir ...
+     * @param spec The data table spec to which the this buffer complies to.
+     * @param metaIn An input stream from which this constructor reads the meta information (e.g. which byte encodes
+     *            which DataCell).
+     * @param bufferID The id of this buffer used for blob (de)serialization.
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
+     * @param settings the {@link BufferSettings}
+     * @throws IOException If the header (the spec information) can't be read.
+     */
+    Buffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
+        final InputStream metaIn, final int bufferID, final IDataRepository dataRepository,
+        final BufferSettings settings) throws IOException {
         // just check if data is present!
         if (binFile == null || !binFile.canRead() || !binFile.isFile()) {
             throw new IOException("Unable to read from file: " + binFile);
@@ -552,8 +628,8 @@ public class Buffer implements KNIMEStreamConstants {
         m_blobDir = blobDir;
         m_bufferID = bufferID;
         if (dataRepository == null) {
-            LOGGER.debug("no data repository set, using new instance of "
-                    + NotInWorkflowDataRepository.class.getName());
+            LOGGER
+                .debug("no data repository set, using new instance of " + NotInWorkflowDataRepository.class.getName());
             m_dataRepository = NotInWorkflowDataRepository.newInstance();
         } else {
             m_dataRepository = dataRepository;
@@ -562,7 +638,8 @@ public class Buffer implements KNIMEStreamConstants {
             throw new IOException("No meta information given (null)");
         }
         m_flushedToDisk = true;
-        m_lifecycle = ENABLE_LRU ? new SoftRefLRUSyncWriteLifecycle() : new MemorizeIfSmallLifecycle(0);
+        m_bufferSettings = settings;
+        m_lifecycle = m_bufferSettings.useLRU() ? new SoftRefLRUSyncWriteLifecycle() : new MemorizeIfSmallLifecycle(0);
         try {
             readMetaFromFile(metaIn, fileStoreDir);
         } catch (InvalidSettingsException ise) {
@@ -1410,7 +1487,13 @@ public class Buffer implements KNIMEStreamConstants {
         return new String(c);
     }
 
-    synchronized RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder() {
+    /**
+     * Creates the row iterator builder.
+     *
+     * @return the row iterator builder
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public final synchronized RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder() {
         final List<BlobSupportDataRow> list = obtainListFromCacheOrBackIntoMemoryIterator();
         if (list == null) {
             if (m_useBackIntoMemoryIterator) {
@@ -1483,7 +1566,7 @@ public class Buffer implements KNIMEStreamConstants {
      */
     Buffer createLocalCloneForWriting() {
         return new Buffer(m_spec, 0, getBufferID(), m_dataRepository, Collections.emptyMap(),
-            castAndGetFileStoreHandler(), true);
+            castAndGetFileStoreHandler(), true, m_bufferSettings);
     }
 
     /**
@@ -1693,13 +1776,13 @@ public class Buffer implements KNIMEStreamConstants {
     static void onFileCreated(final File file) throws IOException {
         int count = FILES_CREATED_COUNTER.incrementAndGet();
         long freeSpace = file.exists() ? file.getUsableSpace() : Long.MAX_VALUE;
-        long minSpace = DataContainer.MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB * (1024L * 1024L);
+        long minSpace = MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB * (1024L * 1024L);
         if (freeSpace < minSpace) {
             throw new IOException("The partition of the temp file \"" + file.getAbsolutePath()
-                    + "\" is too low on disc space (" + freeSpace / (1024 * 1024) + "MB available but at least "
-                    + DataContainer.MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB are required). "
-                    + " You can tweak the limit by changing the \""
-                    + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "\" java property.");
+                + "\" is too low on disc space (" + freeSpace / (1024 * 1024) + "MB available but at least "
+                + MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB * (1024L * 1024L) + "MB are required). "
+                + " You can tweak the limit by changing the \""
+                + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "\" java property.");
         }
         if (count % MAX_FILES_TO_CREATE_BEFORE_GC == 0) {
             LOGGER.debug("created " + count + " files, performing garbage collection to release handles");

@@ -104,15 +104,16 @@ public final class DataTableCompressionTest extends TestCase {
         throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
         // initial settings
         final DataContainerSettings settings =
-            DataContainerSettings.getDefault().withMaxCellsInMemory(10).withInitializedDomain(false).withSyncIO(false);
+            DataContainerSettings.getDefault().withMaxCellsInMemory(0).withInitializedDomain(false);
         // create the data
         final Pair<DataTableSpec, DataRow[]> data = createData(ROW_COUNT);
 
         for (final CompressionFormat cFormat : CompressionFormat.values()) {
 
             // store the data to a table that writes its content to a compressed file
-            DataContainer cont = new DataContainer(data.getFirst(), settings.withOutputFormat(
-                new DefaultTableStoreFormat(DefaultTableStoreSettings.getDefault().withCompression(cFormat))));
+            DataContainer cont = new DataContainer(data.getFirst(),
+                settings.withBufferSettings(BufferSettings.getDefault().withOutputFormat(
+                    new DefaultTableStoreFormat(DefaultTableStoreSettings.getDefault().withCompression(cFormat)))));
 
             // write the data
             writeData(data.getSecond(), cont);

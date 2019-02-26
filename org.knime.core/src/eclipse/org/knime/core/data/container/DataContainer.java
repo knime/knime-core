@@ -155,6 +155,7 @@ public class DataContainer implements RowAppender {
      * Whether to use synchronous IO while adding rows to a buffer or reading from an file iterator. The default value
      * can be changed by setting the appropriate java property {@link KNIMEConstants#PROPERTY_SYNCHRONOUS_IO} at
      * startup.
+     *
      * @deprecated access via {@link DataContainerSettings#getDefault()}
      */
     @Deprecated
@@ -162,6 +163,7 @@ public class DataContainer implements RowAppender {
 
     /**
      * The maximum number of asynchronous write threads, each additional container will switch to synchronous mode.
+     *
      * @deprecated access via {@link DataContainerSettings#getDefault()}
      */
     @Deprecated
@@ -361,7 +363,7 @@ public class DataContainer implements RowAppender {
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
         m_maxRowsInMemory = settings.getMaxCellsInMemory() / ((colCount > 0) ? colCount : 1);
-        m_bufferCreator = new BufferCreator(settings);
+        m_bufferCreator = new BufferCreator(settings.getBufferSettings());
     }
 
     private void addRowToTableWrite(final DataRow row) {
@@ -562,7 +564,7 @@ public class DataContainer implements RowAppender {
                 // put the data row / container close object into the queue and wait 30 seconds for it to be fetched
                 if (m_rowBuffer.offer(object, 30, TimeUnit.SECONDS)) {
                     return;
-                // if it wasn't fetched, continue / try again unless the container has been closed already
+                    // if it wasn't fetched, continue / try again unless the container has been closed already
                 } else {
                     if (m_asyncAddFuture.isDone()) {
                         checkAsyncWriteThrowable();
@@ -1162,22 +1164,22 @@ public class DataContainer implements RowAppender {
     static class BufferCreator {
 
         /** The settings informing about the output format used by the writing buffer. */
-        final DataContainerSettings m_settings;
+        final BufferSettings m_bufferSettings;
 
         /**
          * Constructor.
          */
         BufferCreator() {
-            this(DataContainerSettings.getDefault());
+            this(BufferSettings.getDefault());
         }
 
         /**
          * Constructor.
          *
-         * @param settings the settings informing about the output format used by the writing buffer
+         * @param settings the {@link BufferSettings}
          */
-        BufferCreator(final DataContainerSettings settings) {
-            m_settings = settings;
+        BufferCreator(final BufferSettings settings) {
+            m_bufferSettings = settings;
         }
 
         /**
@@ -1195,11 +1197,12 @@ public class DataContainer implements RowAppender {
          */
         Buffer createBuffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
             final InputStream metaIn, final int bufID, final IDataRepository dataRepository) throws IOException {
-            return new Buffer(binFile, blobDir, fileStoreDir, spec, metaIn, bufID, dataRepository);
+            return new Buffer(binFile, blobDir, fileStoreDir, spec, metaIn, bufID, dataRepository, m_bufferSettings);
         }
 
         /**
          * Creates buffer for writing (adding of rows).
+         *
          * @param spec Write spec -- used to initialize output stream for some non-KNIME formats
          * @param rowsInMemory The number of rows being kept in memory.
          * @param bufferID The buffer's id used for blob (de)serialization.
@@ -1214,7 +1217,7 @@ public class DataContainer implements RowAppender {
             final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTableRep,
             final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite) {
             return new Buffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler,
-                forceSynchronousWrite, m_settings.getOutputFormat(spec));
+                forceSynchronousWrite, m_bufferSettings);
         }
 
     }

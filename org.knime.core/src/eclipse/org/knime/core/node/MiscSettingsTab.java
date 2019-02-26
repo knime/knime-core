@@ -60,7 +60,7 @@ import javax.swing.JRadioButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.data.container.Buffer;
+import org.knime.core.data.container.BufferSettings;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 
@@ -94,7 +94,7 @@ class MiscSettingsTab extends JPanel {
             }
         };
 
-        if (Buffer.ENABLE_LRU) {
+        if (BufferSettings.getDefault().useLRU()) {
             JRadioButton cacheLRU = new JRadioButton("Cache tables in memory.", true);
             cacheLRU.setActionCommand(MemoryPolicy.CacheSmallInMemory.toString());
             m_group.add(cacheLRU);
