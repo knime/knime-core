@@ -361,7 +361,7 @@ public class WindowCacheTable implements DirectAccessTable {
         boolean pushIterator = !hasRowCount() && (lastRow >= oldRowCount - 1);
         if (start >= (m_rowCountOfInterestInIterator - cacheSize)
                 && (lastRow < m_rowCountOfInterestInIterator) && !pushIterator) {
-            return getRowsFromCache(start, length);
+            return getRowsFromCache(start, length, exec);
         }
 
         /* not all rows in cache */
@@ -389,7 +389,7 @@ public class WindowCacheTable implements DirectAccessTable {
         if (exec != null) {
             exec.setProgress(1.0);
         }
-        return getRowsFromCache(start, length);
+        return getRowsFromCache(start, length, exec);
     }
 
     /**
@@ -462,20 +462,26 @@ public class WindowCacheTable implements DirectAccessTable {
     }
 
     /**
-     * Returns a row with a given index from the cache. It is mandatory to give a row index which is certainly in the
-     * cache, i.e. <code>(row >= (m_rowCountOfInterestInIterator - cS) && row < m_rowCountOfInterestInIterator)</code>
+     * Returns a window of rows with a given index and length from the cache.
+     * It is mandatory to give a row index which is certainly in the cache, i.e.
+     * <code>(row >= (m_rowCountOfInterestInIterator - cS) && row < m_rowCountOfInterestInIterator)</code>
      * must hold.
      *
-     * @param  row index of the row in the underlying <code>DataTable</code>
+     * @param row index of the row in the underlying <code>DataTable</code>
+     * @param length the length of the window to return
+     * @param exec an optional execution monitor to set progress
      * @return the row with the given index
      */
-    private List<DataRow> getRowsFromCache(final long start, final int length) {
+    private List<DataRow> getRowsFromCache(final long start, final int length, final ExecutionMonitor exec) {
         List<DataRow> rowList = new ArrayList<DataRow>(length);
         for (long row = start; row < start + length; row++) {
             if (row >= m_rowCountOfInterest) {
                 break; // row outside of table, may return an empty or partially filled list
             }
             rowList.add(m_cachedRows[indexForRow(row)]);
+        }
+        if (exec != null) {
+            exec.setProgress(1);
         }
         return rowList;
     }
