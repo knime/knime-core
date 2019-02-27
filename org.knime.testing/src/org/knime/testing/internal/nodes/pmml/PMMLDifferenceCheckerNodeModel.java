@@ -47,6 +47,17 @@ package org.knime.testing.internal.nodes.pmml;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.dmg.pmml.PMMLDocument;
 import org.knime.core.data.util.LockedSupplier;
@@ -55,6 +66,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -190,7 +202,19 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
 
             Diff res = comp.areEqual(doc1, doc2);
             if (res != null) {
-                throw new IllegalStateException("Mismatch at: " + crToString(res));
+                NodeLogger logger = getLogger();
+                if (logger.isDebugEnabled()) {
+                    Document d1 = sup1.get();
+                    Document d2 = sup2.get();
+                    logger.debug("------- Document 1 (1st input port) - Start -------");
+                    prettyPrint(d1).forEach(logger::debug);
+                    logger.debug("------- Document 1 (1st input port) - End ---------");
+                    logger.debug("------- Document 2 (2nd input port) - Start -------");
+                    prettyPrint(d2).forEach(logger::debug);
+                    logger.debug("------- Document 2 (2nd input port) - End ---------");
+                }
+                throw new IllegalStateException(
+                    String.format("Mismatch at: \"%s\" (documents dumped to debug output)", crToString(res)));
             }
         }
         return new PortObject[0];
@@ -288,6 +312,18 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+    }
+
+    /** 'pretty-prints' the non-null document into a stream of strings, separated by newline. */
+    private static final Stream<String> prettyPrint(final Document doc)
+        throws TransformerFactoryConfigurationError, TransformerException {
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        StreamResult result = new StreamResult(new StringWriter());
+        DOMSource source = new DOMSource(doc);
+        transformer.transform(source, result);
+        return Pattern.compile("\n").splitAsStream(result.getWriter().toString());
     }
 
 }
