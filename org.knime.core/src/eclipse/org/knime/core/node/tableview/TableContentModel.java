@@ -1138,7 +1138,9 @@ public class TableContentModel extends AbstractTableModel
             }
             currentRow = m_iterator.next();
             m_rowCountInIterator++;
-            m_maxRowCount = Math.max(m_maxRowCount, m_rowCountInIterator);
+            if (!m_isMaxRowCountFinal) {
+                m_maxRowCount = Math.max(m_maxRowCount, m_rowCountInIterator);
+            }
             isHiLit = m_hiLiteHdl != null
                 ? m_hiLiteHdl.isHiLit(currentRow.getKey()) : false;
             // ignore row if we filter for hilit rows and this one is not hilit
@@ -1148,8 +1150,9 @@ public class TableContentModel extends AbstractTableModel
         m_cachedRows[indexInCache] = currentRow;
         m_hilitSet.set(indexInCache, isHiLit);
         m_rowCountOfInterestInIterator++;
-        m_rowCountOfInterest =
-            Math.max(m_rowCountOfInterest, m_rowCountOfInterestInIterator);
+        if (!m_isRowCountOfInterestFinal) {
+            m_rowCountOfInterest = Math.max(m_rowCountOfInterest, m_rowCountOfInterestInIterator);
+        }
         return true;
     } // cacheNextRow()
 
