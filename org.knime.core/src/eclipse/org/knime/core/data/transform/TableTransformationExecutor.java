@@ -52,6 +52,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import org.knime.core.data.DirectAccessTable;
+import org.knime.core.data.sort.TableSortInformation;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.LockedQueue;
 
@@ -167,28 +168,24 @@ public abstract class TableTransformationExecutor {
          * @param transformation the transformation to add
          * @return this builder instance
          */
-        public TableTransformationExecutorBuilder addTransformation(final TableTransformation transformation) {
+        protected TableTransformationExecutorBuilder addTransformation(final TableTransformation transformation) {
             m_transformations.add(transformation);
             return this;
         }
 
         /**
          * Adds a sort transformation to the current queue of transformations
-         * @param sort the sort to add
+         * @param sortInformation the sort to add
          * @return this builder instance
          */
-        public TableTransformationExecutorBuilder sort(final TableSortTransformation sort) {
-            return addTransformation(sort);
-        }
+        public abstract TableTransformationExecutorBuilder sort(final TableSortInformation sortInformation);
 
         /**
          * Adds a filter transformation to the current queue of transformations
          * @param filter the filter to add
          * @return this builder instance
          */
-        public TableTransformationExecutorBuilder filter(final TableFilterTransformation filter) {
-            return addTransformation(filter);
-        }
+        public abstract TableTransformationExecutorBuilder filter(final TableFilterTransformation filter);
 
         /**
          * Returns the table before any transformations have been applied.

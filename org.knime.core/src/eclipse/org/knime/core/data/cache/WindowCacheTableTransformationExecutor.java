@@ -48,7 +48,12 @@
  */
 package org.knime.core.data.cache;
 
+import java.util.Queue;
+
 import org.knime.core.data.DirectAccessTable;
+import org.knime.core.data.sort.TableSortInformation;
+import org.knime.core.data.transform.TableFilterTransformation;
+import org.knime.core.data.transform.TableTransformation;
 import org.knime.core.data.transform.TableTransformationExecutor;
 import org.knime.core.node.ExecutionMonitor;
 
@@ -75,8 +80,12 @@ public class WindowCacheTableTransformationExecutor extends TableTransformationE
      */
     @Override
     public DirectAccessTable executeNext(final ExecutionMonitor exec) {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO: this is generic -> pull up!
+        Queue<TableTransformation> queue = getTableTransformations();
+        if (queue.isEmpty()) {
+            return getOriginalTable();
+        }
+        return queue.poll().transform(exec);
     }
 
     /**
@@ -84,8 +93,18 @@ public class WindowCacheTableTransformationExecutor extends TableTransformationE
      */
     @Override
     public DirectAccessTable execute(final ExecutionMonitor exec) {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO: this is generic -> pull up!
+        Queue<TableTransformation> queue = getTableTransformations();
+        if (queue.isEmpty()) {
+            return getOriginalTable();
+        }
+        final int numTransforms = queue.size();
+        DirectAccessTable transformedTable = getOriginalTable();
+        while (!queue.isEmpty()) {
+            ExecutionMonitor subProgress = exec.createSubProgress(1 - (queue.size() - numTransforms));
+            transformedTable = queue.poll().transform(subProgress);
+        }
+        return transformedTable;
     }
 
     /**
@@ -110,6 +129,26 @@ public class WindowCacheTableTransformationExecutor extends TableTransformationE
          */
         public static WindowCacheTableTansformationExecutorBuilder of(final WindowCacheTable table) {
             return new WindowCacheTableTansformationExecutorBuilder(table);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public TableTransformationExecutorBuilder sort(final TableSortInformation sortInformation) {
+            WindowCacheTableSortTransformation sortTransformation =
+                new WindowCacheTableSortTransformation((WindowCacheTable)getOriginalTable(), sortInformation);
+            addTransformation(sortTransformation);
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public TableTransformationExecutorBuilder filter(final TableFilterTransformation filter) {
+            addTransformation(filter);
+            return this;
         }
 
         /**

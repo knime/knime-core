@@ -48,7 +48,9 @@
  */
 package org.knime.core.data.cache;
 
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DirectAccessTable;
+import org.knime.core.data.sort.DataTableSorter;
 import org.knime.core.data.sort.TableSortInformation;
 import org.knime.core.data.transform.TableSortTransformation;
 import org.knime.core.node.ExecutionMonitor;
@@ -69,7 +71,7 @@ public class WindowCacheTableSortTransformation extends TableSortTransformation 
      * @param originalTable the table to transform
      * @param sortInfo the sort information needed to transform the table
      */
-    public WindowCacheTableSortTransformation(final DirectAccessTable originalTable,
+    public WindowCacheTableSortTransformation(final WindowCacheTable originalTable,
         final TableSortInformation sortInfo) {
         super(originalTable, sortInfo);
     }
@@ -79,7 +81,11 @@ public class WindowCacheTableSortTransformation extends TableSortTransformation 
      */
     @Override
     public DirectAccessTable transform(final ExecutionMonitor exec) {
-        // TODO Auto-generated method stub
+        WindowCacheTable cache = (WindowCacheTable)getOriginalTable();
+        DataTable inputTable = cache.getDataTable();
+
+        //use BufferedDataTableSorter if possible
+        DataTableSorter sorter = new DataTableSorter(inputTable, cache.getRowCount(), sortColNames, sortOrders, false);
         return null;
     }
 
