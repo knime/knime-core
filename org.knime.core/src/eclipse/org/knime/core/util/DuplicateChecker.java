@@ -237,6 +237,7 @@ public class DuplicateChecker implements IDuplicateChecker {
         m_maxStreams = maxStreams;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void addKey(final String s) throws DuplicateKeyException,
             IOException {
@@ -253,6 +254,7 @@ public class DuplicateChecker implements IDuplicateChecker {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void checkForDuplicates() throws DuplicateKeyException, IOException {
         if (m_storedChunks.size() == 0) {

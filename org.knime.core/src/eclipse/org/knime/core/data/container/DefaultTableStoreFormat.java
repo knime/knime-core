@@ -373,7 +373,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
          *
          * @return the compression format
          */
-        public CompressionFormat getCompressionFormat() {
+        CompressionFormat getCompressionFormat() {
             return m_compType;
         }
 

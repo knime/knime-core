@@ -103,19 +103,10 @@ public final class BufferSettings {
      * @param outputFormat the output format
      * @noreference This constructor is not intended to be referenced by clients.
      */
-    public BufferSettings(final boolean enableLRU, final int lruCacheSize, final TableStoreFormat outputFormat) {
+    private BufferSettings(final boolean enableLRU, final int lruCacheSize, final TableStoreFormat outputFormat) {
         m_enableLRU = enableLRU;
         m_lruCacheSize = lruCacheSize;
         m_outputFormat = outputFormat;
-    }
-
-    /**
-     * Returns the default {@link BufferSettings}.
-     *
-     * @return the default {@code BufferSettings}.
-     */
-    public static BufferSettings getDefault() {
-        return DataContainerSettings.getDefault().getBufferSettings();
     }
 
     /**
@@ -193,7 +184,7 @@ public final class BufferSettings {
      * @param lruCacheSize the new LRU cache size
      * @return a new instance of {@code BufferSettings}
      */
-    public BufferSettings withLRUCachSize(final int lruCacheSize) {
+    public BufferSettings withLRUCacheSize(final int lruCacheSize) {
         return new BufferSettings(m_enableLRU, lruCacheSize, m_outputFormat);
     }
 

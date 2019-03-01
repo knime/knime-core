@@ -48,33 +48,77 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
+import java.io.IOException;
+
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.knime.core.data.container.DataContainerSettings;
+import org.knime.core.util.DuplicateKeyException;
+import org.knime.core.util.IDuplicateChecker;
 
 /**
+ * Tests checking that the workflow tests make proper use of {@link DataContainerSettings}.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class WorkflowSettings extends WorkflowTestCase {
+public class TestWorkflowSettings extends WorkflowTestCase {
 
     private NodeID m_dataGenerator;
 
     private NodeID m_joiner;
 
     /**
-     * Checks whether workflow tests make proper use of {@link DataContainerSettings}. To achieve this we compare the
-     * running times of a "keep all rows in memory" and "store table to disc" execution.
+     * Ensure that workflows run with default {@link DataContainerSettings}.
      *
      * @throws Exception - If something goes wrong while loading or executing the workflow
      */
     @Test
-    public void testWorkflowSettings() throws Exception {
-        final double cacheTime = test(DataContainerSettings.getDefault().withMaxCellsInMemory(Integer.MAX_VALUE));
-        final double ioTime = test(DataContainerSettings.getDefault().withMaxCellsInMemory(0));
-        assertTrue("Seems like the data container settings have been ignored.", cacheTime < ioTime);
+    public void testDefaultWorkflowSettings() throws Exception {
+        test(DataContainerSettings.getDefault());
+        checkState(m_dataGenerator, InternalNodeContainerState.EXECUTED);
+        checkState(m_joiner, InternalNodeContainerState.EXECUTED);
+        cleanAndCloseWorkflow();
+    }
+
+    /**
+     * Ensures that altered {@link DataContainerSettings} are used while executing workflows. This is tested by forcing
+     * the {@link IDuplicateChecker} to throw an exception.
+     *
+     * @throws Exception - If something goes wrong while loading or executing the workflow
+     */
+    @Test
+    public void testBrokenWorkflowSettings() throws Exception {
+        test(DataContainerSettings.getDefault().withDuplicateChecker(() -> new IDuplicateChecker() {
+
+            @Override
+            public void clear() {
+            }
+
+            @Override
+            public void checkForDuplicates() throws DuplicateKeyException, IOException {
+                throw new DuplicateKeyException("Test failed due to our own duplicate checker implementation");
+            }
+
+            @Override
+            public void addKey(final String s) throws DuplicateKeyException, IOException {
+
+            }
+        }));
+        NodeMessage msgOfNode = findNodeContainer(m_dataGenerator).getNodeMessage();
+        // should complain about duplicate key exception
+        assertThat("Node not in error state, although an exception has been thrown.", msgOfNode.getMessageType(),
+            is(NodeMessage.Type.ERROR));
+        assertThat("Node message does not reflect the exceptions message", msgOfNode.getMessage(),
+            CoreMatchers.containsString("Test failed due to our own duplicate checker implementation"));
+        assertThat("Workflow Manager dirty state", getManager().isDirty(), is(true));
+        checkState(m_dataGenerator, InternalNodeContainerState.CONFIGURED);
+        checkState(m_joiner, InternalNodeContainerState.CONFIGURED);
+        cleanAndCloseWorkflow();
+
     }
 
     /**
@@ -83,16 +127,10 @@ public class WorkflowSettings extends WorkflowTestCase {
      * @param settings the workflow execution settings
      * @throws Exception - If something goes wrong while loading or executing the workflow
      */
-    private double test(final DataContainerSettings settings) throws Exception {
+    private void test(final DataContainerSettings settings) throws Exception {
         loadWorkflow(settings);
-        final long start = System.currentTimeMillis();
         executeAndWait(m_joiner);
         waitWhileInExecution();
-        double time = System.currentTimeMillis() - start;
-        checkState(m_dataGenerator, InternalNodeContainerState.EXECUTED);
-        checkState(m_joiner, InternalNodeContainerState.EXECUTED);
-        cleanAndCloseWorkflow();
-        return time;
     }
 
     /**

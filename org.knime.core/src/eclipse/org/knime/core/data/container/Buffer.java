@@ -537,7 +537,7 @@ public class Buffer implements KNIMEStreamConstants {
         final IDataRepository dataRepository, final Map<Integer, ContainerTable> localRep,
         final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite) {
         this(spec, maxRowsInMemory, bufferID, dataRepository, localRep, fileStoreHandler, forceSynchronousWrite,
-            BufferSettings.getDefault());
+            DataContainerSettings.getDefault().getBufferSettings());
     }
 
     /**
@@ -567,6 +567,7 @@ public class Buffer implements KNIMEStreamConstants {
         } else {
             m_lifecycle = new MemorizeIfSmallLifecycle(maxRowsInMemory);
         }
+        CACHE.setLRUCacheSize(m_bufferSettings.getLRUCacheSize());
         /**
          * independent of the lifecycle, if maxRowsInMemory is zero, the buffer is expected to flush to disk (e.g, see
          * {@link org.knime.core.data.sort.DataTableSorter#createDataContainer(DataTableSpec, boolean)}).
@@ -598,7 +599,8 @@ public class Buffer implements KNIMEStreamConstants {
      */
     Buffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
         final InputStream metaIn, final int bufferID, final IDataRepository dataRepository) throws IOException {
-        this(binFile, blobDir, fileStoreDir, spec, metaIn, bufferID, dataRepository, BufferSettings.getDefault());
+        this(binFile, blobDir, fileStoreDir, spec, metaIn, bufferID, dataRepository,
+            DataContainerSettings.getDefault().getBufferSettings());
     }
 
     /**
@@ -640,6 +642,7 @@ public class Buffer implements KNIMEStreamConstants {
         m_flushedToDisk = true;
         m_bufferSettings = settings;
         m_lifecycle = m_bufferSettings.useLRU() ? new SoftRefLRUSyncWriteLifecycle() : new MemorizeIfSmallLifecycle(0);
+        CACHE.setLRUCacheSize(m_bufferSettings.getLRUCacheSize());
         try {
             readMetaFromFile(metaIn, fileStoreDir);
         } catch (InvalidSettingsException ise) {

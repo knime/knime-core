@@ -98,7 +98,7 @@ public final class DataContainerSettingsTest extends TestCase {
         assertTrue("Wrong default (duplicate checker)", settings.createDuplicateChecker() instanceof DuplicateChecker);
         assertNotNull("Wrong default (BufferSettings are null)", settings.getBufferSettings());
         assertTrue("Wrong default (Default BufferSettings are different to those provided by the DataContainerSettings",
-            settings.getBufferSettings().equals(BufferSettings.getDefault()));
+            settings.getBufferSettings().equals(DataContainerSettings.getDefault().getBufferSettings()));
     }
 
     /**
@@ -116,7 +116,7 @@ public final class DataContainerSettingsTest extends TestCase {
         final boolean initDomain = !def.getInitializeDomain();
         final int maxAsyncWriteThreads = def.getMaxAsyncWriteThreads() * -1;
         final BufferSettings bSettings =
-            def.getBufferSettings().withLRUCachSize(def.getBufferSettings().getLRUCacheSize() * -1);
+            def.getBufferSettings().withLRUCacheSize(def.getBufferSettings().getLRUCacheSize() * -1);
 
         final DataContainerSettings settings = DataContainerSettings.getDefault()//
             .withAsyncCacheSize(cacheSize)//
@@ -155,7 +155,6 @@ public final class DataContainerSettingsTest extends TestCase {
     /**
      * Tests that functions can be changed and that the default instance is not changed.
      */
-
     @Test
     public void testChangeFunctions() {
         class UnitDomainCreator implements IDataTableDomainCreator {

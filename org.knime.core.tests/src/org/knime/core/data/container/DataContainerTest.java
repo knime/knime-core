@@ -821,7 +821,7 @@ public class DataContainerTest extends TestCase {
         Assert.assertTrue("Recently generated medium-sized table not held in memory.", buffer.isHeldInMemory());
 
         // generate more medium-sized tables that should eventually evict the first table from the LRU cache
-        for (int i = 0; i < BufferCache.LRU_CACHE_SIZE; i++) {
+        for (int i = 0; i < DataContainerSettings.getDefault().getBufferSettings().getLRUCacheSize(); i++) {
             generateMediumSizedTable();
         }
 

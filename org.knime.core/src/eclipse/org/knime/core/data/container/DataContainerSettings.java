@@ -310,7 +310,7 @@ public final class DataContainerSettings {
      *
      * @return maximum number of asynchronous write threads
      */
-    public int getMaxAsyncWriteThreads() {
+    int getMaxAsyncWriteThreads() {
         return m_maxAsyncWriteThreads;
     }
 
@@ -319,7 +319,7 @@ public final class DataContainerSettings {
      *
      * @return the asynchronous cache size
      */
-    public int getAsyncCacheSize() {
+    int getAsyncCacheSize() {
         return m_asyncCacheSize;
     }
 
@@ -328,7 +328,7 @@ public final class DataContainerSettings {
      *
      * @return the initialize domain flag
      */
-    public boolean getInitializeDomain() {
+    boolean getInitializeDomain() {
         return m_initDomain;
     }
 
@@ -346,7 +346,7 @@ public final class DataContainerSettings {
      *
      * @return a {@link IDuplicateChecker}
      */
-    public IDuplicateChecker createDuplicateChecker() {
+    IDuplicateChecker createDuplicateChecker() {
         return m_duplicateCheckerCreator.get();
     }
 
@@ -356,7 +356,7 @@ public final class DataContainerSettings {
      * @param spec the data table sepc
      * @return an instance of {@link IDataTableDomainCreator}
      */
-    public IDataTableDomainCreator createDomainCreator(final DataTableSpec spec) {
+    IDataTableDomainCreator createDomainCreator(final DataTableSpec spec) {
         final IDataTableDomainCreator creator = m_tableDomainCreatorFunction.apply(spec, m_initDomain);
         creator.setMaxPossibleValues(m_maxDomainValues);
         return creator;

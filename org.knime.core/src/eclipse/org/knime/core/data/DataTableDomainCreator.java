@@ -174,6 +174,7 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         });
     }
 
+    /** {@inheritDoc} */
     @Override
     public void setMaxPossibleValues(final int maxValues) {
         if (maxValues < 0) {
@@ -255,6 +256,7 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         return new DataTableSpec(m_inputSpec.getName(), outColSpecs);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void updateDomain(final DataRow row) {
         assert row.getNumCells() == m_inputSpec.getNumColumns() : "Unequal number of columns in spec and row: "

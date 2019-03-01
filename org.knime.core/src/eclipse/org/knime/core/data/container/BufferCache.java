@@ -54,6 +54,7 @@ import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.WeakHashMap;
 
@@ -80,11 +81,6 @@ final class BufferCache {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(BufferCache.class);
 
     /**
-     * A number that determines how many tables are kept in the soft-references LRU cache before being weak-referenced.
-     */
-    static final int LRU_CACHE_SIZE = 32;
-
-    /**
      * The time (in seconds) that has to pass at least in between the logging of statistics.
      */
     private static final int STATISTICS_OUTPUT_INTERVAL = 300;
@@ -94,7 +90,12 @@ final class BufferCache {
      * automatically. We use the buffer itself as key, since multiple buffers can have the same id. The Map has to have
      * weak keys such that unreferenced buffers can be garbage-collected if we forget to clear them.
      */
-    private Map<Buffer, List<BlobSupportDataRow>> m_hardMap = new WeakHashMap<>();
+    private final Map<Buffer, List<BlobSupportDataRow>> m_hardMap = new WeakHashMap<>();
+
+    /**
+     * A number that determines how many tables are kept in the soft-references LRU cache before being weak-referenced.
+     */
+    private int m_LRUCacheSize = DataContainerSettings.getDefault().getBufferSettings().getLRUCacheSize();
 
     /**
      * An LRU-cache of soft references to tables held in this cache. Note that soft references also keep track of when
@@ -102,27 +103,35 @@ final class BufferCache {
      * first and then proceed with soft-referenced tables in the order in which they were least recently used.
      */
     private LRUCache<Buffer, SoftReference<List<BlobSupportDataRow>>> m_LRUCache =
-        new LRUCache<>(LRU_CACHE_SIZE, LRU_CACHE_SIZE);
+        new LRUCache<>(m_LRUCacheSize, m_LRUCacheSize);
 
     /**
      * A map of weak references to tables evicted from the LRU cache.
      */
-    private Map<Buffer, WeakReference<List<BlobSupportDataRow>>> m_weakCache = new WeakHashMap<>();
+    private final Map<Buffer, WeakReference<List<BlobSupportDataRow>>> m_weakCache = new WeakHashMap<>();
 
     /**
      * A reference queue that holds any weak references that were cleared by the garbage collector.
      */
-    private ReferenceQueue<List<BlobSupportDataRow>> m_weakCacheRefQueue = new ReferenceQueue<>();
+    private final ReferenceQueue<List<BlobSupportDataRow>> m_weakCacheRefQueue = new ReferenceQueue<>();
 
     /** Some counters for instrumentation / statistics. */
     private long m_nTables = 0;
+
     private long m_nInvalidatedTables = 0;
+
     private long m_nGCedTables = 0;
+
     private long m_nAccesses = 0;
+
     private long m_nHardHits = 0;
+
     private long m_nSoftHits = 0;
+
     private long m_nWeakHits = 0;
+
     private long m_nMisses = 0;
+
     private long timeOfLastLog = System.currentTimeMillis();
 
     private void logStatistics() {
@@ -173,7 +182,7 @@ final class BufferCache {
          * weak references won't be cleared while there is still a hard reference on the object.
          */
         m_LRUCache.put(buffer, new SoftReference<List<BlobSupportDataRow>>(undmodifiableList));
-        WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.put(buffer,
+        final WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.put(buffer,
             new WeakReference<List<BlobSupportDataRow>>(undmodifiableList, m_weakCacheRefQueue));
 
         if (previousValue == null) {
@@ -300,11 +309,34 @@ final class BufferCache {
     synchronized void invalidate(final Buffer buffer) {
         m_hardMap.remove(buffer);
         m_LRUCache.remove(buffer);
-        WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.remove(buffer);
+        final WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.remove(buffer);
 
         if (previousValue != null && previousValue.get() != null) {
             m_nInvalidatedTables++;
         }
+    }
+
+    /**
+     * Can be used to adjust the size of the LRU cache at runtime. Should only be used for benchmarking purposes.
+     *
+     * @param newSize the new size of the LRU cache
+     */
+    synchronized void setLRUCacheSize(final int newSize) {
+        if (newSize == m_LRUCacheSize) {
+            return;
+        }
+
+        /** Since there is no way of adjusting the cache size of an LRUCache, we have to create a new cache. */
+        final LRUCache<Buffer, SoftReference<List<BlobSupportDataRow>>> cache = new LRUCache<>(newSize, newSize);
+
+        /** If the new cache is smaller than the old one, the least-recently-accessed entries will be entered first
+         * and then also evicted first when the new cache size is reached. */
+        for (Entry<Buffer, SoftReference<List<BlobSupportDataRow>>> entry : m_LRUCache.entrySet()) {
+            cache.put(entry.getKey(), entry.getValue());
+        }
+
+        m_LRUCacheSize = newSize;
+        m_LRUCache = cache;
     }
 
 }
