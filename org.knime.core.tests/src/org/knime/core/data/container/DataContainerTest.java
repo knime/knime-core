@@ -820,10 +820,6 @@ public class DataContainerTest extends TestCase {
         final Buffer buffer = generateMediumSizedTable();
         Assert.assertTrue("Recently generated medium-sized table not held in memory.", buffer.isHeldInMemory());
 
-        // this test is admittedly somewhat fishy - we assume that the table is written asynchronously and has not been
-        // fully written yet (it honestly shouldn't be, since we just closed it's container).
-        Assert.assertFalse("Recently generated medium-sized table prematurely flushed to disk.", buffer.isFlushedToDisk());
-
         // generate more medium-sized tables that should eventually evict the first table from the LRU cache
         for (int i = 0; i < BufferCache.LRU_CACHE_SIZE; i++) {
             generateMediumSizedTable();
