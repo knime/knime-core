@@ -593,7 +593,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             m_credentials = loadCredentials(m_workflowSett);
             // request to initialize credentials - if available
             if (m_credentials != null && !m_credentials.isEmpty()) {
-                m_credentials = getLoadHelper().loadCredentials(m_credentials);
+                m_credentials = getLoadHelper().loadCredentialsPrefilled(m_credentials);
             }
         } catch (InvalidSettingsException e) {
             String error = "Unable to load credentials: " + e.getMessage();

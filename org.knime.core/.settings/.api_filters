@@ -781,6 +781,12 @@
                 <message_argument value="getUnknownKNIMEVersionLoadPolicy(FileWorkflowPersistor.LoadVersion, Version, boolean)"/>
             </message_arguments>
         </filter>
+        <filter comment="reducing scope -- no one is supposed to call it (only override)" id="421572723">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowLoadHelper"/>
+                <message_argument value="loadCredentials(List&lt;Credentials&gt;)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
         <filter id="338792546">

@@ -69,6 +69,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.CoreConstants;
 
 
 /**
@@ -85,6 +86,10 @@ public final class CredentialsStore implements Observer {
 
     private final WorkflowManager m_manager;
     private final Map<String, Credentials> m_credentials;
+    /** See {@link #setKNIMESystemDefault(String, String)} for details. */
+    static String systemCredentialsUserName;
+    /** See {@link #setKNIMESystemDefault(String, String)} for details. */
+    static String systemCredentialsPassword;
 
     /** Create new credential store for a workflow.
      * @param manager The workflow keeping this store to persist credentials.
@@ -312,6 +317,21 @@ public final class CredentialsStore implements Observer {
         add(new Credentials(credentialsValue.getName(), credentialsValue.getLogin(), credentialsValue.getPassword()));
     }
 
+    /**
+     * API hook to set static username + password for credentials entries with
+     * {@link CoreConstants#CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID system credentials id}. In standard KNIME
+     * installations this won't be set but some 3rd party extension may assign defaults during KNIME startup
+     * (e.g. via {@link org.knime.core.util.IEarlyStartup}).
+     * @param userName the user name
+     * @param password the password
+     * @since 3.8
+     */
+    // added as part of AP-11261
+    public static void setKNIMESystemDefault(final String userName, final String password) {
+        CredentialsStore.systemCredentialsUserName = userName;
+        CredentialsStore.systemCredentialsPassword = password;
+    }
+
     /** Framework private method to update or add a credentials object. Used by the Credentials quickform node
      * to hijack the store and add/fix. Subject to change in the next feature release.
      *
@@ -443,6 +463,22 @@ public final class CredentialsStore implements Observer {
                 new FlowVariable(name, new CredentialsFlowVariableValue(name, login, password)));
         }
 
+        /**
+         * Pushes a flow variable using system credentials (set by 3rd party extension, see
+         * {@link CredentialsStore#setKNIMESystemDefault(String, String)}
+         *
+         * @param name Non-null identifier
+         * @return true if 'system' credentials are available and used pushed, false otherwise.
+         * @since 3.8
+         */
+        public default boolean pushCredentialsFlowVariableWithDefaultCredentials(final String name) {
+            if (systemCredentialsUserName != null && systemCredentialsPassword != null) {
+                pushCredentialsFlowVariable(name, systemCredentialsUserName, systemCredentialsPassword);
+                return true;
+            }
+            return false;
+        }
+
         /** Called when node is loaded from disc. Implementations will prompt the password by means of the workflow
          * load helper and then {@link #pushCredentialsFlowVariable(String, String, String)} it.
          * @param loadHelper Non-null helper.
@@ -465,5 +501,6 @@ public final class CredentialsStore implements Observer {
          */
         public default void onWorkfowCredentialsChanged(final Collection<Credentials> workflowCredentials) {
         }
+
     }
 }
