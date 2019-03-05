@@ -53,6 +53,7 @@ import java.util.Queue;
 
 import org.knime.core.data.DirectAccessTable;
 import org.knime.core.data.sort.TableSortInformation;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.LockedQueue;
 
@@ -135,14 +136,32 @@ public abstract class TableTransformationExecutor {
      * @param exec an execution monitor to set progress and check for cancellation
      * @return a {@link DirectAccessTable} to which the next transformation has been applied
      */
-    public abstract DirectAccessTable executeNext(final ExecutionMonitor exec);
+    public DirectAccessTable executeNext(final ExecutionMonitor exec) throws CanceledExecutionException {
+        Queue<TableTransformation> queue = getTableTransformations();
+        if (queue.isEmpty()) {
+            return getOriginalTable();
+        }
+        return queue.poll().transform(exec);
+    }
 
     /**
      * Executes all table transformations in the queue successively.
      * @param exec an execution monitor to set progress and check for cancellation
      * @return a {@link DirectAccessTable} to which all transformations have been applied
      */
-    public abstract DirectAccessTable execute(final ExecutionMonitor exec);
+    public DirectAccessTable execute(final ExecutionMonitor exec) throws CanceledExecutionException {
+        Queue<TableTransformation> queue = getTableTransformations();
+        if (queue.isEmpty()) {
+            return getOriginalTable();
+        }
+        final int numTransforms = queue.size();
+        DirectAccessTable transformedTable = getOriginalTable();
+        while (!queue.isEmpty()) {
+            ExecutionMonitor subProgress = exec.createSubProgress(1 - (queue.size() - numTransforms));
+            transformedTable = queue.poll().transform(subProgress);
+        }
+        return transformedTable;
+    }
 
     /**
      * Builder to create a {@link TableTransformationExecutor} by consecutively adding table transformations.

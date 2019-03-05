@@ -59,7 +59,9 @@ import java.util.Queue;
 public class TableSortInformation {
 
     private final Queue<ColumnSortInformation> m_columns;
+
     private boolean m_natural;
+
     private MissingValueSortStrategy m_missingValueStrategy;
 
     private TableSortInformation(final Queue<ColumnSortInformation> columns, final boolean natural,
@@ -73,46 +75,89 @@ public class TableSortInformation {
         this(new LinkedList<ColumnSortInformation>(), true, MissingValueSortStrategy.LAST);
     }
 
-    public void setMissingValueStrategy(final MissingValueSortStrategy missingValueStrategy) {
-        m_natural = false;
-        m_missingValueStrategy = missingValueStrategy;
-    }
-
     public boolean isNaturalSorting() {
         return m_natural;
+    }
+
+    /**
+     * @return the columns
+     */
+    public Queue<ColumnSortInformation> getColumns() {
+        return m_columns;
+    }
+
+    public void addColumn(final ColumnSortInformation colInfo) {
+        m_columns.add(colInfo);
+    }
+
+    public void setColumns(final Queue<ColumnSortInformation> columns) {
+        m_columns.clear();
+        m_columns.addAll(columns);
     }
 
     public MissingValueSortStrategy getMissingValueSortStrategy() {
         return m_missingValueStrategy;
     }
 
+    public void setMissingValueStrategy(final MissingValueSortStrategy missingValueStrategy) {
+        m_natural = false;
+        m_missingValueStrategy = missingValueStrategy;
+    }
+
     public static class ColumnSortInformation {
 
-        private final boolean m_rowkey;
         private final String m_name;
-        private final boolean m_ascending;
 
-        public ColumnSortInformation(final String name, final boolean isRowkey, final boolean isAscending) {
+        private final SortDirection m_direction;
+
+        private final boolean m_rowkey;
+
+        public ColumnSortInformation(final String name, final SortDirection direction, final boolean isRowkey) {
             m_name = name;
+            m_direction = direction;
             m_rowkey = isRowkey;
-            m_ascending = isAscending;
         }
 
         public ColumnSortInformation(final String name) {
-            this(name, false, true);
+            this(name, SortDirection.ASCENDING, false);
         }
 
-        public ColumnSortInformation(final String name, final boolean isAscending) {
-            this(name, false, isAscending);
+        public ColumnSortInformation(final String name, final SortDirection direction) {
+            this(name, direction, false);
         }
 
-        public ColumnSortInformation(final boolean isAscending) {
-            this(null, true, isAscending);
+        public ColumnSortInformation(final SortDirection direction) {
+            this(null, direction, true);
+        }
+
+        /**
+         * @return the name
+         */
+        public String getName() {
+            return m_name;
+        }
+
+        /**
+         * @return the rowkey
+         */
+        public boolean isRowkey() {
+            return m_rowkey;
+        }
+
+        /**
+         * @return the ascending
+         */
+        public SortDirection getDirection() {
+            return m_direction;
         }
     }
 
+    public static enum SortDirection {
+            ASCENDING, DESCENDING;
+    }
+
     public static enum MissingValueSortStrategy {
-        FIRST, LAST
+            FIRST, LAST
     }
 
 }

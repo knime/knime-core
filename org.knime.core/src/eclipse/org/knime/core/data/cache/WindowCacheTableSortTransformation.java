@@ -48,11 +48,22 @@
  */
 package org.knime.core.data.cache;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DirectAccessTable;
+import org.knime.core.data.DirectAccessTable.UnknownRowCountException;
 import org.knime.core.data.sort.DataTableSorter;
 import org.knime.core.data.sort.TableSortInformation;
+import org.knime.core.data.sort.TableSortInformation.ColumnSortInformation;
+import org.knime.core.data.sort.TableSortInformation.MissingValueSortStrategy;
+import org.knime.core.data.sort.TableSortInformation.SortDirection;
 import org.knime.core.data.transform.TableSortTransformation;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -78,15 +89,39 @@ public class WindowCacheTableSortTransformation extends TableSortTransformation 
 
     /**
      * {@inheritDoc}
+     * @throws CanceledExecutionException
      */
     @Override
-    public DirectAccessTable transform(final ExecutionMonitor exec) {
+    public DirectAccessTable transform(final ExecutionMonitor exec) throws CanceledExecutionException {
         WindowCacheTable cache = (WindowCacheTable)getOriginalTable();
+        TableSortInformation sort = getSortInformation();
+        if (sort == null || sort.isNaturalSorting()) {
+            return cache;
+        }
         DataTable inputTable = cache.getDataTable();
+        boolean missingValuesEnd = sort.getMissingValueSortStrategy() == MissingValueSortStrategy.LAST;
+        final Queue<ColumnSortInformation> sortCols = sort.getColumns();
+        final List<Boolean> directionList = new ArrayList<Boolean>(sortCols.size());
+        List<String> sortColNames = sortCols.stream().map(col -> {
+           directionList.add(col.getDirection() == SortDirection.ASCENDING ? true : false);
+           if (col.isRowkey()) {
+               return DataTableSorter.ROWKEY_SORT_SPEC.getName();
+           }
+           return col.getName();
+        }).collect(Collectors.toList());
+        ArrayUtils.toPrimitive(directionList.stream().toArray(Boolean[]::new));
+        final boolean[] sortDirections = ArrayUtils.toPrimitive(directionList.stream().toArray(Boolean[]::new));
+        long rowCount;
+        try {
+            rowCount = cache.getRowCount();
+        } catch (UnknownRowCountException e) {
+            rowCount = -1;
+        }
 
-        //use BufferedDataTableSorter if possible
-        DataTableSorter sorter = new DataTableSorter(inputTable, cache.getRowCount(), sortColNames, sortOrders, false);
-        return null;
+        DataTableSorter sorter =
+                new DataTableSorter(inputTable, rowCount, sortColNames, sortDirections, missingValuesEnd);
+        DataTable sortedTable = sorter.sort(exec);
+        return new WindowCacheTable(sortedTable, cache.getIncludedColumns().stream().toArray(String[]::new));
     }
 
 }

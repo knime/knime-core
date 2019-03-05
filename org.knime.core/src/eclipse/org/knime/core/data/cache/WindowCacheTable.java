@@ -167,6 +167,10 @@ public class WindowCacheTable implements DirectAccessTable {
         initCache();
     }
 
+    public Set<String> getIncludedColumns() {
+        return m_includedColumnIndices;
+    }
+
     /**
      * Sets an array of column names of which columns from the underlying {@link DataTable} are of interest for the
      * purpose of this cache. By default all columns are included. Accessing cells from columns excluded after calling

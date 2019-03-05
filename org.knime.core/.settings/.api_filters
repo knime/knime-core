@@ -142,6 +142,13 @@
             <message_arguments>
                 <message_argument value="TableTransformationExecutorBuilder"/>
                 <message_argument value="WindowCacheTableTansformationExecutorBuilder"/>
+                <message_argument value="filter(TableFilterTransformation)"/>
+            </message_arguments>
+        </filter>
+        <filter id="643842064">
+            <message_arguments>
+                <message_argument value="TableTransformationExecutorBuilder"/>
+                <message_argument value="WindowCacheTableTansformationExecutorBuilder"/>
                 <message_argument value="sort(TableSortInformation)"/>
             </message_arguments>
         </filter>
