@@ -50,7 +50,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DirectAccessTable;
 
 /**
- * A port object spec that can provide a {@link DataTableSpec}.
+ * A object that can provide a {@link DataTableSpec}.
  *
  * Will very likely be used together with {@link DirectAccessTable}. Since it's pending API we refrained from
  * introducing another interface that emphasizes the relation to {@link DirectAccessTable}.
@@ -62,7 +62,7 @@ import org.knime.core.data.DirectAccessTable;
  * @noimplement This interface is not intended to be implemented by clients. Pending API!
  * @noreference This interface is not intended to be referenced by clients. Pending API!
  */
-public interface HasDataTableSpec extends PortObjectSpec {
+public interface DataTableSpecProvider {
 
     /**
      * @return the data table spec
