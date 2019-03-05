@@ -67,14 +67,16 @@ public interface AsyncTable {
     /**
      * Registers a callback that gets called when new rows get available (and their loading is finished).
      *
-     * @param rowsAvailableCallback consumer that receives the from- and to-index of the rows that became available
+     * @param rowsAvailableCallback consumer that receives the from- and to-index of the rows that became available. Can
+     *            be <code>null</code>, e.g., to unregister the callback.
      */
     void setRowsAvailableCallback(BiConsumer<Long, Long> rowsAvailableCallback);
 
     /**
      * Registers a callback that gets called when the end of the table has been reached and/or the row count is known.
      *
-     * @param rowCountKnownCallback consumer that receives the new row count
+     * @param rowCountKnownCallback consumer that receives the new row count. Can be <code>null</code>, e.g., to
+     *            unregister the callback.
      */
     void setRowCountKnownCallback(Consumer<Long> rowCountKnownCallback);
 
