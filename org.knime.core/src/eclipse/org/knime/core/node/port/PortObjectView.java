@@ -88,8 +88,7 @@ public interface PortObjectView {
     default void close() {}
 
     /**
-     * Called when the view window is opened again. <b>Not</b> called when window is opened for the first time.
-     *
+     * Called every time the view window is opened.
      * @since 3.8
      */
     default void open() {}

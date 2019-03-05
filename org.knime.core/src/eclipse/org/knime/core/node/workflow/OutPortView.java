@@ -293,6 +293,7 @@ public class OutPortView extends JFrame {
                                 PortObjectView poView = (PortObjectView)comp;
                                 poView.setCredentialsProvider(credentials);
                                 poView.setHiliteHandler(hiliteHandler);
+                                poView.open();
                             }
                             m_tabNameToViewDetailMap.put(comp.getName(), ViewDetails.of(comp));
                         }
