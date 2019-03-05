@@ -263,11 +263,6 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
             }
         }
 
-        /* ---- take care about the input ---- */
-
-        // create port inputs for the streamable execution
-        PortInput[][] portInputs = createPortInputs(inputPortRoles, inPortObjects, numChunks, localExec);
-
         /* --- intermediate runs --- */
 
         //sanity check: if NodeModel#createInitialStreamableOperatorInternals" is overridden, the "NodeModel#iterate" should be overridden, too.
@@ -291,6 +286,8 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         final PortObjectSpec[] inSpecsNoFlowPort = ArrayUtils.remove(inPortObjectSpecs, 0);
         LOGGER.info("call local: NodeModel#iterate");
         try {
+            // create port inputs for the streamable execution
+            PortInput[][] portInputs = createPortInputs(inputPortRoles, inPortObjects, numChunks, localExec);
             while (localNodeContainer.getNodeModel().iterate(operatorInternals)) {
 
                 newInternals = performIntermediateIteration(remoteNodeContainers, remoteExec, operatorInternals,
@@ -549,7 +546,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
     /* multiple port inputs for each chunk -> return PortInput[chunks][ports]
      * PortInput[chunk][port] might be null if the number of chunks is smaller than the number of rows at the given port */
     private PortInput[][] createPortInputs(final InputPortRole[] inputPortRoles, final PortObject[] inPortObjects,
-        final int numChunks, final ExecutionContext exec) {
+        final int numChunks, final ExecutionContext exec) throws CanceledExecutionException, IOException {
         PortInput[][] portInputs = new PortInput[numChunks][inputPortRoles.length];
         for (int i = 0; i < inputPortRoles.length; i++) {
             if (inPortObjects[i + 1] == null) {
@@ -576,7 +573,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                     if (inputPortRoles[i].isStreamable()) {
                         portInputs[j][i] = new DataTableRowInput((BufferedDataTable)inPortObjects[i + 1]);
                     } else {
-                        portInputs[j][i] = new PortObjectInput(inPortObjects[i + 1]);
+                        portInputs[j][i] = new PortObjectInput(Node.copyPortObject(inPortObjects[i + 1], exec));
                     }
                 }
             }
