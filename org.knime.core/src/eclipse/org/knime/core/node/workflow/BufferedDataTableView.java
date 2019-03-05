@@ -55,7 +55,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObjectView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.tableview.AsyncDataTable;
+import org.knime.core.node.tableview.AsyncTable;
 import org.knime.core.node.tableview.TableView;
 
 /**
@@ -87,7 +87,7 @@ public class BufferedDataTableView extends JComponent implements PortObjectView 
 
         m_dataView = new TableView();
         m_dataView.setWrapColumnHeader(CorePlugin.getInstance().isWrapColumnHeaderInTableViews());
-        m_dataView.getContentModel().setSortingAllowed(table instanceof AsyncDataTable ? false : true);
+        m_dataView.getContentModel().setSortingAllowed(table instanceof AsyncTable ? false : true);
         m_dataView.registerNavigationActions();
         updateDataTable();
     }
@@ -143,15 +143,15 @@ public class BufferedDataTableView extends JComponent implements PortObjectView 
 
     @Override
     public void close() {
-        if (m_table instanceof AsyncDataTable) {
-            ((AsyncDataTable)m_table).cancel();
+        if (m_table instanceof AsyncTable) {
+            ((AsyncTable)m_table).cancel();
             m_dataView.setDataTable(null);
         }
     }
 
     @Override
     public void open() {
-        if (m_table instanceof AsyncDataTable) {
+        if (m_table instanceof AsyncTable) {
             //the loading process of a async data table might have
             //been canceled on close -> re-initialize the table to
             //get rid of rows stuck in the 'loading' state

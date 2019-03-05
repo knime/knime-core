@@ -16,6 +16,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.tableview.AsyncDataTable">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.tableview.AsyncDataTable"/>
+                <message_argument value="org.knime.core_3.8.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/blob/BinaryObjectCellFactory.java" type="org.knime.core.data.blob.BinaryObjectCellFactory">
         <filter id="338792546">
             <message_arguments>
@@ -395,19 +403,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.Node"/>
                 <message_argument value="removeOutputTablesFromGlobalRepository(HashMap&lt;Integer,ContainerTable&gt;)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/tableview/AsyncDataTable.java" type="org.knime.core.node.tableview.AsyncDataTable">
-        <filter id="404791350">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.tableview.AsyncDataTable"/>
-            </message_arguments>
-        </filter>
-        <filter id="405901410">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.tableview.AsyncDataTable"/>
-                <message_argument value="setRowsAvailableCallback(Consumer&lt;long[]&gt;)"/>
             </message_arguments>
         </filter>
     </resource>

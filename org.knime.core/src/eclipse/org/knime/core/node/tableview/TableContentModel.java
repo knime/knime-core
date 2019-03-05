@@ -409,11 +409,11 @@ public class TableContentModel extends AbstractTableModel
                 }
             }
 
-            if (data instanceof AsyncDataTable) {
-                ((AsyncDataTable)data).setRowsAvailableCallback((from, to) -> {
+            if (data instanceof AsyncTable) {
+                ((AsyncTable)data).setRowsAvailableCallback((from, to) -> {
                     fireTableRowsUpdated(from.intValue(), to.intValue());
                 });
-                ((AsyncDataTable)data).setRowCountKnownCallback(count -> {
+                ((AsyncTable)data).setRowCountKnownCallback(count -> {
                     setRowCount(count.intValue(), true, true);
                 });
             }

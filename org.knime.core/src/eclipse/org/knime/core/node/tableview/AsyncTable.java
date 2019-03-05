@@ -52,7 +52,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * A data table that needs some time to load it's rows (asynchronous).
+ * A table that needs some time to load it's rows (asynchronous).
  *
  * No API, only intended for UI.
  *
@@ -62,7 +62,7 @@ import java.util.function.Consumer;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 3.7
  */
-public interface AsyncDataTable {
+public interface AsyncTable {
 
     /**
      * Registers a callback that gets called when new rows get available (and their loading is finished).
