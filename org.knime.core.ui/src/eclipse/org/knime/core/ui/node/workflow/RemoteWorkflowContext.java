@@ -49,6 +49,7 @@ package org.knime.core.ui.node.workflow;
 import java.net.URI;
 
 import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.util.Version;
 
 /**
  * This class holds information about the context in which a remote workflow (e.g. a workflow on a KNIME server)
@@ -72,6 +73,10 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
 
     private URI m_mountpointURI;
 
+    private Version m_clientVersion;
+
+    private Version m_serverVersion;
+
     /**
      * Creates a new context for purely remote workflows (i.e. workflows running on a server).
      *
@@ -80,14 +85,18 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
      * @param authToken the JWT to be for authentification
      * @param mountId the (default) mount id of the server
      * @param mountpointURI the uri of the workflow inside the mount point
+     * @param clientVersion the version of the client talking to the 'workflow' server
+     * @param serverVersion the version of the server hosting the remote workflow
      */
     public RemoteWorkflowContext(final URI repositoryAddress, final String relativePath, final String authToken,
-        final String mountId, final URI mountpointURI) {
+        final String mountId, final URI mountpointURI, final Version clientVersion, final Version serverVersion) {
         m_repositoryAddress = repositoryAddress;
         m_relativePath = relativePath;
         m_authToken = authToken;
         m_mountId = mountId;
         m_mountpointURI = mountpointURI;
+        m_clientVersion = clientVersion;
+        m_serverVersion = serverVersion;
     }
 
     /**
@@ -134,5 +143,19 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
      */
     public URI getMountpointURI() {
         return m_mountpointURI;
+    }
+
+    /**
+     * @return the version of the client talking to the server
+     */
+    public Version getClientVersion() {
+        return m_clientVersion;
+    }
+
+    /**
+     * @return the version of the server hosting the remote workflow
+     */
+    public Version getServerVersion() {
+        return m_serverVersion;
     }
 }
