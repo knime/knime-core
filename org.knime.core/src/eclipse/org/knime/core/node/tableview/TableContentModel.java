@@ -414,7 +414,7 @@ public class TableContentModel extends AbstractTableModel
                     fireTableRowsUpdated(from.intValue(), to.intValue());
                 });
                 ((AsyncTable)data).setRowCountKnownCallback(count -> {
-                    setRowCount(count.intValue(), true, true);
+                    setRowCount(count.intValue(), true);
                     ((AsyncTable)data).setRowsAvailableCallback(null);
                 });
             }
@@ -1448,12 +1448,10 @@ public class TableContentModel extends AbstractTableModel
      *
      * @param newCount the new row count
      * @param isFinal if there are possibly more rows to count
-     * @param removeRows if <code>true</code> and the new row count is smaller than the old one, rows will be removed.
-     *            If <code>false</code> nothing will happen when <code>newCount < oldCount</code>
      */
-    synchronized void setRowCount(final int newCount, final boolean isFinal, final boolean removeRows) {
+    synchronized void setRowCount(final int newCount, final boolean isFinal) {
         final int oldCount = m_maxRowCount;
-        if (oldCount >= newCount && !removeRows) {
+        if (oldCount >= newCount && !isFinal) {
             return;
         } else {
             m_isMaxRowCountFinal = isFinal;
