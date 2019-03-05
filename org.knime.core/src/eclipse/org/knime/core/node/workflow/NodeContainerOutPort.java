@@ -50,9 +50,11 @@ package org.knime.core.node.workflow;
 import java.awt.Rectangle;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.swing.SwingUtilities;
 
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -61,6 +63,7 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.util.ThreadPool;
 
 /**
  * The implementation of an OutPort of a SingleNodeContainer - e.g. a native node.
@@ -182,28 +185,52 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
      * {@inheritDoc}
      * @since 2.12
      */
-    // TODO: return component with convenience method for Frame construction.
     @Override
     public void openPortView(final String name, final Rectangle knimeWindowBounds) {
         NodeContext.pushContext(m_snc);
         try {
-            ViewUtils.invokeLaterInEDT(new Runnable() {
-                @Override
-                public void run() {
-                    openPortViewInEDT(name, knimeWindowBounds);
-                }
+            ViewUtils.invokeLaterInEDT(() -> {
+                openPortViewInEDT(knimeWindowBounds);
             });
         } finally {
             NodeContext.removeLastContext();
         }
     }
 
-    private void openPortViewInEDT(final String name, final Rectangle knimeWindowBounds) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void createPortView(final Consumer<OutPortView> consumer) {
+        NodeContext.pushContext(m_snc);
+        try {
+            ViewUtils.invokeLaterInEDT(() -> {
+                final OutPortView view = constructPortViewInstance();
+                final ThreadPool pool = KNIMEConstants.GLOBAL_THREAD_POOL;
+
+                pool.enqueue(() -> {
+                    consumer.accept(view);
+                });
+            });
+        } finally {
+            NodeContext.removeLastContext();
+        }
+    }
+
+    private OutPortView constructPortViewInstance() {
+        assert SwingUtilities.isEventDispatchThread();
+
+        final OutPortView view = new OutPortView(m_snc.getDisplayLabel(), getPortName());
+        view.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(), m_snc.getCredentialsProvider(),
+            getHiLiteHandler());
+
+        return view;
+    }
+
+    private void openPortViewInEDT(final Rectangle knimeWindowBounds) {
         assert SwingUtilities.isEventDispatchThread();
         if (m_portView == null) {
-            m_portView = new OutPortView(m_snc.getDisplayLabel(), getPortName());
-            m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(),
-                m_snc.getCredentialsProvider(), getHiLiteHandler());
+            m_portView = constructPortViewInstance();
         }
         // the custom name might have changed meanwhile
         m_portView.setTitle(getPortName() + " - " + m_snc.getDisplayLabel());

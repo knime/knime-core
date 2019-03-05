@@ -45,6 +45,7 @@
 package org.knime.core.node.workflow;
 
 import java.awt.Rectangle;
+import java.util.function.Consumer;
 
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -123,22 +124,34 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener, NodeCont
     /**
      * Opens the port view for this port with the given name.
      *
-     * @param name The name of the port view.
+     * @param name The name of the port view - this value is ignored.
      */
-    // TODO: return component with convenience method for Frame construction.
     public void openPortView(final String name);
 
     /**
      * Opens the port view for this port with the given name.
      *
-     * @param name The name of the port view.
+     * @param name The name of the port view - this value is ignored.
      * @param knimeWindowBounds Bounds of the KNIME window, used to calculate
      * the center which will also be the center of the opened view. If null the
      * center of the primary monitor is used.
      * @since 2.12
      */
-    // TODO: return component with convenience method for Frame construction.
     public void openPortView(final String name, final Rectangle knimeWindowBounds);
+
+    /**
+     * This constructs a populated instance of <code>OutPortView</code> on the EDT and then returns the instance by
+     * invocation of the consumer's <code>accept(OutPortView)</code> implementation on a thread that is not the EDT.
+     *
+     * This method will throw an <code>UnsupportedOperationException</code> exception if the implementor of this class
+     * does not implement this method.
+     *
+     * @param consumer an instance of <code>OutPortView</code> which has not made visible yet.
+     * @since 4.1
+     */
+    default void createPortView(final Consumer<OutPortView> consumer) {
+        throw new UnsupportedOperationException("createPortView is not implemented.");
+    }
 
     /** Dispose the view (if any) associated with this port. */
     public void disposePortView();

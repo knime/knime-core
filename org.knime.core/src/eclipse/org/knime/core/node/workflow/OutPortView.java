@@ -59,6 +59,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import javax.swing.Box;
 import javax.swing.JComponent;
@@ -90,6 +91,7 @@ import org.knime.core.node.util.ViewUtils;
  * @author Fabian Dill, University of Konstanz
  */
 public class OutPortView extends JFrame {
+    private static final long serialVersionUID = 1L;
 
     /** Update object to reset the view. */
     private static final UpdateObject UPDATE_OBJECT_NULL = new UpdateObject(null, null, null, null, null);
@@ -113,6 +115,8 @@ public class OutPortView extends JFrame {
             return t;
         }
     });
+
+    private Consumer<JTabbedPane> m_displayWaitingConsumer;
 
     /**
      * A view showing the data stored in the specified output port.
@@ -147,10 +151,13 @@ public class OutPortView extends JFrame {
         m_tabbedPane.addChangeListener(e -> onTabChanged());
         m_tabNameToViewDetailMap = new LinkedHashMap<>();
         getContentPane().add(m_loadingPanel);
+
+        m_displayWaitingConsumer = null;
     }
 
     /**
      * shows this view and brings it to front.
+     * @param knimeWindowBounds the bounds of the KAP main window
      * @noreference This method is not intended to be referenced by clients.
      */
     public void openView(final Rectangle knimeWindowBounds) {
@@ -185,6 +192,26 @@ public class OutPortView extends JFrame {
         invalidate();
         validate();
         repaint();
+    }
+
+    /**
+     * This is potentially not the final implementation, but has been placed here for quick skeleton example of how an
+     * AP-5078 implementation would look. (TODO)
+     *
+     * This is expected to be called as part of the view construction and display which will embed the tabbed pane.
+     *
+     * @param consumer a consumer wanting the populated <code>JTabbedPane</code> instance wrapped in this view.
+     */
+    public void createDisplayAndReturnTabbedPane(final Consumer<JTabbedPane> consumer) {
+        m_displayWaitingConsumer = consumer;
+
+        ViewUtils.invokeLaterInEDT(() -> {
+            updatePortView();
+
+            if (m_updateObjectReference.get() != null) {
+                runUpdateThread();
+            }
+        });
     }
 
     /**
@@ -255,6 +282,12 @@ public class OutPortView extends JFrame {
                         // as new UO may be set (another thread is queued)
                         break;
                     }
+                }
+
+                if (m_displayWaitingConsumer != null) {
+                    m_displayWaitingConsumer.accept(m_tabbedPane);
+
+                    m_displayWaitingConsumer = null;
                 }
             }
         });
@@ -338,7 +371,9 @@ public class OutPortView extends JFrame {
                     m_tabbedPane.addTab(entry.getKey(), viewDetails.getView());
                 }
                 remove(m_loadingPanel);
-                add(m_tabbedPane);
+                if (m_displayWaitingConsumer == null) {
+                    add(m_tabbedPane);
+                }
                 onTabChanged();
                 invalidate();
                 validate();
@@ -360,7 +395,7 @@ public class OutPortView extends JFrame {
         }
         Component selectedTab = m_tabbedPane.getSelectedComponent();
         String selectedTabName = selectedTab != null ? selectedTab.getName() : null;
-        if (m_tabbedPane.isVisible() && selectedTabName != null) {
+        if (/*m_tabbedPane.isVisible() &&*/ selectedTabName != null) {
             ViewDetails viewDetails = m_tabNameToViewDetailMap.get(selectedTabName);
             assert viewDetails != null : "No view details for tab \"" + selectedTabName + "\"";
             viewDetails.getMenus().ifPresent(m -> {

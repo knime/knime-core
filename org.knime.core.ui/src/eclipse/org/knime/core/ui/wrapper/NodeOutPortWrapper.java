@@ -49,6 +49,7 @@
 package org.knime.core.ui.wrapper;
 
 import java.awt.Rectangle;
+import java.util.function.Consumer;
 
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -58,6 +59,7 @@ import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.OutPortView;
 import org.knime.core.ui.node.workflow.NodeOutPortUI;
 
 /**
@@ -137,6 +139,11 @@ public class NodeOutPortWrapper extends AbstractWrapper<NodeOutPort> implements 
     @Override
     public void openPortView(final String name, final Rectangle knimeWindowBounds) {
         unwrap().openPortView(name, knimeWindowBounds);
+    }
+
+    @Override
+    public void createPortView(final Consumer<OutPortView> consumer) {
+        unwrap().createPortView(consumer);
     }
 
     @Override
