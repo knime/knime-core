@@ -452,7 +452,7 @@ public final class OptionsPanel extends JPanel {
             m_useOrdinaryColumnsRadio.doClick();
         }
 
-        m_targetColumnBox.update(inSpec, cfg.getTargetColumn());
+        m_targetColumnBox.update(inSpec, cfg.getTargetColumn(), true);
 
         int hiliteCount = cfg.getNrHilitePatterns();
         if (hiliteCount > 0) {

@@ -342,7 +342,7 @@ public class OptionsPanel extends JPanel {
             m_useFingerprintColumnRadio.setEnabled(false);
             fpColumn = null;
         }
-        m_targetColumnBox.update(inSpec, cfg.getTargetColumn());
+        m_targetColumnBox.update(inSpec, cfg.getTargetColumn(), true);
 
         if (fpColumn != null || !hasOrdinaryColumnsInInput) {
             m_useFingerprintColumnRadio.doClick();
