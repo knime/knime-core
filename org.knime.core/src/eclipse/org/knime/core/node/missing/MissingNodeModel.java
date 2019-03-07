@@ -67,6 +67,7 @@ import org.knime.core.util.FileUtil;
  * No API - Model to missing node placeholder node. It fails on configure and execute but provides data etc.
  * if the node was loaded in an executed state.
  * @author wiswedel
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class MissingNodeModel extends NodeModel {
 

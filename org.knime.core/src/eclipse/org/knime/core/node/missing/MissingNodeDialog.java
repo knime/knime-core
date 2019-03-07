@@ -61,14 +61,17 @@ import org.knime.core.node.port.PortObjectSpec;
 /**
  * Dialog to missing node placeholder. Shows original node's config in a tree.
  * @author wiswedel
+ * @noreference This class is not intended to be referenced by clients.
  */
-final class MissingNodeDialog extends NodeDialogPane {
+public final class MissingNodeDialog extends NodeDialogPane {
 
     private final JTree m_tree;
     private NodeSettings m_settings;
 
-    /** ... */
-    MissingNodeDialog() {
+    /**
+     * Creates a new dialog.
+     */
+    public MissingNodeDialog() {
         m_tree = new JTree();
         m_tree.setRootVisible(false);
         addTab("Settings", new JScrollPane(m_tree));
