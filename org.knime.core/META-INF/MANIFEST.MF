@@ -88,8 +88,6 @@ Export-Package: log4j,
   org.knime.core.node.util.filter.column,
   org.knime.core.node.util.filter.nominal,
   org.knime.core.node.util.filter.variable,
-  org.knime.core.node.util.rsyntaxtextarea,
-  org.knime.core.node.util.rsyntaxtextarea.guarded,
   org.knime.core.node.web,
   org.knime.core.node.wizard,
   org.knime.core.node.wizard.util,
@@ -142,9 +140,7 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.10.0,4.0.0)";visibility:=ree
   org.eclipse.equinox.p2.engine;bundle-version="[2.4.0,3.0.0)";resolution:=optional,
   org.eclipse.ui.workbench;bundle-version="[3.108.1,4.0.0)",
   com.toedter.jcalendar;bundle-version="[1.4.0,1.5.0)",
-  com.fifesoft.autocomplete;bundle-version="[2.6.0,3.0.0)",
-  com.fifesoft.rsyntaxtextarea;bundle-version="[2.6.0,3.0.0)",
-  com.fifesoft.languagesupport;bundle-version="[2.6.0,3.0.0)"
+  org.knime.rsyntaxtextarea;bundle-version="[3.7.1,4.0.0)";visibility:=reexport
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy
