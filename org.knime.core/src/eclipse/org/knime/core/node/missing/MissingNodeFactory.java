@@ -66,6 +66,7 @@ import org.knime.node2012.PortsDocument.Ports;
 /**
  * No API. Factory for missing node placeholder node.
  * @author wiswedel
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
 
