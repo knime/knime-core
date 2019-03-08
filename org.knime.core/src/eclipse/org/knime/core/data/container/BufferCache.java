@@ -152,7 +152,7 @@ final class BufferCache {
             LOGGER.debug("KNIME Buffer cache statistics:");
             LOGGER.debugWithFormat("\t%d tables currently held in cache", nActiveTables);
             LOGGER.debugWithFormat("\t%d distinct tables cached", m_nTables);
-            LOGGER.debugWithFormat("\t%d tables invalidated succesfully", m_nInvalidatedTables);
+            LOGGER.debugWithFormat("\t%d tables invalidated successfully", m_nInvalidatedTables);
             LOGGER.debugWithFormat("\t%d tables dropped by garbage collector", m_nGCedTables);
             LOGGER.debugWithFormat("\t%d cache hits (hard-referenced)", m_nHardHits);
             LOGGER.debugWithFormat("\t%d cache hits (softly referenced)", m_nSoftHits);
