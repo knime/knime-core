@@ -11,12 +11,12 @@ properties([
     ),
     stringParam(
       name: 'KNIME_TP_P2',
-      defaultValue: '${P2_REPO}/knime-tp/',
+      defaultValue: '${P2_REPO}/knime-tp/' + env.BRANCH_NAME.replaceAll("/", "%252F") + '/repository/',
       description: 'KNIME Target Platform P2 update site url.'
     ),
     stringParam(
       name: 'KNIME_SHARED_P2',
-      defaultValue: '${P2_REPO}/knime-shared/',
+      defaultValue: '${P2_REPO}/knime-shared/' + env.BRANCH_NAME.replaceAll("/", "%252F") + '/repository/',
       description: 'org.knime.update.shared site url.'
     )
   ]),
