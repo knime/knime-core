@@ -46,7 +46,7 @@
  * History
  *   25 Sep 2018 (Christian Albrecht, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.node.util.rsyntaxtextarea.guarded;
+package org.knime.rsyntaxtextarea.guarded;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
