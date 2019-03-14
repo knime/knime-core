@@ -75,6 +75,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.exec.SandboxedNodeCreator;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.streamable.DataTableRowInput;
@@ -285,9 +287,17 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         StreamableOperatorInternals[] newInternals = new StreamableOperatorInternals[numChunks];
         final PortObjectSpec[] inSpecsNoFlowPort = ArrayUtils.remove(inPortObjectSpecs, 0);
         LOGGER.info("call local: NodeModel#iterate");
+
+        // Port types for determining whether a port must be copied or not in createPortInputs(...)
+        PortType[] portTypes = new PortType[inPortObjects.length];
+        // Skipping the variable port
+        for (int i = 1; i < inPortObjects.length; i++) {
+            portTypes[i - 1] = PortTypeRegistry.getInstance().getPortType(inPortObjects[i].getClass());
+        }
+
         try {
             // create port inputs for the streamable execution
-            PortInput[][] portInputs = createPortInputs(inputPortRoles, inPortObjects, numChunks, localExec);
+            PortInput[][] portInputs = createPortInputs(inputPortRoles, inPortObjects, portTypes, numChunks, localExec);
             while (localNodeContainer.getNodeModel().iterate(operatorInternals)) {
 
                 newInternals = performIntermediateIteration(remoteNodeContainers, remoteExec, operatorInternals,
@@ -299,7 +309,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 }
 
                 //re-create port inputs since they were already iterated above
-                portInputs = createPortInputs(inputPortRoles, inPortObjects, numChunks, localExec);
+                portInputs = createPortInputs(inputPortRoles, inPortObjects, portTypes, numChunks, localExec);
 
             }
 
@@ -546,7 +556,8 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
     /* multiple port inputs for each chunk -> return PortInput[chunks][ports]
      * PortInput[chunk][port] might be null if the number of chunks is smaller than the number of rows at the given port */
     private PortInput[][] createPortInputs(final InputPortRole[] inputPortRoles, final PortObject[] inPortObjects,
-        final int numChunks, final ExecutionContext exec) throws CanceledExecutionException, IOException {
+        final PortType[] inPortTypes, final int numChunks, final ExecutionContext exec)
+        throws CanceledExecutionException, IOException {
         PortInput[][] portInputs = new PortInput[numChunks][inputPortRoles.length];
         for (int i = 0; i < inputPortRoles.length; i++) {
             if (inPortObjects[i + 1] == null) {
@@ -573,7 +584,15 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                     if (inputPortRoles[i].isStreamable()) {
                         portInputs[j][i] = new DataTableRowInput((BufferedDataTable)inPortObjects[i + 1]);
                     } else {
-                        portInputs[j][i] = new PortObjectInput(Node.copyPortObject(inPortObjects[i + 1], exec));
+                        // i here and i+1 below because port type array does not contain flow variable port, but inPortObjects does
+                        final PortType portType = inPortTypes[i];
+                        final boolean isData =
+                            BufferedDataTable.TYPE.equals(portType) || BufferedDataTable.TYPE_OPTIONAL.equals(portType);
+                        if (isData) {
+                            portInputs[j][i] = new PortObjectInput(inPortObjects[i + 1]);
+                        } else {
+                            portInputs[j][i] = new PortObjectInput(Node.copyPortObject(inPortObjects[i + 1], exec));
+                        }
                     }
                 }
             }
