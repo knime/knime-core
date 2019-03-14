@@ -55,11 +55,11 @@ package org.knime.base.node.jsnippet.guarded;
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
- * @deprecated Use {@link org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedDocument} instead.
+ * @deprecated Use {@link org.knime.rsyntaxtextarea.guarded.GuardedDocument} instead.
  */
 @Deprecated
 @SuppressWarnings("serial")
-public class GuardedDocument extends org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedDocument {
+public class GuardedDocument extends org.knime.rsyntaxtextarea.guarded.GuardedDocument {
 
     /* Empty implementation for backwards compatibility */
 

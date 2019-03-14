@@ -49,7 +49,7 @@ package org.knime.base.node.jsnippet.guarded;
 
 import javax.swing.text.Position;
 
-import org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedDocument;
+import org.knime.rsyntaxtextarea.guarded.GuardedDocument;
 
 /**
  * A guarded, e.g. non editable section in a document.
@@ -61,10 +61,10 @@ import org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedDocument;
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
- * @deprecated Use {@link org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSection} instead.
+ * @deprecated Use {@link org.knime.rsyntaxtextarea.guarded.GuardedSection} instead.
  */
 @Deprecated
-public final class GuardedSection extends org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSection {
+public final class GuardedSection extends org.knime.rsyntaxtextarea.guarded.GuardedSection {
 
     /* empty implementation for backwards compatibility */
 

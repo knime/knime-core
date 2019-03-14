@@ -54,9 +54,9 @@ import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
 import org.knime.base.node.jsnippet.guarded.GuardedSectionsFoldParser;
 import org.knime.base.node.jsnippet.guarded.JavaSnippetDocument;
 import org.knime.base.node.jsnippet.util.JSnippet;
-import org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea;
-import org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedDocument;
-import org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSection;
+import org.knime.rsyntaxtextarea.KnimeSyntaxTextArea;
+import org.knime.rsyntaxtextarea.guarded.GuardedDocument;
+import org.knime.rsyntaxtextarea.guarded.GuardedSection;
 
 /**
  * A text area for the java snippet expression.

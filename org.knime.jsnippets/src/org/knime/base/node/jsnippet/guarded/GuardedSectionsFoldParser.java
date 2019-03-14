@@ -60,7 +60,7 @@ package org.knime.base.node.jsnippet.guarded;
  * @deprecated
  */
 @Deprecated
-public class GuardedSectionsFoldParser extends org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSectionsFoldParser {
+public class GuardedSectionsFoldParser extends org.knime.rsyntaxtextarea.guarded.GuardedSectionsFoldParser {
 
     /* empty implementation for backwards compatibility */
 

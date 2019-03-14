@@ -86,10 +86,10 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
-import org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.ext.sun.nodes.script.compile.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
+import org.knime.rsyntaxtextarea.KnimeCompletionProvider;
 
 /**
  * The node dialog of the string manipulation node and string manipulation (variable) node.

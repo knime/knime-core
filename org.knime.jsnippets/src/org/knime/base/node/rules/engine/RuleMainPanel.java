@@ -72,7 +72,7 @@ import org.knime.base.node.rules.engine.manipulator.RuleManipulatorProvider;
 import org.knime.base.node.util.JSnippetPanel;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea;
+import org.knime.rsyntaxtextarea.KnimeSyntaxTextArea;
 
 /**
  * The main panel (manipulators, columns, flow variables and the editor) of the rule engine node dialogs.

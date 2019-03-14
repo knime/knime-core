@@ -60,8 +60,8 @@ import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 
 import org.knime.core.node.util.FlowVariableListCellRenderer;
-import org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.rsyntaxtextarea.KnimeSyntaxTextArea;
 
 /**
  * A component that presents a list of flow variables for the snippet dialogs.

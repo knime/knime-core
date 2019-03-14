@@ -98,9 +98,9 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.ViewUtils;
-import org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.ThreadUtils;
+import org.knime.rsyntaxtextarea.KnimeSyntaxTextArea;
 
 /**
  * A Rule panel with a {@link RuleMainPanel} with further controls for output.

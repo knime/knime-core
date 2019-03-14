@@ -95,9 +95,9 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
-import org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.ext.sun.nodes.script.expression.Expression;
+import org.knime.rsyntaxtextarea.KnimeCompletionProvider;
 
 /**
  * This class is a sophisticated panel that offers an editor for almost

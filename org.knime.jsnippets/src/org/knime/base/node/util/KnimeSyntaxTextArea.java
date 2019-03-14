@@ -57,11 +57,11 @@ import org.knime.base.node.jsnippet.ui.JSnippetTextArea;
  *
  * @author Gabor Bakos
  * @since 2.8
- * @deprecated Use {@link org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea} instead
+ * @deprecated Use {@link org.knime.rsyntaxtextarea.KnimeSyntaxTextArea} instead
  */
 @Deprecated
 @SuppressWarnings("serial")
-public class KnimeSyntaxTextArea extends org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea {
+public class KnimeSyntaxTextArea extends org.knime.rsyntaxtextarea.KnimeSyntaxTextArea {
     /**
      * No-arg constructor for {@link KnimeSyntaxTextArea}.
      */

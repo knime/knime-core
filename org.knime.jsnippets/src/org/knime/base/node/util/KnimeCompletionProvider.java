@@ -52,10 +52,10 @@ package org.knime.base.node.util;
  *
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6
- * @deprecated Use {@link org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider} instead
+ * @deprecated Use {@link org.knime.rsyntaxtextarea.KnimeCompletionProvider} instead
  */
 @Deprecated
-public abstract class KnimeCompletionProvider extends org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider {
+public abstract class KnimeCompletionProvider extends org.knime.rsyntaxtextarea.KnimeCompletionProvider {
 
     /* empty implementation for backwards compatibility */
 
