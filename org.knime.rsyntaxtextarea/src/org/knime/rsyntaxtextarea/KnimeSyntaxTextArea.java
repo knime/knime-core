@@ -46,7 +46,7 @@
  * History
  *   24 Sep 2018 (albrecht): created
  */
-package org.knime.core.node.util.rsyntaxtextarea;
+package org.knime.rsyntaxtextarea;
 
 import java.io.IOException;
 import java.io.InputStream;

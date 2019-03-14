@@ -10,5 +10,5 @@ Require-Bundle: org.knime.core;bundle-version="[3.7.1,4.0.0)",
  com.fifesoft.autocomplete;bundle-version="[2.6.0,3.0.0)",
  com.fifesoft.rsyntaxtextarea;bundle-version="[2.6.0,3.0.0)",
  com.fifesoft.languagesupport;bundle-version="[2.6.0,3.0.0)"
-Export-Package: org.knime.core.node.util.rsyntaxtextarea,
-  org.knime.core.node.util.rsyntaxtextarea.guarded
+Export-Package: org.knime.rsyntaxtextarea,
+  org.knime.rsyntaxtextarea.guarded

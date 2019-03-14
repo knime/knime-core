@@ -46,7 +46,7 @@
  * History
  *   25 Sep 2018 (albrecht): created
  */
-package org.knime.core.node.util.rsyntaxtextarea.guarded;
+package org.knime.rsyntaxtextarea.guarded;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
