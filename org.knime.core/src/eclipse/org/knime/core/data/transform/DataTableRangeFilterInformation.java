@@ -1,7 +1,6 @@
 /*
  * ------------------------------------------------------------------------
  *
-
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -45,9 +44,13 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   26 Feb 2019 (albrecht): created
+ *   11 Mar 2019 (albrecht): created
  */
 package org.knime.core.data.transform;
+
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.property.filter.FilterModelRange;
 
 /**
  *
@@ -55,21 +58,39 @@ package org.knime.core.data.transform;
  * @since 3.8
  *
  * @noextend This class is not intended to be subclassed by clients. Pending API
+ * @noinstantiate This class is not intended to be instantiated by clients. Pending API
  * @noreference This class is not intended to be referenced by clients. Pending API
  */
-public abstract class TableFilterTransformation implements TableTransformation {
+public class DataTableRangeFilterInformation implements DataTableFilterInformation {
 
-    private TableFilterInformation m_filter;
+    private final FilterModelRange m_range;
+    private final int m_colIndex;
 
-    public TableFilterTransformation(final TableFilterInformation filter) {
-        m_filter = filter;
+    /**
+     *
+     */
+    public DataTableRangeFilterInformation(final DataTableSpec spec, final String colName, final FilterModelRange range) {
+        m_range = range;
+        m_colIndex = spec.findColumnIndex(colName);
+
+        //TODO assert correct behaviour here
     }
 
     /**
-     * @return the filter
+     *
      */
-    public TableFilterInformation getFilter() {
-        return m_filter;
+    public DataTableRangeFilterInformation(final int colIndex, final FilterModelRange range) {
+        m_colIndex = colIndex;
+        m_range = range;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isRowIncluded(final DataRow row) {
+        //TODO check colIndex is valid here and cell is double
+        return m_range.isInFilter(row.getCell(m_colIndex));
     }
 
 }

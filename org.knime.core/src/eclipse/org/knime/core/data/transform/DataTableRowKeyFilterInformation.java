@@ -1,7 +1,6 @@
 /*
  * ------------------------------------------------------------------------
  *
-
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -45,9 +44,16 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   26 Feb 2019 (albrecht): created
+ *   11 Mar 2019 (albrecht): created
  */
 package org.knime.core.data.transform;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import org.knime.core.data.DataRow;
 
 /**
  *
@@ -55,21 +61,36 @@ package org.knime.core.data.transform;
  * @since 3.8
  *
  * @noextend This class is not intended to be subclassed by clients. Pending API
+ * @noinstantiate This class is not intended to be instantiated by clients. Pending API
  * @noreference This class is not intended to be referenced by clients. Pending API
  */
-public abstract class TableFilterTransformation implements TableTransformation {
+public class DataTableRowKeyFilterInformation implements DataTableFilterInformation {
 
-    private TableFilterInformation m_filter;
+    private final Set<String> m_rowKeys;
 
-    public TableFilterTransformation(final TableFilterInformation filter) {
-        m_filter = filter;
+    /**
+     * @param rowKeys
+     *
+     */
+    public DataTableRowKeyFilterInformation(final String... rowKeys) {
+        m_rowKeys = new LinkedHashSet<String>(rowKeys.length);
+        m_rowKeys.addAll(Arrays.asList(rowKeys));
     }
 
     /**
-     * @return the filter
+     * @param rowKeys
+     *
      */
-    public TableFilterInformation getFilter() {
-        return m_filter;
+    public DataTableRowKeyFilterInformation(final HashSet<String> rowKeys) {
+        m_rowKeys = rowKeys;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isRowIncluded(final DataRow row) {
+        return m_rowKeys.contains(row.getKey().getString());
     }
 
 }

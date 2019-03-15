@@ -70,19 +70,13 @@ import org.knime.core.util.LockedQueue;
  */
 public abstract class TableTransformationExecutor {
 
-    private final DirectAccessTable m_table;
     private Queue<TableTransformation> m_transformations;
 
     /**
      * Creates a new {@link TableTransformationExecutor} by providing a non-null {@link DirectAccessTable} to which
      * transformations should be applied.
-     * @param table the unaltered table, not null
      */
-    protected TableTransformationExecutor(final DirectAccessTable table) {
-        if (table == null) {
-            throw new NullPointerException();
-        }
-        m_table = table;
+    protected TableTransformationExecutor() {
         m_transformations = new LockedQueue<TableTransformation>(new LinkedList<TableTransformation>());
     }
 
@@ -96,14 +90,6 @@ public abstract class TableTransformationExecutor {
         } else {
             m_transformations = new LockedQueue<TableTransformation>(transformations);
         }
-    }
-
-    /**
-     * Retrieves the original table to which no transformations have been applied.
-     * @return the original table
-     */
-    public DirectAccessTable getOriginalTable() {
-        return m_table;
     }
 
     /**
@@ -136,12 +122,12 @@ public abstract class TableTransformationExecutor {
      * @param exec an execution monitor to set progress and check for cancellation
      * @return a {@link DirectAccessTable} to which the next transformation has been applied
      */
-    public DirectAccessTable executeNext(final ExecutionMonitor exec) throws CanceledExecutionException {
+    public DirectAccessTable executeNext(final DirectAccessTable originalTable, final ExecutionMonitor exec) throws CanceledExecutionException {
         Queue<TableTransformation> queue = getTableTransformations();
         if (queue.isEmpty()) {
-            return getOriginalTable();
+            return originalTable;
         }
-        return queue.poll().transform(exec);
+        return queue.poll().transform(originalTable, exec);
     }
 
     /**
@@ -149,16 +135,19 @@ public abstract class TableTransformationExecutor {
      * @param exec an execution monitor to set progress and check for cancellation
      * @return a {@link DirectAccessTable} to which all transformations have been applied
      */
-    public DirectAccessTable execute(final ExecutionMonitor exec) throws CanceledExecutionException {
+    public DirectAccessTable execute(final DirectAccessTable originalTable, final ExecutionMonitor exec) throws CanceledExecutionException {
         Queue<TableTransformation> queue = getTableTransformations();
         if (queue.isEmpty()) {
-            return getOriginalTable();
+            return originalTable;
         }
         final int numTransforms = queue.size();
-        DirectAccessTable transformedTable = getOriginalTable();
+        DirectAccessTable transformedTable = originalTable;
         while (!queue.isEmpty()) {
-            ExecutionMonitor subProgress = exec.createSubProgress(1 - (queue.size() - numTransforms));
-            transformedTable = queue.poll().transform(subProgress);
+            ExecutionMonitor subProgress = null;
+            if (exec != null) {
+                subProgress = exec.createSubProgress(1 - (queue.size() - numTransforms));
+            }
+            transformedTable = queue.poll().transform(transformedTable, subProgress);
         }
         return transformedTable;
     }
@@ -174,11 +163,9 @@ public abstract class TableTransformationExecutor {
      */
     public static abstract class TableTransformationExecutorBuilder {
 
-        private final DirectAccessTable m_originalTable;
         private final Queue<TableTransformation> m_transformations;
 
-        protected TableTransformationExecutorBuilder(final DirectAccessTable originalTable) {
-            m_originalTable = originalTable;
+        protected TableTransformationExecutorBuilder() {
             m_transformations = new LinkedList<TableTransformation>();
         }
 
@@ -204,15 +191,7 @@ public abstract class TableTransformationExecutor {
          * @param filter the filter to add
          * @return this builder instance
          */
-        public abstract TableTransformationExecutorBuilder filter(final TableFilterTransformation filter);
-
-        /**
-         * Returns the table before any transformations have been applied.
-         * @return the original table
-         */
-        protected DirectAccessTable getOriginalTable() {
-            return m_originalTable;
-        }
+        public abstract TableTransformationExecutorBuilder filter(final TableFilterInformation filter);
 
         /**
          * Retrieves the current queue of transformations in a locked state. Adding and removing elements from this

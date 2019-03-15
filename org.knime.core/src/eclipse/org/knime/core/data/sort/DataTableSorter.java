@@ -190,7 +190,7 @@ public class DataTableSorter extends AbstractTableSorter {
     public DataTableSorter(final DataTable inputTable, final long rowsCount,
             final Collection<String> inclList, final boolean[] sortAscending,
             final boolean sortMissingToEnd) {
-        super(inputTable, rowsCount, inclList, sortAscending);
+        super(inputTable, rowsCount, inclList, sortAscending, sortMissingToEnd);
     }
     /**
      * Package default constructor for the {@link AbstractColumnTableSorter}.

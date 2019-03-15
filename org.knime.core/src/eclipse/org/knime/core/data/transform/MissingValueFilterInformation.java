@@ -1,7 +1,6 @@
 /*
  * ------------------------------------------------------------------------
  *
-
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -45,9 +44,11 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   26 Feb 2019 (albrecht): created
+ *   11 Mar 2019 (albrecht): created
  */
 package org.knime.core.data.transform;
+
+import org.knime.core.data.DataRow;
 
 /**
  *
@@ -55,21 +56,33 @@ package org.knime.core.data.transform;
  * @since 3.8
  *
  * @noextend This class is not intended to be subclassed by clients. Pending API
+ * @noinstantiate This class is not intended to be instantiated by clients. Pending API
  * @noreference This class is not intended to be referenced by clients. Pending API
  */
-public abstract class TableFilterTransformation implements TableTransformation {
+public class MissingValueFilterInformation implements DataTableFilterInformation {
 
-    private TableFilterInformation m_filter;
+    private final int[] m_colIndices;
 
-    public TableFilterTransformation(final TableFilterInformation filter) {
-        m_filter = filter;
+    /**
+     *
+     */
+    public MissingValueFilterInformation(final int... colIndices) {
+        m_colIndices = colIndices;
     }
 
     /**
-     * @return the filter
+     * {@inheritDoc}
      */
-    public TableFilterInformation getFilter() {
-        return m_filter;
+    @Override
+    public boolean isRowIncluded(final DataRow row) {
+        boolean included = true;
+        for (int col : m_colIndices) {
+            if (row.getCell(col).isMissing()) {
+                included = false;
+                break;
+            }
+        }
+        return included;
     }
 
 }

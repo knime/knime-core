@@ -63,8 +63,7 @@ import org.knime.core.node.ExecutionMonitor;
  */
 public interface TableTransformation {
 
-    DirectAccessTable getOriginalTable();
-
-    DirectAccessTable transform(ExecutionMonitor exec) throws CanceledExecutionException;
+    DirectAccessTable transform(DirectAccessTable originalTable, ExecutionMonitor exec)
+        throws CanceledExecutionException;
 
 }

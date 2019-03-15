@@ -1,7 +1,6 @@
 /*
  * ------------------------------------------------------------------------
  *
-
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -45,9 +44,13 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   26 Feb 2019 (albrecht): created
+ *   11 Mar 2019 (albrecht): created
  */
 package org.knime.core.data.transform;
+
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.property.filter.FilterModelNominal;
 
 /**
  *
@@ -55,21 +58,33 @@ package org.knime.core.data.transform;
  * @since 3.8
  *
  * @noextend This class is not intended to be subclassed by clients. Pending API
+ * @noinstantiate This class is not intended to be instantiated by clients. Pending API
  * @noreference This class is not intended to be referenced by clients. Pending API
  */
-public abstract class TableFilterTransformation implements TableTransformation {
+public class DataTableNominalFilterInformation implements DataTableFilterInformation {
 
-    private TableFilterInformation m_filter;
+    private final int m_colIndex;
+    private final FilterModelNominal m_filter;
 
-    public TableFilterTransformation(final TableFilterInformation filter) {
+    /**
+     *
+     */
+    public DataTableNominalFilterInformation(final DataTableSpec spec, final String colName, final FilterModelNominal filter) {
+        this(spec.findColumnIndex(colName), filter);
+    }
+
+    public DataTableNominalFilterInformation(final int colIndex, final FilterModelNominal filter) {
+        m_colIndex = colIndex;
         m_filter = filter;
     }
 
     /**
-     * @return the filter
+     * {@inheritDoc}
      */
-    public TableFilterInformation getFilter() {
-        return m_filter;
+    @Override
+    public boolean isRowIncluded(final DataRow row) {
+        // TODO check colIndex is valid and cell is string comp
+        return m_filter.isInFilter(row.getCell(m_colIndex));
     }
 
 }

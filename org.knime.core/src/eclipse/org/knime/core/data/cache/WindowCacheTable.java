@@ -62,6 +62,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowIteratorBuilder;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.transform.DataTableFilterInformation;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -101,24 +102,30 @@ public class WindowCacheTable implements DirectAccessTable {
     private DataRow[] m_cachedRows;
 
     /**
-     * Number of rows seen in current iterator that are of interest, i.e. hilited rows when only hilited rows should be
-     * shown, all rows otherwise. This field is set to 0 when a new iterator is instantiated.
+     * Number of rows seen in current iterator that are of interest, i.e. filtered rows when filters are present, all
+     * rows otherwise. This field is set to 0 when a new iterator is instantiated.
      */
-    private long m_rowCountOfInterestInIterator;
+    private long m_rowCountFilteredInIterator;
 
     /**
-     * Number of rows of interest that have been seen so far. If only hilited rows should be shown this field is equal
-     * to {@link #m_maxRowCount}.
+     * Number of rows of interest that have been seen so far. If no filters are present this field is equal to
+     * {@link #m_maxRowCount}.
      */
-    private long m_rowCountOfInterest;
+    private long m_rowCountFiltered;
 
-    /** Counter of rows in current iterator. If only hilited rows should be shown, this field is equal to
-     * {@link #m_rowCountOfInterestInIterator}. This field is incremented with each <code>m_iterator.next()</code>
+    /**
+     * Is the current value of {@link #m_rowCountFiltered} final? If no filters are present this field is equal to
+     * {@link #m_isMaxRowCountFinal}.
+     */
+    private boolean m_isRowCountFilteredFinal;
+
+    /** Counter of rows in current iterator. If no filters are present, this field is equal to
+     * {@link #m_rowCountFilteredInIterator}. This field is incremented with each <code>m_iterator.next()</code>
      * and reset to 0 with <code>m_iterator = new ...</code>
      */
     private long m_rowCountInIterator;
 
-    /** Lower bound for overall number of rows in {@link #m_data}, updated when new rows are encountered.
+    /** Lower bound for overall number of rows in {@link #m_table}, updated when new rows are encountered.
      */
     private long m_maxRowCount;
 
@@ -139,12 +146,15 @@ public class WindowCacheTable implements DirectAccessTable {
      * exceptions to be thrown. An empty or uninitialized set indicates that all columns should be accessible. */
     private Set<String> m_includedColumnIndices;
 
+    private List<DataTableFilterInformation> m_filters;
+
     private WindowCacheTable(final DataTable table, final boolean init) {
         m_maxRowCount = 0;
         m_isMaxRowCountFinal = true; // no data seen, assume final row count
         m_lookAheadSize = DEFAULT_LOOK_AHEAD;
         m_cacheSize = DEFAULT_CACHE_SIZE;
         m_table = table;
+        m_filters = new ArrayList<DataTableFilterInformation>(0);
         if (init) {
             initCache();
         }
@@ -167,6 +177,19 @@ public class WindowCacheTable implements DirectAccessTable {
         initCache();
     }
 
+    public WindowCacheTable(final DataTable table, final List<DataTableFilterInformation> filters,
+        final String... includedColumns) {
+        this(table, false);
+        m_filters = filters;
+        setIncludedColumns(includedColumns);
+        initCache();
+    }
+
+    /**
+     * Returns the column names which are included in this cache. Accessing columns not in the returned set might lead
+     * to exceptions.
+     * @return the set of included column names
+     */
     public Set<String> getIncludedColumns() {
         return m_includedColumnIndices;
     }
@@ -188,16 +211,26 @@ public class WindowCacheTable implements DirectAccessTable {
         }
     }
 
+    /**
+     * Returns a list of all filters currently applied to the iterator of the underlying {@link DataTable}.
+     * @return the filters a list of all filters
+     */
+    public List<DataTableFilterInformation> getFilters() {
+        return m_filters;
+    }
+
     private void initCache() {
         m_cachedRows = null;
         m_tableIterator = null;
-        m_rowCountOfInterestInIterator = 0;
-        m_rowCountOfInterest = 0;
+        m_rowCountFilteredInIterator = 0;
+        m_rowCountFiltered = 0;
         m_maxRowCount = 0;
         m_isMaxRowCountFinal = true;
+        m_isRowCountFilteredFinal = true;
         if (m_table != null) {
             // assume that there are rows, may change in cacheNextRow() below
             m_isMaxRowCountFinal = false;
+            m_isRowCountFilteredFinal = false;
             final long rowCountFromTable;
             if (m_table instanceof BufferedDataTable) {
                 rowCountFromTable = ((BufferedDataTable)m_table).size();
@@ -209,13 +242,20 @@ public class WindowCacheTable implements DirectAccessTable {
             if (rowCountFromTable >= 0) {
                 m_isMaxRowCountFinal = true;
                 m_maxRowCount = rowCountFromTable;
-                m_rowCountOfInterest = m_maxRowCount;
+                if (m_filters.size() <= 0) {
+                    m_rowCountFiltered = m_maxRowCount;
+                    m_isRowCountFilteredFinal = true;
+                }
             }
             int cacheSize = getCacheSize();
             m_cachedRows = new DataRow[cacheSize];
             clearCacheAndInitIterator();  // will instantiate a new iterator.
             // will also set m_isRowCountOfInterestFinal etc. accordingly
-            cacheNextRow();
+            try {
+                cacheNextRow(null);
+            } catch (CanceledExecutionException ex) {
+                // is never thrown because no execution monitor is passed
+            }
         }
     }
 
@@ -273,7 +313,7 @@ public class WindowCacheTable implements DirectAccessTable {
      * @return if there are no more unknown rows
      */
     public boolean hasRowCount() {
-        return m_isMaxRowCountFinal;
+        return m_isRowCountFilteredFinal;
     }
 
     /**
@@ -358,37 +398,37 @@ public class WindowCacheTable implements DirectAccessTable {
                 + ". Consider increasing the cache size or decreasing the amount of requested rows.");
         }
         final int cacheSize = getCacheSize();
-        final long oldRowCount = m_rowCountOfInterest;
+        final long oldRowCount = m_rowCountFiltered;
         final long lastRow = start + length - 1;
 
         // the iterator goes further when the last known row is requested
-        boolean pushIterator = !hasRowCount() && (lastRow >= oldRowCount - 1);
-        if (start >= (m_rowCountOfInterestInIterator - cacheSize)
-                && (lastRow < m_rowCountOfInterestInIterator) && !pushIterator) {
+        boolean pushIterator = !m_isRowCountFilteredFinal && (lastRow >= oldRowCount - 1);
+        if (start >= (m_rowCountFilteredInIterator - cacheSize)
+                && (lastRow < m_rowCountFilteredInIterator) && !pushIterator) {
             return getRowsFromCache(start, length, exec);
         }
 
         /* not all rows in cache */
         // some rows already released from cache
-        if (start < (m_rowCountOfInterestInIterator - cacheSize)) {
+        if (start < (m_rowCountFilteredInIterator - cacheSize)) {
             // clear cache, init new iterator
             clearCacheAndInitIterator();
         }
-        assert (start + length >= m_rowCountOfInterestInIterator - 1);
+        assert (start + length >= m_rowCountFilteredInIterator - 1);
 
         /* push iterator forward to index lastRow + m_lookAheadSize
          * (ensures when getRows(lastRow+1,...) is called the iterator does not need to be used again) */
-        double rowDiffInitial = Math.max(1, lastRow - m_rowCountOfInterestInIterator + m_lookAheadSize);
+        double rowDiffInitial = Math.max(1, lastRow - m_rowCountFilteredInIterator + m_lookAheadSize);
         int newRowsCached = 0;
         boolean mayHaveNext;
         do {
             // changes also m_rowCountOfInterestInIterator
-            mayHaveNext = cacheNextRow();
+            mayHaveNext = cacheNextRow(exec);
             if (exec != null) {
                 exec.checkCanceled();
                 exec.setProgress(++newRowsCached / rowDiffInitial);
             }
-        } while ((m_rowCountOfInterestInIterator - 1) != (lastRow + m_lookAheadSize) && mayHaveNext);
+        } while ((m_rowCountFilteredInIterator - 1) != (lastRow + m_lookAheadSize) && mayHaveNext);
 
         if (exec != null) {
             exec.setProgress(1.0);
@@ -401,10 +441,10 @@ public class WindowCacheTable implements DirectAccessTable {
      */
     @Override
     public long getRowCount() throws UnknownRowCountException {
-        if (!m_isMaxRowCountFinal) {
+        if (!m_isRowCountFilteredFinal) {
             throw new UnknownRowCountException();
         }
-        return m_rowCountOfInterest;
+        return m_rowCountFiltered;
     }
 
     /**
@@ -413,24 +453,41 @@ public class WindowCacheTable implements DirectAccessTable {
      * @return <code>true</code> if that was successful, <code>false</code>
      *         if the iterator went to the end.
      */
-    private boolean cacheNextRow() {
+    private boolean cacheNextRow(final ExecutionMonitor exec) throws CanceledExecutionException {
         assert (hasData());
         DataRow currentRow;
-        if (!m_tableIterator.hasNext()) {
-            // set to false with new data
-            m_isMaxRowCountFinal = true;
-            return false;
-        }
-        currentRow = m_tableIterator.next();
-        m_rowCountInIterator++;
-        m_maxRowCount = Math.max(m_maxRowCount, m_rowCountInIterator);
-        // TODO: skip rows if rows need to be filtered by some other predicate (e.g. show selected only...)
+        boolean includedInFilter;
+        do {
+            if (exec != null) {
+                exec.checkCanceled();
+            }
+            if (!m_tableIterator.hasNext()) {
+                //iterated over whole table, which means all row counts are final
+                m_isMaxRowCountFinal = true;
+                m_isRowCountFilteredFinal = true;
+                return false;
+            }
+            currentRow = m_tableIterator.next();
+            m_rowCountInIterator++;
+            if (!m_isMaxRowCountFinal) {
+                m_maxRowCount = Math.max(m_maxRowCount, m_rowCountInIterator);
+            }
+            includedInFilter = true;
+            for (DataTableFilterInformation filter : m_filters) {
+                if (!filter.isRowIncluded(currentRow)) {
+                    includedInFilter = false;
+                    break;
+                }
+            }
+        } while (!includedInFilter);
 
         // index of row in cache
-        int indexInCache = (int)m_rowCountOfInterestInIterator % getCacheSize();
+        int indexInCache = (int)m_rowCountFilteredInIterator % getCacheSize();
         m_cachedRows[indexInCache] = currentRow;
-        m_rowCountOfInterestInIterator++;
-        m_rowCountOfInterest = Math.max(m_rowCountOfInterest, m_rowCountOfInterestInIterator);
+        m_rowCountFilteredInIterator++;
+        if (!m_isRowCountFilteredFinal) {
+            m_rowCountFiltered = Math.max(m_rowCountFiltered, m_rowCountFilteredInIterator);
+        }
         return true;
     }
 
@@ -460,7 +517,7 @@ public class WindowCacheTable implements DirectAccessTable {
         m_tableIterator = getNewDataIterator();
         m_rowCountInIterator = 0;
         // all updated in nextBlock()
-        m_rowCountOfInterestInIterator = 0;
+        m_rowCountFilteredInIterator = 0;
         // clear cache
         Arrays.fill(m_cachedRows, null);
     }
@@ -479,7 +536,7 @@ public class WindowCacheTable implements DirectAccessTable {
     private List<DataRow> getRowsFromCache(final long start, final int length, final ExecutionMonitor exec) {
         List<DataRow> rowList = new ArrayList<DataRow>(length);
         for (long row = start; row < start + length; row++) {
-            if (row >= m_rowCountOfInterest) {
+            if (row >= m_rowCountFiltered) {
                 break; // row outside of table, may return an empty or partially filled list
             }
             rowList.add(m_cachedRows[indexForRow(row)]);
@@ -499,8 +556,8 @@ public class WindowCacheTable implements DirectAccessTable {
      */
     private int indexForRow(final long row) {
         final int cS = getCacheSize();
-        assert (row >= (m_rowCountOfInterestInIterator - cS)
-                && row < m_rowCountOfInterestInIterator) : "Row is not cached";
+        assert (row >= (m_rowCountFilteredInIterator - cS)
+                && row < m_rowCountFilteredInIterator) : "Row is not cached";
         // index of row in ring buffer
         int indexInCache = (int)(row % cS);
         return indexInCache;
@@ -521,7 +578,7 @@ public class WindowCacheTable implements DirectAccessTable {
         }
         m_isMaxRowCountFinal = isFinal;
         m_maxRowCount = newCount;
-        m_rowCountOfInterest = m_maxRowCount;
+        m_rowCountFiltered = m_maxRowCount;
     }
 
     /**
@@ -535,16 +592,15 @@ public class WindowCacheTable implements DirectAccessTable {
             throw new IndexOutOfBoundsException(
                 "Row index must not be < 0: " + rowIndex);
         }
-        // reasonable check only possible when table was seen completely,
-        // method is called again when m_isMaxRowCountFinal switches to true
+        // reasonable check only possible when table was seen completely, method is called again when
+        // m_isMaxRowCountFinal switches to true
         long rowCount = -1;
-        try {
-            rowCount = getRowCount();
-        } catch (UnknownRowCountException e) { }
-        if (hasRowCount() && (rowIndex >= rowCount)) {
-            throw new IndexOutOfBoundsException(
-                "Row index " + rowIndex + " invalid: "
-                + rowIndex + " >= " +  m_maxRowCount);
+        if (m_isMaxRowCountFinal) {
+            rowCount = m_maxRowCount;
+            if (rowIndex >= rowCount) {
+                throw new IndexOutOfBoundsException(
+                    "Row index " + rowIndex + " invalid: " + rowIndex + " >= " + m_maxRowCount);
+            }
         }
     }
 }

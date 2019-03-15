@@ -44,19 +44,23 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   26 Feb 2019 (albrecht): created
+ *   9 Mar 2019 (albrecht): created
  */
-package org.knime.core.data;
+package org.knime.core.data.transform;
+
+import org.knime.core.data.DataRow;
 
 /**
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @since 3.8
+ *
+ * @noextend This interface is not intended to be extended by clients. Pending API
+ * @noimplement This interface is not intended to be implemented by clients. Pending API
+ * @noreference This interface is not intended to be referenced by clients. Pending API
  */
-public interface TableTransformations {
+public interface DataTableFilterInformation extends TableFilterInformation {
 
-    DirectAccessTable sort();
-
-    DirectAccessTable filter();
+    public boolean isRowIncluded(DataRow row);
 
 }

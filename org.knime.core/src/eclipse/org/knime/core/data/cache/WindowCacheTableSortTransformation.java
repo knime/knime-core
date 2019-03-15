@@ -79,12 +79,10 @@ public class WindowCacheTableSortTransformation extends TableSortTransformation 
 
     /**
      * Creates a new sort transformation instance for a given {@link WindowCacheTable}.
-     * @param originalTable the table to transform
      * @param sortInfo the sort information needed to transform the table
      */
-    public WindowCacheTableSortTransformation(final WindowCacheTable originalTable,
-        final TableSortInformation sortInfo) {
-        super(originalTable, sortInfo);
+    public WindowCacheTableSortTransformation(final TableSortInformation sortInfo) {
+        super(sortInfo);
     }
 
     /**
@@ -92,8 +90,16 @@ public class WindowCacheTableSortTransformation extends TableSortTransformation 
      * @throws CanceledExecutionException
      */
     @Override
-    public DirectAccessTable transform(final ExecutionMonitor exec) throws CanceledExecutionException {
-        WindowCacheTable cache = (WindowCacheTable)getOriginalTable();
+    public DirectAccessTable transform(final DirectAccessTable originalTable, final ExecutionMonitor exec)
+        throws CanceledExecutionException {
+        if (!(originalTable instanceof WindowCacheTable)) {
+            throw new IllegalArgumentException("WindowCacheTable expected");
+        }
+        if (exec != null) {
+            exec.checkCanceled();
+            exec.setMessage("Sorting...");
+        }
+        WindowCacheTable cache = (WindowCacheTable)originalTable;
         TableSortInformation sort = getSortInformation();
         if (sort == null || sort.isNaturalSorting()) {
             return cache;
@@ -121,7 +127,21 @@ public class WindowCacheTableSortTransformation extends TableSortTransformation 
         DataTableSorter sorter =
                 new DataTableSorter(inputTable, rowCount, sortColNames, sortDirections, missingValuesEnd);
         DataTable sortedTable = sorter.sort(exec);
-        return new WindowCacheTable(sortedTable, cache.getIncludedColumns().stream().toArray(String[]::new));
+
+        WindowCacheTable newTable = new WindowCacheTable(sortedTable, cache.getFilters(),
+            cache.getIncludedColumns().stream().toArray(String[]::new));
+        int cacheSize = cache.getCacheSize();
+        if (cacheSize != WindowCacheTable.DEFAULT_CACHE_SIZE) {
+            newTable.setCacheSize(cacheSize);
+        }
+        int lookAhead = cache.getLookAheadSize();
+        if (lookAhead != WindowCacheTable.DEFAULT_LOOK_AHEAD) {
+            newTable.setLookAheadSize(cacheSize);
+        }
+        if (exec != null) {
+            exec.setProgress(1);
+        }
+        return newTable;
     }
 
 }

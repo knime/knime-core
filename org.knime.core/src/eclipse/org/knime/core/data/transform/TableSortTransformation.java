@@ -48,7 +48,6 @@
  */
 package org.knime.core.data.transform;
 
-import org.knime.core.data.DirectAccessTable;
 import org.knime.core.data.sort.TableSortInformation;
 
 /**
@@ -61,20 +60,10 @@ import org.knime.core.data.sort.TableSortInformation;
  */
 public abstract class TableSortTransformation implements TableTransformation {
 
-    private DirectAccessTable m_originalTable;
     private TableSortInformation m_sort;
 
-    protected TableSortTransformation(final DirectAccessTable table, final TableSortInformation sort) {
-        m_originalTable = table;
+    protected TableSortTransformation(final TableSortInformation sort) {
         m_sort = sort;
-    }
-
-    /**
-     * @return the originalTable
-     */
-    @Override
-    public DirectAccessTable getOriginalTable() {
-        return m_originalTable;
     }
 
     /**

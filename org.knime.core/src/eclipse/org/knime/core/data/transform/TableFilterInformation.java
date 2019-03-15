@@ -1,7 +1,6 @@
 /*
  * ------------------------------------------------------------------------
  *
-
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -45,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   26 Feb 2019 (albrecht): created
+ *   8 Mar 2019 (albrecht): created
  */
 package org.knime.core.data.transform;
 
@@ -54,22 +53,12 @@ package org.knime.core.data.transform;
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  * @since 3.8
  *
- * @noextend This class is not intended to be subclassed by clients. Pending API
- * @noreference This class is not intended to be referenced by clients. Pending API
+ * @noextend This interface is not intended to be extended by clients. Pending API
+ * @noimplement This interface is not intended to be implemented by clients. Pending API
+ * @noreference This interface is not intended to be referenced by clients. Pending API
  */
-public abstract class TableFilterTransformation implements TableTransformation {
+public interface TableFilterInformation {
 
-    private TableFilterInformation m_filter;
-
-    public TableFilterTransformation(final TableFilterInformation filter) {
-        m_filter = filter;
-    }
-
-    /**
-     * @return the filter
-     */
-    public TableFilterInformation getFilter() {
-        return m_filter;
-    }
+    /* don't think anything can be defined here */
 
 }

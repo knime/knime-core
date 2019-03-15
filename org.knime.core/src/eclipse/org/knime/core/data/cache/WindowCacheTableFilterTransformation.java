@@ -1,7 +1,6 @@
 /*
  * ------------------------------------------------------------------------
  *
-
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -45,9 +44,18 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   26 Feb 2019 (albrecht): created
+ *   12 Mar 2019 (albrecht): created
  */
-package org.knime.core.data.transform;
+package org.knime.core.data.cache;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.knime.core.data.DirectAccessTable;
+import org.knime.core.data.transform.DataTableFilterInformation;
+import org.knime.core.data.transform.TableFilterTransformation;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 
 /**
  *
@@ -55,21 +63,51 @@ package org.knime.core.data.transform;
  * @since 3.8
  *
  * @noextend This class is not intended to be subclassed by clients. Pending API
+ * @noinstantiate This class is not intended to be instantiated by clients. Pending API
  * @noreference This class is not intended to be referenced by clients. Pending API
  */
-public abstract class TableFilterTransformation implements TableTransformation {
+public class WindowCacheTableFilterTransformation extends TableFilterTransformation {
 
-    private TableFilterInformation m_filter;
-
-    public TableFilterTransformation(final TableFilterInformation filter) {
-        m_filter = filter;
+    /**
+     *
+     */
+    public WindowCacheTableFilterTransformation(final DataTableFilterInformation filterInfo) {
+        super(filterInfo);
     }
 
     /**
-     * @return the filter
+     * {@inheritDoc}
      */
-    public TableFilterInformation getFilter() {
-        return m_filter;
+    @Override
+    public DirectAccessTable transform(final DirectAccessTable originalTable, final ExecutionMonitor exec)
+        throws CanceledExecutionException {
+        if (!(originalTable instanceof WindowCacheTable)) {
+            throw new IllegalArgumentException("WindowCacheTable expected");
+        }
+        if (exec != null) {
+            exec.checkCanceled();
+            exec.setMessage("Filtering...");
+            exec.setProgress(0);
+        }
+        WindowCacheTable cache = (WindowCacheTable)originalTable;
+        List<DataTableFilterInformation> newFilters = new ArrayList<DataTableFilterInformation>();
+        List<DataTableFilterInformation> filters = cache.getFilters();
+        newFilters.addAll(filters);
+        newFilters.add((DataTableFilterInformation)getFilter());
+        WindowCacheTable newTable = new WindowCacheTable(cache.getDataTable(), newFilters,
+            cache.getIncludedColumns().stream().toArray(String[]::new));
+        int cacheSize = cache.getCacheSize();
+        if (cacheSize != WindowCacheTable.DEFAULT_CACHE_SIZE) {
+            newTable.setCacheSize(cacheSize);
+        }
+        int lookAhead = cache.getLookAheadSize();
+        if (lookAhead != WindowCacheTable.DEFAULT_LOOK_AHEAD) {
+            newTable.setLookAheadSize(cacheSize);
+        }
+        if (exec != null) {
+            exec.setProgress(1);
+        }
+        return newTable;
     }
 
 }

@@ -48,9 +48,14 @@
  */
 package org.knime.core.data.cache;
 
+import org.knime.core.data.DirectAccessTable;
 import org.knime.core.data.sort.TableSortInformation;
+import org.knime.core.data.transform.DataTableFilterInformation;
+import org.knime.core.data.transform.TableFilterInformation;
 import org.knime.core.data.transform.TableFilterTransformation;
 import org.knime.core.data.transform.TableTransformationExecutor;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 
 /**
  *
@@ -63,11 +68,8 @@ import org.knime.core.data.transform.TableTransformationExecutor;
  */
 public class WindowCacheTableTransformationExecutor extends TableTransformationExecutor {
 
-    /**
-     * @param table
-     */
-    public WindowCacheTableTransformationExecutor(final WindowCacheTable table) {
-        super(table);
+    private WindowCacheTableTransformationExecutor() {
+        super();
     }
 
     /**
@@ -81,8 +83,8 @@ public class WindowCacheTableTransformationExecutor extends TableTransformationE
      */
     public static class WindowCacheTableTansformationExecutorBuilder extends TableTransformationExecutorBuilder {
 
-        private WindowCacheTableTansformationExecutorBuilder(final WindowCacheTable table) {
-            super(table);
+        private WindowCacheTableTansformationExecutorBuilder() {
+            super();
         }
 
         /**
@@ -90,8 +92,10 @@ public class WindowCacheTableTransformationExecutor extends TableTransformationE
          * @param table the table to transform
          * @return a new builder
          */
-        public static WindowCacheTableTansformationExecutorBuilder of(final WindowCacheTable table) {
-            return new WindowCacheTableTansformationExecutorBuilder(table);
+        public static WindowCacheTableTansformationExecutorBuilder newBuilder() {
+            WindowCacheTableTansformationExecutorBuilder builder = new WindowCacheTableTansformationExecutorBuilder();
+            builder.addTransformation(new WindowCacheStripFilterTransformation());
+            return builder;
         }
 
         /**
@@ -100,7 +104,7 @@ public class WindowCacheTableTransformationExecutor extends TableTransformationE
         @Override
         public TableTransformationExecutorBuilder sort(final TableSortInformation sortInformation) {
             WindowCacheTableSortTransformation sortTransformation =
-                new WindowCacheTableSortTransformation((WindowCacheTable)getOriginalTable(), sortInformation);
+                new WindowCacheTableSortTransformation(sortInformation);
             addTransformation(sortTransformation);
             return this;
         }
@@ -109,8 +113,13 @@ public class WindowCacheTableTransformationExecutor extends TableTransformationE
          * {@inheritDoc}
          */
         @Override
-        public TableTransformationExecutorBuilder filter(final TableFilterTransformation filter) {
-            addTransformation(filter);
+        public TableTransformationExecutorBuilder filter(final TableFilterInformation filterInformation) {
+            if (!(filterInformation instanceof DataTableFilterInformation)) {
+                throw new IllegalArgumentException("Filter needs to be DataTableFilterInformation");
+            }
+            WindowCacheTableFilterTransformation filterTransformation =
+                new WindowCacheTableFilterTransformation((DataTableFilterInformation)filterInformation);
+            addTransformation(filterTransformation);
             return this;
         }
 
@@ -119,10 +128,45 @@ public class WindowCacheTableTransformationExecutor extends TableTransformationE
          */
         @Override
         public TableTransformationExecutor build() {
-            WindowCacheTableTransformationExecutor executor =
-                new WindowCacheTableTransformationExecutor((WindowCacheTable)getOriginalTable());
+            WindowCacheTableTransformationExecutor executor = new WindowCacheTableTransformationExecutor();
             executor.setTableTranformations(getLockedTransformations());
             return executor;
+        }
+
+    }
+
+    private static class WindowCacheStripFilterTransformation extends TableFilterTransformation {
+
+        private WindowCacheStripFilterTransformation() {
+            super(null);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DirectAccessTable transform(final DirectAccessTable originalTable, final ExecutionMonitor exec)
+            throws CanceledExecutionException {
+            if (exec != null) {
+                exec.checkCanceled();
+                exec.setMessage("Filtering...");
+                exec.setProgress(0);
+            }
+            WindowCacheTable cache = (WindowCacheTable)originalTable;
+            WindowCacheTable newTable = new WindowCacheTable(cache.getDataTable(),
+                cache.getIncludedColumns().stream().toArray(String[]::new));
+            int cacheSize = cache.getCacheSize();
+            if (cacheSize != WindowCacheTable.DEFAULT_CACHE_SIZE) {
+                newTable.setCacheSize(cacheSize);
+            }
+            int lookAhead = cache.getLookAheadSize();
+            if (lookAhead != WindowCacheTable.DEFAULT_LOOK_AHEAD) {
+                newTable.setLookAheadSize(cacheSize);
+            }
+            if (exec != null) {
+                exec.setProgress(1);
+            }
+            return newTable;
         }
 
     }
