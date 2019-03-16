@@ -1,14 +1,10 @@
 #!groovy
+def BN = BRANCH_NAME == "master" || BRANCH_NAME.startsWith("releases/") ? BRANCH_NAME : "master"
 
-library "knime-pipeline@$BRANCH_NAME"
+library "knime-pipeline@$BN"
 
 properties([
   parameters([
-    stringParam(
-      name: 'BRANCH_NAME',
-      defaultValue: 'build/DEVOPS-35_standalone-knime-core-build',
-      description: 'Name of the branch to build.'
-    ),
     stringParam(
       name: 'KNIME_TP_P2',
       defaultValue: '${P2_REPO}/knime-tp/' + env.BRANCH_NAME.replaceAll("/", "%252F") + '/repository/',
@@ -35,24 +31,9 @@ properties([
 
 node {
   docker.withServer('tcp://proxy1:2375') {
-    docker.image('knime/jenkins-slave-ubuntu:1.0.2').inside {
+    docker.image(slaves.DEFAULT_JAVA).inside {
       stage('Checkout Sources') {
-        checkout([
-          $class: 'GitSCM',
-          branches: [[name: '${BRANCH_NAME}']],
-          doGenerateSubmoduleConfigurations: false,
-          extensions: [
-            [$class: 'GitLFSPull'],
-            [$class: 'CheckoutOption', timeout: 60],
-	    [$class: 'CleanBeforeCheckout'],
-            [$class: 'PruneStaleBranch']
-          ],
-          submoduleCfg: [],
-          userRemoteConfigs: [[
-            credentialsId: 'bitbucket-jenkins',
-            url: 'https://bitbucket.org/KNIME/knime-core'
-          ]]
-        ])
+        checkout scm
       }
 
       stage('Maven/Tycho Build') {
@@ -83,3 +64,5 @@ node {
     }
   }
 }
+
+/* vim: set ts=4: */
