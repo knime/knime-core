@@ -76,7 +76,6 @@ import org.knime.core.node.exec.SandboxedNodeCreator;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.streamable.DataTableRowInput;
@@ -292,7 +291,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         PortType[] portTypes = new PortType[inPortObjects.length];
         // Skipping the variable port
         for (int i = 1; i < inPortObjects.length; i++) {
-            portTypes[i - 1] = PortTypeRegistry.getInstance().getPortType(inPortObjects[i].getClass());
+            portTypes[i - 1] = localNodeContainer.getInPort(i).getPortType();
         }
 
         try {
