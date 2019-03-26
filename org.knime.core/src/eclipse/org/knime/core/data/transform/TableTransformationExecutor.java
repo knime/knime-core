@@ -145,7 +145,7 @@ public abstract class TableTransformationExecutor {
         while (!queue.isEmpty()) {
             ExecutionMonitor subProgress = null;
             if (exec != null) {
-                subProgress = exec.createSubProgress(1 - (queue.size() - numTransforms));
+                subProgress = exec.createSubProgress(1 - (queue.size() / numTransforms));
             }
             transformedTable = queue.poll().transform(transformedTable, subProgress);
         }
