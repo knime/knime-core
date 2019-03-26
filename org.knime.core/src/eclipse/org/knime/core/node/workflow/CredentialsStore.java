@@ -69,8 +69,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.util.CoreConstants;
-
 
 /**
  * Container for credentials defined on a workflow. Elements in this store
@@ -319,12 +317,12 @@ public final class CredentialsStore implements Observer {
 
     /**
      * API hook to set static username + password for credentials entries with
-     * {@link CoreConstants#CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID system credentials id}. In standard KNIME
+     * system credentials id. In standard KNIME
      * installations this won't be set but some 3rd party extension may assign defaults during KNIME startup
      * (e.g. via {@link org.knime.core.util.IEarlyStartup}).
      * @param userName the user name
      * @param password the password
-     * @since 3.8
+     * @since 3.7
      */
     // added as part of AP-11261
     public static void setKNIMESystemDefault(final String userName, final String password) {
@@ -469,7 +467,7 @@ public final class CredentialsStore implements Observer {
          *
          * @param name Non-null identifier
          * @return true if 'system' credentials are available and used pushed, false otherwise.
-         * @since 3.8
+         * @since 3.7
          */
         public default boolean pushCredentialsFlowVariableWithDefaultCredentials(final String name) {
             if (systemCredentialsUserName != null && systemCredentialsPassword != null) {

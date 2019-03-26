@@ -61,7 +61,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
-import org.knime.core.util.CoreConstants;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
 
@@ -150,17 +149,17 @@ public class WorkflowLoadHelper {
     }
 
     /**
-     * Pre-populates the {@link CoreConstants#CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID system credentials} with user name and
+     * Pre-populates the system credentials with user name and
      * password in case it was set by a 3rd party via {@link CredentialsStore#setKNIMESystemDefault(String, String)}.
      * It then calls {@link #loadCredentials(List)} and returns its result.
      * @param credentials the list of credentials to load.
      * @return result of {@link #loadCredentials(List)} after pre-filling system defaults.
-     * @since 3.8
+     * @since 3.7
      */
     public final List<Credentials> loadCredentialsPrefilled(final List<Credentials> credentials) {
         if (CredentialsStore.systemCredentialsPassword != null || CredentialsStore.systemCredentialsUserName != null) {
             for (Credentials c : credentials) {
-                if (c.getName().equals(CoreConstants.CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID)) {
+                if (c.getName().equals("knime.system.default")) {
                     c.setLogin(CredentialsStore.systemCredentialsUserName);
                     c.setPassword(CredentialsStore.systemCredentialsPassword);
                 }

@@ -65,7 +65,6 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
-import org.knime.core.util.CoreConstants;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.SWTUtilities;
 import org.knime.core.util.Version;
@@ -155,8 +154,7 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
         for (Credentials c : credentialsList) {
             // see AP-11261: (API) Add hook to workflow loading routine to populate "knime.system.credentials"
             // if the system 'default' credentials is set/defined don't prompt for it when opening the workflow
-            if (CoreConstants.CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID.equals(c.getName())
-                    && c.getLogin() != null && c.getPassword() != null) {
+            if (c.getName().equals("knime.system.default") && c.getLogin() != null && c.getPassword() != null) {
                 m_promptedCredentials.put(c.getName(), c);
             }
             Credentials updatedCredentials = m_promptedCredentials.get(c.getName());
