@@ -49,13 +49,17 @@
 package org.knime.core.data.transform;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
 
@@ -73,6 +77,7 @@ public class DataTableSearchFilterInformation implements DataTableFilterInformat
     private final int[] m_colIndices;
     private final String m_searchTerm;
     private Pattern m_pattern = null;
+    private Map<Integer, DataTableSearchFilterFormatter> m_formatters;
 
     /**
      * @param searchTerm
@@ -81,6 +86,7 @@ public class DataTableSearchFilterInformation implements DataTableFilterInformat
      * @param colIndices
      */
     public DataTableSearchFilterInformation(final String searchTerm, final boolean isRegex, final boolean isSmart,
+        final Map<Integer, DataTableSearchFilterFormatter> formatters, final DataTableSpec spec,
         final int... colIndices) {
         m_colIndices = colIndices;
         m_searchTerm = searchTerm;
@@ -109,6 +115,20 @@ public class DataTableSearchFilterInformation implements DataTableFilterInformat
             }
             m_pattern = Pattern.compile("^(?=.*?\\Q" + String.join("\\E)(?=.*?\\Q", individualTerms) + "\\E).*$");
         }
+        m_formatters = new HashMap<Integer, DataTableSearchFilterFormatter>();
+        for (int colIndex : m_colIndices) {
+            Integer colInteger = Integer.valueOf(colIndex);
+            if (formatters != null && formatters.containsKey(colIndex)) {
+                m_formatters.put(colIndex, formatters.get(Integer.valueOf(colIndex)));
+            } else {
+                final DataType colType = spec.getColumnSpec(colIndex).getType();
+                if (colType.isCompatible(DoubleValue.class)) {
+                    m_formatters.put(colInteger, new DefaultDoubleSearchFilterFormatter());
+                } else if (colType.isCompatible(StringValue.class)) {
+                    m_formatters.put(colInteger, new DefaultStringSearchFilterFormatter());
+                }
+            }
+        }
     }
 
     /**
@@ -122,20 +142,21 @@ public class DataTableSearchFilterInformation implements DataTableFilterInformat
         }
         // this matches the search term found in ANY of the specified columns
         for (int col : m_colIndices) {
+            if (!m_formatters.containsKey(Integer.valueOf(col))) {
+                continue;
+            }
+
             DataCell cell = row.getCell(col);
             if (cell.isMissing()) {
                 continue;
             }
-            String cellContent = null;
-            //TODO: this is very naive as it does not account for special formatting applied to cells, etc.
-            if (cell.getType().isCompatible(StringValue.class)) {
-                cellContent = ((StringValue)cell).getStringValue();
-            } else if (cell.getType().isCompatible(DoubleValue.class)) {
-                cellContent = Double.toString(((DoubleValue)cell).getDoubleValue());
-            }
+
+            DataTableSearchFilterFormatter formatter = m_formatters.get(Integer.valueOf(col));
+            String cellContent = formatter.format(cell);
             if (cellContent == null) {
                 continue;
             }
+
             if (m_pattern != null) {
                 Matcher match = m_pattern.matcher(cellContent);
                 if (match.find()) {
@@ -146,6 +167,37 @@ public class DataTableSearchFilterInformation implements DataTableFilterInformat
             }
         }
         return false;
+    }
+
+    public static interface DataTableSearchFilterFormatter {
+
+        public String format(DataCell cell);
+
+    }
+
+    public static class DefaultStringSearchFilterFormatter implements DataTableSearchFilterFormatter {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String format(final DataCell cell) {
+            // no additional type or missing checking done here for performance reasons
+            return ((StringValue)cell).getStringValue();
+        }
+    }
+
+    public static class DefaultDoubleSearchFilterFormatter implements DataTableSearchFilterFormatter {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String format(final DataCell cell) {
+            // no additional type or missing checking done here for performance reasons
+            return Double.toString(((DoubleValue)cell).getDoubleValue());
+        }
+
     }
 
 }
