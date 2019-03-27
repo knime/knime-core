@@ -202,12 +202,13 @@ public class WindowCacheTable implements DirectAccessTable {
      * @param includedColumns the column names of the columns to include in the row cache
      */
     private void setIncludedColumns(final String... includedColumns) {
-        if (includedColumns == null || includedColumns.length <= 0) {
-            return;
-        }
-        Set<String> colSet = Arrays.stream(includedColumns).collect(Collectors.toSet());
-        if (!colSet.equals(m_includedColumnIndices)) {
-            m_includedColumnIndices = colSet;
+        if (includedColumns == null) {
+            m_includedColumnIndices = null;
+        } else {
+            Set<String> colSet = Arrays.stream(includedColumns).collect(Collectors.toSet());
+            if (!colSet.equals(m_includedColumnIndices)) {
+                m_includedColumnIndices = colSet;
+            }
         }
     }
 
