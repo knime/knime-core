@@ -63,7 +63,6 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.LoopStartNodeTerminator;
 
 /** Start of loop: pushes variables in input datatable columns
@@ -100,21 +99,27 @@ public class LoopStartVariableNodeModel extends TableToVariableNodeModel impleme
     protected PortObject[] execute(final PortObject[] inPOs,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable inData = (BufferedDataTable)inPOs[0];
+        DataRow row;
         if (m_currentIteration == -1) {
             assert m_iterator == null : "Iterator expected to be null here";
             // first time we see this, initialize counters:
             m_currentIteration = 0;
             m_maxNrIterations = KnowsRowCountTable.checkRowCount(inData.size());
-            CheckUtils.checkArgument(m_maxNrIterations > 0, "Input table is empty (no rows) -- can't loop");
             m_lastTable = inData;
             m_iterator = m_lastTable.iterator();
+            if (m_maxNrIterations == 0) {
+                assert !m_iterator.hasNext() : "Iterator returns rows but size is 0";
+                row = null; // see AP-11399 -- perform single iteration in case of empty table
+            } else {
+                row = m_iterator.next();
+            }
         } else {
             if (m_currentIteration > m_maxNrIterations) {
                 throw new IOException("Loop did not terminate correctly.");
             }
+            row = m_iterator.next();
         }
         assert m_lastTable == inData : "not the same table instance";
-        DataRow row = m_iterator.next();
         // put values for variables on stack, based on current row
         pushVariables(inData.getDataTableSpec(), row);
         // and add information about loop progress
