@@ -1170,7 +1170,7 @@ public class DataContainer implements RowAppender {
          * Constructor.
          */
         BufferCreator() {
-            this(DataContainerSettings.getDefault().getBufferSettings());
+            this(BufferSettings.getDefault());
         }
 
         /**

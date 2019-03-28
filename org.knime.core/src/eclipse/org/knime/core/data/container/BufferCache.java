@@ -95,7 +95,7 @@ final class BufferCache {
     /**
      * A number that determines how many tables are kept in the soft-references LRU cache before being weak-referenced.
      */
-    private int m_LRUCacheSize = DataContainerSettings.getDefault().getBufferSettings().getLRUCacheSize();
+    private int m_LRUCacheSize = BufferSettings.getDefault().getLRUCacheSize();
 
     /**
      * An LRU-cache of soft references to tables held in this cache. Note that soft references also keep track of when

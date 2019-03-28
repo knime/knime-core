@@ -112,7 +112,7 @@ public final class DataTableCompressionTest extends TestCase {
 
             // store the data to a table that writes its content to a compressed file
             DataContainer cont = new DataContainer(data.getFirst(),
-                settings.withBufferSettings(DataContainerSettings.getDefault().getBufferSettings().withOutputFormat(
+                settings.withBufferSettings(BufferSettings.getDefault().withOutputFormat(
                     new DefaultTableStoreFormat(DefaultTableStoreSettings.getDefault().withCompression(cFormat)))));
 
             // write the data

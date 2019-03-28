@@ -86,7 +86,7 @@ public class BufferCacheTest {
     @Test
     public void testHardRefCache() {
         // put k tables into cache
-        final int k = DataContainerSettings.getDefault().getBufferSettings().getLRUCacheSize();
+        final int k = BufferSettings.getDefault().getLRUCacheSize();
         final List<Pair<Buffer, List<BlobSupportDataRow>>> tables = generateKTables(k, false);
         final BufferCache cache = new BufferCache();
         addTablesToCache(tables, cache, false);
@@ -121,9 +121,9 @@ public class BufferCacheTest {
     public void testSoftRefCache() throws InterruptedException {
         // generate k-1 hot tables and k cold tables where k equals the LRU cache size -1
         List<Pair<Buffer, List<BlobSupportDataRow>>> hotTables =
-            generateKTables(DataContainerSettings.getDefault().getBufferSettings().getLRUCacheSize() - 1, true);
+            generateKTables(BufferSettings.getDefault().getLRUCacheSize() - 1, true);
         List<Pair<Buffer, List<BlobSupportDataRow>>> coldTables =
-            generateKTables(DataContainerSettings.getDefault().getBufferSettings().getLRUCacheSize(), true);
+            generateKTables(BufferSettings.getDefault().getLRUCacheSize(), true);
 
         // put all hot tables into the cache
         final BufferCache cache = new BufferCache();

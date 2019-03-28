@@ -70,7 +70,7 @@ public final class BufferSettingsTest extends TestCase {
     @Test
     public void testDefault() {
         final DataTableSpec spec = new DataTableSpecCreator().createSpec();
-        final BufferSettings settings = DataContainerSettings.getDefault().getBufferSettings();
+        final BufferSettings settings = BufferSettings.getDefault();
         assertEquals("Wrong default (LRU cache size)", BufferSettings.DEF_LRU_CACHE_SIZE, settings.getLRUCacheSize());
         assertEquals("Wrong default (enable LRU cache flag)", BufferSettings.DEF_TABLE_CACHE.equals("LRU"),
             settings.useLRU());
@@ -84,13 +84,13 @@ public final class BufferSettingsTest extends TestCase {
     @SuppressWarnings("static-method")
     @Test
     public void testChangedValues() {
-        final BufferSettings def = DataContainerSettings.getDefault().getBufferSettings();
+        final BufferSettings def = BufferSettings.getDefault();
 
         final int lruCacheSize = def.getLRUCacheSize() * -1;
         final boolean useLRU = !def.useLRU();
         final TableStoreFormat outputFormat = new DefaultTableStoreFormat();
 
-        final BufferSettings settings = DataContainerSettings.getDefault().getBufferSettings()//
+        final BufferSettings settings = BufferSettings.getDefault()//
             .withOutputFormat(outputFormat)//
             .withLRU(useLRU)//
             .withLRUCacheSize(lruCacheSize);

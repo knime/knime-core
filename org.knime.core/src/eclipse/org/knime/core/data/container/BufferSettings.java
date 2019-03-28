@@ -167,6 +167,15 @@ public final class BufferSettings {
     }
 
     /**
+     * Returns the default {@link BufferSettings}.
+     *
+     * @return the default {@code BufferSettings}.
+     */
+    public static BufferSettings getDefault() {
+        return DataContainerSettings.getDefault().getBufferSettings();
+    }
+
+    /**
      * Creates a new <code>BufferSettings</code> object by replicating the current <code>BufferSettings</code> instance
      * and solely changes the enable LRU caching flag.
      *

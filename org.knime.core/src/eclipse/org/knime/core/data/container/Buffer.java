@@ -537,7 +537,7 @@ public class Buffer implements KNIMEStreamConstants {
         final IDataRepository dataRepository, final Map<Integer, ContainerTable> localRep,
         final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite) {
         this(spec, maxRowsInMemory, bufferID, dataRepository, localRep, fileStoreHandler, forceSynchronousWrite,
-            DataContainerSettings.getDefault().getBufferSettings());
+            BufferSettings.getDefault());
     }
 
     /**
@@ -599,8 +599,7 @@ public class Buffer implements KNIMEStreamConstants {
      */
     Buffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
         final InputStream metaIn, final int bufferID, final IDataRepository dataRepository) throws IOException {
-        this(binFile, blobDir, fileStoreDir, spec, metaIn, bufferID, dataRepository,
-            DataContainerSettings.getDefault().getBufferSettings());
+        this(binFile, blobDir, fileStoreDir, spec, metaIn, bufferID, dataRepository, BufferSettings.getDefault());
     }
 
     /**

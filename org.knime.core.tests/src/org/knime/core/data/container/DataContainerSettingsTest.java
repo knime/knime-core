@@ -98,7 +98,7 @@ public final class DataContainerSettingsTest extends TestCase {
         assertTrue("Wrong default (duplicate checker)", settings.createDuplicateChecker() instanceof DuplicateChecker);
         assertNotNull("Wrong default (BufferSettings are null)", settings.getBufferSettings());
         assertTrue("Wrong default (Default BufferSettings are different to those provided by the DataContainerSettings",
-            settings.getBufferSettings().equals(DataContainerSettings.getDefault().getBufferSettings()));
+            settings.getBufferSettings().equals(BufferSettings.getDefault()));
     }
 
     /**
