@@ -79,6 +79,7 @@ public class DataColumnPropertiesView extends JPanel implements PortObjectSpecVi
     public DataColumnPropertiesView(final DataTableSpec tableSpec) {
         setLayout(new BorderLayout());
         m_propsView = new TableView(createPropsTable(CheckUtils.checkArgumentNotNull(tableSpec)));
+        m_propsView.createViewMenu(); // only for keyboard actions
         m_propsView.setShowIconInColumnHeader(false);
         m_propsView.getHeaderTable().setShowColorInfo(false);
         add(m_propsView);

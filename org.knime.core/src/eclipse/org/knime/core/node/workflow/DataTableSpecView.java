@@ -82,6 +82,7 @@ public class DataTableSpecView extends JPanel implements PortObjectSpecView {
         setBackground(NodeView.COLOR_BACKGROUND);
 
         m_specView = new TableView();
+        m_specView.createViewMenu(); // only for keyboard actions
         m_specView.getContentModel().setSortingAllowed(true);
         m_specView.setShowIconInColumnHeader(false);
         m_specView.setShowColorInfo(false);
