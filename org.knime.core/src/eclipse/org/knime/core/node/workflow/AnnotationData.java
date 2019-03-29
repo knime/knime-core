@@ -49,6 +49,7 @@ package org.knime.core.node.workflow;
 
 import java.util.Arrays;
 
+import org.eclipse.swt.SWT;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -71,6 +72,23 @@ public class AnnotationData implements Cloneable {
         CENTER,
         /** Right alignment. */
         RIGHT;
+    }
+
+    /**
+     * @param swtAlignment a value which should be one of <code>SWT.RIGHT</code>, <code>SWT.CENTER</code>,
+     *            <code>SWT.LEFT</code>
+     * @return the semantically related <code>TextAlignment</code> enum
+     * @since 3.8
+     */
+    public static TextAlignment getTextAlignmentForSWTAlignment(final int swtAlignment) {
+        switch (swtAlignment) {
+            case SWT.RIGHT:
+                return TextAlignment.RIGHT;
+            case SWT.CENTER:
+                return TextAlignment.CENTER;
+            default:
+                return TextAlignment.LEFT;
+        }
     }
 
     /** Old type annotation - font is system font (inconsistent layout).

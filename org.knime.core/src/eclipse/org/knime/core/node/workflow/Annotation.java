@@ -46,6 +46,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -69,11 +70,15 @@ public abstract class Annotation implements UIInformation {
     private CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
             new CopyOnWriteArraySet<NodeUIInformationListener>();
 
+    private transient AtomicInteger m_revisionNumber;
+
     /** Create new annotation with arg data (not null).
      * @param data The data
      */
     Annotation(final AnnotationData data) {
         m_data = CheckUtils.checkArgumentNotNull(data);
+
+        m_revisionNumber = new AtomicInteger(1);
     }
 
     /** @return the data */
@@ -175,17 +180,28 @@ public abstract class Annotation implements UIInformation {
     }
 
     /**
-     * Set dimensions, but don't notify any listener. (Used only by the GUI for
-     * node annotations for legacy support. Sets dimensions in old workflows
-     * without making the flow dirty.)
+     * Set dimensions, but don't notify any listener. (Used only by the GUI for node annotations for legacy support.
+     * Sets dimensions in old workflows without making the flow dirty.)
+     *
      * @param x coordinate
      * @param y coordinate
      * @param width of the annotation
      * @param height of the component
      */
-    protected void setDimensionNoNotify(final int x, final int y, final int width,
-            final int height) {
+    protected void setDimensionNoNotify(final int x, final int y, final int width, final int height) {
         m_data.setDimension(x, y, width, height);
+    }
+
+    /**
+     * Return the current version of the annotation; this is updated each time
+     * <code>copyFrom(AnnotationData, boolean)</code> is invoked.
+     *
+     * @return the version of this annotation.
+     * @see #copyFrom(AnnotationData, boolean)
+     * @since 3.8
+     */
+    public int getRevision() {
+        return m_revisionNumber.get();
     }
 
     /** {@inheritDoc} */
@@ -210,15 +226,17 @@ public abstract class Annotation implements UIInformation {
     }
 
     /**
-     * Copy content, styles, position from the argument and notify listeners.
+     * Copy content, styles, position from the argument and notify listeners; the version of this annotation will be
+     * incremented prior to listeners being notified.
      *
      * @param annotationData To copy from.
-     * @param includeBounds Whether to also update x, y, width, height. If
-     * false, it will only a copy the text with its styles
+     * @param includeBounds Whether to also update x, y, width, height. If false, it will only a copy the text with its
+     *            styles
      */
-    public void copyFrom(final AnnotationData annotationData,
-            final boolean includeBounds) {
+    public void copyFrom(final AnnotationData annotationData, final boolean includeBounds) {
         m_data.copyFrom(annotationData, includeBounds);
+        m_revisionNumber.incrementAndGet();
+
         fireChangeEvent();
     }
 
@@ -237,24 +255,31 @@ public abstract class Annotation implements UIInformation {
         }
     }
 
+    /**
+     * @param l an implementor of <code>NodeUIInformationListener</code> which wants to hear about changes to this model.
+     */
     public final void addUIInformationListener(final NodeUIInformationListener l) {
         if (l == null) {
-            throw new NullPointerException(
-                    "NodeUIInformationListener must not be null!");
+            throw new NullPointerException("NodeUIInformationListener must not be null!");
         }
         m_uiListeners.add(l);
     }
 
+    /**
+     * @param l an implementor of <code>NodeUIInformationListener</code> which no longer wants to hear about changes to
+     *            this model.
+     */
     public final void removeUIInformationListener(final NodeUIInformationListener l) {
         m_uiListeners.remove(l);
     }
 
+    /**
+     * Notifies the listeners of a change to the model.
+     */
     protected void fireChangeEvent() {
         for (NodeUIInformationListener l : m_uiListeners) {
             l.nodeUIInformationChanged(new NodeUIInformationEvent(
                     new NodeID(0), null, null));
         }
     }
-
 }
-
