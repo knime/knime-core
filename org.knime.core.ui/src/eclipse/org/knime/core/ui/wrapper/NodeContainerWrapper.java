@@ -55,6 +55,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.base.ConfigBaseRO;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeLock;
@@ -70,7 +71,6 @@ import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationListener;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.node.workflow.InteractiveWebViewsResultUI;
@@ -102,14 +102,16 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
      * @param nc the object to be wrapped
      * @return a new wrapper or a already existing one or <code>null</code> if nc is null
      */
+    @SuppressWarnings("rawtypes")
     public static final NodeContainerWrapper wrap(final NodeContainer nc) {
         if (nc == null) {
             return null;
         }
+        //order of checking important
         if (nc instanceof SubNodeContainer) {
             return SubNodeContainerWrapper.wrap((SubNodeContainer)nc);
-        } else if (nc instanceof SingleNodeContainer) {
-            return SingleNodeContainerWrapper.wrap((SingleNodeContainer)nc);
+        } else if (nc instanceof NativeNodeContainer) {
+            return NativeNodeContainerWrapper.wrap((NativeNodeContainer)nc);
         } else if (nc instanceof WorkflowManager) {
             return WorkflowManagerWrapper.wrap((WorkflowManager)nc);
         } else {
