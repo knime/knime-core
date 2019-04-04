@@ -573,13 +573,13 @@ public class WindowCacheTable implements DirectAccessTable {
      * @param isFinal if there are possibly more rows to count
      */
     public synchronized void setRowCount(final long newCount, final boolean isFinal) {
-        final long oldCount = m_maxRowCount;
+        final long oldCount = m_rowCountFiltered;
         if (oldCount >= newCount) {
             return;
         }
-        m_isMaxRowCountFinal = isFinal;
-        m_maxRowCount = newCount;
-        m_rowCountFiltered = m_maxRowCount;
+        m_isRowCountFilteredFinal = isFinal;
+        //m_maxRowCount = newCount;
+        m_rowCountFiltered = newCount;
     }
 
     /**

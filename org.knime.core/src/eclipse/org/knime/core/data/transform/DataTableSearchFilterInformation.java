@@ -169,6 +169,14 @@ public class DataTableSearchFilterInformation implements DataTableFilterInformat
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int[] getColumnIndices() {
+        return m_colIndices;
+    }
+
     public static interface DataTableSearchFilterFormatter {
 
         public String format(DataCell cell);

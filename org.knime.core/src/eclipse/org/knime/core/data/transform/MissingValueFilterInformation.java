@@ -85,4 +85,12 @@ public class MissingValueFilterInformation implements DataTableFilterInformation
         return included;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int[] getColumnIndices() {
+        return m_colIndices;
+    }
+
 }

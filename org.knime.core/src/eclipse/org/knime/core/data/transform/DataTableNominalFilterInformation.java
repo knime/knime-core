@@ -87,4 +87,12 @@ public class DataTableNominalFilterInformation implements DataTableFilterInforma
         return m_filter.isInFilter(row.getCell(m_colIndex));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int[] getColumnIndices() {
+        return new int[] {m_colIndex};
+    }
+
 }

@@ -63,4 +63,6 @@ public interface DataTableFilterInformation extends TableFilterInformation {
 
     public boolean isRowIncluded(DataRow row);
 
+    public int[] getColumnIndices();
+
 }

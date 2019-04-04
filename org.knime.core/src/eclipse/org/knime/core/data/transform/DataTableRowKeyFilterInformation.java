@@ -93,4 +93,12 @@ public class DataTableRowKeyFilterInformation implements DataTableFilterInformat
         return m_rowKeys.contains(row.getKey().getString());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int[] getColumnIndices() {
+        return new int[0];
+    }
+
 }

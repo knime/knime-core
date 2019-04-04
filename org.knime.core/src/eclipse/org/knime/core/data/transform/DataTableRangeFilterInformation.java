@@ -93,4 +93,12 @@ public class DataTableRangeFilterInformation implements DataTableFilterInformati
         return m_range.isInFilter(row.getCell(m_colIndex));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int[] getColumnIndices() {
+        return new int[] {m_colIndex};
+    }
+
 }
