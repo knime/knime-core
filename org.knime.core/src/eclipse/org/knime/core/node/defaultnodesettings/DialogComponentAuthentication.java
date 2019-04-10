@@ -174,7 +174,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      */
     public DialogComponentAuthentication(final SettingsModelAuthentication authModel, final String label,
         final AuthenticationType... supportedTypes) {
-        this(authModel, label, null, supportedTypes);
+        this(authModel, label, Arrays.asList(supportedTypes), null);
     }
 
     /** Constructor for this dialog component
@@ -188,11 +188,25 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      */
     public DialogComponentAuthentication(final SettingsModelAuthentication authModel, final String label,
         final HashMap<AuthenticationType, Pair<String, String>> namingMap, final AuthenticationType... supportedTypes) {
+        this(authModel, label, Arrays.asList(supportedTypes), namingMap);
+    }
+
+    /** Constructor for this dialog component
+     *
+     * @param authModel The {@link SettingsModel}
+     * @param label The label.
+     * @param namingMap The map containing the {@link AuthenticationType} as key and a pair
+     *          consisting of the label and the tooltip String for the radio buttons for authentication types
+     * @param supportedTypes the authentication {@link AuthenticationType}s to display
+     * @since 3.8
+     */
+    public DialogComponentAuthentication(final SettingsModelAuthentication authModel, final String label,
+        final Collection<AuthenticationType> supportedTypes, final Map<AuthenticationType, Pair<String, String>> namingMap) {
         super(authModel);
-        m_supportedTypes = new HashSet<>(Arrays.asList(supportedTypes));
+        m_supportedTypes = new HashSet<>(supportedTypes);
         m_label = label;
 
-        if (namingMap !=null) {
+        if (namingMap != null) {
             m_namingMap = namingMap;
         }
         m_typeNone = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.NONE, m_authenticationType, this);
