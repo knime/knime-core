@@ -60,7 +60,6 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.IntStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellTypeConverter;
@@ -271,18 +270,8 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
      */
     @Override
     public CloseableRowIterator iterator() {
-        CloseableRowIterator appendIt;
-        if (m_appendTable != null) {
-            int[] appendIndices =
-                IntStream.range(0, m_map.length).filter(i -> !m_isFromRefTable[i]).map(i -> m_map[i]).toArray();
-            appendIt = m_appendTable.iteratorBuilder().filterColumns(appendIndices).build();
-        } else {
-            appendIt = EMPTY_ITERATOR;
-        }
-        int[] refIndices =
-            IntStream.range(0, m_map.length).filter(i -> m_isFromRefTable[i]).map(i -> m_map[i]).toArray();
-        CloseableRowIterator refIt = m_reference.iteratorBuilder().filterColumns(refIndices).build();
-        return new JoinTableIterator(refIt, appendIt, m_map, m_isFromRefTable);
+        return new JoinTableIterator(m_reference.iterator(),
+            m_appendTable != null ? m_appendTable.iterator() : EMPTY_ITERATOR, m_map, m_isFromRefTable);
     }
 
     /**

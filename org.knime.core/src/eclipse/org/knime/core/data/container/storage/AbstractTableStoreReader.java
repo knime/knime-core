@@ -67,8 +67,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.RowIteratorBuilder;
-import org.knime.core.data.RowIteratorBuilder.DefaultRowIteratorBuilder;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.Buffer;
@@ -189,25 +187,6 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      * @return row iterator
      */
     public abstract TableStoreCloseableRowIterator iterator();
-
-    /**
-     * Returns a {@link RowIteratorBuilder} that can be used to assemble more complex
-     * {@link TableStoreCloseableRowIterator}s that only iterate over parts of a table.
-     *
-     * @return a {@link RowIteratorBuilder} that can be used to assemble complex {@link TableStoreCloseableRowIterator}s
-     *
-     * @since 3.7
-     */
-    public RowIteratorBuilder<? extends TableStoreCloseableRowIterator> iteratorBuilder() {
-        return new DefaultRowIteratorBuilder<TableStoreCloseableRowIterator>(() -> iterator(), m_spec) {
-            @Override
-            public TableStoreCloseableRowIterator build() {
-                TableStoreCloseableRowIterator iterator = super.build();
-                registerNewIteratorInstance(iterator);
-                return iterator;
-            }
-        };
-    }
 
     /**
      * Reads the cell class info shortcuts array from the node settings for container versions 6 and lower.

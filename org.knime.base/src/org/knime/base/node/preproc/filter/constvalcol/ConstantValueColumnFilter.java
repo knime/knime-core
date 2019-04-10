@@ -60,7 +60,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowIteratorBuilder;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.node.BufferedDataTable;
@@ -167,10 +166,7 @@ public class ConstantValueColumnFilter {
             }
         }
 
-        RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder = inputTable.iteratorBuilder();
-        iteratorBuilder.filterColumns(columnCheckers.keySet().stream().mapToInt(i -> i).toArray());
-
-        try (CloseableRowIterator rowIt = iteratorBuilder.build()) {
+        try (CloseableRowIterator rowIt = inputTable.iterator()) {
             // the first row has already been read
             rowIt.next();
             /*

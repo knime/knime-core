@@ -91,15 +91,12 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.RowIteratorBuilder;
-import org.knime.core.data.RowIteratorBuilder.DefaultRowIteratorBuilder;
 import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.DCObjectOutputVersion2.BlockableDCObjectOutputVersion2;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
-import org.knime.core.data.container.storage.AbstractTableStoreReader.TableStoreCloseableRowIterator;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
 import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.data.container.storage.TableStoreFormatRegistry;
@@ -1380,21 +1377,19 @@ public class Buffer implements KNIMEStreamConstants {
         return new String(c);
     }
 
-    synchronized RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder() {
+    synchronized CloseableRowIterator iterator() {
         if (usesOutFile()) {
             if (m_useBackIntoMemoryIterator) {
                 // the order of the following lines is very important!
                 m_useBackIntoMemoryIterator = false;
-                m_backIntoMemoryIterator = iteratorBuilder().build();
+                m_backIntoMemoryIterator = iterator();
                 // we never store more than 2^31 rows in memory, therefore it's safe to cast to int
                 m_list = new ArrayList<BlobSupportDataRow>((int) size());
-                return new DefaultRowIteratorBuilder<>(() -> new FromListIterator(), getTableSpec());
+                return new FromListIterator();
             }
-            RowIteratorBuilder<? extends TableStoreCloseableRowIterator> iteratorBuilder =
-                m_outputReader.iteratorBuilder();
-            return iteratorBuilder;
+            return m_outputReader.iterator();
         } else {
-            return new DefaultRowIteratorBuilder<>(() -> new FromListIterator(), getTableSpec());
+            return new FromListIterator();
         }
     }
 
@@ -1488,7 +1483,7 @@ public class Buffer implements KNIMEStreamConstants {
                 copy.initOutputWriter(tempFile);
             }
             int count = 1;
-            for (RowIterator it = iteratorBuilder().build(); it.hasNext();) {
+            for (RowIterator it = iterator(); it.hasNext();) {
                 final BlobSupportDataRow row = (BlobSupportDataRow)it.next();
                 final int countCurrent = count;
                 exec.setProgress(count / (double)size(),

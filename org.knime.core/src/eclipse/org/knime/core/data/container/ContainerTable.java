@@ -54,7 +54,6 @@ import java.util.zip.ZipOutputStream;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.RowIteratorBuilder;
 import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -127,16 +126,7 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
     @Override
     public CloseableRowIterator iterator() {
         ensureBufferOpen();
-        return m_buffer.iteratorBuilder().build();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder() {
-        ensureBufferOpen();
-        return m_buffer.iteratorBuilder();
+        return m_buffer.iterator();
     }
 
     /**
