@@ -57,8 +57,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.IOUtils;
 import org.eclipse.core.runtime.Platform;
@@ -98,18 +96,6 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
 
     private final DataTableSpec m_spec;
 
-    /**
-     * List of file iterators that look at this buffer. Need to close them when the node is reset and the file shall be
-     * deleted.
-     */
-    private final WeakHashMap<TableStoreCloseableRowIterator, Object> m_openIteratorSet;
-
-    /** Dummy object for the file iterator map. */
-    private static final Object DUMMY = new Object();
-
-    /** Number of open file input streams on m_binFile. */
-    private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
-
     private CellClassInfo[] m_shortCutsLookup;
 
     private IDataRepository m_dataRepository;
@@ -135,7 +121,6 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         final int version) throws IOException, InvalidSettingsException {
         m_file = CheckUtils.checkArgumentNotNull(binFile);
         m_spec = CheckUtils.checkArgumentNotNull(spec);
-        m_openIteratorSet = new WeakHashMap<>();
         m_version = version;
     }
 
@@ -286,55 +271,6 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         return m_shortCutsLookup[shortCutIndex];
     }
 
-    /**
-     * Register a new iterator with this buffer.
-     *
-     * @param it The iterator
-     */
-    protected void registerNewIteratorInstance (final TableStoreCloseableRowIterator it) {
-        LOGGER.debug("Opening input stream on file \"" + m_file.getAbsolutePath() + "\", "
-                + m_nrOpenInputStreams + " open streams");
-        it.setReader(this);
-        synchronized (m_openIteratorSet) {
-            m_nrOpenInputStreams.incrementAndGet();
-            m_openIteratorSet.put(it, DUMMY);
-        }
-    }
-
-    /**
-     * Clear all iterators handled by this reader.
-     */
-    public void clearIteratorInstances() {
-        synchronized (m_openIteratorSet) {
-            // removeFromHash is false here, since clearing iterators would lead to a ConcurrentModificationException
-            m_openIteratorSet.keySet().stream().filter(f -> f != null).forEach(f -> clearIteratorInstance(f, false));
-            m_openIteratorSet.clear();
-        }
-    }
-
-    /**
-     * Clear the argument iterator (free the allocated resources).
-     *
-     * @param it The iterator
-     * @param removeFromHash Whether to remove from global hash.
-     */
-    private void clearIteratorInstance(final TableStoreCloseableRowIterator it, final boolean removeFromHash) {
-        String closeMes = (m_file != null) ? "Closing input stream on \"" + m_file.getAbsolutePath() + "\", " : "";
-        try {
-            if (it.performClose()) {
-                synchronized (m_openIteratorSet) {
-                    m_nrOpenInputStreams.decrementAndGet();
-                    LOGGER.debug(closeMes + m_nrOpenInputStreams + " remaining", null);
-                    if (removeFromHash) {
-                        m_openIteratorSet.remove(it);
-                    }
-                }
-            }
-        } catch (IOException ioe) {
-            LOGGER.debug(closeMes + "failed!", ioe);
-        }
-    }
-
     private static List<OutputStream> DEBUG_STREAMS = new ArrayList<>();
 
     static {
@@ -374,21 +310,20 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
     }
 
     public static abstract class TableStoreCloseableRowIterator extends CloseableRowIterator {
-        private AbstractTableStoreReader m_reader;
+        private Buffer m_buffer;
 
         /**
-         * @param reader the table store reader to set
-         *
+         * @param buffer the buffer to set
          * @since 3.7
          */
-        public void setReader(final AbstractTableStoreReader reader) {
-            m_reader = reader;
+        public void setBuffer(final Buffer buffer) {
+            m_buffer = buffer;
         }
 
         /** {@inheritDoc} */
         @Override
         public final void close() {
-            m_reader.clearIteratorInstance(this, true);
+            m_buffer.clearIteratorInstance(this, true);
         }
 
         public abstract boolean performClose() throws IOException;
