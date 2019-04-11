@@ -49,6 +49,7 @@
 package org.knime.core.node;
 
 import java.io.File;
+import java.util.UUID;
 
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.helpers.FormattingInfo;
@@ -74,6 +75,8 @@ public class NodeLoggerPatternLayout extends PatternLayout {
     static final char QUALIFIER = 'Q';
     /**Workflow directory pattern.*/
     static final char WORKFLOW_DIR = 'W';
+    /**Job id pattern.*/
+    static final char JOB_ID = 'J';
 
     class LogPatternParser extends PatternParser {
         /**
@@ -101,6 +104,10 @@ public class NodeLoggerPatternLayout extends PatternLayout {
             case QUALIFIER:
                 currentLiteral.setLength(0);
                 addConverter(new QualifierPatternConverter(formattingInfo, extractPrecisionOption()));
+                break;
+            case JOB_ID:
+                currentLiteral.setLength(0);
+                addConverter(new JobIDLogPatternConverter(formattingInfo));
                 break;
             default:
                 super.finalizeConverter(c);
@@ -250,6 +257,30 @@ public class NodeLoggerPatternLayout extends PatternLayout {
                         }
                         return wfPath.substring(end + 1, len);
                     }
+                }
+            }
+            return null;
+        }
+    }
+
+    class JobIDLogPatternConverter extends PatternConverter {
+
+        /**
+         * @param formattingInfo
+         */
+        JobIDLogPatternConverter(final FormattingInfo formattingInfo) {
+            super(formattingInfo);
+        }
+
+        /**{@inheritDoc}*/
+        @Override
+        protected String convert(final LoggingEvent event) {
+            Object msg = event.getMessage();
+            if (msg instanceof KNIMELogMessage) {
+                final KNIMELogMessage kmsg = (KNIMELogMessage)msg;
+                final UUID jobID = kmsg.getjobID();
+                if (jobID != null) {
+                    return jobID.toString();
                 }
             }
             return null;

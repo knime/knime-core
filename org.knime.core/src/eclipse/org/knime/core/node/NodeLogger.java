@@ -60,6 +60,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.FileAppender;
@@ -137,6 +138,7 @@ public final class NodeLogger {
         private Object m_msg;
         private NodeID m_nodeID;
         private String m_nodeName;
+        private UUID m_jobID;
 
         /**
          * @param nodeID the NodeID if available (can be <code>null</code>)
@@ -144,11 +146,12 @@ public final class NodeLogger {
          * @param workflowDir the workflow location if available (can be <code>null</code>)
          * @param msg the logging message
          */
-        private KNIMELogMessage(final NodeID nodeID, final String nodeName, final File workflowDir,
+        private KNIMELogMessage(final NodeID nodeID, final String nodeName, final File workflowDir, final UUID jobID,
             final Object msg) {
             m_nodeID = nodeID;
             m_nodeName = nodeName;
             m_workflowDir = workflowDir;
+            m_jobID = jobID;
             m_msg = msg;
         }
 
@@ -171,6 +174,13 @@ public final class NodeLogger {
          */
         String getNodeName() {
             return m_nodeName;
+        }
+
+        /**
+         * @return the jobID
+         */
+        UUID getjobID() {
+            return m_jobID;
         }
 
         /**
@@ -283,6 +293,8 @@ public final class NodeLogger {
     private static boolean LOG_NODE_ID = false;
 
     private static boolean LOG_WF_DIR = false;
+
+    private static boolean LOG_JOB_ID = false;
 
     private static Layout WF_DIR_LOG_FILE_LAYOUT = new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n");
 
@@ -637,6 +649,11 @@ public final class NodeLogger {
             if (LOG_WF_DIR) {
                 LogLog.debug("Workflow directory logging enabled due to pattern layout");
             }
+            //enable the job id logging if one of the appender contains the job id pattern
+            LOG_JOB_ID |= conversionPattern.contains("%" + NodeLoggerPatternLayout.JOB_ID);
+            if (LOG_JOB_ID) {
+                LogLog.debug("Job id logging enabled due to pattern layout");
+            }
         }
     }
 
@@ -646,13 +663,14 @@ public final class NodeLogger {
      * and node that belong to the log message if applicable
      */
     private Object getLogObject(final Object message) {
-        if (!LOG_NODE_ID && !LOG_IN_WF_DIR && !LOG_WF_DIR) {
+        if (!LOG_NODE_ID && !LOG_IN_WF_DIR && !LOG_WF_DIR && !LOG_JOB_ID) {
             return message;
         }
         final NodeContext context = NodeContext.getContext();
         NodeID nodeID = null;
         String nodeName = null;
         File workflowDir = null;
+        UUID jobID = null;
         if (context != null) {
             if (LOG_NODE_ID) {
                 //retrieve and store the node id only if the user has requested to log it
@@ -662,17 +680,18 @@ public final class NodeLogger {
                     nodeName = nodeContainer.getName();
                 }
             }
-            if (LOG_IN_WF_DIR || LOG_WF_DIR) {
+            if (LOG_IN_WF_DIR || LOG_WF_DIR || LOG_JOB_ID) {
                 final WorkflowManager workflowManager = context.getWorkflowManager();
                 if (workflowManager != null) {
                     final WorkflowContext workflowContext = workflowManager.getContext();
                     if (workflowContext != null) {
                         workflowDir = workflowContext.getCurrentLocation();
+                        jobID = workflowContext.getJobId().orElse(null);
                     }
                 }
             }
         }
-        return new KNIMELogMessage(nodeID, nodeName, workflowDir, message);
+        return new KNIMELogMessage(nodeID, nodeName, workflowDir, jobID,  message);
     }
 
     /**
