@@ -52,6 +52,7 @@ import java.io.IOException;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -114,6 +115,11 @@ public final class VoidTable implements KnowsRowCountTable {
             public void close() {
             }
         };
+    }
+
+    @Override
+    public CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
+        return iterator();
     }
 
     /** Does nothing. {@inheritDoc} */

@@ -134,8 +134,12 @@ class JoinTableIterator extends CloseableRowIterator {
     }
 
     private static DataCell getUnwrappedCell(final DataRow row, final int i) {
-        return row instanceof BlobSupportDataRow
-            ? ((BlobSupportDataRow)row).getRawCell(i) : row.getCell(i);
+        if (row instanceof PartlyMaterializedBlobSupportRow) {
+            return ((PartlyMaterializedBlobSupportRow)row).getRawCellUnsafe(i);
+        } else if (row instanceof BlobSupportDataRow) {
+            return ((BlobSupportDataRow)row).getRawCell(i);
+        }
+        return row.getCell(i);
     }
 
 }

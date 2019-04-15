@@ -74,8 +74,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.RowIteratorBuilder;
-import org.knime.core.data.RowIteratorBuilder.DefaultRowIteratorBuilder;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobSupportDataRow;
 import org.knime.core.data.container.CloseableRowIterator;
@@ -88,6 +86,8 @@ import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.VoidTable;
 import org.knime.core.data.container.WrappedTable;
+import org.knime.core.data.container.filter.CloseableDataRowIterable;
+import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.data.container.storage.TableStoreFormatRegistry;
 import org.knime.core.internal.ReferencedFile;
@@ -350,11 +350,39 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     /**
-     * {@inheritDoc}
+     * Provides a {@link CloseableDataRowIterable} that is filtered according to a given {@link TableFilter} and can be
+     * iterated over. The filtering won't change this BufferedDataTable or impact subsequent calls of this method with
+     * other filters.
+     *
+     * @param filter the filter to be applied
+     * @return a filtered iterable
+     * @since 3.8
      */
-    @Override
-    public RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder() {
-        return m_delegate.iteratorBuilder();
+    public CloseableDataRowIterable filter(final TableFilter filter) {
+        return filter(filter, null);
+    }
+
+    /**
+     * Provides a {@link CloseableDataRowIterable} that is filtered according to a given {@link TableFilter} and can be
+     * iterated over. During iteration, a given {@link ExecutionMonitor} will update its progress. Note that the
+     * progress updates will not be accurate if you iterate over the returned iterable multiple times. It is therefore
+     * suggested to use the returned iterable only once. The filtering won't change this BufferedDataTable or impact
+     * subsequent calls of this method with other filters.
+     *
+     * @param filter the filter to be applied
+     * @param exec the execution monitor that shall be updated with progress or null if no progress updates are desired
+     * @return a filtered iterable
+     * @since 3.8
+     */
+    public CloseableDataRowIterable filter(final TableFilter filter, final ExecutionMonitor exec) {
+        CheckUtils.checkArgumentNotNull(filter);
+        filter.validate(getSpec());
+        return new CloseableDataRowIterable() {
+            @Override
+            public CloseableRowIterator iterator() {
+                return m_delegate.iteratorWithFilter(filter, exec);
+            }
+        };
     }
 
     /**
@@ -746,6 +774,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
                     "Table reference with ID %d not found in load map", id);
             case TABLE_TYPE_CONTAINER:
                 if (isVersion11x) {
+                    if (fileRef == null) {
+                        throw new NullPointerException("Reference on file to load from has not been set.");
+                    }
                     final ContainerTable cont = DataContainer.readFromZip(fileRef.getFile());
                     t = new BufferedDataTable(cont, id);
                     break;
@@ -797,6 +828,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 } else if (tableType.equals(TABLE_TYPE_NEW_SPEC)) {
                     TableSpecReplacerTable replTable;
                     if (isVersion11x) {
+                        if (fileRef == null) {
+                            throw new NullPointerException("Reference on file to load from has not been set.");
+                        }
                         replTable = TableSpecReplacerTable.load11x(fileRef.getFile(), s, tblRep, dataRepository);
                     } else {
                         replTable = TableSpecReplacerTable.load(s, spec, tblRep, dataRepository);
@@ -965,7 +999,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
          */
         void clear();
 
-        /** Implementation of {@link BufferedDataTable#ensureOpen()}. */
+        /** Implementation of link BufferedDataTable#ensureOpen(). */
         void ensureOpen();
 
         /** Overridden to narrow return type to closeable iterator.
@@ -974,12 +1008,29 @@ public final class BufferedDataTable implements DataTable, PortObject {
         public CloseableRowIterator iterator();
 
         /**
-         * {@inheritDoc}
+         * Provides a {@link CloseableRowIterator} that is filtered according to a given {@link TableFilter}. The
+         * filtering won't change this KnowsRowCountTable or impact subsequent calls of this method with other filters.
+         *
+         * @param filter the filter to be applied
+         * @return a filtered iterator
+         * @since 3.8
          */
-        @Override
-        default RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder() {
-            return new DefaultRowIteratorBuilder<CloseableRowIterator>(() -> iterator(), getDataTableSpec());
+        default CloseableRowIterator iteratorWithFilter(final TableFilter filter) {
+            return iteratorWithFilter(filter, null);
         }
+
+        /**
+         * Provides a {@link CloseableRowIterator} that is filtered according to a given {@link TableFilter}. During
+         * iteration, a given {@link ExecutionMonitor} will update its progress. The filtering won't change this
+         * KnowsRowCountTable or impact subsequent calls of this method with other filters.
+         *
+         * @param filter the filter to be applied
+         * @param exec the execution monitor that shall be updated with progress or null if no progress updates are
+         *            desired
+         * @return a filtered iterator
+         * @since 3.8
+         */
+        CloseableRowIterator iteratorWithFilter(TableFilter filter, ExecutionMonitor exec);
 
         /** Reference to the underlying tables, if any. A reference
          * table exists if this object is just a wrapper, such as a

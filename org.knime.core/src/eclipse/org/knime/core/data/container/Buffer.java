@@ -75,6 +75,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -100,13 +101,13 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.RowIteratorBuilder;
-import org.knime.core.data.RowIteratorBuilder.DefaultRowIteratorBuilder;
 import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.DCObjectOutputVersion2.BlockableDCObjectOutputVersion2;
+import org.knime.core.data.container.filter.FilterDelegateRowIterator;
+import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.data.container.storage.AbstractTableStoreReader.TableStoreCloseableRowIterator;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
@@ -519,6 +520,18 @@ public class Buffer implements KNIMEStreamConstants {
     private DataTableSpec m_spec;
 
     /**
+     * List of file iterators that look at this buffer. Need to close them when the node is reset and the file shall be
+     * deleted.
+     */
+    private final WeakHashMap<TableStoreCloseableRowIterator, Object> m_openIteratorSet;
+
+    /** Dummy object for the file iterator map. */
+    private static final Object DUMMY = new Object();
+
+    /** Number of open file input streams on m_binFile. */
+    private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
+
+    /**
      * The iterator that is used to read the content back into memory. This instance is used after the workflow is
      * restored from disk or when a table that fits into the cache is dropped from the cache due to not having been used
      * recently. The BackIntoMemoryIterator is only weakly referenced here so that we can garbage-collect it and its
@@ -601,6 +614,7 @@ public class Buffer implements KNIMEStreamConstants {
         } else {
             m_lifecycle = new MemorizeIfSmallLifecycle();
         }
+        m_openIteratorSet = new WeakHashMap<>();
         CACHE.setLRUCacheSize(m_bufferSettings.getLRUCacheSize());
         /**
          * independent of the lifecycle, if maxRowsInMemory is zero, the buffer is expected to flush to disk (e.g, see
@@ -662,6 +676,7 @@ public class Buffer implements KNIMEStreamConstants {
         m_binFile = binFile;
         m_blobDir = blobDir;
         m_bufferID = bufferID;
+        m_openIteratorSet = new WeakHashMap<>();
         if (dataRepository == null) {
             LOGGER
                 .debug("no data repository set, using new instance of " + NotInWorkflowDataRepository.class.getName());
@@ -1561,31 +1576,81 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Creates the row iterator builder.
+     * Creates the row iterator.
      *
-     * @return the row iterator builder
+     * @return the row iterator
      * @noreference This method is not intended to be referenced by clients.
      */
-    public final synchronized RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder() {
+    public final synchronized CloseableRowIterator iterator() {
+        return iteratorWithFilter(null);
+    }
+
+    /**
+     * Creates the row iterator builder that is filtered according to a {@link TableFilter}.
+     *
+     * @param filter the filter to be applied while iterating
+     * @return the filtered row iterator
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public final synchronized CloseableRowIterator iteratorWithFilter(final TableFilter filter) {
+        return iteratorWithFilter(filter, null);
+    }
+
+    // This method might return a FilterDelegateRowIterator that wraps a CloseableRowIterator. This leads to a warning
+    // about the wrapped iterator potentially not being closed. It is safe to disregard this warning though, since
+    // the FilterDelegateRowIterator takes care of closing the wrapped iterator.
+    @SuppressWarnings("resource")
+    final synchronized CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
+
         final List<BlobSupportDataRow> list = obtainListFromCacheOrBackIntoMemoryIterator();
         if (list == null) {
+
+            // Case 1: We don't have have the table in memory and want to iterate it back into memory.
             if (m_useBackIntoMemoryIterator) {
                 // the order of the following lines is very important!
                 m_useBackIntoMemoryIterator = false;
-                BackIntoMemoryIterator backIntoMemoryIterator =
-                    new BackIntoMemoryIterator(m_outputReader.iteratorBuilder().build(), size());
-                m_backIntoMemoryIteratorRef = new WeakReference<BackIntoMemoryIterator>(backIntoMemoryIterator);
-                // we never store more than 2^31 rows in memory, therefore it's safe to cast to int
-                return new DefaultRowIteratorBuilder<>(
-                    () -> new FromListIterator(backIntoMemoryIterator.getList(), backIntoMemoryIterator),
-                    getTableSpec());
+                final BackIntoMemoryIterator backIntoMemoryIt = new BackIntoMemoryIterator(iterator(), size());
+                m_backIntoMemoryIteratorRef = new WeakReference<BackIntoMemoryIterator>(backIntoMemoryIt);
+                final CloseableRowIterator listIt = new FromListIterator(backIntoMemoryIt.getList(), backIntoMemoryIt);
+                return filter == null ? listIt : new FilterDelegateRowIterator(listIt, filter, exec);
             }
-            RowIteratorBuilder<? extends TableStoreCloseableRowIterator> iteratorBuilder =
-                m_outputReader.iteratorBuilder();
-            return iteratorBuilder;
+
+            // Case 2: We don't have have the table in memory.
+            final TableStoreCloseableRowIterator tableStoreIt =
+                filter == null ? m_outputReader.iterator() : m_outputReader.iteratorWithFilter(filter, exec);
+            // register the table store iterator with this buffer
+            tableStoreIt.setBuffer(this);
+            m_nrOpenInputStreams.incrementAndGet();
+            synchronized (m_openIteratorSet) {
+                m_openIteratorSet.put(tableStoreIt, DUMMY);
+            }
+            return tableStoreIt;
+
         } else {
-            return new DefaultRowIteratorBuilder<>(() -> new FromListIterator(list,
-                m_backIntoMemoryIteratorRef != null ? m_backIntoMemoryIteratorRef.get() : null), getTableSpec());
+            final BackIntoMemoryIterator backIntoMemoryIt =
+                m_backIntoMemoryIteratorRef != null ? m_backIntoMemoryIteratorRef.get() : null;
+            if (filter != null) {
+
+                // Case 3: We have the full table in memory and want to apply a filter.
+                if (backIntoMemoryIt == null) {
+                    // We never store more than 2^31 rows in memory, therefore it's safe to cast to int.
+                    final int offset = (int)filter.getFromRowIndex();
+                    final TableFilter offsetFilter = new TableFilter.Builder(filter)//
+                        .withFromRowIndex(0)//
+                        .withToRowIndex(filter.getToRowIndex() - offset)//
+                        .build();
+                    return new FilterDelegateRowIterator(new FromListOffsetIterator(list, offset), offsetFilter, exec);
+                }
+
+                // Case 4: We are currently iterating the table back into memory and want to apply a filter.
+                else {
+                    return new FilterDelegateRowIterator(new FromListIterator(list, backIntoMemoryIt), filter, exec);
+                }
+
+            }
+
+            // Case 5: We have at least parts of the table in memory and don't want to apply a filter.
+            return new FromListIterator(list, backIntoMemoryIt);
         }
     }
 
@@ -1697,7 +1762,7 @@ public class Buffer implements KNIMEStreamConstants {
                 copy.initOutputWriter(tempFile);
             }
             int count = 1;
-            for (RowIterator it = iteratorBuilder().build(); it.hasNext();) {
+            for (RowIterator it = iterator(); it.hasNext();) {
                 final BlobSupportDataRow row = (BlobSupportDataRow)it.next();
                 final int countCurrent = count;
                 exec.setProgress(count / (double)size(),
@@ -1817,6 +1882,30 @@ public class Buffer implements KNIMEStreamConstants {
         return m_uniqueID;
     }
 
+    /**
+     * Clear the argument iterator (free the allocated resources.
+     *
+     * @param it The iterator
+     * @param removeFromHash Whether to remove from global hash.
+     */
+    public synchronized void clearIteratorInstance(final TableStoreCloseableRowIterator it, final boolean removeFromHash) {
+        String closeMes =
+                (m_binFile != null) ? "Closing input stream on \"" + m_binFile.getAbsolutePath() + "\", " : "";
+        try {
+            if (it.performClose()) {
+                m_nrOpenInputStreams.decrementAndGet();
+                logDebug(closeMes + m_nrOpenInputStreams + " remaining", null);
+                if (removeFromHash) {
+                    synchronized (m_openIteratorSet) {
+                        m_openIteratorSet.remove(it);
+                    }
+                }
+            }
+        } catch (IOException ioe) {
+            logDebug(closeMes + "failed!", ioe);
+        }
+    }
+
     /** Clears the temp file. Any subsequent iteration will fail! */
     synchronized void clear() {
         m_lifecycle.onClear();
@@ -1833,9 +1922,10 @@ public class Buffer implements KNIMEStreamConstants {
                 m_listWhileAddRow = null;
                 CACHE.invalidate(this);
                 if (m_binFile != null) {
-                    if (m_outputReader != null) {
-                        // output reader might be null if Buffer was created but never read -- no iterators to clear
-                        m_outputReader.clearIteratorInstances();
+                    synchronized (m_openIteratorSet) {
+                        m_openIteratorSet.keySet().stream().filter(f -> f != null)
+                        .forEach(f -> clearIteratorInstance(f, false));
+                        m_openIteratorSet.clear();
                     }
                     if (m_outputWriter != null) {
                         try {
@@ -1968,10 +2058,10 @@ public class Buffer implements KNIMEStreamConstants {
      */
     private final class BackIntoMemoryIterator {
 
-        /**
-         * The iterator for reading additional rows from disk.
-         */
-        private final TableStoreCloseableRowIterator m_iterator;
+    	/**
+    	 * The iterator for reading additional rows from disk.
+    	 */
+        private final CloseableRowIterator m_iterator;
 
         /**
          * A table held in memory while still being modifiable and before being added to the cache. This is only ever
@@ -1987,7 +2077,7 @@ public class Buffer implements KNIMEStreamConstants {
          * @param iterator the file-based iterator underlying this BackIntoMemoryIterator
          * @param size the size of the table to be read back into memory
          */
-        private BackIntoMemoryIterator(final TableStoreCloseableRowIterator iterator, final long size) {
+        private BackIntoMemoryIterator(final CloseableRowIterator iterator, final long size) {
             m_iterator = iterator;
             m_listWhileBackIntoMemory = new ArrayList<BlobSupportDataRow>((int)size);
         }
@@ -2013,9 +2103,44 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Iterator to be used when data is contained in m_list. It uses access by index rather than wrapping an
-     * java.util.Iterator as the list may be simultaneously modified while reading (in case the content is fetched from
-     * disk and restored in memory). This object is used when all rows fit in memory (no file).
+     * Iterator to be used when all data is kept in a list in memory. It uses access by index and allows to start
+     * iterating with a certain offset.
+     */
+    private class FromListOffsetIterator extends CloseableRowIterator {
+
+        private List<BlobSupportDataRow> m_list;
+
+        private int m_nextIndex = 0;
+
+        FromListOffsetIterator(final List<BlobSupportDataRow> list, final int offset) {
+            m_list = list;
+            m_nextIndex = offset;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return m_nextIndex < size();
+        }
+
+        @Override
+        public DataRow next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException("No more rows in buffer");
+            }
+            return m_list.get(m_nextIndex++);
+        }
+
+        @Override
+        public void close() {
+            m_nextIndex = (int) size();
+        }
+    }
+
+    /**
+     * Iterator to be used when data is kept in a list in memory or read back into memory using a
+     * {@link BackIntoMemoryIterator}. It uses access by index rather than wrapping an java.util.Iterator as the list
+     * may be simultaneously modified while reading (in case the content is fetched from disk and restored in memory).
+     * This object is used when all rows fit in memory (no file).
      */
     private class FromListIterator extends CloseableRowIterator {
 

@@ -51,10 +51,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.zip.ZipOutputStream;
 
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.RowIteratorBuilder;
+import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -76,7 +75,7 @@ import org.knime.core.node.workflow.WorkflowDataRepository;
  * fixed.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class ContainerTable implements DataTable, KnowsRowCountTable {
+public final class ContainerTable implements KnowsRowCountTable {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(ContainerTable.class);
@@ -127,16 +126,13 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
     @Override
     public CloseableRowIterator iterator() {
         ensureBufferOpen();
-        return m_buffer.iteratorBuilder().build();
+        return m_buffer.iterator();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public RowIteratorBuilder<? extends CloseableRowIterator> iteratorBuilder() {
+    public CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
         ensureBufferOpen();
-        return m_buffer.iteratorBuilder();
+        return m_buffer.iteratorWithFilter(filter, exec);
     }
 
     /**
@@ -181,10 +177,11 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
         return m_readTask.getBufferID();
     }
 
-    /** Instruct the underlying buffer to cache the rows into main
-     * memory to accelerate future iterations. This method does nothing
-     * if the buffer is reading from memory already.
-     * @see Buffer#setRestoreIntoMemoryOnCacheMiss() */
+    /**
+     * Instruct the underlying buffer to cache the rows into main memory to accelerate future iterations. This method
+     * does nothing if the buffer is reading from memory already.
+     * see Buffer#setRestoreIntoMemoryOnCacheMiss()
+     */
     protected void restoreIntoMemory() {
         if (m_buffer != null) {
             m_buffer.setRestoreIntoMemoryOnCacheMiss();

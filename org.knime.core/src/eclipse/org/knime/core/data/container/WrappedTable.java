@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -122,6 +123,11 @@ public final class WrappedTable implements KnowsRowCountTable {
     @Override
     public CloseableRowIterator iterator() {
         return m_table.iterator();
+    }
+
+    @Override
+    public CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
+        return m_table.filter(filter, exec).iterator();
     }
 
     /** {@inheritDoc} */

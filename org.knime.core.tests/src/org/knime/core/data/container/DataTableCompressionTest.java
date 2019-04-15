@@ -196,7 +196,7 @@ public final class DataTableCompressionTest extends TestCase {
      */
     private static void read(final Buffer b, final DataRow[] rows) {
         // read the data
-        try (final CloseableRowIterator rowIt = b.iteratorBuilder().build()) {
+        try (final CloseableRowIterator rowIt = b.iterator()) {
             for (int i = 0; i < rows.length; i++) {
                 Assert.assertThat("Iterator has rows", rowIt.hasNext(), is(true));
                 DataRow refRow = rows[i];

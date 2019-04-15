@@ -54,6 +54,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.append.AppendedRowsTable;
 import org.knime.core.data.append.AppendedRowsTable.DuplicatePolicy;
+import org.knime.core.data.container.filter.FilterDelegateRowIterator;
+import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -177,6 +179,19 @@ public final class ConcatenateTable implements KnowsRowCountTable {
             return new MyIterator();
         } else {
             return m_tablesWrapper.iterator(null, -1);
+        }
+    }
+
+    @Override
+    public CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
+        // If all specs are the same AND there are no duplicates in row keys of underlying tables
+        // (as indicated by m_tablesWrapper == null) required, return MyIterator.
+        if (m_tablesWrapper == null) {
+            return new MyIterator(filter, exec);
+        }
+        // Otherwise, fall back to an appended rows table which operates on data tables which cannot be filtered.
+        else {
+            return new FilterDelegateRowIterator(m_tablesWrapper.iterator(exec, -1), filter, exec);
         }
     }
 
@@ -320,15 +335,53 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     }
 
     private class MyIterator extends CloseableRowIterator {
-        private int m_tableIndex;
+
+        private final TableFilter m_filter;
+        private final ExecutionMonitor m_exec;
+
+        private long m_offset = 0;
+        private int m_tableIndex = 0;
         private CloseableRowIterator m_curIterator;
         private DataRow m_next;
 
         /** Creates new iterator. */
-        public MyIterator() {
-            m_tableIndex = 0;
+        MyIterator() {
+            m_filter = null;
+            m_exec = null;
             m_curIterator = m_tables[m_tableIndex].iterator();
             m_next = internalNext();
+        }
+
+        MyIterator(final TableFilter filter, final ExecutionMonitor exec) {
+            m_filter = filter;
+            m_exec = exec;
+            m_curIterator = getNextFilteredIterator();
+            m_next = internalNext();
+        }
+
+        private CloseableRowIterator getNextFilteredIterator() {
+            if (m_tableIndex >= m_tables.length) {
+                return null;
+            }
+
+            do {
+                final BufferedDataTable curTable = m_tables[m_tableIndex];
+
+                // determine offset-adjusted filter for current table
+                final TableFilter filter = new TableFilter.Builder(m_filter)//
+                    .withFromRowIndex(Math.max(m_filter.getFromRowIndex() - m_offset, 0))//
+                    .withToRowIndex(Math.min(m_filter.getToRowIndex() - m_offset, curTable.size() - 1))//
+                    .build();
+                m_offset += curTable.size();
+                final ExecutionMonitor exec = m_exec != null ? m_exec.createSubProgress(1.0 / m_tables.length) : null;
+
+                final CloseableRowIterator curIterator = m_tables[m_tableIndex].filter(filter, exec).iterator();
+                if (curIterator.hasNext()) {
+                    return curIterator;
+                }
+            } while (m_tableIndex++ < m_tables.length);
+
+            return null;
         }
 
         /**
@@ -355,7 +408,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
             }
             if (m_tableIndex < m_tables.length - 1) {
                 m_tableIndex++;
-                m_curIterator = m_tables[m_tableIndex].iterator();
+                m_curIterator = m_filter == null ? m_tables[m_tableIndex].iterator() : getNextFilteredIterator();
                 return internalNext();
             }
             return null;

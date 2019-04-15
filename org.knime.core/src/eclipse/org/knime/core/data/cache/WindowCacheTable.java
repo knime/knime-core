@@ -48,6 +48,8 @@
  */
 package org.knime.core.data.cache;
 
+import static org.knime.core.data.container.filter.TableFilter.materializeCols;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,9 +61,9 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DirectAccessTable;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.RowIteratorBuilder;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -436,11 +438,13 @@ public class WindowCacheTable implements DirectAccessTable {
      */
     private RowIterator getNewDataIterator() {
         assert hasData();
-        RowIteratorBuilder<? extends RowIterator> iteratorBuilder = m_table.iteratorBuilder();
-        if (m_includedColumnIndices != null) {
-            iteratorBuilder.filterColumns(m_includedColumnIndices.stream().toArray(String[]::new));
+        if (m_table instanceof BufferedDataTable && m_includedColumnIndices != null) {
+            BufferedDataTable bdt = (BufferedDataTable)m_table;
+            DataTableSpec spec = bdt.getSpec();
+            TableFilter filter = materializeCols(spec, m_includedColumnIndices.stream().toArray(String[]::new));
+            return bdt.filter(filter).iterator();
         }
-        return iteratorBuilder.build();
+        return m_table.iterator();
     }
 
     /**

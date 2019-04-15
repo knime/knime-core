@@ -116,7 +116,7 @@ public class DataContainerTest extends TestCase {
     /**
      * method being tested: open().
      */
-    public final void testOpen() {
+    public static final void testOpen() {
         DataContainer c = new DataContainer(EMPTY_SPEC);
         c.addRowToTable(new DefaultRow(
                 "no one is going to read me", new DataCell[] {}));
@@ -126,7 +126,7 @@ public class DataContainerTest extends TestCase {
     /**
      * method being tested: isClosed().
      */
-    public final void testIsClosed() {
+    public static final void testIsClosed() {
         DataContainer c = new DataContainer(EMPTY_SPEC);
         assertFalse(c.isClosed());
         c.close();
@@ -139,21 +139,24 @@ public class DataContainerTest extends TestCase {
     /**
      * method being tested: close().
      */
-    public final void testClose() {
+    public static final void testClose() {
         DataContainer c = new DataContainer(EMPTY_SPEC);
         c.close();
         // hm, does it work again?
         c.close(); // should ignore it
     }
 
-    public final void testMemoryAlertAfterClose() throws Exception {
+    /**
+     * @throws Exception
+     */
+    public static final void testMemoryAlertAfterClose() throws Exception {
         DataContainer container = new DataContainer(SPEC_STR_INT_DBL,
                 true, Integer.MAX_VALUE, false);
         for (RowIterator it = generateRows(100000); it.hasNext();) {
             container.addRowToTable(it.next());
         }
         container.close();
-        Buffer buffer = container.getBufferedTable().getBuffer();
+        container.getBufferedTable().getBuffer();
         MemoryAlertSystem.getInstance().sendMemoryAlert();
         RowIterator tableIterator = container.getTable().iterator();
         for (RowIterator it = generateRows(100000); it.hasNext();) {
@@ -161,7 +164,10 @@ public class DataContainerTest extends TestCase {
         }
     }
 
-    public final void testMemoryAlertAfterCloseWhileReading() throws Exception {
+    /**
+     * @throws Exception
+     */
+    public static final void testMemoryAlertAfterCloseWhileReading() throws Exception {
         DataContainer container = new DataContainer(SPEC_STR_INT_DBL,
                 true, Integer.MAX_VALUE, false);
         int count = 100000;
@@ -183,7 +189,10 @@ public class DataContainerTest extends TestCase {
         }
     }
 
-    public void testMemoryAlertWhileWrite() throws Exception {
+    /**
+     * @throws Exception
+     */
+    public static void testMemoryAlertWhileWrite() throws Exception {
         DataContainer cont = new DataContainer(SPEC_STR_INT_DBL, true, 1000000);
         int nrRows = 10;
         RowIterator it = generateRows(nrRows);
@@ -205,7 +214,10 @@ public class DataContainerTest extends TestCase {
         }
     }
 
-    public final void testMemoryAlertWhileRestore() throws Exception {
+    /**
+     * @throws Exception
+     */
+    public static final void testMemoryAlertWhileRestore() throws Exception {
         DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, /* no rows in mem */ 0, false);
         int count = 100000;
         for (RowIterator it = generateRows(count); it.hasNext();) {
@@ -451,7 +463,7 @@ public class DataContainerTest extends TestCase {
     /**
      * method being tested: addRowToTable().
      */
-    public final void testRowOrder() {
+    public static final void testRowOrder() {
         // addRow should preserve the order, we try here randomly generated
         // IntCells as key (the container puts it in a linked has map)
         DataCell[] values = new DataCell[0];
@@ -806,7 +818,7 @@ public class DataContainerTest extends TestCase {
         Assert.assertTrue("Medium-sized table dropped from memory but not written to disk.", buffer.isFlushedToDisk());
 
         // finally, we iterate over the table and make sure that it has been read back into memory
-        try (final CloseableRowIterator it = buffer.iteratorBuilder().build();) {
+        try (final CloseableRowIterator it = buffer.iterator();) {
             while (it.hasNext()) {
                 it.next();
             }

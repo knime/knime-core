@@ -247,6 +247,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * @since 3.7
      */
     public int[] columnsToIndices(final String... columns) {
+        CheckUtils.checkArgumentNotNull(columns);
         int[] indices = new int[columns.length];
         for (int i = 0; i < columns.length; i++) {
             indices[i] = findColumnIndex(columns[i]);

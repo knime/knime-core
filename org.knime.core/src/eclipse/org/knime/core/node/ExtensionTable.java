@@ -54,7 +54,10 @@ import java.util.Map;
 import javax.swing.JComponent;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.WrappedTable;
+import org.knime.core.data.container.filter.FilterDelegateRowIterator;
+import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
@@ -68,6 +71,11 @@ public abstract class ExtensionTable implements KnowsRowCountTable {
     private static final String CFG_TABLE_IMPL = "table_implementation";
     private static final String CFG_TABLE_DERIVED_SETTINGS =
         "table_derived_settings";
+
+    @Override
+    public CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
+        return new FilterDelegateRowIterator(iterator(), filter, exec);
+    }
 
     /**
      * Various parameters needed for loading an extension table.
@@ -171,6 +179,7 @@ public abstract class ExtensionTable implements KnowsRowCountTable {
     /** Overridden to help preserve backward compatibility. It will simply call {@link #getRowCount()}. Subclasses
      * are encouraged to override.
      * @since 3.0 */
+    @SuppressWarnings("deprecation")
     @Override
     public long size() {
         return getRowCount();
