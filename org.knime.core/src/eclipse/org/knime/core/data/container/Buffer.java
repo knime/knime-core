@@ -1639,7 +1639,7 @@ public class Buffer implements KNIMEStreamConstants {
                     final FromListRangeIterator rangeIterator = new FromListRangeIterator(list, fromIndex, toIndex);
 
                     /**
-                     * In a future world (a world of predicates, see AP-11805), the filter might be configured to keep
+                     * The filter might be configured to keep
                      * only rows with an index between 1000 and 2000 and a value greater than 42 in column 13. The
                      * rangeIterator will take care of only returning rows with an index between 1000 and 2000. In
                      * fact, it will return the row with index 1000 as its first row. Therefore, the

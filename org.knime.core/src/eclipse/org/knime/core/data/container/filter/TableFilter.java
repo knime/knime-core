@@ -230,7 +230,10 @@ public final class TableFilter {
          *
          * @param indices the indices of columns to materialize
          * @return the same builder with updated parameters
+<<<<<<< 0ff40a5ca95d31129757656187aab5ef8df34053
          * @throws IllegalArgumentException when there are duplicates among given indices
+=======
+>>>>>>> AP-10205: Implement row iterator filter for range of rows
          */
         public Builder withMaterializeColumnIndices(final int... indices) {
             CheckUtils.checkArgumentNotNull(indices);
