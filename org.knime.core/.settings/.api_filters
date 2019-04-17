@@ -13,9 +13,21 @@
                 <message_argument value="3.7.0"/>
             </message_arguments>
         </filter>
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="3.7.2"/>
+                <message_argument value="3.7.0"/>
+            </message_arguments>
+        </filter>
         <filter id="924844039">
             <message_arguments>
                 <message_argument value="3.7.1"/>
+                <message_argument value="3.7.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="3.7.2"/>
                 <message_argument value="3.7.0"/>
             </message_arguments>
         </filter>
@@ -27,12 +39,10 @@
                 <message_argument value="org.knime.core_3.7.1"/>
             </message_arguments>
         </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.NodeAndBundleInformation">
         <filter id="305324134">
             <message_arguments>
-                <message_argument value="org.knime.core.node.NodeAndBundleInformation"/>
-                <message_argument value="org.knime.core_3.7.0"/>
+                <message_argument value="org.knime.core.data.RowIteratorBuilder"/>
+                <message_argument value="org.knime.core_3.7.2"/>
             </message_arguments>
         </filter>
     </resource>
@@ -43,12 +53,24 @@
                 <message_argument value="org.knime.core_3.7.1"/>
             </message_arguments>
         </filter>
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.rsyntaxtextarea.KnimeCompletionProvider"/>
+                <message_argument value="org.knime.core_3.7.2"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea">
         <filter id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea"/>
                 <message_argument value="org.knime.core_3.7.1"/>
+            </message_arguments>
+        </filter>
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.rsyntaxtextarea.KnimeSyntaxTextArea"/>
+                <message_argument value="org.knime.core_3.7.2"/>
             </message_arguments>
         </filter>
     </resource>
@@ -59,6 +81,12 @@
                 <message_argument value="org.knime.core_3.7.1"/>
             </message_arguments>
         </filter>
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedDocument"/>
+                <message_argument value="org.knime.core_3.7.2"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSection">
         <filter id="305324134">
@@ -67,12 +95,24 @@
                 <message_argument value="org.knime.core_3.7.1"/>
             </message_arguments>
         </filter>
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSection"/>
+                <message_argument value="org.knime.core_3.7.2"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSectionsFoldParser">
         <filter id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSectionsFoldParser"/>
                 <message_argument value="org.knime.core_3.7.1"/>
+            </message_arguments>
+        </filter>
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.rsyntaxtextarea.guarded.GuardedSectionsFoldParser"/>
+                <message_argument value="org.knime.core_3.7.2"/>
             </message_arguments>
         </filter>
     </resource>
