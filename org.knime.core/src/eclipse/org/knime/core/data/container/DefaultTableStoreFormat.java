@@ -87,7 +87,7 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DefaultTableStoreFormat.class);
 
     /** The default compression format. */
-    private static final CompressionFormat DEF_COMPRESSION = CompressionFormat.GZIP;
+    private static final CompressionFormat DEF_COMPRESSION = CompressionFormat.SNAPPY;
 
     /** Compression format. */
     private static final String CFG_COMPRESSION = "container.compression";

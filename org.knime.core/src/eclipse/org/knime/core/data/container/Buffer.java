@@ -263,10 +263,10 @@ public class Buffer implements KNIMEStreamConstants {
     private static final String CFG_SIZE_L = "table.size.long";
 
     /** Current version string. */
-    public static final String VERSION = "container_11";
+    public static final String VERSION = "container_12";
 
     /** The version number corresponding to {@link #VERSION}. */
-    public static final int IVERSION = 11;
+    public static final int IVERSION = 12;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 
@@ -282,7 +282,8 @@ public class Buffer implements KNIMEStreamConstants {
         COMPATIBILITY_MAP.put("container_8", 8); // version 2.0.1
         COMPATIBILITY_MAP.put("container_9", 9); // never released - some workflow tests contain it (BW used a nightly)
         COMPATIBILITY_MAP.put("container_10", 10); // version 3.6 (multiple table formats)
-        COMPATIBILITY_MAP.put(VERSION, IVERSION); // version 3.7 - add FileStoreCell support for multiple FileStores
+        COMPATIBILITY_MAP.put("container_11", 11); // version 3.7 - add FileStoreCell support for multiple FileStores
+        COMPATIBILITY_MAP.put(VERSION, IVERSION); // version 3.8 - changed default compression to Snappy
         // NOTE consider to also
         // - increment the workflow.knime version number when updating this list
         // - update list in NoKeyBuffer
