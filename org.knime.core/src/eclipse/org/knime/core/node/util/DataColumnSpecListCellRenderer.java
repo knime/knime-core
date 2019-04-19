@@ -148,14 +148,12 @@ public class DataColumnSpecListCellRenderer extends DefaultListCellRenderer {
      * {@inheritDoc}
      */
     @Override
-    public Component getListCellRendererComponent(
-            final JList list, final Object value, final int index,
-            final boolean isSelected, final boolean cellHasFocus) {
+    public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index,
+        final boolean isSelected, final boolean cellHasFocus) {
         // The super method will reset the icon if we call this method
         // last. So we let super do its job first and then we take care
         // that everything is properly set.
-        Component c =  super.getListCellRendererComponent(list, value, index,
-                isSelected, cellHasFocus);
+        Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         assert (c == this);
         String text = null;
         String tooltipText = null;

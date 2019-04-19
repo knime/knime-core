@@ -86,7 +86,7 @@ public class ColumnSelectionPanel extends JPanel {
     private static final String ROWID_OPTION_LABEL = "<RowID>";
 
     /** Contains all column names for the given given filter class. */
-    private final JComboBox m_chooser;
+    private final JComboBox<DataColumnSpec> m_chooser;
 
 
     /**Show only columns which pass the given {@link ColumnFilter}.*/
@@ -116,10 +116,9 @@ public class ColumnSelectionPanel extends JPanel {
      *
      * @see #update(DataTableSpec,String)
      */
-    public ColumnSelectionPanel(
-            final Class<? extends DataValue>... filterValueClasses) {
-            this(" Column Selection ", filterValueClasses);
-
+    @SafeVarargs
+    public ColumnSelectionPanel(final Class<? extends DataValue>... filterValueClasses) {
+        this(" Column Selection ", filterValueClasses);
     }
 
     /**
@@ -127,7 +126,6 @@ public class ColumnSelectionPanel extends JPanel {
      * column are included in the combox box.
      * @param borderTitle The border title.
      */
-    @SuppressWarnings("unchecked")
     public ColumnSelectionPanel(final String borderTitle) {
         this(borderTitle, DataValue.class);
     }
@@ -143,8 +141,8 @@ public class ColumnSelectionPanel extends JPanel {
      *
      * @see #update(DataTableSpec,String)
      */
-    public ColumnSelectionPanel(final String borderTitle,
-            final Class<? extends DataValue>... filterValueClasses) {
+    @SafeVarargs
+    public ColumnSelectionPanel(final String borderTitle, final Class<? extends DataValue>... filterValueClasses) {
         this(BorderFactory.createTitledBorder(borderTitle), filterValueClasses);
     }
 
@@ -199,9 +197,8 @@ public class ColumnSelectionPanel extends JPanel {
      * list
      * @see #update(DataTableSpec,String)
      */
-    public ColumnSelectionPanel(final Border border,
-            final ColumnFilter columnFilter, final boolean addNoneCol,
-            final boolean addRowID) {
+    public ColumnSelectionPanel(final Border border, final ColumnFilter columnFilter, final boolean addNoneCol,
+        final boolean addRowID) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         if (columnFilter == null) {
             throw new NullPointerException("ColumnFilter must not be null");
@@ -210,7 +207,7 @@ public class ColumnSelectionPanel extends JPanel {
         if (border != null) {
             setBorder(border);
         }
-        m_chooser = new JComboBox();
+        m_chooser = new JComboBox<>();
         m_chooser.setRenderer(new DataColumnSpecListCellRenderer());
         m_chooser.setMinimumSize(new Dimension(100, 25));
         m_chooser.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
@@ -231,8 +228,8 @@ public class ColumnSelectionPanel extends JPanel {
      *
      * @see #update(DataTableSpec,String)
      */
-    public ColumnSelectionPanel(final Border border,
-            final Class<? extends DataValue>... filterValueClasses) {
+    @SafeVarargs
+    public ColumnSelectionPanel(final Border border, final Class<? extends DataValue>... filterValueClasses) {
         this(border, new DataValueColumnFilter(filterValueClasses));
     }
 
@@ -245,14 +242,13 @@ public class ColumnSelectionPanel extends JPanel {
      *            will allow to select only columns compatible with the
      *            column filter. All other columns will be ignored.
      */
-    public ColumnSelectionPanel(final JLabel label,
-            final ColumnFilter columnFilter) {
+    public ColumnSelectionPanel(final JLabel label, final ColumnFilter columnFilter) {
         if (columnFilter == null) {
             throw new NullPointerException("ColumnFilter must not be null");
         }
         m_columnFilter = columnFilter;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        m_chooser = new JComboBox();
+        m_chooser = new JComboBox<>();
         m_chooser.setRenderer(new DataColumnSpecListCellRenderer());
         m_chooser.setMinimumSize(new Dimension(100, 25));
         m_chooser.setMaximumSize(new Dimension(200, 25));
@@ -275,8 +271,8 @@ public class ColumnSelectionPanel extends JPanel {
      * @param label label of the combo box.
      * @param filterValueClasses allowed classes.
      */
-    public ColumnSelectionPanel(final JLabel label,
-            final Class<? extends DataValue>...filterValueClasses) {
+    @SafeVarargs
+    public ColumnSelectionPanel(final JLabel label, final Class<? extends DataValue>... filterValueClasses) {
         this(label, new DataValueColumnFilter(filterValueClasses));
     }
 
@@ -498,25 +494,23 @@ public class ColumnSelectionPanel extends JPanel {
      * @param colName Name of the fixed x columns.
      */
     public void fixSelectablesTo(final String... colName) {
-        final DataColumnSpec oldSelected = (DataColumnSpec)m_chooser
-            .getSelectedItem();
-        final HashSet<String> hash =
-            new HashSet<String>(Arrays.asList(colName));
-        final Vector<DataColumnSpec> survivers = new Vector<DataColumnSpec>();
+        final DataColumnSpec oldSelected = (DataColumnSpec)m_chooser.getSelectedItem();
+        final HashSet<String> hash = new HashSet<String>(Arrays.asList(colName));
+        final Vector<DataColumnSpec> survivors = new Vector<DataColumnSpec>();
         for (int item = 0; item < m_chooser.getItemCount(); item++) {
-            final DataColumnSpec s = (DataColumnSpec)m_chooser.getItemAt(item);
+            final DataColumnSpec s = m_chooser.getItemAt(item);
             if (hash.contains(s.getName())) {
-                survivers.add(s);
+                survivors.add(s);
             }
         }
-        m_chooser.setModel(new DefaultComboBoxModel(survivers));
-        if (survivers.contains(oldSelected)) {
+        m_chooser.setModel(new DefaultComboBoxModel<DataColumnSpec>(survivors));
+        if (survivors.contains(oldSelected)) {
             m_chooser.setSelectedItem(oldSelected);
         } else {
             // may be -1 ... but that is ok
-            m_chooser.setSelectedIndex(survivers.size() - 1);
+            m_chooser.setSelectedIndex(survivors.size() - 1);
         }
-        m_chooser.setEnabled(survivers.size() > 1);
+        m_chooser.setEnabled(survivors.size() > 1);
     }
 
 
@@ -638,9 +632,9 @@ public class ColumnSelectionPanel extends JPanel {
      * @since 2.10
      */
     public List<DataColumnSpec> getAvailableColumns() {
-        List<DataColumnSpec> columns = new ArrayList<DataColumnSpec>();
+        final List<DataColumnSpec> columns = new ArrayList<DataColumnSpec>();
         for (int i = 0; i < m_chooser.getModel().getSize(); i++) {
-            columns.add((DataColumnSpec)m_chooser.getModel().getElementAt(i));
+            columns.add(m_chooser.getModel().getElementAt(i));
         }
         return columns;
     }
