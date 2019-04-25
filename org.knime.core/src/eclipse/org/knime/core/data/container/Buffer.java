@@ -84,6 +84,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPOutputStream;
@@ -310,8 +311,6 @@ public class Buffer implements KNIMEStreamConstants {
 
     /**
      * Adds a shutdown hook to the runtime that closes all open input streams
-     *
-     * @see #OPENBUFFERS
      */
     static {
         ZLIB_SUPPORTS_LEVEL_SWITCH_AP8083 = isZLIBSupportsLevelSwitchAP8083();
@@ -672,8 +671,8 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Get the version string to write to the meta file. This method is overridden in the {@link NoKeyBuffer} to
-     * distinguish streams written by the different implementations.
+     * Get the version string to write to the meta file. This method is overridden in the NoKeyBuffer to distinguish
+     * streams written by the different implementations.
      *
      * @return The version string.
      */
@@ -772,8 +771,9 @@ public class Buffer implements KNIMEStreamConstants {
     /**
      * @throws IOException
      */
-    private void initOutputWriter(final OutputStream output) throws IOException, UnsupportedOperationException {
-        m_outputWriter = m_outputFormat.createWriter(output, m_spec, !shouldSkipRowKey());
+    private void initOutputWriter(final Supplier<OutputStream> output)
+        throws IOException, UnsupportedOperationException {
+        m_outputWriter = m_outputFormat.createWriter(output.get(), m_spec, !shouldSkipRowKey());
         m_outputWriter.setFileStoreHandler((IWriteFileStoreHandler)m_fileStoreHandler);
     }
 
@@ -802,6 +802,7 @@ public class Buffer implements KNIMEStreamConstants {
 
         // take ownership of unassigned blob cells (if any)
         for (int col = 0; col < cellCount; col++) {
+            @SuppressWarnings("null")
             DataCell cell = isBlobRow ? blobRow.getRawCell(col) : cellCopies[col];
 
             final boolean isWrapperCell = cell instanceof BlobWrapperDataCell;
@@ -820,7 +821,9 @@ public class Buffer implements KNIMEStreamConstants {
                     cellCopies = new DataCell[cellCount];
                     for (int i = 0; i < cellCount; i++) {
                         // cellCopies can only be null for blob rows
-                        cellCopies[i] = blobRow.getRawCell(i);
+                        @SuppressWarnings("null")
+                        final DataCell rawCell = blobRow.getRawCell(i);
+                        cellCopies[i] = rawCell;
                     }
                 }
                 cellCopies[col] = processedCell;
@@ -893,8 +896,12 @@ public class Buffer implements KNIMEStreamConstants {
              * (ad != null) and put it manually into a new wrapper cell
              * (wc != null) - by doing that you loose the buffer info
              * (wc.getBuffer == null) */
-            if (isWrapperCell && wc.getBuffer() == null) {
-                wc.setAddressAndBuffer(ad, ownerBuffer);
+            if (isWrapperCell) {
+                @SuppressWarnings("null")
+                final Buffer buf = wc.getBuffer();
+                if (buf == null) {
+                    wc.setAddressAndBuffer(ad, ownerBuffer);
+                }
             }
         } else {
             ownerBuffer = null;
@@ -904,15 +911,17 @@ public class Buffer implements KNIMEStreamConstants {
         // assignable m_indicesOfBlobInColumns[col])
         boolean isToCloneForVersionHop = false;
         if (copyForVersionHop) {
-            isToCloneForVersionHop = ad != null && ad.getBufferID() == getBufferID();
-            // this if statement handles cases where a blob is added to the
-            // buffer multiple times -- don't copy the duplicates
-            if (isToCloneForVersionHop && m_indicesOfBlobInColumns == null) {
-                // first to assign
-                isToCloneForVersionHop = ad.getIndexOfBlobInColumn() == 0;
-                assert isToCloneForVersionHop : "Clone of buffer does not return blobs in order";
-            } else if (isToCloneForVersionHop && m_indicesOfBlobInColumns != null) {
-                isToCloneForVersionHop = ad.getIndexOfBlobInColumn() == m_indicesOfBlobInColumns[col];
+            if (ad != null && ad.getBufferID() == getBufferID()) {
+                isToCloneForVersionHop = true;
+                // this if statement handles cases where a blob is added to the
+                // buffer multiple times -- don't copy the duplicates
+                if (m_indicesOfBlobInColumns == null) {
+                    // first to assign
+                    isToCloneForVersionHop = ad.getIndexOfBlobInColumn() == 0;
+                    assert isToCloneForVersionHop : "Clone of buffer does not return blobs in order";
+                } else {
+                    isToCloneForVersionHop = ad.getIndexOfBlobInColumn() == m_indicesOfBlobInColumns[col];
+                }
             }
         }
 
@@ -1045,16 +1054,13 @@ public class Buffer implements KNIMEStreamConstants {
                 return;
             }
         }
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));
-        Buffer.onFileCreated(outFile);
-        if (isToCompress) {
-            out = new GZIPOutputStream(out);
+
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));
+                BlockableDCObjectOutputVersion2 outStream = new BlockableDCObjectOutputVersion2(
+                    isToCompress ? new BufferedOutputStream(new GZIPOutputStream(out)) : out)) {
             // buffering the gzip stream brings another performance boost
             // (in one case from 5mins down to 2 mins)
-            out = new BufferedOutputStream(out);
-        }
-        try (BlockableDCObjectOutputVersion2 outStream =
-            new BlockableDCObjectOutputVersion2(out)) {
+            Buffer.onFileCreated(outFile);
             if (ser != null) { // DataCell is datacell-serializable
                 outStream.writeDataCellPerKNIMESerializer(ser, cell);
             } else {
@@ -1174,7 +1180,7 @@ public class Buffer implements KNIMEStreamConstants {
      * @param out To write to.
      * @throws IOException If that fails.
      */
-    private void writeMetaToFile(final OutputStream out) throws IOException {
+    private void writeMetaToFile(final Supplier<OutputStream> out) throws IOException {
         NodeSettings settings = new NodeSettings("Table Meta Information");
         NodeSettingsWO subSettings = settings.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addString(CFG_VERSION, getVersion());
@@ -1205,7 +1211,7 @@ public class Buffer implements KNIMEStreamConstants {
             // these settings are no longer read in newer versions of KNIME (3.6+) -- attempt of forward compatibility
             m_formatSettings.copyTo(subSettings);
         }
-        settings.saveToXML(out);
+        settings.saveToXML(out.get());
     }
 
     /**
@@ -1639,7 +1645,7 @@ public class Buffer implements KNIMEStreamConstants {
             Buffer copy = createLocalCloneForWriting();
             File tempFile = null;
             try {
-                copy.initOutputWriter(new NonClosableOutputStream.Zip(zipOut));
+                copy.initOutputWriter(() -> new NonClosableOutputStream.Zip(zipOut));
                 copy.m_hasTempFile = false;
             } catch (UnsupportedOperationException notSupported) {
                 tempFile = DataContainer.createTempFile(copy.m_outputFormat.getFilenameSuffix());
@@ -1662,7 +1668,9 @@ public class Buffer implements KNIMEStreamConstants {
             }
             if (tempFile != null) {
                 try (InputStream in = new FileInputStream(tempFile)) {
-                    IOUtils.copyLarge(in, new NonClosableOutputStream(zipOut));
+                    try (NonClosableOutputStream ncOut = new NonClosableOutputStream(zipOut)) {
+                        IOUtils.copyLarge(in, ncOut);
+                    }
                 } finally {
                     tempFile.delete();
                 }
@@ -1692,7 +1700,7 @@ public class Buffer implements KNIMEStreamConstants {
                 zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
             }
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
-            copy.writeMetaToFile(new NonClosableOutputStream.Zip(zipOut));
+            copy.writeMetaToFile(() -> new NonClosableOutputStream.Zip(zipOut));
         } else {
             // no need for BufferedInputStream here as the copy method
             // does the buffering itself
@@ -1710,7 +1718,7 @@ public class Buffer implements KNIMEStreamConstants {
                 zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
             }
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
-            writeMetaToFile(new NonClosableOutputStream.Zip(zipOut));
+            writeMetaToFile(() -> new NonClosableOutputStream.Zip(zipOut));
         }
     }
 
@@ -1728,9 +1736,9 @@ public class Buffer implements KNIMEStreamConstants {
                 addToZip(dirPath, zipOut, f);
             } else {
                 zipOut.putNextEntry(new ZipEntry(zipEntry + "/" + name));
-                InputStream i = new BufferedInputStream(new FileInputStream(f));
-                FileUtil.copy(i, zipOut);
-                i.close();
+                try (InputStream i = new BufferedInputStream(new FileInputStream(f))) {
+                    FileUtil.copy(i, zipOut);
+                }
                 zipOut.closeEntry();
             }
         }
@@ -1865,6 +1873,8 @@ public class Buffer implements KNIMEStreamConstants {
 
     /** Last recently used cache for blobs. */
     private static final class BlobLRUCache extends LinkedHashMap<BlobAddress, SoftReference<BlobDataCell>> {
+
+        private static final long serialVersionUID = 1L;
 
         /** Default constructor, instructs for access order. */
         BlobLRUCache() {

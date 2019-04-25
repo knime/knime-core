@@ -116,20 +116,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/data/container/Buffer.java" type="org.knime.core.data.container.Buffer">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.container.Buffer"/>
-                <message_argument value="clearIteratorInstance(AbstractTableStoreReader.TableStoreCloseableRowIterator, boolean)"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.container.Buffer"/>
-                <message_argument value="getGlobalRepository()"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/ConcatenateTable.java" type="org.knime.core.data.container.ConcatenateTable">
         <filter id="338792546">
             <message_arguments>
