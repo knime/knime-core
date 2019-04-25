@@ -141,33 +141,29 @@ public class BufferCacheTest {
         // now add one additional table to push the last cold table out of LRU
         addTablesToCache(generateKTables(1, true), cache, true);
 
-        // drop hard references on tables
-        final List<Pair<WeakReference<Buffer>, WeakReference<List<BlobSupportDataRow>>>> weakenedHotTables =
-            weaken(hotTables);
-        final List<Pair<WeakReference<Buffer>, WeakReference<List<BlobSupportDataRow>>>> weakenedColdTables =
-            weaken(coldTables);
+        // drop hard references on lists but keep hard references on buffers (we don't want the buffers to be GCed)
+        final List<Pair<Buffer, WeakReference<List<BlobSupportDataRow>>>> weakenedHotTables = weaken(hotTables);
+        final List<Pair<Buffer, WeakReference<List<BlobSupportDataRow>>>> weakenedColdTables = weaken(coldTables);
+
         hotTables = null;
         coldTables = null;
 
         // invoke garbage collection
         MemoryAlertSystemTest.forceGC();
 
-        // check that all hot tables (buffers and lists) are still in the cache (due to them being softly referenced)
-        for (Pair<WeakReference<Buffer>, WeakReference<List<BlobSupportDataRow>>> weakenedHotTable : weakenedHotTables) {
-            final Buffer buffer = weakenedHotTable.getFirst().get();
+        // check that all hot tables are still in the cache (due to them being softly referenced)
+        for (Pair<Buffer, WeakReference<List<BlobSupportDataRow>>> weakenedHotTable : weakenedHotTables) {
+            final Buffer buffer = weakenedHotTable.getFirst();
             final List<BlobSupportDataRow> list = weakenedHotTable.getSecond().get();
             final Optional<List<BlobSupportDataRow>> listFromCache = cache.get(buffer);
-            Assert.assertNotNull("Reference to buffer has been dropped unexpectedly.", buffer);
             Assert.assertNotNull("Reference to list has been dropped unexpectedly.", list);
             Assert.assertTrue("List could not be retrieved from cache.", listFromCache.isPresent());
             Assert.assertEquals("List retrieved from cache differs from list put into cache.", list,
                 listFromCache.get());
         }
 
-        // check that all cold tables (buffers and lists) have been dropped (due to them being only weakly referenced)
-        for (Pair<WeakReference<Buffer>, WeakReference<List<BlobSupportDataRow>>> weakenedColdTable : weakenedColdTables) {
-            Assert.assertNull("Reference to buffer has not been dropped as instructed.",
-                weakenedColdTable.getFirst().get());
+        // check that all cold tables have been dropped (due to them being only weakly referenced)
+        for (Pair<Buffer, WeakReference<List<BlobSupportDataRow>>> weakenedColdTable : weakenedColdTables) {
             Assert.assertNull("Reference to list has not been dropped as instructed.",
                 weakenedColdTable.getSecond().get());
         }
@@ -204,12 +200,10 @@ public class BufferCacheTest {
         return result;
     }
 
-    private static List<Pair<WeakReference<Buffer>, WeakReference<List<BlobSupportDataRow>>>>
+    private static List<Pair<Buffer, WeakReference<List<BlobSupportDataRow>>>>
         weaken(final List<Pair<Buffer, List<BlobSupportDataRow>>> tables) {
-        return tables.stream()
-            .map(p -> new Pair<WeakReference<Buffer>, WeakReference<List<BlobSupportDataRow>>>(
-                new WeakReference<Buffer>(p.getFirst()), new WeakReference<List<BlobSupportDataRow>>(p.getSecond())))
-            .collect(Collectors.toList());
+        return tables.stream().map(p -> new Pair<Buffer, WeakReference<List<BlobSupportDataRow>>>(p.getFirst(),
+            new WeakReference<List<BlobSupportDataRow>>(p.getSecond()))).collect(Collectors.toList());
     }
 
     private static void addTablesToCache(final List<Pair<Buffer, List<BlobSupportDataRow>>> tables,

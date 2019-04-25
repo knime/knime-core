@@ -744,7 +744,7 @@ public class DataContainerTest extends TestCase {
 
         // wait for all asynchronous disk write threads to terminate such that they do not interfere with our
         // monitoring of file creation / deletion.
-        Future<?> voidTask = Buffer.ASYNC_EXECUTORS.submit(new Runnable() {
+        Future<?> voidTask = Buffer.ASYNC_EXECUTOR.submit(new Runnable() {
             @Override
             public void run() {
             }

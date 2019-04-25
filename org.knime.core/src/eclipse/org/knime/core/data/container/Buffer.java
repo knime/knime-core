@@ -373,8 +373,8 @@ public class Buffer implements KNIMEStreamConstants {
     /** A cache for holding tables in memory. */
     private static final BufferCache CACHE = new BufferCache();
 
-    /** A thread pool for asynchronous disk I/O threads. */
-    static final ExecutorService ASYNC_EXECUTORS = Executors.newSingleThreadExecutor(new ThreadFactory() {
+    /** A single-threaded executor for asynchronous disk I/O threads. */
+    static final ExecutorService ASYNC_EXECUTOR = Executors.newSingleThreadExecutor(new ThreadFactory() {
         private final AtomicInteger m_threadCount = new AtomicInteger();
 
         /** {@inheritDoc} */
@@ -1762,6 +1762,9 @@ public class Buffer implements KNIMEStreamConstants {
     /** Clears the temp file. Any subsequent iteration will fail! */
     synchronized void clear() {
         m_lifecycle.onClear();
+    }
+
+    void performClear() {
         BufferTracker.getInstance().bufferCleared(this);
         m_listWhileAddRow = null;
         CACHE.invalidate(this);
@@ -2329,6 +2332,8 @@ public class Buffer implements KNIMEStreamConstants {
                 MemoryAlertSystem.getInstance().removeListener(m_memoryAlertListener);
                 m_memoryAlertListener = null;
             }
+
+            performClear();
         }
 
         /** {@inheritDoc} */
@@ -2449,6 +2454,7 @@ public class Buffer implements KNIMEStreamConstants {
         /** {@inheritDoc} */
         @Override
         public void onClear() {
+            performClear();
         }
 
         /** {@inheritDoc} */
@@ -2472,11 +2478,6 @@ public class Buffer implements KNIMEStreamConstants {
          */
         private Future<Void> m_asyncAddFuture;
 
-        /**
-         * A flag to indicate that the asynchronous write task should be cancelled.
-         */
-        private volatile boolean cancelFuture = false;
-
         /** {@inheritDoc} */
         @Override
         public void onAddRowToList(final BlobSupportDataRow row) {
@@ -2498,7 +2499,7 @@ public class Buffer implements KNIMEStreamConstants {
              * the node generating this table. In this implementation, we flush as soon as possible once the buffer
              * has been closed (and the node likely has terminated).
              */
-            m_asyncAddFuture = ASYNC_EXECUTORS.submit(new ASyncWriteCallable());
+            m_asyncAddFuture = ASYNC_EXECUTOR.submit(new ASyncWriteCallable(Buffer.this));
         }
 
         /** {@inheritDoc} */
@@ -2506,11 +2507,20 @@ public class Buffer implements KNIMEStreamConstants {
         public void onClear() {
             assert Thread.holdsLock(Buffer.this);
 
-            if (m_asyncAddFuture != null) {
+            if (m_asyncAddFuture != null && !m_asyncAddFuture.isDone()) {
                 /** We should cancel the asynchronous writer thread. */
-                cancelFuture = true;
-                waitForFuture(m_asyncAddFuture);
+                m_asyncAddFuture.cancel(true);
             }
+
+            /** Clear the buffer asynchronously (after the writer thread has terminated gracefully). */
+            ASYNC_EXECUTOR.submit(new CallableWithContext<Void>() {
+                @Override
+                public Void callWithContext() throws Exception {
+                    performClear();
+                    return null;
+                }
+            });
+
             m_asyncAddFuture = null;
         }
 
@@ -2520,92 +2530,108 @@ public class Buffer implements KNIMEStreamConstants {
             assert Thread.holdsLock(Buffer.this);
 
             /** We have to wait for the asynchronous writer thread. */
-            if (m_asyncAddFuture != null) {
-                waitForFuture(m_asyncAddFuture);
+            if (m_asyncAddFuture != null && !m_asyncAddFuture.isDone()) {
+                try {
+                    m_asyncAddFuture.get();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Interrupted while waiting for asynchronous disk write thread.", e);
+                } catch (ExecutionException e) {
+                    StringBuilder error = new StringBuilder();
+                    Throwable t = e.getCause();
+                    if (t.getMessage() != null) {
+                        error.append(t.getMessage());
+                    } else {
+                        error.append("Writing table to file threw exception \"");
+                        error.append(t.getClass().getSimpleName()).append("\"");
+                    }
+                    throw new RuntimeException(error.toString(), t);
+                } catch (CancellationException e) {
+                    throw new RuntimeException("Asynchronous disk write thread was unexpectedly cancelled.", e);
+                }
             }
             m_asyncAddFuture = null;
         }
 
-        /**
-         * Wait for an asynchronous write task to terminate.
-         */
-        void waitForFuture(final Future<?> future) {
-            try {
-                future.get();
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Interrupted while waiting for asynchronous disk write thread.", e);
-            } catch (ExecutionException e) {
-                StringBuilder error = new StringBuilder();
-                Throwable t = e.getCause();
-                if (t.getMessage() != null) {
-                    error.append(t.getMessage());
-                } else {
-                    error.append("Writing table to file threw exception \"");
-                    error.append(t.getClass().getSimpleName()).append("\"");
-                }
-                throw new RuntimeException(error.toString(), t);
-            } catch (CancellationException e) {
-                throw new RuntimeException("Asynchronous disk write thread was unexpectedly cancelled.", e);
-            }
+    }
+
+    /**
+     * Background task that will write the output data. This is kept as static inner class in order to allow for a
+     * garbage collection of the outer class (which indicates an early stopped buffer writing).
+     */
+    private static final class ASyncWriteCallable extends CallableWithContext<Void> {
+
+        private final WeakReference<Buffer> m_bufferRef;
+
+        ASyncWriteCallable(final Buffer buffer) {
+            m_bufferRef = new WeakReference<>(buffer);
         }
 
         /**
-         * Background task that will write the output data.
+         * {@inheritDoc}
          */
-        private final class ASyncWriteCallable extends CallableWithContext<Void> {
-
+        @Override
+        protected Void callWithContext() throws Exception {
             /**
-             * {@inheritDoc}
+             * we have to 100% make sure no methods that are synchronized on the buffer are called in here and
+             * everything we call in here does not interfere with other methods potentially called asynchronously on
+             * this buffer.
              */
-            @Override
-            protected Void callWithContext() throws Exception {
-                /**
-                 * we have to 100% make sure no methods that are synchronized on the buffer are called in here and
-                 * everything we call in here does not interfere with other methods potentially called asynchronously on
-                 * this buffer.
-                 */
-                Throwable throwable = null;
-                try {
 
-                    ensureWriterIsOpen();
-
-                    List<BlobSupportDataRow> list = CACHE.getSilent(Buffer.this).get();
-
-                    if (list != null) {
-                        for (BlobSupportDataRow rowInList : list) {
-                            /** Writer thread has been cancelled during clear(). */
-                            if (cancelFuture) {
-                                return null;
-                            }
-
-                            m_outputWriter.writeRow(rowInList);
-                        }
-                    }
-
-                    closeWriterAndWriteMeta();
-
-                    CACHE.clearForGarbageCollection(Buffer.this);
-
-                } catch (Throwable t) {
-                    throwable = t;
-                    StringBuilder error = new StringBuilder();
-                    error.append("Asynchronous writing of table to file encountered error:");
-                    error.append("\n" + t.getClass().getSimpleName());
-                    if (t.getMessage() != null) {
-                        error.append(": " + t.getMessage());
-                    }
-                    error.append("\nTable will be held in memory until cleared."
-                        + "\nWorkflow can't be saved in this state. Proceed with caution.");
-                    LOGGER.error(error.toString(), t);
-                }
-
-                if (throwable != null && throwable instanceof Exception) {
-                    throw (Exception)throwable;
-                }
-
+            /** Writer thread has been cancelled during clear(). */
+            if (Thread.currentThread().isInterrupted()) {
                 return null;
             }
 
+            Throwable throwable = null;
+            try {
+                Buffer buffer = m_bufferRef.get();
+                if (buffer == null) {
+                    // buffer was already discarded (no rows added)
+                    return null;
+                }
+                buffer.ensureWriterIsOpen();
+                final List<BlobSupportDataRow> list = CACHE.getSilent(buffer).get();
+                final AbstractTableStoreWriter outputWriter = buffer.m_outputWriter;
+                buffer = null;
+
+                if (list != null) {
+                    for (BlobSupportDataRow rowInList : list) {
+                        /** Writer thread has been cancelled during clear(). */
+                        if (Thread.currentThread().isInterrupted()) {
+                            return null;
+                        }
+
+                        outputWriter.writeRow(rowInList);
+                    }
+                }
+
+                buffer = m_bufferRef.get();
+                if (buffer == null) {
+                    // buffer was already discarded
+                    return null;
+                }
+                buffer.closeWriterAndWriteMeta();
+                CACHE.clearForGarbageCollection(buffer);
+                buffer = null;
+
+            } catch (Throwable t) {
+                throwable = t;
+                StringBuilder error = new StringBuilder();
+                error.append("Asynchronous writing of table to file encountered error:");
+                error.append("\n" + t.getClass().getSimpleName());
+                if (t.getMessage() != null) {
+                    error.append(": " + t.getMessage());
+                }
+                error.append("\nTable will be held in memory until cleared."
+                    + "\nWorkflow can't be saved in this state. Proceed with caution.");
+                LOGGER.error(error.toString(), t);
+            }
+
+            if (throwable != null && throwable instanceof Exception) {
+                throw (Exception)throwable;
+            }
+
+            return null;
         }
 
     }
