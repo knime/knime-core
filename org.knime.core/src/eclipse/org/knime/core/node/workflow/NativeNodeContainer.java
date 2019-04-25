@@ -344,8 +344,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
         super.cleanup();
         NodeContext.pushContext(this);
         try {
-            clearFileStoreHandler();
             m_node.cleanup();
+            clearFileStoreHandler();
         } finally {
             NodeContext.removeLastContext();
         }
