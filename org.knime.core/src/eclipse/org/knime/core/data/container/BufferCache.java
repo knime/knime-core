@@ -52,11 +52,11 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.WeakHashMap;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
@@ -90,7 +90,7 @@ final class BufferCache {
      * automatically. We use the buffer itself as key, since multiple buffers can have the same id. The Map has to have
      * weak keys such that unreferenced buffers can be garbage-collected if we forget to clear them.
      */
-    private final Map<Buffer, List<BlobSupportDataRow>> m_hardMap = new WeakHashMap<>();
+    private final Map<Long, List<BlobSupportDataRow>> m_hardMap = new HashMap<>();
 
     /**
      * A number that determines how many tables are kept in the soft-references LRU cache before being weak-referenced.
@@ -102,13 +102,13 @@ final class BufferCache {
      * they were last accessed. When memory becomes scarce, the garbage collector should clear weak-referenced tables
      * first and then proceed with soft-referenced tables in the order in which they were least recently used.
      */
-    private LRUCache<Buffer, SoftReference<List<BlobSupportDataRow>>> m_LRUCache =
+    private LRUCache<Long, SoftReference<List<BlobSupportDataRow>>> m_LRUCache =
         new LRUCache<>(m_LRUCacheSize, m_LRUCacheSize);
 
     /**
      * A map of weak references to tables evicted from the LRU cache.
      */
-    private final Map<Buffer, WeakReference<List<BlobSupportDataRow>>> m_weakCache = new WeakHashMap<>();
+    private final Map<Long, WeakReference<List<BlobSupportDataRow>>> m_weakCache = new HashMap<>();
 
     /**
      * A reference queue that holds any weak references that were cleared by the garbage collector.
@@ -174,15 +174,17 @@ final class BufferCache {
         CheckUtils.checkArgumentNotNull(buffer);
         CheckUtils.checkArgumentNotNull(list);
 
+        final long uniqueId = buffer.getUniqueID();
+
         /** disallow modification */
         final List<BlobSupportDataRow> undmodifiableList = Collections.unmodifiableList(list);
-        m_hardMap.put(buffer, undmodifiableList);
+        m_hardMap.put(uniqueId, undmodifiableList);
         /**
          * We already fill the soft cache here to keep track of how recently the table has been used. Note that soft and
          * weak references won't be cleared while there is still a hard reference on the object.
          */
-        m_LRUCache.put(buffer, new SoftReference<List<BlobSupportDataRow>>(undmodifiableList));
-        final WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.put(buffer,
+        m_LRUCache.put(uniqueId, new SoftReference<List<BlobSupportDataRow>>(undmodifiableList));
+        final WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.put(uniqueId,
             new WeakReference<List<BlobSupportDataRow>>(undmodifiableList, m_weakCacheRefQueue));
 
         if (previousValue == null) {
@@ -202,7 +204,7 @@ final class BufferCache {
 
         assert buffer.isFlushedToDisk();
 
-        m_hardMap.remove(buffer);
+        m_hardMap.remove(buffer.getUniqueID());
     }
 
     /**
@@ -215,7 +217,7 @@ final class BufferCache {
     synchronized boolean contains(final Buffer buffer) {
         CheckUtils.checkArgumentNotNull(buffer);
 
-        final WeakReference<List<BlobSupportDataRow>> weakRef = m_weakCache.get(buffer);
+        final WeakReference<List<BlobSupportDataRow>> weakRef = m_weakCache.get(buffer.getUniqueID());
         if (weakRef != null) {
             return weakRef.get() != null;
         }
@@ -246,7 +248,9 @@ final class BufferCache {
     private Optional<List<BlobSupportDataRow>> getInternal(final Buffer buffer, final boolean silent) {
         CheckUtils.checkArgumentNotNull(buffer);
 
-        final WeakReference<List<BlobSupportDataRow>> weakRef = m_weakCache.get(buffer);
+        final long uniqueId = buffer.getUniqueID();
+
+        final WeakReference<List<BlobSupportDataRow>> weakRef = m_weakCache.get(uniqueId);
         if (weakRef == null) {
             /** If we've never encountered this buffer or have deliberately invalidated it, it makes no sense to look
              * any further. */
@@ -258,13 +262,13 @@ final class BufferCache {
         m_nAccesses++;
         boolean hit = false;
 
-        if (m_hardMap.get(buffer) != null) {
+        if (m_hardMap.get(uniqueId) != null) {
             m_nHardHits++;
             hit = true;
         }
 
         /** Update recent access in LRU cache and soft reference. */
-        final SoftReference<List<BlobSupportDataRow>> softRef = m_LRUCache.get(buffer);
+        final SoftReference<List<BlobSupportDataRow>> softRef = m_LRUCache.get(uniqueId);
         if (softRef != null && softRef.get() != null && !hit) {
             m_nSoftHits++;
             hit = true;
@@ -279,8 +283,8 @@ final class BufferCache {
         final List<BlobSupportDataRow> list = weakRef.get();
         if (list != null) {
             /** Make sure to put the accessed table back into the LRU cache. */
-            if (!m_LRUCache.containsKey(buffer)) {
-                m_LRUCache.put(buffer, new SoftReference<List<BlobSupportDataRow>>(list));
+            if (!m_LRUCache.containsKey(uniqueId)) {
+                m_LRUCache.put(uniqueId, new SoftReference<List<BlobSupportDataRow>>(list));
             }
             if (!hit) {
                 m_nWeakHits++;
@@ -290,7 +294,7 @@ final class BufferCache {
         } else {
             /** Table has been garbage collected; it should be removed from the LRU cache to make room for other
              * tables. */
-            m_LRUCache.remove(buffer);
+            m_LRUCache.remove(uniqueId);
         }
 
         if (!hit) {
@@ -307,9 +311,11 @@ final class BufferCache {
      * @param buffer the buffer which the to-be-invalidated table is associated with
      */
     synchronized void invalidate(final Buffer buffer) {
-        m_hardMap.remove(buffer);
-        m_LRUCache.remove(buffer);
-        final WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.remove(buffer);
+        final long uniqueId = buffer.getUniqueID();
+
+        m_hardMap.remove(uniqueId);
+        m_LRUCache.remove(uniqueId);
+        final WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.remove(uniqueId);
 
         if (previousValue != null && previousValue.get() != null) {
             m_nInvalidatedTables++;
@@ -327,11 +333,11 @@ final class BufferCache {
         }
 
         /** Since there is no way of adjusting the cache size of an LRUCache, we have to create a new cache. */
-        final LRUCache<Buffer, SoftReference<List<BlobSupportDataRow>>> cache = new LRUCache<>(newSize, newSize);
+        final LRUCache<Long, SoftReference<List<BlobSupportDataRow>>> cache = new LRUCache<>(newSize, newSize);
 
         /** If the new cache is smaller than the old one, the least-recently-accessed entries will be entered first
          * and then also evicted first when the new cache size is reached. */
-        for (Entry<Buffer, SoftReference<List<BlobSupportDataRow>>> entry : m_LRUCache.entrySet()) {
+        for (Entry<Long, SoftReference<List<BlobSupportDataRow>>> entry : m_LRUCache.entrySet()) {
             cache.put(entry.getKey(), entry.getValue());
         }
 

@@ -83,6 +83,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPOutputStream;
@@ -123,6 +124,7 @@ import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.data.util.memory.MemoryAlert;
 import org.knime.core.data.util.memory.MemoryAlertListener;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -346,6 +348,9 @@ public class Buffer implements KNIMEStreamConstants {
      */
     public static final boolean ENABLE_LRU;
 
+    /** The running long for handing out unique buffer ids */
+    private static final AtomicLong RUNNING_ID = new AtomicLong();
+
     static {
         final String envTableCache = PROPERTY_TABLE_CACHE;
         final String valTableCache = System.getProperty(envTableCache);
@@ -428,12 +433,20 @@ public class Buffer implements KNIMEStreamConstants {
     private boolean m_containsBlobs;
 
     /**
-     * The ID of this buffer. Used for blob serialization. This field is -1 when this buffer is not used within a
-     * BufferedDataTable (i.e. for node outport serialization).
+     * The integer id of a buffer associated with a workflow and created by a {@link BufferedDataTable}. This id is used
+     * only for blob serialization and is not unique, as buffers might have the same id when (a) they are associated
+     * with different workflows, (b) one is a clone of the other, or (c) they have been assigned the constant value
+     * {@link DataContainer#NOT_IN_WORKFLOW_BUFFER} as a consequence of being created outside of a
+     * {@link BufferedDataTable}.
      *
      * @see DataContainer#createInternalBufferID()
      */
     private final int m_bufferID;
+
+    /**
+     * The unique id of this buffer, as required for interacting with the static {@link BufferCache CACHE}.
+     */
+    private final long m_uniqueID = RUNNING_ID.getAndIncrement();
 
     /**
      * A map with other buffers that may have written certain blob cells. We reference them by using the bufferID that
@@ -1735,6 +1748,15 @@ public class Buffer implements KNIMEStreamConstants {
      */
     public int getBufferID() {
         return m_bufferID;
+    }
+
+    /**
+     * Get this buffer's unique ID.
+     *
+     * @return the unique  ID of this buffer
+     */
+    long getUniqueID() {
+        return m_uniqueID;
     }
 
     /** Clears the temp file. Any subsequent iteration will fail! */
