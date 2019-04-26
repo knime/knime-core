@@ -102,7 +102,7 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
         if (version < 3) { // stream was not zipped in KNIME 1.1.x
             cF = CompressionFormat.NONE;
         } else if (version >= 8) { // added sometime between format 8 and 9 - no increment of version number
-            cF = CompressionFormat.loadSettings(settings);
+            cF = CompressionFormat.loadSettings(settings, version);
         } else {
             // use gzip compression
             cF = CompressionFormat.GZIP;

@@ -89,6 +89,9 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
     /** The default compression format. */
     private static final CompressionFormat DEF_COMPRESSION = CompressionFormat.SNAPPY;
 
+    /** The pre v12 buffer default compression. */
+    private static final CompressionFormat PRE_V_12_DEF_COMPRESSION = CompressionFormat.GZIP;
+
     /** Compression format. */
     private static final String CFG_COMPRESSION = "container.compression";
 
@@ -213,8 +216,23 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
             }
         }
 
-        static CompressionFormat loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-            String compFormat = settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, DEF_COMPRESSION.name());
+        /**
+         * Retrieves the compression format from the {@link NodeSettingsRO}.
+         *
+         * @param settings the {@code NodeSettingsRO}
+         * @param version the version as defined in the {@code Buffer}
+         * @return the stored {@code CompressionFormat}
+         * @throws InvalidSettingsException
+         */
+        static CompressionFormat loadSettings(final NodeSettingsRO settings, final int version)
+            throws InvalidSettingsException {
+            final String defaultFormat;
+            if (version < 12) {
+                defaultFormat = PRE_V_12_DEF_COMPRESSION.name();
+            } else {
+                defaultFormat = DEF_COMPRESSION.name();
+            }
+            final String compFormat = settings.getString(DefaultTableStoreFormat.CFG_COMPRESSION, defaultFormat);
             try {
                 // backwards compatible since #getCompressionFormat uses upper-case comparison
                 return CompressionFormat.getCompressionFormat(compFormat);
