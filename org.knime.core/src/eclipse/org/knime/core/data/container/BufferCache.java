@@ -202,6 +202,7 @@ final class BufferCache {
     synchronized void clearForGarbageCollection(final Buffer buffer) {
         CheckUtils.checkArgumentNotNull(buffer);
 
+        //TODO: throw exception maybe?
         assert buffer.isFlushedToDisk();
 
         m_hardMap.remove(buffer.getUniqueID());
@@ -235,8 +236,8 @@ final class BufferCache {
     }
 
     /**
-     * Silently retrieve the table associated with a buffer from the cache, i.e., do not gather statistics and position
-     * uddate in LRU cache.
+     * Silently retrieve the table associated with a buffer from the cache, i.e., do not gather statistics and update
+     * position in LRU cache.
      *
      * @param buffer the buffer which the to-be-retrieved table is associated with
      * @return a table represented as a list of datarows, if such a table is present in the cache

@@ -486,6 +486,7 @@ public class Buffer implements KNIMEStreamConstants {
     private boolean m_flushedToDisk;
 
     /** maximum number of rows that are in memory. */
+    // TODO: determine more reasonable value than 100k for LRU strategies via benchmarking
     private final int m_maxRowsInMem;
 
     /**
@@ -671,8 +672,8 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Get the version string to write to the meta file. This method is overridden in the NoKeyBuffer to distinguish
-     * streams written by the different implementations.
+     * Get the version string to write to the meta file. This method is overridden in the {@code NoKeyBuffer} to
+     * distinguish streams written by the different implementations.
      *
      * @return The version string.
      */
@@ -742,7 +743,7 @@ public class Buffer implements KNIMEStreamConstants {
             if (m_listWhileAddRow != null) {
                 m_listWhileAddRow.add(row);
                 if (m_listWhileAddRow.size() > m_maxRowsInMem) {
-                    m_lifecycle.onAddRowToLargeList(row);
+                    m_lifecycle.onAddRowToLargeList();
                 }
             } else {
                 flushBuffer();
@@ -1055,8 +1056,8 @@ public class Buffer implements KNIMEStreamConstants {
             }
         }
 
-        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));
-                BlockableDCObjectOutputVersion2 outStream = new BlockableDCObjectOutputVersion2(
+        try (final OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));
+                final BlockableDCObjectOutputVersion2 outStream = new BlockableDCObjectOutputVersion2(
                     isToCompress ? new BufferedOutputStream(new GZIPOutputStream(out)) : out)) {
             // buffering the gzip stream brings another performance boost
             // (in one case from 5mins down to 2 mins)
@@ -1667,10 +1668,9 @@ public class Buffer implements KNIMEStreamConstants {
                 copy.closeInternal();
             }
             if (tempFile != null) {
-                try (InputStream in = new FileInputStream(tempFile)) {
-                    try (NonClosableOutputStream ncOut = new NonClosableOutputStream(zipOut)) {
-                        IOUtils.copyLarge(in, ncOut);
-                    }
+                try (final InputStream in = new FileInputStream(tempFile);
+                        final NonClosableOutputStream ncOut = new NonClosableOutputStream(zipOut)) {
+                    IOUtils.copyLarge(in, ncOut);
                 } finally {
                     tempFile.delete();
                 }
@@ -1736,7 +1736,7 @@ public class Buffer implements KNIMEStreamConstants {
                 addToZip(dirPath, zipOut, f);
             } else {
                 zipOut.putNextEntry(new ZipEntry(zipEntry + "/" + name));
-                try (InputStream i = new BufferedInputStream(new FileInputStream(f))) {
+                try (final InputStream i = new BufferedInputStream(new FileInputStream(f))) {
                     FileUtil.copy(i, zipOut);
                 }
                 zipOut.closeEntry();
@@ -1780,6 +1780,7 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     void performClear() {
+        // TODO: close and null outputWriter
         BufferTracker.getInstance().bufferCleared(this);
         m_listWhileAddRow = null;
         CACHE.invalidate(this);
@@ -2232,10 +2233,9 @@ public class Buffer implements KNIMEStreamConstants {
          * Synchronously called after adding a row to this buffer's m_listWhileAddRow if it is larger than
          * m_maxRowsInMem
          *
-         * @param row the data row the was just added
          * @throws IOException any kind of I/O error when handling the data row
          */
-        void onAddRowToLargeList(BlobSupportDataRow row) throws IOException;
+        void onAddRowToLargeList() throws IOException;
 
         /**
          * Synchronously called before flushing the buffer to disk.
@@ -2287,7 +2287,7 @@ public class Buffer implements KNIMEStreamConstants {
         private MemoryAlertListener m_memoryAlertListener;
 
         @Override
-        public void onAddRowToLargeList(final BlobSupportDataRow row) {
+        public void onAddRowToLargeList() {
             assert Thread.holdsLock(Buffer.this);
 
             flushBuffer();
@@ -2304,24 +2304,21 @@ public class Buffer implements KNIMEStreamConstants {
             m_memoryAlertListener = new MemoryAlertListener() {
                 @Override
                 protected boolean memoryAlert(final MemoryAlert alert) {
-                    ThreadUtils.threadWithContext(new Runnable() {
-                        @Override
-                        public void run() {
-                            synchronized (Buffer.this) {
-                                final Optional<List<BlobSupportDataRow>> optionalList = CACHE.getSilent(Buffer.this);
-                                if (optionalList.isPresent()) {
-                                    final List<BlobSupportDataRow> list = optionalList.get();
-                                    final int nrRowsWritten = list.size();
-                                    writeList(list);
-                                    closeWriterAndWriteMeta();
-                                    CACHE.invalidate(Buffer.this);
-                                    LOGGER.debug("Wrote " + nrRowsWritten + " rows in order to free memory");
-                                } else {
-                                    // concurrent close or addRow() caused this to be flushed
-                                    // (this method may stall long on Buffer.this)
-                                }
+                    ThreadUtils.threadWithContext(() -> {
+                        synchronized (Buffer.this) {
+                            final Optional<List<BlobSupportDataRow>> optionalList = CACHE.getSilent(Buffer.this);
+                            if (optionalList.isPresent()) {
+                                final List<BlobSupportDataRow> list = optionalList.get();
+                                writeList(list);
+                                closeWriterAndWriteMeta();
+                                CACHE.invalidate(Buffer.this);
+                                LOGGER.debug("Wrote " + list.size() + " rows in order to free memory");
+                            } else {
+                                // concurrent close or addRow() caused this to be flushed
+                                // (this method may stall long on Buffer.this)
                             }
                         }
+
                     }, "KNIME Buffer flusher").start();
                     return true;
                 }
@@ -2398,27 +2395,23 @@ public class Buffer implements KNIMEStreamConstants {
             setRestoreIntoMemoryOnCacheMiss();
 
             if (size() <= m_maxRowsInMem) {
+                //TODO: code nearly identical; merge
                 m_memoryAlertListener = new MemoryAlertListener() {
                     @Override
                     protected boolean memoryAlert(final MemoryAlert alert) {
-                        ThreadUtils.threadWithContext(new Runnable() {
-                            @Override
-                            public void run() {
-                                synchronized (Buffer.this) {
-                                    final Optional<List<BlobSupportDataRow>> optionalList =
-                                        CACHE.getSilent(Buffer.this);
-                                    if (optionalList.isPresent()) {
-                                        final List<BlobSupportDataRow> list = optionalList.get();
-                                        final int nrRowsCleared = list.size();
-                                        writeList(list);
-                                        closeWriterAndWriteMeta();
-                                        CACHE.clearForGarbageCollection(Buffer.this);
-                                        LOGGER.debug("Cleared " + nrRowsCleared
-                                            + " rows for garbage collection in order" + "to free memory");
-                                    } else {
-                                        // concurrent close or addRow() caused this to be flushed
-                                        // (this method may stall long on Buffer.this)
-                                    }
+                        ThreadUtils.threadWithContext(() -> {
+                            synchronized (Buffer.this) {
+                                final Optional<List<BlobSupportDataRow>> optionalList = CACHE.getSilent(Buffer.this);
+                                if (optionalList.isPresent()) {
+                                    final List<BlobSupportDataRow> list = optionalList.get();
+                                    writeList(list);
+                                    closeWriterAndWriteMeta();
+                                    CACHE.clearForGarbageCollection(Buffer.this);
+                                    LOGGER.debug("Cleared " + list.size() + " rows for garbage collection in order"
+                                        + "to free memory");
+                                } else {
+                                    // concurrent close or addRow() caused this to be flushed
+                                    // (this method may stall long on Buffer.this)
                                 }
                             }
                         }, "KNIME Buffer flusher").start();
@@ -2474,7 +2467,7 @@ public class Buffer implements KNIMEStreamConstants {
         private int m_index = 0;
 
         @Override
-        public void onAddRowToLargeList(final BlobSupportDataRow row) throws IOException {
+        public void onAddRowToLargeList() throws IOException {
             assert Thread.holdsLock(Buffer.this);
 
             ensureWriterIsOpen();
@@ -2526,7 +2519,7 @@ public class Buffer implements KNIMEStreamConstants {
         private Future<Void> m_asyncAddFuture;
 
         @Override
-        public void onAddRowToLargeList(final BlobSupportDataRow row) {
+        public void onAddRowToLargeList() {
         }
 
         @Override
@@ -2559,6 +2552,7 @@ public class Buffer implements KNIMEStreamConstants {
                 public Void callWithContext() throws Exception {
                     performClear();
                     return null;
+                    //TODO: we should wait on the callable here to get informed about exception
                 }
             });
 
