@@ -56,8 +56,10 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
@@ -75,10 +77,20 @@ import org.knime.core.data.DataValue;
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.util.ConvenienceMethods;
-import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
+import org.knime.core.node.workflow.VariableType;
+import org.knime.core.node.workflow.VariableType.BooleanArrayType;
+import org.knime.core.node.workflow.VariableType.BooleanType;
+import org.knime.core.node.workflow.VariableType.DoubleArrayType;
+import org.knime.core.node.workflow.VariableType.DoubleType;
+import org.knime.core.node.workflow.VariableType.IntArrayType;
+import org.knime.core.node.workflow.VariableType.IntType;
+import org.knime.core.node.workflow.VariableType.LongArrayType;
+import org.knime.core.node.workflow.VariableType.LongType;
+import org.knime.core.node.workflow.VariableType.StringArrayType;
+import org.knime.core.node.workflow.VariableType.StringType;
 
 /**
  * Panel that displays a single line/element of a {@link ConfigEditJTree}.
@@ -89,12 +101,6 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  */
 public class ConfigEditTreeNodePanel extends JPanel {
 
-    private static final Icon ICON_STRING =
-        FlowVariableListCellRenderer.FLOW_VAR_STRING_ICON;
-    private static final Icon ICON_INT =
-        FlowVariableListCellRenderer.FLOW_VAR_INT_ICON;
-    private static final Icon ICON_DOUBLE =
-        FlowVariableListCellRenderer.FLOW_VAR_DOUBLE_ICON;
     private static final Icon ICON_UNKNOWN = DataValue.UTILITY.getIcon();
 
     private static final Dimension LABEL_DIMENSION = new Dimension(100, 20);
@@ -146,53 +152,99 @@ public class ConfigEditTreeNodePanel extends JPanel {
         }
     }
 
+    private Collection<FlowVariable> getAllVariablesOfTypes(final VariableType<?>... types) {
+        return m_flowObjectStack != null ? m_flowObjectStack.getAvailableFlowVariables(types).values()
+            : Collections.emptyList();
+    }
+
     /** Set a new tree node to display.
      * @param treeNode the new node to represent (may be null).
      */
     public void setTreeNode(final ConfigEditTreeNode treeNode) {
         m_treeNode = treeNode;
         boolean isEditable = m_treeNode != null && m_treeNode.isLeaf();
-        Type selType;
+
         String usedVariable;
         m_valueField.setEnabled(isEditable);
+
+        VariableType<?> selType = null;
+        final Collection<FlowVariable> suitableVariables = new ArrayList<>();
         if (m_treeNode != null) {
-            AbstractConfigEntry entry = treeNode.getConfigEntry();
+            final AbstractConfigEntry entry = treeNode.getConfigEntry();
             switch (entry.getType()) {
-            case xbyte:
-            case xlong:
-            case xshort:
-            case xint:
-                selType = Type.INTEGER;
-                break;
-            case xdouble:
-            case xfloat:
-                selType = Type.DOUBLE;
-                break;
-            default:
-                selType = Type.STRING;
+                case config:
+                    if (m_treeNode.getArraySubType().isPresent()) {
+                        switch (m_treeNode.getArraySubType().get()) {
+                            case xbyte:
+                            case xshort:
+                            case xint:
+                                selType = IntArrayType.INSTANCE;
+                                break;
+                            case xlong:
+                                selType = LongArrayType.INSTANCE;
+                                suitableVariables.addAll(getAllVariablesOfTypes(IntArrayType.INSTANCE));
+                                break;
+                            case xfloat:
+                            case xdouble:
+                                selType = DoubleArrayType.INSTANCE;
+                                suitableVariables
+                                    .addAll(getAllVariablesOfTypes(IntArrayType.INSTANCE, LongArrayType.INSTANCE));
+                                break;
+                            case xboolean:
+                                selType = BooleanArrayType.INSTANCE;
+                                break;
+                            case xchar:
+                            case xstring:
+                                selType = StringArrayType.INSTANCE;
+                                suitableVariables.addAll(getAllVariablesOfTypes(BooleanArrayType.INSTANCE,
+                                    IntArrayType.INSTANCE, LongArrayType.INSTANCE, DoubleArrayType.INSTANCE));
+                                break;
+                            default:
+                        }
+                    }
+                    break;
+                case xbyte:
+                case xshort:
+                case xint:
+                    selType = IntType.INSTANCE;
+                    break;
+                case xlong:
+                    selType = LongType.INSTANCE;
+                    suitableVariables.addAll(getAllVariablesOfTypes(IntType.INSTANCE));
+                    break;
+                case xfloat:
+                case xdouble:
+                    selType = DoubleType.INSTANCE;
+                    suitableVariables.addAll(getAllVariablesOfTypes(IntType.INSTANCE, LongType.INSTANCE));
+                    break;
+                case xboolean:
+                    selType = BooleanType.INSTANCE;
+                    suitableVariables.addAll(getAllVariablesOfTypes(StringType.INSTANCE));
+                    break;
+                case xchar:
+                case xtransientstring:
+                case xpassword:
+                case xstring:
+                default:
+                    selType = StringType.INSTANCE;
+                    suitableVariables.addAll(getAllVariablesOfTypes(BooleanType.INSTANCE, IntType.INSTANCE,
+                        LongType.INSTANCE, DoubleType.INSTANCE));
             }
-            Icon icon;
-            switch (entry.getType()) {
-            case xstring:
-                icon = ICON_STRING;
-                break;
-            case xdouble:
-                icon = ICON_DOUBLE;
-                break;
-            case xint:
-                icon = ICON_INT;
-                break;
-            default:
-                icon = ICON_UNKNOWN;
+
+            if (selType == null) {
+                selType = StringType.INSTANCE;
+                m_keyIcon = ICON_UNKNOWN;
+            } else {
+                m_keyIcon = selType.getIcon();
+                suitableVariables.addAll(getAllVariablesOfTypes(selType));
             }
-            m_keyIcon = icon;
             m_keyLabel.setText(entry.getKey());
             m_keyLabel.setToolTipText(entry.getKey());
             usedVariable = m_treeNode.getUseVariableName();
-            String exposeVariable = m_treeNode.getExposeVariableName();
+            final String exposeVariable = m_treeNode.getExposeVariableName();
             m_exposeAsVariableField.setText(exposeVariable);
         } else {
-            selType = Type.STRING;
+            selType = StringType.INSTANCE;
             m_keyLabel.setText("");
             m_keyLabel.setToolTipText(null);
             m_keyIcon = ICON_UNKNOWN;
@@ -204,33 +256,33 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_keyLabel.setMaximumSize(LABEL_DIMENSION);
         m_keyLabel.setPreferredSize(LABEL_DIMENSION);
         m_keyLabel.setSize(LABEL_DIMENSION);
-        DefaultComboBoxModel model =
-            (DefaultComboBoxModel)m_valueField.getModel();
+        DefaultComboBoxModel model = (DefaultComboBoxModel)m_valueField.getModel();
         model.removeAllElements();
         model.addElement(" ");
         @SuppressWarnings("unchecked")
-        Collection<FlowVariable> allVars = getFlowObjectStack() != null
-            ? getFlowObjectStack().getAvailableFlowVariables().values()
-            : (Collection<FlowVariable>)Collections.EMPTY_LIST;
         ComboBoxElement match = null;
-        for (FlowVariable v : allVars) {
-            boolean isOk = ConfigEditTreeModel.doesTypeAccept(
-                    selType, v.getType());
-            if (isOk) {
-                ComboBoxElement cbe = new ComboBoxElement(v);
-                model.addElement(cbe);
-                if (v.getName().equals(usedVariable)) {
-                    match = cbe;
-                }
-            } else if (v.getName().equals(usedVariable)) {
-                String error = "Variable \"" + usedVariable
-                + "\" has wrong type (" + v.getType()
-                + "), expected " + selType;
+        for (FlowVariable v : suitableVariables) {
+            ComboBoxElement cbe = new ComboBoxElement(v);
+            model.addElement(cbe);
+            if (v.getName().equals(usedVariable)) {
+                match = cbe;
+            }
+        }
+
+        if (match == null && m_flowObjectStack != null) {
+            @SuppressWarnings("deprecation")
+            final Map<String, FlowVariable> allVars = m_flowObjectStack.getAvailableFlowVariables(Type.INTEGER,
+                Type.DOUBLE, Type.STRING, Type.CREDENTIALS, Type.OTHER);
+            if (allVars.containsKey(usedVariable)) {
+                FlowVariable v = allVars.get(usedVariable);
+                String error = "Variable \"" + usedVariable + "\" has wrong type (" + v.getVariableType()
+                    + "), expected " + selType;
                 ComboBoxElement cbe = new ComboBoxElement(v, error);
                 model.addElement(cbe);
                 match = cbe;
             }
         }
+
         if (match != null) {
             m_valueField.setSelectedItem(match);
         } else if (usedVariable != null) {
@@ -240,17 +292,27 @@ public class ConfigEditTreeNodePanel extends JPanel {
             // the workflow package)
             String errorName = "<" + usedVariable + ">";
             String error = "Invalid variable \"" + usedVariable + "\"";
-            FlowVariable virtualVar;
-            switch (selType) {
-            case DOUBLE:
-                virtualVar = new FlowVariable(errorName, 0.0);
-                break;
-            case INTEGER:
+            final FlowVariable virtualVar;
+            if (selType.equals(DoubleArrayType.INSTANCE)) {
+                virtualVar = new FlowVariable(errorName, DoubleArrayType.INSTANCE, new Double[0]);
+            } else if (selType.equals(LongArrayType.INSTANCE)) {
+                virtualVar = new FlowVariable(errorName, LongArrayType.INSTANCE, new Long[0]);
+            } else if (selType.equals(IntArrayType.INSTANCE)) {
+                virtualVar = new FlowVariable(errorName, IntArrayType.INSTANCE, new Integer[0]);
+            } else if (selType.equals(BooleanArrayType.INSTANCE)) {
+                virtualVar = new FlowVariable(errorName, BooleanArrayType.INSTANCE, new Boolean[0]);
+            } else if (selType.equals(StringArrayType.INSTANCE)) {
+                virtualVar = new FlowVariable(errorName, StringArrayType.INSTANCE, new String[0]);
+            } else if (selType.equals(DoubleType.INSTANCE)) {
+                virtualVar = new FlowVariable(errorName, 0d);
+            } else if (selType.equals(LongType.INSTANCE)) {
+                virtualVar = new FlowVariable(errorName, LongType.INSTANCE, 0L);
+            } else if (selType.equals(IntType.INSTANCE)) {
                 virtualVar = new FlowVariable(errorName, 0);
-                break;
-            default:
+            } else if (selType.equals(BooleanType.INSTANCE)) {
+                virtualVar = new FlowVariable(errorName, BooleanType.INSTANCE, false);
+            } else {
                 virtualVar = new FlowVariable(errorName, "");
-                break;
             }
             ComboBoxElement cbe = new ComboBoxElement(virtualVar, error);
             model.addElement(cbe);
@@ -361,30 +423,11 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 ComboBoxElement cbe = (ComboBoxElement)value;
                 FlowVariable v = cbe.m_variable;
                 Icon icon;
-                String curValue;
-                switch (v.getType()) {
-                case DOUBLE:
-                    icon = ICON_DOUBLE;
-                    curValue = Double.toString(v.getDoubleValue());
-                    break;
-                case STRING:
-                    icon = ICON_STRING;
-                    curValue = v.getStringValue();
-                    break;
-                case INTEGER:
-                    icon = ICON_INT;
-                    curValue = Integer.toString(v.getIntValue());
-                    break;
-                default:
-                    assert false : "Unknown type " + v.getType();
-                    curValue = "?";
-                    icon = ICON_UNKNOWN;
-                }
-                setIcon(icon);
+                setIcon(v.getVariableType().getIcon());
                 setText(v.getName());
                 setToolTipText(v.getName() + " ("
                         + (v.getName().startsWith("knime.") ? "constant "
-                                : "currently ") + "\"" + curValue + "\")");
+                                : "currently ") + "\"" + v.getValueAsString() + "\")");
                 if (cbe.m_errorString != null) {
                     ((JComponent)c).setBorder(m_errBorder);
                     setToolTipText(cbe.m_errorString);

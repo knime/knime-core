@@ -56,12 +56,19 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Vector;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.FlowVariable.Type;
+import org.knime.core.node.workflow.VariableType.DoubleType;
+import org.knime.core.node.workflow.VariableType.IntType;
+import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.util.Pair;
 
 
@@ -372,7 +379,9 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @param type The type of the variable to seek.
      * @return the variable
      * @throws NoSuchElementException if variable does not exist
+     * @deprecated Use {@link #peekFlowVariable(String, VariableType)} instead.
      */
+    @Deprecated
     public FlowVariable peekFlowVariable(final String name, final Type type) {
         synchronized (m_stack) {
             for (int i = m_stack.size() - 1; i >= 0; i--) {
@@ -390,11 +399,38 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                 + " type " + type);
     }
 
-    /** Get all (visible!) variables on the stack in a non-modifiable map. This map is filtered for double, string,
-     * int variables to guarantee backward compatibility.
-     * This method is used to show available variables to the user.
-     * @return Such a map.
+    /**
+     * Get the top-most {@link FlowVariable} with a certain name and {@link VariableType} from the stack, leaving the
+     * stack unmodified.
+     *
+     * @param name the name of the variable
+     * @param type the {@link VariableType} of the variable
+     * @return the top-most variable with the argument name and type, if present, otherwise an empty {@link Optional}
+     * @throws NullPointerException if any argument is null
+     * @since 4.1
      */
+    public Optional<FlowVariable> peekFlowVariable(final String name, final VariableType<?> type) {
+        CheckUtils.checkArgumentNotNull(name, "Variable name must not be null.");
+        CheckUtils.checkArgumentNotNull(type, "Variable type must not be null.");
+        synchronized (m_stack) {
+            final int size = m_stack.size();
+            return IntStream.rangeClosed(1, size).mapToObj(i -> m_stack.get(size - i))//
+                .filter(o -> o instanceof FlowVariable)//
+                .map(o -> (FlowVariable)o)//
+                .filter(v -> v.getName().equals(name) && v.getVariableType().equals(type))//
+                .findFirst();
+        }
+    }
+
+    /**
+     * Get all (visible!) variables on the stack in a non-modifiable map. This map is filtered for variables of
+     * types {@link StringType}, {@link DoubleType}, and {@link IntType} to guarantee backward
+     * compatibility. This method is used to show available variables to the user.
+     *
+     * @return Such a map.
+     * @deprecated Use {@link #getAvailableFlowVariables(VariableType[])} instead.
+     */
+    @Deprecated
     public Map<String, FlowVariable> getAvailableFlowVariables() {
         return getAvailableFlowVariables(Type.DOUBLE, Type.INTEGER, Type.STRING);
     }
@@ -403,7 +439,9 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @param types The types to filter for (non-null)
      * @return A map with variables.
      * @since 3.1
+     * @deprecated Use {@link #getAvailableFlowVariables(VariableType[])} instead.
      */
+    @Deprecated
     public Map<String, FlowVariable> getAvailableFlowVariables(final FlowVariable.Type... types) {
         LinkedHashMap<String, FlowVariable> hash = new LinkedHashMap<String, FlowVariable>();
         List<Type> typesAsList = Arrays.asList(types);
@@ -423,6 +461,40 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
             }
         }
         return Collections.unmodifiableMap(hash);
+    }
+
+    /**
+     * Get a map of all {@link FlowVariable FlowVariables} whose {@link VariableType} is equal to any of the arguments.
+     *
+     * @param types any number of {@link VariableType} singletons; the list of valid types is defined in class
+     *            {@link VariableType} (non-API) and may change between versions of KNIME.
+     * @return The non-null read-only map of flow variable name -&gt; {@link FlowVariable}
+     * @since 4.1
+     */
+    public Map<String, FlowVariable> getAvailableFlowVariables(final VariableType<?>[] types) {
+        synchronized (m_stack) {
+            final int size = m_stack.size();
+            final List<VariableType<?>> typesAsList = Arrays.asList(types);
+            return Collections.unmodifiableMap(//
+                IntStream.rangeClosed(1, size).mapToObj(i -> m_stack.get(size - i))//
+                    .filter(o -> o instanceof FlowVariable)//
+                    .map(o -> (FlowVariable)o)//
+                    .filter(v -> typesAsList.contains(v.getVariableType()))//
+                    .collect(Collectors.toMap(FlowVariable::getName, Function.identity(), (v1, v2) -> v1)));
+        }
+    }
+
+    /**
+     * Get a map of all {@link FlowVariable FlowVariables} whose {@link VariableType} is equal to any of the arguments.
+     *
+     * @param type a {@link VariableType} singleton
+     * @param otherTypes any number of additional {@link VariableType} singletons
+     * @return The non-null read-only map of flow variable name -&gt; {@link FlowVariable}
+     * @since 4.1
+     */
+    public Map<String, FlowVariable> getAvailableFlowVariables(final VariableType<?> type,
+        final VariableType<?>... otherTypes) {
+        return getAvailableFlowVariables(ArrayUtils.add(otherTypes, type));
     }
 
     /** Get all objects on the stack that are owned by the node with the given

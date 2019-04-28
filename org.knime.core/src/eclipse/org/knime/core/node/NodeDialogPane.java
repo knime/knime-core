@@ -92,6 +92,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigEditJTree;
@@ -116,6 +117,10 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
+import org.knime.core.node.workflow.VariableType;
+import org.knime.core.node.workflow.VariableType.DoubleType;
+import org.knime.core.node.workflow.VariableType.IntType;
+import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.util.MutableInteger;
 
 
@@ -312,14 +317,20 @@ public abstract class NodeDialogPane {
         return m_isWriteProtected;
     }
 
-    /** @return available flow variables in a non-modifiable map
-     *           (ensured to be not null) . */
+    /**
+     * @return available flow variables of types {@link StringType}, {@link DoubleType}, and {@link IntType} in a
+     *         non-modifiable map (ensured to be not null).
+     * @deprecated Use {@link #getAvailableFlowVariables(VariableType[])} instead.
+     */
+    @Deprecated
     public final Map<String, FlowVariable> getAvailableFlowVariables() {
         return getAvailableFlowVariables(Type.STRING, Type.DOUBLE, Type.INTEGER);
     }
 
     /** @param types Type filter (include)
-     * @return available flow variables in a non-modifiable map (ensured to be not null). */
+     * @return available flow variables in a non-modifiable map (ensured to be not null).
+     * @deprecated Use {@link #getAvailableFlowVariables(VariableType[])} instead. */
+    @Deprecated
     final Map<String, FlowVariable> getAvailableFlowVariables(final FlowVariable.Type...types) {
         Map<String, FlowVariable> result = null;
         if (m_flowObjectStack != null) {
@@ -329,6 +340,35 @@ public abstract class NodeDialogPane {
             result = Collections.emptyMap();
         }
         return result;
+    }
+
+    /**
+     * Get a map of all input {@link FlowVariable FlowVariables} whose {@link VariableType} is equal to any of the
+     * arguments.
+     *
+     * @param types any number of {@link VariableType} singletons; the list of valid types is defined in class
+     *            {@link VariableType} (non-API) and may change between versions of KNIME.
+     * @return the non-null read-only map of flow variable name -&gt; {@link FlowVariable}
+     * @see FlowObjectStack#getAvailableFlowVariables(VariableType[])
+     * @since 4.1
+     */
+    public final Map<String, FlowVariable> getAvailableFlowVariables(final VariableType<?>[] types) {
+        return m_flowObjectStack != null ? m_flowObjectStack.getAvailableFlowVariables(types) : Collections.emptyMap();
+    }
+
+    /**
+     * Get a map of all input {@link FlowVariable FlowVariables} whose {@link VariableType} is equal to any of the
+     * arguments.
+     *
+     * @param type a {@link VariableType} singleton
+     * @param otherTypes any number of additional {@link VariableType} singletons
+     * @return the non-null read-only map of flow variable name -&gt; {@link FlowVariable}
+     * @see FlowObjectStack#getAvailableFlowVariables(VariableType[])
+     * @since 4.1
+     */
+    public Map<String, FlowVariable> getAvailableFlowVariables(final VariableType<?> type,
+        final VariableType<?>... otherTypes) {
+        return getAvailableFlowVariables(ArrayUtils.add(otherTypes, type));
     }
 
     /** Get a list of available credentials identifiers. This is important for,

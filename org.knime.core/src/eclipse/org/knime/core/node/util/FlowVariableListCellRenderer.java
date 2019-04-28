@@ -55,7 +55,6 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.JList;
 
-import org.knime.core.data.DataValue;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -119,36 +118,17 @@ public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
         }
         // If flow variable was found either directly as value or inside flow variable cell
         if (flowVariable != null) {
-            FlowVariable v = flowVariable;
-            Icon icon;
+            final FlowVariable v = flowVariable;
             setText(v.getName());
-            String curValue;
-            switch (v.getType()) {
-            case DOUBLE:
-                icon = FLOW_VAR_DOUBLE_ICON;
-                curValue = Double.toString(v.getDoubleValue());
-                break;
-            case INTEGER:
-                icon = FLOW_VAR_INT_ICON;
-                curValue = Integer.toString(v.getIntValue());
-                break;
-            case STRING:
-                icon = FLOW_VAR_STRING_ICON;
-                curValue = v.getStringValue();
-                break;
-            default:
-                icon = DataValue.UTILITY.getIcon();
-                curValue = v.toString();
-            }
-            setIcon(icon);
-            StringBuilder b = new StringBuilder(v.getName());
+            setIcon(v.getVariableType().getIcon());
+            final StringBuilder b = new StringBuilder(v.getName());
             b.append(" (");
             if (v.getName().startsWith("knime.")) { // constant
                 b.append("constant: ");
             } else {
                 b.append("current value: ");
             }
-            b.append(curValue);
+            b.append(v.getValueAsString());
             b.append(")");
             setToolTipText(b.toString());
         }

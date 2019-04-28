@@ -108,25 +108,7 @@ public final class PortObjectInNodeModel extends NodeModel {
     /** Push flow variables onto stack. */
     private void pushFlowVariables() {
         for (FlowVariable fv : m_portObjectIDSettings.getFlowVariables()) {
-            switch (fv.getType()) {
-            case DOUBLE:
-                pushFlowVariableDouble(fv.getName(), fv.getDoubleValue());
-                break;
-            case INTEGER:
-                pushFlowVariableInt(fv.getName(), fv.getIntValue());
-                break;
-            case STRING:
-                pushFlowVariableString(fv.getName(), fv.getStringValue());
-                break;
-            case CREDENTIALS:
-                Node.invokePushFlowVariable(this, fv);
-                break;
-            case FS_CONNECTION:
-                Node.invokePushFlowVariable(this, fv);
-                break;
-            default:
-                throw new RuntimeException("Unknown variable type: " + fv.getType() + " (" + fv + ")");
-            }
+            Node.invokePushFlowVariable(this, fv);
         }
     }
 

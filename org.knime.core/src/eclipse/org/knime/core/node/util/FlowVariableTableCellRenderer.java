@@ -51,11 +51,9 @@ import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.BorderFactory;
-import javax.swing.Icon;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import org.knime.core.data.DataValue;
 import org.knime.core.node.util.FlowVariableListCellRenderer.FlowVariableCell;
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -97,28 +95,9 @@ public class FlowVariableTableCellRenderer extends DefaultTableCellRenderer {
         }
         // If flow variable was found either directly as value or inside flow variable cell
         if (flowVariable != null) {
-            FlowVariable v = flowVariable;
-            Icon icon;
+            final FlowVariable v = flowVariable;
             setText(v.getName());
-            String curValue;
-            switch (v.getType()) {
-            case DOUBLE:
-                icon = FlowVariableListCellRenderer.FLOW_VAR_DOUBLE_ICON;
-                curValue = Double.toString(v.getDoubleValue());
-                break;
-            case INTEGER:
-                icon = FlowVariableListCellRenderer.FLOW_VAR_INT_ICON;
-                curValue = Integer.toString(v.getIntValue());
-                break;
-            case STRING:
-                icon = FlowVariableListCellRenderer.FLOW_VAR_STRING_ICON;
-                curValue = v.getStringValue();
-                break;
-            default:
-                icon = DataValue.UTILITY.getIcon();
-                curValue = v.toString();
-            }
-            setIcon(icon);
+            setIcon(v.getVariableType().getIcon());
             StringBuilder b = new StringBuilder(v.getName());
             b.append(" (");
             if (v.getName().startsWith("knime.")) { // constant
@@ -126,7 +105,7 @@ public class FlowVariableTableCellRenderer extends DefaultTableCellRenderer {
             } else {
                 b.append("current value: ");
             }
-            b.append(curValue);
+            b.append(v.getValueAsString());
             b.append(")");
             setToolTipText(b.toString());
         }

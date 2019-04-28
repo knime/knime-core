@@ -337,7 +337,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
         } catch (final InvalidSettingsException e) {
             throw new InvalidSettingsException("Errors reading flow variables: " + e.getMessage(), e);
         }
-        Map<String, FlowVariable> flowVariablesMap = getFlowObjectStack().getAvailableFlowVariables();
+        final Map<String, FlowVariable> flowVariablesMap =
+            getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes());
         List<FlowVariable> newVariableList;
         try {
             newVariableList = configEditor.overwriteSettings(fromModel, flowVariablesMap);

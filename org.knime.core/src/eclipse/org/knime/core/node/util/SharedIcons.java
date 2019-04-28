@@ -53,6 +53,9 @@ import java.net.URL;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import org.apache.commons.lang3.concurrent.ConcurrentException;
+import org.apache.commons.lang3.concurrent.LazyInitializer;
+
 /**
  * An enum providing commonly used icons for the use in node dialogs.
  *
@@ -211,14 +214,32 @@ public enum SharedIcons {
     FLOWVAR_GENERAL("icons/flowvar_general.png"),
     /** Flow variable boolean **/
     FLOWVAR_BOOLEAN("icons/flowvar_boolean.png"),
+    /** Flow variable boolean array
+     * @since 4.1**/
+    FLOWVAR_BOOLEAN_ARRAY("icons/flowvar_boolean_array.png"),
     /** Flow variable default **/
     FLOWVAR_DEFAULT("icons/flowvar_default.png"),
     /** Flow variable double **/
     FLOWVAR_DOUBLE("icons/flowvar_double.png"),
+    /** Flow variable double array
+     * @since 4.1**/
+    FLOWVAR_DOUBLE_ARRAY("icons/flowvar_double_array.png"),
     /** Flow variable integer **/
     FLOWVAR_INTEGER("icons/flowvar_integer.png"),
+    /** Flow variable integer array
+     * @since 4.1**/
+    FLOWVAR_INTEGER_ARRAY("icons/flowvar_integer_array.png"),
+    /** Flow variable long
+     * @since 4.1**/
+    FLOWVAR_LONG("icons/flowvar_long.png"),
+    /** Flow variable long array
+     * @since 4.1**/
+    FLOWVAR_LONG_ARRAY("icons/flowvar_long_array.png"),
     /** Flow variable string **/
     FLOWVAR_STRING("icons/flowvar_string.png"),
+    /** Flow variable string array
+     * @since 4.1**/
+    FLOWVAR_STRING_ARRAY("icons/flowvar_string_array.png"),
     /** Flow variable active **/
     FLOWVAR_ACTIVE("icons/flowvar_active.png"),
     /** Flow variable inactive **/
@@ -228,23 +249,32 @@ public enum SharedIcons {
     /** Variable dialog inactive **/
     FLOWVAR_DIALOG_INACTIVE("icons/flowvar_dialog_inactive.png");
 
-    private final Icon m_icon;
+    private final LazyInitializer<Icon> m_icon;
 
     private SharedIcons(final String path) {
         URL url = SharedIcons.class.getResource(path);
         // if file does not exist or path is wrong
-        if (url == null) {
-            System.out.println("Icon at path " + path + " could not be found.");
-            m_icon = new ImageIcon();
-        } else {
-            m_icon = new ImageIcon(url);
-        }
+        m_icon = new LazyInitializer<Icon>() {
+            @Override
+            protected Icon initialize() throws ConcurrentException {
+                if (url == null) {
+                    System.out.println("Icon at path " + path + " could not be found.");
+                    return new ImageIcon();
+                } else {
+                    return new ImageIcon(url);
+                }
+            }
+        };
     }
 
     /**
      * @return the actual Icon, not null.
      */
     public Icon get() {
-        return m_icon;
+        try {
+            return m_icon.get();
+        } catch (ConcurrentException ex) {
+            throw new InternalError(ex);
+        }
     }
 }

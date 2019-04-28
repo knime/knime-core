@@ -51,8 +51,11 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
@@ -97,6 +100,10 @@ import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.ScopeStartNode;
+import org.knime.core.node.workflow.VariableType;
+import org.knime.core.node.workflow.VariableType.DoubleType;
+import org.knime.core.node.workflow.VariableType.IntType;
+import org.knime.core.node.workflow.VariableType.StringType;
 
 
 /**
@@ -1278,6 +1285,25 @@ public abstract class NodeModel implements ViewableModel {
         pushFlowVariable(new FlowVariable(name, value));
     }
 
+    /**
+     * Put a new {@link FlowVariable} of any {@link VariableType} onto the stack. If such variable already exists, its
+     * value will be (virtually) overwritten.
+     *
+     * @param name the name of the variable
+     * @param type the {@link VariableType} of the variable
+     * @param value the simple value of the variable
+     * @param <T> the simple value type of the variable
+     * @throws NullPointerException if any argument is null
+     *
+     * @since 4.1
+     */
+    protected final <T> void pushFlowVariable(final String name, final VariableType<T> type, final T value) {
+        CheckUtils.checkArgumentNotNull(name, "Variable name must not be null.");
+        CheckUtils.checkArgumentNotNull(type, "Variable type must not be null.");
+        CheckUtils.checkArgumentNotNull(value, "Variable value must not be null.");
+        pushFlowVariable(new FlowVariable(name, type, value));
+    }
+
     /** Get the value of the double variable with the given name leaving the
      * variable stack unmodified.
      * @param name Name of the variable
@@ -1295,6 +1321,38 @@ public abstract class NodeModel implements ViewableModel {
             return m_flowObjectStack.peekFlowVariable(
                     name, FlowVariable.Type.DOUBLE).getDoubleValue();
         }
+    }
+
+    /**
+     * Get the value of the top-most (output or input) {@link FlowVariable} with a certain name and {@link VariableType}
+     * from the stack, leaving the stack unmodified.
+     *
+     * @param name the name of the variable
+     * @param type the {@link VariableType} of the variable
+     * @param <T> the simple value type of the variable
+     * @return the simple non-null value of the top-most variable with the argument name and type
+     * @throws NullPointerException if any argument is null
+     * @throws NoSuchElementException if no variable with the correct name and type is available.
+     * @since 4.1
+     * @see FlowObjectStack#peekFlowVariable(String, VariableType)
+     */
+    public final <T> T peekFlowVariable(final String name, final VariableType<T> type) {
+        CheckUtils.checkArgumentNotNull(name, "Variable name must not be null.");
+        CheckUtils.checkArgumentNotNull(type, "Variable type must not be null.");
+        CheckUtils.checkArgumentNotNull(m_outgoingFlowObjectStack, "Outgoing flow object stack must not be null.");
+        if (m_outgoingFlowObjectStack != null) {
+            final Optional<FlowVariable> out = m_outgoingFlowObjectStack.peekFlowVariable(name, type);
+            if (out.isPresent()) {
+                return out.get().getValue(type);
+            }
+        }
+        if (m_flowObjectStack != null) {
+            final Optional<FlowVariable> out = m_flowObjectStack.peekFlowVariable(name, type);
+            if (out.isPresent()) {
+                return out.get().getValue(type);
+            }
+        }
+        throw new NoSuchElementException("No such variable \"" + name + "\" of type " + type);
     }
 
     /** Get the FlowScopeContext on top leaving the variable stack unmodified.
@@ -1324,6 +1382,7 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     final void pushFlowVariable(final FlowVariable variable) {
+        CheckUtils.checkArgumentNotNull(m_outgoingFlowObjectStack, "Outgoing flow object stack must not be null.");
         m_outgoingFlowObjectStack.push(variable);
     }
 
@@ -1374,16 +1433,21 @@ public abstract class NodeModel implements ViewableModel {
         return m_outgoingFlowObjectStack;
     }
 
-    /** Get all primitive flow variables currently available at this node. The keys of the returned map will be
-     * the identifiers of the flow variables and the values the flow variables itself. The map is non-modifiable.
+    /**
+     * Get all flow variables of types {@link StringType}, {@link DoubleType}, and {@link IntType} currently available
+     * at this node. The keys of the returned map will be the identifiers of the flow variables and the values the flow
+     * variables itself. The map is non-modifiable.
      *
-     * <p>The map contains all flow variables, i.e. the variables that are provided as part of (all) input connections
-     * and the variables that were pushed onto the stack by this node itself (which is different from the
+     * <p>
+     * The map contains all flow variables, i.e. the variables that are provided as part of (all) input connections and
+     * the variables that were pushed onto the stack by this node itself (which is different from the
      * {@link NodeDialogPane#getAvailableFlowVariables()} method, which only returns variables provided at the input.
      *
      * @return A new map of available flow variables in a non-modifiable map (never null).
      * @since 2.3.3
+     * @deprecated Use {@link #getAvailableFlowVariables(VariableType[])} instead.
      */
+    @Deprecated
     public final Map<String, FlowVariable> getAvailableFlowVariables() {
         Map<String, FlowVariable> result = new LinkedHashMap<String, FlowVariable>();
         if (m_flowObjectStack != null) {
@@ -1406,7 +1470,9 @@ public abstract class NodeModel implements ViewableModel {
      * @param types The type list - a variable whose type is in the argument list is filtered (= part of the result)
      * @return A new map of available flow variables in a non-modifiable map (never null).
      * @since 3.1
+     * @deprecated Use {@link #getAvailableFlowVariables(VariableType[])} instead.
      */
+    @Deprecated
     final Map<String, FlowVariable> getAvailableFlowVariables(final FlowVariable.Type... types) {
         Map<String, FlowVariable> result = new LinkedHashMap<String, FlowVariable>();
         if (m_flowObjectStack != null) {
@@ -1416,18 +1482,54 @@ public abstract class NodeModel implements ViewableModel {
         return Collections.unmodifiableMap(result);
     }
 
-    /** Get all flow variables currently available at the input of this node.
-     * The keys of the returned map will be the identifiers of the flow
-     * variables and the values the flow variables itself. The map is
-     * non-modifiable.
+    /**
+     * Get a map of all (input and output) {@link FlowVariable FlowVariables} whose {@link VariableType} is equal to any
+     * of the arguments.
      *
-     * <p>The map contains only flow variables that are provided as part of
-     * (all) input connections (which is same as the list returned in the
-     * dialog by calling {@link NodeDialogPane#getAvailableFlowVariables()}).
-     * @return A new map of input flow variables in a non-modifiable map
-     *         (never null).
-     * @since 2.6
+     * @param types any number of {@link VariableType} singletons; the list of valid types is defined in class
+     *            {@link VariableType} (non-API) and may change between versions of KNIME.
+     * @return The non-null read-only map of flow variable name -&gt; {@link FlowVariable}
+     * @see FlowObjectStack#getAvailableFlowVariables(VariableType[])
+     * @since 4.1
      */
+    public final Map<String, FlowVariable> getAvailableFlowVariables(final VariableType<?>[] types) {
+        return Collections.unmodifiableMap(Stream.concat(//
+            Optional.ofNullable(m_flowObjectStack)//
+            .map(s -> s.getAvailableFlowVariables(types).entrySet().stream()).orElseGet(Stream::empty),
+            Optional.ofNullable(m_outgoingFlowObjectStack)//
+            .map(s -> s.getAvailableFlowVariables(types).entrySet().stream()).orElseGet(Stream::empty))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1)));
+    }
+
+    /**
+     * Get a map of all (input and output) {@link FlowVariable FlowVariables} whose {@link VariableType} is equal to any
+     * of the arguments.
+     *
+     * @param type a {@link VariableType} singleton
+     * @param otherTypes any number of additional {@link VariableType} singletons
+     * @return The non-null read-only map of flow variable name -&gt; {@link FlowVariable}
+     * @see FlowObjectStack#getAvailableFlowVariables(VariableType[])
+     * @since 4.1
+     */
+    public Map<String, FlowVariable> getAvailableFlowVariables(final VariableType<?> type,
+        final VariableType<?>... otherTypes) {
+        return getAvailableFlowVariables(ArrayUtils.add(otherTypes, type));
+    }
+
+    /**
+     * Get all flow variables of types {@link StringType}, {@link DoubleType}, and {@link IntType} currently available
+     * at the input of this node. The keys of the returned map will be the identifiers of the flow variables and the
+     * values the flow variables itself. The map is non-modifiable.
+     *
+     * <p>
+     * The map contains only flow variables that are provided as part of (all) input connections (which is same as the
+     * list returned in the dialog by calling {@link NodeDialogPane#getAvailableFlowVariables()}).
+     *
+     * @return A new map of input flow variables in a non-modifiable map (never null).
+     * @since 2.6
+     * @deprecated Use {@link #getAvailableInputFlowVariables(VariableType[])} instead.
+     */
+    @Deprecated
     public final Map<String, FlowVariable> getAvailableInputFlowVariables() {
         Map<String, FlowVariable> result =
             new LinkedHashMap<String, FlowVariable>();
@@ -1435,6 +1537,35 @@ public abstract class NodeModel implements ViewableModel {
             result.putAll(m_flowObjectStack.getAvailableFlowVariables());
         }
         return Collections.unmodifiableMap(result);
+    }
+
+    /**
+     * Get a map of all input {@link FlowVariable FlowVariables} whose {@link VariableType} is equal to any of the
+     * arguments.
+     *
+     * @param types any number of {@link VariableType} singletons; the list of valid types is defined in class
+     *            {@link VariableType} (non-API) and may change between versions of KNIME.
+     * @return the non-null read-only map of flow variable name -&gt; {@link FlowVariable}
+     * @see FlowObjectStack#getAvailableFlowVariables(VariableType[])
+     * @since 4.1
+     */
+    public final Map<String, FlowVariable> getAvailableInputFlowVariables(final VariableType<?>[] types) {
+        return m_flowObjectStack != null ? m_flowObjectStack.getAvailableFlowVariables(types) : Collections.emptyMap();
+    }
+
+    /**
+     * Get a map of all input {@link FlowVariable FlowVariables} whose {@link VariableType} is equal to any of the
+     * arguments.
+     *
+     * @param type a {@link VariableType} singleton
+     * @param otherTypes any number of additional {@link VariableType} singletons
+     * @return the non-null read-only map of flow variable name -&gt; {@link FlowVariable}
+     * @see FlowObjectStack#getAvailableFlowVariables(VariableType[])
+     * @since 4.1
+     */
+    public Map<String, FlowVariable> getAvailableInputFlowVariables(final VariableType<?> type,
+        final VariableType<?>... otherTypes) {
+        return getAvailableInputFlowVariables(ArrayUtils.add(otherTypes, type));
     }
 
     //////////////////////////////////////////

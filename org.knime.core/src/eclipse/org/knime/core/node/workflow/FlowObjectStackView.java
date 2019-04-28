@@ -130,27 +130,7 @@ final class FlowObjectStackView extends JPanel {
                         continue;
                     }
                     obj[2] = s;
-                    Object o;
-                    switch (v.getType()) {
-                    case DOUBLE:
-                        o = Double.valueOf(v.getDoubleValue());
-                        break;
-                    case INTEGER:
-                        o = Integer.valueOf(v.getIntValue());
-                        break;
-                    case STRING:
-                        o = v.getStringValue();
-                        break;
-                    case CREDENTIALS:
-                        o = v.getCredentialsValue();
-                        break;
-                    case FS_CONNECTION:
-                        o = v.getFSConnectionValue();
-                        break;
-                    default:
-                        o = "Unknown Type: " + v.getType();
-                    }
-                    obj[3] = o;
+                    obj[3] = v.getValueAsString();
                 } else if (s instanceof FlowLoopContext) {
                     duplicateElementsSet.clear();
                     if (!((FlowLoopContext)s).isInactiveScope()) {

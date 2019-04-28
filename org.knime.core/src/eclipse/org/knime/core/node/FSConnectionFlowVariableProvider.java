@@ -56,7 +56,7 @@ import java.util.Optional;
 import org.apache.commons.lang3.Validate;
 import org.knime.core.node.workflow.FSConnectionKeyAccessor;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.FlowVariable.Type;
+import org.knime.core.node.workflow.VariableType.FSConnectionType;
 
 /**
  * Wrapper that gives access to all file system connection flow variables.
@@ -82,7 +82,7 @@ public class FSConnectionFlowVariableProvider {
      */
     public FSConnectionFlowVariableProvider(final NodeDialogPane nodeDialogPane) {
         Validate.notNull(nodeDialogPane);
-        m_fsConnectionFlowVariables = nodeDialogPane.getAvailableFlowVariables(Type.FS_CONNECTION);
+        m_fsConnectionFlowVariables = nodeDialogPane.getAvailableFlowVariables(FSConnectionType.INSTANCE);
     }
 
     /**
@@ -92,7 +92,7 @@ public class FSConnectionFlowVariableProvider {
      */
     public FSConnectionFlowVariableProvider(final NodeModel nodeModel) {
         Validate.notNull(nodeModel);
-        m_fsConnectionFlowVariables = nodeModel.getAvailableFlowVariables(Type.FS_CONNECTION);
+        m_fsConnectionFlowVariables = nodeModel.getAvailableFlowVariables(FSConnectionType.INSTANCE);
     }
 
     /**

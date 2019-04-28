@@ -69,6 +69,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.VariableType.CredentialsType;
 import org.knime.core.util.CoreConstants;
 
 
@@ -311,9 +312,9 @@ public final class CredentialsStore implements Observer {
      * @since 3.3
      */
     public void addFromFlowVariable(final FlowVariable v) {
-        CheckUtils.checkArgument(v.getType().equals(FlowVariable.Type.CREDENTIALS),
+        CheckUtils.checkArgument(v.getVariableType().equals(CredentialsType.INSTANCE),
             "Not a crendentials flow variable: %s", v);
-        CredentialsFlowVariableValue credentialsValue = v.getCredentialsValue();
+        CredentialsFlowVariableValue credentialsValue = v.getValue(CredentialsType.INSTANCE);
         add(new Credentials(credentialsValue.getName(), credentialsValue.getLogin(), credentialsValue.getPassword()));
     }
 

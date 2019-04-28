@@ -47,19 +47,25 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.Objects;
-
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue;
+import org.knime.core.node.workflow.VariableType.CredentialsType;
+import org.knime.core.node.workflow.VariableType.DoubleType;
+import org.knime.core.node.workflow.VariableType.FSConnectionType;
+import org.knime.core.node.workflow.VariableType.IntType;
+import org.knime.core.node.workflow.VariableType.StringType;
+import org.knime.core.node.workflow.VariableType.VariableValue;
 
 /**
- * FlowVariable holding local variables of basic types which can
- * be passed along connections in a workflow.
+ * FlowVariable holding local variables of basic types which can be passed along connections in a workflow.
  *
  * @author M. Berthold, University of Konstanz
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
 public final class FlowVariable extends FlowObject {
 
@@ -69,7 +75,12 @@ public final class FlowVariable extends FlowObject {
     @Deprecated
     public static final String GLOBAL_CONST_ID = "knime";
 
-    /** Type of a variable, supports currently only scalars. */
+    /**
+     * The type of a variable.
+     *
+     * @deprecated use {@link VariableType} instead
+     */
+    @Deprecated
     public static enum Type {
         /** double type. */
         DOUBLE,
@@ -80,11 +91,10 @@ public final class FlowVariable extends FlowObject {
         /** Credentials, currently filtered from {@link FlowObjectStack#getAvailableFlowVariables()}.
          * @since 3.1 */
         CREDENTIALS,
-        /**
-         * A key used to retrieve file system connections from the FSConnnectionRegistry.
-         * @since 4.1
-         */
-        FS_CONNECTION;
+        /** All other (new) types, which were added after this enum got deprecated (4.1). Filtered from
+         * {@link FlowObjectStack#getAvailableFlowVariables()}.
+         * @since 4.1 */
+        OTHER;
     }
 
     /** Scope of variable. */
@@ -135,113 +145,125 @@ public final class FlowVariable extends FlowObject {
         }
     }
 
-    private final Type m_type;
     private final Scope m_scope;
     private final String m_name;
-    private String m_valueS = null;
-    private double m_valueD = Double.NaN;
-    private int m_valueI = 0;
-    private CredentialsFlowVariableValue m_valueCredentials;
-    private FSConnectionFlowVariableValue m_valueFSConnection;
+    private final VariableValue<?> m_value;
 
-
-    private FlowVariable(final String name, final Type type,
-            final Scope scope) {
-        if (name == null || type == null) {
-            throw new NullPointerException("Argument must not be null");
-        }
-        if (name.trim().isEmpty()) {
+    private FlowVariable(final String name, final VariableValue<?> value, final Scope scope) {
+        m_name = CheckUtils.checkArgumentNotNull(name, "Name must not be null");
+        if (StringUtils.isBlank(name)) {
             throw new IllegalFlowObjectStackException("Invalid (empty) flow variable name");
         }
+
+        m_value = CheckUtils.checkArgumentNotNull(value, "Value must not be null");
+
+        CheckUtils.checkArgumentNotNull(scope, "Scope must not be null");
         scope.verifyName(name);
-        m_name = name;
-        m_type = type;
         m_scope = scope;
     }
 
-    /** create new FlowVariable representing a string.
+    private <T> FlowVariable(final String name, final VariableType<T> type, final T value, final Scope scope) {
+        this(name, CheckUtils.checkArgumentNotNull(type, "Type must not be null")
+            .newValue(CheckUtils.checkArgumentNotNull(value, "Value must not be null")), scope);
+    }
+
+    /**
+     * Create a new {@link FlowVariable} that holds a value of some {@link VariableType}.
+     *
+     * @param name the name of the variable
+     * @param type the type of the variable
+     * @param value the simple value held by this variable
+     * @param <T> the simple value type held by this variable
+     *
+     * @since 4.1
+     */
+    public <T> FlowVariable(final String name, final VariableType<T> type, final T value) {
+        this(name, type, value, Scope.Flow);
+    }
+
+    /**
+     * create new FlowVariable representing a string.
      *
      * @param name of the variable
      * @param valueS string value
      */
     public FlowVariable(final String name, final String valueS) {
-        this(name, valueS, Scope.Flow);
+        this(name, StringType.INSTANCE, valueS);
     }
 
-    /** create new FlowVariable representing a double.
+    /**
+     * create new FlowVariable representing a double.
      *
      * @param name of the variable
      * @param valueD double value
      */
     public FlowVariable(final String name, final double valueD) {
-        this(name, valueD, Scope.Flow);
+        this(name, DoubleType.INSTANCE, valueD);
     }
 
-    /** create new FlowVariable representing an integer.
+    /**
+     * create new FlowVariable representing an integer.
      *
      * @param name of the variable
      * @param valueI int value
      */
     public FlowVariable(final String name, final int valueI) {
-        this(name, valueI, Scope.Flow);
+        this(name, IntType.INSTANCE, valueI);
     }
 
-    /** create new FlowVariable representing a string which can either
-     * be a global workflow variable or a local one.
-     *
-     * @param name of the variable
-     * @param valueS string value
-     * @param scope Scope of variable
-     */
-    FlowVariable(final String name, final String valueS, final Scope scope) {
-        this(name, Type.STRING, scope);
-        m_valueS = valueS;
-    }
-
-    /** create new FlowVariable representing a double which can either
-     * be a global workflow variable or a local one.
-     *
-     * @param name of the variable
-     * @param valueD double value
-     * @param scope Scope of variable
-     */
-    FlowVariable(final String name, final double valueD, final Scope scope) {
-        this(name, Type.DOUBLE, scope);
-        m_valueD = valueD;
-    }
-
-    /** create new FlowVariable representing an integer which can either
-     * be a global workflow variable or a local one.
-     *
-     * @param name of the variable
-     * @param valueI int value
-     * @param scope Scope of variable
-     */
-    FlowVariable(final String name, final int valueI, final Scope scope) {
-        this(name, Type.INTEGER, scope);
-        m_valueI = valueI;
-    }
-
-    /** create new FlowVariable representing a credentials object. (Flow Scope)
+    /**
+     * create new FlowVariable representing a credentials object. (Flow Scope)
      *
      * @param name of the variable
      * @param valueC credentials object (usually has the same name except for name uniquification in subnode).
      * @noreference This constructor is not intended to be referenced by clients.
      */
     public FlowVariable(final String name, final CredentialsFlowVariableValue valueC) {
-        this(name, Type.CREDENTIALS, Scope.Flow);
-        m_valueCredentials = CheckUtils.checkArgumentNotNull(valueC);
+        this(name, CredentialsType.INSTANCE, valueC, Scope.Flow);
     }
 
-    /** create new FlowVariable containing a file system connection key. (Flow Scope)
+    /**
+     * create new FlowVariable containing a file system connection key. (Flow Scope)
      *
      * @param name of the variable
      * @param fsConnection file system connection key object
-     * @noreference This constructor is not intended to be referenced by clients
+     * @noreference This constructor is not intended to be referenced by clients.
      */
-    FlowVariable(final String name, final FSConnectionFlowVariableValue fsConnection) {
-        this(name, Type.FS_CONNECTION, Scope.Flow);
-        m_valueFSConnection = CheckUtils.checkArgumentNotNull(fsConnection);
+    public FlowVariable(final String name, final FSConnectionFlowVariableValue fsConnection) {
+        this(name, FSConnectionType.INSTANCE, fsConnection, Scope.Flow);
+    }
+
+    /**
+     * create new FlowVariable representing a string which can either be a global workflow variable or a local one.
+     *
+     * @param name of the variable
+     * @param valueS string value
+     * @param scope Scope of variable
+     */
+    FlowVariable(final String name, final String valueS, final Scope scope) {
+        this(name, StringType.INSTANCE, valueS, scope);
+    }
+
+    /**
+     * create new FlowVariable representing a double which can either be a global workflow variable or a local one.
+     *
+     * @param name of the variable
+     * @param valueD double value
+     * @param scope Scope of variable
+     */
+    FlowVariable(final String name, final double valueD, final Scope scope) {
+        this(name, DoubleType.INSTANCE, valueD, scope);
+    }
+
+    /**
+     * create new FlowVariable representing an integer which can either be a global workflow variable or a local one.
+     *
+     * @param name of the variable
+     * @param valueI int value
+     * @param scope Scope of variable
+     */
+    FlowVariable(final String name, final int valueI, final Scope scope) {
+        this(name, IntType.INSTANCE, valueI, scope);
     }
 
     /**
@@ -263,40 +285,66 @@ public final class FlowVariable extends FlowObject {
         return m_scope;
     }
 
-    /** @return the type */
+    /**
+     * @return the type
+     * @deprecated use {@link #getVariableType()} instead
+     */
+    @Deprecated
     public Type getType() {
-        return m_type;
+        return getVariableType().getType();
+    }
+
+    /**
+     * Method for obtaining the {@link VariableType} of this {@link FlowVariable}.
+     *
+     * @return the {@link VariableType} of this {@link FlowVariable}
+     * @since 4.1
+     */
+    public VariableType<?> getVariableType() {
+        return m_value.getType();
+    }
+
+    /**
+     * Get the simple value of this variable.
+     *
+     * @param expectedType the expected {@link VariableType} of the to-be-returned value (use {@link #getVariableType()
+     *            to obtain the actual type and compare it against the expected type}
+     * @param <T> the simple type of the to-be-returned value
+     * @return non-null simple value object represented by this variable
+     * @throws IllegalArgumentException if the argument is null or not of the correct class.
+     * @since 4.1
+     */
+    public <T> T getValue(final VariableType<T> expectedType) {
+        CheckUtils.checkArgumentNotNull(expectedType);
+        final VariableType<?> actualType = m_value.getType();
+        CheckUtils.checkArgument(actualType.equals(expectedType),
+            "Flow variable does not represent value of class \"%s\" (but \"%s\")", expectedType, actualType);
+
+        // It's safe to make this unchecked cast, since we just checked that expected and actual types are identical.
+        @SuppressWarnings("unchecked")
+        VariableValue<T> result = (VariableValue<T>)m_value;
+        return result.get();
     }
 
     /**
      * @return get string value of the variable or null if it's not a string.
      */
     public String getStringValue() {
-        if (m_type != Type.STRING) {
-            return null;
-        }
-        return m_valueS;
+        return m_value.getType().equals(StringType.INSTANCE) ? (String)m_value.get() : null;
     }
 
     /**
-     * @return get double value of the variable or Double.NaN if it's not a
-     * double.
+     * @return get double value of the variable or Double.NaN if it's not a double.
      */
     public double getDoubleValue() {
-        if (m_type != Type.DOUBLE) {
-            return Double.NaN;
-        }
-        return m_valueD;
+        return m_value.getType().equals(DoubleType.INSTANCE) ? (Double)m_value.get() : Double.NaN;
     }
 
     /**
      * @return get int value of the variable or 0 if it's not an integer.
      */
     public int getIntValue() {
-        if (m_type != Type.INTEGER) {
-            return 0;
-        }
-        return m_valueI;
+        return m_value.getType().equals(IntType.INSTANCE) ? (Integer)m_value.get() : 0;
     }
 
     /** Temporary workaround to represent credentials in flow variables. This is a framework method that is going
@@ -305,10 +353,7 @@ public final class FlowVariable extends FlowObject {
      * @noreference This method is not intended to be referenced by clients.
      */
     CredentialsFlowVariableValue getCredentialsValue() {
-        if (m_type != Type.CREDENTIALS) {
-            return null;
-        }
-        return m_valueCredentials;
+        return m_value.getType().equals(CredentialsType.INSTANCE) ? (CredentialsFlowVariableValue)m_value.get() : null;
     }
 
     /**
@@ -319,10 +364,8 @@ public final class FlowVariable extends FlowObject {
      * @noreference this method is not intended to be referenced by clients.
      */
     FSConnectionFlowVariableValue getFSConnectionValue() {
-        if (m_type != Type.FS_CONNECTION) {
-            return null;
-        }
-        return m_valueFSConnection;
+        return m_value.getType().equals(FSConnectionType.INSTANCE) ? (FSConnectionFlowVariableValue)m_value.get()
+            : null;
     }
 
     /**
@@ -330,134 +373,49 @@ public final class FlowVariable extends FlowObject {
      * @since 2.6
      */
     public String getValueAsString() {
-        switch (m_type) {
-            case DOUBLE:
-                return Double.toString(m_valueD);
-            case INTEGER:
-                return Integer.toString(m_valueI);
-            case STRING:
-                return m_valueS;
-            case CREDENTIALS:
-                return "Credentials: " + m_valueCredentials.getName();
-            case FS_CONNECTION:
-                return m_valueFSConnection.connectionKey();
-        }
-        return "invalid type";
+        return m_value.asString();
     }
 
     /** Saves this flow variable to a settings object. This method writes
      * directly into the argument object (no creating of intermediate child).
      * @param settings To save to.
+     * @since 4.1
+     * @noreference This method is not intended to be referenced by clients.
      */
-    void save(final NodeSettingsWO settings) {
+    public void save(final NodeSettingsWO settings) {
         settings.addString("name", getName());
-        settings.addString("class", getType().name());
-        switch (getType()) {
-            case INTEGER:
-                settings.addInt("value", getIntValue());
-                break;
-            case DOUBLE:
-                settings.addDouble("value", getDoubleValue());
-                break;
-            case STRING:
-                settings.addString("value", getStringValue());
-                break;
-            case CREDENTIALS:
-                NodeSettingsWO subSettings = settings.addNodeSettings("value");
-                m_valueCredentials.save(subSettings);
-                break;
-            case FS_CONNECTION:
-                settings.addString("value", getFSConnectionValue().connectionKey());
-                break;
-            default:
-                assert false : "Unknown variable type: " + getType();
-        }
+        m_value.save(settings);
     }
 
     /**
-     * Read a flow variable from a settings object. This is the counterpart
-     * to {@link #save(NodeSettingsWO)}.
+     * Read a flow variable from a settings object. This is the counterpart to {@link #save(NodeSettingsWO)}.
+     *
      * @param sub To load from.
      * @return A new {@link FlowVariable} read from the settings object.
      * @throws InvalidSettingsException If that fails for any reason.
+     * @since 4.1
+     * @noreference This method is not intended to be referenced by clients.
      */
-    static FlowVariable load(final NodeSettingsRO sub)
-        throws InvalidSettingsException {
-        String name = sub.getString("name");
-        String typeS = sub.getString("class");
-        if (typeS == null || name == null) {
-            throw new InvalidSettingsException("name or type is null");
-        }
-        Type varType;
-        try {
-            varType = Type.valueOf(typeS);
-        } catch (final IllegalArgumentException e) {
-            throw new InvalidSettingsException("invalid type " + typeS);
-        }
-        FlowVariable v;
-        switch (varType) {
-            case DOUBLE:
-                v = new FlowVariable(name, sub.getDouble("value"));
-                break;
-            case INTEGER:
-                v = new FlowVariable(name, sub.getInt("value"));
-                break;
-            case STRING:
-                v = new FlowVariable(name, sub.getString("value"));
-                break;
-            case CREDENTIALS:
-                NodeSettingsRO subSettings = sub.getNodeSettings("value");
-                CredentialsFlowVariableValue credentialsValue = CredentialsFlowVariableValue.load(subSettings);
-                v = new FlowVariable(name, credentialsValue);
-                break;
-            case FS_CONNECTION:
-                v = new FlowVariable(name, new FSConnectionFlowVariableValue(sub.getString("value")));
-                break;
-            default:
-                throw new InvalidSettingsException("Unknown type " + varType);
-        }
-        return v;
+    public static FlowVariable load(final NodeSettingsRO sub) throws InvalidSettingsException {
+        final String name = CheckUtils.checkSettingNotNull(sub.getString("name"), "name must not be null");
+        final VariableValue<?> value = VariableType.load(sub);
+        return new FlowVariable(name, value, Scope.Flow);
     }
 
-    /** Clones this object, setting a new name (used in subnode, puts a unique identifier).
+    /**
+     * Clones this object, setting a new name (used in subnode, puts a unique identifier).
+     *
      * @param name new identifier, not null.
      * @return a 'clone' of this with a new name.
      * @noreference This method is not intended to be referenced by clients.
      */
     public FlowVariable withNewName(final String name) {
-        FlowVariable clone = new FlowVariable(name, m_type, m_scope);
-        clone.m_valueD = m_valueD;
-        clone.m_valueI = m_valueI;
-        clone.m_valueS = m_valueS;
-        clone.m_valueCredentials = m_valueCredentials;
-        clone.m_valueFSConnection = m_valueFSConnection;
-        return clone;
+        return new FlowVariable(name, m_value, m_scope);
     }
 
-    /** {@inheritDoc} */
     @Override
     public String toString() {
-        String value;
-        switch (m_type) {
-            case DOUBLE:
-                value = Double.toString(m_valueD);
-                break;
-            case INTEGER:
-                value = Integer.toString(m_valueI);
-                break;
-            case STRING:
-                value = m_valueS;
-                break;
-            case CREDENTIALS:
-                value = m_valueCredentials.toString();
-                break;
-            case FS_CONNECTION:
-                value = m_valueFSConnection.toString();
-                break;
-            default:
-                throw new InternalError("m_type must not be null");
-        }
-        return m_name + "\" (" + m_type + ": " + value + ")";
+        return String.format("\"%s\" (%s: %s)", m_name, m_value.getType().getIdentifier(), m_value.asString());
     }
 
     /** {@inheritDoc}
@@ -470,36 +428,11 @@ public final class FlowVariable extends FlowObject {
         if (!(obj instanceof FlowVariable)) {
             return false;
         }
-        FlowVariable v = (FlowVariable)obj;
-        if (!v.getType().equals(getType())) {
-            return false;
-        }
+        final FlowVariable v = (FlowVariable)obj;
         if (!v.getName().equals(getName())) {
             return false;
         }
-        boolean valueEqual;
-        switch (getType()) {
-        case DOUBLE:
-            valueEqual = Double.compare(v.getDoubleValue(), getDoubleValue()) == 0;
-            break;
-        case INTEGER:
-            valueEqual = v.getIntValue() == getIntValue();
-            break;
-        case STRING:
-            valueEqual = Objects.equals(v.getStringValue(), getStringValue());
-            break;
-        case CREDENTIALS:
-            valueEqual = Objects.equals(v.getCredentialsValue(), getCredentialsValue());
-            break;
-        case FS_CONNECTION:
-                valueEqual =
-                    Objects.equals(v.getFSConnectionValue().connectionKey(), getFSConnectionValue().connectionKey());
-            break;
-        default:
-            throw new IllegalStateException("Unsupported variable type "
-                    + getType() + " (not implemented)");
-        }
-        return valueEqual;
+        return m_value.equals(v.m_value);
     }
 
     /** {@inheritDoc} */

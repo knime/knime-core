@@ -56,11 +56,8 @@ import org.knime.core.node.FSConnectionFlowVariableProvider;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
-import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.ICredentials;
 
 /**
  * Settings helper that reads/writes the port object ID that is used by the {@link PortObjectRepository}.
@@ -97,42 +94,7 @@ public final class PortObjectIDSettings {
             for (String key : sub.keySet()) {
                 NodeSettingsRO child = sub.getNodeSettings(key);
 
-                // code copied from (package scope) load method in FlowVariable
-                String name = child.getString("name");
-                String typeS = child.getString("class");
-                if (typeS == null || name == null) {
-                    throw new InvalidSettingsException("name or type is null");
-                }
-                FlowVariable.Type varType;
-                try {
-                    varType = FlowVariable.Type.valueOf(typeS);
-                } catch (final IllegalArgumentException e) {
-                    throw new InvalidSettingsException("invalid type " + typeS);
-                }
-                FlowVariable v;
-                switch (varType) {
-                    case DOUBLE:
-                        v = new FlowVariable(name, child.getDouble("value"));
-                        break;
-                    case INTEGER:
-                        v = new FlowVariable(name, child.getInt("value"));
-                        break;
-                    case STRING:
-                        v = new FlowVariable(name, child.getString("value"));
-                        break;
-                    case CREDENTIALS:
-                        CheckUtils.checkState(m_credentialsProvider != null, "No credentials provider set");
-                        ICredentials credentials = m_credentialsProvider.get(child.getString("value"));
-                        v = CredentialsStore.newCredentialsFlowVariable(credentials.getName(), credentials.getLogin(),
-                            credentials.getPassword(), false, false);
-                        break;
-                    case FS_CONNECTION:
-                        String flowVariableName = child.getString("value");
-                        v = m_fsConnectionsProvider.flowVariableFor(flowVariableName).orElse(null);
-                        break;
-                    default:
-                        throw new InvalidSettingsException("Unknown type " + varType);
-                }
+                final FlowVariable v = FlowVariable.load(child);
                 m_flowVariables.add(v);
             }
         }
@@ -149,28 +111,7 @@ public final class PortObjectIDSettings {
         int index = 0;
         for (FlowVariable fv : getFlowVariables()) {
             NodeSettingsWO child = sub.addNodeSettings("flowVar_" + (index++));
-            // copied from (package scope) save method in FlowVariable
-            child.addString("name", fv.getName());
-            child.addString("class", fv.getType().name());
-            switch (fv.getType()) {
-            case INTEGER:
-                child.addInt("value", fv.getIntValue());
-                break;
-            case DOUBLE:
-                child.addDouble("value", fv.getDoubleValue());
-                break;
-            case STRING:
-                child.addString("value", fv.getStringValue());
-                break;
-            case CREDENTIALS:
-                child.addString("value", fv.getName());
-                break;
-            case FS_CONNECTION:
-                child.addString("value", fv.getName());
-                break;
-            default:
-                assert false : "Unknown variable type: " + fv.getType();
-            }
+            fv.save(child);
         }
     }
 
