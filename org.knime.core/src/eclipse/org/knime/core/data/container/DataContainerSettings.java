@@ -78,7 +78,7 @@ public final class DataContainerSettings {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DataContainerSettings.class);
 
     /** The default number of cells to be held in memory. */
-    private static final int DEF_MAX_CELLS_IN_MEMORY = 100000;
+    private static final int DEF_MAX_CELLS_IN_MEMORY = 5000;
 
     /**
      * For asynchronous table writing (default) the cache size. It's the number of rows that are kept in memory until

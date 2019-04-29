@@ -202,8 +202,9 @@ final class BufferCache {
     synchronized void clearForGarbageCollection(final Buffer buffer) {
         CheckUtils.checkArgumentNotNull(buffer);
 
-        //TODO: throw exception maybe?
-        assert buffer.isFlushedToDisk();
+        if(!buffer.isFlushedToDisk()) {
+            throw new IllegalStateException("Unflushed buffer ilegally cleared for garbage collection.");
+        }
 
         m_hardMap.remove(buffer.getUniqueID());
     }

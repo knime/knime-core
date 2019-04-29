@@ -486,7 +486,6 @@ public class Buffer implements KNIMEStreamConstants {
     private boolean m_flushedToDisk;
 
     /** maximum number of rows that are in memory. */
-    // TODO: determine more reasonable value than 100k for LRU strategies via benchmarking
     private final int m_maxRowsInMem;
 
     /**
@@ -1780,7 +1779,6 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     void performClear() {
-        // TODO: close and null outputWriter
         BufferTracker.getInstance().bufferCleared(this);
         m_listWhileAddRow = null;
         CACHE.invalidate(this);
@@ -1788,6 +1786,14 @@ public class Buffer implements KNIMEStreamConstants {
             if (m_outputReader != null) {
                 // output reader might be null if Buffer was created but never read -- no iterators to clear
                 m_outputReader.clearIteratorInstances();
+            }
+            if (m_outputWriter != null) {
+                try {
+                    m_outputWriter.close();
+                } catch (IOException ioe) {
+                    // Exception indicates that stream has already been closed. If exception was thrown for another
+                    // reason, we are OK with it as well, since we're clearing this buffer anyways.
+                }
             }
             if (m_blobDir != null) {
                 DeleteInBackgroundThread.delete(m_binFile, m_blobDir);
@@ -2215,6 +2221,32 @@ public class Buffer implements KNIMEStreamConstants {
         return true;
     }
 
+    private MemoryAlertListener createNewMemoryAlertListener() {
+        MemoryAlertListener memoryAlertListener = new MemoryAlertListener() {
+            @Override
+            protected boolean memoryAlert(final MemoryAlert alert) {
+                ThreadUtils.threadWithContext(() -> {
+                    synchronized (Buffer.this) {
+                        final Optional<List<BlobSupportDataRow>> optionalList = CACHE.getSilent(Buffer.this);
+                        if (optionalList.isPresent()) {
+                            final List<BlobSupportDataRow> list = optionalList.get();
+                            writeList(list);
+                            closeWriterAndWriteMeta();
+                            m_lifecycle.onMemoryAlert(list);
+                        } else {
+                            // concurrent close or addRow() caused this to be flushed
+                            // (this method may stall long on Buffer.this)
+                        }
+                    }
+
+                }, "KNIME Buffer flusher").start();
+                return true;
+            }
+        };
+        MemoryAlertSystem.getInstance().addListener(memoryAlertListener);
+        return memoryAlertListener;
+    }
+
     /**
      * An interface that described the lifecycle of a buffer. It is interfaced during multiple stages of a buffer's
      * existence and is responsible for determining (a) when to evict tables from the cache, (b) when to move tables
@@ -2256,6 +2288,14 @@ public class Buffer implements KNIMEStreamConstants {
          * Synchronously called before saving the table held by this buffer.
          */
         void onSave();
+
+        /**
+         * Synchronously after a previously registered {@link MemoryAlertListener} throws a memory alert and wrote the
+         * table held in memory to disk.
+         *
+         * @param list the list held in memory when the memory alert is thrown
+         */
+        void onMemoryAlert(List<BlobSupportDataRow> list);
 
         /**
          * Asynchronously called while saving the table held by this buffer to determine whether the table held by this
@@ -2301,29 +2341,7 @@ public class Buffer implements KNIMEStreamConstants {
         public void onCloseIfCached() {
             assert Thread.holdsLock(Buffer.this);
 
-            m_memoryAlertListener = new MemoryAlertListener() {
-                @Override
-                protected boolean memoryAlert(final MemoryAlert alert) {
-                    ThreadUtils.threadWithContext(() -> {
-                        synchronized (Buffer.this) {
-                            final Optional<List<BlobSupportDataRow>> optionalList = CACHE.getSilent(Buffer.this);
-                            if (optionalList.isPresent()) {
-                                final List<BlobSupportDataRow> list = optionalList.get();
-                                writeList(list);
-                                closeWriterAndWriteMeta();
-                                CACHE.invalidate(Buffer.this);
-                                LOGGER.debug("Wrote " + list.size() + " rows in order to free memory");
-                            } else {
-                                // concurrent close or addRow() caused this to be flushed
-                                // (this method may stall long on Buffer.this)
-                            }
-                        }
-
-                    }, "KNIME Buffer flusher").start();
-                    return true;
-                }
-            };
-            MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
+            m_memoryAlertListener = createNewMemoryAlertListener();
         }
 
         @Override
@@ -2340,6 +2358,12 @@ public class Buffer implements KNIMEStreamConstants {
 
         @Override
         public void onSave() {
+        }
+
+        @Override
+        public void onMemoryAlert(final List<BlobSupportDataRow> list) {
+            CACHE.invalidate(Buffer.this);
+            LOGGER.debug("Wrote " + list.size() + " rows in order to free memory");
         }
 
         @Override
@@ -2395,33 +2419,17 @@ public class Buffer implements KNIMEStreamConstants {
             setRestoreIntoMemoryOnCacheMiss();
 
             if (size() <= m_maxRowsInMem) {
-                //TODO: code nearly identical; merge
-                m_memoryAlertListener = new MemoryAlertListener() {
-                    @Override
-                    protected boolean memoryAlert(final MemoryAlert alert) {
-                        ThreadUtils.threadWithContext(() -> {
-                            synchronized (Buffer.this) {
-                                final Optional<List<BlobSupportDataRow>> optionalList = CACHE.getSilent(Buffer.this);
-                                if (optionalList.isPresent()) {
-                                    final List<BlobSupportDataRow> list = optionalList.get();
-                                    writeList(list);
-                                    closeWriterAndWriteMeta();
-                                    CACHE.clearForGarbageCollection(Buffer.this);
-                                    LOGGER.debug("Cleared " + list.size() + " rows for garbage collection in order"
-                                        + "to free memory");
-                                } else {
-                                    // concurrent close or addRow() caused this to be flushed
-                                    // (this method may stall long on Buffer.this)
-                                }
-                            }
-                        }, "KNIME Buffer flusher").start();
-                        return true;
-                    }
-                };
-                MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
+                m_memoryAlertListener = createNewMemoryAlertListener();
             } else {
                 onCloseIfCachedAndLarge();
             }
+        }
+
+        @Override
+        public void onMemoryAlert(final List<BlobSupportDataRow> list) {
+            CACHE.clearForGarbageCollection(Buffer.this);
+            LOGGER.debug("Cleared " + list.size() + " rows for garbage collection in order"
+                + "to free memory");
         }
 
         abstract void onCloseIfCachedAndLarge();
@@ -2514,7 +2522,7 @@ public class Buffer implements KNIMEStreamConstants {
     final class SoftRefLRUAsyncWriteLifecycle extends SoftRefLRULifecycle {
 
         /**
-         * The object that represent the pending task of writing a full table from memory to disk
+         * The object that represent the pending task of writing a full table from memory to disk.
          */
         private Future<Void> m_asyncAddFuture;
 
@@ -2542,19 +2550,13 @@ public class Buffer implements KNIMEStreamConstants {
             super.onClear();
 
             if (m_asyncAddFuture != null && !m_asyncAddFuture.isDone()) {
-                /** We should cancel the asynchronous writer thread. */
+                /**
+                 * We should cancel the asynchronous writer thread. We do not have to wait for the thread to terminate
+                 * gracefully, since it takes care of calling performClear itself. This is also not the right place and
+                 * time to check whether the thread has thrown any exceptions, since we're clearing the buffer anyways.
+                 */
                 m_asyncAddFuture.cancel(true);
             }
-
-            /** Clear the buffer asynchronously (after the writer thread has terminated gracefully). */
-            ASYNC_EXECUTOR.submit(new CallableWithContext<Void>() {
-                @Override
-                public Void callWithContext() throws Exception {
-                    performClear();
-                    return null;
-                    //TODO: we should wait on the callable here to get informed about exception
-                }
-            });
 
             m_asyncAddFuture = null;
         }
@@ -2563,7 +2565,11 @@ public class Buffer implements KNIMEStreamConstants {
         public void onSave() {
             assert Thread.holdsLock(Buffer.this);
 
-            /** We have to wait for the asynchronous writer thread. */
+            /**
+             * We have to wait for the asynchronous writer thread and check for exceptions. This is the only time we
+             * ever check for exceptions in the asynchronous writer thread, since the graceful termination of that
+             * thread is required when we're saving the workflow. It is never required at any other time.
+             */
             if (m_asyncAddFuture != null && !m_asyncAddFuture.isDone()) {
                 try {
                     m_asyncAddFuture.get();
@@ -2580,7 +2586,7 @@ public class Buffer implements KNIMEStreamConstants {
                     }
                     throw new RuntimeException(error.toString(), t);
                 } catch (CancellationException e) {
-                    throw new RuntimeException("Asynchronous disk write thread was unexpectedly cancelled.", e);
+                    /** The asynchronous writer thread was cancelled in onClear(). Nothing to do here. */
                 }
             }
             m_asyncAddFuture = null;
@@ -2647,22 +2653,44 @@ public class Buffer implements KNIMEStreamConstants {
 
             } catch (Throwable t) {
                 throwable = t;
-                StringBuilder error = new StringBuilder();
-                error.append("Asynchronous writing of table to file encountered error:");
-                error.append("\n" + t.getClass().getSimpleName());
-                if (t.getMessage() != null) {
-                    error.append(": " + t.getMessage());
-                }
-                error.append("\nTable will be held in memory until cleared."
-                    + "\nWorkflow can't be saved in this state. Proceed with caution.");
-                LOGGER.error(error.toString(), t);
-            }
+                logThrowable(t);
 
-            if (throwable != null && throwable instanceof Exception) {
-                throw (Exception)throwable;
+            } finally {
+                if (Thread.currentThread().isInterrupted()) {
+                    /**
+                     * Thread was interrupted due to invocation of clear() on the buffer. The buffer reference should
+                     * therefore not have been cleared and we may get that reference to run performClear and terminate
+                     * gracefully.
+                     */
+                    final Buffer buffer = m_bufferRef.get();
+                    if (buffer != null) {
+                        try {
+                            buffer.performClear();
+                        } catch (Throwable t) {
+                            throwable = t;
+                            logThrowable(t);
+                        }
+                    }
+                }
+
+                if (throwable != null && throwable instanceof Exception) {
+                    throw (Exception)throwable;
+                }
             }
 
             return null;
+        }
+
+        private static void logThrowable(final Throwable t) {
+            final StringBuilder error = new StringBuilder();
+            error.append("Asynchronous writing of table to file encountered error:");
+            error.append("\n" + t.getClass().getSimpleName());
+            if (t.getMessage() != null) {
+                error.append(": " + t.getMessage());
+            }
+            error.append("\nTable will be held in memory until cleared."
+                + "\nWorkflow can't be saved in this state. Proceed with caution.");
+            LOGGER.error(error.toString(), t);
         }
 
     }
