@@ -63,7 +63,7 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.DuplicateChecker;
-import org.knime.core.util.IDuplicateChecker;
+import org.knime.core.util.ThreadSafeDuplicateChecker;
 
 /**
  * The data container settings. Solely used for benchmarking.
@@ -122,11 +122,11 @@ public final class DataContainerSettings {
         /** The initialize domain flag used by the {@link IDataTableDomainCreator}. */
         private boolean m_initDomain;
 
-        /** The maximum number of domain values used by {@link IDuplicateChecker}. */
+        /** The maximum number of domain values used by {@link ThreadSafeDuplicateChecker}. */
         private int m_maxDomainValues;
 
-        /** The function creating new instances of {@link IDuplicateChecker}. */
-        private Supplier<IDuplicateChecker> m_duplicateCheckerCreator;
+        /** The function creating new instances of {@link ThreadSafeDuplicateChecker}. */
+        private Supplier<ThreadSafeDuplicateChecker> m_duplicateCheckerCreator;
 
         /** The function creating new instances of {@link IDataTableDomainCreator}. */
         private BiFunction<DataTableSpec, Boolean, IDataTableDomainCreator> m_tableDomainCreatorFunction;
@@ -181,7 +181,7 @@ public final class DataContainerSettings {
             return this;
         }
 
-        Builder setDuplicateCheckerCreator(final Supplier<IDuplicateChecker> supplier) {
+        Builder setDuplicateCheckerCreator(final Supplier<ThreadSafeDuplicateChecker> supplier) {
             m_duplicateCheckerCreator = supplier;
             return this;
         }
@@ -222,11 +222,11 @@ public final class DataContainerSettings {
     /** The initialize domain flag used by the {@link IDataTableDomainCreator}. */
     private final boolean m_initDomain;
 
-    /** The maximum number of domain values used by {@link IDuplicateChecker}. */
+    /** The maximum number of domain values used by {@link ThreadSafeDuplicateChecker}. */
     private final int m_maxDomainValues;
 
-    /** The function creating new instances of {@link IDuplicateChecker}. */
-    private final Supplier<IDuplicateChecker> m_duplicateCheckerCreator;
+    /** The function creating new instances of {@link ThreadSafeDuplicateChecker}. */
+    private final Supplier<ThreadSafeDuplicateChecker> m_duplicateCheckerCreator;
 
     /** The function creating new instances of {@link IDataTableDomainCreator}. */
     private final BiFunction<DataTableSpec, Boolean, IDataTableDomainCreator> m_tableDomainCreatorFunction;
@@ -342,11 +342,11 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Creates a {@link IDuplicateChecker} ensuring that the row keys are unique.
+     * Creates a {@link ThreadSafeDuplicateChecker} ensuring that the row keys are unique.
      *
-     * @return a {@link IDuplicateChecker}
+     * @return a {@link ThreadSafeDuplicateChecker}
      */
-    IDuplicateChecker createDuplicateChecker() {
+    ThreadSafeDuplicateChecker createDuplicateChecker() {
         return m_duplicateCheckerCreator.get();
     }
 
@@ -426,7 +426,7 @@ public final class DataContainerSettings {
     /**
      * Creates a new <code>DataContainerSetting</code> object by replicating the current
      * <code>DataContainerSetting</code> instance and solely changes the initialize domain flag used by the
-     * {@link IDuplicateChecker}.
+     * {@link ThreadSafeDuplicateChecker}.
      *
      * @param initDomain the new init domain flag
      * @return a new instance of {@code DataContainerSettings}
@@ -454,12 +454,12 @@ public final class DataContainerSettings {
     /**
      * Creates a new <code>DataContainerSetting</code> object by replicating the current
      * <code>DataContainerSetting</code> instance and solely changes the supplier to create instances of
-     * {@link IDuplicateChecker}.
+     * {@link ThreadSafeDuplicateChecker}.
      *
-     * @param supplier the new {@code IDuplicateChecker} function
+     * @param supplier the new {@code ThreadSafeDuplicateChecker} function
      * @return a new instance of {@code DataContainerSettings}
      */
-    public DataContainerSettings withDuplicateChecker(final Supplier<IDuplicateChecker> supplier) {
+    public DataContainerSettings withDuplicateChecker(final Supplier<ThreadSafeDuplicateChecker> supplier) {
         final Builder b = new Builder(this);
         b.setDuplicateCheckerCreator(supplier);
         return b.build();

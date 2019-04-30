@@ -98,7 +98,7 @@ import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.FileUtil;
-import org.knime.core.util.IDuplicateChecker;
+import org.knime.core.util.ThreadSafeDuplicateChecker;
 
 /**
  * Buffer that collects <code>DataRow</code> objects and creates a <code>DataTable</code> on request. This data
@@ -243,7 +243,7 @@ public class DataContainer implements RowAppender {
     private int m_maxRowsInMemory;
 
     /** Holds the keys of the added rows to check for duplicates. */
-    private IDuplicateChecker m_duplicateChecker;
+    private ThreadSafeDuplicateChecker m_duplicateChecker;
 
     /** The tablespec of the return table. */
     private DataTableSpec m_spec;

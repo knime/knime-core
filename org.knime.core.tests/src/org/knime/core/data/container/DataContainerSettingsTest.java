@@ -66,7 +66,7 @@ import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.IDataTableDomainCreator;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
-import org.knime.core.util.IDuplicateChecker;
+import org.knime.core.util.ThreadSafeDuplicateChecker;
 
 import junit.framework.TestCase;
 
@@ -184,33 +184,26 @@ public final class DataContainerSettingsTest extends TestCase {
 
             @Override
             public void merge(final IDataTableDomainCreator dataTableDomainCreator) {
-                // TODO Auto-generated method stub
-
             }
 
         }
 
-        class UnitDuplicateChecker implements IDuplicateChecker {
+        class UnitDuplicateChecker implements ThreadSafeDuplicateChecker {
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public void addKey(final String s) throws DuplicateKeyException, IOException {
             }
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public void checkForDuplicates() throws DuplicateKeyException, IOException {
             }
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public void clear() {
+            }
+
+            @Override
+            public void writeToDisk() throws IOException {
             }
 
         }

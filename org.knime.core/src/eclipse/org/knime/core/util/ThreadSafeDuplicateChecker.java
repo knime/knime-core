@@ -51,12 +51,13 @@ package org.knime.core.util;
 import java.io.IOException;
 
 /**
- * Interface for classes used to check that the columns of a data table don't contain any duplicates.
+ * Interface for classes used to check that the columns of a data table don't contain any duplicates. All methods have
+ * to be thread safe.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  * @since 3.8
  */
-public interface IDuplicateChecker {
+public interface ThreadSafeDuplicateChecker {
 
     /**
      * Adds a new key to the duplicate checker.
@@ -75,6 +76,13 @@ public interface IDuplicateChecker {
      * @throws IOException if an I/O error occurs
      */
     public void checkForDuplicates() throws DuplicateKeyException, IOException;
+
+    /**
+     * Writes a chunk of keys to disk.
+     *
+     * @throws IOException if an I/O error occurs while writing the chunk to disk
+     */
+    public void writeToDisk() throws IOException;
 
     /**
      * Clears the duplicate checker.

@@ -134,6 +134,44 @@ public class DuplicateCheckerTest {
         checker.addKey("A");
     }
 
+    /**
+     * Simply test that calling write to disk works with duplicates works as expected.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testWriteToDiskWithException() throws Exception {
+        DuplicateChecker checker = new DuplicateChecker();
+        for (int i = 0; i < 10; i++) {
+            checker.addKey("A");
+            checker.writeToDisk();
+        }
+        expectedException.expect(DuplicateKeyException.class);
+        checker.checkForDuplicates();
+    }
+
+    /**
+     * Simply test that calling write to disk works with unique keys works as expected.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testWriteToDisk() throws Exception {
+        DuplicateChecker checker = new DuplicateChecker();
+        for (int i = 0; i < 10; i++) {
+            checker.addKey("Row" + (10 - i));
+            if (i % 2 == 1) {
+                checker.writeToDisk();
+            }
+        }
+        // do useless writeToDisk calls
+        checker.writeToDisk();
+        checker.writeToDisk();
+        // add an additional row that resides in memory
+        checker.addKey("Row0");
+        checker.checkForDuplicates();
+    }
+
     private void internalTestArbitraryStrings(final boolean isAddDuplicates, final long seed) throws IOException {
         LinkedHashSet<String> hash = new LinkedHashSet<String>();
         Random r = new Random(seed);

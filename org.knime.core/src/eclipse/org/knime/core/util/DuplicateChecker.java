@@ -66,24 +66,20 @@ import java.util.Set;
 import org.knime.core.node.KNIMEConstants;
 
 /**
- * This class checks for duplicates in an (almost) arbitrary number of strings.
- * This can be used to check for e.g. unique row keys. The checking is done in
- * two stages: first new keys are added to a set. If the set already contains a
- * key an exception is thrown. If the set gets bigger than the maximum chunk
- * size it is written to disk and the set is cleared. If then after adding all
- * keys {@link #checkForDuplicates()} is called all created chunks are processed
- * and sorted by a merge sort like algorithm. If any duplicate keys are detected
- * during this process an exception is thrown.
- *
- * <p>Note: This implementation is not thread-safe, it's supposed to be used
- * by a single thread only.
+ * This class checks for duplicates in an (almost) arbitrary number of strings. This can be used to check for e.g.
+ * unique row keys. The checking is done in two stages: first new keys are added to a set. If the set already contains a
+ * key an exception is thrown. If the set gets bigger than the maximum chunk size it is written to disk and the set is
+ * cleared. If then after adding all keys {@link #checkForDuplicates()} is called all created chunks are processed and
+ * sorted by a merge sort like algorithm. If any duplicate keys are detected during this process an exception is thrown.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class DuplicateChecker implements IDuplicateChecker {
+public class DuplicateChecker implements ThreadSafeDuplicateChecker {
     private static class Chunk {
         private final File m_file;
+
         private DataOutputStream m_out;
+
         private long m_count = 0;
 
         public Chunk() throws IOException {
@@ -128,6 +124,7 @@ public class DuplicateChecker implements IDuplicateChecker {
             }
             return new Iterator<String>() {
                 private DataInputStream m_in;
+
                 private long m_read;
 
                 {
@@ -187,18 +184,17 @@ public class DuplicateChecker implements IDuplicateChecker {
 
     private final int m_maxStreams;
 
-    private Set<String> m_currentChunk = new HashSet<String>();
+    private Set<String> m_currentChunk = new HashSet<>();
 
     private List<Chunk> m_storedChunks = new ArrayList<Chunk>();
 
     private static final boolean DISABLE_DUPLICATE_CHECK =
-        Boolean.getBoolean(
-                KNIMEConstants.PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK);
+        Boolean.getBoolean(KNIMEConstants.PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK);
 
-    /** Custom hash set to keep list of to-be-deleted files, see bug 2966:
-     * "DuplicateChecker always writes to disc (even for small tables) + temp
-     * file names are hashed in core java (increased mem consumption for loops)"
-     * for details. */
+    /**
+     * Custom hash set to keep list of to-be-deleted files, see bug 2966: "DuplicateChecker always writes to disc (even
+     * for small tables) + temp file names are hashed in core java (increased mem consumption for loops)" for details.
+     */
     private static final Collection<Chunk> ALL_CHUNKS = new ArrayList<Chunk>();
 
     static {
@@ -222,12 +218,20 @@ public class DuplicateChecker implements IDuplicateChecker {
     }
 
     /**
+     * Creates a new duplicate checker with the given chunk size.
+     *
+     * @param maxChunkSize the size of each chunk, i.e. the maximum number of elements kept in memory
+     * @since 3.8
+     */
+    public DuplicateChecker(final int maxChunkSize) {
+        this(maxChunkSize, MAX_STREAMS);
+    }
+
+    /**
      * Creates a new duplicate checker.
      *
-     * @param maxChunkSize the size of each chunk, i.e. the maximum number of
-     *            elements kept in memory
-     * @param maxStreams the maximum number of streams that are kept open during
-     *            the merge process, must be at least 2
+     * @param maxChunkSize the size of each chunk, i.e. the maximum number of elements kept in memory
+     * @param maxStreams the maximum number of streams that are kept open during the merge process, must be at least 2
      */
     public DuplicateChecker(final int maxChunkSize, final int maxStreams) {
         if (maxStreams < 2) {
@@ -237,10 +241,8 @@ public class DuplicateChecker implements IDuplicateChecker {
         m_maxStreams = maxStreams;
     }
 
-    /** {@inheritDoc} */
     @Override
-    public void addKey(final String s) throws DuplicateKeyException,
-            IOException {
+    synchronized public void addKey(final String s) throws DuplicateKeyException, IOException {
         if (DISABLE_DUPLICATE_CHECK) {
             return;
         }
@@ -254,9 +256,8 @@ public class DuplicateChecker implements IDuplicateChecker {
         }
     }
 
-    /** {@inheritDoc} */
     @Override
-    public void checkForDuplicates() throws DuplicateKeyException, IOException {
+    synchronized public void checkForDuplicates() throws DuplicateKeyException, IOException {
         if (m_storedChunks.size() == 0) {
             // less than MAX_CHUNK_SIZE keys, no need to write
             // a file because the check for duplicates has already
@@ -267,16 +268,19 @@ public class DuplicateChecker implements IDuplicateChecker {
         checkForDuplicates(m_storedChunks);
     }
 
-    /**
-     * Clears the checker, i.e. removes all temporary files and all keys in
-     * memory.
-     */
     @Override
-    public void clear() {
+    synchronized public void writeToDisk() throws IOException {
+        writeChunk();
+    }
+
+    @Override
+    synchronized public void clear() {
         for (Chunk c : m_storedChunks) {
             c.dispose();
         }
-        synchronized (ALL_CHUNKS) { ALL_CHUNKS.removeAll(m_storedChunks); }
+        synchronized (ALL_CHUNKS) {
+            ALL_CHUNKS.removeAll(m_storedChunks);
+        }
         m_storedChunks.clear();
         m_currentChunk.clear();
     }
@@ -290,17 +294,14 @@ public class DuplicateChecker implements IDuplicateChecker {
      * @throws DuplicateKeyException if a duplicate key has been detected
      */
     private void checkForDuplicates(final List<Chunk> storedChunks)
-            throws NumberFormatException, IOException, DuplicateKeyException {
-        final int nrChunks =
-                (int)Math.ceil(storedChunks.size() / (double)m_maxStreams);
+        throws NumberFormatException, IOException, DuplicateKeyException {
+        final int nrChunks = (int)Math.ceil(storedChunks.size() / (double)m_maxStreams);
         List<Chunk> newChunks = new ArrayList<Chunk>(nrChunks);
 
         int chunkCount = 0;
         for (int i = 0; i < nrChunks; i++) {
             @SuppressWarnings("unchecked")
-            Iterator<String>[] in =
-                new Iterator[Math.min(
-                        m_maxStreams, storedChunks.size() - chunkCount)];
+            Iterator<String>[] in = new Iterator[Math.min(m_maxStreams, storedChunks.size() - chunkCount)];
             if (in.length == 1) {
                 // only one (remaining) chunk => no need to merge anything
                 newChunks.add(storedChunks.get(chunkCount++));
@@ -320,7 +321,9 @@ public class DuplicateChecker implements IDuplicateChecker {
             }
 
             Chunk chunk = new Chunk();
-            synchronized (ALL_CHUNKS) { ALL_CHUNKS.add(chunk); }
+            synchronized (ALL_CHUNKS) {
+                ALL_CHUNKS.add(chunk);
+            }
             newChunks.add(chunk);
 
             String lastKey = null;
@@ -351,7 +354,9 @@ public class DuplicateChecker implements IDuplicateChecker {
         for (Chunk c : newChunks) {
             c.dispose();
         }
-        synchronized (ALL_CHUNKS) { ALL_CHUNKS.removeAll(newChunks); }
+        synchronized (ALL_CHUNKS) {
+            ALL_CHUNKS.removeAll(newChunks);
+        }
     }
 
     /**
@@ -371,8 +376,7 @@ public class DuplicateChecker implements IDuplicateChecker {
     }
 
     /**
-     * Container to hold a string and the stream index where the string
-     * was read from.
+     * Container to hold a string and the stream index where the string was read from.
      */
     private static final class Helper implements Comparable<Helper> {
         private String m_s;
