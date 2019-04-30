@@ -178,7 +178,7 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable, KNIMESt
      * @throws IOException If there are too many different cell implementations (currently 253 are theoretically
      *             supported)
      */
-    public DataCellSerializer<DataCell> getSerializerForDataCell(final CellClassInfo cellClass) throws IOException {
+    synchronized public DataCellSerializer<DataCell> getSerializerForDataCell(final CellClassInfo cellClass) throws IOException {
         if (m_typeShortCuts == null) {
             m_typeShortCuts = new HashMap<CellClassInfo, Byte>();
         }
