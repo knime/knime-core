@@ -50,6 +50,7 @@ package org.knime.core.data;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import java.util.Collections;
@@ -131,17 +132,17 @@ public class DataTableDomainCreatorTest {
         // change lower bound to -Inf
         domainCreator.updateDomain(new DefaultRow(rowKey, Double.NEGATIVE_INFINITY));
         colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
-        assertThat("Unexpected lower bound", colDomain.getLowerBound(), is((DataCell)new DoubleCell(
-            Double.NEGATIVE_INFINITY)));
+        assertThat("Unexpected lower bound", colDomain.getLowerBound(),
+            is((DataCell)new DoubleCell(Double.NEGATIVE_INFINITY)));
         assertThat("Unexpected upper bound", colDomain.getUpperBound(), is((DataCell)new DoubleCell(1)));
 
         // change upper bound to +Inf
         domainCreator.updateDomain(new DefaultRow(rowKey, Double.POSITIVE_INFINITY));
         colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
-        assertThat("Unexpected lower bound", colDomain.getLowerBound(), is((DataCell)new DoubleCell(
-            Double.NEGATIVE_INFINITY)));
-        assertThat("Unexpected upper bound", colDomain.getUpperBound(), is((DataCell)new DoubleCell(
-            Double.POSITIVE_INFINITY)));
+        assertThat("Unexpected lower bound", colDomain.getLowerBound(),
+            is((DataCell)new DoubleCell(Double.NEGATIVE_INFINITY)));
+        assertThat("Unexpected upper bound", colDomain.getUpperBound(),
+            is((DataCell)new DoubleCell(Double.POSITIVE_INFINITY)));
     }
 
     /**
@@ -248,7 +249,6 @@ public class DataTableDomainCreatorTest {
         domainCreator.setMaxPossibleValues(-1);
     }
 
-
     /**
      * Checks whether bounds are initialized correctly if requested.
      */
@@ -268,24 +268,23 @@ public class DataTableDomainCreatorTest {
 
         // check initialized bounds
         DataColumnDomain colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
-        assertThat("Unexpected lower bound", colDomain.getLowerBound(), is((DataCell) new IntCell(-2)));
-        assertThat("Unexpected upper bound", colDomain.getUpperBound(), is((DataCell) new IntCell(2)));
+        assertThat("Unexpected lower bound", colDomain.getLowerBound(), is((DataCell)new IntCell(-2)));
+        assertThat("Unexpected upper bound", colDomain.getUpperBound(), is((DataCell)new IntCell(2)));
 
         domainCreator.updateDomain(new DefaultRow(rowKey, new IntCell(1)));
         colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
-        assertThat("Unexpected lower bound", colDomain.getLowerBound(), is((DataCell) new IntCell(-2)));
-        assertThat("Unexpected upper bound", colDomain.getUpperBound(), is((DataCell) new IntCell(2)));
-
+        assertThat("Unexpected lower bound", colDomain.getLowerBound(), is((DataCell)new IntCell(-2)));
+        assertThat("Unexpected upper bound", colDomain.getUpperBound(), is((DataCell)new IntCell(2)));
 
         domainCreator.updateDomain(new DefaultRow(rowKey, new IntCell(3)));
         colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
-        assertThat("Unexpected lower bound", colDomain.getLowerBound(), is((DataCell) new IntCell(-2)));
-        assertThat("Unexpected upper bound", colDomain.getUpperBound(), is((DataCell) new IntCell(3)));
+        assertThat("Unexpected lower bound", colDomain.getLowerBound(), is((DataCell)new IntCell(-2)));
+        assertThat("Unexpected upper bound", colDomain.getUpperBound(), is((DataCell)new IntCell(3)));
 
         domainCreator.updateDomain(new DefaultRow(rowKey, new IntCell(-3)));
         colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
-        assertThat("Unexpected lower bound", colDomain.getLowerBound(), is((DataCell) new IntCell(-3)));
-        assertThat("Unexpected upper bound", colDomain.getUpperBound(), is((DataCell) new IntCell(3)));
+        assertThat("Unexpected lower bound", colDomain.getLowerBound(), is((DataCell)new IntCell(-3)));
+        assertThat("Unexpected upper bound", colDomain.getUpperBound(), is((DataCell)new IntCell(3)));
     }
 
     /**
@@ -298,7 +297,6 @@ public class DataTableDomainCreatorTest {
         domainCrea.setValues(Collections.singleton(new StringCell("v99")));
         colSpecCrea.setDomain(domainCrea.createDomain());
         DataColumnSpec stringColSpec = colSpecCrea.createSpec();
-
 
         DataTableSpec tableSpec = new DataTableSpec(stringColSpec);
         RowKey rowKey = new RowKey("Row0");
@@ -317,7 +315,6 @@ public class DataTableDomainCreatorTest {
         colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
         assertThat("Unexpected possible values", colDomain.getValues(), is(expectedValues));
 
-
         // check whether a initial set of more than 60 possible values is retained if no new possible values
         // appear in the data
         domainCrea = new DataColumnDomainCreator();
@@ -328,7 +325,6 @@ public class DataTableDomainCreatorTest {
         domainCrea.setValues(initialValues);
         colSpecCrea.setDomain(domainCrea.createDomain());
         stringColSpec = colSpecCrea.createSpec();
-
 
         tableSpec = new DataTableSpec(stringColSpec);
         domainCreator = new DataTableDomainCreator(tableSpec, true);
@@ -343,7 +339,6 @@ public class DataTableDomainCreatorTest {
         colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
         assertThat("Unexpected possible values", colDomain.getValues(), is(initialValues));
     }
-
 
     /**
      * Checks whether the default maximum of possible values is taken from the system property.
@@ -368,9 +363,108 @@ public class DataTableDomainCreatorTest {
         assertThat("Unexpected possible values", colDomain.getValues(), is(expectedValues));
 
         // add more than the maximum number removes all values
-        domainCreator.updateDomain(new DefaultRow(new RowKey("One value too many"), new StringCell("One value too many")));
+        domainCreator
+            .updateDomain(new DefaultRow(new RowKey("One value too many"), new StringCell("One value too many")));
         colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
         assertThat("Unexpected possible values", colDomain.getValues(), is(nullValue()));
 
     }
+
+    /**
+     * Checks whether merges are done correctly.
+     */
+    @Test
+    public void testMerge() {
+        final DataColumnSpecCreator colSpecStringCrea = new DataColumnSpecCreator("String col", StringCell.TYPE);
+        final DataColumnSpecCreator colSpecDoubleCrea = new DataColumnSpecCreator("Double col", DoubleCell.TYPE);
+        final DataColumnSpecCreator colSpecIntCrea = new DataColumnSpecCreator("Int col", IntCell.TYPE);
+        final DataTableSpec tableSpec = new DataTableSpec(colSpecStringCrea.createSpec(), colSpecDoubleCrea.createSpec(),
+            colSpecIntCrea.createSpec());
+
+        final RowKey rowKey = new RowKey("Row0");
+
+        final DataTableDomainCreator domainCreator_1 = new DataTableDomainCreator(tableSpec, false);
+        final DataTableDomainCreator domainCreator_2 = new DataTableDomainCreator(tableSpec, false);
+
+        final LinkedHashSet<DataCell> possibleValues = new LinkedHashSet<>();
+
+        domainCreator_1.updateDomain(new DefaultRow(rowKey, new StringCell("A"), new DoubleCell(0.5), new IntCell(1)));
+        possibleValues.add(new StringCell("A"));
+        domainCreator_2.updateDomain(new DefaultRow(rowKey, new StringCell("B"), new DoubleCell(1.5), new IntCell(0)));
+        possibleValues.add(new StringCell("B"));
+        domainCreator_1.merge(domainCreator_2);
+
+        final DataTableSpec createSpec_1 = domainCreator_1.createSpec();
+        final DataColumnDomain stringDomain = createSpec_1.getColumnSpec(0).getDomain();
+        assertThat("Unexpected possible values in string domain", stringDomain.getValues(), is(possibleValues));
+
+        final DataColumnDomain doubleDomain = createSpec_1.getColumnSpec(1).getDomain();
+        assertThat("Unexpected lower bound (double cell)", doubleDomain.getLowerBound(),
+            is((DataCell)new DoubleCell(0.5)));
+        assertThat("Unexpected upper bound (double cell)", doubleDomain.getUpperBound(),
+            is((DataCell)new DoubleCell(1.5)));
+
+        final DataColumnDomain intDomain = createSpec_1.getColumnSpec(2).getDomain();
+        assertThat("Unexpected lower bound (int cell)", intDomain.getLowerBound(), is((DataCell)new IntCell(0)));
+        assertThat("Unexpected upper bound (int cell)", intDomain.getUpperBound(), is((DataCell)new IntCell(1)));
+    }
+
+    /**
+     * Tests that merge respects the maximum number of possible values.
+     */
+    @Test
+    public void testMergeRespectsMaxValues() {
+        final DataTableSpec tableSpec = new DataTableSpec(new DataColumnSpecCreator("String col", StringCell.TYPE).createSpec());
+
+        final RowKey rowKey = new RowKey("Row0");
+
+        final DataTableDomainCreator domainCreator_1 = new DataTableDomainCreator(tableSpec, false);
+        domainCreator_1.setMaxPossibleValues(1);
+        final DataTableDomainCreator domainCreator_2 = new DataTableDomainCreator(tableSpec, false);
+        domainCreator_2.setMaxPossibleValues(1);
+
+        domainCreator_1.updateDomain(new DefaultRow(rowKey, new StringCell("A")));
+        domainCreator_2.updateDomain(new DefaultRow(rowKey, new StringCell("B")));
+        domainCreator_1.merge(domainCreator_2);
+
+        final DataTableSpec createSpec_1 = domainCreator_1.createSpec();
+        final DataColumnDomain stringDomain = createSpec_1.getColumnSpec(0).getDomain();
+        assertNull("Unexpected possible values in string domain", stringDomain.getValues());
+    }
+
+    /**
+     * Checks that merge throws an exception if the spec's column names are different.
+     */
+    @Test (expected = IllegalArgumentException.class)
+    public void testMergeFailsIfColumnNamesAreDifferent() {
+        final DataTableSpec tableSpec_1 = new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
+        final DataTableSpec tableSpec_2 = new DataTableSpec(new DataColumnSpecCreator("Double col", IntCell.TYPE).createSpec());
+        final DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec_1, false);
+        domainCreator.merge(new DataTableDomainCreator(tableSpec_2, false));
+    }
+
+    /**
+     * Checks that merge throws an exception if the spec's column types are different.
+     */
+    @Test (expected = IllegalArgumentException.class)
+    public void testMergeFailsIfColumnTypesAreDifferent() {
+        final DataTableSpec tableSpec_1 = new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
+        final DataTableSpec tableSpec_2 = new DataTableSpec(new DataColumnSpecCreator("Int col", DoubleCell.TYPE).createSpec());
+        final DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec_1, false);
+        domainCreator.merge(new DataTableDomainCreator(tableSpec_2, false));
+    }
+
+
+    /**
+     * Checks that merge throws an exception if the maximum number of possible values are different.
+     */
+    @Test (expected = IllegalArgumentException.class)
+    public void testMergeFailsIfMaxPossibleValuesAreDifferent() {
+        final DataTableSpec tableSpec_1 = new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
+        final DataTableSpec tableSpec_2 = new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
+        final DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec_1, false);
+        domainCreator.setMaxPossibleValues(0);
+        domainCreator.merge(new DataTableDomainCreator(tableSpec_2, false));
+    }
+
 }

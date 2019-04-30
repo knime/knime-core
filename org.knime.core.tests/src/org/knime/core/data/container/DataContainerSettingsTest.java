@@ -159,26 +159,33 @@ public final class DataContainerSettingsTest extends TestCase {
     public void testChangeFunctions() {
         class UnitDomainCreator implements IDataTableDomainCreator {
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public void updateDomain(final DataRow row) {
             }
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public void setMaxPossibleValues(final int maxVals) {
             }
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public DataTableSpec createSpec() {
                 return null;
+            }
+
+            @Override
+            public DataTableSpec getInputSpec() {
+                return null;
+            }
+
+            @Override
+            public int getMaxPossibleVals() {
+                return 0;
+            }
+
+            @Override
+            public void merge(final IDataTableDomainCreator dataTableDomainCreator) {
+                // TODO Auto-generated method stub
+
             }
 
         }
