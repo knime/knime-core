@@ -53,11 +53,9 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
@@ -66,9 +64,7 @@ import java.util.concurrent.Future;
 import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.eclipse.core.runtime.Platform;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -690,31 +686,6 @@ public class DataContainerTest extends TestCase {
         assertTrue(comparator.compare(min, max) < 0);
         assertEquals(min, r1Cell2);
         assertEquals(max, r3Cell2);
-    }
-
-    public void testAsyncWriteLimits() throws Exception {
-        Assume.assumeTrue(!DataContainer.SYNCHRONOUS_IO);
-        final int limit = Platform.ARCH_X86.equals(Platform.getOSArch()) ? 10 : 50;
-        Assert.assertEquals(limit, DataContainer.MAX_ASYNC_WRITE_THREADS);
-        RowIterator infinitIterator = generateRows(Integer.MAX_VALUE);
-        List<DataContainer> containerList = new ArrayList<DataContainer>();
-        try {
-            boolean isAsync;
-            do {
-                int activeCount = DataContainer.ASYNC_EXECUTORS.getActiveCount();
-                DataContainer c = new DataContainer(SPEC_STR_INT_DBL, true, 0);
-                c.addRowToTable(infinitIterator.next());
-                // no activeCount is incremented by one - so order of two lines is important.
-                containerList.add(c);
-                isAsync = activeCount <= limit;
-                assertEquals("unexpected async write behavior, active thread count is " + activeCount,
-                    isAsync, !c.isSynchronousWrite());
-            } while (isAsync);
-        } finally {
-            for (DataContainer c : containerList) {
-                c.close();
-            }
-        }
     }
 
     /**

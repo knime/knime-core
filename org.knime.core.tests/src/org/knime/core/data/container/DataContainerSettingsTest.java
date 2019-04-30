@@ -93,6 +93,7 @@ public final class DataContainerSettingsTest extends TestCase {
         assertEquals("Wrong default (intialize domain flag)", INIT_DOMAIN, settings.getInitializeDomain());
         assertEquals("Wrong default (asynchrnous write threads)", MAX_ASYNC_WRITE_THREADS,
             settings.getMaxAsyncWriteThreads());
+        assertEquals("Wrong default (container threads)", MAX_ASYNC_WRITE_THREADS, settings.getMaxContainerThreads());
         assertTrue("Wrong default (domain creator)",
             settings.createDomainCreator(spec) instanceof DataTableDomainCreator);
         assertTrue("Wrong default (duplicate checker)", settings.createDuplicateChecker() instanceof DuplicateChecker);
@@ -115,6 +116,7 @@ public final class DataContainerSettingsTest extends TestCase {
         final boolean syncIO = !def.useSyncIO();
         final boolean initDomain = !def.getInitializeDomain();
         final int maxAsyncWriteThreads = def.getMaxAsyncWriteThreads() * -1;
+        final int maxContainerThreads = def.getMaxContainerThreads() * -1;
         final BufferSettings bSettings =
             def.getBufferSettings().withLRUCacheSize(def.getBufferSettings().getLRUCacheSize() * -1);
 
@@ -125,6 +127,7 @@ public final class DataContainerSettingsTest extends TestCase {
             .withSyncIO(syncIO)//
             .withInitializedDomain(initDomain)//
             .withMaxAsyncWriteThreads(maxAsyncWriteThreads)//
+            .withMaxContainerThreads(maxContainerThreads)//
             .withBufferSettings(bSettings);
 
         assertEquals("Modified settings created wrong cache size", cacheSize, settings.getAsyncCacheSize());
@@ -135,8 +138,10 @@ public final class DataContainerSettingsTest extends TestCase {
         assertEquals("Modified settings created wrong synchronous IO flag", syncIO, settings.useSyncIO());
         assertEquals("Modified settings created wrong initialize domain flag", initDomain,
             settings.getInitializeDomain());
-        assertEquals("Modified settings created wrong initialize maximum number of asynchronous write threads",
+        assertEquals("Modified settings created wrong maximum number of asynchronous write threads",
             maxAsyncWriteThreads, settings.getMaxAsyncWriteThreads());
+        assertEquals("Modified settings created wrong maximum number of container threads", maxContainerThreads,
+            settings.getMaxContainerThreads());
         assertNotEquals("Default settings has been modified (chache size)", def.getAsyncCacheSize(),
             settings.getAsyncCacheSize());
         assertNotEquals("Default settings has been modified (number of cells in memory)", def.getMaxCellsInMemory(),
@@ -145,6 +150,8 @@ public final class DataContainerSettingsTest extends TestCase {
             def.getMaxDomainValues(), settings.getMaxDomainValues());
         assertNotEquals("Default settings has been modified (number of asynchronous write threads)",
             def.getMaxAsyncWriteThreads(), settings.getMaxAsyncWriteThreads());
+        assertNotEquals("Default settings has been modified (number of container threads)",
+            def.getMaxContainerThreads(), settings.getMaxContainerThreads());
         assertNotEquals("Default settings has been modified (synchronous IO flag)", def.useSyncIO(),
             settings.useSyncIO());
         assertNotEquals("Default settings has been modified (initialize domain flag)", def.getInitializeDomain(),

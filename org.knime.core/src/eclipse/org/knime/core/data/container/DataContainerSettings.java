@@ -86,7 +86,7 @@ public final class DataContainerSettings {
      *
      * @see KNIMEConstants#PROPERTY_ASYNC_WRITE_CACHE_SIZE
      */
-    private static final int DEF_ASYNC_CACHE_SIZE = 10;
+    private static final int DEF_ASYNC_CACHE_SIZE = 100;
 
     /**
      * The default number of possible values being kept at most. If the number of possible values in a column exceeds
@@ -116,6 +116,9 @@ public final class DataContainerSettings {
         /** The maximum number of asynchronous write threads. */
         private int m_maxAsyncWriteThreads;
 
+        /** The maximum number of threads used by a {@link DataContainer}. */
+        private int m_maxContainerThreads;
+
         /** The asynchronous cache size. */
         private int m_asyncCacheSize;
 
@@ -143,6 +146,7 @@ public final class DataContainerSettings {
             m_maxCellsInMemory = settings.m_maxCellsInMemory;
             m_syncIO = settings.m_syncIO;
             m_maxAsyncWriteThreads = settings.m_maxAsyncWriteThreads;
+            m_maxContainerThreads = settings.m_maxContainerThreads;
             m_asyncCacheSize = settings.m_asyncCacheSize;
             m_initDomain = settings.m_initDomain;
             m_maxDomainValues = settings.m_maxDomainValues;
@@ -163,6 +167,11 @@ public final class DataContainerSettings {
 
         Builder setMaxAsyncWriteThreads(final int maxAsyncWriteThreads) {
             m_maxAsyncWriteThreads = maxAsyncWriteThreads;
+            return this;
+        }
+
+        Builder setMaxContainerThreads(final int maxContainerThreads) {
+            m_maxContainerThreads = maxContainerThreads;
             return this;
         }
 
@@ -216,6 +225,9 @@ public final class DataContainerSettings {
     /** The maximum number of asynchronous write threads. */
     private final int m_maxAsyncWriteThreads;
 
+    /** The maximum number of threads used by a {@link DataContainer}. */
+    private final int m_maxContainerThreads;
+
     /** The asynchronous cache size. */
     private final int m_asyncCacheSize;
 
@@ -247,10 +259,11 @@ public final class DataContainerSettings {
         m_maxCellsInMemory = initMaxCellsInMemory();
         m_syncIO = initSynchronousIO();
         m_maxAsyncWriteThreads = initMaxAsyncWriteThreads();
+        m_maxContainerThreads = initContainerThreads();
         m_asyncCacheSize = initAsyncCacheSize();
         m_initDomain = initDomain();
         m_maxDomainValues = initMaxDomainValues();
-        m_duplicateCheckerCreator = () -> new DuplicateChecker();
+        m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
         m_tableDomainCreatorFunction = (spec, initDomain) -> new DataTableDomainCreator(spec, initDomain);
         m_bufferSettings = DEFAULT_BUFFER_INSTANCE;
     }
@@ -264,6 +277,7 @@ public final class DataContainerSettings {
         m_maxCellsInMemory = builder.m_maxCellsInMemory;
         m_syncIO = builder.m_syncIO;
         m_maxAsyncWriteThreads = builder.m_maxAsyncWriteThreads;
+        m_maxContainerThreads = builder.m_maxContainerThreads;
         m_asyncCacheSize = builder.m_asyncCacheSize;
         m_initDomain = builder.m_initDomain;
         m_maxDomainValues = builder.m_maxDomainValues;
@@ -312,6 +326,15 @@ public final class DataContainerSettings {
      */
     int getMaxAsyncWriteThreads() {
         return m_maxAsyncWriteThreads;
+    }
+
+    /**
+     * Returns the maximum number of container threads.
+     *
+     * @return maximum number of container threads
+     */
+    int getMaxContainerThreads() {
+        return m_maxContainerThreads;
     }
 
     /**
@@ -407,6 +430,19 @@ public final class DataContainerSettings {
     public DataContainerSettings withMaxAsyncWriteThreads(final int maxAsyncWriteThreads) {
         final Builder b = new Builder(this);
         b.setMaxAsyncWriteThreads(maxAsyncWriteThreads);
+        return b.build();
+    }
+
+    /**
+     * Creates a new <code>DataContainerSetting</code> object by replicating the current
+     * <code>DataContainerSetting</code> instance and solely changes the maximum number of container threads.
+     *
+     * @param maxContainerThreads the new maximum number of container threads
+     * @return a new instance of {@code DataContainerSettings}
+     */
+    public DataContainerSettings withMaxContainerThreads(final int maxContainerThreads) {
+        final Builder b = new Builder(this);
+        b.setMaxContainerThreads(maxContainerThreads);
         return b.build();
     }
 
@@ -540,6 +576,10 @@ public final class DataContainerSettings {
      * @return the maximum number of asynchornous write threads
      */
     private static int initMaxAsyncWriteThreads() {
+        return Platform.ARCH_X86.equals(Platform.getOSArch()) ? 10 : 50;
+    }
+
+    private static int initContainerThreads() {
         return Platform.ARCH_X86.equals(Platform.getOSArch()) ? 10 : 50;
     }
 
