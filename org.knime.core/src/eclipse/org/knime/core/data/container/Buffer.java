@@ -2556,6 +2556,8 @@ public class Buffer implements KNIMEStreamConstants {
                  * time to check whether the thread has thrown any exceptions, since we're clearing the buffer anyways.
                  */
                 m_asyncAddFuture.cancel(true);
+            } else {
+                performClear();
             }
 
             m_asyncAddFuture = null;
