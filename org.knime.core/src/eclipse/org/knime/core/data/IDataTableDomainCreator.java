@@ -48,6 +48,8 @@
  */
 package org.knime.core.data;
 
+import java.util.Map;
+
 /**
  * Interface for classes used to create or recreate the domain of a data table.
  *
@@ -77,6 +79,42 @@ public interface IDataTableDomainCreator {
      * @param maxVals the maximal number of values, must be &gt;= 0
      */
     void setMaxPossibleValues(final int maxVals);
+
+    /**
+     * Sets the batch ID, ensuring that after merging various {@link IDataTableDomainCreator} instances the ordering of
+     * the domain values coincides with their occurrence in the input table.
+     *
+     * @param id the batch index
+     */
+    void setBatchId(final long id);
+
+    /**
+     * Returns all possible domain values for the given column index, or {@code null} if more values have been processed
+     * than the maximum number of allowed values. The map stores for each &ltkey&gt ({@link DataCell}) the ID of first.
+     * i.e., smallest, batch that contained it.
+     *
+     * @param colIndex the column index
+     * @return the possible domain values for the given column
+     */
+    Map<DataCell, Long> getDomainValues(final int colIndex);
+
+    /**
+     * Returns the cell with the smallest value for the given column, or {@code null} if only {@code MissingCells} have
+     * been processed.
+     *
+     * @param colIndex the column index
+     * @return the minimum value for the given column.
+     */
+    DataCell getMin(final int colIndex);
+
+    /**
+     * Returns the cell with the largest value for the given column, or {@code null} if only {@code MissingCells} have
+     * been processed.
+     *
+     * @param colIndex the column index
+     * @return the maximum value for the given column.
+     */
+    DataCell getMax(final int colIndex);
 
     /**
      * Creates an updated version of the input spec.

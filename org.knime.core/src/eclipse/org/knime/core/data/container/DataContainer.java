@@ -1168,9 +1168,10 @@ public class DataContainer implements RowAppender {
         ContainerDomainRunnable(final DataContainer container, final IDataTableDomainCreator domainCreator,
             final List<DataRow> rows, final long batchIdx) {
             m_containerRef = new WeakReference<>(container);
-            m_dataTableDomainCreator = domainCreator;
             m_rows = rows;
             m_batchIdx = batchIdx;
+            m_dataTableDomainCreator = domainCreator;
+            m_dataTableDomainCreator.setBatchId(m_batchIdx);
         }
 
         @Override

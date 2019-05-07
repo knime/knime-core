@@ -47,8 +47,13 @@
 package org.knime.core.data;
 
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.DataContainerSettings;
@@ -86,9 +91,12 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
 
     private final boolean[] m_maxsMissing;
 
-    private final Set<DataCell>[] m_possVals;
+    private final Map<DataCell, Long>[] m_possVals;
 
     private final DataValueComparator[] m_comparators;
+
+    /** The batch id. */
+    private long m_batchId;
 
     /**
      * A new instance that recreates the domain of certains columns. Which columns are processed and if the domains
@@ -108,7 +116,7 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         m_minsMissing = new boolean[inputSpec.getNumColumns()];
         m_maxs = new DataCell[inputSpec.getNumColumns()];
         m_maxsMissing = new boolean[inputSpec.getNumColumns()];
-        m_possVals = new LinkedHashSet[inputSpec.getNumColumns()];
+        m_possVals = new LinkedHashMap[inputSpec.getNumColumns()];
         m_comparators = new DataValueComparator[inputSpec.getNumColumns()];
         m_domainValuesColumnSelection = domainValuesColumnSelection;
         m_domainMinMaxColumnSelection = domainMinMaxColumnSelection;
@@ -120,12 +128,19 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
                 Set<DataCell> values = colSpec.getDomain().getValues();
 
                 if (!m_domainValuesColumnSelection.dropDomain(colSpec) && (values != null)) {
-                    m_possVals[i] = new LinkedHashSet<>(values);
+                    m_possVals[i] = values.stream()//
+                        .collect(Collectors.toMap(//
+                            Function.identity(), //
+                            v -> m_batchId, //
+                            (v1, v2) -> {
+                                throw new IllegalStateException();
+                            }, //
+                            () -> new LinkedHashMap<>()));
                 } else {
                     // since we're doing a lot of checks for whether a DataCell is contained in the set of possible
                     // values, we should reduce the amount of expected hash collisions by creating a sufficiently
                     // large hash set with a low load factor.
-                    m_possVals[i] = new LinkedHashSet<>(2 * m_maxPossibleValues, 1 / 3f);
+                    m_possVals[i] = new LinkedHashMap<>(2 * m_maxPossibleValues, 1 / 3f);
                 }
             }
 
@@ -196,6 +211,26 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         m_maxPossibleValues = maxValues;
     }
 
+    @Override
+    public void setBatchId(final long id) {
+        m_batchId = id;
+    }
+
+    @Override
+    public Map<DataCell, Long> getDomainValues(final int colIndex) {
+        return m_possVals[colIndex];
+    }
+
+    @Override
+    public DataCell getMin(final int colIndex) {
+        return m_mins[colIndex];
+    }
+
+    @Override
+    public DataCell getMax(final int colIndex) {
+        return m_maxs[colIndex];
+    }
+
     /**
      * Updates the min and max value for an respective column. This method does nothing if the min and max values don't
      * need to be stored, e.g. the column at hand contains string values.
@@ -208,7 +243,8 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         final boolean isMissing = cell.isMissing();
 
         if (!isMissing && m_possVals[col] != null) {
-            if (m_possVals[col].add(cell) && (m_possVals[col].size() > m_maxPossibleValues)) {
+            if (m_possVals[col].putIfAbsent(cell, m_batchId) == null
+                && (m_possVals[col].size() > m_maxPossibleValues)) {
                 m_possVals[col] = null;
             }
         }
@@ -227,8 +263,6 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         updateMin(col, mins, unwrapped, comparator);
         updateMax(col, maxs, unwrapped, comparator);
     }
-
-
 
     private void updateMin(final int col, final DataCell[] mins, final DataCell cell,
         final Comparator<DataCell> comparator) {
@@ -274,7 +308,7 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
             }
 
             if (m_domainValuesColumnSelection.createDomain(original)) {
-                domainCreator.setValues(m_possVals[i]);
+                domainCreator.setValues(getSortedValues(i));
             }
             if (m_domainMinMaxColumnSelection.createDomain(original)) {
                 DataCell min = m_mins[i] != null && !m_mins[i].isMissing() ? m_mins[i] : null;
@@ -289,6 +323,16 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         }
 
         return new DataTableSpec(m_inputSpec.getName(), outColSpecs);
+    }
+
+    private Set<DataCell> getSortedValues(final int index) {
+        Map<DataCell, Long> vals = m_possVals[index];
+        if (vals == null) {
+            return null;
+        }
+        return vals.keySet().stream()//
+            .sorted((d1, d2) -> Long.compare(vals.get(d1), vals.get(d2)))//
+            .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     @Override
@@ -391,25 +435,27 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
             "Cannot merge data table domain creators based on different table specs");
         CheckUtils.checkArgument(getMaxPossibleVals() == dataTableDomainCreator.getMaxPossibleVals(),
             "Cannot merge data table domain creators using a different number of unique values");
-        final DataColumnSpec[] columnSpecs = dataTableDomainCreator.createSpec().getColumnSpecs();
         for (int i = 0; i < m_inputSpec.getNumColumns(); i++) {
-            final DataColumnDomain domain = columnSpecs[i].getDomain();
-            if (m_possVals[i] != null && domain.getValues() != null) {
-                for (final DataCell c : domain.getValues()) {
-                    if (m_possVals[i].add(c) && (m_possVals[i].size() > m_maxPossibleValues)) {
-                        m_possVals[i] = null;
-                        break;
+            if (m_possVals[i] != null && dataTableDomainCreator.getDomainValues(i) != null) {
+                for (final Entry<DataCell, Long> entry : dataTableDomainCreator.getDomainValues(i).entrySet()) {
+                    Map<DataCell, Long> vals = m_possVals[i];
+                    if (!vals.containsKey(entry.getKey()) || vals.get(entry.getKey()) > entry.getValue()) {
+                        vals.put(entry.getKey(), entry.getValue());
+                        if ((m_possVals[i].size() > m_maxPossibleValues)) {
+                            m_possVals[i] = null;
+                            break;
+                        }
                     }
                 }
             } else {
                 m_possVals[i] = null;
             }
             final Comparator<DataCell> comparator = m_comparators[i];
-            final DataCell otherMin = domain.getLowerBound();
+            final DataCell otherMin = dataTableDomainCreator.getMin(i);
             if (otherMin != null) {
                 updateMin(i, m_mins, otherMin, comparator);
             }
-            final DataCell otherMax = domain.getUpperBound();
+            final DataCell otherMax = dataTableDomainCreator.getMax(i);
             if (otherMax != null) {
                 updateMax(i, m_maxs, otherMax, comparator);
             }

@@ -57,8 +57,10 @@ import static org.knime.core.data.container.DataContainer.MAX_POSSIBLE_VALUES;
 import static org.knime.core.data.container.DataContainer.SYNCHRONOUS_IO;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.junit.Test;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
@@ -191,6 +193,25 @@ public final class DataContainerSettingsTest extends TestCase {
 
             @Override
             public void merge(final IDataTableDomainCreator dataTableDomainCreator) {
+            }
+
+            @Override
+            public void setBatchId(final long index) {
+            }
+
+            @Override
+            public Map<DataCell, Long> getDomainValues(final int colIndex) {
+                return null;
+            }
+
+            @Override
+            public DataCell getMin(final int colIndex) {
+                return null;
+            }
+
+            @Override
+            public DataCell getMax(final int colIndex) {
+                return null;
             }
 
         }
