@@ -158,6 +158,8 @@ public final class NodeTimer {
         private long m_currentInstanceLaunchTime = System.currentTimeMillis();
         private int m_workflowsOpened = 0;
         private int m_remoteWorkflowsOpened = 0;
+        private int m_workflowsImported = 0;
+        private int m_workflowsExported = 0;
         private int m_launches = 0;
         private int m_crashes = 0;
         private long m_timeOfLastSave = System.currentTimeMillis() - SAVEINTERVAL + 1000*60;
@@ -248,6 +250,28 @@ public final class NodeTimer {
                 return;
             }
             m_remoteWorkflowsOpened++;
+        }
+
+        /**
+         * Called by KNIME AP when the user imports a workflow.
+         * @since 3.8
+         */
+        public void incWorkflowImport() {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_workflowsImported++;
+        }
+
+        /**
+         * Called by KNIME AP when the user exports a workflow.
+         * @since 3.8
+         */
+        public void incWorkflowExport() {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_workflowsExported++;
         }
 
         private void processStatChanges() {
@@ -383,6 +407,8 @@ public final class NodeTimer {
             job.add("uptime", getAvgUpTime());
             job.add("workflowsOpened", m_workflowsOpened);
             job.add("remoteWorkflowsOpened", m_remoteWorkflowsOpened);
+            job.add("workflowsImported", m_workflowsImported);
+            job.add("workflowsExported", m_workflowsExported);
             job.add("launches", getNrLaunches());
             job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
@@ -643,6 +669,12 @@ public final class NodeTimer {
                             break;
                         case "remoteWorkflowsOpened":
                             m_remoteWorkflowsOpened = jo.getInt(key);
+                            break;
+                        case "workflowsImported":
+                            m_workflowsImported = jo.getInt(key);
+                            break;
+                        case "workflowsExported":
+                            m_workflowsExported = jo.getInt(key);
                             break;
                         case "uptime":
                             m_avgUpTime = jo.getJsonNumber(key).longValue();
