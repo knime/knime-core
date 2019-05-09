@@ -2253,30 +2253,47 @@ public class Buffer implements KNIMEStreamConstants {
         return true;
     }
 
-    private MemoryAlertListener createNewMemoryAlertListener() {
-        MemoryAlertListener memoryAlertListener = new MemoryAlertListener() {
-            @Override
-            protected boolean memoryAlert(final MemoryAlert alert) {
-                ThreadUtils.threadWithContext(() -> {
-                    synchronized (Buffer.this) {
-                        final Optional<List<BlobSupportDataRow>> optionalList = CACHE.getSilent(Buffer.this);
+    /**
+     * Background task that will write the buffer data on memory alert. This is kept as static inner class in order to
+     * allow for a garbage collection of the outer class.
+     */
+    private static final class BufferFlusher extends MemoryAlertListener {
+
+        private final WeakReference<Buffer> m_bufferRef;
+
+        BufferFlusher(final Buffer buffer) {
+            m_bufferRef = new WeakReference<>(buffer);
+            MemoryAlertSystem.getInstance().addListener(this);
+        }
+
+        @Override
+        protected boolean memoryAlert(final MemoryAlert alert) {
+
+            ThreadUtils.threadWithContext(() -> {
+                final Buffer buffer = m_bufferRef.get();
+                if (buffer != null) {
+
+                    synchronized (buffer) {
+                        final Optional<List<BlobSupportDataRow>> optionalList = CACHE.getSilent(buffer);
                         if (optionalList.isPresent()) {
+
                             final List<BlobSupportDataRow> list = optionalList.get();
-                            writeList(list);
-                            closeWriterAndWriteMeta();
-                            m_lifecycle.onMemoryAlert(list);
+                            buffer.writeList(list);
+                            buffer.closeWriterAndWriteMeta();
+                            buffer.m_lifecycle.onMemoryAlert(list);
+
                         } else {
-                            // concurrent close or addRow() caused this to be flushed
-                            // (this method may stall long on Buffer.this)
+                            // concurrent thread caused this to be flushed
                         }
                     }
 
-                }, "KNIME Buffer flusher").start();
-                return true;
-            }
-        };
-        MemoryAlertSystem.getInstance().addListener(memoryAlertListener);
-        return memoryAlertListener;
+                } else {
+                    // buffer has already been finalized, at which point it has been invalidated in the cache
+                }
+
+            }, "KNIME Buffer flusher").start();
+            return true;
+        }
     }
 
     /**
@@ -2373,7 +2390,8 @@ public class Buffer implements KNIMEStreamConstants {
         public void onCloseIfCached() {
             assert Thread.holdsLock(Buffer.this);
 
-            m_memoryAlertListener = createNewMemoryAlertListener();
+            m_memoryAlertListener = new BufferFlusher(Buffer.this);
+            MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
         }
 
         @Override
@@ -2451,7 +2469,8 @@ public class Buffer implements KNIMEStreamConstants {
             setRestoreIntoMemoryOnCacheMiss();
 
             if (size() <= m_maxRowsInMem) {
-                m_memoryAlertListener = createNewMemoryAlertListener();
+                m_memoryAlertListener = new BufferFlusher(Buffer.this);
+                MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
             } else {
                 onCloseIfCachedAndLarge();
             }
