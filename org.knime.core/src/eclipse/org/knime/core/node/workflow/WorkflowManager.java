@@ -6221,6 +6221,46 @@ public final class WorkflowManager extends NodeContainer
         return build.toString();
     }
 
+    /**
+     * Prints a list of errors that occurred in this node and all subnodes
+
+     * @param prefix if containing node/workflow
+     * @param indent number of leading spaces
+     * @return String of errors with their node ids
+     */
+    public String printNodeErrorSummary(final NodeID prefix, final int indent) {
+        char[] indentChars = new char[indent];
+        Arrays.fill(indentChars, ' ');
+        String indentString = new String(indentChars);
+        StringBuilder build = new StringBuilder(indentString);
+        try (WorkflowLock lock = lock()) {
+            for (NodeID id : m_workflow.getNodeIDs()) {
+                if (id.hasPrefix(prefix)) {
+                    NodeContainer nc = m_workflow.getNode(id);
+                    if (nc instanceof WorkflowManager) {
+                        build.append(((WorkflowManager)nc).printNodeErrorSummary(nc.getID(), indent + 2));
+                    } else if (nc instanceof SubNodeContainer) {
+                        build.append(
+                            ((SubNodeContainer)nc).getWorkflowManager().printNodeErrorSummary(nc.getID(), indent + 6));
+                    } else {
+                        if (!nc.getNodeContainerState().isExecuted()
+                            && nc.getNodeMessage().getMessageType() == Type.ERROR) {
+                            build.append(indentString);
+                            build.append("  ");
+                            build.append(nc.getNameWithID());
+                            build.append(" : ");
+                            build.append(nc.getNodeMessage());
+                            build.append("\n");
+                        }
+                    }
+                } else { // skip remaining nodes with wrong prefix
+                    break;
+                }
+            }
+        }
+        return build.toString();
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {

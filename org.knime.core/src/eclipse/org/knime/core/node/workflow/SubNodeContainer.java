@@ -1138,8 +1138,8 @@ public final class SubNodeContainer extends SingleNodeContainer
             } else if (isCanceled) {
                 setNodeMessage(new NodeMessage(Type.WARNING, "Execution canceled"));
             } else {
-                setNodeMessage(new NodeMessage(Type.ERROR, "Not all contained nodes are executed:\n"
-                        + m_wfm.printNodeSummary(m_wfm.getID(), 0)));
+                setNodeMessage(new NodeMessage(Type.ERROR, "Error during execution:\n"
+                        + m_wfm.printNodeErrorSummary(m_wfm.getID(), 0)));
             }
             return allExecuted ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
         } finally {
