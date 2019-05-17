@@ -599,6 +599,19 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FileSingleNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSingleNodeContainerPersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileSingleNodeContainerPersistor"/>
+                <message_argument value="getMetaPersistor()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getMetaPersistor()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileSubNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSubNodeContainerPersistor">
         <filter id="338722907">
             <message_arguments>
@@ -653,6 +666,12 @@
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="getMetaPersistor()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
                 <message_argument value="getSaveVersion()"/>
             </message_arguments>
         </filter>
@@ -672,6 +691,11 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion"/>
                 <message_argument value="org.knime.core_3.7.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getMetaPersistor()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -694,6 +718,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.NativeNodeContainer"/>
                 <message_argument value="getNodeAndBundleInformation()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ObsoleteMetaNodeFileWorkflowPersistor.java" type="org.knime.core.node.workflow.ObsoleteMetaNodeFileWorkflowPersistor">
+        <filter id="421572723">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ObsoleteMetaNodeFileWorkflowPersistor"/>
+                <message_argument value="getWorkflowKNIMEFile()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -885,6 +917,13 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager.AuthorInformation"/>
                 <message_argument value="org.knime.core_3.7.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="Type"/>
+                <message_argument value="WorkflowManager"/>
+                <message_argument value="values()"/>
             </message_arguments>
         </filter>
         <filter id="1141899266">

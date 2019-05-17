@@ -7567,14 +7567,15 @@ public final class WorkflowManager extends NodeContainer
      * @param persistor The persistor containing the node(s) to be loaded as children to this node.
      * @param exec For progress/cancellation (currently not supported)
      * @param keepNodeMessages Whether to keep the messages that are associated with the nodes in the loaded workflow
-     *            (mostly false but true when remotely computed results are loaded).
+     *            (mostly false but true when remotely computed results arempla loaded).
      * @return A workflow load result, which also contains the loaded node(s).
      * @throws IOException If errors reading the "important" files fails due to I/O problems (file not present, e.g.)
      * @throws InvalidSettingsException If parsing the "important" files fails.
      * @throws CanceledExecutionException If canceled.
      * @throws UnsupportedWorkflowVersionException If the version of the workflow is unknown (future version)
+     * @since 3.8
      */
-    public WorkflowLoadResult load(final FileWorkflowPersistor persistor, final ExecutionMonitor exec,
+    public WorkflowLoadResult load(final TemplateNodeContainerPersistor persistor, final ExecutionMonitor exec,
         final boolean keepNodeMessages)
         throws IOException, InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException {
         final ReferencedFile refDirectory = persistor.getMetaPersistor().getNodeContainerDirectory();
@@ -8170,7 +8171,7 @@ public final class WorkflowManager extends NodeContainer
             directoryReference.writeLock();
             try {
                 final boolean isWorkingDirectory = directoryReference.equals(getNodeContainerDirectory());
-                final LoadVersion saveVersion = FileWorkflowPersistor.VERSION_LATEST;
+                final LoadVersion saveVersion = AbstractStorageWorkflowPersistor.VERSION_LATEST;
                 if (m_loadVersion != null && !m_loadVersion.equals(saveVersion)) {
                     LOGGER.info("Workflow was created with another version of KNIME (workflow version " + m_loadVersion
                         + "), converting to current version. This may take some time.");

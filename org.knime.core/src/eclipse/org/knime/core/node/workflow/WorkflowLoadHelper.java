@@ -64,6 +64,7 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
+import org.knime.core.util.workflowalizer2.WorkflowBundle;
 
 /**
  * Callback class that is used during loading of a workflow to read
@@ -246,6 +247,15 @@ public class WorkflowLoadHelper {
         return createTemplateLoadPersistor(directory, null);
     }
 
+    /**
+     * @since 3.8
+     */
+    public final TemplateNodeContainerPersistor createTemplateLoadPersistor(final WorkflowBundle workflowBundle)
+                throws IOException {
+        return new WorkflowAlizerWorkflowPersistor(workflowBundle, this,
+            LoadVersion.V3080, new WorkflowDataRepository(), true);
+    }
+
     /** Create persistor for a workflow or template.
      * @noreference Clients should only be required to load projects using
      * {@link WorkflowManager#loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}
@@ -286,7 +296,7 @@ public class WorkflowLoadHelper {
         } else {
             versionString = "0.9.0";
         }
-        LoadVersion version = FileWorkflowPersistor.parseVersion(versionString); // might also be FUTURE
+        LoadVersion version = AbstractStorageWorkflowPersistor.parseVersion(versionString); // might also be FUTURE
         boolean isSetDirtyAfterLoad = false;
         StringBuilder versionDetails = new StringBuilder(versionString);
         String createdBy = settings.getString(WorkflowLoadHelper.CFG_CREATED_BY, null);

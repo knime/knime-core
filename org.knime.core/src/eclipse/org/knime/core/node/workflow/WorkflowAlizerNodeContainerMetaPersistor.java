@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,42 +41,35 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   May 16, 2019 (wiswedel): created
  */
 package org.knime.core.node.workflow;
+
+import java.io.File;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.util.LoadVersion;
 
-class FileNodeContainerMetaPersistor extends AbstractStorageNodeContainerMetaPersistor {
-
-    private final ReferencedFile m_nodeSettingsFile;
+/**
+ *
+ * @author wiswedel
+ */
+final class WorkflowAlizerNodeContainerMetaPersistor extends AbstractStorageNodeContainerMetaPersistor {
 
     /**
-     * @param settingsFile The settings file associated with this node.
-     * @param loadHelper The load helper to query for additional information.
-     * @param version The load version, not null.
+     * @param loadHelper
+     * @param version
      */
-    FileNodeContainerMetaPersistor(final ReferencedFile settingsFile, final WorkflowLoadHelper loadHelper,
-        final LoadVersion version) {
+    WorkflowAlizerNodeContainerMetaPersistor(final WorkflowLoadHelper loadHelper, final LoadVersion version) {
         super(loadHelper, version);
-        m_nodeSettingsFile = settingsFile;
-        // the root folder is usually locked during load, one exception
-        // is the loading from templates in the node repository (X-Val, e.g.)
-        if (!settingsFile.isRootFileLockedForVM()) {
-            getLogger().debug(
-                "Workflow being loaded (\"" + settingsFile.getParent().getFile().getName() + "\") is not locked");
-        }
     }
 
-    /** {@inheritDoc} */
     @Override
     public ReferencedFile getNodeContainerDirectory() {
-        return m_nodeSettingsFile.getParent();
-    }
-
-    ReferencedFile getNodeSettingsFile() {
-        return m_nodeSettingsFile;
+        return new ReferencedFile(new File("/tmp"));
     }
 
 }

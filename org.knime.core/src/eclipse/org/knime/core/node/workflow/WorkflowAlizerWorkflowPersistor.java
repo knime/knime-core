@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,42 +41,73 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   May 16, 2019 (wiswedel): created
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.internal.ReferencedFile;
+import java.io.IOException;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.util.workflowalizer2.Node;
+import org.knime.core.util.workflowalizer2.WorkflowBundle;
+import org.knime.core.util.workflowalizer2.Workflowalizer2;
 
-class FileNodeContainerMetaPersistor extends AbstractStorageNodeContainerMetaPersistor {
+/**
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @author wiswedel
+ */
+public class WorkflowAlizerWorkflowPersistor extends AbstractStorageWorkflowPersistor {
 
-    private final ReferencedFile m_nodeSettingsFile;
+    private final WorkflowBundle m_workflowBundle;
 
     /**
-     * @param settingsFile The settings file associated with this node.
-     * @param loadHelper The load helper to query for additional information.
-     * @param version The load version, not null.
+     * @param workflowDataRepository
+     * @param isProject
      */
-    FileNodeContainerMetaPersistor(final ReferencedFile settingsFile, final WorkflowLoadHelper loadHelper,
-        final LoadVersion version) {
-        super(loadHelper, version);
-        m_nodeSettingsFile = settingsFile;
-        // the root folder is usually locked during load, one exception
-        // is the loading from templates in the node repository (X-Val, e.g.)
-        if (!settingsFile.isRootFileLockedForVM()) {
-            getLogger().debug(
-                "Workflow being loaded (\"" + settingsFile.getParent().getFile().getName() + "\") is not locked");
-        }
+    public WorkflowAlizerWorkflowPersistor(final WorkflowBundle workflowBundle,
+        final WorkflowLoadHelper loadHelper, final LoadVersion loadVersion,
+        final WorkflowDataRepository workflowDataRepository, final boolean isProject) {
+        super(new WorkflowAlizerNodeContainerMetaPersistor(loadHelper, loadVersion), workflowDataRepository, isProject);
+        m_workflowBundle = workflowBundle;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public ReferencedFile getNodeContainerDirectory() {
-        return m_nodeSettingsFile.getParent();
+    NodeSettingsRO readWorkflowSettings() throws IOException {
+        return Workflowalizer2.convert(m_workflowBundle.getWorkflow(), new NodeSettings("workflow"));
     }
 
-    ReferencedFile getNodeSettingsFile() {
-        return m_nodeSettingsFile;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    String getWorkflowSource() {
+        return "MongoDB";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    FromFileNodeContainerPersistor createNodeContainerPersitorLoad(
+        final NodeSettingsRO nodeSetting, final NodeType nodeType)
+        throws InvalidSettingsException {
+        String lookupKey = m_workflowBundle.getWorkflow().getId() + "#" + nodeSetting.getKey();
+
+        Node b = m_workflowBundle.getNodes().stream().filter(n -> n.getId().equals(lookupKey)).findFirst().get();
+//        Node b = m_workflowBundle.getNodes().stream().filter(n -> n.getId().equals(lookupKey)).findFirst()
+        //                .orElseThrow(s -> new InvalidSettingsException("No node with ID " + lookupKey));
+        return new FileNativeNodeContainerPersistor(b, mustWarnOnDataLoadError(), getWorkflowDataRepository(), getLoadHelper(), getLoadVersion());
     }
 
 }

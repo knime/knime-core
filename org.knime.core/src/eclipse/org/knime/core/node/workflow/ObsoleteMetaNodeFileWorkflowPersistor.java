@@ -114,7 +114,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
             final NodeSettingsRO parentSettings, final LoadResult result)
     throws IOException, InvalidSettingsException {
-        ReferencedFile workflowKNIMEFile = super.getWorkflowKNIMEFile();
+        ReferencedFile workflowKNIMEFile = getWorkflowKNIMEFile();
         File setFile = workflowKNIMEFile.getFile();
         if (!setFile.getName().equals("settings.xml")) {
             String warn = "Settings file of obsolete metanode is not "
@@ -163,13 +163,10 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    protected ReferencedFile getWorkflowKNIMEFile() {
+    private ReferencedFile getWorkflowKNIMEFile() {
         // config file as passed from parent wfm is "settings.xml"
-        ReferencedFile settingsXML = super.getWorkflowKNIMEFile();
-        return new ReferencedFile(settingsXML.getParent(),
-                WorkflowPersistor.WORKFLOW_FILE);
+        ReferencedFile settingsXML = getMetaPersistor().getNodeSettingsFile();
+        return new ReferencedFile(settingsXML.getParent(), WorkflowPersistor.WORKFLOW_FILE);
     }
 
     /** {@inheritDoc} */

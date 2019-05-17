@@ -44,12 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,7 +75,6 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
-import org.knime.core.util.workflowalizer2.Workflowalizer2;
 
 /**
  *
@@ -86,10 +82,10 @@ import org.knime.core.util.workflowalizer2.Workflowalizer2;
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public abstract class FileSingleNodeContainerPersistor implements SingleNodeContainerPersistor,
+public abstract class AbstractStorageSingleNodeContainerPersistor implements SingleNodeContainerPersistor,
     FromFileNodeContainerPersistor {
 
-    private static final NodeLogger SAVE_LOGGER = NodeLogger.getLogger(FileSingleNodeContainerPersistor.class);
+    private static final NodeLogger SAVE_LOGGER = NodeLogger.getLogger(AbstractStorageSingleNodeContainerPersistor.class);
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
@@ -110,31 +106,14 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
 
     private final WorkflowDataRepository m_workflowDataRepository;
 
-    private final NodeSettingsInjector m_settingsInjector;
-
 
     /** Load persistor.
      * @param workflowDataRepository TODO
      * @param mustWarnOnDataLoadError TODO*/
-    FileSingleNodeContainerPersistor(final ReferencedFile nodeSettingsFile,
-        final WorkflowLoadHelper loadHelper, final LoadVersion version,
-        final WorkflowDataRepository workflowDataRepository,
-        final boolean mustWarnOnDataLoadError) {
-        CheckUtils.checkArgumentNotNull(version, "Version must not be null");
+    AbstractStorageSingleNodeContainerPersistor(final AbstractStorageNodeContainerMetaPersistor metaPersistor,
+        final WorkflowDataRepository workflowDataRepository, final boolean mustWarnOnDataLoadError) {
         CheckUtils.checkArgumentNotNull(workflowDataRepository, "File store handler repository must not be null");
-        m_metaPersistor = new FileNodeContainerMetaPersistor(nodeSettingsFile, loadHelper, version);
-        m_workflowDataRepository = workflowDataRepository;
-        m_mustWarnOnDataLoadError = mustWarnOnDataLoadError;
-        m_settingsInjector = new FileBackedNodeSettingsInjector();
-    }
-
-    FileSingleNodeContainerPersistor(final org.knime.core.util.workflowalizer2.Node wfAlizerNode,
-        final WorkflowLoadHelper loadHelper,
-        final LoadVersion loadVersion, final WorkflowDataRepository workflowDataRepository, final boolean mustWarnOnDataLoadError) {
-        WorkflowAlizerNodeSettingsInjector injector = WorkflowAlizerNodeSettingsInjector.create(wfAlizerNode);
-        m_settingsInjector = injector;
-        m_metaPersistor = new WorkflowAlizerNodeContainerMetaPersistor(loadHelper, loadVersion);
-        CheckUtils.checkArgumentNotNull(workflowDataRepository, "File store handler repository must not be null");
+        m_metaPersistor = metaPersistor;
         m_workflowDataRepository = workflowDataRepository;
         m_mustWarnOnDataLoadError = mustWarnOnDataLoadError;
     }
@@ -180,12 +159,6 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         return m_metaPersistor;
     }
 
-    /** @return Directory associated with node.
-     * @since 2.8 */
-    public ReferencedFile getNodeContainerDirectory() {
-        return m_metaPersistor.getNodeContainerDirectory();
-    }
-
     public WorkflowLoadHelper getLoadHelper() {
         return m_metaPersistor.getLoadHelper();
     }
@@ -213,8 +186,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     @Override
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
         final LoadResult result) throws InvalidSettingsException, IOException {
-
-        NodeSettingsRO settings = m_settingsInjector.readSettings(parentPersistor);
+        NodeSettingsRO settings = readSettings(parentPersistor);
         AbstractStorageNodeContainerMetaPersistor meta = getMetaPersistor();
 
         boolean resetRequired = meta.load(settings, parentSettings, result);
@@ -228,6 +200,8 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         }
 
     }
+
+    abstract NodeSettingsRO readSettings(final WorkflowPersistor parentPersistor) throws IOException;
 
     /** {@inheritDoc} */
     @Override
@@ -449,7 +423,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
             stackSet = settings.getNodeSettings("scope_stack");
         } else {
-            stackSet = settings.containsKey("flow_stack") ? settings.getNodeSettings("flow_stack") : new NodeSettings("flow_stack");
+            stackSet = settings.getNodeSettings("flow_stack");
         }
         for (String key : stackSet.keySet()) {
             NodeSettingsRO sub = stackSet.getNodeSettings(key);
@@ -699,59 +673,5 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         }
         return success;
     }
-
-    interface NodeSettingsInjector {
-        NodeSettingsRO readSettings(final WorkflowPersistor parentPersistor) throws IOException;
-    }
-
-    final class FileBackedNodeSettingsInjector implements NodeSettingsInjector {
-
-        @Override
-        public NodeSettingsRO readSettings(final WorkflowPersistor parentPersistor) throws IOException {
-            FileNodeContainerMetaPersistor meta = (FileNodeContainerMetaPersistor)getMetaPersistor();
-            final ReferencedFile settingsFileRef = meta.getNodeSettingsFile();
-            File settingsFile = settingsFileRef.getFile();
-            if (!settingsFile.isFile()) {
-                setDirtyAfterLoad();
-                throw new IOException("Can't read node file \"" + settingsFile.getAbsolutePath() + "\"");
-            }
-            try (InputStream fileIn = new FileInputStream(settingsFile)) {
-                // parentPersitor is null for loaded subnode templates
-                InputStream in = parentPersistor == null ? fileIn : parentPersistor.decipherInput(fileIn);
-                try (BufferedInputStream bIn = new BufferedInputStream(in)) {
-                    return NodeSettings.loadFromXML(bIn);
-                }
-            } catch (IOException ioe) {
-                setDirtyAfterLoad();
-                throw ioe;
-            }
-        }
-    }
-
-    static final class WorkflowAlizerNodeSettingsInjector implements NodeSettingsInjector {
-
-        private final NodeSettings m_settings;
-
-        private WorkflowAlizerNodeSettingsInjector(final NodeSettings settings) {
-            m_settings = settings;
-        }
-
-        @Override
-        public NodeSettingsRO readSettings(final WorkflowPersistor parentPersistor) throws IOException {
-            return m_settings;
-        }
-
-        @Override
-        public String toString() {
-            StringBuffer sbf = new StringBuffer();
-            m_settings.toString(sbf);
-            return sbf.toString();
-        }
-
-        static WorkflowAlizerNodeSettingsInjector create(final org.knime.core.util.workflowalizer2.Node o) {
-            return new WorkflowAlizerNodeSettingsInjector(Workflowalizer2.convert(o, new NodeSettings("node")));
-        }
-    }
-
 
 }

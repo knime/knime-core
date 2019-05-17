@@ -127,6 +127,12 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         super(nodeSettingsFile, loadHelper, version, workflowDataRepository, mustWarnOnDataLoadError);
     }
 
+    FileNativeNodeContainerPersistor(final org.knime.core.util.workflowalizer2.Node wfAlizerNode,
+        final boolean mustWarnOnDataLoadError,
+        final WorkflowDataRepository workflowDataRepository, final WorkflowLoadHelper loadHelper, final LoadVersion loadVersion) {
+        super(wfAlizerNode, loadHelper, loadVersion, workflowDataRepository, mustWarnOnDataLoadError);
+    }
+
     /** Called by {@link Node} to update the message field in the {@link NodeModel} class.
      * @return the msg or null.
      */
@@ -359,7 +365,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     NodeSettingsRO loadSettingsForNode(final LoadResult loadResult) throws IOException {
         NodeSettingsRO nodeSettings = getNodeSettings();
         if (getLoadVersion().ordinal() < LoadVersion.V280.ordinal()) {
-            FileNodeContainerMetaPersistor metaPersistor = getMetaPersistor();
+            AbstractStorageNodeContainerMetaPersistor metaPersistor = getMetaPersistor();
 
             ReferencedFile nodeFile;
             try {
@@ -482,7 +488,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             }
             MissingNodeFactory nodefactory =
                 new MissingNodeFactory(nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes);
-            if (getLoadVersion().ordinal() < FileWorkflowPersistor.VERSION_LATEST.ordinal()) {
+            if (getLoadVersion().ordinal() < AbstractStorageWorkflowPersistor.VERSION_LATEST.ordinal()) {
                 nodefactory.setCopyInternDirForWorkflowVersionChange(true);
             }
             nodefactory.init();
