@@ -51,24 +51,11 @@ package org.knime.core.data.container;
 import static org.junit.Assert.assertNotEquals;
 import static org.knime.core.data.container.DataContainer.ASYNC_CACHE_SIZE;
 import static org.knime.core.data.container.DataContainer.INIT_DOMAIN;
-import static org.knime.core.data.container.DataContainer.MAX_ASYNC_WRITE_THREADS;
 import static org.knime.core.data.container.DataContainer.MAX_CELLS_IN_MEMORY;
 import static org.knime.core.data.container.DataContainer.MAX_POSSIBLE_VALUES;
 import static org.knime.core.data.container.DataContainer.SYNCHRONOUS_IO;
 
-import java.io.IOException;
-import java.util.Map;
-
 import org.junit.Test;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableDomainCreator;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataTableSpecCreator;
-import org.knime.core.data.IDataTableDomainCreator;
-import org.knime.core.util.DuplicateChecker;
-import org.knime.core.util.DuplicateKeyException;
-import org.knime.core.util.ThreadSafeDuplicateChecker;
 
 import junit.framework.TestCase;
 
@@ -85,7 +72,6 @@ public final class DataContainerSettingsTest extends TestCase {
     @SuppressWarnings({"static-method", "deprecation"})
     @Test
     public void testDefault() {
-        final DataTableSpec spec = new DataTableSpecCreator().createSpec();
         final DataContainerSettings settings = DataContainerSettings.getDefault();
         assertEquals("Wrong default (cache size)", ASYNC_CACHE_SIZE, settings.getAsyncCacheSize());
         assertEquals("Wrong default (number of cells in memory)", MAX_CELLS_IN_MEMORY, settings.getMaxCellsInMemory());
@@ -93,12 +79,11 @@ public final class DataContainerSettingsTest extends TestCase {
             settings.getMaxDomainValues());
         assertEquals("Wrong default (asynchronous IO flag)", SYNCHRONOUS_IO, settings.useSyncIO());
         assertEquals("Wrong default (intialize domain flag)", INIT_DOMAIN, settings.getInitializeDomain());
-        assertEquals("Wrong default (asynchrnous write threads)", MAX_ASYNC_WRITE_THREADS,
-            settings.getMaxAsyncWriteThreads());
-        assertEquals("Wrong default (container threads)", MAX_ASYNC_WRITE_THREADS, settings.getMaxContainerThreads());
-        assertTrue("Wrong default (domain creator)",
-            settings.createDomainCreator(spec) instanceof DataTableDomainCreator);
-        assertTrue("Wrong default (duplicate checker)", settings.createDuplicateChecker() instanceof DuplicateChecker);
+        assertEquals("Wrong default (asynchrnous write threads)", Runtime.getRuntime().availableProcessors(),
+            settings.getMaxContainerThreads());
+        assertEquals("Wrong default (container threads)", Runtime.getRuntime().availableProcessors(),
+            settings.getMaxThreadsPerContainer());
+        assertNotNull("Wrong default (duplicate checker)", settings.createDuplicateChecker());
         assertNotNull("Wrong default (BufferSettings are null)", settings.getBufferSettings());
         assertTrue("Wrong default (Default BufferSettings are different to those provided by the DataContainerSettings",
             settings.getBufferSettings().equals(BufferSettings.getDefault()));
@@ -117,8 +102,8 @@ public final class DataContainerSettingsTest extends TestCase {
         final int maxPossibleValues = def.getMaxDomainValues() * -1;
         final boolean syncIO = !def.useSyncIO();
         final boolean initDomain = !def.getInitializeDomain();
-        final int maxAsyncWriteThreads = def.getMaxAsyncWriteThreads() * -1;
-        final int maxContainerThreads = def.getMaxContainerThreads() * -1;
+        final int maxThreadsPerDataContainer = def.getMaxThreadsPerContainer() * -1;
+        final int maxContainerThreads = def.getMaxThreadsPerContainer() * -1;
         final BufferSettings bSettings =
             def.getBufferSettings().withLRUCacheSize(def.getBufferSettings().getLRUCacheSize() * -1);
 
@@ -128,8 +113,8 @@ public final class DataContainerSettingsTest extends TestCase {
             .withMaxDomainValues(maxPossibleValues)//
             .withSyncIO(syncIO)//
             .withInitializedDomain(initDomain)//
-            .withMaxAsyncWriteThreads(maxAsyncWriteThreads)//
             .withMaxContainerThreads(maxContainerThreads)//
+            .withMaxThreadsPerContainer(maxThreadsPerDataContainer)//
             .withBufferSettings(bSettings);
 
         assertEquals("Modified settings created wrong cache size", cacheSize, settings.getAsyncCacheSize());
@@ -140,20 +125,20 @@ public final class DataContainerSettingsTest extends TestCase {
         assertEquals("Modified settings created wrong synchronous IO flag", syncIO, settings.useSyncIO());
         assertEquals("Modified settings created wrong initialize domain flag", initDomain,
             settings.getInitializeDomain());
-        assertEquals("Modified settings created wrong maximum number of asynchronous write threads",
-            maxAsyncWriteThreads, settings.getMaxAsyncWriteThreads());
         assertEquals("Modified settings created wrong maximum number of container threads", maxContainerThreads,
             settings.getMaxContainerThreads());
+        assertEquals("Modified settings created wrong maximum number of threads per data container",
+            maxThreadsPerDataContainer, settings.getMaxThreadsPerContainer());
         assertNotEquals("Default settings has been modified (chache size)", def.getAsyncCacheSize(),
             settings.getAsyncCacheSize());
         assertNotEquals("Default settings has been modified (number of cells in memory)", def.getMaxCellsInMemory(),
             settings.getMaxCellsInMemory());
         assertNotEquals("Default settings has been modified (number of possible domain values)",
             def.getMaxDomainValues(), settings.getMaxDomainValues());
-        assertNotEquals("Default settings has been modified (number of asynchronous write threads)",
-            def.getMaxAsyncWriteThreads(), settings.getMaxAsyncWriteThreads());
-        assertNotEquals("Default settings has been modified (number of container threads)",
+        assertNotEquals("Default settings has been modified (max number of container threads)",
             def.getMaxContainerThreads(), settings.getMaxContainerThreads());
+        assertNotEquals("Default settings has been modified (number of threads per container)",
+            def.getMaxThreadsPerContainer(), settings.getMaxThreadsPerContainer());
         assertNotEquals("Default settings has been modified (synchronous IO flag)", def.useSyncIO(),
             settings.useSyncIO());
         assertNotEquals("Default settings has been modified (initialize domain flag)", def.getInitializeDomain(),
@@ -162,93 +147,16 @@ public final class DataContainerSettingsTest extends TestCase {
     }
 
     /**
-     * Tests that functions can be changed and that the default instance is not changed.
+     * Tests that the number of threads per container cannot be assigned a value larger than the maximum total number of
+     * container threads.
      */
+    @SuppressWarnings("static-method")
     @Test
-    public void testChangeFunctions() {
-        class UnitDomainCreator implements IDataTableDomainCreator {
-
-            @Override
-            public void updateDomain(final DataRow row) {
-            }
-
-            @Override
-            public void setMaxPossibleValues(final int maxVals) {
-            }
-
-            @Override
-            public DataTableSpec createSpec() {
-                return null;
-            }
-
-            @Override
-            public DataTableSpec getInputSpec() {
-                return null;
-            }
-
-            @Override
-            public int getMaxPossibleVals() {
-                return 0;
-            }
-
-            @Override
-            public void merge(final IDataTableDomainCreator dataTableDomainCreator) {
-            }
-
-            @Override
-            public void setBatchId(final long index) {
-            }
-
-            @Override
-            public Map<DataCell, Long> getDomainValues(final int colIndex) {
-                return null;
-            }
-
-            @Override
-            public DataCell getMin(final int colIndex) {
-                return null;
-            }
-
-            @Override
-            public DataCell getMax(final int colIndex) {
-                return null;
-            }
-
-        }
-
-        class UnitDuplicateChecker implements ThreadSafeDuplicateChecker {
-
-            @Override
-            public void addKey(final String s) throws DuplicateKeyException, IOException {
-            }
-
-            @Override
-            public void checkForDuplicates() throws DuplicateKeyException, IOException {
-            }
-
-            @Override
-            public void clear() {
-            }
-
-            @Override
-            public void writeToDisk() throws IOException {
-            }
-
-        }
-
+    public void testMaxThreadsPerContainerRestriction() {
         final DataContainerSettings def = DataContainerSettings.getDefault();
-        final DataContainerSettings settings = def.withDuplicateChecker(() -> new UnitDuplicateChecker())
-            .withDomainCreator((s, b) -> new UnitDomainCreator());
-
-        assertFalse("Default settings created wrong domain instance",
-            def.createDomainCreator(new DataTableSpecCreator().createSpec()) instanceof UnitDomainCreator);
-        assertFalse("Default settings created wrong duplicate checker instance",
-            def.createDuplicateChecker() instanceof UnitDuplicateChecker);
-
-        assertTrue("Modified settings created wrong domain instance",
-            settings.createDomainCreator(null) instanceof UnitDomainCreator);
-        assertTrue("Modified settings created wrong duplicate checker instance",
-            settings.createDuplicateChecker() instanceof UnitDuplicateChecker);
+        // try setting the number of threads per container value higher than allowed
+        final DataContainerSettings modified = def.withMaxThreadsPerContainer(2 * def.getMaxContainerThreads());
+        assertTrue(modified.getMaxThreadsPerContainer() == def.getMaxContainerThreads());
     }
 
 }

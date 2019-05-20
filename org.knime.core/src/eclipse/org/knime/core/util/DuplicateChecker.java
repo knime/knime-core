@@ -74,7 +74,7 @@ import org.knime.core.node.KNIMEConstants;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class DuplicateChecker implements ThreadSafeDuplicateChecker {
+public class DuplicateChecker {
     private static class Chunk {
         private final File m_file;
 
@@ -241,8 +241,14 @@ public class DuplicateChecker implements ThreadSafeDuplicateChecker {
         m_maxStreams = maxStreams;
     }
 
-    @Override
-    synchronized public void addKey(final String s) throws DuplicateKeyException, IOException {
+    /**
+     * Adds a new key to the duplicate checker.
+     *
+     * @param s the key
+     * @throws DuplicateKeyException if a duplicate within the current chunk has been detected
+     * @throws IOException if an I/O error occurs while writing the chunk to disk
+     */
+    public synchronized void addKey(final String s) throws DuplicateKeyException, IOException {
         if (DISABLE_DUPLICATE_CHECK) {
             return;
         }
@@ -256,8 +262,14 @@ public class DuplicateChecker implements ThreadSafeDuplicateChecker {
         }
     }
 
-    @Override
-    synchronized public void checkForDuplicates() throws DuplicateKeyException, IOException {
+    /**
+     * Checks for duplicates in all added keys. This method must only be called once after all keys have been added!
+     * Multiple calls may lead to exceptions and excessive resource usage.
+     *
+     * @throws DuplicateKeyException if a duplicate key has been detected
+     * @throws IOException if an I/O error occurs
+     */
+    public synchronized void checkForDuplicates() throws DuplicateKeyException, IOException {
         if (m_storedChunks.size() == 0) {
             // less than MAX_CHUNK_SIZE keys, no need to write
             // a file because the check for duplicates has already
@@ -268,13 +280,20 @@ public class DuplicateChecker implements ThreadSafeDuplicateChecker {
         checkForDuplicates(m_storedChunks);
     }
 
-    @Override
-    synchronized public void writeToDisk() throws IOException {
+    /**
+     * Writes a chunk of keys to disk.
+     *
+     * @throws IOException if an I/O error occurs while writing the chunk to disk
+     * @since 3.8
+     */
+    public synchronized void flush() throws IOException {
         writeChunk();
     }
 
-    @Override
-    synchronized public void clear() {
+    /**
+     * Clears the duplicate checker.
+     */
+    public synchronized void clear() {
         for (Chunk c : m_storedChunks) {
             c.dispose();
         }

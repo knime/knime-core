@@ -144,7 +144,7 @@ public class DuplicateCheckerTest {
         DuplicateChecker checker = new DuplicateChecker();
         for (int i = 0; i < 10; i++) {
             checker.addKey("A");
-            checker.writeToDisk();
+            checker.flush();
         }
         expectedException.expect(DuplicateKeyException.class);
         checker.checkForDuplicates();
@@ -161,12 +161,12 @@ public class DuplicateCheckerTest {
         for (int i = 0; i < 10; i++) {
             checker.addKey("Row" + (10 - i));
             if (i % 2 == 1) {
-                checker.writeToDisk();
+                checker.flush();
             }
         }
         // do useless writeToDisk calls
-        checker.writeToDisk();
-        checker.writeToDisk();
+        checker.flush();
+        checker.flush();
         // add an additional row that resides in memory
         checker.addKey("Row0");
         checker.checkForDuplicates();

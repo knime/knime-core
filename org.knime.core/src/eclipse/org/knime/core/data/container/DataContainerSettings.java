@@ -52,10 +52,8 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.IDataTableDomainCreator;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConfigurableWorkflowContext;
@@ -63,7 +61,6 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.DuplicateChecker;
-import org.knime.core.util.ThreadSafeDuplicateChecker;
 
 /**
  * The data container settings. Solely used for benchmarking.
@@ -113,26 +110,20 @@ public final class DataContainerSettings {
         /** The synchronous write flag. */
         private boolean m_syncIO;
 
-        /** The maximum number of asynchronous write threads. */
-        private int m_maxAsyncWriteThreads;
+        /** The maximum number of threads that can be used by {@link DataContainer} instances. */
+        private int m_maxDataContainerThreads;
 
-        /** The maximum number of threads used by a {@link DataContainer}. */
-        private int m_maxContainerThreads;
+        /** The maximum number of threads per {@link DataContainer} instance. */
+        private int m_maxThreadsPerDataContainer;
 
         /** The asynchronous cache size. */
         private int m_asyncCacheSize;
 
-        /** The initialize domain flag used by the {@link IDataTableDomainCreator}. */
+        /** The initialize domain flag used by the {@link DataTableDomainCreator}. */
         private boolean m_initDomain;
 
-        /** The maximum number of domain values used by {@link ThreadSafeDuplicateChecker}. */
+        /** The maximum number of domain values used by {@link DuplicateChecker}. */
         private int m_maxDomainValues;
-
-        /** The function creating new instances of {@link ThreadSafeDuplicateChecker}. */
-        private Supplier<ThreadSafeDuplicateChecker> m_duplicateCheckerCreator;
-
-        /** The function creating new instances of {@link IDataTableDomainCreator}. */
-        private BiFunction<DataTableSpec, Boolean, IDataTableDomainCreator> m_tableDomainCreatorFunction;
 
         /** The {@link BufferSettings}. */
         private BufferSettings m_bufferSettings;
@@ -145,13 +136,11 @@ public final class DataContainerSettings {
         Builder(final DataContainerSettings settings) {
             m_maxCellsInMemory = settings.m_maxCellsInMemory;
             m_syncIO = settings.m_syncIO;
-            m_maxAsyncWriteThreads = settings.m_maxAsyncWriteThreads;
-            m_maxContainerThreads = settings.m_maxContainerThreads;
+            m_maxDataContainerThreads = settings.m_maxDataContainerThreads;
+            m_maxThreadsPerDataContainer = settings.m_maxThreadsPerDataContainer;
             m_asyncCacheSize = settings.m_asyncCacheSize;
             m_initDomain = settings.m_initDomain;
             m_maxDomainValues = settings.m_maxDomainValues;
-            m_duplicateCheckerCreator = settings.m_duplicateCheckerCreator;
-            m_tableDomainCreatorFunction = settings.m_tableDomainCreatorFunction;
             m_bufferSettings = settings.m_bufferSettings;
         }
 
@@ -165,13 +154,13 @@ public final class DataContainerSettings {
             return this;
         }
 
-        Builder setMaxAsyncWriteThreads(final int maxAsyncWriteThreads) {
-            m_maxAsyncWriteThreads = maxAsyncWriteThreads;
+        Builder setMaxContainerThreads(final int maxDataContainerThreads) {
+            m_maxDataContainerThreads = maxDataContainerThreads;
             return this;
         }
 
-        Builder setMaxContainerThreads(final int maxContainerThreads) {
-            m_maxContainerThreads = maxContainerThreads;
+        Builder setMaxThreadsPerDataContainer(final int maxThreadsPerDataContainer) {
+            m_maxThreadsPerDataContainer = maxThreadsPerDataContainer;
             return this;
         }
 
@@ -187,16 +176,6 @@ public final class DataContainerSettings {
 
         Builder setMaxDomainValues(final int maxDomainValues) {
             m_maxDomainValues = maxDomainValues;
-            return this;
-        }
-
-        Builder setDuplicateCheckerCreator(final Supplier<ThreadSafeDuplicateChecker> supplier) {
-            m_duplicateCheckerCreator = supplier;
-            return this;
-        }
-
-        Builder setTableDomainCreatorFunction(final BiFunction<DataTableSpec, Boolean, IDataTableDomainCreator> func) {
-            m_tableDomainCreatorFunction = func;
             return this;
         }
 
@@ -216,32 +195,32 @@ public final class DataContainerSettings {
 
     }
 
+    /** The function creating new instances of {@link DuplicateChecker}. */
+    private final Supplier<DuplicateChecker> m_duplicateCheckerCreator;
+
+    /** The function creating new instances of {@link DataTableDomainCreator}. */
+    private final BiFunction<DataTableSpec, Boolean, DataTableDomainCreator> m_tableDomainCreatorFunction;
+
     /** The maximum number of cells in memory. */
     private final int m_maxCellsInMemory;
 
     /** The synchronous write flag. */
     private final boolean m_syncIO;
 
-    /** The maximum number of asynchronous write threads. */
-    private final int m_maxAsyncWriteThreads;
+    /** The maximum number of threads that can be used by {@link DataContainer} instances. */
+    private final int m_maxDataContainerThreads;
 
-    /** The maximum number of threads used by a {@link DataContainer}. */
-    private final int m_maxContainerThreads;
+    /** The maximum number of threads per {@link DataContainer} instance. */
+    private final int m_maxThreadsPerDataContainer;
 
     /** The asynchronous cache size. */
     private final int m_asyncCacheSize;
 
-    /** The initialize domain flag used by the {@link IDataTableDomainCreator}. */
+    /** The initialize domain flag used by the {@link DataTableDomainCreator}. */
     private final boolean m_initDomain;
 
-    /** The maximum number of domain values used by {@link ThreadSafeDuplicateChecker}. */
+    /** The maximum number of domain values used by {@link DuplicateChecker}. */
     private final int m_maxDomainValues;
-
-    /** The function creating new instances of {@link ThreadSafeDuplicateChecker}. */
-    private final Supplier<ThreadSafeDuplicateChecker> m_duplicateCheckerCreator;
-
-    /** The function creating new instances of {@link IDataTableDomainCreator}. */
-    private final BiFunction<DataTableSpec, Boolean, IDataTableDomainCreator> m_tableDomainCreatorFunction;
 
     /** The {@link BufferSettings}. */
     private final BufferSettings m_bufferSettings;
@@ -256,15 +235,22 @@ public final class DataContainerSettings {
      * Default constructor.
      */
     private DataContainerSettings() {
+        m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
+        m_tableDomainCreatorFunction = (spec, initDomain) -> new DataTableDomainCreator(spec, initDomain);
         m_maxCellsInMemory = initMaxCellsInMemory();
         m_syncIO = initSynchronousIO();
-        m_maxAsyncWriteThreads = initMaxAsyncWriteThreads();
-        m_maxContainerThreads = initContainerThreads();
+        m_maxDataContainerThreads = initMaxDataContainerThreads();
+        int maxThreadsPerDataContainer = initThreadsPerDataContainerInstance();
+        if (maxThreadsPerDataContainer > maxThreadsPerDataContainer) {
+            maxThreadsPerDataContainer = m_maxDataContainerThreads;
+            LOGGER.debug(
+                "The number of threads per data container cannot be larger than the total number of data container "
+                    + "threads. Value has been set to according to the the total number of data container threads");
+        }
+        m_maxThreadsPerDataContainer = maxThreadsPerDataContainer;
         m_asyncCacheSize = initAsyncCacheSize();
         m_initDomain = initDomain();
         m_maxDomainValues = initMaxDomainValues();
-        m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
-        m_tableDomainCreatorFunction = (spec, initDomain) -> new DataTableDomainCreator(spec, initDomain);
         m_bufferSettings = DEFAULT_BUFFER_INSTANCE;
     }
 
@@ -274,15 +260,15 @@ public final class DataContainerSettings {
      * @param builder the builder holding the settings
      */
     private DataContainerSettings(final Builder builder) {
+        m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
+        m_tableDomainCreatorFunction = (spec, initDomain) -> new DataTableDomainCreator(spec, initDomain);
         m_maxCellsInMemory = builder.m_maxCellsInMemory;
         m_syncIO = builder.m_syncIO;
-        m_maxAsyncWriteThreads = builder.m_maxAsyncWriteThreads;
-        m_maxContainerThreads = builder.m_maxContainerThreads;
+        m_maxDataContainerThreads = builder.m_maxDataContainerThreads;
+        m_maxThreadsPerDataContainer = builder.m_maxThreadsPerDataContainer;
         m_asyncCacheSize = builder.m_asyncCacheSize;
         m_initDomain = builder.m_initDomain;
         m_maxDomainValues = builder.m_maxDomainValues;
-        m_duplicateCheckerCreator = builder.m_duplicateCheckerCreator;
-        m_tableDomainCreatorFunction = builder.m_tableDomainCreatorFunction;
         m_bufferSettings = builder.m_bufferSettings;
     }
 
@@ -320,21 +306,21 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Returns the maximum number of asynchronous write threads.
+     * Returns the maximum total number threads that can be used by {@link DataContainer} instances.
      *
      * @return maximum number of asynchronous write threads
      */
-    int getMaxAsyncWriteThreads() {
-        return m_maxAsyncWriteThreads;
+    int getMaxContainerThreads() {
+        return m_maxDataContainerThreads;
     }
 
     /**
-     * Returns the maximum number of container threads.
+     * Returns the maximum number of threads per {@link DataContainer}.
      *
-     * @return maximum number of container threads
+     * @return maximum number of threads per container
      */
-    int getMaxContainerThreads() {
-        return m_maxContainerThreads;
+    int getMaxThreadsPerContainer() {
+        return m_maxThreadsPerDataContainer;
     }
 
     /**
@@ -365,11 +351,11 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Creates a {@link ThreadSafeDuplicateChecker} ensuring that the row keys are unique.
+     * Creates a {@link DuplicateChecker} ensuring that the row keys are unique.
      *
-     * @return a {@link ThreadSafeDuplicateChecker}
+     * @return a {@code DuplicateChecker}
      */
-    ThreadSafeDuplicateChecker createDuplicateChecker() {
+    DuplicateChecker createDuplicateChecker() {
         return m_duplicateCheckerCreator.get();
     }
 
@@ -377,10 +363,10 @@ public final class DataContainerSettings {
      * Initializes a domain creator.
      *
      * @param spec the data table sepc
-     * @return an instance of {@link IDataTableDomainCreator}
+     * @return an instance of {@link DataTableDomainCreator}
      */
-    IDataTableDomainCreator createDomainCreator(final DataTableSpec spec) {
-        final IDataTableDomainCreator creator = m_tableDomainCreatorFunction.apply(spec, m_initDomain);
+    DataTableDomainCreator createDomainCreator(final DataTableSpec spec) {
+        final DataTableDomainCreator creator = m_tableDomainCreatorFunction.apply(spec, m_initDomain);
         creator.setMaxPossibleValues(m_maxDomainValues);
         return creator;
     }
@@ -422,27 +408,31 @@ public final class DataContainerSettings {
 
     /**
      * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the maximum number of asynchronous write threads.
+     * <code>DataContainerSetting</code> instance and solely changes the maximum number of threads per
+     * {@link DataContainer} instance. Note the if the new value is larger than the maximum total number of container
+     * threads the value will be automatically adapted.
      *
-     * @param maxAsyncWriteThreads the new maximum number of asynchronous write threads
+     * @param maxThreadsPerDataContainer the new maximum number of threads per {@code DataContainer}
      * @return a new instance of {@code DataContainerSettings}
      */
-    public DataContainerSettings withMaxAsyncWriteThreads(final int maxAsyncWriteThreads) {
+    public DataContainerSettings withMaxThreadsPerContainer(final int maxThreadsPerDataContainer) {
         final Builder b = new Builder(this);
-        b.setMaxAsyncWriteThreads(maxAsyncWriteThreads);
+        b.setMaxThreadsPerDataContainer(Math.min(getMaxContainerThreads(), maxThreadsPerDataContainer));
         return b.build();
     }
 
     /**
      * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the maximum number of container threads.
+     * <code>DataContainerSetting</code> instance and solely changes the maximum number of threads that can be used by
+     * {@link DataContainer} instances
      *
-     * @param maxContainerThreads the new maximum number of container threads
+     * @param maxDataContainerThreads the new maximum number of threads that can be used by {@code DataContainer}
+     *            instances
      * @return a new instance of {@code DataContainerSettings}
      */
-    public DataContainerSettings withMaxContainerThreads(final int maxContainerThreads) {
+    public DataContainerSettings withMaxContainerThreads(final int maxDataContainerThreads) {
         final Builder b = new Builder(this);
-        b.setMaxContainerThreads(maxContainerThreads);
+        b.setMaxContainerThreads(maxDataContainerThreads);
         return b.build();
     }
 
@@ -462,7 +452,7 @@ public final class DataContainerSettings {
     /**
      * Creates a new <code>DataContainerSetting</code> object by replicating the current
      * <code>DataContainerSetting</code> instance and solely changes the initialize domain flag used by the
-     * {@link ThreadSafeDuplicateChecker}.
+     * {@link DuplicateChecker}.
      *
      * @param initDomain the new init domain flag
      * @return a new instance of {@code DataContainerSettings}
@@ -476,7 +466,7 @@ public final class DataContainerSettings {
     /**
      * Creates a new <code>DataContainerSetting</code> object by replicating the current
      * <code>DataContainerSetting</code> instance and solely changes the maximum number of domain values stored by the
-     * {@link IDataTableDomainCreator}.
+     * {@link DataTableDomainCreator}.
      *
      * @param maxDomainValues the new maximum number of domain values
      * @return a new instance of {@code DataContainerSettings}
@@ -484,35 +474,6 @@ public final class DataContainerSettings {
     public DataContainerSettings withMaxDomainValues(final int maxDomainValues) {
         final Builder b = new Builder(this);
         b.setMaxDomainValues(maxDomainValues);
-        return b.build();
-    }
-
-    /**
-     * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the supplier to create instances of
-     * {@link ThreadSafeDuplicateChecker}.
-     *
-     * @param supplier the new {@code ThreadSafeDuplicateChecker} function
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withDuplicateChecker(final Supplier<ThreadSafeDuplicateChecker> supplier) {
-        final Builder b = new Builder(this);
-        b.setDuplicateCheckerCreator(supplier);
-        return b.build();
-    }
-
-    /**
-     * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the function to creates instances of
-     * {@link IDataTableDomainCreator}.
-     *
-     * @param func the new {@code IDataTableDomainCreator} function
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings
-        withDomainCreator(final BiFunction<DataTableSpec, Boolean, IDataTableDomainCreator> func) {
-        final Builder b = new Builder(this);
-        b.setTableDomainCreatorFunction(func);
         return b.build();
     }
 
@@ -543,7 +504,7 @@ public final class DataContainerSettings {
             try {
                 int newSize = Integer.parseInt(s);
                 if (newSize < 0) {
-                    throw new NumberFormatException("max cell count in memory < 0" + newSize);
+                    throw new IllegalArgumentException("max cell count in memory < 0" + newSize);
                 }
                 size = newSize;
                 LOGGER.debug("Setting max cell count to be held in memory to " + size);
@@ -571,16 +532,57 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Initializes the maximum number of asynchronous write threads depending on the OS architecture.
+     * Initializes the maximum number of that can be used by {@link DataContainer} instances.
      *
-     * @return the maximum number of asynchornous write threads
+     * @return the maximum number of that can be used by {@code DataContainer} instances
+     *
      */
-    private static int initMaxAsyncWriteThreads() {
-        return Platform.ARCH_X86.equals(Platform.getOSArch()) ? 10 : 50;
+    private static int initMaxDataContainerThreads() {
+        int maxDataContainerThreads = Runtime.getRuntime().availableProcessors();
+        final String prop = KNIMEConstants.PROPERTY_MAX_THREADS_TOTAL;
+        final String val = System.getProperty(prop);
+        if (val != null) {
+            String s = val.trim();
+            try {
+                maxDataContainerThreads = Integer.parseInt(s);
+                if (maxDataContainerThreads <= 0) {
+                    throw new IllegalArgumentException(
+                        "maximum number of container threads cannot be less than or equal to 0");
+                }
+                LOGGER.debug("Settings maximum number of container threads to " + maxDataContainerThreads);
+            } catch (final IllegalArgumentException e) {
+                LOGGER.warn("Unable to parse property " + prop + ", using default (" + maxDataContainerThreads
+                    + " = number of available processors)");
+            }
+        }
+        return maxDataContainerThreads;
     }
 
-    private static int initContainerThreads() {
-        return Platform.ARCH_X86.equals(Platform.getOSArch()) ? 10 : 50;
+    /**
+     * Initializes the maximum number of threads that can be used per {@link DataContainer} instance.
+     *
+     * @return the maximum number of that can be used per {@code DataContainer} instances
+     *
+     */
+    private static int initThreadsPerDataContainerInstance() {
+        int maxThreadsPerContainer = Runtime.getRuntime().availableProcessors();
+        final String prop = KNIMEConstants.PROPERTY_MAX_THREADS_INSTANCE;
+        final String val = System.getProperty(prop);
+        if (val != null) {
+            String s = val.trim();
+            try {
+                maxThreadsPerContainer = Integer.parseInt(s);
+                if (maxThreadsPerContainer <= 0) {
+                    throw new IllegalArgumentException(
+                        "maximum number of threads per data container cannot be less than or equal to 0");
+                }
+                LOGGER.debug("Settings maximum number of threads per container to " + maxThreadsPerContainer);
+            } catch (final IllegalArgumentException e) {
+                LOGGER.warn("Unable to parse property " + prop + ", using default (" + maxThreadsPerContainer
+                    + " = number of available processors)");
+            }
+        }
+        return maxThreadsPerContainer;
     }
 
     /**
@@ -597,11 +599,11 @@ public final class DataContainerSettings {
             try {
                 int newSize = Integer.parseInt(s);
                 if (newSize < 0) {
-                    throw new NumberFormatException("async write cache < 0" + newSize);
+                    throw new IllegalArgumentException("async write cache < 0" + newSize);
                 }
                 asyncCacheSize = newSize;
                 LOGGER.debug("Setting asynchronous write cache to " + asyncCacheSize + " row(s)");
-            } catch (NumberFormatException e) {
+            } catch (IllegalArgumentException e) {
                 LOGGER.warn(
                     "Unable to parse property " + envAsyncCache + ", using default (" + DEF_ASYNC_CACHE_SIZE + ")", e);
             }
@@ -632,11 +634,11 @@ public final class DataContainerSettings {
             try {
                 int newSize = Integer.parseInt(s);
                 if (newSize < 0) {
-                    throw new NumberFormatException("max possible value count < 0" + newSize);
+                    throw new IllegalArgumentException("max possible value count < 0" + newSize);
                 }
                 maxPossValues = newSize;
                 LOGGER.debug("Setting default count for possible domain values to " + maxPossValues);
-            } catch (NumberFormatException e) {
+            } catch (IllegalArgumentException e) {
                 LOGGER.warn(
                     "Unable to parse property " + envPossValues + ", using default (" + DEF_MAX_POSSIBLE_VALUES + ")",
                     e);

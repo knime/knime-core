@@ -68,6 +68,8 @@ import javax.swing.SwingUtilities;
 
 import org.apache.commons.codec.binary.Hex;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.ConfigurationAreaChecker;
 import org.knime.core.internal.KNIMEPath;
@@ -147,6 +149,28 @@ public final class KNIMEConstants {
      * @since 2.6
      */
     public static final String PROPERTY_CELLS_IN_MEMORY = "org.knime.container.cellsinmemory";
+
+
+    /**
+     * Defines the maximum number of threads that are shared between instances of {@link DataContainer DataContainers}.
+     * The default value is set to the number of available CPU's, see {@link Runtime#availableProcessors()} and
+     * {@link DataContainerSettings}.
+     *
+     * @since 3.8
+     *
+     */
+    public static final String PROPERTY_MAX_THREADS_TOTAL = "org.knime.container.threads.total";
+
+    /**
+     * Defines the maximum number of threads that can be used by a single instance of {@link DataContainer
+     * DataContainer}. The value has to be smaller than {link {@link #PROPERTY_MAX_THREADS_TOTAL}. The default value is
+     * set to the number of available CPU's, see {@link Runtime#availableProcessors()} and
+     * {@link DataContainerSettings}.
+     *
+     * @since 3.8
+     *
+     */
+    public static final String PROPERTY_MAX_THREADS_INSTANCE = "org.knime.container.threads.instance";
 
     /** Java property name to specify the minimum free disc space in MB that needs to be available. If less is
      * available, no further table files &amp; blobs will be created (resulting in an exception). Default is

@@ -71,7 +71,7 @@ import org.knime.core.node.util.CheckUtils;
  * @author Heiko Hofer
  * @since 2.10
  */
-public class DataTableDomainCreator implements IDataTableDomainCreator {
+public class DataTableDomainCreator {
     /** Defines columns to recreate or drop domain values. */
     private final DomainCreatorColumnSelection m_domainValuesColumnSelection;
 
@@ -203,7 +203,11 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         });
     }
 
-    @Override
+    /**
+     * Set the maximum number of possible values in the domain of a nominal value columns.
+     *
+     * @param maxValues the maximal number of values, must be &gt;= 0
+     */
     public void setMaxPossibleValues(final int maxValues) {
         if (maxValues < 0) {
             throw new IllegalArgumentException("Maximum possible values must be >= 0 but is " + maxValues);
@@ -211,24 +215,25 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         m_maxPossibleValues = maxValues;
     }
 
-    @Override
+    /**
+     * Returns the maximum number of possible unique values.
+     *
+     * @return the maximum number of possible unique values
+     * @since 3.8
+     */
+    public int getMaxPossibleValues() {
+        return m_maxPossibleValues;
+    }
+
+    /**
+     * Sets the batch ID, ensuring that after merging various {@link DataTableDomainCreator} instances the ordering of
+     * the domain values coincides with their occurrence in the input table.
+     *
+     * @param id the batch index
+     * @since 3.8
+     */
     public void setBatchId(final long id) {
         m_batchId = id;
-    }
-
-    @Override
-    public Map<DataCell, Long> getDomainValues(final int colIndex) {
-        return m_possVals[colIndex];
-    }
-
-    @Override
-    public DataCell getMin(final int colIndex) {
-        return m_mins[colIndex];
-    }
-
-    @Override
-    public DataCell getMax(final int colIndex) {
-        return m_maxs[colIndex];
     }
 
     /**
@@ -280,7 +285,7 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         }
     }
 
-    private boolean isNaN(final DataCell cell) {
+    private static boolean isNaN(final DataCell cell) {
         return cell instanceof DoubleValue && Double.isNaN(((DoubleValue)cell).getDoubleValue());
     }
 
@@ -292,7 +297,6 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
      *
      * @return an updated table spec
      */
-    @Override
     public DataTableSpec createSpec() {
         DataColumnSpec[] outColSpecs = new DataColumnSpec[m_inputSpec.getNumColumns()];
         for (int i = 0; i < outColSpecs.length; i++) {
@@ -335,12 +339,12 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
             .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    @Override
-    public DataTableSpec getInputSpec() {
-        return m_inputSpec;
-    }
-
-    @Override
+    /**
+     * Updates the domain values with a single row. Note that the row structure must match the table spec that has been
+     * provided to the constructor.
+     *
+     * @param row a data row
+     */
     public void updateDomain(final DataRow row) {
         assert row.getNumCells() == m_inputSpec.getNumColumns() : "Unequal number of columns in spec and row: "
             + m_inputSpec.getNumColumns() + " vs. " + row.getNumCells();
@@ -424,20 +428,20 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
         updateDomain(table, exec, table.size());
     }
 
-    @Override
-    public int getMaxPossibleVals() {
-        return m_maxPossibleValues;
-    }
-
-    @Override
-    public void merge(final IDataTableDomainCreator dataTableDomainCreator) {
-        CheckUtils.checkArgument(getInputSpec().equals(dataTableDomainCreator.getInputSpec()),
+    /**
+     * Merges two distinct {@link DataTableDomainCreator}.
+     *
+     * @param dataTableDomainCreator the {@code DataTableDomainCreator} to be merged
+     * @since 3.8
+     */
+    public void merge(final DataTableDomainCreator dataTableDomainCreator) {
+        CheckUtils.checkArgument(m_inputSpec.equals(dataTableDomainCreator.m_inputSpec),
             "Cannot merge data table domain creators based on different table specs");
-        CheckUtils.checkArgument(getMaxPossibleVals() == dataTableDomainCreator.getMaxPossibleVals(),
+        CheckUtils.checkArgument(m_maxPossibleValues == dataTableDomainCreator.m_maxPossibleValues,
             "Cannot merge data table domain creators using a different number of unique values");
         for (int i = 0; i < m_inputSpec.getNumColumns(); i++) {
-            if (m_possVals[i] != null && dataTableDomainCreator.getDomainValues(i) != null) {
-                for (final Entry<DataCell, Long> entry : dataTableDomainCreator.getDomainValues(i).entrySet()) {
+            if (m_possVals[i] != null && dataTableDomainCreator.m_possVals[i] != null) {
+                for (final Entry<DataCell, Long> entry : dataTableDomainCreator.m_possVals[i].entrySet()) {
                     Map<DataCell, Long> vals = m_possVals[i];
                     if (!vals.containsKey(entry.getKey()) || vals.get(entry.getKey()) > entry.getValue()) {
                         vals.put(entry.getKey(), entry.getValue());
@@ -451,11 +455,11 @@ public class DataTableDomainCreator implements IDataTableDomainCreator {
                 m_possVals[i] = null;
             }
             final Comparator<DataCell> comparator = m_comparators[i];
-            final DataCell otherMin = dataTableDomainCreator.getMin(i);
+            final DataCell otherMin = dataTableDomainCreator.m_mins[i];
             if (otherMin != null) {
                 updateMin(i, m_mins, otherMin, comparator);
             }
-            final DataCell otherMax = dataTableDomainCreator.getMax(i);
+            final DataCell otherMax = dataTableDomainCreator.m_maxs[i];
             if (otherMax != null) {
                 updateMax(i, m_maxs, otherMax, comparator);
             }
