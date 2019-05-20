@@ -138,8 +138,8 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LRUCache;
+import org.knime.core.util.MutableBoolean;
 import org.knime.core.util.ShutdownHelper;
-import org.knime.core.util.ThreadUtils;
 import org.knime.core.util.ThreadUtils.CallableWithContext;
 
 /**
@@ -431,6 +431,13 @@ public class Buffer implements KNIMEStreamConstants {
 
     /** a flag that determines whether this Buffer has its own temporary m_binFile to write to */
     private boolean m_hasTempFile = true;
+
+    /**
+     * A flag that is set to true once this Buffer has been cleared and that is locked while the Buffer is being cleared
+     * (to prevent concurrent clear operations and to prevent an {@link ASyncWriteCallable} from writing rows while the
+     * buffer is concurrently cleared).
+     */
+    private MutableBoolean m_isClearedLock = new MutableBoolean(false);
 
     /** The directory where blob cells are stored or null if none available. */
     private File m_blobDir;
@@ -901,7 +908,7 @@ public class Buffer implements KNIMEStreamConstants {
         }
         // at this point cell can only be a WrapperCell or BlobDataCell
         synchronized (this) {
-        	boolean forceCopyOfBlobs = forceCopyOfBlobsArg;
+            boolean forceCopyOfBlobs = forceCopyOfBlobsArg;
             Buffer ownerBuffer;
             if (ad != null) {
                 // either copying from or to an isolated buffer (or both)
@@ -1810,36 +1817,44 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     void performClear() {
-        BufferTracker.getInstance().bufferCleared(this);
-        m_listWhileAddRow = null;
-        CACHE.invalidate(this);
-        if (m_binFile != null) {
-            if (m_outputReader != null) {
-                // output reader might be null if Buffer was created but never read -- no iterators to clear
-                m_outputReader.clearIteratorInstances();
-            }
-            if (m_outputWriter != null) {
-                try {
-                    m_outputWriter.close();
-                } catch (IOException ioe) {
-                    // Exception indicates that stream has already been closed. If exception was thrown for another
-                    // reason, we are OK with it as well, since we're clearing this buffer anyways.
+        /** lock clear flag to prevent concurrent clearing or asynchronous writing to this buffer */
+        synchronized (m_isClearedLock) {
+            if (!m_isClearedLock.booleanValue()) {
+                /** prevent subsequent clears */
+                m_isClearedLock.setValue(true);
+
+                BufferTracker.getInstance().bufferCleared(this);
+                m_listWhileAddRow = null;
+                CACHE.invalidate(this);
+                if (m_binFile != null) {
+                    if (m_outputReader != null) {
+                        // output reader might be null if Buffer was created but never read -- no iterators to clear
+                        m_outputReader.clearIteratorInstances();
+                    }
+                    if (m_outputWriter != null) {
+                        try {
+                            m_outputWriter.close();
+                        } catch (IOException ioe) {
+                            // Exception indicates that stream has already been closed. If exception was thrown for another
+                            // reason, we are OK with it as well, since we're clearing this buffer anyways.
+                        }
+                    }
+                    if (m_blobDir != null) {
+                        DeleteInBackgroundThread.delete(m_binFile, m_blobDir);
+                    } else {
+                        DeleteInBackgroundThread.delete(m_binFile);
+                    }
                 }
+                if (m_fileStoreHandler instanceof NotInWorkflowWriteFileStoreHandler) {
+                    m_fileStoreHandler.clearAndDispose();
+                }
+                if (m_blobLRUCache != null) {
+                    m_blobLRUCache.clear();
+                }
+                m_binFile = null;
+                m_blobDir = null;
             }
-            if (m_blobDir != null) {
-                DeleteInBackgroundThread.delete(m_binFile, m_blobDir);
-            } else {
-                DeleteInBackgroundThread.delete(m_binFile);
-            }
         }
-        if (m_fileStoreHandler instanceof NotInWorkflowWriteFileStoreHandler) {
-            m_fileStoreHandler.clearAndDispose();
-        }
-        if (m_blobLRUCache != null) {
-            m_blobLRUCache.clear();
-        }
-        m_binFile = null;
-        m_blobDir = null;
     }
 
     private static final int MAX_FILES_TO_CREATE_BEFORE_GC = 10000;
@@ -2261,41 +2276,16 @@ public class Buffer implements KNIMEStreamConstants {
      */
     private static final class BufferFlusher extends MemoryAlertListener {
 
-        private final WeakReference<Buffer> m_bufferRef;
+        private final ASyncWriteCallable m_aSyncWriteCallable;
 
-        BufferFlusher(final Buffer buffer) {
-            m_bufferRef = new WeakReference<>(buffer);
-            MemoryAlertSystem.getInstance().addListener(this);
+        BufferFlusher(final ASyncWriteCallable aSyncWriteCallable) {
+            m_aSyncWriteCallable = aSyncWriteCallable;
         }
 
         @Override
         protected boolean memoryAlert(final MemoryAlert alert) {
-
-            ThreadUtils.threadWithContext(() -> {
-                final Buffer buffer = m_bufferRef.get();
-                if (buffer != null) {
-
-                    synchronized (buffer) {
-                        final Optional<List<BlobSupportDataRow>> optionalList = CACHE.getSilent(buffer);
-                        if (optionalList.isPresent()) {
-
-                            final List<BlobSupportDataRow> list = optionalList.get();
-                            buffer.writeList(list);
-                            buffer.closeWriterAndWriteMeta();
-                            buffer.m_lifecycle.onMemoryAlert(list);
-
-                        } else {
-                            // concurrent thread caused this to be flushed
-                        }
-                    }
-
-                } else {
-                    // buffer has already been finalized, at which point it has been invalidated in the cache
-                }
-
-                MemoryAlertSystem.getInstance().removeListener(this);
-
-            }, "KNIME Buffer flusher").start();
+            ASYNC_EXECUTOR.submit(m_aSyncWriteCallable);
+            MemoryAlertSystem.getInstance().removeListener(this);
             return true;
         }
     }
@@ -2343,14 +2333,6 @@ public class Buffer implements KNIMEStreamConstants {
         void onSave();
 
         /**
-         * Synchronously after a previously registered {@link MemoryAlertListener} throws a memory alert and wrote the
-         * table held in memory to disk.
-         *
-         * @param list the list held in memory when the memory alert is thrown
-         */
-        void onMemoryAlert(List<BlobSupportDataRow> list);
-
-        /**
          * Asynchronously called while saving the table held by this buffer to determine whether the table held by this
          * buffer should be read back into memory after load.
          *
@@ -2394,7 +2376,8 @@ public class Buffer implements KNIMEStreamConstants {
         public void onCloseIfCached() {
             assert Thread.holdsLock(Buffer.this);
 
-            m_memoryAlertListener = new BufferFlusher(Buffer.this);
+            m_memoryAlertListener = new BufferFlusher(new ASyncWriteCallable(Buffer.this, true));
+            MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
         }
 
         @Override
@@ -2411,12 +2394,6 @@ public class Buffer implements KNIMEStreamConstants {
 
         @Override
         public void onSave() {
-        }
-
-        @Override
-        public void onMemoryAlert(final List<BlobSupportDataRow> list) {
-            CACHE.invalidate(Buffer.this);
-            LOGGER.debug("Wrote " + list.size() + " rows in order to free memory");
         }
 
         @Override
@@ -2472,16 +2449,11 @@ public class Buffer implements KNIMEStreamConstants {
             setRestoreIntoMemoryOnCacheMiss();
 
             if (size() <= m_maxRowsInMem) {
-                m_memoryAlertListener = new BufferFlusher(Buffer.this);
+                m_memoryAlertListener = new BufferFlusher(new ASyncWriteCallable(Buffer.this, false));
+                MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
             } else {
                 onCloseIfCachedAndLarge();
             }
-        }
-
-        @Override
-        public void onMemoryAlert(final List<BlobSupportDataRow> list) {
-            CACHE.clearForGarbageCollection(Buffer.this);
-            LOGGER.debug("Cleared " + list.size() + " rows for garbage collection in order" + "to free memory");
         }
 
         abstract void onCloseIfCachedAndLarge();
@@ -2598,7 +2570,7 @@ public class Buffer implements KNIMEStreamConstants {
              * node generating this table. In this implementation, we flush as soon as possible once the buffer has been
              * closed (and the node likely has terminated).
              */
-            m_asyncAddFuture = ASYNC_EXECUTOR.submit(new ASyncWriteCallable(Buffer.this));
+            m_asyncAddFuture = ASYNC_EXECUTOR.submit(new ASyncWriteCallable(Buffer.this, false));
         }
 
         @Override
@@ -2662,7 +2634,9 @@ public class Buffer implements KNIMEStreamConstants {
 
         private final Optional<String> m_nodeName;
 
-        ASyncWriteCallable(final Buffer buffer) {
+        private final boolean m_invalidateAfterWrite;
+
+        ASyncWriteCallable(final Buffer buffer, final boolean invalidateAfterWrite) {
             m_bufferRef = new WeakReference<>(buffer);
 
             String nodeName = null;
@@ -2674,6 +2648,8 @@ public class Buffer implements KNIMEStreamConstants {
                 }
             }
             m_nodeName = Optional.ofNullable(nodeName);
+
+            m_invalidateAfterWrite = invalidateAfterWrite;
         }
 
         @Override
@@ -2717,28 +2693,42 @@ public class Buffer implements KNIMEStreamConstants {
                     return null;
                 }
                 buffer.closeWriterAndWriteMeta();
-                CACHE.clearForGarbageCollection(buffer);
+                if (m_invalidateAfterWrite) {
+                    CACHE.invalidate(buffer);
+                } else {
+                    CACHE.clearForGarbageCollection(buffer);
+                }
                 buffer = null;
 
             } catch (Throwable t) {
-                final StringBuilder error = new StringBuilder();
-                error.append("Writing of table to file");
-                if (m_nodeName.isPresent()) {
-                    error.append(" at node ");
-                    error.append(m_nodeName);
-                }
-                error.append(" encountered error: ");
-                error.append(t.getClass().getSimpleName());
-                if (t.getMessage() != null) {
-                    error.append(": " + t.getMessage());
-                }
+                /** only log error if buffer has neither been garbage-collected nor cleared */
+                final Buffer buffer = m_bufferRef.get();
+                if (buffer != null) {
+                    /** wait for potential asynchronous clear processes before checking value of m_isClearedLock */
+                    synchronized(buffer.m_isClearedLock) {
+                        if (!buffer.m_isClearedLock.booleanValue()) {
 
-                LOGGER.warn(error.toString(), t);
-                LOGGER.warn("Table will be held in memory until node is cleared.");
-                LOGGER.warn("Workflow can't be saved in this state.");
+                            final StringBuilder error = new StringBuilder();
+                            error.append("Writing of table to file");
+                            if (m_nodeName.isPresent()) {
+                                error.append(" at node ");
+                                error.append(m_nodeName.get());
+                            }
+                            error.append(" encountered error: ");
+                            error.append(t.getClass().getSimpleName());
+                            if (t.getMessage() != null) {
+                                error.append(": " + t.getMessage());
+                            }
 
-                error.append(". Workflow can't be saved until node is cleared.");
-                throw new IOException(error.toString(), t);
+                            LOGGER.error(error.toString(), t);
+                            LOGGER.error("Table will be held in memory until node is cleared.");
+                            LOGGER.error("Workflow can't be saved in this state.");
+
+                            error.append(". Workflow can't be saved until node is cleared.");
+                            throw new IOException(error.toString(), t);
+                        }
+                    }
+                }
 
             } finally {
                 if (Thread.currentThread().isInterrupted()) {
@@ -2749,11 +2739,23 @@ public class Buffer implements KNIMEStreamConstants {
                      */
                     final Buffer buffer = m_bufferRef.get();
                     if (buffer != null) {
-                        /**
-                         * We don't really care if an exception is thrown here, since it'll most likely imply that the
-                         * buffer has already been cleared.
-                         */
-                        buffer.performClear();
+                        try {
+                            buffer.performClear();
+                        } catch (Throwable t) {
+                            final StringBuilder error = new StringBuilder();
+                            error.append("Clearing of table");
+                            if (m_nodeName.isPresent()) {
+                                error.append(" at node ");
+                                error.append(m_nodeName.get());
+                            }
+                            error.append(" encountered error: ");
+                            error.append(t.getClass().getSimpleName());
+                            if (t.getMessage() != null) {
+                                error.append(": " + t.getMessage());
+                            }
+
+                            LOGGER.debug(error.toString(), t);
+                        }
                     }
                 }
             }
