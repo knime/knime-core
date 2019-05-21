@@ -55,6 +55,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -326,12 +327,31 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
     }
 
     /**
+     * The (internal) compression format used to write the format. The value is {@link #validateVersion(String)
+     * validated} during reading.
+     *
+     * @return the compression format string that is persisted
+     */
+    public CompressionFormat getCompressionFormat() {
+        return m_tableStoreSettings.getCompressionFormat();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public boolean validateVersion(final String versionString) {
         return true; // this method is really only called for 3rd party types. Actual validation happens in class Buffer
+    }
 
+    /**
+     * Validates the compression format string that was saved along with the data.
+     *
+     * @param compressionFormatString the non-null compression format string
+     * @return true if the compression format is 'known' and readable, false otherwise
+     */
+    public static boolean validateCompressionFormat(final String compressionFormatString) {
+        return Arrays.stream(CompressionFormat.values()).anyMatch((c) -> c.name().equals(compressionFormatString));
     }
 
     /**

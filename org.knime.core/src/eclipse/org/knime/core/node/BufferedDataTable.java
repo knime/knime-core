@@ -47,6 +47,9 @@
  */
 package org.knime.core.node;
 
+import static org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat.GZIP;
+import static org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat.NONE;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -474,19 +477,27 @@ public final class BufferedDataTable implements DataTable, PortObject {
     private static final String CFG_TABLE_FILE_NAME = "table_file_name";
     private static final String CFG_TABLE_CONTAINER_FORMAT = "table_format";
     private static final String CFG_TABLE_CONTAINER_FORMAT_VERSION = "table_format_version";
+    private static final String CFG_TABLE_COMPRESSION_FORMAT = "table_compression_format";
 
     private static final String TABLE_TYPE_CONTAINER = "container_table";
     /**
-     * As of 3.6 KNIME saves the container table type under this new value in order to make KNIME 3.5 fail when loading
-     * future workflows, see {@link ContainerTable#isUsingNewerTableFormat()} for details.
+     * As of 3.6 KNIME saves container tables written with a format other than the {@link DefaultTableStoreFormat} under
+     * this value in order to make KNIME <= 3.5 fail when loading such a workflow.
      */
     private static final String TABLE_TYPE_CONTAINER_CUSTOM = "container_table_custom";
+    /**
+     * As of 4.0 KNIME saves container tables written with the {@link DefaultTableStoreFormat}, but compressed with a
+     * format other than GZIP under this value in order to make KNIME <= 3.7 fail when loading such a workflow.
+     */
+    private static final String TABLE_TYPE_CONTAINER_COMPRESS = "container_table_compressed";
     private static final String TABLE_TYPE_REARRANGE_COLUMN = "rearrange_columns_table";
     /**
-     * Similar to the container table (see above), we have to make sure that KNIME <= 3.5 complains when loading a
-     * workflow that has been written with a custom table store format (e.g., Parquet).
+     * Similar to the container table (see above), we have to make sure that earlier versions of KNIME complain when
+     * loading a workflow that has been written with a custom table store format (e.g., Parquet) or custom compression
+     * formats (e.g., Snappy).
      */
     private static final String TABLE_TYPE_REARRANGE_COLUMN_CUSTOM = "rearrange_columns_table_custom";
+    private static final String TABLE_TYPE_REARRANGE_COLUMN_COMPRESS = "rearrange_columns_table_compressed";
     private static final String TABLE_TYPE_NEW_SPEC = "new_spec_table";
     private static final String TABLE_TYPE_WRAPPED = "wrapped_table";
     private static final String TABLE_TYPE_CONCATENATE = "concatenate_table";
@@ -523,25 +534,41 @@ public final class BufferedDataTable implements DataTable, PortObject {
         if (!savedTableIDs.add(bufferedTableID)) {
             s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REFERENCE_IN_SAME_NODE);
         } else if (m_delegate instanceof ContainerTable) {
-            TableStoreFormat tableStoreFormat = ((ContainerTable)m_delegate).getTableStoreFormat();
-            if (!DefaultTableStoreFormat.class.equals(tableStoreFormat.getClass())) {
+            final TableStoreFormat format = ((ContainerTable)m_delegate).getTableStoreFormat();
+            if (!DefaultTableStoreFormat.class.equals(format.getClass())) {
                 // use different identifier to cause old versions of KNIME to fail loading newer workflows
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER_CUSTOM);
-                s.addString(CFG_TABLE_CONTAINER_FORMAT, tableStoreFormat.getClass().getName());
-                s.addString(CFG_TABLE_CONTAINER_FORMAT_VERSION, tableStoreFormat.getVersion());
+                s.addString(CFG_TABLE_CONTAINER_FORMAT, format.getClass().getName());
+                s.addString(CFG_TABLE_CONTAINER_FORMAT_VERSION, format.getVersion());
             } else {
-                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER);
+                final DefaultTableStoreFormat defaultFormat = (DefaultTableStoreFormat)format;
+                if (!Arrays.asList(NONE, GZIP).contains(defaultFormat.getCompressionFormat())) {
+                    s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER_COMPRESS);
+                    s.addString(CFG_TABLE_COMPRESSION_FORMAT, defaultFormat.getCompressionFormat().toString());
+                } else {
+                    s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER);
+                }
             }
             m_delegate.saveToFile(outFile, s, exec);
         } else {
             if (m_delegate instanceof RearrangeColumnsTable) {
-                ContainerTable appendTable = ((RearrangeColumnsTable)m_delegate).getAppendTable();
-                if (appendTable != null
-                    && !DefaultTableStoreFormat.class.equals(appendTable.getTableStoreFormat().getClass())) {
-                    // use different identifier to cause old versions of KNIME to fail loading newer workflows
-                    s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN_CUSTOM);
-                    s.addString(CFG_TABLE_CONTAINER_FORMAT, appendTable.getTableStoreFormat().getClass().getName());
-                    s.addString(CFG_TABLE_CONTAINER_FORMAT_VERSION, appendTable.getTableStoreFormat().getVersion());
+                final ContainerTable appendTable = ((RearrangeColumnsTable)m_delegate).getAppendTable();
+                if (appendTable != null) {
+                    final TableStoreFormat format = appendTable.getTableStoreFormat();
+                    if (!DefaultTableStoreFormat.class.equals(format.getClass())) {
+                        // use different identifier to cause old versions of KNIME to fail loading newer workflows
+                        s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN_CUSTOM);
+                        s.addString(CFG_TABLE_CONTAINER_FORMAT, appendTable.getTableStoreFormat().getClass().getName());
+                        s.addString(CFG_TABLE_CONTAINER_FORMAT_VERSION, appendTable.getTableStoreFormat().getVersion());
+                    } else {
+                        final DefaultTableStoreFormat defaultFormat = (DefaultTableStoreFormat)format;
+                        if (!Arrays.asList(NONE, GZIP).contains(defaultFormat.getCompressionFormat())) {
+                            s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN_COMPRESS);
+                            s.addString(CFG_TABLE_COMPRESSION_FORMAT, defaultFormat.getCompressionFormat().toString());
+                        } else {
+                            s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
+                        }
+                    }
                 } else {
                     s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
                 }
@@ -705,27 +732,31 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
         String tableType = CheckUtils.checkSettingNotNull(s.getString(CFG_TABLE_TYPE), "Table type must not be null");
         BufferedDataTable t;
+
+        if (Arrays.asList(TABLE_TYPE_CONTAINER_CUSTOM, TABLE_TYPE_REARRANGE_COLUMN_CUSTOM).contains(tableType)) {
+            checkFormat(s);
+        }
+        if (Arrays.asList(TABLE_TYPE_CONTAINER_COMPRESS, TABLE_TYPE_REARRANGE_COLUMN_COMPRESS).contains(tableType)) {
+            checkCompression(s);
+        }
+
         switch (tableType) {
             case TABLE_TYPE_REFERENCE_IN_SAME_NODE:
                 return CheckUtils.checkSettingNotNull(tblRep.get(id),
                     "Table reference with ID %d not found in load map", id);
             case TABLE_TYPE_CONTAINER:
-                ContainerTable fromContainer;
                 if (isVersion11x) {
-                    fromContainer = DataContainer.readFromZip(fileRef.getFile());
-                } else {
-                    fromContainer = BufferedDataContainer.readFromZipDelayed(fileRef, spec, id, dataRepository);
+                    final ContainerTable cont = DataContainer.readFromZip(fileRef.getFile());
+                    t = new BufferedDataTable(cont, id);
+                    break;
                 }
-                t = new BufferedDataTable(fromContainer, id);
-                break;
             case TABLE_TYPE_CONTAINER_CUSTOM: // added in 3.6
-                checkFormat(s);
-                fromContainer =
-                    BufferedDataContainer.readFromZipDelayed(fileRef, spec, id, dataRepository);
-                t = new BufferedDataTable(fromContainer, id);
+            case TABLE_TYPE_CONTAINER_COMPRESS: // added in 4.0
+                final ContainerTable cont = BufferedDataContainer.readFromZipDelayed(fileRef, spec, id, dataRepository);
+                t = new BufferedDataTable(cont, id);
                 break;
             case TABLE_TYPE_REARRANGE_COLUMN_CUSTOM:
-                checkFormat(s);
+            case TABLE_TYPE_REARRANGE_COLUMN_COMPRESS:
             case TABLE_TYPE_REARRANGE_COLUMN:
             case TABLE_TYPE_JOINED:
             case TABLE_TYPE_VOID:
@@ -747,10 +778,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
                     ReferencedFile referenceDirRef = new ReferencedFile(dirRef, reference);
                     loadFromFile(referenceDirRef, s, exec, tblRep, dataRepository);
                 }
-                if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
-                    || tableType.equals(TABLE_TYPE_REARRANGE_COLUMN_CUSTOM)) {
-                    t = new BufferedDataTable(
-                        new RearrangeColumnsTable(fileRef, s, tblRep, spec, id, dataRepository), dataRepository);
+                if (Arrays.asList(TABLE_TYPE_REARRANGE_COLUMN, TABLE_TYPE_REARRANGE_COLUMN_CUSTOM,
+                    TABLE_TYPE_REARRANGE_COLUMN_COMPRESS).contains(tableType)) {
+                    t = new BufferedDataTable(new RearrangeColumnsTable(fileRef, s, tblRep, spec, id, dataRepository),
+                        dataRepository);
                 } else if (tableType.equals(TABLE_TYPE_JOINED)) {
                     JoinedTable jt = JoinedTable.load(s, spec, tblRep, dataRepository);
                     t = new BufferedDataTable(jt, dataRepository);
@@ -795,6 +826,13 @@ public final class BufferedDataTable implements DataTable, PortObject {
             "Version string is null");
         CheckUtils.checkSetting(format.validateVersion(versionString),
             "Unsupported version \"%s\" for table format \"%s\"", versionString, format.getClass().getName());
+    }
+
+    private static void checkCompression(final NodeSettingsRO settings) throws InvalidSettingsException {
+        String compressionName = CheckUtils.checkSettingNotNull(settings.getString(CFG_TABLE_COMPRESSION_FORMAT),
+            "Compression format is null");
+        CheckUtils.checkSetting(DefaultTableStoreFormat.validateCompressionFormat(compressionName),
+            "Unsupported compression format \"%s\"", compressionName);
     }
 
     /**
