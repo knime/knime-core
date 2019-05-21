@@ -225,12 +225,6 @@ public final class DataContainerSettings {
     /** The {@link BufferSettings}. */
     private final BufferSettings m_bufferSettings;
 
-    /** The default {@code BufferSettings} instance. */
-    private static final BufferSettings DEFAULT_BUFFER_INSTANCE = new BufferSettings();
-
-    /** The default {@code DataContainerSettings} instance. */
-    private static final DataContainerSettings DEFAULT_CONTAINER_INSTANCE = new DataContainerSettings();
-
     /**
      * Default constructor.
      */
@@ -251,7 +245,7 @@ public final class DataContainerSettings {
         m_asyncCacheSize = initAsyncCacheSize();
         m_initDomain = initDomain();
         m_maxDomainValues = initMaxDomainValues();
-        m_bufferSettings = DEFAULT_BUFFER_INSTANCE;
+        m_bufferSettings = new BufferSettings();
     }
 
     /**
@@ -284,7 +278,10 @@ public final class DataContainerSettings {
         if (optContext.isPresent() && optContext.get() instanceof ConfigurableWorkflowContext) {
             return ((ConfigurableWorkflowContext)optContext.get()).getContainerSettings();
         }
-        return DEFAULT_CONTAINER_INSTANCE;
+        // While it would be tempting to always return the same instance here, it does not make sense, since the
+        // default settings can change while KAP is running (e.g., when the user changes which data storage format to
+        // use)
+        return new DataContainerSettings();
     }
 
     /**
