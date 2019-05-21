@@ -50,7 +50,7 @@
 					<li>"yyyy-MM-dd'T'HH:mm:ss.SSSZ" parses dates like
 						"2001-07-04T12:08:56.235-0700"
 					</li>
-					<li>"yyyy-MM-dd'T'HH:mm:ss.SSSVV'['zzzz']'" parses dates like
+					<li>"yyyy-MM-dd'T'HH:mm:ss.SSSXXX'['VV']'" parses dates like
 						"2001-07-04T12:08:56.235+02:00[Europe/Berlin]"
 					</li>
 				</ul>

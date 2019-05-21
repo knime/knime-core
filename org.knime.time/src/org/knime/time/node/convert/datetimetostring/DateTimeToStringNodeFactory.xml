@@ -36,7 +36,7 @@
 					</li>
 					<li>"yyyy-MM-dd'T'HH:mm:ss.SSSZ" produces dates such as	"2001-07-04T12:08:56.235-0700"
 					</li>
-					<li>"yyyy-MM-dd'T'HH:mm:ss.SSSVV'['VV']'" produces dates such as "2001-07-04T12:08:56.235+02:00[Europe/Berlin]"
+					<li>"yyyy-MM-dd'T'HH:mm:ss.SSSXXX'['VV']'" produces dates such as "2001-07-04T12:08:56.235+02:00[Europe/Berlin]"
 					</li>
 				</ul>
 				<b>Supported placeholders in the pattern are:</b>
