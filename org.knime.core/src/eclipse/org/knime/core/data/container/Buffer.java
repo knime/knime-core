@@ -2276,16 +2276,19 @@ public class Buffer implements KNIMEStreamConstants {
      */
     private static final class BufferFlusher extends MemoryAlertListener {
 
-        private final ASyncWriteCallable m_aSyncWriteCallable;
+        private final WeakReference<Buffer> m_bufferRef;
 
-        BufferFlusher(final ASyncWriteCallable aSyncWriteCallable) {
-            m_aSyncWriteCallable = aSyncWriteCallable;
+        BufferFlusher(final Buffer buffer) {
+            m_bufferRef = new WeakReference<>(buffer);
         }
 
         @Override
         protected boolean memoryAlert(final MemoryAlert alert) {
-            ASYNC_EXECUTOR.submit(m_aSyncWriteCallable);
-            MemoryAlertSystem.getInstance().removeListener(this);
+            final Buffer buffer = m_bufferRef.get();
+            if (buffer != null) {
+                ASYNC_EXECUTOR.submit(new ASyncWriteCallable(buffer));
+                LOGGER.debug("Writing " + buffer.size() + " rows in order to free memory.");
+            }
             return true;
         }
     }
@@ -2333,6 +2336,11 @@ public class Buffer implements KNIMEStreamConstants {
         void onSave();
 
         /**
+         * Asynchronously called after an {@link ASyncWriteCallable} succesfully wrote the table held in memory to disk.
+         */
+        void onWriteSuccessful();
+
+        /**
          * Asynchronously called while saving the table held by this buffer to determine whether the table held by this
          * buffer should be read back into memory after load.
          *
@@ -2376,7 +2384,7 @@ public class Buffer implements KNIMEStreamConstants {
         public void onCloseIfCached() {
             assert Thread.holdsLock(Buffer.this);
 
-            m_memoryAlertListener = new BufferFlusher(new ASyncWriteCallable(Buffer.this, true));
+            m_memoryAlertListener = new BufferFlusher(Buffer.this);
             MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
         }
 
@@ -2394,6 +2402,11 @@ public class Buffer implements KNIMEStreamConstants {
 
         @Override
         public void onSave() {
+        }
+
+        @Override
+        public void onWriteSuccessful() {
+            CACHE.invalidate(Buffer.this);
         }
 
         @Override
@@ -2449,11 +2462,16 @@ public class Buffer implements KNIMEStreamConstants {
             setRestoreIntoMemoryOnCacheMiss();
 
             if (size() <= m_maxRowsInMem) {
-                m_memoryAlertListener = new BufferFlusher(new ASyncWriteCallable(Buffer.this, false));
+                m_memoryAlertListener = new BufferFlusher(Buffer.this);
                 MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
             } else {
                 onCloseIfCachedAndLarge();
             }
+        }
+
+        @Override
+        public void onWriteSuccessful() {
+            CACHE.clearForGarbageCollection(Buffer.this);
         }
 
         abstract void onCloseIfCachedAndLarge();
@@ -2570,7 +2588,7 @@ public class Buffer implements KNIMEStreamConstants {
              * node generating this table. In this implementation, we flush as soon as possible once the buffer has been
              * closed (and the node likely has terminated).
              */
-            m_asyncAddFuture = ASYNC_EXECUTOR.submit(new ASyncWriteCallable(Buffer.this, false));
+            m_asyncAddFuture = ASYNC_EXECUTOR.submit(new ASyncWriteCallable(Buffer.this));
         }
 
         @Override
@@ -2634,9 +2652,7 @@ public class Buffer implements KNIMEStreamConstants {
 
         private final Optional<String> m_nodeName;
 
-        private final boolean m_invalidateAfterWrite;
-
-        ASyncWriteCallable(final Buffer buffer, final boolean invalidateAfterWrite) {
+        ASyncWriteCallable(final Buffer buffer) {
             m_bufferRef = new WeakReference<>(buffer);
 
             String nodeName = null;
@@ -2648,8 +2664,6 @@ public class Buffer implements KNIMEStreamConstants {
                 }
             }
             m_nodeName = Optional.ofNullable(nodeName);
-
-            m_invalidateAfterWrite = invalidateAfterWrite;
         }
 
         @Override
@@ -2693,11 +2707,7 @@ public class Buffer implements KNIMEStreamConstants {
                     return null;
                 }
                 buffer.closeWriterAndWriteMeta();
-                if (m_invalidateAfterWrite) {
-                    CACHE.invalidate(buffer);
-                } else {
-                    CACHE.clearForGarbageCollection(buffer);
-                }
+                buffer.m_lifecycle.onWriteSuccessful();
                 buffer = null;
 
             } catch (Throwable t) {
