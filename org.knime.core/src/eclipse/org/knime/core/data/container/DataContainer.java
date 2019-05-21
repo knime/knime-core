@@ -441,6 +441,7 @@ public class DataContainer implements RowAppender {
             if (waitForRunnables) {
                 try {
                     m_asyncValidationSemaphore.acquire(m_nThreads);
+                    m_asyncValidationSemaphore.release(m_nThreads);
                 } catch (InterruptedException ie) {
                     checkAsyncWriteThrowable(false);
                 }
@@ -560,6 +561,7 @@ public class DataContainer implements RowAppender {
                 }
                 // wait for all threads to stop
                 m_asyncValidationSemaphore.acquire(m_nThreads);
+                m_asyncValidationSemaphore.release(m_nThreads);
             } catch (final InterruptedException ie) {
                 m_writeThrowable.compareAndSet(null, ie);
             }
