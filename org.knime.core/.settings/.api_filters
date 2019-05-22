@@ -186,6 +186,118 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/BinaryLogicalPredicate.java" type="org.knime.core.data.container.filter.predicate.BinaryLogicalPredicate">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="FilterPredicate"/>
+                <message_argument value="BinaryLogicalPredicate"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/ColumnPredicate.java" type="org.knime.core.data.container.filter.predicate.ColumnPredicate">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="FilterPredicate"/>
+                <message_argument value="ColumnPredicate&lt;T&gt;"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/FilterPredicateCopier.java" type="org.knime.core.data.container.filter.predicate.FilterPredicateCopier">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="Visitor&lt;R&gt;"/>
+                <message_argument value="FilterPredicateCopier"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/FilterPredicateIndexMapper.java" type="org.knime.core.data.container.filter.predicate.FilterPredicateIndexMapper">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="Visitor&lt;R&gt;"/>
+                <message_argument value="FilterPredicateIndexMapper"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/FilterPredicateSpecReplacer.java" type="org.knime.core.data.container.filter.predicate.FilterPredicateSpecReplacer">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="Visitor&lt;R&gt;"/>
+                <message_argument value="FilterPredicateSpecReplacer"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/FilterPredicateToDataRowApplier.java" type="org.knime.core.data.container.filter.predicate.FilterPredicateToDataRowApplier">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="Visitor&lt;R&gt;"/>
+                <message_argument value="FilterPredicateToDataRowApplier"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/FilterPredicateValidator.java" type="org.knime.core.data.container.filter.predicate.FilterPredicateValidator">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="Visitor&lt;R&gt;"/>
+                <message_argument value="FilterPredicateValidator"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/IndexedColumn.java" type="org.knime.core.data.container.filter.predicate.IndexedColumn">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="TypedColumn&lt;T&gt;"/>
+                <message_argument value="IndexedColumn&lt;T&gt;"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/IndexedColumn.java" type="org.knime.core.data.container.filter.predicate.IndexedColumn$DoubleColumn">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="OrderColumn&lt;T&gt;"/>
+                <message_argument value="DoubleColumn"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/IndexedColumn.java" type="org.knime.core.data.container.filter.predicate.IndexedColumn$IntColumn">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="OrderColumn&lt;T&gt;"/>
+                <message_argument value="IntColumn"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/IndexedColumn.java" type="org.knime.core.data.container.filter.predicate.IndexedColumn$LongColumn">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="OrderColumn&lt;T&gt;"/>
+                <message_argument value="LongColumn"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/IndexedColumn.java" type="org.knime.core.data.container.filter.predicate.IndexedColumn$StringColumn">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="OrderColumn&lt;T&gt;"/>
+                <message_argument value="StringColumn"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/Not.java" type="org.knime.core.data.container.filter.predicate.Not">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="FilterPredicate"/>
+                <message_argument value="Not"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/predicate/RowKeyColumn.java" type="org.knime.core.data.container.filter.predicate.RowKeyColumn">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="TypedColumn&lt;T&gt;"/>
+                <message_argument value="RowKeyColumn"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/storage/AbstractTableStoreReader.java" type="org.knime.core.data.container.storage.AbstractTableStoreReader">
         <filter id="338792546">
             <message_arguments>

@@ -58,6 +58,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.CancellationException;
@@ -74,7 +75,11 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
+import org.knime.core.data.container.filter.FilterDelegateRowIterator;
 import org.knime.core.data.container.filter.TableFilter;
+import org.knime.core.data.container.filter.predicate.FilterPredicate;
+import org.knime.core.data.container.filter.predicate.FilterPredicateIndexMapper;
+import org.knime.core.data.container.filter.predicate.FilterPredicateValidator;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -300,6 +305,12 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
     @SuppressWarnings("resource")
     public CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
 
+        final Optional<FilterPredicate> optionalPredicate = filter.getFilterPredicate();
+        if (m_appendTable != null && optionalPredicate.isPresent()) {
+            // We can't split a predicate across two underlying tables and have to use a fallback here.
+            return new FilterDelegateRowIterator(iterator(), filter, exec);
+        }
+
         final Supplier<IntStream> indicesSup = () -> filter.getMaterializeColumnIndices()
             .map(o -> o.stream().mapToInt(i -> i)).orElse(IntStream.range(0, m_map.length));
 
@@ -313,9 +324,15 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         }
 
         // determine iterator for reference table
+        final DataTableSpec referenceSpec = m_reference.getDataTableSpec();
         final TableFilter.Builder referenceFilterBuilder = new TableFilter.Builder(filter);
         final int[] refIndices = indicesSup.get().filter(i -> m_isFromRefTable[i]).map(i -> m_map[i]).toArray();
         referenceFilterBuilder.withMaterializeColumnIndices(refIndices);
+        if (optionalPredicate.isPresent()) {
+        	final FilterPredicate predicate = optionalPredicate.get().accept(new FilterPredicateIndexMapper(m_map));
+            predicate.accept(new FilterPredicateValidator(referenceSpec));
+            referenceFilterBuilder.withFilterPredicate(predicate);
+        }
         final CloseableRowIterator refIt = m_reference.filter(referenceFilterBuilder.build(), exec).iterator();
 
         return new JoinTableIterator(refIt, appendIt, m_map, m_isFromRefTable);

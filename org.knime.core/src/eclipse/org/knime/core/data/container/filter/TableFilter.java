@@ -54,6 +54,8 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.UnmaterializedCell.UnmaterializedDataCellException;
+import org.knime.core.data.container.filter.predicate.FilterPredicate;
+import org.knime.core.data.container.filter.predicate.FilterPredicateValidator;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.util.CheckUtils;
@@ -69,12 +71,12 @@ import org.knime.core.node.util.CheckUtils;
  */
 public final class TableFilter {
 
-    // Additional filter options are planned for the future, see AP-11805
     private TableFilter(final Optional<Set<Integer>> columnIndices, final Optional<Long> fromRowIndex,
-        final Optional<Long> toRowIndex) {
+        final Optional<Long> toRowIndex, final Optional<FilterPredicate> rowFilterPredicate) {
         m_columnIndices = columnIndices;
         m_fromRowIndex = fromRowIndex;
         m_toRowIndex = toRowIndex;
+        m_rowFilterPredicate = rowFilterPredicate;
     }
 
     private final Optional<Set<Integer>> m_columnIndices;
@@ -82,6 +84,8 @@ public final class TableFilter {
     private final Optional<Long> m_fromRowIndex;
 
     private final Optional<Long> m_toRowIndex;
+
+    private final Optional<FilterPredicate> m_rowFilterPredicate;
 
     /**
      * A method that can be used to obtain the indices of columns that should be materialized. The returned
@@ -131,6 +135,20 @@ public final class TableFilter {
         if (m_columnIndices.isPresent()) {
             spec.verifyIndices(m_columnIndices.get().stream().mapToInt(i -> i).toArray());
         }
+
+        if (m_rowFilterPredicate.isPresent()) {
+            m_rowFilterPredicate.get().accept(new FilterPredicateValidator(spec));
+        }
+    }
+
+    /**
+     * A method that can be used to obtain a {@link FilterPredicate} associated with this filter. The returned {@link Optional} will be empty if
+     * no predicate is to be applied.
+     *
+     * @return an optional predicate that is to be applied when filtering data rows
+     */
+    public Optional<FilterPredicate> getFilterPredicate() {
+        return m_rowFilterPredicate;
     }
 
     /**
@@ -193,6 +211,17 @@ public final class TableFilter {
     }
 
     /**
+     * Static factory method for creating a {@link TableFilter} that retains only rows according to a given
+     * {@link FilterPredicate}.
+     *
+     * @param predicate the predicate that specifies which rows to keep
+     * @return a new table filter
+     */
+    public static TableFilter filterRows(final FilterPredicate predicate) {
+        return (new Builder()).withFilterPredicate(predicate).build();
+    }
+
+    /**
      * Implementation of the builder design pattern for the {@link TableFilter} class.
      */
     public final static class Builder {
@@ -203,6 +232,8 @@ public final class TableFilter {
 
         private Optional<Long> m_toRowIndex;
 
+        private Optional<FilterPredicate> m_rowFilterPredicate;
+
         /**
          * Constructs a new builder.
          */
@@ -210,6 +241,7 @@ public final class TableFilter {
             m_columnIndices = Optional.empty();
             m_fromRowIndex = Optional.empty();
             m_toRowIndex = Optional.empty();
+            m_rowFilterPredicate = Optional.empty();
         }
 
         /**
@@ -221,6 +253,7 @@ public final class TableFilter {
             m_columnIndices = filter.getMaterializeColumnIndices();
             m_fromRowIndex = filter.getFromRowIndex();
             m_toRowIndex = filter.getToRowIndex();
+            m_rowFilterPredicate = filter.getFilterPredicate();
         }
 
         /**
@@ -230,10 +263,7 @@ public final class TableFilter {
          *
          * @param indices the indices of columns to materialize
          * @return the same builder with updated parameters
-<<<<<<< 0ff40a5ca95d31129757656187aab5ef8df34053
          * @throws IllegalArgumentException when there are duplicates among given indices
-=======
->>>>>>> AP-10205: Implement row iterator filter for range of rows
          */
         public Builder withMaterializeColumnIndices(final int... indices) {
             CheckUtils.checkArgumentNotNull(indices);
@@ -288,12 +318,25 @@ public final class TableFilter {
         }
 
         /**
+         * Configure the builder to provide {@link TableFilter TableFilters} that retain only rows according to a given
+         * {@link FilterPredicate}.
+         *
+         * @param predicate the predicate that specifies which rows to keep
+         * @return the same builder with updated parameters
+         */
+        public Builder withFilterPredicate(final FilterPredicate predicate) {
+            CheckUtils.checkArgumentNotNull(predicate, "Predicate must not be null.");
+            m_rowFilterPredicate = Optional.of(predicate);
+            return this;
+        }
+
+        /**
          * Builds a new table filter with the paramaters configured in this builder.
          *
          * @return a new table filter
          */
         public TableFilter build() {
-            return new TableFilter(m_columnIndices, m_fromRowIndex, m_toRowIndex);
+            return new TableFilter(m_columnIndices, m_fromRowIndex, m_toRowIndex, m_rowFilterPredicate);
         }
 
     }

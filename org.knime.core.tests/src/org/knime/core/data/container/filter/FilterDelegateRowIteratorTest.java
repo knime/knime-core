@@ -49,9 +49,17 @@ package org.knime.core.data.container.filter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.knime.core.data.container.filter.predicate.FilterPredicate.custom;
+import static org.knime.core.data.container.filter.predicate.FilterPredicate.equal;
+import static org.knime.core.data.container.filter.predicate.FilterPredicate.greaterOrEqual;
+import static org.knime.core.data.container.filter.predicate.FilterPredicate.lesserOrEqual;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.boolCol;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.intCol;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.longCol;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -59,6 +67,7 @@ import org.junit.Test;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.container.filter.predicate.FilterPredicate;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -104,17 +113,47 @@ public class FilterDelegateRowIteratorTest {
      */
     @Test
     public void testFilterSome() {
-        // keep only rows with an index between 14 and 16
-        TableFilter filter = (new TableFilter.Builder()).withFromRowIndex(14).withToRowIndex(16).build();
+        // keep only rows with an index that is even and between 13 and 17 (i.e. 14, 16)
+        FilterPredicate pred =
+            greaterOrEqual(intCol(0), 10).and(lesserOrEqual(longCol(2), 20l)).and(equal(boolCol(4), false));
+        TableFilter filter = (new TableFilter.Builder()).withFilterPredicate(pred).withFromRowIndex(13)
+            .withToRowIndex(17).build();
 
         try (final CloseableRowIterator rowIt = new FilterDelegateRowIterator(new TestIterator(), filter, null)) {
             assertTrue(rowIt.hasNext());
             assertEquals("14", rowIt.next().getKey().getString());
             assertTrue(rowIt.hasNext());
-            assertEquals("15", rowIt.next().getKey().getString());
-            assertTrue(rowIt.hasNext());
             assertEquals("16", rowIt.next().getKey().getString());
             assertFalse(rowIt.hasNext());
+        }
+    }
+
+    /**
+     * Tests that {@link TableFilter TableFilters} filtering all rows are correctly handled by a
+     * {@link FilterDelegateRowIterator}.
+     */
+    @Test(expected = NoSuchElementException.class)
+    public void testFilterAll() {
+        TableFilter filter = TableFilter.filterRows(custom(intCol(0), i -> false));
+        try (final CloseableRowIterator rowIt = new FilterDelegateRowIterator(new TestIterator(), filter, null)) {
+            assertFalse(rowIt.hasNext());
+            rowIt.next();
+        }
+    }
+
+    /**
+     * Tests that {@link TableFilter TableFilters} filtering no rows are correctly handled by a
+     * {@link FilterDelegateRowIterator}.
+     */
+    @Test
+    public void testFilterNone() {
+        final Iterator<DataRow> referenceIt = ROWS.iterator();
+        final TableFilter filter = TableFilter.filterRows(custom(intCol(0), i -> true));
+        try (final CloseableRowIterator rowIt = new FilterDelegateRowIterator(new TestIterator(), filter, null)) {
+            while (rowIt.hasNext() && referenceIt.hasNext()) {
+                assertEquals(rowIt.next(), referenceIt.next());
+            }
+            assertEquals(rowIt.hasNext(), referenceIt.hasNext());
         }
     }
 

@@ -51,6 +51,8 @@ import java.util.Optional;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.container.filter.predicate.FilterPredicate;
+import org.knime.core.data.container.filter.predicate.FilterPredicateToDataRowApplier;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -71,6 +73,8 @@ public final class FilterDelegateRowIterator extends CloseableRowIterator {
     private final long m_fromIndex;
 
     private final long m_toIndex;
+
+    private final Optional<FilterPredicate> m_predicate;
 
     private final Optional<ExecutionMonitor> m_exec;
 
@@ -93,6 +97,7 @@ public final class FilterDelegateRowIterator extends CloseableRowIterator {
         m_delegate = iterator;
         m_fromIndex = filter.getFromRowIndex().orElse(0l);
         m_toIndex = filter.getToRowIndex().orElse(Long.MAX_VALUE);
+        m_predicate = filter.getFilterPredicate();
         m_exec = Optional.ofNullable(exec);
         m_index = 0;
     }
@@ -136,9 +141,10 @@ public final class FilterDelegateRowIterator extends CloseableRowIterator {
                     () -> String.format("Row %,d/%,d (%s)", index, size, row.getKey()));
             }
 
-            // return the row if we're at or above the minimum index of rows to keep
+            // return the row if the predicate evaluates to true and we're at or above the minimum index of rows to keep
             // also, increase the index by one
-            if (m_index++ >= m_fromIndex) {
+            if (m_index++ >= m_fromIndex
+                && (!m_predicate.isPresent() || m_predicate.get().accept(new FilterPredicateToDataRowApplier(row)))) {
                 return row;
             }
         }

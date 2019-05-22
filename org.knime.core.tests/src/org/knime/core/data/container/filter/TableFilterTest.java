@@ -48,9 +48,15 @@
  */
 package org.knime.core.data.container.filter;
 
+import static org.knime.core.data.container.filter.predicate.FilterPredicate.equal;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.boolCol;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.intCol;
+
 import org.junit.Test;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.container.filter.predicate.ColumnPredicate;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -129,6 +135,24 @@ public class TableFilterTest {
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidRangeOfRows() {
         TableFilter.filterRangeOfRows(5, 3).validate(SPEC, 0);
+    }
+
+    /**
+     * Tests that attempting to build a {@link ColumnPredicate} on a column with an index below 0 throws an
+     * {@link IndexOutOfBoundsException}.
+     */
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testPredicateIndexOutOfBounds() {
+        TableFilter.filterRows(equal(intCol(-1), 0)).validate(SPEC, 0);
+    }
+
+    /**
+     * Tests that attempting to build a {@link ColumnPredicate} with a {@link DataType} that is not compatible to the
+     * {@link DataTableSpec} throws an {@link IllegalArgumentException}.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testIncompatiblePredicate() {
+        TableFilter.filterRows(equal(boolCol(0), false)).validate(SPEC, 0);
     }
 
 }

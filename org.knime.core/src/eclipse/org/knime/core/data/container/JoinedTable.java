@@ -55,6 +55,7 @@ import java.util.Set;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.filter.FilterDelegateRowIterator;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -130,6 +131,11 @@ public final class JoinedTable implements KnowsRowCountTable {
 
     @Override
     public CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
+        if (filter.getFilterPredicate().isPresent()) {
+            // We can't split a predicate across two tables so we can't push the predicate down and have to fallback.
+            return new FilterDelegateRowIterator(iterator(), filter, exec);
+        }
+
         // apply row index filter to left and right tables
         final TableFilter.Builder leftFilterBuilder = new TableFilter.Builder(filter);
         final TableFilter.Builder rightFilterBuilder = new TableFilter.Builder(filter);

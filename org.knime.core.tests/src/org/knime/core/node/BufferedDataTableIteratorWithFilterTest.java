@@ -49,7 +49,15 @@ package org.knime.core.node;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.knime.core.data.container.filter.predicate.FilterPredicate.custom;
+import static org.knime.core.data.container.filter.predicate.FilterPredicate.equal;
+import static org.knime.core.data.container.filter.predicate.FilterPredicate.greaterOrEqual;
+import static org.knime.core.data.container.filter.predicate.FilterPredicate.lesserOrEqual;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.boolCol;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.intCol;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.longCol;
 
+import java.util.NoSuchElementException;
 import java.util.stream.IntStream;
 
 import org.junit.Test;
@@ -89,9 +97,10 @@ public class BufferedDataTableIteratorWithFilterTest {
             new DataColumnSpecCreator("double", DoubleCell.TYPE).createSpec(),
             new DataColumnSpecCreator("boolean", BooleanCell.TYPE).createSpec());
 
-    // keep only rows with an index between 14 and 16
-    private static final TableFilter FILTER_MOST = (new TableFilter.Builder())
-            .withFromRowIndex(14).withToRowIndex(16).build();
+    // keep only rows with an index that is even and between 13 and 17 (i.e. 14, 16)
+    private static final TableFilter FILTER_MOST = (new TableFilter.Builder()).withFilterPredicate(
+        greaterOrEqual(intCol(0), 10).and(lesserOrEqual(longCol(2), 20l)).and(equal(boolCol(4), false)))
+            .withFromRowIndex(13).withToRowIndex(17).build();
 
     private static final NodeProgressMonitor PROGRESS = new DefaultNodeProgressMonitor();
 
@@ -129,8 +138,6 @@ public class BufferedDataTableIteratorWithFilterTest {
             assertTrue(rowIt.hasNext());
             assertEquals("14", rowIt.next().getKey().getString());
             assertTrue(rowIt.hasNext());
-            assertEquals("15", rowIt.next().getKey().getString());
-            assertTrue(rowIt.hasNext());
             assertEquals("16", rowIt.next().getKey().getString());
             assertFalse(rowIt.hasNext());
         }
@@ -148,10 +155,43 @@ public class BufferedDataTableIteratorWithFilterTest {
             assertTrue(rowIt.hasNext());
             assertEquals("14", rowIt.next().getKey().getString());
             assertTrue(rowIt.hasNext());
-            assertEquals("15", rowIt.next().getKey().getString());
-            assertTrue(rowIt.hasNext());
             assertEquals("16", rowIt.next().getKey().getString());
             assertFalse(rowIt.hasNext());
+        }
+    }
+
+    /**
+     * Tests that {@link TableFilter TableFilters} filtering all rows are correctly applied to {@link Buffer Buffers}
+     * holding their table in memory.
+     */
+    @Test(expected = NoSuchElementException.class)
+    public void testFilterAll() {
+        BufferedDataTable table = createTable(100, true);
+
+        TableFilter filter = TableFilter.filterRows(custom(intCol(0), i -> false));
+
+        try (final CloseableRowIterator rowIt = table.filter(filter).iterator()) {
+            assertFalse(rowIt.hasNext());
+            rowIt.next();
+        }
+    }
+
+    /**
+     * Tests that {@link TableFilter TableFilters} filtering no rows are correctly applied to {@link Buffer Buffers}
+     * holding their table in memory.
+     */
+    @Test
+    public void testFilterNone() {
+        BufferedDataTable table = createTable(100, true);
+
+        TableFilter filter = TableFilter.filterRows(custom(intCol(0), i -> true));
+
+        try (final CloseableRowIterator rowIt1 = table.filter(filter).iterator();
+                CloseableRowIterator rowIt2 = table.iterator()) {
+            while (rowIt1.hasNext() && rowIt2.hasNext()) {
+                assertEquals(rowIt1.next(), rowIt2.next());
+            }
+            assertEquals(rowIt1.hasNext(), rowIt2.hasNext());
         }
     }
 
