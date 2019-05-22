@@ -281,13 +281,15 @@ public class DuplicateChecker {
     }
 
     /**
-     * Writes a chunk of keys to disk.
+     * Writes all stored keys to disk if their number is greater than or equal to {@value #MAX_CHUNK_SIZE}.
      *
      * @throws IOException if an I/O error occurs while writing the chunk to disk
-     * @since 3.8
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public synchronized void flush() throws IOException {
-        writeChunk();
+    public synchronized void flushIfNecessary() throws IOException {
+        if (m_currentChunk.size() >= MAX_CHUNK_SIZE) {
+            writeChunk();
+        }
     }
 
     /**

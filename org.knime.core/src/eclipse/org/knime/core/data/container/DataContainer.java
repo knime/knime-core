@@ -216,6 +216,9 @@ public class DataContainer implements RowAppender {
      */
     private final boolean m_isSynchronousWrite;
 
+    /** Flag indicating the memory state.     */
+    boolean m_memoryLowState;
+
     /**
      * The index of the pending batch, i.e., the index of the next batch that has to be forwarded to the {@link Buffer}.
      */
@@ -351,6 +354,7 @@ public class DataContainer implements RowAppender {
         m_duplicateChecker = settings.createDuplicateChecker();
         m_isSynchronousWrite = settings.useSyncIO();
         m_batchSize = settings.getAsyncCacheSize();
+        m_memoryLowState = false;
         if (m_isSynchronousWrite) {
             m_asyncValidationSemaphore = null;
             m_pendingBatchIdx = null;
@@ -440,8 +444,7 @@ public class DataContainer implements RowAppender {
             m_pendingBatchMap.clear();
             if (waitForRunnables) {
                 try {
-                    m_asyncValidationSemaphore.acquire(m_nThreads);
-                    m_asyncValidationSemaphore.release(m_nThreads);
+                    waitForRunnableTermination();
                 } catch (InterruptedException ie) {
                     checkAsyncWriteThrowable(false);
                 }
@@ -556,12 +559,10 @@ public class DataContainer implements RowAppender {
         }
         if (!m_isSynchronousWrite) {
             try {
-                if (!m_curBatch.isEmpty()) {
+                if (m_writeThrowable.get() == null && !m_curBatch.isEmpty()) {
                     submit();
                 }
-                // wait for all threads to stop
-                m_asyncValidationSemaphore.acquire(m_nThreads);
-                m_asyncValidationSemaphore.release(m_nThreads);
+                waitForRunnableTermination();
             } catch (final InterruptedException ie) {
                 m_writeThrowable.compareAndSet(null, ie);
             }
@@ -673,45 +674,97 @@ public class DataContainer implements RowAppender {
         if (row == null) {
             throw new NullPointerException("Can't add null rows to container");
         }
+        initBufferIfRequired();
+        if (m_isSynchronousWrite) {
+            addRowToTableSynchronously(row);
+        } else {
+            addRowToTableAsynchronously(row);
+        }
+        m_size += 1;
+    } // addRowToTable(DataRow)
+
+
+
+    /**
+     * Initializes the buffer if required.
+     */
+    private void initBufferIfRequired() {
         if (m_buffer == null) {
-            int bufID = createInternalBufferID();
-            Map<Integer, ContainerTable> localTableRep = getLocalTableRepository();
-            IWriteFileStoreHandler fileStoreHandler = getFileStoreHandler();
+            final int bufID = createInternalBufferID();
+            final Map<Integer, ContainerTable> localTableRep = getLocalTableRepository();
+            final IWriteFileStoreHandler fileStoreHandler = getFileStoreHandler();
             m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, bufID, getDataRepository(),
                 localTableRep, fileStoreHandler, m_isSynchronousWrite);
             if (m_buffer == null) {
                 throw new NullPointerException("Implementation error, must not return a null buffer.");
             }
         }
-        if (m_isSynchronousWrite) {
+    }
+
+
+    /**
+     * Adds the row to the table in a synchronous manner and reacts to memory alerts.
+     *
+     * @param row the row to be synchronously processed
+     */
+    private void addRowToTableSynchronously(final DataRow row) {
+        if (MemoryAlertSystem.getInstance().isMemoryLow()) {
+            m_buffer.flushBuffer();
+        }
+        addRowToTableWrite(row);
+    }
+
+    /**
+     * Adds the row to the table in a asynchronous/synchronous manner depending on the current memory state, see
+     * {@link #m_memoryLowState}. Whenever we change into a low memory state we flush everything to disk and wait for
+     * all {@link ContainerRunnable} to finish their execution, while blocking the data producer.
+     *
+     * @param row the row to be asynchronously processed
+     */
+    private void addRowToTableAsynchronously(final DataRow row) {
+        checkAsyncWriteThrowable(true);
+        try {
             if (MemoryAlertSystem.getInstance().isMemoryLow()) {
-                m_buffer.flushBuffer();
-            }
-            addRowToTableWrite(row);
-        } else {
-            m_curBatch.add(row);
-            try {
-                if (MemoryAlertSystem.getInstance().isMemoryLow()) {
+                // write all keys to disk if necessary
+                m_duplicateChecker.flushIfNecessary();
+                // if we witness a low memory state the first time we flush everything to disk.
+                // In case we are already in this state we switch to synchronous |writing", to ensure that
+                // we release the memory as fast as possible.
+                if (!m_memoryLowState) {
                     // flush the buffer, forces the buffer to synchronously write to disc from here on
                     m_buffer.flushBuffer();
-                    // write all keys to disk
-                    m_duplicateChecker.flush();
                     // submit the pending batch
-                    submit();
+                    if (!m_curBatch.isEmpty()) {
+                        submit();
+                    }
                     // wait until all runnables are finished
-                    m_asyncValidationSemaphore.acquire(m_nThreads);
-                    m_asyncValidationSemaphore.release(m_nThreads);
+                    waitForRunnableTermination();
+                    // adjust the memory state
+                    m_memoryLowState = true;
+                    // we change to synchronous write so we need to ensure that the domain values order stays correct
+                    // and that our ContainerRunnables can continue their work once we leave the low memory state
+                    m_domainCreator.setBatchId(m_curBatchIdx++);
+                    m_pendingBatchIdx.increment();
                 }
+                // write synchronously
+                addRowToTableWrite(row);
+            } else {
+                m_memoryLowState = false;
+                m_curBatch.add(row);
                 if (m_curBatch.size() == m_batchSize) {
                     submit();
                 }
-            } catch (final IOException | InterruptedException e) {
-                m_writeThrowable.compareAndSet(null, e);
             }
-            checkAsyncWriteThrowable(true);
+        } catch (final IOException | InterruptedException e) {
+            m_writeThrowable.compareAndSet(null, e);
         }
-        m_size += 1;
-    } // addRowToTable(DataRow)
+    }
+
+    private void waitForRunnableTermination() throws InterruptedException {
+        m_asyncValidationSemaphore.acquire(m_nThreads);
+        m_asyncValidationSemaphore.release(m_nThreads);
+        assert(m_curBatchIdx == m_pendingBatchIdx.longValue());
+    }
 
     /**
      * Submits the current batch to the {@link #ASYNC_EXECUTORS} service.
