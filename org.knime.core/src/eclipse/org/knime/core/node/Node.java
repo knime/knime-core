@@ -154,6 +154,12 @@ import org.w3c.dom.Element;
  */
 public final class Node implements NodeModelWarningListener {
 
+    /** Text prepended to message on node execution failure.
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 3.8
+     */
+    public static final String EXECUTE_FAILED_PREFIX = "Execute failed: ";
+
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Node.class);
 
@@ -1013,7 +1019,7 @@ public final class Node implements NodeModelWarningListener {
                         return true;
                     }
                 }
-                String message = "Execute failed: ";
+                String message = EXECUTE_FAILED_PREFIX;
                 if (th.getMessage() != null && th.getMessage().length() >= 5) {
                     message = message.concat(th.getMessage());
                 } else {

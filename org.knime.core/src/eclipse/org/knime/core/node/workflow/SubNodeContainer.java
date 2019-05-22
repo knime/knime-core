@@ -1139,7 +1139,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 setNodeMessage(new NodeMessage(Type.WARNING, "Execution canceled"));
             } else {
                 setNodeMessage(new NodeMessage(Type.ERROR, "Error during execution:\n"
-                        + m_wfm.printNodeErrorSummary(m_wfm.getID(), 0)));
+                        + m_wfm.printNodeErrorSummary(0)));
             }
             return allExecuted ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
         } finally {
