@@ -111,6 +111,8 @@ public class BatchExecutor {
         IGNORED_ARGUMENTS.add("-showlocation");
         IGNORED_ARGUMENTS.add("-allowdeadlock");
         IGNORED_ARGUMENTS.add("-checkforupdates");
+        IGNORED_ARGUMENTS.add("-profilelist");
+        IGNORED_ARGUMENTS.add("-profilelocation");
     }
 
 
