@@ -222,7 +222,8 @@ public class DataTableDomainCreator {
         m_maxsMissing = toCopy.m_maxsMissing.clone();
         m_possVals = new LinkedHashMap[toCopy.m_possVals.length];
         for (int i = 0; i < m_possVals.length; i++) {
-            m_possVals[i] = new LinkedHashMap<>(toCopy.m_possVals[i]);
+            Map<DataCell, Long> copyMap = toCopy.m_possVals[i];
+            m_possVals[i] = copyMap == null ? null : new LinkedHashMap<>(toCopy.m_possVals[i]);
         }
         m_comparators = toCopy.m_comparators.clone();
         m_batchId = toCopy.m_batchId;
