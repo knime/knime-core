@@ -779,7 +779,7 @@ public class DataContainer implements RowAppender {
         // it's computation
         DataTableDomainCreator domainCreator = m_domainUpdaterPool.poll();
         if (domainCreator == null) {
-            domainCreator = new DataTableDomainCreator(m_spec, false);
+            domainCreator = new DataTableDomainCreator(m_domainCreator);
             domainCreator.setMaxPossibleValues(m_domainCreator.getMaxPossibleValues());
         }
         ASYNC_EXECUTORS.execute(new ContainerRunnable(domainCreator, m_curBatch, m_curBatchIdx++));

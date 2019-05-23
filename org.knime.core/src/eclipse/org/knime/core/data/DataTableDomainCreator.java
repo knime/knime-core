@@ -204,6 +204,31 @@ public class DataTableDomainCreator {
     }
 
     /**
+     * Creates a copy of the given {@link DataTableDomainCreator instance}. Note that this is not a deep-copy, i.e.,
+     * none of the read-only members are copied.
+     *
+     * @param toCopy the instance to be copied
+     * @since 3.8
+     */
+    @SuppressWarnings("unchecked")
+    public DataTableDomainCreator(final DataTableDomainCreator toCopy) {
+        m_domainValuesColumnSelection = toCopy.m_domainValuesColumnSelection;
+        m_domainMinMaxColumnSelection = toCopy.m_domainMinMaxColumnSelection;
+        m_maxPossibleValues = toCopy.m_maxPossibleValues;
+        m_inputSpec = toCopy.m_inputSpec;
+        m_mins = toCopy.m_mins.clone();
+        m_minsMissing = toCopy.m_minsMissing.clone();
+        m_maxs = toCopy.m_maxs.clone();
+        m_maxsMissing = toCopy.m_maxsMissing.clone();
+        m_possVals = new LinkedHashMap[toCopy.m_possVals.length];
+        for (int i = 0; i < m_possVals.length; i++) {
+            m_possVals[i] = new LinkedHashMap<>(toCopy.m_possVals[i]);
+        }
+        m_comparators = toCopy.m_comparators.clone();
+        m_batchId = toCopy.m_batchId;
+    }
+
+    /**
      * Set the maximum number of possible values in the domain of a nominal value columns.
      *
      * @param maxValues the maximal number of values, must be &gt;= 0
@@ -465,4 +490,5 @@ public class DataTableDomainCreator {
             }
         }
     }
+
 }
