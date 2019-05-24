@@ -482,11 +482,11 @@ public class DataTableDomainCreator {
             }
             final Comparator<DataCell> comparator = m_comparators[i];
             final DataCell otherMin = dataTableDomainCreator.m_mins[i];
-            if (otherMin != null) {
+            if (!dataTableDomainCreator.m_minsMissing[i] && otherMin != null) {
                 updateMin(i, m_mins, otherMin, comparator);
             }
             final DataCell otherMax = dataTableDomainCreator.m_maxs[i];
-            if (otherMax != null) {
+            if (!dataTableDomainCreator.m_maxsMissing[i] && otherMax != null) {
                 updateMax(i, m_maxs, otherMax, comparator);
             }
         }
