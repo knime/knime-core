@@ -248,7 +248,13 @@ public class DataContainer implements RowAppender {
     private final int m_nThreads;
 
     /** Semaphore used to block the container until all {@link ContainerRunnable} are finished. */
-    private final Semaphore m_asyncValidationSemaphore;
+    private final Semaphore m_numActiveContRunnables;
+
+    /**
+     * Semaphore used to block the producer in case that we have more than {link {@link #m_nThreads} batches waiting to
+     * be handed over to the {@link Buffer}.
+     */
+    private final Semaphore m_numPendingBatches;
 
     /** The maximum number of rows kept in memory. */
     private int m_maxRowsInMemory;
@@ -356,7 +362,8 @@ public class DataContainer implements RowAppender {
         m_batchSize = settings.getAsyncCacheSize();
         m_memoryLowState = false;
         if (m_isSynchronousWrite) {
-            m_asyncValidationSemaphore = null;
+            m_numActiveContRunnables = null;
+            m_numPendingBatches = null;
             m_pendingBatchIdx = null;
             m_pendingBatchMap = null;
             m_writeThrowable = null;
@@ -365,7 +372,8 @@ public class DataContainer implements RowAppender {
         } else {
             m_nThreads = Math.min(settings.getMaxThreadsPerContainer(), ASYNC_EXECUTORS.getMaximumPoolSize());
             m_pendingBatchMap = new ConcurrentHashMap<>();
-            m_asyncValidationSemaphore = new Semaphore(m_nThreads);
+            m_numActiveContRunnables = new Semaphore(m_nThreads);
+            m_numPendingBatches = new Semaphore(m_nThreads);
             m_domainUpdaterPool = new ArrayBlockingQueue<>(m_nThreads);
             m_curBatch = new ArrayList<>(m_batchSize);
             m_pendingBatchIdx = new MutableLong();
@@ -761,9 +769,8 @@ public class DataContainer implements RowAppender {
     }
 
     private void waitForRunnableTermination() throws InterruptedException {
-        m_asyncValidationSemaphore.acquire(m_nThreads);
-        m_asyncValidationSemaphore.release(m_nThreads);
-        assert(m_curBatchIdx == m_pendingBatchIdx.longValue());
+        m_numActiveContRunnables.acquire(m_nThreads);
+        m_numActiveContRunnables.release(m_nThreads);
     }
 
     /**
@@ -773,7 +780,8 @@ public class DataContainer implements RowAppender {
      */
     private void submit() throws InterruptedException {
         // wait until we are allowed to submit a new runnable
-        m_asyncValidationSemaphore.acquire();
+        m_numPendingBatches.acquire();
+        m_numActiveContRunnables.acquire();
         // poll can only return null if we never had #nThreads ContainerRunnables at the same
         // time queued for execution or none of the already submitted Runnables has already finished
         // it's computation
@@ -1240,8 +1248,10 @@ public class DataContainer implements RowAppender {
                     }
                     if (addRows) {
                         addRows(blobRows);
+                        m_numPendingBatches.release();
                         while (isNextPendingBatchExistent()) {
                             addRows(m_pendingBatchMap.remove(m_pendingBatchIdx.longValue()));
+                            m_numPendingBatches.release();
                         }
                     }
 
@@ -1251,7 +1261,7 @@ public class DataContainer implements RowAppender {
                 m_writeThrowable.compareAndSet(null, e);
             } finally {
                 m_domainUpdaterPool.add(m_dataTableDomainCreator);
-                m_asyncValidationSemaphore.release();
+                m_numActiveContRunnables.release();
             }
         }
 
