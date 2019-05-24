@@ -1910,18 +1910,17 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     private void writeList(final List<BlobSupportDataRow> list) {
-        if (list != null) {
-            try {
-                ensureWriterIsOpen();
+        try {
+            ensureWriterIsOpen();
+            if (list != null) {
                 for (BlobSupportDataRow row : list) {
                     m_outputWriter.writeRow(row);
                 }
-            } catch (IOException ioe) {
-                LOGGER.error("Failed to write rows from buffer to file.", ioe);
-            } catch (IllegalStateException ise) {
-                LOGGER
-                    .error(ise.getMessage() + "; Construction time call stack:\n" + m_fullStackTraceAtConstructionTime);
             }
+        } catch (IOException ioe) {
+            LOGGER.error("Failed to write rows from buffer to file.", ioe);
+        } catch (IllegalStateException ise) {
+            LOGGER.error(ise.getMessage() + "; Construction time call stack:\n" + m_fullStackTraceAtConstructionTime);
         }
     }
 
