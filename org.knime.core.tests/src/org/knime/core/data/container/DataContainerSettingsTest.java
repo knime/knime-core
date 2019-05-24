@@ -56,6 +56,10 @@ import static org.knime.core.data.container.DataContainer.MAX_POSSIBLE_VALUES;
 import static org.knime.core.data.container.DataContainer.SYNCHRONOUS_IO;
 
 import org.junit.Test;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
+import org.knime.core.data.def.DoubleCell;
 
 import junit.framework.TestCase;
 
@@ -85,8 +89,22 @@ public final class DataContainerSettingsTest extends TestCase {
             settings.getMaxThreadsPerContainer());
         assertNotNull("Wrong default (duplicate checker)", settings.createDuplicateChecker());
         assertNotNull("Wrong default (BufferSettings are null)", settings.getBufferSettings());
-        assertTrue("Wrong default (Default BufferSettings are different to those provided by the DataContainerSettings",
-            settings.getBufferSettings().equals(BufferSettings.getDefault()));
+
+        assertTrue(
+            "Wrong default (Default BufferSettings LRU flag is different to that provided by the DataContainerSettings",
+            settings.getBufferSettings().useLRU() == BufferSettings.getDefault().useLRU());
+
+        assertTrue(
+            "Wrong default (Default BufferSettings LRU cache size is different to that provided by the DataContainerSettings",
+            settings.getBufferSettings().getLRUCacheSize() == BufferSettings.getDefault().getLRUCacheSize());
+
+        final DataTableSpec spec = new DataTableSpecCreator()
+            .addColumns(new DataColumnSpecCreator("test", DoubleCell.TYPE).createSpec()).createSpec();
+        assertTrue(
+            "Wrong default (Default BufferSettings output format is different to that provided by the DataContainerSettings",
+            settings.getBufferSettings().getOutputFormat(spec).getClass()
+                .equals(BufferSettings.getDefault().getOutputFormat(spec).getClass()));
+
     }
 
     /**
