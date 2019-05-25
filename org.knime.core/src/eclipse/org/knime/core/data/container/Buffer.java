@@ -867,47 +867,53 @@ public class Buffer implements KNIMEStreamConstants {
     private DataCell handleIncomingBlob(final DataCell cell, final int col, final int totalColCount,
         final boolean copyForVersionHop, final boolean forceCopyOfBlobsArg, final boolean isWrapperCell,
         final boolean isCollectionCell) throws IOException {
-        BlobAddress ad;
-        final CellClassInfo cl;
-        BlobWrapperDataCell wc;
-        if (isWrapperCell) {
-            wc = (BlobWrapperDataCell)cell;
-            ad = wc.getAddress();
-            cl = wc.getBlobClassInfo();
-        } else if (cell instanceof BlobDataCell) {
-            wc = null;
-            cl = CellClassInfo.get(cell);
-            ad = ((BlobDataCell)cell).getBlobAddress();
-        } else if (isCollectionCell) {
-            CellCollection cdv = (CellCollection)cell;
-            if (cdv.containsBlobWrapperCells()) {
-                Iterator<DataCell> it = cdv.iterator();
-                if (!(it instanceof BlobSupportDataCellIterator)) {
-                    LOGGER.coding("(Collection) DataCell of class \"" + cell.getClass().getSimpleName()
-                        + "\" contains Blobs, but does not return an iterator supporting those (expected "
-                        + BlobSupportDataCellIterator.class.getName() + ", got " + it.getClass().getName() + ")");
-                }
-                while (it.hasNext()) {
-                    DataCell n = it instanceof BlobSupportDataCellIterator
-                        ? ((BlobSupportDataCellIterator)it).nextWithBlobSupport() : it.next();
-                    DataCell correctedCell = handleIncomingBlob(n, col, totalColCount, copyForVersionHop,
-                        forceCopyOfBlobsArg, n instanceof BlobWrapperDataCell, n instanceof CellCollection);
-                    if (correctedCell != n) {
-                        if (it instanceof BlobSupportDataCellIterator) {
-                            BlobSupportDataCellIterator bsdi = (BlobSupportDataCellIterator)it;
-                            bsdi.replaceLastReturnedWithWrapperCell(correctedCell);
-                        } else {
-                            // coding problem was reported above.
+        if (!isWrapperCell && !(cell instanceof BlobDataCell)) {
+            if (isCollectionCell) {
+                CellCollection cdv = (CellCollection)cell;
+                if (cdv.containsBlobWrapperCells()) {
+                    Iterator<DataCell> it = cdv.iterator();
+                    if (!(it instanceof BlobSupportDataCellIterator)) {
+                        LOGGER.coding("(Collection) DataCell of class \"" + cell.getClass().getSimpleName()
+                            + "\" contains Blobs, but does not return an iterator supporting those (expected "
+                            + BlobSupportDataCellIterator.class.getName() + ", got " + it.getClass().getName() + ")");
+                    }
+                    while (it.hasNext()) {
+                        DataCell n = it instanceof BlobSupportDataCellIterator
+                            ? ((BlobSupportDataCellIterator)it).nextWithBlobSupport() : it.next();
+                        DataCell correctedCell = handleIncomingBlob(n, col, totalColCount, copyForVersionHop,
+                            forceCopyOfBlobsArg, n instanceof BlobWrapperDataCell, n instanceof CellCollection);
+                        if (correctedCell != n) {
+                            if (it instanceof BlobSupportDataCellIterator) {
+                                BlobSupportDataCellIterator bsdi = (BlobSupportDataCellIterator)it;
+                                bsdi.replaceLastReturnedWithWrapperCell(correctedCell);
+                            } else {
+                                // coding problem was reported above.
+                            }
                         }
                     }
                 }
+                return cell;
+            } else {
+                return cell; // ordinary cell (e.g. double cell)
             }
-            return cell;
-        } else {
-            return cell; // ordinary cell (e.g. double cell)
         }
         // at this point cell can only be a WrapperCell or BlobDataCell
         synchronized (this) {
+            BlobAddress ad;
+            final CellClassInfo cl;
+            BlobWrapperDataCell wc;
+
+            // treat Wrapper and BlobDataCell differently
+            if (isWrapperCell) {
+                wc = (BlobWrapperDataCell)cell;
+                ad = wc.getAddress();
+                cl = wc.getBlobClassInfo();
+            } else {
+                wc = null;
+                cl = CellClassInfo.get(cell);
+                ad = ((BlobDataCell)cell).getBlobAddress();
+            }
+
             boolean forceCopyOfBlobs = forceCopyOfBlobsArg;
             Buffer ownerBuffer;
             if (ad != null) {
