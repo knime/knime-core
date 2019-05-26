@@ -48,6 +48,9 @@
  */
 package org.knime.core.util;
 
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
@@ -119,5 +122,35 @@ public class SWTUtilities {
      */
     public static Shell getActiveShell() {
         return getActiveShell(Display.getCurrent());
+    }
+
+    /**
+     * Oh com'on SWT - seriously: why isn't this a method in {@link Composite}?
+     *
+     * @param parent the Composite instance which will have all of its children removed.
+     * @since 3.8
+     */
+    public static void removeAllChildren(final Composite parent) {
+        for (final Control child : parent.getChildren()) {
+            child.dispose();
+        }
+    }
+
+    /**
+     * I'm not sure why the SWT authors thought implementing 'setVisible(false)' should mean we space should continue to
+     * be laid out but just not painted, like the worlds most obvious invisibility cloak... but they did - bless'em.
+     *
+     * @param widget the widget to make visible or hidden; the widget's layout data must be {@link GridData} or else
+     *            this method will do nothing more than invoke {@link Control#setVisible(boolean)}
+     * @param visible true to make visible, false to make hidden
+     * @since 3.8
+     */
+    public static void spaceReclaimingSetVisible(final Control widget, final boolean visible) {
+        final Object o = widget.getLayoutData();
+
+        widget.setVisible(visible);
+        if (o instanceof GridData) {
+            ((GridData)o).exclude = !visible;
+        }
     }
 }
