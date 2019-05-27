@@ -1634,12 +1634,23 @@ public class Buffer implements KNIMEStreamConstants {
                 // Case 3: We have the full table in memory and want to apply a filter.
                 if (backIntoMemoryIt == null) {
                     // We never store more than 2^31 rows in memory, therefore it's safe to cast to int.
-                    final int offset = (int)filter.getFromRowIndex();
+                    final int fromIndex = (int)filter.getFromRowIndex();
+                    final int toIndex = (int)filter.getToRowIndex();
+                    final FromListRangeIterator rangeIterator = new FromListRangeIterator(list, fromIndex, toIndex);
+
+                    /**
+                     * In a future world (a world of predicates, see AP-11805), the filter might be configured to keep
+                     * only rows with an index between 1000 and 2000 and a value greater than 42 in column 13. The
+                     * rangeIterator will take care of only returning rows with an index between 1000 and 2000. In
+                     * fact, it will return the row with index 1000 as its first row. Therefore, the
+                     * FilterDelegateRowIterator that handles the column-13-greater-than-42-predicate, has to be
+                     * provided with a copied filter with adjusted from- and toRowIndices.
+                     */
                     final TableFilter offsetFilter = new TableFilter.Builder(filter)//
-                        .withFromRowIndex(0)//
-                        .withToRowIndex(filter.getToRowIndex() - offset)//
-                        .build();
-                    return new FilterDelegateRowIterator(new FromListOffsetIterator(list, offset), offsetFilter, exec);
+                            .withFromRowIndex(0)//
+                            .withToRowIndex(toIndex - fromIndex)//
+                            .build();
+                    return new FilterDelegateRowIterator(rangeIterator, offsetFilter, exec);
                 }
 
                 // Case 4: We are currently iterating the table back into memory and want to apply a filter.
@@ -2103,23 +2114,26 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Iterator to be used when all data is kept in a list in memory. It uses access by index and allows to start
-     * iterating with a certain offset.
+     * Iterator to be used when all data is kept in a list in memory. It uses access by index and allows to itarate over
+     * a range of rows.
      */
-    private class FromListOffsetIterator extends CloseableRowIterator {
+    private class FromListRangeIterator extends CloseableRowIterator {
 
-        private List<BlobSupportDataRow> m_list;
+        private final List<BlobSupportDataRow> m_list;
 
-        private int m_nextIndex = 0;
+        private int m_nextIndex;
 
-        FromListOffsetIterator(final List<BlobSupportDataRow> list, final int offset) {
+        private final int m_toIndex;
+
+        FromListRangeIterator(final List<BlobSupportDataRow> list, final int fromIndex, final int toIndex) {
             m_list = list;
-            m_nextIndex = offset;
+            m_nextIndex = fromIndex;
+            m_toIndex = toIndex;
         }
 
         @Override
         public boolean hasNext() {
-            return m_nextIndex < size();
+            return m_nextIndex <= m_toIndex;
         }
 
         @Override

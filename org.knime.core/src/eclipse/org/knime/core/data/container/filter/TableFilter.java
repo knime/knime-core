@@ -69,6 +69,7 @@ import org.knime.core.node.util.CheckUtils;
  */
 public final class TableFilter {
 
+	// Additional filter options are planned for the future, see AP-11805
     private TableFilter(final Optional<Set<Integer>> columnIndices, final long fromRowIndex, final long toRowIndex) {
         m_columnIndices = columnIndices;
         m_fromRowIndex = fromRowIndex;
