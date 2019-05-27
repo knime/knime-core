@@ -73,9 +73,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.xerial.snappy.SnappyInputStream;
 import org.xerial.snappy.SnappyOutputStream;
 
-import net.jpountz.lz4.LZ4BlockInputStream;
-import net.jpountz.lz4.LZ4BlockOutputStream;
-
 /**
  * The default table store format used to read data from / write data to disc.
  *
@@ -133,11 +130,6 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
             GZIP(".bin.gz", //
                 i -> new BufferedInputStream(new GZIPInputStream(i)), //
                 o -> new BufferedOutputStream(new GZIPOutputStream(o))),
-
-            /** LZ4 compression. */
-            LZ4(".bin.lz4", //
-                i -> new BufferedInputStream(new LZ4BlockInputStream(i)), //
-                o -> new BufferedOutputStream(new LZ4BlockOutputStream(o))),
 
             /** Snappy compression. */
             SNAPPY(".bin.snappy", //
