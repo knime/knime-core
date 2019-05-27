@@ -1256,9 +1256,8 @@ public class DataContainer implements RowAppender {
                     }
 
                 }
-            } catch (final IOException | DuplicateKeyException | DataContainerException | IllegalArgumentException
-                    | SecurityException e) {
-                m_writeThrowable.compareAndSet(null, e);
+            } catch (final Throwable t) {
+                m_writeThrowable.compareAndSet(null, t);
             } finally {
                 m_domainUpdaterPool.add(m_dataTableDomainCreator);
                 m_numActiveContRunnables.release();
