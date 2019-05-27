@@ -69,8 +69,9 @@ import org.knime.core.node.util.CheckUtils;
  */
 public final class TableFilter {
 
-	// Additional filter options are planned for the future, see AP-11805
-    private TableFilter(final Optional<Set<Integer>> columnIndices, final long fromRowIndex, final long toRowIndex) {
+    // Additional filter options are planned for the future, see AP-11805
+    private TableFilter(final Optional<Set<Integer>> columnIndices, final Optional<Long> fromRowIndex,
+        final Optional<Long> toRowIndex) {
         m_columnIndices = columnIndices;
         m_fromRowIndex = fromRowIndex;
         m_toRowIndex = toRowIndex;
@@ -78,9 +79,9 @@ public final class TableFilter {
 
     private final Optional<Set<Integer>> m_columnIndices;
 
-    private final long m_fromRowIndex;
+    private final Optional<Long> m_fromRowIndex;
 
-    private final long m_toRowIndex;
+    private final Optional<Long> m_toRowIndex;
 
     /**
      * A method that can be used to obtain the indices of columns that should be materialized. The returned
@@ -93,21 +94,22 @@ public final class TableFilter {
     }
 
     /**
-     * A method that can be used to obtain the lowest index of rows to keep.
+     * A method that can be used to obtain the lowest index of rows to keep. The returned {@link Optional} will be empty
+     * if no lower bound for row indices is set.
      *
-     * @return the minimum index of to-be-kept rows
+     * @return an optional minimum index of to-be-kept rows
      */
-    public long getFromRowIndex() {
+    public Optional<Long> getFromRowIndex() {
         return m_fromRowIndex;
     }
 
     /**
-     * A method that can be used to obtain the highest index of rows to keep. Note that the returned value can be higher
-     * than the size of the table this filter is to be applied to.
+     * A method that can be used to obtain the highest index of rows to keep. The returned {@link Optional} will be
+     * empty if no upper bound for row indices is set.
      *
-     * @return the maximum index of to-be-kept rows
+     * @return an optional maximum index of to-be-kept rows
      */
-    public long getToRowIndex() {
+    public Optional<Long> getToRowIndex() {
         return m_toRowIndex;
     }
 
@@ -115,22 +117,20 @@ public final class TableFilter {
      * Validates this {@link TableFilter} against a {@link DataTableSpec}.
      *
      * @param spec the spec to validate against
+     * @param size the size of the table that is to be filtered
      * @throws IndexOutOfBoundsException when any index is out of bounds
      * @throws IllegalArgumentException when any argument is invalid
      */
-    public void validate(final DataTableSpec spec) {
+    public void validate(final DataTableSpec spec, final long size) {
+        if (m_toRowIndex.isPresent()) {
+            if (m_toRowIndex.get() >= size) {
+                throw new IndexOutOfBoundsException("Row index must be smaller than " + size);
+            }
+        }
+
         if (m_columnIndices.isPresent()) {
             spec.verifyIndices(m_columnIndices.get().stream().mapToInt(i -> i).toArray());
         }
-
-        if (m_fromRowIndex < 0) {
-            throw new IndexOutOfBoundsException("Row index must be at least 0.");
-        }
-        if (m_toRowIndex < 0) {
-            throw new IndexOutOfBoundsException("Row index must be at least 0.");
-        }
-        CheckUtils.checkArgument(m_fromRowIndex <= m_toRowIndex,
-            "Row index to filter from cannot be higher than row index to filter to.");
     }
 
     /**
@@ -199,17 +199,17 @@ public final class TableFilter {
 
         private Optional<Set<Integer>> m_columnIndices;
 
-        private long m_fromRowIndex;
+        private Optional<Long> m_fromRowIndex;
 
-        private long m_toRowIndex;
+        private Optional<Long> m_toRowIndex;
 
         /**
          * Constructs a new builder.
          */
         public Builder() {
             m_columnIndices = Optional.empty();
-            m_fromRowIndex = 0;
-            m_toRowIndex = Long.MAX_VALUE;
+            m_fromRowIndex = Optional.empty();
+            m_toRowIndex = Optional.empty();
         }
 
         /**
@@ -230,6 +230,7 @@ public final class TableFilter {
          *
          * @param indices the indices of columns to materialize
          * @return the same builder with updated parameters
+         * @throws IllegalArgumentException when there are duplicates among given indices
          */
         public Builder withMaterializeColumnIndices(final int... indices) {
             CheckUtils.checkArgumentNotNull(indices);
@@ -249,9 +250,17 @@ public final class TableFilter {
          *
          * @param index the row index from which to filter
          * @return the same builder with updated parameters
+         * @throws IndexOutOfBoundsException when any index is out of bounds
          */
         public Builder withFromRowIndex(final long index) {
-            m_fromRowIndex = index;
+            if (index < 0) {
+                throw new IndexOutOfBoundsException("Row index must be at least 0.");
+            }
+            if (m_toRowIndex.isPresent()) {
+                CheckUtils.checkArgument(index <= m_toRowIndex.get(),
+                    "Row index to filter from cannot be higher than row index to filter to.");
+            }
+            m_fromRowIndex = Optional.of(index);
             return this;
         }
 
@@ -261,9 +270,17 @@ public final class TableFilter {
          *
          * @param index the row index to which to filter
          * @return the same builder with updated parameters
+         * @throws IndexOutOfBoundsException when any index is out of bounds
          */
         public Builder withToRowIndex(final long index) {
-            m_toRowIndex = index;
+            if (index < 0) {
+                throw new IndexOutOfBoundsException("Row index must be at least 0.");
+            }
+            if (m_fromRowIndex.isPresent()) {
+                CheckUtils.checkArgument(m_fromRowIndex.get() <= index,
+                    "Row index to filter from cannot be higher than row index to filter to.");
+            }
+            m_toRowIndex = Optional.of(index);
             return this;
         }
 

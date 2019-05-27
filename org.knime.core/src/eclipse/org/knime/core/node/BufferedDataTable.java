@@ -376,7 +376,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      */
     public CloseableDataRowIterable filter(final TableFilter filter, final ExecutionMonitor exec) {
         CheckUtils.checkArgumentNotNull(filter);
-        filter.validate(getSpec());
+        filter.validate(getSpec(), m_delegate.size());
         return new CloseableDataRowIterable() {
             @Override
             public CloseableRowIterator iterator() {

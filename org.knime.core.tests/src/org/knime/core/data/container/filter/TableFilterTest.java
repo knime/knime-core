@@ -77,7 +77,7 @@ public class TableFilterTest {
      */
     @Test(expected = IndexOutOfBoundsException.class)
     public void testMaterializeColumnsIndexOutOfBoundsLow() {
-        TableFilter.materializeCols(2, -1).validate(SPEC);
+        TableFilter.materializeCols(2, -1).validate(SPEC, 0);
     }
 
     /**
@@ -86,7 +86,7 @@ public class TableFilterTest {
      */
     @Test(expected = IndexOutOfBoundsException.class)
     public void testMaterializeColumnsIndexOutOfBoundsHigh() {
-        TableFilter.materializeCols(2, 5).validate(SPEC);
+        TableFilter.materializeCols(2, 5).validate(SPEC, 0);
     }
 
     /**
@@ -95,7 +95,7 @@ public class TableFilterTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testMaterializeColumnsDuplicateIndex() {
-        TableFilter.materializeCols(2, 2).validate(SPEC);
+        TableFilter.materializeCols(2, 2).validate(SPEC, 0);
     }
 
     /**
@@ -104,7 +104,7 @@ public class TableFilterTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testMaterializeColumnsNonExistingColumnName() {
-        TableFilter.materializeCols(SPEC, "long", "intt").validate(SPEC);
+        TableFilter.materializeCols(SPEC, "long", "intt").validate(SPEC, 0);
     }
 
     /**
@@ -112,7 +112,7 @@ public class TableFilterTest {
      */
     @Test(expected = IndexOutOfBoundsException.class)
     public void testFilterRowsFromIndexOutOfBounds() {
-        TableFilter.filterRowsFromIndex(-13).validate(SPEC);
+        TableFilter.filterRowsFromIndex(-13).validate(SPEC, 0);
     }
 
     /**
@@ -120,7 +120,7 @@ public class TableFilterTest {
      */
     @Test(expected = IndexOutOfBoundsException.class)
     public void testFilterRowsToIndexOutOfBounds() {
-        TableFilter.filterRowsToIndex(-5).validate(SPEC);
+        TableFilter.filterRowsToIndex(-5).validate(SPEC, 0);
     }
 
     /**
@@ -128,7 +128,7 @@ public class TableFilterTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidRangeOfRows() {
-        TableFilter.filterRangeOfRows(5, 3).validate(SPEC);
+        TableFilter.filterRangeOfRows(5, 3).validate(SPEC, 0);
     }
 
 }

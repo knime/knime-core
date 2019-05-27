@@ -1629,13 +1629,13 @@ public class Buffer implements KNIMEStreamConstants {
         } else {
             final BackIntoMemoryIterator backIntoMemoryIt =
                 m_backIntoMemoryIteratorRef != null ? m_backIntoMemoryIteratorRef.get() : null;
-            if (filter != null) {
+            if (filter != null && size() > 0) {
 
                 // Case 3: We have the full table in memory and want to apply a filter.
                 if (backIntoMemoryIt == null) {
                     // We never store more than 2^31 rows in memory, therefore it's safe to cast to int.
-                    final int fromIndex = (int)filter.getFromRowIndex();
-                    final int toIndex = (int)filter.getToRowIndex();
+                    final int fromIndex = (int)Math.min(Integer.MAX_VALUE, filter.getFromRowIndex().orElse(0l));
+                    final int toIndex = (int)Math.min(Integer.MAX_VALUE, filter.getToRowIndex().orElse(size() - 1));
                     final FromListRangeIterator rangeIterator = new FromListRangeIterator(list, fromIndex, toIndex);
 
                     /**
@@ -2126,6 +2126,8 @@ public class Buffer implements KNIMEStreamConstants {
         private final int m_toIndex;
 
         FromListRangeIterator(final List<BlobSupportDataRow> list, final int fromIndex, final int toIndex) {
+            assert fromIndex >= 0;
+            assert toIndex < size();
             m_list = list;
             m_nextIndex = fromIndex;
             m_toIndex = toIndex;

@@ -91,8 +91,8 @@ public final class FilterDelegateRowIterator extends CloseableRowIterator {
     public FilterDelegateRowIterator(final CloseableRowIterator iterator, final TableFilter filter,
         final ExecutionMonitor exec) {
         m_delegate = iterator;
-        m_fromIndex = filter.getFromRowIndex();
-        m_toIndex = filter.getToRowIndex();
+        m_fromIndex = filter.getFromRowIndex().orElse(0l);
+        m_toIndex = filter.getToRowIndex().orElse(Long.MAX_VALUE);
         m_exec = Optional.ofNullable(exec);
         m_index = 0;
     }

@@ -369,8 +369,9 @@ public final class ConcatenateTable implements KnowsRowCountTable {
 
                 // determine offset-adjusted filter for current table
                 final TableFilter filter = new TableFilter.Builder(m_filter)//
-                    .withFromRowIndex(Math.max(m_filter.getFromRowIndex() - m_offset, 0))//
-                    .withToRowIndex(Math.min(m_filter.getToRowIndex() - m_offset, curTable.size() - 1))//
+                    .withFromRowIndex(Math.max(m_filter.getFromRowIndex().orElse(0l) - m_offset, 0))//
+                    .withToRowIndex(
+                        Math.min(m_filter.getToRowIndex().orElse(size() - 1) - m_offset, curTable.size() - 1))//
                     .build();
                 m_offset += curTable.size();
                 final ExecutionMonitor exec = m_exec != null ? m_exec.createSubProgress(1.0 / m_tables.length) : null;
