@@ -1515,7 +1515,8 @@ public final class SubNodeContainer extends SingleNodeContainer
     public static final String getDialogNodeParameterNameDefault(final Class<?> cl) {
         CheckUtils.checkArgumentNotNull(cl, "Must not be null");
         // from IntInputQuickFormNodeModel -> IntInput
-        final String[] hiddenSuffixes = new String[] {"quickformnodemodel", "nodemodel", "quickformconfig", "config"};
+        final String[] hiddenSuffixes = new String[]{"configurationnodemodel", "quickformnodemodel", "nodemodel",
+            "quickformconfig", "config", "dialognode", "widget"};
         String truncated = cl.getSimpleName();
         for (String suffix : hiddenSuffixes) {
             truncated = StringUtils.removeEndIgnoreCase(truncated, suffix);

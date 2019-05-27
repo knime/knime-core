@@ -63,8 +63,7 @@ import org.knime.core.node.InvalidSettingsException;
  * @since 2.9
  */
 @SuppressWarnings("serial")
-public abstract class DialogNodePanel<VAL extends DialogNodeValue>
-        extends JPanel {
+public abstract class DialogNodePanel<VAL extends DialogNodeValue> extends JPanel {
 
     /**
      * Creates a new DialogNode panel.
