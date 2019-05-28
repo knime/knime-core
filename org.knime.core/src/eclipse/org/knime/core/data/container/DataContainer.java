@@ -442,20 +442,15 @@ public class DataContainer implements RowAppender {
     /**
      * Checks if any of the {@link ContainerRunnable} threw an exception.
      *
-     * @param waitForRunnables if set to {@code true} and an exception occured this call will block until all runnables
-     *            are finished
-     *
      */
-    private void checkAsyncWriteThrowable(final boolean waitForRunnables) {
+    private void checkAsyncWriteThrowable() {
         Throwable t = m_writeThrowable.get();
         if (t != null) {
             m_pendingBatchMap.clear();
-            if (waitForRunnables) {
-                try {
-                    waitForRunnableTermination();
-                } catch (InterruptedException ie) {
-                    checkAsyncWriteThrowable(false);
-                }
+            try {
+                waitForRunnableTermination();
+            } catch (InterruptedException ie) {
+                // nothing to do we already have t != null
             }
             StringBuilder error = new StringBuilder();
             if (t.getMessage() != null) {
@@ -574,10 +569,10 @@ public class DataContainer implements RowAppender {
             } catch (final InterruptedException ie) {
                 m_writeThrowable.compareAndSet(null, ie);
             }
+            checkAsyncWriteThrowable();
             for (final DataTableDomainCreator domainCreator : m_domainUpdaterPool) {
                 m_domainCreator.merge(domainCreator);
             }
-            checkAsyncWriteThrowable(false);
         }
         // create table spec _after_ all_ rows have been added (i.e. wait for
         // asynchronous write thread to finish)
@@ -730,7 +725,7 @@ public class DataContainer implements RowAppender {
      * @param row the row to be asynchronously processed
      */
     private void addRowToTableAsynchronously(final DataRow row) {
-        checkAsyncWriteThrowable(true);
+        checkAsyncWriteThrowable();
         try {
             if (MemoryAlertSystem.getInstance().isMemoryLow()) {
                 // write all keys to disk if necessary
