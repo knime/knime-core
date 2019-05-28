@@ -187,12 +187,11 @@ public final class DoubleCell extends DataCell
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        double o = ((DoubleCell)dc).m_double;
-        if (Double.isNaN(m_double) && Double.isNaN(o)) {
-            // Double.NaN is not equal to Double.NaN
-            return true;
-        }
-        return o == m_double;
+        final double o = ((DoubleCell)dc).m_double;
+        // NOTE: Double.doubleToLongBits always returns the same value for Double.NaN
+        // NOTE: -0.0 != 0.0 because they have a different bit representation.
+        // This is how the Double class implements equals.
+        return Double.doubleToLongBits(o) == Double.doubleToLongBits(m_double);
     }
 
     /**
