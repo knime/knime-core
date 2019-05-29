@@ -110,8 +110,8 @@ class NoKeyBuffer extends Buffer {
      */
     NoKeyBuffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
         final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTblRep,
-        final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite) {
-        super(spec, maxRowsInMemory, bufferID, dataRepository, localTblRep, fileStoreHandler, forceSynchronousWrite);
+        final IWriteFileStoreHandler fileStoreHandler) {
+        super(spec, maxRowsInMemory, bufferID, dataRepository, localTblRep, fileStoreHandler);
     }
 
     /** Creates new buffer for reading.
@@ -161,7 +161,7 @@ class NoKeyBuffer extends Buffer {
     @Override
     Buffer createLocalCloneForWriting() {
         return new NoKeyBuffer(getTableSpec(), 0, getBufferID(), getDataRepository(), Collections.emptyMap(),
-            castAndGetFileStoreHandler(), true);
+            castAndGetFileStoreHandler());
     }
 
 }

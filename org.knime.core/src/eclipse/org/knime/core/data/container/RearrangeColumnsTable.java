@@ -714,9 +714,8 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         @Override
         Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory, final int bufferID,
             final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTableRep,
-            final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite) {
-            return new NoKeyBuffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler,
-                forceSynchronousWrite);
+            final IWriteFileStoreHandler fileStoreHandler) {
+            return new NoKeyBuffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler);
         }
 
         /** {@inheritDoc} */

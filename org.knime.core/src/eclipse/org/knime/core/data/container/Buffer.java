@@ -576,14 +576,12 @@ public class Buffer implements KNIMEStreamConstants {
      * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      * @param localRep Local table repository for blob (de)serialization.
      * @param fileStoreHandler the file store handlers
-     * @param forceSynchronousWrite whether to force the buffer disk IO thread to write synchronously
      * @param outputFormat the output table store format
      */
     Buffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
         final IDataRepository dataRepository, final Map<Integer, ContainerTable> localRep,
-        final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite) {
-        this(spec, maxRowsInMemory, bufferID, dataRepository, localRep, fileStoreHandler, forceSynchronousWrite,
-            BufferSettings.getDefault());
+        final IWriteFileStoreHandler fileStoreHandler) {
+        this(spec, maxRowsInMemory, bufferID, dataRepository, localRep, fileStoreHandler, BufferSettings.getDefault());
     }
 
     /**
@@ -597,20 +595,17 @@ public class Buffer implements KNIMEStreamConstants {
      * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
      * @param localRep Local table repository for blob (de)serialization.
      * @param fileStoreHandler the file store handlers
-     * @param forceSynchronousWrite whether to force the buffer disk IO thread to write synchronously
      * @param settings the {@link BufferSettings}
      */
     Buffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
         final IDataRepository dataRepository, final Map<Integer, ContainerTable> localRep,
-        final IWriteFileStoreHandler fileStoreHandler, final boolean forceSynchronousWrite,
-        final BufferSettings settings) {
+        final IWriteFileStoreHandler fileStoreHandler, final BufferSettings settings) {
         assert (maxRowsInMemory >= 0);
         m_flushedToDisk = false;
         m_bufferSettings = settings;
         m_maxRowsInMem = maxRowsInMemory;
         if (m_bufferSettings.useLRU()) {
-            m_lifecycle =
-                forceSynchronousWrite ? new SoftRefLRUSyncWriteLifecycle() : new SoftRefLRUAsyncWriteLifecycle();
+            m_lifecycle = new SoftRefLRUAsyncWriteLifecycle();
         } else {
             m_lifecycle = new MemorizeIfSmallLifecycle();
         }
@@ -1716,7 +1711,7 @@ public class Buffer implements KNIMEStreamConstants {
      */
     Buffer createLocalCloneForWriting() {
         return new Buffer(m_spec, 0, getBufferID(), m_dataRepository, Collections.emptyMap(),
-            castAndGetFileStoreHandler(), true, m_bufferSettings);
+            castAndGetFileStoreHandler(), m_bufferSettings);
     }
 
     /**
