@@ -216,7 +216,7 @@ public class DataContainer implements RowAppender {
      */
     private final boolean m_isSynchronousWrite;
 
-    /** Flag indicating the memory state.     */
+    /** Flag indicating the memory state. */
     boolean m_memoryLowState;
 
     /**
@@ -245,13 +245,15 @@ public class DataContainer implements RowAppender {
     private final int m_batchSize;
 
     /** The maximum number of threads used by this container. */
-    private final int m_nThreads;
+    private final int m_maxNumThreads;
 
-    /** Semaphore used to block the container until all {@link ContainerRunnable} are finished. */
+    /**
+     * Semaphore used to block the container until all {@link #m_maxNumThreads} {@link ContainerRunnable} are finished.
+     */
     private final Semaphore m_numActiveContRunnables;
 
     /**
-     * Semaphore used to block the producer in case that we have more than {link {@link #m_nThreads} batches waiting to
+     * Semaphore used to block the producer in case that we have more than {@link #m_maxNumThreads} batches waiting to
      * be handed over to the {@link Buffer}.
      */
     private final Semaphore m_numPendingBatches;
@@ -367,14 +369,14 @@ public class DataContainer implements RowAppender {
             m_pendingBatchIdx = null;
             m_pendingBatchMap = null;
             m_writeThrowable = null;
-            m_nThreads = 0;
+            m_maxNumThreads = 0;
             m_domainUpdaterPool = null;
         } else {
-            m_nThreads = Math.min(settings.getMaxThreadsPerContainer(), ASYNC_EXECUTORS.getMaximumPoolSize());
+            m_maxNumThreads = Math.min(settings.getMaxThreadsPerContainer(), ASYNC_EXECUTORS.getMaximumPoolSize());
             m_pendingBatchMap = new ConcurrentHashMap<>();
-            m_numActiveContRunnables = new Semaphore(m_nThreads);
-            m_numPendingBatches = new Semaphore(m_nThreads);
-            m_domainUpdaterPool = new ArrayBlockingQueue<>(m_nThreads);
+            m_numActiveContRunnables = new Semaphore(m_maxNumThreads);
+            m_domainUpdaterPool = new ArrayBlockingQueue<>(m_maxNumThreads);
+            m_numPendingBatches = new Semaphore(m_maxNumThreads);
             m_curBatch = new ArrayList<>(m_batchSize);
             m_pendingBatchIdx = new MutableLong();
             m_writeThrowable = new AtomicReference<Throwable>();
@@ -684,9 +686,7 @@ public class DataContainer implements RowAppender {
             addRowToTableAsynchronously(row);
         }
         m_size += 1;
-    } // addRowToTable(DataRow)
-
-
+    }
 
     /**
      * Initializes the buffer if required.
@@ -703,7 +703,6 @@ public class DataContainer implements RowAppender {
             }
         }
     }
-
 
     /**
      * Adds the row to the table in a synchronous manner and reacts to memory alerts.
@@ -764,8 +763,8 @@ public class DataContainer implements RowAppender {
     }
 
     private void waitForRunnableTermination() throws InterruptedException {
-        m_numActiveContRunnables.acquire(m_nThreads);
-        m_numActiveContRunnables.release(m_nThreads);
+        m_numActiveContRunnables.acquire(m_maxNumThreads);
+        m_numActiveContRunnables.release(m_maxNumThreads);
     }
 
     /**
@@ -1253,6 +1252,23 @@ public class DataContainer implements RowAppender {
                 }
             } catch (final Throwable t) {
                 m_writeThrowable.compareAndSet(null, t);
+                // Potential deadlock cause by the following scenario.
+                // Initial condition:
+                //      1. ContainerRunnables:
+                //          1.1 The max number of container runnables are submitted to the pool
+                //          1.2 No batch has been handed over to the buffer (m_numPendingBatches no available permits)
+                //      2. Producer:
+                //          2.1. Hasn't seen an exception so far wants to submit another batch and tries to acquire a
+                //              permit from m_numPendingBatches
+                //      3. The container runnable whose index equals the current pending batch index crashes before
+                //          it can hand anything to the buffer and finally give its permit back to m_numPendingBatches
+                // Result: The producer waits forever to acquire a permit from m_numPendingBatches. Hence, we have to
+                //          release at least one permit here
+                // Note: The producer will submit another ContainerRunnable, however this will do nothing as
+                //          m_writeThrowable.get != null
+                if (m_batchIdx == m_pendingBatchIdx.longValue()) {
+                    m_numPendingBatches.release();
+                }
             } finally {
                 m_domainUpdaterPool.add(m_dataTableDomainCreator);
                 m_numActiveContRunnables.release();
