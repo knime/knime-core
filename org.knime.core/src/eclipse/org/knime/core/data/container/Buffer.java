@@ -604,11 +604,7 @@ public class Buffer implements KNIMEStreamConstants {
         m_flushedToDisk = false;
         m_bufferSettings = settings;
         m_maxRowsInMem = maxRowsInMemory;
-        if (m_bufferSettings.useLRU()) {
-            m_lifecycle = new SoftRefLRUAsyncWriteLifecycle();
-        } else {
-            m_lifecycle = new MemorizeIfSmallLifecycle();
-        }
+        m_lifecycle = m_bufferSettings.useLRU() ? new SoftRefLRULifecycle() : new MemorizeIfSmallLifecycle();
         m_openIteratorSet = new WeakHashMap<>();
         CACHE.setLRUCacheSize(m_bufferSettings.getLRUCacheSize());
         /**
@@ -685,7 +681,7 @@ public class Buffer implements KNIMEStreamConstants {
         m_flushedToDisk = true;
         m_bufferSettings = settings;
         m_maxRowsInMem = 0;
-        m_lifecycle = m_bufferSettings.useLRU() ? new SoftRefLRUSyncWriteLifecycle() : new MemorizeIfSmallLifecycle();
+        m_lifecycle = m_bufferSettings.useLRU() ? new SoftRefLRULifecycle() : new MemorizeIfSmallLifecycle();
         CACHE.setLRUCacheSize(m_bufferSettings.getLRUCacheSize());
         try {
             readMetaFromFile(metaIn, fileStoreDir);
@@ -2005,10 +2001,7 @@ public class Buffer implements KNIMEStreamConstants {
 
     /** Write all rows from list into file. Used while rows are added and if low mem condition is met. */
     synchronized void flushBuffer() {
-        m_lifecycle.onFlush();
-
         writeList(m_listWhileAddRow);
-
         m_listWhileAddRow = null; // don't write to internal cache any more
     }
 
@@ -2458,11 +2451,6 @@ public class Buffer implements KNIMEStreamConstants {
         void onAddRowToLargeList() throws IOException;
 
         /**
-         * Synchronously called before flushing the buffer to disk.
-         */
-        void onFlush();
-
-        /**
          * Synchronously called after closing this buffer and adding the table to the cache.
          */
         void onCloseIfCached();
@@ -2519,10 +2507,6 @@ public class Buffer implements KNIMEStreamConstants {
         }
 
         @Override
-        public void onFlush() {
-        }
-
-        @Override
         public void onCloseIfCached() {
             assert Thread.holdsLock(Buffer.this);
 
@@ -2574,18 +2558,18 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Similar to the {@link MemorizeIfSmallLifecycle}, tables are hard-referenced in the cache until they grow larger
-     * than a certain amount of rows, which by default is derived from
-     * {@link DataContainerSettings#DEF_MAX_CELLS_IN_MEMORY}. However, when the {@link MemoryAlertSystem} notices that
-     * memory becomes critical, small tables are not dropped from the cache, but merely cleared for garbage collection.
-     * Also, tables larger than the specified row limit are not prematurely flushed to disk, but attempted to be kept in
-     * memory and only cleared for garbage collection. When the garbage collector notices that memory becomes scarce,
-     * tables cleared for garbage collection are evicted from the cache in least-recently-used (LRU) order (see
-     * {@link LRUCache}). A table that has been cached once will always be read back into the cache when iterated over.
+     * The default lifecycle since KNIME 3.8.0. Similar to the {@link MemorizeIfSmallLifecycle}, small tables are
+     * hard-referenced in the cache. However, when the {@link MemoryAlertSystem} notices that memory becomes critical,
+     * small tables are not dropped from the cache, but merely cleared for garbage collection. Also, tables larger than
+     * {@link DataContainerSettings#DEF_MAX_CELLS_IN_MEMORY} are attempted to be kept in memory. They are written to
+     * disk asynchronously when the buffer is closed and cleared for garbage collection. When the garbage collector
+     * notices that memory becomes scarce, tables cleared for garbage collection are evicted from the cache in
+     * least-recently-used (LRU) order (see {@link LRUCache}). A table that has been cached once will always be read
+     * back into the cache when iterated over.
      *
      * @author Marc Bux, KNIME GmbH, Berlin, Germany
      */
-    abstract class SoftRefLRULifecycle implements Lifecycle {
+    final class SoftRefLRULifecycle implements Lifecycle {
 
         /**
          * A flag that denotes whether the table held by this buffer was held in memory when the buffer was closed (and
@@ -2594,6 +2578,15 @@ public class Buffer implements KNIMEStreamConstants {
         private boolean m_fitsIntoMemory = false;
 
         private MemoryAlertListener m_memoryAlertListener;
+
+        /**
+         * The object that represent the pending task of writing a full table from memory to disk.
+         */
+        private Future<Void> m_asyncAddFuture;
+
+        @Override
+        public void onAddRowToLargeList() throws IOException {
+        }
 
         @Override
         public void onCloseIfCached() {
@@ -2607,7 +2600,13 @@ public class Buffer implements KNIMEStreamConstants {
                 m_memoryAlertListener = new BufferFlusher(Buffer.this);
                 MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
             } else {
-                onCloseIfCachedAndLarge();
+                /**
+                 * We'd like to flush early so that we can garbage-collect if memory becomes critical and we don't run out
+                 * of memory. At the same time, we'd like to flush late so that we don't interfere with I/O tasks in the
+                 * node generating this table. In this implementation, we flush as soon as possible once the buffer has been
+                 * closed (and the node likely has terminated).
+                 */
+                m_asyncAddFuture = ASYNC_EXECUTOR.submit(new ASyncWriteCallable(Buffer.this));
             }
         }
 
@@ -2615,8 +2614,6 @@ public class Buffer implements KNIMEStreamConstants {
         public void onWriteSuccessful() {
             CACHE.clearForGarbageCollection(Buffer.this);
         }
-
-        abstract void onCloseIfCachedAndLarge();
 
         @Override
         public void onClear() {
@@ -2626,116 +2623,6 @@ public class Buffer implements KNIMEStreamConstants {
                 MemoryAlertSystem.getInstance().removeListener(m_memoryAlertListener);
                 m_memoryAlertListener = null;
             }
-        }
-
-        @Override
-        public void onAllRowsReadBackIntoMemory() {
-            synchronized (Buffer.this) {
-                CACHE.clearForGarbageCollection(Buffer.this);
-                if (shallLoadBackIntoMemory()) {
-                    /** When having read the table back into memory, we should do so again the next time we need to. */
-                    setRestoreIntoMemoryOnCacheMiss();
-                }
-            }
-        }
-
-        @Override
-        public boolean shallLoadBackIntoMemory() {
-            /**
-             * Load back into memory on workflow load if it has fit into memory before. Caution: This could entail that
-             * a workflow saved on a high-memory machine cannot be loaded on a low-memory machine. However, this
-             * behavior is in-line with the behavior of the MemorizeIfSmallLifecycle.
-             */
-            return m_fitsIntoMemory;
-        }
-    }
-
-    /**
-     * A {@link SoftRefLRULifecycle} that, in contrast to the {@link SoftRefLRUAsyncWriteLifecycle} writes tables
-     * synchronously to disk while rows are added to the buffer.
-     *
-     * @author Marc Bux, KNIME GmbH, Berlin, Germany
-     */
-    final class SoftRefLRUSyncWriteLifecycle extends SoftRefLRULifecycle {
-
-        private int m_index = 0;
-
-        @Override
-        public void onAddRowToLargeList() throws IOException {
-            assert Thread.holdsLock(Buffer.this);
-
-            ensureWriterIsOpen();
-            while (m_index < m_listWhileAddRow.size()) {
-                m_outputWriter.writeRow(m_listWhileAddRow.get(m_index++));
-            }
-        }
-
-        @Override
-        public void onFlush() {
-            assert Thread.holdsLock(Buffer.this);
-
-            /**
-             * Since we've already written to disk when adding rows, we do not have to do so again here. Instead, we
-             * merely have to drop the reference to the table held in memory.
-             */
-            m_listWhileAddRow = null;
-        }
-
-        @Override
-        void onCloseIfCachedAndLarge() {
-            closeWriterAndWriteMeta();
-            CACHE.clearForGarbageCollection(Buffer.this);
-        }
-
-        @Override
-        public void onClear() {
-            super.onClear();
-
-            performClear();
-        }
-
-        @Override
-        public void onSave() {
-        }
-
-    }
-
-    /**
-     * The default lifecycle since KNIME 3.8.0. A {@link SoftRefLRULifecycle} that, in contrast to the
-     * {@link SoftRefLRUSyncWriteLifecycle} writes tables asynchronously to disk when the buffer is closed and the table
-     * can still be held in memory,
-     *
-     * @author Marc Bux, KNIME GmbH, Berlin, Germany
-     */
-    final class SoftRefLRUAsyncWriteLifecycle extends SoftRefLRULifecycle {
-
-        /**
-         * The object that represent the pending task of writing a full table from memory to disk.
-         */
-        private Future<Void> m_asyncAddFuture;
-
-        @Override
-        public void onAddRowToLargeList() {
-        }
-
-        @Override
-        public void onFlush() {
-        }
-
-        @Override
-        void onCloseIfCachedAndLarge() {
-            /**
-             * We'd like to flush early so that we can garbage-collect if memory becomes critical and we don't run out
-             * of memory. At the same time, we'd like to flush late so that we don't interfere with I/O tasks in the
-             * node generating this table. In this implementation, we flush as soon as possible once the buffer has been
-             * closed (and the node likely has terminated).
-             */
-            m_asyncAddFuture = ASYNC_EXECUTOR.submit(new ASyncWriteCallable(Buffer.this));
-        }
-
-        @Override
-        public void onClear() {
-            super.onClear();
 
             if (m_asyncAddFuture != null && !m_asyncAddFuture.isDone()) {
                 /**
@@ -2780,6 +2667,27 @@ public class Buffer implements KNIMEStreamConstants {
                 }
             }
             m_asyncAddFuture = null;
+        }
+
+        @Override
+        public void onAllRowsReadBackIntoMemory() {
+            synchronized (Buffer.this) {
+                CACHE.clearForGarbageCollection(Buffer.this);
+                if (shallLoadBackIntoMemory()) {
+                    /** When having read the table back into memory, we should do so again the next time we need to. */
+                    setRestoreIntoMemoryOnCacheMiss();
+                }
+            }
+        }
+
+        @Override
+        public boolean shallLoadBackIntoMemory() {
+            /**
+             * Load back into memory on workflow load if it has fit into memory before. Caution: This could entail that
+             * a workflow saved on a high-memory machine cannot be loaded on a low-memory machine. However, this
+             * behavior is in-line with the behavior of the MemorizeIfSmallLifecycle.
+             */
+            return m_fitsIntoMemory;
         }
 
     }
