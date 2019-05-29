@@ -45,10 +45,15 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.knime.core.util.KnimeURIUtil.getBaseURI;
+import static org.knime.core.util.KnimeURIUtil.getDownloadURI;
+import static org.knime.core.util.KnimeURIUtil.isHubURI;
+
 import java.net.URI;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
@@ -204,8 +209,21 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
     /** @return the sourceURI */
     public URI getSourceURI() {
-        return m_sourceURI;
+        return getDownloadURI(m_sourceURI);
     }
+
+    /**
+     * @return an optional URI that references a web page (e.g. the respective page on the workflow hub)
+     * @since 4.0
+     */
+    public Optional<URI> getMetaNodePageURI() {
+        if (isWebLink(m_sourceURI) && isHubURI(m_sourceURI)) {
+            return Optional.of(getBaseURI(m_sourceURI));
+        } else {
+            return Optional.empty();
+        }
+    }
+
     /** @return the role */
     public Role getRole() {
         return m_role;
