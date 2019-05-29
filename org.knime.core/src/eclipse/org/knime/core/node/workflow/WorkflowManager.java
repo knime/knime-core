@@ -6242,14 +6242,16 @@ public final class WorkflowManager extends NodeContainer
                 } else if (nc instanceof SubNodeContainer) {
                     build.append(((SubNodeContainer)nc).getWorkflowManager().printNodeErrorSummary(indent + 6));
                 } else {
-                    if (!nc.getNodeContainerState().isExecuted()
-                        && nc.getNodeMessage().getMessageType() == Type.ERROR) {
+                    final NodeMessage nodeMessage = nc.getNodeMessage();
+                    // Print messages from nodes that have an error message, and warning messages from nodes that failed to configure
+                    if (nodeMessage.getMessageType() == Type.ERROR
+                        || (!nc.getNodeContainerState().isConfigured() && nodeMessage.getMessageType() == Type.WARNING)) {
                         build.append(indentString);
                         build.append("  ");
                         build.append(nc.getNameWithID());
                         build.append(" : ");
                         build.append(
-                            StringUtils.removeStart(nc.getNodeMessage().getMessage(), Node.EXECUTE_FAILED_PREFIX));
+                            StringUtils.removeStart(nodeMessage.getMessage(), Node.EXECUTE_FAILED_PREFIX));
                         build.append("\n");
                     }
                 }
