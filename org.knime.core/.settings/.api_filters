@@ -56,6 +56,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.quickform.QuickFormRepresentation">
+        <filter comment="Renamed interface" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.quickform.QuickFormRepresentation"/>
+                <message_argument value="org.knime.core_3.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/DataTable.java" type="org.knime.core.data.DataTable">
         <filter id="405901410">
             <message_arguments>

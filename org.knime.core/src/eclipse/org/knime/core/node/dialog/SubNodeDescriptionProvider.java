@@ -46,19 +46,16 @@
  * History
  *   May 15, 2014 ("Patrick Winter"): created
  */
-package org.knime.core.quickform;
-
-import org.knime.core.node.dialog.DialogNodeRepresentation;
-import org.knime.core.node.dialog.DialogNodeValue;
+package org.knime.core.node.dialog;
 
 /**
  * Contains information that is needed for the representation of a quick form's sub node dialog.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
  * @param <VAL> The value class handled by this representation
- * @since 2.10
+ * @since 3.8
  */
-public interface QuickFormRepresentation<VAL extends DialogNodeValue> extends DialogNodeRepresentation<VAL> {
+public interface SubNodeDescriptionProvider<VAL extends DialogNodeValue> extends DialogNodeRepresentation<VAL> {
 
     /**
      * @return Label of the setting that is provided by this quick form

@@ -99,6 +99,7 @@ import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.DialogNodeRepresentation;
 import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
+import org.knime.core.node.dialog.SubNodeDescriptionProvider;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
@@ -137,7 +138,6 @@ import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFacto
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
-import org.knime.core.quickform.QuickFormRepresentation;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
@@ -601,9 +601,9 @@ public final class SubNodeContainer extends SingleNodeContainer
         List<String> optionDescriptions = new ArrayList<String>();
         for (DialogNode dialogNode : nodes.values()) {
             DialogNodeRepresentation representation = dialogNode.getDialogRepresentation();
-            if (representation instanceof QuickFormRepresentation) {
-                optionNames.add(((QuickFormRepresentation)representation).getLabel());
-                optionDescriptions.add(((QuickFormRepresentation)representation).getDescription());
+            if (representation instanceof SubNodeDescriptionProvider) {
+                optionNames.add(((SubNodeDescriptionProvider)representation).getLabel());
+                optionDescriptions.add(((SubNodeDescriptionProvider)representation).getDescription());
             }
         }
         try {
