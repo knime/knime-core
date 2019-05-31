@@ -55,7 +55,7 @@ import javax.swing.JFileChooser;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
- * @since 3.8
+ * @since 4.0
  *
  * @noimplement This interface is not intended to be implemented by clients.
  * @noreference This interface is not intended to be referenced by clients.

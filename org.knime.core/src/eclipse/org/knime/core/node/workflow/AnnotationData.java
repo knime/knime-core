@@ -78,7 +78,7 @@ public class AnnotationData implements Cloneable {
      * @param swtAlignment a value which should be one of <code>SWT.RIGHT</code>, <code>SWT.CENTER</code>,
      *            <code>SWT.LEFT</code>
      * @return the semantically related <code>TextAlignment</code> enum
-     * @since 3.8
+     * @since 4.0
      */
     public static TextAlignment getTextAlignmentForSWTAlignment(final int swtAlignment) {
         switch (swtAlignment) {

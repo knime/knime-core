@@ -350,7 +350,7 @@ public class Buffer implements KNIMEStreamConstants {
     /**
      * Whether to use an SoftRefLRUAsyncWriteLifecycle as opposed to the MemorizeIfSmallLifecycle.
      *
-     * @since 3.8
+     * @since 4.0
      * @noreference This field is not intended to be referenced by clients.
      */
     public static final boolean ENABLE_LRU;

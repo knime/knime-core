@@ -62,7 +62,7 @@ import org.knime.core.node.ExecutionMonitor;
  * {@link AbstractTableStoreReader#iteratorWithFilter(TableFilter)}.
  *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
- * @since 3.8
+ * @since 4.0
  */
 public final class FilterDelegateRowIterator extends CloseableRowIterator {
 

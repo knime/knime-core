@@ -64,7 +64,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     /**
      * @param initialCapacity the initial capacity of the cache
      * @param maxHistory the maximum size of the cache
-     * @since 3.8
+     * @since 4.0
      */
     public LRUCache(final int initialCapacity, final int maxHistory) {
         super(initialCapacity, 0.75f, true);

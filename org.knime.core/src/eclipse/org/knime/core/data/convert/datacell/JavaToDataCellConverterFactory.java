@@ -89,7 +89,7 @@ public interface JavaToDataCellConverterFactory<S> extends ConverterFactory<Clas
      *
      * @param fileStoreFactory {@link FileStoreFactory} which may be used for creating {@link CellFactory}s.
      * @return a {@link JavaToDataCellConverter} instances
-     * @since 3.8
+     * @since 4.0
      */
     public JavaToDataCellConverter<S> create(final FileStoreFactory fileStoreFactory);
 

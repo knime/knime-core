@@ -198,7 +198,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      * @param namingMap The map containing the {@link AuthenticationType} as key and a pair
      *          consisting of the label and the tooltip String for the radio buttons for authentication types
      * @param supportedTypes the authentication {@link AuthenticationType}s to display
-     * @since 3.8
+     * @since 4.0
      */
     public DialogComponentAuthentication(final SettingsModelAuthentication authModel, final String label,
         final Collection<AuthenticationType> supportedTypes, final Map<AuthenticationType, Pair<String, String>> namingMap) {

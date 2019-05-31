@@ -324,7 +324,7 @@ public final class CredentialsStore implements Observer {
      * (e.g. via {@link org.knime.core.util.IEarlyStartup}).
      * @param userName the user name
      * @param password the password
-     * @since 3.8
+     * @since 4.0
      */
     // added as part of AP-11261
     public static void setKNIMESystemDefault(final String userName, final String password) {
@@ -469,7 +469,7 @@ public final class CredentialsStore implements Observer {
          *
          * @param name Non-null identifier
          * @return true if 'system' credentials are available and used pushed, false otherwise.
-         * @since 3.8
+         * @since 4.0
          */
         public default boolean pushCredentialsFlowVariableWithDefaultCredentials(final String name) {
             if (systemCredentialsUserName != null && systemCredentialsPassword != null) {

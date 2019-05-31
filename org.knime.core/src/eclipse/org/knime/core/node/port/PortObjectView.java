@@ -83,13 +83,13 @@ public interface PortObjectView {
 
     /**
      * Called when the view window is closed but could potentially be opened again.
-     * @since 3.8
+     * @since 4.0
      */
     default void close() {}
 
     /**
      * Called every time the view window is opened.
-     * @since 3.8
+     * @since 4.0
      */
     default void open() {}
 

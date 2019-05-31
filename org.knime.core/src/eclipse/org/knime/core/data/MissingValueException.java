@@ -57,7 +57,7 @@ import org.knime.core.node.util.CheckUtils;
  * level to better indicate to the user where the missing value occurred.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @since 3.8
+ * @since 4.0
  */
 public class MissingValueException extends RuntimeException {
 

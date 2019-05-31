@@ -68,7 +68,7 @@ import org.knime.core.util.SimpleFileFilter;
  * implementations of the JFileChooser's {@link FileSystemView}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @since 3.8
+ * @since 4.0
  */
 public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
 

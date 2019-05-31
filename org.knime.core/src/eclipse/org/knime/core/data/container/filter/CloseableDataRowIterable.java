@@ -55,7 +55,7 @@ import org.knime.core.node.BufferedDataTable;
  * iterated over, similar to a {@link BufferedDataTable}.
  *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
- * @since 3.8
+ * @since 4.0
  */
 public interface CloseableDataRowIterable extends Iterable<DataRow> {
 

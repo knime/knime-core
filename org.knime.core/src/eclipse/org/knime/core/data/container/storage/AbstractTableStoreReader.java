@@ -191,7 +191,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      *
      * @param filter the filter to be applied
      * @return a filtered iterator
-     * @since 3.8
+     * @since 4.0
      */
     public TableStoreCloseableRowIterator iteratorWithFilter(final TableFilter filter) {
         return iteratorWithFilter(filter, null);
@@ -204,7 +204,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      * @param filter the filter to be applied
      * @param exec the execution monitor that shall be updated with progress or null if no progress updates are desired
      * @return a filtered iterator
-     * @since 3.8
+     * @since 4.0
      */
     @SuppressWarnings("resource")
     public TableStoreCloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
@@ -387,7 +387,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         /**
          * @param buffer the buffer to set
          *
-         * @since 3.8
+         * @since 4.0
          */
         public void setBuffer(final Buffer buffer) {
             m_buffer = buffer;

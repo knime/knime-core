@@ -64,7 +64,7 @@ import org.knime.core.node.ExecutionMonitor;
  * {@link DataColumnSpec}s which contain information about the column, e.g. name, type, and possible values etc.
  *
  * @author Christian Albrecht, Martin Horn, Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
- * @since 3.8
+ * @since 4.0
  *
  * @see DataTable
  * @see DataCell
@@ -115,7 +115,7 @@ public interface DirectAccessTable {
      * or not yet known to the callee.
      *
      * @author Christian Albrecht, Martin Horn, KNIME GmbH, Konstanz, Germany
-     * @since 3.8
+     * @since 4.0
      *
      * @noreference This class is not intended to be referenced by clients. Pending API
      * @noextend This class is not intended to be subclassed by clients. Pending API

@@ -219,7 +219,7 @@ public class MappingFramework {
      * @param <S> Type of the source from which to create data rows.
      * @param <PP> Producer parameters subclass. Specific to the source.
      * @return The data row producer for the given source and the given mapping.
-     * @since 3.8
+     * @since 4.0
      */
     public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRowProducer<PP>
         createDataRowProducer(final FileStoreFactory fileStoreFactory, final S source, final ProductionPath[] mapping) {
@@ -257,7 +257,7 @@ public class MappingFramework {
      * @throws Exception If conversion fails
      * @param <ST> Source type
      * @param <PP> Producer parameters subclass
-     * @since 3.8
+     * @since 4.0
      */
     public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRow map(final RowKey key,
         final FileStoreFactory fileStoreFactory, final S source, final ProductionPath[] mapping,

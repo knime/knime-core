@@ -102,7 +102,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
     /**
      * Link type (if template is linked).
-     * @since 3.8
+     * @since 4.0
      */
     public enum LinkType {
         /** If not linked. */
@@ -212,7 +212,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
     /** @return the link type
-     * @since 3.8*/
+     * @since 4.0*/
     public LinkType getLinkType() {
         return m_linkType;
     }

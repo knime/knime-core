@@ -62,7 +62,7 @@ import org.knime.core.data.UnmaterializedCell.UnmaterializedDataCellException;
  * @noinstantiate This class is not intended to be instantiated by clients.
  *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
- * @since 3.8
+ * @since 4.0
  */
 public class PartlyMaterializedBlobSupportRow extends BlobSupportDataRow {
 

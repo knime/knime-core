@@ -66,7 +66,7 @@ import org.knime.core.util.FileUtil;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
- * @since 3.8
+ * @since 4.0
  */
 public class LocalFileSystemBrowser extends AbstractJFileChooserBrowser {
 

@@ -58,7 +58,7 @@ import org.knime.core.data.DirectAccessTable;
  * Pending API! Will be re-visited (and likely removed) with AP-11279.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @since 3.8
+ * @since 4.0
  * @noimplement This interface is not intended to be implemented by clients. Pending API!
  * @noreference This interface is not intended to be referenced by clients. Pending API!
  */

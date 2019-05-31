@@ -194,7 +194,7 @@ public final class FileStoreUtil {
      * @param fileStoreFactory The factory (null is OK).
      * @return The corresponding execution context.
      * @noreference This method is not intended to be referenced by clients.
-     * @since 3.8
+     * @since 4.0
      */
     public static Optional<ExecutionContext> getContextFrom(final FileStoreFactory fileStoreFactory) {
         if (fileStoreFactory instanceof WorkflowFileStoreFactory) {

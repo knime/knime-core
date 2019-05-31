@@ -221,7 +221,7 @@ public class DuplicateChecker {
      * Creates a new duplicate checker with the given chunk size.
      *
      * @param maxChunkSize the size of each chunk, i.e. the maximum number of elements kept in memory
-     * @since 3.8
+     * @since 4.0
      */
     public DuplicateChecker(final int maxChunkSize) {
         this(maxChunkSize, MAX_STREAMS);

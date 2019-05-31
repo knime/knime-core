@@ -74,7 +74,7 @@ import org.knime.core.node.ExecutionMonitor;
  * currently visible rows can be accessed quickly.
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
- * @since 3.8
+ * @since 4.0
  *
  * @noreference This class is not intended to be referenced by clients. Pending API
  * @noextend This class is not intended to be subclassed by clients. Pending API

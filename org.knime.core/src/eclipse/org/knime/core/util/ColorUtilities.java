@@ -55,7 +55,7 @@ import org.eclipse.swt.graphics.RGB;
  * A class of utilities that operate on Color (usually SWT) instances.
  *
  * @author loki der quaeler
- * @since 3.8
+ * @since 4.0
  */
 public class ColorUtilities {
     /**

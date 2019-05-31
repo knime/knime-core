@@ -61,7 +61,7 @@ import org.knime.core.node.NodeLogger;
  * Gives access to the extensions that provide {@link FileSystemBrowser}-implementations.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @since 3.8
+ * @since 4.0
  *
  * @noreference This class is not intended to be referenced by clients.
  */

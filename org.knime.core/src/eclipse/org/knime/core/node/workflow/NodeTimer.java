@@ -254,7 +254,7 @@ public final class NodeTimer {
 
         /**
          * Called by KNIME AP when the user imports a workflow.
-         * @since 3.8
+         * @since 4.0
          */
         public void incWorkflowImport() {
             if (DISABLE_GLOBAL_TIMER) {
@@ -265,7 +265,7 @@ public final class NodeTimer {
 
         /**
          * Called by KNIME AP when the user exports a workflow.
-         * @since 3.8
+         * @since 4.0
          */
         public void incWorkflowExport() {
             if (DISABLE_GLOBAL_TIMER) {

@@ -6227,7 +6227,7 @@ public final class WorkflowManager extends NodeContainer
      * @param prefix if containing node/workflow
      * @param indent number of leading spaces
      * @return String of errors with their node ids
-     * @since 3.8
+     * @since 4.0
      */
     String printNodeErrorSummary(final int indent) {
         char[] indentChars = new char[indent];

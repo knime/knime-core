@@ -1354,7 +1354,7 @@ public final class DataType {
      *
      * @param fileStore the {@link FileStoreFactory} to use
      * @return a data cell factory or an empty optional
-     * @since 3.8
+     * @since 4.0
      * @see #getCellFactory(ExecutionContext)
      */
     public Optional<DataCellFactory> getCellFactoryFor(final FileStoreFactory fileStore) {

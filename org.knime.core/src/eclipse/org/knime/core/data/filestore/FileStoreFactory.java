@@ -91,7 +91,7 @@ public abstract class FileStoreFactory {
      * is provided.
      * @param exec (optional) {@link ExecutionContext}
      * @return {@link FileStoreFactory} to use
-     * @since 3.8
+     * @since 4.0
      */
     public static final FileStoreFactory createFileStoreFactory(final ExecutionContext exec) {
         return exec != null ? createWorkflowFileStoreFactory(exec) : createNotInWorkflowFileStoreFactory();

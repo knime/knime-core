@@ -1215,7 +1215,7 @@ public abstract class NodeDialogPane {
      * Gets the titles of all the tabs in the tabbed pane, in order.
      *
      * @return an unmodifiable list of all the tab titles.
-     * @since 3.8
+     * @since 4.0
      * @see #addTabAt(int, String, Component)
      * @see #addTabAt(int, String, Component, boolean)
      * @see #getTabIndex(String)

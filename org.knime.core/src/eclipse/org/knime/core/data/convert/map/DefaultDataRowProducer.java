@@ -116,7 +116,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
      *            and order of the passed paths must match the ones of the parameters later passed to
      *            {@link #produceDataRow(RowKey, ProducerParameters[])}.
      * @param fileStoreFactory {@link FileStoreFactory} which may be used for creating {@link CellFactory}s.
-     * @since 3.8
+     * @since 4.0
      */
     public DefaultDataRowProducer(final S source, final ProductionPath[] mapping,
         final FileStoreFactory fileStoreFactory) {

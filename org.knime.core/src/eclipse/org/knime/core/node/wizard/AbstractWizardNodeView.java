@@ -241,7 +241,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * Cancel all view requests that have beein initiated by this view and are still running
-     * @since 3.8
+     * @since 4.0
      */
     protected synchronized void cancelOutstandingViewRequests() {
         m_viewRequestMap.values().forEach(job -> job.cancel());

@@ -155,7 +155,7 @@ public class WorkflowLoadHelper {
      * It then calls {@link #loadCredentials(List)} and returns its result.
      * @param credentials the list of credentials to load.
      * @return result of {@link #loadCredentials(List)} after pre-filling system defaults.
-     * @since 3.8
+     * @since 4.0
      */
     public final List<Credentials> loadCredentialsPrefilled(final List<Credentials> credentials) {
         if (CredentialsStore.systemCredentialsPassword != null || CredentialsStore.systemCredentialsUserName != null) {

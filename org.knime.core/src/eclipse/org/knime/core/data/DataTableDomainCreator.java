@@ -208,7 +208,7 @@ public class DataTableDomainCreator {
      * none of the read-only members are copied.
      *
      * @param toCopy the instance to be copied
-     * @since 3.8
+     * @since 4.0
      */
     @SuppressWarnings("unchecked")
     public DataTableDomainCreator(final DataTableDomainCreator toCopy) {
@@ -245,7 +245,7 @@ public class DataTableDomainCreator {
      * Returns the maximum number of possible unique values.
      *
      * @return the maximum number of possible unique values
-     * @since 3.8
+     * @since 4.0
      */
     public int getMaxPossibleValues() {
         return m_maxPossibleValues;
@@ -256,7 +256,7 @@ public class DataTableDomainCreator {
      * the domain values coincides with their occurrence in the input table.
      *
      * @param id the batch index
-     * @since 3.8
+     * @since 4.0
      */
     public void setBatchId(final long id) {
         m_batchId = id;
@@ -458,7 +458,7 @@ public class DataTableDomainCreator {
      * Merges two distinct {@link DataTableDomainCreator}.
      *
      * @param dataTableDomainCreator the {@code DataTableDomainCreator} to be merged
-     * @since 3.8
+     * @since 4.0
      */
     public void merge(final DataTableDomainCreator dataTableDomainCreator) {
         CheckUtils.checkArgument(m_inputSpec.equals(dataTableDomainCreator.m_inputSpec),

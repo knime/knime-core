@@ -156,7 +156,7 @@ public final class KNIMEConstants {
      * The default value is set to the number of available CPU's, see {@link Runtime#availableProcessors()} and
      * {@link DataContainerSettings}.
      *
-     * @since 3.8
+     * @since 4.0
      *
      */
     public static final String PROPERTY_MAX_THREADS_TOTAL = "org.knime.container.threads.total";
@@ -167,7 +167,7 @@ public final class KNIMEConstants {
      * set to the number of available CPU's, see {@link Runtime#availableProcessors()} and
      * {@link DataContainerSettings}.
      *
-     * @since 3.8
+     * @since 4.0
      *
      */
     public static final String PROPERTY_MAX_THREADS_INSTANCE = "org.knime.container.threads.instance";
@@ -189,7 +189,7 @@ public final class KNIMEConstants {
      * generating the table was specifically configured to flush tables to disk or keep tables in memory. Flushing of
      * tables to disk then happens synchronously. The default is {@code LRU}.
      *
-     * @since 3.8
+     * @since 4.0
      */
     public static final String PROPERTY_TABLE_CACHE = "knime.table.cache";
 
@@ -199,7 +199,7 @@ public final class KNIMEConstants {
      * <p>
      * <strong>Warning:</strong> Changing this property will result in KNIME not being able to read workflows written
      * previously (with a different compression property).
-     * @since 3.8
+     * @since 4.0
      */
     public static final String PROPERTY_TABLE_COMPRESSION = "knime.compress.io";
 
@@ -438,7 +438,7 @@ public final class KNIMEConstants {
      *
      * @return the image icon, or an empty optional if in headless-mode or the loading failed
      *
-     * @since 3.8
+     * @since 4.0
      */
     public static Optional<ImageIcon> getKNIMEIcon16X16() {
         if (KNIME16x16_ICON == null) {

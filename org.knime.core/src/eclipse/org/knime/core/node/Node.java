@@ -156,7 +156,7 @@ public final class Node implements NodeModelWarningListener {
 
     /** Text prepended to message on node execution failure.
      * @noreference This field is not intended to be referenced by clients.
-     * @since 3.8
+     * @since 4.0
      */
     public static final String EXECUTE_FAILED_PREFIX = "Execute failed: ";
 

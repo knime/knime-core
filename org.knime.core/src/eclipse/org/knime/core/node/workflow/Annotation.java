@@ -198,7 +198,7 @@ public abstract class Annotation implements UIInformation {
      *
      * @return the version of this annotation.
      * @see #copyFrom(AnnotationData, boolean)
-     * @since 3.8
+     * @since 4.0
      */
     public int getRevision() {
         return m_revisionNumber.get();

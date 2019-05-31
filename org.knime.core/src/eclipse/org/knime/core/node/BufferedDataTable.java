@@ -356,7 +356,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      *
      * @param filter the filter to be applied
      * @return a filtered iterable
-     * @since 3.8
+     * @since 4.0
      */
     public CloseableDataRowIterable filter(final TableFilter filter) {
         return filter(filter, null);
@@ -372,7 +372,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @param filter the filter to be applied
      * @param exec the execution monitor that shall be updated with progress or null if no progress updates are desired
      * @return a filtered iterable
-     * @since 3.8
+     * @since 4.0
      */
     public CloseableDataRowIterable filter(final TableFilter filter, final ExecutionMonitor exec) {
         CheckUtils.checkArgumentNotNull(filter);
@@ -1013,7 +1013,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
          *
          * @param filter the filter to be applied
          * @return a filtered iterator
-         * @since 3.8
+         * @since 4.0
          */
         default CloseableRowIterator iteratorWithFilter(final TableFilter filter) {
             return iteratorWithFilter(filter, null);
@@ -1028,7 +1028,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
          * @param exec the execution monitor that shall be updated with progress or null if no progress updates are
          *            desired
          * @return a filtered iterator
-         * @since 3.8
+         * @since 4.0
          */
         CloseableRowIterator iteratorWithFilter(TableFilter filter, ExecutionMonitor exec);
 

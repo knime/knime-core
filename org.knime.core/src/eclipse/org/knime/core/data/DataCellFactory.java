@@ -166,7 +166,7 @@ public interface DataCellFactory {
      * Note that if this method is called from the framework the {@link FileStoreFactory} is always present.
      *
      * @param fileStore {@link FileStoreFactory} to use. Will always be present if called by the framework.
-     * @since 3.8
+     * @since 4.0
      */
     default void initFactory(final FileStoreFactory fileStore) {
         // no nothing
