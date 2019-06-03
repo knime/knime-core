@@ -82,7 +82,7 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
         Plain,
         /** Collapse content of wrappednode into metanode. */
         MetaNodeInSubnode,
-        /** Collapse content of wrappednode into wrapped metanode. */
+        /** Collapse content of wrappednode into component. */
         SubnodeInSubnode
     }
 

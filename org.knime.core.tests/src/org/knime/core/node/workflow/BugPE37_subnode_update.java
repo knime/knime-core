@@ -59,7 +59,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 
 /**
- * See PE-37. Configurations on linked wrapped metanodes was lost when an update is performed. Also indirectly
+ * See PE-37. Configurations on linked components was lost when an update is performed. Also indirectly
  * tests AP-3120.
  *
  * @author wiswedel, University of Konstanz

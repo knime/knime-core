@@ -101,7 +101,7 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
         WorkflowManager manager = getManager();
         checkState(manager, IDLE);
         // can't check classes here, unfortunately
-        assertThat("Expected streaming executor on wrapped metanode", findNodeContainer(m_streamSubnode_5)
+        assertThat("Expected streaming executor on component", findNodeContainer(m_streamSubnode_5)
             .getJobManager().getClass().toString().toLowerCase(), containsString("stream"));
         ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
         execLock.lock();
@@ -150,7 +150,7 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
         WorkflowLoadResult loadResult = initWorkflowFromTemp();
         assertFalse("should not have errors", loadResult.hasErrors());
         // when saving the workflow while executing we can't determine the correct 'safe' state of all nodes
-        // in the wrapped metanode - most of them are configured but downstream of the transpose they are idle;
+        // in the component - most of them are configured but downstream of the transpose they are idle;
         // the framework saves them as IDLE and the load-routines will update the state ... and warn.
         assertTrue("should have warnings on state - unpredictable during #save", loadResult.hasWarningEntries());
         manager = getManager();

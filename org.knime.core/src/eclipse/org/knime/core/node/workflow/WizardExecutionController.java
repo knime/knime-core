@@ -354,8 +354,8 @@ public final class WizardExecutionController extends WebResourceController imple
                 ? null : m_promptedSubnodeIDSuffixes.peek();
         SubNodeContainer previousSN = previousSNIDSuffix == null ? null
             : manager.getNodeContainer(toNodeID(previousSNIDSuffix), SubNodeContainer.class, true);
-        LOGGER.debugWithFormat("Stepping back wizard execution - resetting Wrapped Metanode \"%s\" (%s)",
-            currentSN.getNameWithID(), previousSN == null ? "no more Wrapped Metanodes to reset"
+        LOGGER.debugWithFormat("Stepping back wizard execution - resetting Component \"%s\" (%s)",
+            currentSN.getNameWithID(), previousSN == null ? "no more Components to reset"
                 : "new current one is \"" + previousSN.getNameWithID() + "\"");
         manager.cancelExecution(currentSN);
         manager.resetAndConfigureNodeAndSuccessors(currentSNID, false);
@@ -390,7 +390,7 @@ public final class WizardExecutionController extends WebResourceController imple
     void stateCheckDownstreamNodesWhenApplyingViewValues(final SubNodeContainer snc, final NodeContainer downstreamNC) {
         final InternalNodeContainerState destNCState = downstreamNC.getInternalState();
         CheckUtils.checkState(destNCState.isHalted() && !destNCState.isExecuted(), "Downstream nodes of "
-                + "Wrapped Metanode %s must not be in execution/executed (node %s)", snc.getNameWithID(), downstreamNC);
+                + "Component %s must not be in execution/executed (node %s)", snc.getNameWithID(), downstreamNC);
     }
 
 }

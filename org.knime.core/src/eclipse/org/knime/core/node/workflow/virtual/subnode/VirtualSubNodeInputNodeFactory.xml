@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./empty.png" type="LoopStart">
-    <name>WrappedNode Input</name>
-    <shortDescription>WrappedNode input handle</shortDescription>
+    <name>Component Input</name>
+    <shortDescription>Component input handle</shortDescription>
     <fullDescription>
     <intro>
-        WrappedNode input handle. It represents the input data of the WrappedNode in the parent workflow.
+        Component input handle. It represents the input data of the Component in the parent workflow.
     </intro>
     </fullDescription>
     <ports>

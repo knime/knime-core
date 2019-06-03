@@ -385,7 +385,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     NodeSettingsRO loadSettingsForNode(final LoadResult loadResult) throws IOException {
         NodeSettingsRO nodeSettings = getNodeSettings();
         if (getLoadVersion().ordinal() < LoadVersion.V280.ordinal()) {
-            throw new IOException("No Wrapped Metanode in version " + getLoadVersion());
+            throw new IOException("No Component in version " + getLoadVersion());
         } else {
             return nodeSettings;
         }

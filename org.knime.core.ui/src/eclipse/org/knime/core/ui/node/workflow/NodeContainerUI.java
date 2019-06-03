@@ -321,7 +321,7 @@ public interface NodeContainerUI extends NodeProgressListener, NodeContainerStat
     String getInteractiveViewName();
 
     /** Get the 'interactive web views' provided by this node. That is, views providing a {@link WebTemplate} for an interactive
-     * web view. Native nodes can have at most one view, wrapped metanodes may have many (one for
+     * web view. Native nodes can have at most one view, components may have many (one for
      * each contained view node), metanodes have none.
      *
      * <p>The name associated with the web view (e.g. JS scatter plot) comes from a node's description (xml).

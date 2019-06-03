@@ -1312,7 +1312,7 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     <T> Map<NodeID, T> findNodes(Class<T> nodeModelClass, boolean recurse);
 
 //    /** Calls {@link #findNodes(Class, NodeModelFilter, boolean, boolean)} with last argument <code>false</code>
-//     * (no recursion into wrapped metanodes).
+//     * (no recursion into components).
 //     * @param <T> see delegated method
 //     * @param nodeModelClass see delegated method
 //     * @param filter see delegated method
@@ -1330,7 +1330,7 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
 //     * @param nodeModelClass The class of interest
 //     * @param filter A non-null filter to apply.
 //     * @param recurseIntoMetaNodes Whether to recurse into contained metanodes.
-//     * @param recurseIntoSubnodes Whether to recurse into contained wrapped metanodes.
+//     * @param recurseIntoSubnodes Whether to recurse into contained components.
 //     * @return A (unsorted) list of nodes matching the class criterion
 //     * @since 3.2
 //     */

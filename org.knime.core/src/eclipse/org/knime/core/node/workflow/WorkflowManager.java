@@ -3537,14 +3537,14 @@ public final class WorkflowManager extends NodeContainer
     public String canExpandSubNode(final NodeID subNodeID) {
         try (WorkflowLock lock = lock()) {
             if (!(getNodeContainer(subNodeID) instanceof SubNodeContainer)) {
-                return "Cannot expand selected node (not a Wrapped Metanode).";
+                return "Cannot expand selected node (not a Component).";
             }
             if (!canRemoveNode(subNodeID)) {
-                return "Cannot move Wrapped Metanode or nodes inside Wrapped Metanodes (node(s) or successor still executing?)";
+                return "Cannot move Component or nodes inside Components (node(s) or successor still executing?)";
             }
             WorkflowManager wfm = ((SubNodeContainer)getNodeContainer(subNodeID)).getWorkflowManager();
             if (wfm.containsExecutedNode()) {
-                return "Cannot expand executed Wrapped Metanode (reset first).";
+                return "Cannot expand executed Component (reset first).";
             }
             return null;
         }
@@ -9253,7 +9253,7 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * Calls {@link #findNodes(Class, NodeModelFilter, boolean, boolean)} with last argument <code>false</code> (no
-     * recursion into wrapped metanodes).
+     * recursion into components).
      *
      * @param <T> see delegated method
      * @param nodeModelClass see delegated method
@@ -9275,7 +9275,7 @@ public final class WorkflowManager extends NodeContainer
      * @param nodeModelClass The class of interest
      * @param filter A non-null filter to apply.
      * @param recurseIntoMetaNodes Whether to recurse into contained metanodes.
-     * @param recurseIntoSubnodes Whether to recurse into contained wrapped metanodes.
+     * @param recurseIntoSubnodes Whether to recurse into contained components.
      * @return A (unsorted) list of nodes matching the class criterion
      * @since 3.3
      */

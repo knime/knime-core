@@ -630,7 +630,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             Element intro = doc.createElement("intro");
             fullDescription.appendChild(intro);
             addText(intro, description, NO_DESCRIPTION_SET + "\nIn order to set a description browse the input node "
-                    + "contained in the Wrapped Metanode and change its configuration.");
+                    + "contained in the Component and change its configuration.");
             // option
             for (int i = 0; i < optionNames.size(); i++) {
                 Element option = doc.createElement("option");
@@ -649,7 +649,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 inPort.setAttribute("name", inPortNames[i]);
                 String defaultText = NO_DESCRIPTION_SET;
                 if (i == 0) {
-                    defaultText += "\nChange this label by browsing the input node contained in the Wrapped Metanode "
+                    defaultText += "\nChange this label by browsing the input node contained in the Component "
                             + "and changing its configuration.";
                 }
                 addText(inPort, inPortDescriptions[i], defaultText);
@@ -662,14 +662,14 @@ public final class SubNodeContainer extends SingleNodeContainer
                 outPort.setAttribute("name", outPortNames[i]);
                 String defaultText = NO_DESCRIPTION_SET;
                 if (i == 0) {
-                    defaultText += "\nChange this label by browsing the output node contained in the Wrapped Metanode "
+                    defaultText += "\nChange this label by browsing the output node contained in the Component "
                             + "and changing its configuration.";
                 }
                 addText(outPort, outPortDescriptions[i], defaultText);
             }
             return new NodeDescription27Proxy(doc).getXMLDescription();
         } catch (ParserConfigurationException | DOMException | XmlException e) {
-            LOGGER.warn("Could not generate Wrapped Metanode description", e);
+            LOGGER.warn("Could not generate Component description", e);
         }
         return null;
     }
@@ -1585,7 +1585,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         synchronized (m_nodeMutex) {
             // check state of contained WFM as state of this Subnode may already be "MARKED".
             if (m_wfm.getInternalState().isExecutionInProgress()) {
-                throw new IllegalStateException("Cannot load settings as the Wrapped Metanode is currently executing");
+                throw new IllegalStateException("Cannot load settings as the Component is currently executing");
             }
             Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
             // contains all nodes that have new value (different to previous value, even if null now).
@@ -1672,7 +1672,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             try {
                 loadModelSettingsIntoDialogNodes(modelSettings, false);
             } catch (InvalidSettingsException e) {
-                final String msg = "Could not load Wrapped Metanode configuration into dialog-nodes: " + e.getMessage();
+                final String msg = "Could not load Component configuration into dialog-nodes: " + e.getMessage();
                 LOGGER.error(msg, e);
                 loadResult.addError(msg);
                 setDirty();

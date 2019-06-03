@@ -643,8 +643,8 @@ public abstract class WebResourceController {
         // validation succeeded, reset subnode and apply
         if (!subNodeNC.getInternalState().isExecuted()) { // this used to be an error but see SRV-745
             LOGGER.warnWithFormat(
-                "Wrapped metanode (%s) not fully executed on appyling new values -- "
-                    + "consider to change wrapped metanode layout to have self-contained executable units",
+                "Component (%s) not fully executed on appyling new values -- "
+                    + "consider to change component layout to have self-contained executable units",
                 subNodeNC.getNameWithID());
         }
         manager.resetSubnodeForViewUpdate(subnodeID, this);
@@ -673,7 +673,7 @@ public abstract class WebResourceController {
     }
 
     /** Before applying view values the subnode needs to possibly reset downstream nodes. For the wizard execution
-     * downstream nodes should be executing (state = executing), whereas for single page mode/wrapped metanode view
+     * downstream nodes should be executing (state = executing), whereas for single page mode/component view
      * none of the downstream nodes should be executing.
      * @param subNCId The id of the subnode container.
      * @throws IllegalStateException If state isn't correct.
@@ -712,10 +712,10 @@ public abstract class WebResourceController {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
             CheckUtils.checkState(id.hasPrefix(subnodeID), "The wizard page content for ID %s (suffix %s) "
-                + "does not belong to the current Wrapped Metanode (ID %s)", id, entry.getKey(), subnodeID);
+                + "does not belong to the current Component (ID %s)", id, entry.getKey(), subnodeID);
             WizardNode wizardNode = wizardNodeSet.get(id);
             CheckUtils.checkState(wizardNode != null,
-                "No wizard node with ID %s in Wrapped Metanode, valid IDs are: " + "%s", id,
+                "No wizard node with ID %s in Component, valid IDs are: " + "%s", id,
                 ConvenienceMethods.getShortStringFrom(wizardNodeSet.entrySet(), 10));
             @SuppressWarnings("null")
             WebViewContent newViewValue = wizardNode.createEmptyViewValue();

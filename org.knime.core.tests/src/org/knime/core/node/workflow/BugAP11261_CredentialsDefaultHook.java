@@ -72,8 +72,8 @@ public class BugAP11261_CredentialsDefaultHook extends WorkflowTestCase {
         NodeID baseID = loadAndSetWorkflow();
         m_credentialsValidate_1 = baseID.createChild(1);
         m_credentialsValidate_3 = baseID.createChild(3);
-        m_credentialsValidate_6_4 = baseID.createChild(6).createChild(0).createChild(4); // wrapped metanode
-        m_credentialsValidate_8_4 = baseID.createChild(8).createChild(0).createChild(4); // wrapped metanode
+        m_credentialsValidate_6_4 = baseID.createChild(6).createChild(0).createChild(4); // component
+        m_credentialsValidate_8_4 = baseID.createChild(8).createChild(0).createChild(4); // component
     }
 
 

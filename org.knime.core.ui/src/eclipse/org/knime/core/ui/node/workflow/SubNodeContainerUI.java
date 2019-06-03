@@ -305,7 +305,7 @@ public interface SubNodeContainerUI extends SingleNodeContainerUI, UI {
     public boolean isWriteProtected();
 
     /**
-     * @return whether the wrapped metanode has a composite view
+     * @return whether the component has a composite view
      */
     boolean hasWizardPage();
 

@@ -185,7 +185,7 @@ public class SinglePageWebResourceController extends WebResourceController {
     void stateCheckWhenApplyingViewValues(final SubNodeContainer snc) {
         NodeID id = snc.getID();
         WorkflowManager parent = snc.getParent();
-        CheckUtils.checkState(parent.canResetNode(id), "Can't reset wrapped metanode%s",
+        CheckUtils.checkState(parent.canResetNode(id), "Can't reset component%s",
             parent.hasSuccessorInProgress(id) ? " - some downstream nodes are still executing" : "");
     }
 
