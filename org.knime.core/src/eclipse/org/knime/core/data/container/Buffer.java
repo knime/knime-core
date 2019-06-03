@@ -1701,7 +1701,8 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Creates a clone of this buffer for writing the content to a stream that is of the current version.
+     * Creates a clone of this buffer for writing the content to a stream that is of the current version. The cloned
+     * buffer is always synchronously flushed to disk and never keeps its table in memory.
      *
      * @return A new buffer with the same ID, which is only used locally to update the stream.
      */

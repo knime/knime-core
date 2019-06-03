@@ -113,11 +113,12 @@ public final class KNIMEConstants {
      * preference pages and is by default the same as the java.io.tmpdir */
     public static final String PROPERTY_TEMP_DIR = "knime.tmpdir";
 
-    /** Java property to disable the asynchronous writing of KNIME tables. By
-     * default, each table container writing to disk performs the write
-     * operation in a dedicated (potentially re-used) thread. Setting this field
-     * to true will instruct KNIME to always write synchronously, which in some
-     * cases may be slower. (Asynchronous I/O became default with v2.1.) */
+    /** Java property to disable the nonsequential handling of rows for KNIME tables. By default, each table container
+     * processes its rows asynchronously in a number of (potentially re-used) threads. Setting this field to true will
+     * instruct KNIME to always handle rows sequentially and synchronously, which in some cases may be slower.
+     * Asynchronous I/O became default with v2.1. Note that independent of this settingthe writing of rows to disk
+     * always happens sequentially, and, depending on the {@link #PROPERTY_TABLE_CACHE} setting, potentially
+     * asynchronously. */
     public static final String PROPERTY_SYNCHRONOUS_IO = "knime.synchronous.io";
 
     /** Java property to customize the write cache for asynchronous

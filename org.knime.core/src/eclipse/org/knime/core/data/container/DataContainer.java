@@ -175,7 +175,7 @@ public class DataContainer implements RowAppender {
         final DataContainerSettings defaults = DataContainerSettings.getDefault();
         MAX_CELLS_IN_MEMORY = defaults.getMaxCellsInMemory();
         ASYNC_CACHE_SIZE = defaults.getAsyncCacheSize();
-        SYNCHRONOUS_IO = defaults.useSyncIO();
+        SYNCHRONOUS_IO = defaults.isForceSequentialRowHandling();
         MAX_POSSIBLE_VALUES = defaults.getMaxDomainValues();
         INIT_DOMAIN = defaults.getInitializeDomain();
         // see also {@link Executors#fixedThradPool(ThreadFactory)}
@@ -209,12 +209,12 @@ public class DataContainer implements RowAppender {
     private AtomicReference<Throwable> m_writeThrowable;
 
     /**
-     * Whether this container writes synchronously, i.e. when rows come in they get written immediately. If true the
-     * fields {@link #m_asyncAddFuture} and {@link #m_writeThrowable} are null. This field coincides most of times with
-     * the {@link #SYNCHRONOUS_IO}, but may be true if there are too many concurrent write threads (more than
-     * {@value #MAX_ASYNC_WRITE_THREADS}).
+     * Whether this container handles rows sequentially, i.e. one row after another. Handling a row encompasses (1)
+     * validation against a given table spec, (2) updating the table's domain, (3) checking for duplicates among row
+     * keys, and (4) handling of blob and file store cells. Independent of this setting, the underlying {@link Buffer}
+     * class always writes rows to disk sequentially, yet potentially asynchronously.
      */
-    private final boolean m_isSynchronousWrite;
+    private final boolean m_forceSequentialRowHandling;
 
     /** Flag indicating the memory state. */
     boolean m_memoryLowState;
@@ -344,7 +344,7 @@ public class DataContainer implements RowAppender {
         final boolean forceSynchronousIO) {
         this(spec,
             DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
-                .withSyncIO(forceSynchronousIO || DataContainerSettings.getDefault().useSyncIO()));
+                .withForceSequentialRowHandling(forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()));
     }
 
     /**
@@ -360,10 +360,10 @@ public class DataContainer implements RowAppender {
             settings.getMaxCellsInMemory());
         m_spec = spec;
         m_duplicateChecker = settings.createDuplicateChecker();
-        m_isSynchronousWrite = settings.useSyncIO();
+        m_forceSequentialRowHandling = settings.isForceSequentialRowHandling();
         m_batchSize = settings.getAsyncCacheSize();
         m_memoryLowState = false;
-        if (m_isSynchronousWrite) {
+        if (m_forceSequentialRowHandling) {
             m_numActiveContRunnables = null;
             m_numPendingBatches = null;
             m_pendingBatchIdx = null;
@@ -562,7 +562,7 @@ public class DataContainer implements RowAppender {
             m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, createInternalBufferID(),
                 getDataRepository(), getLocalTableRepository(), getFileStoreHandler());
         }
-        if (!m_isSynchronousWrite) {
+        if (!m_forceSequentialRowHandling) {
             try {
                 if (m_writeThrowable.get() == null && !m_curBatch.isEmpty()) {
                     submit();
@@ -680,7 +680,7 @@ public class DataContainer implements RowAppender {
             throw new NullPointerException("Can't add null rows to container");
         }
         initBufferIfRequired();
-        if (m_isSynchronousWrite) {
+        if (m_forceSequentialRowHandling) {
             addRowToTableSynchronously(row);
         } else {
             addRowToTableAsynchronously(row);
@@ -905,14 +905,6 @@ public class DataContainer implements RowAppender {
             m_localMap = new HashMap<Integer, ContainerTable>();
         }
         return m_localMap;
-    }
-
-    /**
-     * @return the isSynchronousWrite whether the data is written in the same thread that calls addRow. Property depends
-     *         on system property {@link #SYNCHRONOUS_IO} and the number of concurrent writes.
-     */
-    boolean isSynchronousWrite() {
-        return m_isSynchronousWrite;
     }
 
     /**

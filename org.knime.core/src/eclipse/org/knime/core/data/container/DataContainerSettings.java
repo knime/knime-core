@@ -107,8 +107,8 @@ public final class DataContainerSettings {
         /** The maximum number of cells in memory. */
         private int m_maxCellsInMemory;
 
-        /** The synchronous write flag. */
-        private boolean m_syncIO;
+        /** The sequential write flag. */
+        private boolean m_sequentialIO;
 
         /** The maximum number of threads that can be used by {@link DataContainer} instances. */
         private int m_maxDataContainerThreads;
@@ -135,7 +135,7 @@ public final class DataContainerSettings {
          */
         Builder(final DataContainerSettings settings) {
             m_maxCellsInMemory = settings.m_maxCellsInMemory;
-            m_syncIO = settings.m_syncIO;
+            m_sequentialIO = settings.m_sequentialIO;
             m_maxDataContainerThreads = settings.m_maxDataContainerThreads;
             m_maxThreadsPerDataContainer = settings.m_maxThreadsPerDataContainer;
             m_asyncCacheSize = settings.m_asyncCacheSize;
@@ -149,8 +149,8 @@ public final class DataContainerSettings {
             return this;
         }
 
-        Builder useSyncIO(final boolean useSyncIO) {
-            m_syncIO = useSyncIO;
+        Builder useSequentialIO(final boolean useSequentialIO) {
+            m_sequentialIO = useSequentialIO;
             return this;
         }
 
@@ -204,8 +204,8 @@ public final class DataContainerSettings {
     /** The maximum number of cells in memory. */
     private final int m_maxCellsInMemory;
 
-    /** The synchronous write flag. */
-    private final boolean m_syncIO;
+    /** The sequential write flag. */
+    private final boolean m_sequentialIO;
 
     /** The maximum number of threads that can be used by {@link DataContainer} instances. */
     private final int m_maxDataContainerThreads;
@@ -232,7 +232,7 @@ public final class DataContainerSettings {
         m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
         m_tableDomainCreatorFunction = (spec, initDomain) -> new DataTableDomainCreator(spec, initDomain);
         m_maxCellsInMemory = initMaxCellsInMemory();
-        m_syncIO = initSynchronousIO();
+        m_sequentialIO = initSequentialIO();
         m_maxDataContainerThreads = initMaxDataContainerThreads();
         int maxThreadsPerDataContainer = initThreadsPerDataContainerInstance();
         if (maxThreadsPerDataContainer > maxThreadsPerDataContainer) {
@@ -257,7 +257,7 @@ public final class DataContainerSettings {
         m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
         m_tableDomainCreatorFunction = (spec, initDomain) -> new DataTableDomainCreator(spec, initDomain);
         m_maxCellsInMemory = builder.m_maxCellsInMemory;
-        m_syncIO = builder.m_syncIO;
+        m_sequentialIO = builder.m_sequentialIO;
         m_maxDataContainerThreads = builder.m_maxDataContainerThreads;
         m_maxThreadsPerDataContainer = builder.m_maxThreadsPerDataContainer;
         m_asyncCacheSize = builder.m_asyncCacheSize;
@@ -294,12 +294,15 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Returns whether to write tables in a synchronous or asynchronous fashion.
+     * Returns whether to force rows to be handled sequentially, i.e. one row after another. Handling a row encompasses
+     * (1) validation against a given table spec, (2) updating the table's domain, (3) checking for duplicates among row
+     * keys, and (4) handling of blob and file store cells. Independent of this setting, the underlying {@link Buffer}
+     * class always writes rows to disk sequentially, yet potentially asynchronously.
      *
-     * @return flag indicating how to write tables to disc
+     * @return flag indicating whether to force rows to be handled sequentially
      */
-    public boolean useSyncIO() {
-        return m_syncIO;
+    public boolean isForceSequentialRowHandling() {
+        return m_sequentialIO;
     }
 
     /**
@@ -392,14 +395,15 @@ public final class DataContainerSettings {
 
     /**
      * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the use synchronous write flag.
+     * <code>DataContainerSetting</code> instance and solely changes the use flag that determines whether rows are to be
+     * handed sequentially.
      *
-     * @param useSyncIO the new use synchronous write flag
+     * @param useSequentialIO the new sequential IO flag
      * @return a new instance of {@code DataContainerSettings}
      */
-    public DataContainerSettings withSyncIO(final boolean useSyncIO) {
+    public DataContainerSettings withForceSequentialRowHandling(final boolean useSequentialIO) {
         final Builder b = new Builder(this);
-        b.useSyncIO(useSyncIO);
+        b.useSequentialIO(useSequentialIO);
         return b.build();
     }
 
@@ -515,13 +519,13 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Initializes the synchronous I/O flag w.r.t. the defined properties.
+     * Initializes the sequential I/O flag w.r.t. the defined properties.
      *
-     * @return the synchronous I/O flag
+     * @return the sequential I/O flag
      */
-    private static boolean initSynchronousIO() {
+    private static boolean initSequentialIO() {
         if (Boolean.getBoolean(KNIMEConstants.PROPERTY_SYNCHRONOUS_IO)) {
-            LOGGER.debug("Using synchronous IO; " + KNIMEConstants.PROPERTY_SYNCHRONOUS_IO + " is set");
+            LOGGER.debug("Handling rows sequentially; " + KNIMEConstants.PROPERTY_SYNCHRONOUS_IO + " is set");
             return true;
         } else {
             return false;

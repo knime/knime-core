@@ -1666,22 +1666,27 @@ public final class Node implements NodeModelWarningListener {
         return c.getLocalTableRepository();
     }
 
-    /** Force any tables written by the associated execution context to be
-     * written synchronously. This will be the default for loop end nodes
-     * (they always write synchronously) but can also be forced by calling this
-     * method. Calling this method with value = false doesn't mean tables
-     * get written asynchronously.
+    /**
+     * Force any tables created by the associated execution context to be handled sequentially, i.e. one row after
+     * another. This will be the default for loop end nodes (they always write synchronously) but can also be forced by
+     * calling this method. Handling a row encompasses (1) validation against a given table spec, (2) updating the
+     * table's domain, (3) checking for duplicates among row keys, and (4) handling of blob and file store cells.
+     * Calling this method with value = false doesn't mean tables are written nonsequentially. Independent of this
+     * setting, rows are always written to disk sequentially, yet potentially asynchronously.
      *
-     * @param value The value to set.
+     * @param value whether to force created tables to be handled sequentially
      * @since 2.6
      */
     public void setForceSynchronousIO(final boolean value) {
         m_forceSychronousIO = value || this.isModelCompatibleTo(LoopEndNode.class);
     }
 
-    /** Getter for {@link #setForceSynchronousIO(boolean)}.
-     * @return the forceSychronousIO
-     * @since 2.6 */
+    /**
+     * Getter for {@link #setForceSynchronousIO(boolean)}.
+     *
+     * @return a flag that determines whether to force created tables to be handled sequentially
+     * @since 2.6
+     */
     public boolean isForceSychronousIO() {
         return m_forceSychronousIO;
     }

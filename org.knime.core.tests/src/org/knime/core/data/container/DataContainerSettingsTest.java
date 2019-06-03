@@ -81,7 +81,7 @@ public final class DataContainerSettingsTest extends TestCase {
         assertEquals("Wrong default (number of cells in memory)", MAX_CELLS_IN_MEMORY, settings.getMaxCellsInMemory());
         assertEquals("Wrong default (number of possible domain values)", MAX_POSSIBLE_VALUES,
             settings.getMaxDomainValues());
-        assertEquals("Wrong default (asynchronous IO flag)", SYNCHRONOUS_IO, settings.useSyncIO());
+        assertEquals("Wrong default (asynchronous IO flag)", SYNCHRONOUS_IO, settings.isForceSequentialRowHandling());
         assertEquals("Wrong default (intialize domain flag)", INIT_DOMAIN, settings.getInitializeDomain());
         assertEquals("Wrong default (asynchrnous write threads)", Runtime.getRuntime().availableProcessors(),
             settings.getMaxContainerThreads());
@@ -118,7 +118,7 @@ public final class DataContainerSettingsTest extends TestCase {
         final int cacheSize = def.getAsyncCacheSize() * -1;
         final int maxCellsInMemory = def.getMaxCellsInMemory() * -1;
         final int maxPossibleValues = def.getMaxDomainValues() * -1;
-        final boolean syncIO = !def.useSyncIO();
+        final boolean syncIO = !def.isForceSequentialRowHandling();
         final boolean initDomain = !def.getInitializeDomain();
         final int maxThreadsPerDataContainer = def.getMaxThreadsPerContainer() * -1;
         final int maxContainerThreads = def.getMaxThreadsPerContainer() * -1;
@@ -129,7 +129,7 @@ public final class DataContainerSettingsTest extends TestCase {
             .withAsyncCacheSize(cacheSize)//
             .withMaxCellsInMemory(maxCellsInMemory)//
             .withMaxDomainValues(maxPossibleValues)//
-            .withSyncIO(syncIO)//
+            .withForceSequentialRowHandling(syncIO)//
             .withInitializedDomain(initDomain)//
             .withMaxContainerThreads(maxContainerThreads)//
             .withMaxThreadsPerContainer(maxThreadsPerDataContainer)//
@@ -140,7 +140,7 @@ public final class DataContainerSettingsTest extends TestCase {
             settings.getMaxCellsInMemory());
         assertEquals("Modified settings created wrong maximum number of possible domain values", maxPossibleValues,
             settings.getMaxDomainValues());
-        assertEquals("Modified settings created wrong synchronous IO flag", syncIO, settings.useSyncIO());
+        assertEquals("Modified settings created wrong synchronous IO flag", syncIO, settings.isForceSequentialRowHandling());
         assertEquals("Modified settings created wrong initialize domain flag", initDomain,
             settings.getInitializeDomain());
         assertEquals("Modified settings created wrong maximum number of container threads", maxContainerThreads,
@@ -157,8 +157,8 @@ public final class DataContainerSettingsTest extends TestCase {
             def.getMaxContainerThreads(), settings.getMaxContainerThreads());
         assertNotEquals("Default settings has been modified (number of threads per container)",
             def.getMaxThreadsPerContainer(), settings.getMaxThreadsPerContainer());
-        assertNotEquals("Default settings has been modified (synchronous IO flag)", def.useSyncIO(),
-            settings.useSyncIO());
+        assertNotEquals("Default settings has been modified (synchronous IO flag)", def.isForceSequentialRowHandling(),
+            settings.isForceSequentialRowHandling());
         assertNotEquals("Default settings has been modified (initialize domain flag)", def.getInitializeDomain(),
             settings.getInitializeDomain());
         assertNotEquals("Default BufferSettings have not been modified", def.getBufferSettings().equals(bSettings));

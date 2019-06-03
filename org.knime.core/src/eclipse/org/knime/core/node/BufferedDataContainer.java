@@ -140,9 +140,11 @@ public class BufferedDataContainer extends DataContainer {
             final IDataRepository dataRepository,
             final Map<Integer, ContainerTable> localTableRepository,
             final IWriteFileStoreHandler fileStoreHandler) {
-        // force synchronous IO when the node is a loop end:
-        // rows containing blobs need to be written instantly as their owning
-        // buffer is discarded in the next loop iteration, see bug 2935
+        /**
+         * Force sequential handling of rows when the node is a loop end: At a loop end, rows containing blobs need to
+         * be written instantly as their owning buffer is discarded in the next loop iteration, see bug 2935. To be
+         * written instantly, they have to be handled sequentially.
+         */
         super(spec, initDomain, maxCellsInMemory < 0
                 ? getMaxCellsInMemory(policy) : maxCellsInMemory,
                         node.isForceSychronousIO());
