@@ -1612,7 +1612,7 @@ public class Buffer implements KNIMEStreamConstants {
                 final BackIntoMemoryIterator backIntoMemoryIt = new BackIntoMemoryIterator(iterator(), size());
                 m_backIntoMemoryIteratorRef = new WeakReference<BackIntoMemoryIterator>(backIntoMemoryIt);
                 final CloseableRowIterator listIt = new FromListIterator(backIntoMemoryIt.getList(), backIntoMemoryIt);
-                return filter == null ? listIt : new FilterDelegateRowIterator(listIt, filter, exec);
+                return filter == null ? listIt : new FilterDelegateRowIterator(listIt, filter, size(), exec);
             }
 
             // Case 2: We don't have have the table in memory.
@@ -1650,12 +1650,13 @@ public class Buffer implements KNIMEStreamConstants {
                             .withFromRowIndex(0)//
                             .withToRowIndex(toIndex - fromIndex)//
                             .build();
-                    return new FilterDelegateRowIterator(rangeIterator, offsetFilter, exec);
+                    return new FilterDelegateRowIterator(rangeIterator, offsetFilter, size(), exec);
                 }
 
                 // Case 4: We are currently iterating the table back into memory and want to apply a filter.
                 else {
-                    return new FilterDelegateRowIterator(new FromListIterator(list, backIntoMemoryIt), filter, exec);
+                    return new FilterDelegateRowIterator(new FromListIterator(list, backIntoMemoryIt), filter, size(),
+                        exec);
                 }
 
             }

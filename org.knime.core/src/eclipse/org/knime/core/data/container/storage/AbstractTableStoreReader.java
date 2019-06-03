@@ -209,7 +209,8 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
     @SuppressWarnings("resource")
     public TableStoreCloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
         final TableStoreCloseableRowIterator delegate = iterator();
-        final FilterDelegateRowIterator filterDelegate = new FilterDelegateRowIterator(delegate, filter, exec);
+        final long size = getBuffer() == null ? Long.MAX_VALUE : getBuffer().size();
+        final FilterDelegateRowIterator filterDelegate = new FilterDelegateRowIterator(delegate, filter, size, exec);
 
         return new TableStoreCloseableRowIterator() {
             @Override

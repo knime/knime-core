@@ -107,7 +107,7 @@ public class FilterDelegateRowIteratorTest {
         // keep only rows with an index between 14 and 16
         TableFilter filter = (new TableFilter.Builder()).withFromRowIndex(14).withToRowIndex(16).build();
 
-        try (final CloseableRowIterator rowIt = new FilterDelegateRowIterator(new TestIterator(), filter, null)) {
+        try (final CloseableRowIterator rowIt = new FilterDelegateRowIterator(new TestIterator(), filter, 100, null)) {
             assertTrue(rowIt.hasNext());
             assertEquals("14", rowIt.next().getKey().getString());
             assertTrue(rowIt.hasNext());

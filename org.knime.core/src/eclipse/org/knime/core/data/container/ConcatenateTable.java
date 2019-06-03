@@ -191,7 +191,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         }
         // Otherwise, fall back to an appended rows table which operates on data tables which cannot be filtered.
         else {
-            return new FilterDelegateRowIterator(m_tablesWrapper.iterator(exec, -1), filter, exec);
+            return new FilterDelegateRowIterator(m_tablesWrapper.iterator(exec, -1), filter, size(), exec);
         }
     }
 

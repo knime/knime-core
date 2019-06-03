@@ -74,7 +74,7 @@ public abstract class ExtensionTable implements KnowsRowCountTable {
 
     @Override
     public CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
-        return new FilterDelegateRowIterator(iterator(), filter, exec);
+        return new FilterDelegateRowIterator(iterator(), filter, size(), exec);
     }
 
     /**

@@ -86,13 +86,14 @@ public final class FilterDelegateRowIterator extends CloseableRowIterator {
      *
      * @param iterator the iterator to delegate to and filter from
      * @param filter the table filter that specifies the filtering to be performed on the delegate iterator
+     * @param size the size of the table to iterate over
      * @param exec the execution monitor that shall be updated with progress or null if no progress updates are desired
      */
-    public FilterDelegateRowIterator(final CloseableRowIterator iterator, final TableFilter filter,
+    public FilterDelegateRowIterator(final CloseableRowIterator iterator, final TableFilter filter, final long size,
         final ExecutionMonitor exec) {
         m_delegate = iterator;
         m_fromIndex = filter.getFromRowIndex().orElse(0l);
-        m_toIndex = filter.getToRowIndex().orElse(Long.MAX_VALUE);
+        m_toIndex = filter.getToRowIndex().orElse(size - 1);
         m_exec = Optional.ofNullable(exec);
         m_index = 0;
     }
@@ -132,8 +133,10 @@ public final class FilterDelegateRowIterator extends CloseableRowIterator {
             if (m_exec.isPresent()) {
                 final long index = m_index + 1;
                 final long size = m_toIndex + 1;
-                m_exec.get().setProgress(m_index / m_toIndex,
-                    () -> String.format("Row %,d/%,d (%s)", index, size, row.getKey()));
+                // size can never be 0 since m_index is never lower than 0 and thus m_toIndex is also at least 0
+                // (otherwise we would not be in this loop)
+                final double prog = ((double)index) / size;
+                m_exec.get().setProgress(prog, () -> String.format("Row %,d/%,d (%s)", index, size, row.getKey()));
             }
 
             // return the row if we're at or above the minimum index of rows to keep
@@ -147,6 +150,8 @@ public final class FilterDelegateRowIterator extends CloseableRowIterator {
 
     @Override
     public void close() {
+        m_nextRow = null;
+        m_index = m_toIndex + 1;
         m_delegate.close();
     }
 
