@@ -174,7 +174,7 @@ public class DataContainer implements RowAppender {
     static {
         final DataContainerSettings defaults = DataContainerSettings.getDefault();
         MAX_CELLS_IN_MEMORY = defaults.getMaxCellsInMemory();
-        ASYNC_CACHE_SIZE = defaults.getAsyncCacheSize();
+        ASYNC_CACHE_SIZE = defaults.getRowBatchSize();
         SYNCHRONOUS_IO = defaults.isForceSequentialRowHandling();
         MAX_POSSIBLE_VALUES = defaults.getMaxDomainValues();
         INIT_DOMAIN = defaults.getInitializeDomain();
@@ -361,7 +361,7 @@ public class DataContainer implements RowAppender {
         m_spec = spec;
         m_duplicateChecker = settings.createDuplicateChecker();
         m_forceSequentialRowHandling = settings.isForceSequentialRowHandling();
-        m_batchSize = settings.getAsyncCacheSize();
+        m_batchSize = settings.getRowBatchSize();
         m_memoryLowState = false;
         if (m_forceSequentialRowHandling) {
             m_numActiveContRunnables = null;

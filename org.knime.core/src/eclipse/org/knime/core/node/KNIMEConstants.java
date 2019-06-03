@@ -97,56 +97,58 @@ public final class KNIMEConstants {
     /** The build date, is set automatically by the build scripts.*/
     public static final String BUILD_DATE;
 
-    /** Java property name that is used to identify whether KNIME is started
-     * in expert mode or not. Note, with KNIME v2.4 this field became obsolete
-     * and is not used anymore, including all variable specific features/nodes.
-     * <p>Values of this field must be either "true" or "false". */
+    /**
+     * Java property name that is used to identify whether KNIME is started in expert mode or not. Note, with KNIME v2.4
+     * this field became obsolete and is not used anymore, including all variable specific features/nodes.
+     * <p>
+     * Values of this field must be either "true" or "false".
+     */
     public static final String PROPERTY_EXPERT_MODE = "knime.expert.mode";
 
-    /** Java property name to specify the default max thread count variable
-     * (can be set via preference page). */
-    public static final String PROPERTY_MAX_THREAD_COUNT =
-        "org.knime.core.maxThreads";
+    /**
+     * Java property name to specify the default max thread count variable (can be set via preference page).
+     */
+    public static final String PROPERTY_MAX_THREAD_COUNT = "org.knime.core.maxThreads";
 
-    /** Java property name to specify the default temp directory for
-     * KNIME temp files (such as data files). This can be changed in the
-     * preference pages and is by default the same as the java.io.tmpdir */
+    /**
+     * Java property name to specify the default temp directory for KNIME temp files (such as data files). This can be
+     * changed in the preference pages and is by default the same as the java.io.tmpdir
+     */
     public static final String PROPERTY_TEMP_DIR = "knime.tmpdir";
 
-    /** Java property to disable the nonsequential handling of rows for KNIME tables. By default, each table container
+    /**
+     * Java property to disable the nonsequential handling of rows for KNIME tables. By default, each table container
      * processes its rows asynchronously in a number of (potentially re-used) threads. Setting this field to true will
      * instruct KNIME to always handle rows sequentially and synchronously, which in some cases may be slower.
-     * Asynchronous I/O became default with v2.1. Note that independent of this settingthe writing of rows to disk
+     * Asynchronous I/O became default with v2.1. Note that independent of this setting the writing of rows to disk
      * always happens sequentially, and, depending on the {@link #PROPERTY_TABLE_CACHE} setting, potentially
-     * asynchronously. */
+     * asynchronously. If not specified the default is obtained from {@link DataContainerSettings#getDefault()}.
+     */
     public static final String PROPERTY_SYNCHRONOUS_IO = "knime.synchronous.io";
 
-    /** Java property to customize the write cache for asynchronous
-     * table writing. It specifies the size of a temporary buffer for data rows
-     * that is used during table creating. Once this buffer is full (or there
-     * are no more rows to write), this buffer is handed over to the writing
-     * routines to write the data output stream. The larger the buffer, the
-     * smaller the synchronization overhead but the larger the memory
-     * requirements.
-     * <p>
-     * The default value is {@value
-     * org.knime.core.data.container.DataContainer#DEF_ASYNC_CACHE_SIZE}. This
-     * property has no effect if tables are written synchronously
-     * (see {@link #PROPERTY_SYNCHRONOUS_IO}). */
-    public static final String PROPERTY_ASYNC_WRITE_CACHE_SIZE =
-        "knime.async.io.cachesize";
+    /**
+     * Java property to customize cache / batch size for non-sequential and asynchronous handling of rows (see
+     * {@link #PROPERTY_SYNCHRONOUS_IO}). It specifies the amount of data rows that are handled by a single container
+     * thread. The larger the buffer, the smaller the synchronization overhead but the larger the memory requirements.
+     * This property has no effect if rows are handled sequentially. If not specified the default is obtained from
+     * {@link DataContainerSettings#getDefault()}.
+     */
+    public static final String PROPERTY_ASYNC_WRITE_CACHE_SIZE = "knime.async.io.cachesize";
 
-    /** The number of nominal values kept in the domain when adding rows to a table. This is only the default and
-     * may be overruled by individual node implementations. If not specified the default is {@value
-     * org.knime.core.data.container.DataContainer#DEF_MAX_POSSIBLE_VALUES}.
+    /**
+     * The number of nominal values kept in the domain when adding rows to a table. This is only the default and may be
+     * overruled by individual node implementations. If not specified the default is obtained from
+     * {@link DataContainerSettings#getDefault()}.
+     *
      * @since 2.10
      */
     public static final String PROPERTY_DOMAIN_MAX_POSSIBLE_VALUES = "knime.domain.valuecount";
 
-    /** Java property name to set a different threshold for the number of
-     * cells to be held in main memory (if memory setting is
-     * "Keep only small tables in memory"). The default is {@value
-     * org.knime.core.data.container.DataContainer#DEF_MAX_CELLS_IN_MEMORY}.
+    /**
+     * Java property name to set a different threshold for the number of cells to be held in main memory (if memory
+     * setting is "Keep only small tables in memory"). If not specified the default is obtained from
+     * {@link DataContainerSettings#getDefault()}.
+     *
      * @since 2.6
      */
     public static final String PROPERTY_CELLS_IN_MEMORY = "org.knime.container.cellsinmemory";
@@ -175,7 +177,7 @@ public final class KNIMEConstants {
 
     /** Java property name to specify the minimum free disc space in MB that needs to be available. If less is
      * available, no further table files &amp; blobs will be created (resulting in an exception). Default is
-     * {@value org.knime.core.data.container.DataContainer#DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB} MB.
+     * {@value org.knime.core.data.container.Buffer#DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB} MB.
      * @since 2.8
      */
     public static final String PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = "org.knime.container.minspace.temp";

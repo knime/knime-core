@@ -77,7 +77,7 @@ public final class DataContainerSettingsTest extends TestCase {
     @Test
     public void testDefault() {
         final DataContainerSettings settings = DataContainerSettings.getDefault();
-        assertEquals("Wrong default (cache size)", ASYNC_CACHE_SIZE, settings.getAsyncCacheSize());
+        assertEquals("Wrong default (cache size)", ASYNC_CACHE_SIZE, settings.getRowBatchSize());
         assertEquals("Wrong default (number of cells in memory)", MAX_CELLS_IN_MEMORY, settings.getMaxCellsInMemory());
         assertEquals("Wrong default (number of possible domain values)", MAX_POSSIBLE_VALUES,
             settings.getMaxDomainValues());
@@ -115,7 +115,7 @@ public final class DataContainerSettingsTest extends TestCase {
     public void testChangedValues() {
         final DataContainerSettings def = DataContainerSettings.getDefault();
 
-        final int cacheSize = def.getAsyncCacheSize() * -1;
+        final int cacheSize = def.getRowBatchSize() * -1;
         final int maxCellsInMemory = def.getMaxCellsInMemory() * -1;
         final int maxPossibleValues = def.getMaxDomainValues() * -1;
         final boolean syncIO = !def.isForceSequentialRowHandling();
@@ -126,7 +126,7 @@ public final class DataContainerSettingsTest extends TestCase {
             def.getBufferSettings().withLRUCacheSize(def.getBufferSettings().getLRUCacheSize() * -1);
 
         final DataContainerSettings settings = DataContainerSettings.getDefault()//
-            .withAsyncCacheSize(cacheSize)//
+            .withRowBatchSize(cacheSize)//
             .withMaxCellsInMemory(maxCellsInMemory)//
             .withMaxDomainValues(maxPossibleValues)//
             .withForceSequentialRowHandling(syncIO)//
@@ -135,7 +135,7 @@ public final class DataContainerSettingsTest extends TestCase {
             .withMaxThreadsPerContainer(maxThreadsPerDataContainer)//
             .withBufferSettings(bSettings);
 
-        assertEquals("Modified settings created wrong cache size", cacheSize, settings.getAsyncCacheSize());
+        assertEquals("Modified settings created wrong cache size", cacheSize, settings.getRowBatchSize());
         assertEquals("Modified settings created wrong maximum number of cells in memory", maxCellsInMemory,
             settings.getMaxCellsInMemory());
         assertEquals("Modified settings created wrong maximum number of possible domain values", maxPossibleValues,
@@ -147,8 +147,8 @@ public final class DataContainerSettingsTest extends TestCase {
             settings.getMaxContainerThreads());
         assertEquals("Modified settings created wrong maximum number of threads per data container",
             maxThreadsPerDataContainer, settings.getMaxThreadsPerContainer());
-        assertNotEquals("Default settings has been modified (chache size)", def.getAsyncCacheSize(),
-            settings.getAsyncCacheSize());
+        assertNotEquals("Default settings has been modified (chache size)", def.getRowBatchSize(),
+            settings.getRowBatchSize());
         assertNotEquals("Default settings has been modified (number of cells in memory)", def.getMaxCellsInMemory(),
             settings.getMaxCellsInMemory());
         assertNotEquals("Default settings has been modified (number of possible domain values)",

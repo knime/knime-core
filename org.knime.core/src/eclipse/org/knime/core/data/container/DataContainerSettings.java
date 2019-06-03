@@ -78,12 +78,12 @@ public final class DataContainerSettings {
     private static final int DEF_MAX_CELLS_IN_MEMORY = 5000;
 
     /**
-     * For asynchronous table writing (default) the cache size. It's the number of rows that are kept in memory until
-     * handed off to the write routines.
+     * The amount of rows to be processed by a single thread when not forced to handle rows sequentially. It's the
+     * number of rows that are kept in memory until handed off to the write routines.
      *
      * @see KNIMEConstants#PROPERTY_ASYNC_WRITE_CACHE_SIZE
      */
-    private static final int DEF_ASYNC_CACHE_SIZE = 100;
+    private static final int DEF_ROW_BATCH_SIZE = 100;
 
     /**
      * The default number of possible values being kept at most. If the number of possible values in a column exceeds
@@ -116,8 +116,8 @@ public final class DataContainerSettings {
         /** The maximum number of threads per {@link DataContainer} instance. */
         private int m_maxThreadsPerDataContainer;
 
-        /** The asynchronous cache size. */
-        private int m_asyncCacheSize;
+        /** The amount of rows to be processed by a single thread when not forced to handle rows sequentially. */
+        private int m_rowBatchSize;
 
         /** The initialize domain flag used by the {@link DataTableDomainCreator}. */
         private boolean m_initDomain;
@@ -138,7 +138,7 @@ public final class DataContainerSettings {
             m_sequentialIO = settings.m_sequentialIO;
             m_maxDataContainerThreads = settings.m_maxDataContainerThreads;
             m_maxThreadsPerDataContainer = settings.m_maxThreadsPerDataContainer;
-            m_asyncCacheSize = settings.m_asyncCacheSize;
+            m_rowBatchSize = settings.m_rowBatchSize;
             m_initDomain = settings.m_initDomain;
             m_maxDomainValues = settings.m_maxDomainValues;
             m_bufferSettings = settings.m_bufferSettings;
@@ -164,8 +164,8 @@ public final class DataContainerSettings {
             return this;
         }
 
-        Builder setAsyncCacheSize(final int asyncCacheSize) {
-            m_asyncCacheSize = asyncCacheSize;
+        Builder setRowBatchSize(final int rowBatchSize) {
+            m_rowBatchSize = rowBatchSize;
             return this;
         }
 
@@ -213,8 +213,8 @@ public final class DataContainerSettings {
     /** The maximum number of threads per {@link DataContainer} instance. */
     private final int m_maxThreadsPerDataContainer;
 
-    /** The asynchronous cache size. */
-    private final int m_asyncCacheSize;
+    /** The amount of rows to be processed by a single thread when not forced to handle rows sequentially. */
+    private final int m_rowBatchSize;
 
     /** The initialize domain flag used by the {@link DataTableDomainCreator}. */
     private final boolean m_initDomain;
@@ -242,7 +242,7 @@ public final class DataContainerSettings {
                     + "threads. Value has been set to according to the the total number of data container threads");
         }
         m_maxThreadsPerDataContainer = maxThreadsPerDataContainer;
-        m_asyncCacheSize = initAsyncCacheSize();
+        m_rowBatchSize = initRowBatchSize();
         m_initDomain = initDomain();
         m_maxDomainValues = initMaxDomainValues();
         m_bufferSettings = new BufferSettings();
@@ -260,7 +260,7 @@ public final class DataContainerSettings {
         m_sequentialIO = builder.m_sequentialIO;
         m_maxDataContainerThreads = builder.m_maxDataContainerThreads;
         m_maxThreadsPerDataContainer = builder.m_maxThreadsPerDataContainer;
-        m_asyncCacheSize = builder.m_asyncCacheSize;
+        m_rowBatchSize = builder.m_rowBatchSize;
         m_initDomain = builder.m_initDomain;
         m_maxDomainValues = builder.m_maxDomainValues;
         m_bufferSettings = builder.m_bufferSettings;
@@ -324,12 +324,12 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Returns the asynchronous cache size.
+     * Returns the amount of rows to be processed by a single thread when not forced to handle rows sequentially.
      *
-     * @return the asynchronous cache size
+     * @return the row batch size
      */
-    int getAsyncCacheSize() {
-        return m_asyncCacheSize;
+    int getRowBatchSize() {
+        return m_rowBatchSize;
     }
 
     /**
@@ -439,14 +439,15 @@ public final class DataContainerSettings {
 
     /**
      * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the asynchronous cache size.
+     * <code>DataContainerSetting</code> instance and solely changes the row batch size, i.e., the amount of rows to be
+     * processed by a single thread when not forced to handle rows sequentially
      *
-     * @param asyncCacheSize the new asynchronous cache size
+     * @param rowBatchSize the new row batch size
      * @return a new instance of {@code DataContainerSettings}
      */
-    public DataContainerSettings withAsyncCacheSize(final int asyncCacheSize) {
+    public DataContainerSettings withRowBatchSize(final int rowBatchSize) {
         final Builder b = new Builder(this);
-        b.setAsyncCacheSize(asyncCacheSize);
+        b.setRowBatchSize(rowBatchSize);
         return b.build();
     }
 
@@ -587,12 +588,12 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Initializes the asynchronous cache size w.r.t. the defined properties.
+     * Initializes the row batch size w.r.t. the defined properties.
      *
-     * @return the asynchronous chace size
+     * @return the row batch size
      */
-    private static int initAsyncCacheSize() {
-        int asyncCacheSize = DEF_ASYNC_CACHE_SIZE;
+    private static int initRowBatchSize() {
+        int rowBatchSize = DEF_ROW_BATCH_SIZE;
         String envAsyncCache = KNIMEConstants.PROPERTY_ASYNC_WRITE_CACHE_SIZE;
         String valAsyncCache = System.getProperty(envAsyncCache);
         if (valAsyncCache != null) {
@@ -600,16 +601,16 @@ public final class DataContainerSettings {
             try {
                 int newSize = Integer.parseInt(s);
                 if (newSize < 0) {
-                    throw new IllegalArgumentException("async write cache < 0" + newSize);
+                    throw new IllegalArgumentException("row batch size < 0" + newSize);
                 }
-                asyncCacheSize = newSize;
-                LOGGER.debug("Setting asynchronous write cache to " + asyncCacheSize + " row(s)");
+                rowBatchSize = newSize;
+                LOGGER.debug("Setting row batch size to " + rowBatchSize + " row(s)");
             } catch (IllegalArgumentException e) {
                 LOGGER.warn(
-                    "Unable to parse property " + envAsyncCache + ", using default (" + DEF_ASYNC_CACHE_SIZE + ")", e);
+                    "Unable to parse property " + envAsyncCache + ", using default (" + DEF_ROW_BATCH_SIZE + ")", e);
             }
         }
-        return asyncCacheSize;
+        return rowBatchSize;
     }
 
     /**
