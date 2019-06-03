@@ -53,7 +53,7 @@ package org.knime.core.node.dialog;
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
  * @param <VAL> The value class handled by this representation
- * @since 3.8
+ * @since 4.0
  */
 public interface SubNodeDescriptionProvider<VAL extends DialogNodeValue> extends DialogNodeRepresentation<VAL> {
 

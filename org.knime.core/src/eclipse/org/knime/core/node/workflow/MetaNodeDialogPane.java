@@ -111,7 +111,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         m_panel = new JPanel();
         final BoxLayout boxLayout = new BoxLayout(m_panel, BoxLayout.Y_AXIS);
         m_panel.setLayout(boxLayout);
-        addTab("QuickForms", new JScrollPane(m_panel));
+        addTab("Options", new JScrollPane(m_panel));
         m_usedInSubnode = usedInSubnode;
     }
 
