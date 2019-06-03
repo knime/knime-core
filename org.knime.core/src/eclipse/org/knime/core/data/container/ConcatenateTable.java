@@ -47,6 +47,7 @@ package org.knime.core.data.container;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.knime.core.data.DataRow;
@@ -63,6 +64,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
@@ -176,7 +178,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     public CloseableRowIterator iterator() {
         // return MyIterator if all specs are the same indicated by m_tablesWrapper == null
         if(m_tablesWrapper == null) {
-            return new MyIterator();
+            return new ContatenateTableIterator();
         } else {
             return m_tablesWrapper.iterator(null, -1);
         }
@@ -187,7 +189,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         // If all specs are the same AND there are no duplicates in row keys of underlying tables
         // (as indicated by m_tablesWrapper == null) required, return MyIterator.
         if (m_tablesWrapper == null) {
-            return new MyIterator(filter, exec);
+            return new ConcatenateTableIteratorWithFilter(filter, exec);
         }
         // Otherwise, fall back to an appended rows table which operates on data tables which cannot be filtered.
         else {
@@ -256,15 +258,14 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     }
 
     /**
-     * Creates a new table from argument tables. This methods checks for row key duplicates over all given tables only if
-     * desired AND duplicate rows are not to be skipped and a duplicate suffix is not set.
+     * Creates a new table from argument tables. This methods checks for row key duplicates over all given tables only
+     * if desired AND duplicate rows are not to be skipped and a duplicate suffix is not set.
      *
      * @param mon for progress info/cancellation
-     * @param rowKeyDuplicateSuffix if set, the given suffix
-     *            will be appended to row key duplicates.
+     * @param rowKeyDuplicateSuffix if set, the given suffix will be appended to row key duplicates.
      * @param duplicatesPreCheck if for duplicates should be checked BEFORE creating the result table. If
-     *            <code>false</code> the row keys of the input tables MUST either be unique over all tables or
-     *            a suffix appended.
+     *            <code>false</code> the row keys of the input tables MUST either be unique over all tables or a suffix
+     *            appended.
      * @param tables Tables to put together.
      * @return The new table.
      * @throws CanceledExecutionException If cancelled.
@@ -283,7 +284,8 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     }
 
     /**
-     * Creates a new table from argument tables. This methods checks for row key duplicates over all given tables before creating it.
+     * Creates a new table from argument tables. This methods checks for row key duplicates over all given tables before
+     * creating it.
      *
      * @param mon for progress info/cancellation
      * @param tables Tables to put together.
@@ -334,92 +336,131 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         return DataTableSpec.mergeDataTableSpecs(specs);
     }
 
-    private class MyIterator extends CloseableRowIterator {
+    private class ContatenateTableIterator extends CloseableRowIterator {
 
-        private final TableFilter m_filter;
-        private final ExecutionMonitor m_exec;
+        int m_tableIndex;
+        CloseableRowIterator m_curIterator;
+        DataRow m_next;
 
-        private long m_offset = 0;
-        private int m_tableIndex = 0;
-        private CloseableRowIterator m_curIterator;
-        private DataRow m_next;
-
-        /** Creates new iterator. */
-        MyIterator() {
-            m_filter = null;
-            m_exec = null;
+        ContatenateTableIterator() {
+            m_tableIndex = 0;
             m_curIterator = m_tables[m_tableIndex].iterator();
             m_next = internalNext();
         }
 
-        MyIterator(final TableFilter filter, final ExecutionMonitor exec) {
-            m_filter = filter;
-            m_exec = exec;
-            m_curIterator = getNextFilteredIterator();
-            m_next = internalNext();
-        }
-
-        private CloseableRowIterator getNextFilteredIterator() {
-            if (m_tableIndex >= m_tables.length) {
-                return null;
-            }
-
-            do {
-                final BufferedDataTable curTable = m_tables[m_tableIndex];
-
-                // determine offset-adjusted filter for current table
-                final TableFilter filter = new TableFilter.Builder(m_filter)//
-                    .withFromRowIndex(Math.max(m_filter.getFromRowIndex().orElse(0l) - m_offset, 0))//
-                    .withToRowIndex(
-                        Math.min(m_filter.getToRowIndex().orElse(size() - 1) - m_offset, curTable.size() - 1))//
-                    .build();
-                m_offset += curTable.size();
-                final ExecutionMonitor exec = m_exec != null ? m_exec.createSubProgress(1.0 / m_tables.length) : null;
-
-                final CloseableRowIterator curIterator = m_tables[m_tableIndex].filter(filter, exec).iterator();
-                if (curIterator.hasNext()) {
-                    return curIterator;
-                }
-            } while (m_tableIndex++ < m_tables.length);
-
-            return null;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public boolean hasNext() {
             return m_next != null;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public DataRow next() {
-            DataRow next = m_next;
+            if (m_next == null) {
+                throw new NoSuchElementException();
+            }
+            final DataRow next = m_next;
             m_next = internalNext();
             return next;
         }
 
-        private DataRow internalNext() {
+        DataRow internalNext() {
             if (m_curIterator.hasNext()) {
                 return m_curIterator.next();
             }
             if (m_tableIndex < m_tables.length - 1) {
+                m_curIterator.close();
                 m_tableIndex++;
-                m_curIterator = m_filter == null ? m_tables[m_tableIndex].iterator() : getNextFilteredIterator();
+                m_curIterator = m_tables[m_tableIndex].iterator();
                 return internalNext();
             }
             return null;
         }
 
-        /** {@inheritDoc} */
         @Override
         public void close() {
             m_curIterator.close();
             m_tableIndex = m_tables.length;
+        }
+
+    }
+
+    private final class ConcatenateTableIteratorWithFilter extends ContatenateTableIterator {
+
+        private final TableFilter m_filter;
+        private final ExecutionMonitor m_exec;
+        private final long m_fromRowIndex;
+        private final long m_toRowIndex;
+
+        private final int m_numTables;
+        private final int m_lastTableIndex;
+
+        private long m_rowIndexOffset;
+
+        /** Creates new iterator. */
+        ConcatenateTableIteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
+            m_filter = CheckUtils.checkArgumentNotNull(filter);
+            m_exec = exec;
+            m_fromRowIndex = Math.max(m_filter.getFromRowIndex().orElse(0L), 0L);
+            m_toRowIndex = Math.min(m_filter.getToRowIndex().orElse(size() - 1), size() - 1);
+            assert m_toRowIndex >= m_fromRowIndex;
+
+            // determine index of first table to iterate over
+            int tableIndex = 0;
+            long rowIndexOffset = 0L;
+            while (rowIndexOffset + m_tables[tableIndex].size() <= m_fromRowIndex) {
+                rowIndexOffset += m_tables[tableIndex++].size();
+            }
+            int firstTableIndex = tableIndex;
+            m_rowIndexOffset = rowIndexOffset;
+
+            // determine index of last table to iterate over
+            while (rowIndexOffset + m_tables[tableIndex].size() <= m_toRowIndex) {
+                rowIndexOffset += m_tables[tableIndex++].size();
+            }
+            m_lastTableIndex = tableIndex;
+            m_numTables = m_lastTableIndex - firstTableIndex + 1;
+
+            m_tableIndex = firstTableIndex;
+            m_curIterator = buildOffsetAdjustedIterator();
+            m_next = internalNext();
+        }
+
+        private CloseableRowIterator buildOffsetAdjustedIterator() {
+            final BufferedDataTable curTable = m_tables[m_tableIndex];
+            if (curTable.size() <= 0) {
+                if (m_exec != null) {
+                    createSubExecutionMonitor().setProgress(1.0);
+                }
+                return curTable.iterator();
+            }
+
+            // note that m_toRowIndex >= m_fromRowIndex and curTable.size() > 0 here
+            // therefore curToIndex >= curFromIndex >= 0
+            final long curFromIndex = Math.max(m_fromRowIndex - m_rowIndexOffset, 0);
+            final long curToIndex = Math.min(m_toRowIndex - m_rowIndexOffset, curTable.size() - 1);
+            final TableFilter filter =
+                new TableFilter.Builder(m_filter).withFromRowIndex(curFromIndex).withToRowIndex(curToIndex).build();
+            return curTable.filter(filter, m_exec == null ? null : createSubExecutionMonitor()).iterator();
+        }
+
+        private ExecutionMonitor createSubExecutionMonitor() {
+            return m_exec.createSubProgress(1.0 / m_numTables);
+        }
+
+        @Override
+        DataRow internalNext() {
+            if (m_curIterator.hasNext()) {
+                return m_curIterator.next();
+            }
+            if (m_tableIndex < m_lastTableIndex) {
+                m_curIterator.close();
+                m_rowIndexOffset += m_tables[m_tableIndex].size();
+                m_tableIndex++;
+
+                m_curIterator = buildOffsetAdjustedIterator();
+                return internalNext();
+            }
+            return null;
         }
 
     }

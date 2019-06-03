@@ -145,7 +145,14 @@ public class KnowsRowCountTableIteratorWithFilterTest {
         final BufferedDataTable concatenateTable = EXEC.createJoinedTable(leftTable, rightTable, EXEC);
 
         final TableFilter filter = createFilter(4, 12, 4, 12);
+
         compareTables(fullTable, concatenateTable, filter);
+
+        compareTables(fullTable, concatenateTable, createFilter(4, 12, 4, 12));
+
+        compareTables(fullTable, concatenateTable, createFilter(4, 6, 4, 12));
+
+        compareTables(fullTable, concatenateTable, createFilter(10, 12, 4, 12));
 
     }
 
@@ -223,8 +230,11 @@ public class KnowsRowCountTableIteratorWithFilterTest {
 
         final BufferedDataTable restoredTable = EXEC.createColumnRearrangeTable(shortenedTable, rearranger, EXEC);
 
-        final TableFilter filter = createFilter(2, 6, 4, 12);
-        compareTables(table, restoredTable, filter);
+        compareTables(table, restoredTable, createFilter(2, 6, 4, 12));
+
+        compareTables(table, restoredTable, createFilter(1, 2, 4, 12));
+
+        compareTables(table, restoredTable, createFilter(6, 7, 4, 12));
 
     }
 
@@ -244,8 +254,19 @@ public class KnowsRowCountTableIteratorWithFilterTest {
         final BufferedDataTable concatenateTable =
             EXEC.createConcatenateTable(new ExecutionMonitor(PROGRESS), topTable, bottomTable);
 
-        final TableFilter filter = createFilter(4, 12, 4, 12);
-        compareTables(fullTable, concatenateTable, filter);
+        compareTables(fullTable, concatenateTable, createFilter(4, 12, 4, 12));
+
+        compareTables(fullTable, concatenateTable, createFilter(4, 12, 4, 6));
+
+        compareTables(fullTable, concatenateTable, createFilter(4, 12, 10, 12));
+
+        compareTables(fullTable, concatenateTable, createFilter(4, 12, 7, 7));
+
+        compareTables(fullTable, concatenateTable, createFilter(4, 12, 8, 8));
+
+        compareTables(fullTable, concatenateTable, createFilter(4, 12, 0, 0));
+
+        compareTables(fullTable, concatenateTable, createFilter(4, 12, 15, 15));
 
     }
 
