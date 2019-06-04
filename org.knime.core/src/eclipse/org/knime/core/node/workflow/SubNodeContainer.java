@@ -98,6 +98,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.DialogNodeRepresentation;
 import org.knime.core.node.dialog.DialogNodeValue;
+import org.knime.core.node.dialog.EnabledDialogNodeModelFilter;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.dialog.SubNodeDescriptionProvider;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
@@ -596,7 +597,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         String[] inPortDescriptions = inNode.getPortDescriptions();
         String[] outPortNames = outNode.getPortNames();
         String[] outPortDescriptions = outNode.getPortDescriptions();
-        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
+        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, new EnabledDialogNodeModelFilter(), false);
         List<String> optionNames = new ArrayList<String>();
         List<String> optionDescriptions = new ArrayList<String>();
         for (DialogNode dialogNode : nodes.values()) {
