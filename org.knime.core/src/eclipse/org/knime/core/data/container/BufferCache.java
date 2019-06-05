@@ -132,14 +132,14 @@ final class BufferCache {
 
     private long m_nMisses = 0;
 
-    private long timeOfLastLog = System.currentTimeMillis();
+    private long m_timeOfLastLog = System.currentTimeMillis();
 
     private void logStatistics() {
         while (m_weakCacheRefQueue.poll() != null) {
             m_nGCedTables++;
         }
         final long time = System.currentTimeMillis();
-        if ((time - timeOfLastLog) / 1000 >= STATISTICS_OUTPUT_INTERVAL) {
+        if ((time - m_timeOfLastLog) / 1000 >= STATISTICS_OUTPUT_INTERVAL) {
 
             long nActiveTables = 0;
 
@@ -159,7 +159,7 @@ final class BufferCache {
             LOGGER.debugWithFormat("\t%d cache hits (weakly referenced)", m_nWeakHits);
             LOGGER.debugWithFormat("\t%d cache misses", m_nMisses);
 
-            timeOfLastLog = time;
+            m_timeOfLastLog = time;
             assert m_nAccesses == m_nHardHits + m_nSoftHits + m_nWeakHits + m_nMisses;
         }
     }

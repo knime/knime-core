@@ -148,7 +148,7 @@ public final class MemoryAlertSystem {
 
     private final double m_usageThreshold;
 
-    private long timeOfLastCheck = System.currentTimeMillis();
+    private long m_timeOfLastCheck = System.currentTimeMillis();
 
     /**
      * Creates a new memory alert system. <b>In almost all cases you should use the singleton instance via
@@ -226,7 +226,7 @@ public final class MemoryAlertSystem {
                     (double)max / FileUtils.ONE_GB);
                 m_lowMemory.set(false);
             }
-            timeOfLastCheck = System.currentTimeMillis();
+            m_timeOfLastCheck = System.currentTimeMillis();
         }
     }
 
@@ -393,7 +393,7 @@ public final class MemoryAlertSystem {
          * thus, will only very rarely (if ever) emit a GC event notification that would be caught by the
          * MemoryAlertSystem. See AP-11858 for details.
          */
-        if (m_lowMemory.get() && (time - timeOfLastCheck) / 1000 >= CHECK_HEAP_SIZE_INTERVAL) {
+        if (m_lowMemory.get() && (time - m_timeOfLastCheck) / 1000 >= CHECK_HEAP_SIZE_INTERVAL) {
             // based on the Javadoc, invoking getUsage() is expected to be a relatively quick operation
             final MemoryUsage usage = m_memPool.getUsage();
             final double used = usage.getUsed();
@@ -408,7 +408,7 @@ public final class MemoryAlertSystem {
                     (double)max / FileUtils.ONE_GB));
                 m_lowMemory.set(false);
             }
-            timeOfLastCheck = time;
+            m_timeOfLastCheck = time;
         }
 
         return m_lowMemory.get();
