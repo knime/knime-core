@@ -217,7 +217,17 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
 
         m_rootPanel = getRootPanel();
         getComponentPanel().setLayout(new GridBagLayout());
-        getComponentPanel().add(m_rootPanel);
+
+        final GridBagConstraints gbc = new GridBagConstraints();
+        // connection
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridy = 0;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+
+        getComponentPanel().add(m_rootPanel, gbc);
 
         //add all the change listeners
         // update the model, if the user changes the component
@@ -323,7 +333,9 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
                 authBox.add(m_typeUser, gbc);
             }
             gbc.gridy++;
+            gbc.insets = new Insets(0,23,0,0);
             authBox.add(m_userPanel, gbc);
+            gbc.insets = NEUTRAL_INSET;
         }
 
         if (m_supportedTypes.contains(AuthenticationType.USER_PWD)) {
