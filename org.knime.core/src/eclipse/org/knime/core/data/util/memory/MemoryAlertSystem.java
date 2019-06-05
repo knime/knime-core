@@ -106,7 +106,7 @@ public final class MemoryAlertSystem {
         public boolean lowMemoryActionRequired() {
             if (m_lastCheckTimestamp < m_lastGcTimestamp.get()) {
                 m_lastCheckTimestamp = m_lastGcTimestamp.get();
-                return m_lowMemory.get();
+                return isMemoryLow();
             } else {
                 return false;
             }
@@ -127,6 +127,11 @@ public final class MemoryAlertSystem {
     /* Standard Logger */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MemoryAlertSystem.class);
 
+    /**
+     * The time (in seconds) that has to pass at least in between heap size checks.
+     */
+    private static final int CHECK_HEAP_SIZE_INTERVAL = 5;
+
     private final Collection<MemoryAlertListener> m_listeners = new ArrayList<>();
 
     private final MemoryPoolMXBean m_memPool = OLD_GEN_POOL;
@@ -141,6 +146,10 @@ public final class MemoryAlertSystem {
 
     private final AtomicLong m_lastGcTimestamp = new AtomicLong();
 
+    private final double m_usageThreshold;
+
+    private long timeOfLastCheck = System.currentTimeMillis();
+
     /**
      * Creates a new memory alert system. <b>In almost all cases you should use the singleton instance via
      * {@link #getInstance()} instead of creating your own instance.</b>
@@ -149,6 +158,7 @@ public final class MemoryAlertSystem {
      * @noreference This constructor is not intended to be referenced by clients. Only used in test cases.
      */
     private MemoryAlertSystem(final double usageThreshold) {
+        m_usageThreshold = usageThreshold;
         setFractionUsageThreshold(usageThreshold);
 
         for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
@@ -157,7 +167,7 @@ public final class MemoryAlertSystem {
                     ((NotificationEmitter)gcBean).addNotificationListener(new NotificationListener() {
                         @Override
                         public void handleNotification(final Notification notification, final Object handback) {
-                            gcEvent(usageThreshold, notification);
+                            gcEvent(notification);
                         }
                     }, null, null);
                     break;
@@ -170,7 +180,7 @@ public final class MemoryAlertSystem {
             @Override
             public void handleNotification(final Notification notification, final Object handback) {
                 if (notification.getType().equals(MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED)) {
-                    usageThresholdEvent(usageThreshold, notification);
+                    usageThresholdEvent(notification);
                 }
             }
         }, null, null);
@@ -178,8 +188,8 @@ public final class MemoryAlertSystem {
         startNotificationThread();
     }
 
-    private void usageThresholdEvent(final double usageThreshold, final Notification not) {
-        LOGGER.debugWithFormat("Memory collection threshold of %.0f%% exceeded after GC", usageThreshold * 100.0);
+    private void usageThresholdEvent(final Notification not) {
+        LOGGER.debugWithFormat("Memory collection threshold of %.0f%% exceeded after GC", m_usageThreshold * 100.0);
 
         long prev, next;
         do {
@@ -193,7 +203,7 @@ public final class MemoryAlertSystem {
         }
     }
 
-    private void gcEvent(final double usageThreshold, final Notification not) {
+    private void gcEvent(final Notification not) {
         // Only reset the low memory flag if the last (memory) event was earlier than this event.
         // the GC event and the Mem event have the same timestamp in case the threshold is exceeded.
 
@@ -205,15 +215,18 @@ public final class MemoryAlertSystem {
         } while (!m_lastEventTimestamp.compareAndSet(prev, next));
 
         if (prev < not.getTimeStamp()) {
-            MemoryUsage collectionUsage = m_memPool.getCollectionUsage();
-            long used = collectionUsage.getUsed();
-            long max = collectionUsage.getMax();
-            double currentUsagePercent = 100.0 * used / max;
-            LOGGER.debugWithFormat(
-                "Memory usage below threshold (%.0f%%) after GC run, currently %.0f%% (%.2fGB/%.2fGB)",
-                usageThreshold * 100.0, currentUsagePercent, (double)used / FileUtils.ONE_GB,
-                (double)max / FileUtils.ONE_GB);
-            m_lowMemory.set(false);
+            final MemoryUsage collectionUsage = m_memPool.getCollectionUsage();
+            final double used = collectionUsage.getUsed();
+            final long max = collectionUsage.getMax();
+            final double currentUsage = used / max;
+            if (currentUsage < m_usageThreshold) {
+                LOGGER.debugWithFormat(
+                    "Tenured gen heap space usage below threshold (%.0f%%) after GC, currently %.0f%% (%.2fGB/%.2fGB)",
+                    m_usageThreshold * 100, currentUsage * 100, used / FileUtils.ONE_GB,
+                    (double)max / FileUtils.ONE_GB);
+                m_lowMemory.set(false);
+            }
+            timeOfLastCheck = System.currentTimeMillis();
         }
     }
 
@@ -373,6 +386,31 @@ public final class MemoryAlertSystem {
      * @return <code>true</code> if memory is low, <code>false</code> otherwise
      */
     public boolean isMemoryLow() {
+        final long time = System.currentTimeMillis();
+
+        /**
+         * We have to occasionally check tenured gen heap space manually, since some GCs (like G1) avoid full GCs and,
+         * thus, will only very rarely (if ever) emit a GC event notification that would be caught by the
+         * MemoryAlertSystem. See AP-11858 for details.
+         */
+        if (m_lowMemory.get() && (time - timeOfLastCheck) / 1000 >= CHECK_HEAP_SIZE_INTERVAL) {
+            // based on the Javadoc, invoking getUsage() is expected to be a relatively quick operation
+            final MemoryUsage usage = m_memPool.getUsage();
+            final double used = usage.getUsed();
+            final long max = usage.getMax();
+            final double currentUsage = used / max;
+
+            if (currentUsage < m_usageThreshold) {
+                LOGGER.debugWithoutContext(String.format(
+                    "Estimated tenured gen heap space usage below threshold (%.0f%%), "
+                        + "currently %.0f%% (%.2fGB/%.2fGB)",
+                    m_usageThreshold * 100, currentUsage * 100, used / FileUtils.ONE_GB,
+                    (double)max / FileUtils.ONE_GB));
+                m_lowMemory.set(false);
+            }
+            timeOfLastCheck = time;
+        }
+
         return m_lowMemory.get();
     }
 
