@@ -58,6 +58,7 @@ import java.net.URISyntaxException;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 4.0
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class KnimeURIUtil {
 
@@ -130,7 +131,7 @@ public final class KnimeURIUtil {
      * @return <code>true</code> if it's a 'hub'-URI
      */
     public static boolean isHubURI(final URI knimeURI) {
-        return knimeURI.getHost().matches("(hub|hubdev).knime.com");
+        return knimeURI.getHost().matches("(hub|hubdev)\\.knime\\.com");
     }
 
     private static String getQueryParamValue(final URI knimeURI, final String key) {
@@ -163,6 +164,10 @@ public final class KnimeURIUtil {
     private static URI removeQueryParams(final URI uri, final String... keys) {
         String uriString = uri.toString() + "&";
         for (String key : keys) {
+            //removes e.g. "knimeEntityType=component&" from the URI
+            //adding a '?' on a quantifier (?, * or +) makes it non-greedy,
+            //i.e. matching as few characters as possible
+            //here: match the very first '&' after the 'key'
             uriString = uriString.replaceFirst(key + ".*?&", "");
         }
         try {
