@@ -59,7 +59,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
@@ -135,10 +134,6 @@ public final class MemoryAlertSystem {
     private final ReentrantLock m_aboveThresholdLock = new ReentrantLock();
 
     private final Condition m_aboveThresholdEvent = m_aboveThresholdLock.newCondition();
-
-    private final ReentrantLock m_gcEventLock = new ReentrantLock();
-
-    private final Condition m_gcEvent = m_gcEventLock.newCondition();
 
     private final AtomicBoolean m_lowMemory = new AtomicBoolean();
 
@@ -219,13 +214,6 @@ public final class MemoryAlertSystem {
                 usageThreshold * 100.0, currentUsagePercent, (double)used / FileUtils.ONE_GB,
                 (double)max / FileUtils.ONE_GB);
             m_lowMemory.set(false);
-        }
-
-        m_gcEventLock.lock();
-        try {
-            m_gcEvent.signalAll();
-        } finally {
-            m_gcEventLock.unlock();
         }
     }
 
@@ -386,47 +374,6 @@ public final class MemoryAlertSystem {
      */
     public boolean isMemoryLow() {
         return m_lowMemory.get();
-    }
-
-    /**
-     * Calling this method will hold the current thread in case a low memory condition is present. It will sleep until
-     * enough memory is available again. You can specify a timeout after which the method returns even if memory is
-     * still low.
-     *
-     * @param threshold a usage threshold which must be greater or equal to the threshold of the memory alert system
-     * @param timeout the maximum waiting time in milliseconds
-     * @return <code>true</code> if memory is available again, <code>false</code> if the timeout has elapsed and memory
-     *         is still low
-     * @throws InterruptedException if the thread is interrupted while waiting
-     */
-    public boolean sleepWhileLow(final double threshold, final long timeout) throws InterruptedException {
-        if (threshold < (m_memPool.getCollectionUsageThreshold() / (double)getMaximumMemory())) {
-            throw new IllegalArgumentException("Threshold must be above configured threshold for this system: "
-                + threshold + " vs. " + (m_memPool.getCollectionUsageThreshold() / (double)getMaximumMemory()));
-        }
-
-        if (m_lowMemory.get()) {
-            long remainingTime = timeout;
-            m_gcEventLock.lock();
-            try {
-                double usage = getUsage();
-                while (m_lowMemory.get() && (usage > threshold)) {
-                    if (remainingTime <= 0) {
-                        return false;
-                    }
-                    long diff = System.currentTimeMillis();
-                    m_gcEvent.await(remainingTime, TimeUnit.MILLISECONDS);
-                    remainingTime -= System.currentTimeMillis() - diff;
-                    usage = getUsage();
-                    LOGGER.debug("Wakeup in sleepWhileLow, current usage: " + usage);
-                }
-                return true;
-            } finally {
-                m_gcEventLock.unlock();
-            }
-        } else {
-            return true;
-        }
     }
 
     /**

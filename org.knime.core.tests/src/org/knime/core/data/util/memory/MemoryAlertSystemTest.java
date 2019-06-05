@@ -53,7 +53,6 @@ import static org.junit.Assert.assertThat;
 
 import java.lang.ref.SoftReference;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -86,55 +85,6 @@ public class MemoryAlertSystemTest {
             "Memory usage: " + MemoryAlertSystem.getUsedMemory() + "/" + MemoryAlertSystem.getMaximumMemory() + " => "
                 + MemoryAlertSystem.getUsage());
         forceGC();
-    }
-
-    /**
-     * Checks whether {@link MemoryAlertSystem#sleepWhileLow(double, long)} works as expected.
-     *
-     * @throws Exception if an error occurs
-     */
-    @Test(timeout = 20000)
-    public void testSleepWhileLow() throws Exception {
-        int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
-            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory())) + (32 << 20);
-
-        // we should return immediately because enough memory is available
-        boolean memoryAvailable = m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 1000);
-        assertThat("Was sleeping although memory is below threshold: " + MemoryAlertSystem.getUsage(), memoryAvailable,
-            is(true));
-
-        // allocate memory
-        final AtomicReference<byte[]> buffer = new AtomicReference<byte[]>(new byte[reserveSize]);
-        // force buffer into tenured space
-        forceGC();
-
-        Thread.sleep(1000);
-        // we should return after 1 seconds
-        memoryAvailable = m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 1000);
-        assertThat("Was not sleeping although memory usage is above threshold: " + MemoryAlertSystem.getUsage(),
-            memoryAvailable, is(false));
-
-        Thread clearThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(1000);
-                    buffer.set(null);
-                    NodeLogger.getLogger(getClass()).debug("Cleared buffer, memory should be freed now");
-                    forceGC();
-                } catch (Exception ex) {
-                    // ignore
-                }
-            }
-        });
-        clearThread.start();
-
-        NodeLogger.getLogger(getClass()).debug(
-            "Going to sleep, memory usage is " + MemoryAlertSystem.getUsage());
-        m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 25000);
-        // should return quite fast and not time out the test method
-        clearThread.interrupt();
-        clearThread.join();
     }
 
     /**
