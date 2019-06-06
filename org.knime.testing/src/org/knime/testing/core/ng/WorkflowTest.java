@@ -169,23 +169,52 @@ public abstract class WorkflowTest implements TestWithName {
         return buf.toString();
     }
 
+    /**
+     * Calculates the current collected heap usage, i.e., the heap usage after garbage collection.
+     *
+     * @return the current collected heap usage
+     */
     protected static MemoryUsage getHeapUsage() {
         System.gc();
 
         long initMem = 0;
+        boolean initUndefined = false;
         long maxMem = 0;
+        boolean maxUndefined = false;
         long committedMem = 0;
         long usedMem = 0;
         for (MemoryPoolMXBean memoryPool : ManagementFactory.getMemoryPoolMXBeans()) {
             if (memoryPool.getType().equals(MemoryType.HEAP) && (memoryPool.getCollectionUsage() != null)) {
                 MemoryUsage usage = memoryPool.getUsage();
 
-                initMem += usage.getInit();
-                maxMem += usage.getMax();
-                committedMem += usage.getCommitted();
-                usedMem += usage.getUsed();
+                // init may be -1 if undefined
+                final long init = Math.max(usage.getInit(), -1);
+                if (init == -1) {
+                    initUndefined = true;
+                }
+
+                // max may be -1 if undefined
+                final long max = Math.max(usage.getMax(), -1);
+                if (max == -1) {
+                    maxUndefined = true;
+                }
+
+                long committed = Math.max(usage.getCommitted(), 0);
+                if (max != -1) {
+                    // committed must not be larger than max, but due to a bug in JDK, it is sometimes reported as such:
+                    // https://bugs.openjdk.java.net/browse/JDK-8207200
+                    committed = Math.min(committed, max);
+                }
+
+                // used must not be larger than committed
+                final long used = Math.min(Math.max(usage.getUsed(), 0), committed);
+
+                initMem += init;
+                maxMem += max;
+                committedMem += committed;
+                usedMem += used;
             }
         }
-        return new MemoryUsage(initMem, usedMem, committedMem, maxMem);
+        return new MemoryUsage(initUndefined ? -1 : initMem, usedMem, committedMem, maxUndefined ? -1 : maxMem);
     }
 }
