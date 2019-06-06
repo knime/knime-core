@@ -50,6 +50,7 @@ package org.knime.core.util;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 
 /**
  * Utility class to deal with URIs referencing KNIME-specific resources (e.g. hub) potentially with some additional
@@ -62,7 +63,30 @@ import java.net.URISyntaxException;
  */
 public final class KnimeURIUtil {
 
-    private static final String ENTITY_TYPE_QUERY_PARAM = "knimeEntityType";
+    /**
+     * Parameter determining the entity type, such as node, component etc.
+     */
+    public static final String ENTITY_TYPE_QUERY_PARAM = "knimeEntityType";
+
+    /**
+     * Parameter that specifies the node factory, e.g. to be dropped onto the workbench.
+     */
+    public static final String NODE_FACTORY_PARAM = "knimeNodeFactory";
+
+    /**
+     * Parameter that specifies the symbolic name of a bundle (i.e. as KNIME extension).
+     */
+    public static final String BUNDLE_SYMBOLIC_NAME_PARAM = "knimeBundleSymbolicName";
+
+    /**
+     * Parameter that specifies the symbolic name of a feature (i.e. as KNIME extension).
+     */
+    public static final String FEATURE_SYMBOLIC_NAME_PARAM = "knimeFeatureSymbolicName";
+
+    /**
+     * Parameter that specifies the name of a KNIME extension
+     */
+    public static final String BUNDLE_NAME_PARAM = "knimeBundleName";
 
     /**
      * Type of a KNIME entity specified as a query parameter.
@@ -72,6 +96,11 @@ public final class KnimeURIUtil {
              * A KNIME component (aka wrapped metanode).
              */
             COMPONENT,
+
+            /**
+             * A KNIME node
+             */
+            NODE,
 
             /**
              * If the type couldn't be determined or is not known.
@@ -95,9 +124,23 @@ public final class KnimeURIUtil {
         if (p != null) {
             if (p.equalsIgnoreCase(Type.COMPONENT.name())) {
                 return Type.COMPONENT;
+            } else if (p.equalsIgnoreCase(Type.NODE.name())) {
+                return Type.NODE;
             }
         }
         return Type.UNKNOWN;
+    }
+
+    /**
+     * Extracts a value for a knime specific parameter from the URI.
+     *
+     * @param knimeURI the knime URI to extract the value from
+     * @param key the key of the parameter
+     * @return the value or an empty optional if there is no such parameter
+     */
+    public static Optional<String> getKnimeParamValue(final URI knimeURI, final String key) {
+        String p = getQueryParamValue(knimeURI, key);
+        return Optional.ofNullable(p);
     }
 
     /**
@@ -158,7 +201,8 @@ public final class KnimeURIUtil {
      * @return the URI with KNIME specific query parameters removed
      */
     public static URI getBaseURI(final URI knimeURI) {
-        return removeQueryParams(knimeURI, ENTITY_TYPE_QUERY_PARAM);
+        return removeQueryParams(knimeURI, ENTITY_TYPE_QUERY_PARAM, NODE_FACTORY_PARAM, BUNDLE_SYMBOLIC_NAME_PARAM,
+            FEATURE_SYMBOLIC_NAME_PARAM, BUNDLE_NAME_PARAM);
     }
 
     private static URI removeQueryParams(final URI uri, final String... keys) {
