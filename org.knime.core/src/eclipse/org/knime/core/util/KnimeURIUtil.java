@@ -50,7 +50,6 @@ package org.knime.core.util;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Optional;
 
 /**
  * Utility class to deal with URIs referencing KNIME-specific resources (e.g. hub) potentially with some additional
@@ -64,43 +63,23 @@ import java.util.Optional;
 public final class KnimeURIUtil {
 
     /**
-     * Parameter determining the entity type, such as node, component etc.
-     */
-    public static final String ENTITY_TYPE_QUERY_PARAM = "knimeEntityType";
-
-    /**
-     * Parameter that specifies the node factory, e.g. to be dropped onto the workbench.
-     */
-    public static final String NODE_FACTORY_PARAM = "knimeNodeFactory";
-
-    /**
-     * Parameter that specifies the symbolic name of a bundle (i.e. as KNIME extension).
-     */
-    public static final String BUNDLE_SYMBOLIC_NAME_PARAM = "knimeBundleSymbolicName";
-
-    /**
-     * Parameter that specifies the symbolic name of a feature (i.e. as KNIME extension).
-     */
-    public static final String FEATURE_SYMBOLIC_NAME_PARAM = "knimeFeatureSymbolicName";
-
-    /**
-     * Parameter that specifies the name of a KNIME extension
-     */
-    public static final String BUNDLE_NAME_PARAM = "knimeBundleName";
-
-    /**
      * Type of a KNIME entity specified as a query parameter.
      */
     public static enum Type {
             /**
-             * A KNIME component (aka wrapped metanode).
+             * An object from a space (either component, workflow group, workflow or file).
              */
-            COMPONENT,
+            OBJECT,
 
             /**
              * A KNIME node
              */
             NODE,
+
+            /**
+             * A KNIME extension
+             */
+            EXTENSION,
 
             /**
              * If the type couldn't be determined or is not known.
@@ -113,57 +92,61 @@ public final class KnimeURIUtil {
     }
 
     /**
-     * Extracts the entity type (e.g. component) from the URI's query parameters.
+     * Guesses the type of the entity given the URL.
+     *
+     * Implemented according to URL Scheme https://knime-com.atlassian.net/wiki/spaces/SPECS/pages/577404968/URL+Scheme
+     * (06/12/19)
      *
      * @param knimeURI the URI to extract the type from
      *
      * @return the type
      */
-    public static Type getEntityType(final URI knimeURI) {
-        String p = getQueryParamValue(knimeURI, ENTITY_TYPE_QUERY_PARAM);
-        if (p != null) {
-            if (p.equalsIgnoreCase(Type.COMPONENT.name())) {
-                return Type.COMPONENT;
-            } else if (p.equalsIgnoreCase(Type.NODE.name())) {
-                return Type.NODE;
+    public static Type guessEntityType(final URI knimeURI) {
+        if (!isHubURI(knimeURI)) {
+            return Type.UNKNOWN;
+        }
+        final String[] split = splitPath(knimeURI);
+        if (split.length > 2) {
+            // handle extensions and nodes
+            if (split[1].equalsIgnoreCase("extensions")) {
+                // user/extension/extId and user/extension/extId/version
+                if (split.length == 3 || split.length == 4) {
+                    return Type.EXTENSION;
+                } else /* user/extension/extId/version/nodeFactory */ if (split.length == 5) {
+                    return Type.NODE;
+                }
+            }
+            // handle space objects.
+            else if (split[1].equalsIgnoreCase("space")) {
+                return Type.OBJECT;
             }
         }
+
         return Type.UNKNOWN;
     }
 
     /**
-     * Extracts a value for a knime specific parameter from the URI.
-     *
-     * @param knimeURI the knime URI to extract the value from
-     * @param key the key of the parameter
-     * @return the value or an empty optional if there is no such parameter
+     * @return canonical path without leading "/".
      */
-    public static Optional<String> getKnimeParamValue(final URI knimeURI, final String key) {
-        String p = getQueryParamValue(knimeURI, key);
-        return Optional.ofNullable(p);
+    private static String[] splitPath(final URI knimeURI) {
+        final String path = knimeURI.getPath();
+        return (path.startsWith("/") ? path.substring(1, path.length()) : path).split("/");
     }
 
-    /**
-     * Extracts a URI from the original URI that represents the download link of the respective knime entity (e.g. a
-     * component).
-     *
-     * @param knimeURI the URL to transform
-     * @return the download URI or the passed URI itself if it's not referencing the hub
-     */
-    public static URI getDownloadURI(final URI knimeURI) {
-        if (isHubURI(knimeURI)) {
-            String scheme = knimeURI.getScheme();
-            String host = "api." + knimeURI.getHost();
-            String path = "/knime/rest/v4/repository/Users" + knimeURI.getPath().replaceFirst("/space", "") + ":data";
-            try {
-                return new URI(scheme, host, path, null);
-            } catch (URISyntaxException ex) {
-                //should never happen -> implementation problem
-                throw new RuntimeException(ex);
-            }
-        } else {
-            return knimeURI;
-        }
+    public static URI getSpaceEntityEndpointURI(final URI knimeURI, final boolean download) {
+        // TODO needs fix if we change backend API
+        return getHubEndpoint(knimeURI, "/knime/rest/v4/repository/Users"
+            + knimeURI.getPath().replaceFirst("/space", "") + (download ? ":data" : ""));
+    }
+
+    public static URI getNodeEndpointURI(final URI knimeURI) {
+        // TODO needs fix if we change backend API
+        return getHubEndpoint(knimeURI, "/nodes/" + splitPath(knimeURI)[4]);
+    }
+
+    public static URI getExtensionEndpointURI(final URI knimeURI) {
+        // TODO needs fix if we change backend API
+        return getHubEndpoint(knimeURI, "/extensions/" + splitPath(knimeURI)[2]);
     }
 
     /**
@@ -177,49 +160,18 @@ public final class KnimeURIUtil {
         return knimeURI.getHost().matches("(hub|hubdev)\\.knime\\.com");
     }
 
-    private static String getQueryParamValue(final URI knimeURI, final String key) {
-        String query = knimeURI.getQuery();
-        if (query != null) {
-            int index = query.indexOf(key);
-            if (index >= 0) {
-                index = query.indexOf("=", index);
-                if (index >= 0) {
-                    int indexAnd = query.indexOf("&", index);
-                    if (indexAnd >= 0) {
-                        return query.substring(index + 1, indexAnd);
-                    } else {
-                        return query.substring(index + 1);
-                    }
-                }
+    private static URI getHubEndpoint(final URI knimeURI, final String path) {
+        if (isHubURI(knimeURI)) {
+            String scheme = knimeURI.getScheme();
+            String host = "api." + knimeURI.getHost();
+            try {
+                return new URI(scheme, host, path, null);
+            } catch (URISyntaxException ex) {
+                //should never happen -> implementation problem
+                throw new RuntimeException(ex);
             }
-        }
-        return null;
-    }
-
-    /**
-     * @param knimeURI the URI to transform
-     * @return the URI with KNIME specific query parameters removed
-     */
-    public static URI getBaseURI(final URI knimeURI) {
-        return removeQueryParams(knimeURI, ENTITY_TYPE_QUERY_PARAM, NODE_FACTORY_PARAM, BUNDLE_SYMBOLIC_NAME_PARAM,
-            FEATURE_SYMBOLIC_NAME_PARAM, BUNDLE_NAME_PARAM);
-    }
-
-    private static URI removeQueryParams(final URI uri, final String... keys) {
-        String uriString = uri.toString() + "&";
-        for (String key : keys) {
-            //removes e.g. "knimeEntityType=component&" from the URI
-            //adding a '?' on a quantifier (?, * or +) makes it non-greedy,
-            //i.e. matching as few characters as possible
-            //here: match the very first '&' after the 'key'
-            uriString = uriString.replaceFirst(key + ".*?&", "");
-        }
-        try {
-            return new URI(uriString.substring(0, uriString.length() - 1));
-        } catch (URISyntaxException ex) {
-            //should never happen
-            //otherwise something is wrong with the implementation
-            throw new RuntimeException();
+        } else {
+            return knimeURI;
         }
     }
 

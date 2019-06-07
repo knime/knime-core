@@ -53,7 +53,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.knime.core.util.KnimeURIUtil.getBaseURI;
-import static org.knime.core.util.KnimeURIUtil.getDownloadURI;
+import static org.knime.core.util.KnimeURIUtil.getComponentURI;
 import static org.knime.core.util.KnimeURIUtil.getEntityType;
 import static org.knime.core.util.KnimeURIUtil.isHubURI;
 
@@ -100,6 +100,12 @@ public class KnimeURIUtilTest {
         knimeURI = new URI("http://knime.com/path/to/component?knimeEntityType=component&key=value");
         assertThat("problem extracting base uri", getBaseURI(knimeURI),
             is(new URI("http://knime.com/path/to/component?key=value")));
+
+        knimeURI = new URI(
+            "http://knime.com/path/to/component?anotherParam=val&knimeEntityType=component&knimeNodeFactory=org.knime.NodeFactory&"
+                + "knimeBundleSymbolicName=foo&knimeFeatureSymbolicName=bar&knimeBundleName=name&key=value");
+        assertThat("problem extracting base uri", getBaseURI(knimeURI),
+            is(new URI("http://knime.com/path/to/component?anotherParam=val&key=value")));
     }
 
     @SuppressWarnings("javadoc")
@@ -107,18 +113,18 @@ public class KnimeURIUtilTest {
     public void testGetDownloadURI() throws URISyntaxException {
         //check mapping for 'user-owned' entities
         URI knimeURI = new URI("https://hub.knime.com/johndoe/space/path/to/component");
-        URI downloadURI = getDownloadURI(knimeURI);
+        URI downloadURI = getComponentURI(knimeURI);
         assertThat("wrong download URI", downloadURI,
             is(new URI("https://api.hub.knime.com/knime/rest/v4/repository/Users/johndoe/path/to/component:data")));
 
         knimeURI = new URI("https://hubdev.knime.com/johndoe/space/path/to/component");
-        downloadURI = getDownloadURI(knimeURI);
+        downloadURI = getComponentURI(knimeURI);
         assertThat("wrong download URI", downloadURI,
             is(new URI("https://api.hubdev.knime.com/knime/rest/v4/repository/Users/johndoe/path/to/component:data")));
 
         //check mapping for 'knime-owned' entities (i.e. example workflows/components)
         knimeURI = new URI("https://hub.knime.com/knime/space/Examples/path/to/component");
-        downloadURI = getDownloadURI(knimeURI);
+        downloadURI = getComponentURI(knimeURI);
         assertThat("wrong download URI", downloadURI,
             is(new URI("https://api.hub.knime.com/knime/rest/v4/repository/Users/knime/Examples/path/to/component:data")));
 
@@ -128,12 +134,12 @@ public class KnimeURIUtilTest {
 
         //edge cases
         knimeURI = new URI("https://hub.knime.com/space/space/path/to/component");
-        downloadURI = getDownloadURI(knimeURI);
+        downloadURI = getComponentURI(knimeURI);
         assertThat("wrong download URI", downloadURI,
             is(new URI("https://api.hub.knime.com/knime/rest/v4/repository/Users/space/path/to/component:data")));
 
         knimeURI = new URI("https://hub.knime.com/user/space/space/to/component");
-        downloadURI = getDownloadURI(knimeURI);
+        downloadURI = getComponentURI(knimeURI);
         assertThat("wrong download URI", downloadURI,
             is(new URI("https://api.hub.knime.com/knime/rest/v4/repository/Users/user/space/to/component:data")));
     }

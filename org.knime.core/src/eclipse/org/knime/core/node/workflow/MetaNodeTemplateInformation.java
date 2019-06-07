@@ -45,8 +45,6 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.knime.core.util.KnimeURIUtil.getBaseURI;
-import static org.knime.core.util.KnimeURIUtil.getDownloadURI;
 import static org.knime.core.util.KnimeURIUtil.isHubURI;
 
 import java.net.URI;
@@ -60,6 +58,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.KnimeURIUtil;
 import org.knime.core.util.LoadVersion;
 
 /**
@@ -209,7 +208,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
     /** @return the sourceURI */
     public URI getSourceURI() {
-        return getDownloadURI(m_sourceURI);
+        return KnimeURIUtil.getSpaceEntityEndpointURI(m_sourceURI, true);
     }
 
     /**
@@ -218,7 +217,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      */
     public Optional<URI> getMetaNodePageURI() {
         if (isWebLink(m_sourceURI) && isHubURI(m_sourceURI)) {
-            return Optional.of(getBaseURI(m_sourceURI));
+            return Optional.of(m_sourceURI);
         } else {
             return Optional.empty();
         }
