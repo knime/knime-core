@@ -133,18 +133,18 @@ public class AutoBinnerSettingsPanel extends JPanel {
 
         final GridBagConstraints gbc = new GridBagConstraints();
 
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.insets = new Insets(2, 2, 2, 2);
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 1;
         gbc.weightx = 1;
         gbc.weighty = 1;
 
         m_filterPanel = new DataColumnSpecFilterPanel();
         add(m_filterPanel, gbc);
-
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weighty = 0;
         gbc.gridy++;
         add(createMethodUIControls(supportsQuantile), gbc);
 
