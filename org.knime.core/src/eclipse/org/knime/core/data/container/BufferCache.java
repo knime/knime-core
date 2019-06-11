@@ -213,7 +213,7 @@ final class BufferCache {
 
         m_hardMap.remove(uniqueId);
 
-        MemoryAlertSystem.getInstance().addListener(new MemoryAlertListener() {
+        MemoryAlertSystem.getInstanceUncollected().addListener(new MemoryAlertListener() {
             @Override
             protected boolean memoryAlert(final MemoryAlert alert) {
                 m_LRUCache.remove(uniqueId);

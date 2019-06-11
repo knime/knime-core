@@ -2599,7 +2599,7 @@ public class Buffer implements KNIMEStreamConstants {
 
             if (size() <= m_maxRowsInMem) {
                 m_memoryAlertListener = new BufferFlusher(Buffer.this);
-                MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
+                MemoryAlertSystem.getInstanceUncollected().addListener(m_memoryAlertListener);
             } else {
                 /**
                  * We'd like to flush early so that we can garbage-collect if memory becomes critical and we don't run out
@@ -2621,7 +2621,7 @@ public class Buffer implements KNIMEStreamConstants {
             assert Thread.holdsLock(Buffer.this);
 
             if (m_memoryAlertListener != null) {
-                MemoryAlertSystem.getInstance().removeListener(m_memoryAlertListener);
+                MemoryAlertSystem.getInstanceUncollected().removeListener(m_memoryAlertListener);
                 m_memoryAlertListener = null;
             }
 

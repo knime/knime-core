@@ -710,7 +710,7 @@ public class DataContainer implements RowAppender {
      * @param row the row to be synchronously processed
      */
     private void addRowToTableSynchronously(final DataRow row) {
-        if (MemoryAlertSystem.getInstance().isMemoryLow()) {
+        if (MemoryAlertSystem.getInstanceUncollected().isMemoryLow()) {
             m_buffer.flushBuffer();
         }
         addRowToTableWrite(row);
@@ -726,7 +726,7 @@ public class DataContainer implements RowAppender {
     private void addRowToTableAsynchronously(final DataRow row) {
         checkAsyncWriteThrowable();
         try {
-            if (MemoryAlertSystem.getInstance().isMemoryLow()) {
+            if (MemoryAlertSystem.getInstanceUncollected().isMemoryLow()) {
                 // write all keys to disk if necessary
                 m_duplicateChecker.flushIfNecessary();
                 // if we witness a low memory state the first time we flush everything to disk.

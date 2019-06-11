@@ -48,9 +48,10 @@
  */
 package org.knime.core.data.util.memory;
 
+import static java.lang.management.MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED;
+
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryNotificationInfo;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
@@ -122,7 +123,12 @@ public final class MemoryAlertSystem {
      */
     public static final double DEFAULT_USAGE_THRESHOLD = 0.9 - ((128 << 20) / (double) getMaximumMemory());
 
-    private static final MemoryAlertSystem INSTANCE = new MemoryAlertSystem(DEFAULT_USAGE_THRESHOLD);
+    private static final MemoryAlertSystem INSTANCE = new MemoryAlertSystem(DEFAULT_USAGE_THRESHOLD, true);
+
+    private final static boolean IS_G1 = ManagementFactory.getGarbageCollectorMXBeans().stream()
+            .map(GarbageCollectorMXBean::getName).anyMatch(n -> n.equals("G1 Old Generation"));
+
+    private static final MemoryAlertSystem INSTANCE_UNCOLLECTED = new MemoryAlertSystem(DEFAULT_USAGE_THRESHOLD, false);
 
     /* Standard Logger */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MemoryAlertSystem.class);
@@ -148,17 +154,22 @@ public final class MemoryAlertSystem {
 
     private final double m_usageThreshold;
 
+    private final boolean m_checkCollectedMemory;
+
     private long m_timeOfLastCheck = System.currentTimeMillis();
 
     /**
-     * Creates a new memory alert system. <b>In almost all cases you should use the singleton instance via
-     * {@link #getInstance()} instead of creating your own instance.</b>
+     * Creates a new memory alert system. <b>In almost all cases you should use the instance via {@link #getInstance()}
+     * or {@link #getInstanceUncollected()} instead of creating your own instance.</b>
      *
      * @param usageThreshold the threshold above which a low memory condition will be reported; a value between 0 and 1
+     * @param checkCollectedMemory whether collected memory (i.e., memory after the last full GC) or current memory is
+     *            to be considered when determining a low memory condition
      * @noreference This constructor is not intended to be referenced by clients. Only used in test cases.
      */
-    private MemoryAlertSystem(final double usageThreshold) {
+    private MemoryAlertSystem(final double usageThreshold, final boolean checkCollectedMemory) {
         m_usageThreshold = usageThreshold;
+        m_checkCollectedMemory = checkCollectedMemory;
         setFractionUsageThreshold(usageThreshold);
 
         for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
@@ -179,7 +190,15 @@ public final class MemoryAlertSystem {
         memoryBean.addNotificationListener(new NotificationListener() {
             @Override
             public void handleNotification(final Notification notification, final Object handback) {
-                if (notification.getType().equals(MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED)) {
+                if (checkCollectedMemory) {
+                    if (notification.getType().equals(MEMORY_COLLECTION_THRESHOLD_EXCEEDED)) {
+                        LOGGER.debugWithFormat("Memory collection threshold of %.0f%% exceeded after GC",
+                            m_usageThreshold * 100.0);
+                        usageThresholdEvent(notification);
+                    }
+                } else {
+                    // when notification is of type MEMORY_COLLECTION_EXCEEDED or MEMORY_COLLECTION_THRESHOLD_EXCEEDED
+                    LOGGER.debugWithFormat("Memory threshold of %.0f%% exceeded", m_usageThreshold * 100.0);
                     usageThresholdEvent(notification);
                 }
             }
@@ -189,8 +208,6 @@ public final class MemoryAlertSystem {
     }
 
     private void usageThresholdEvent(final Notification not) {
-        LOGGER.debugWithFormat("Memory collection threshold of %.0f%% exceeded after GC", m_usageThreshold * 100.0);
-
         long prev, next;
         do {
             prev = m_lastEventTimestamp.get();
@@ -279,7 +296,11 @@ public final class MemoryAlertSystem {
         }
 
         long warningThreshold = (long)(getMaximumMemory() * percentage);
-        m_memPool.setCollectionUsageThreshold(warningThreshold);
+        if (m_checkCollectedMemory) {
+            m_memPool.setCollectionUsageThreshold(warningThreshold);
+        } else {
+            m_memPool.setUsageThreshold(warningThreshold);
+        }
     }
 
     private void startNotificationThread() {
@@ -425,11 +446,24 @@ public final class MemoryAlertSystem {
     }
 
     /**
-     * Singleton instance of {@link MemoryAlertSystem}.
+     * Instance of {@link MemoryAlertSystem} that emits memory alerts based on collected old generation heap space,
+     * i.e., space after the last full garbage collection.
      *
-     * @return the singleton instance
+     * @return the instance for collected old generation heap space
      */
     public static MemoryAlertSystem getInstance() {
         return INSTANCE;
+    }
+
+    /**
+     * Instance of {@link MemoryAlertSystem} that emits memory alerts based on current old generation heap space.
+     * Currently only supported when the G1 garbage collector is enabled. Will return {@link #getInstance()} when
+     * another garbage collector is enabled.
+     *
+     * @return the instance for current old generation heap space
+     * @since 4.0
+     */
+    public static MemoryAlertSystem getInstanceUncollected() {
+        return IS_G1 ? INSTANCE_UNCOLLECTED : getInstance();
     }
 }
