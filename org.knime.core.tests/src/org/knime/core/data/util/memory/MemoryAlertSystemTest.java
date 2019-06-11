@@ -52,6 +52,8 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Before;
@@ -64,6 +66,11 @@ import org.knime.core.node.NodeLogger;
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 public class MemoryAlertSystemTest {
+
+    // some JVMs even throw an "java.lang.OutOfMemoryError: Requested array size exceeds VM limit" for values below
+    // Integer.MAX_VALUE
+    private static final int MAX_ARRAY_LENGTH = 1000000000;
+
     private MemoryAlertSystem m_memSystem;
 
     /**
@@ -87,6 +94,19 @@ public class MemoryAlertSystemTest {
         forceGC();
     }
 
+    private static List<Integer> determineReserveSizeSplits() {
+        final long max = MemoryAlertSystem.getMaximumMemory();
+        final long used = MemoryAlertSystem.getUsedMemory();
+        long reserveSize = (long)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD * (max - used));
+        final List<Integer> reserveSizeSplits = new ArrayList<>();
+        while (reserveSize > MAX_ARRAY_LENGTH) {
+            reserveSizeSplits.add(MAX_ARRAY_LENGTH);
+            reserveSize -= MAX_ARRAY_LENGTH;
+        }
+        reserveSizeSplits.add((int)reserveSize);
+        return reserveSizeSplits;
+    }
+
     /**
      * Checks whether listeners are notified correctly.
      *
@@ -94,8 +114,7 @@ public class MemoryAlertSystemTest {
      */
     @Test
     public void testListener() throws Exception {
-        int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
-            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
+        final List<Integer> reserveSizeSplits = determineReserveSizeSplits();
 
         final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
@@ -115,8 +134,10 @@ public class MemoryAlertSystemTest {
             assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(false));
 
-            @SuppressWarnings("unused")
-            byte[] buf = new byte[reserveSize];
+            final byte[][] bufs = new byte[reserveSizeSplits.size()][];
+            for (int i = 0; i < reserveSizeSplits.size(); i++) {
+                bufs[i] = new byte[reserveSizeSplits.get(i)];
+            }
             forceGC();
             Thread.sleep(2000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
@@ -133,8 +154,7 @@ public class MemoryAlertSystemTest {
      */
     @Test
     public void testAutoRemoveListener() throws Exception {
-        int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
-            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
+        final List<Integer> reserveSizeSplits = determineReserveSizeSplits();
 
         final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
@@ -152,8 +172,10 @@ public class MemoryAlertSystemTest {
             assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(false));
 
-            @SuppressWarnings("unused")
-            byte[] buf = new byte[reserveSize];
+            final byte[][] bufs = new byte[reserveSizeSplits.size()][];
+            for (int i = 0; i < reserveSizeSplits.size(); i++) {
+                bufs[i] = new byte[reserveSizeSplits.get(i)];
+            }
             forceGC();
             Thread.sleep(1000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
