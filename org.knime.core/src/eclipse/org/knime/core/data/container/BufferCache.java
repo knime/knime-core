@@ -58,6 +58,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import org.knime.core.data.util.memory.MemoryAlert;
+import org.knime.core.data.util.memory.MemoryAlertListener;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.LRUCache;
@@ -206,7 +209,17 @@ final class BufferCache {
             throw new IllegalStateException("Unflushed buffer ilegally cleared for garbage collection.");
         }
 
-        m_hardMap.remove(buffer.getUniqueID());
+        final long uniqueId = buffer.getUniqueID();
+
+        m_hardMap.remove(uniqueId);
+
+        MemoryAlertSystem.getInstance().addListener(new MemoryAlertListener() {
+            @Override
+            protected boolean memoryAlert(final MemoryAlert alert) {
+                m_LRUCache.remove(uniqueId);
+                return true;
+            }
+        });
     }
 
     /**
