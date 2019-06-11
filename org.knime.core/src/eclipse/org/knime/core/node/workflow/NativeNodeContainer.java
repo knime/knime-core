@@ -974,17 +974,13 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** {@inheritDoc} */
     @Override
     public FlowObjectStack getFlowObjectStack() {
-        synchronized (m_nodeMutex) {
-            return m_node.getFlowObjectStack();
-        }
+        return m_node.getFlowObjectStack();
     }
 
     /** {@inheritDoc} */
     @Override
     public FlowObjectStack getOutgoingFlowObjectStack() {
-        synchronized (m_nodeMutex) {
-            return m_node.getOutgoingFlowObjectStack();
-        }
+        return m_node.getOutgoingFlowObjectStack();
     }
 
     /** {@inheritDoc} */
