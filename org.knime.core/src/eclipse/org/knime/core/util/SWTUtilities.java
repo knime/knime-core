@@ -128,7 +128,7 @@ public class SWTUtilities {
      * Oh com'on SWT - seriously: why isn't this a method in {@link Composite}?
      *
      * @param parent the Composite instance which will have all of its children removed.
-     * @since 3.8
+     * @since 4.0
      */
     public static void removeAllChildren(final Composite parent) {
         for (final Control child : parent.getChildren()) {
@@ -143,7 +143,7 @@ public class SWTUtilities {
      * @param widget the widget to make visible or hidden; the widget's layout data must be {@link GridData} or else
      *            this method will do nothing more than invoke {@link Control#setVisible(boolean)}
      * @param visible true to make visible, false to make hidden
-     * @since 3.8
+     * @since 4.0
      */
     public static void spaceReclaimingSetVisible(final Control widget, final boolean visible) {
         final Object o = widget.getLayoutData();
