@@ -182,10 +182,9 @@ final class BufferCache {
         /** disallow modification */
         final List<BlobSupportDataRow> undmodifiableList = Collections.unmodifiableList(list);
         m_hardMap.put(uniqueId, undmodifiableList);
-        /**
-         * We already fill the soft cache here to keep track of how recently the table has been used. Note that soft and
-         * weak references won't be cleared while there is still a hard reference on the object.
-         */
+
+        /** We already fill the soft cache here to keep track of how recently the table has been used. Note that soft
+         * and weak references won't be cleared while there is still a hard reference on the object. */
         m_LRUCache.put(uniqueId, new SoftReference<List<BlobSupportDataRow>>(undmodifiableList));
         final WeakReference<List<BlobSupportDataRow>> previousValue = m_weakCache.put(uniqueId,
             new WeakReference<List<BlobSupportDataRow>>(undmodifiableList, m_weakCacheRefQueue));
@@ -206,13 +205,16 @@ final class BufferCache {
         CheckUtils.checkArgumentNotNull(buffer);
 
         if(!buffer.isFlushedToDisk()) {
-            throw new IllegalStateException("Unflushed buffer ilegally cleared for garbage collection.");
+            throw new IllegalStateException("Unflushed buffer illegally cleared for garbage collection.");
         }
 
         final long uniqueId = buffer.getUniqueID();
 
         m_hardMap.remove(uniqueId);
 
+        /** We should remove soft-referenced tables from the LRU cache on memory alert. Otherwise, the LRU cache would
+        * block memory despite memory alerts. This could lead to a scenario where new buffers are always flushed to
+        * disk and old buffers are kept in the LRU cache indefinitely. */
         MemoryAlertSystem.getInstanceUncollected().addListener(new MemoryAlertListener() {
             @Override
             protected boolean memoryAlert(final MemoryAlert alert) {

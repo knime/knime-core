@@ -49,6 +49,7 @@
 package org.knime.core.data.util.memory;
 
 import static java.lang.management.MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED;
+import static java.lang.management.MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -163,8 +164,8 @@ public final class MemoryAlertSystem {
      * or {@link #getInstanceUncollected()} instead of creating your own instance.</b>
      *
      * @param usageThreshold the threshold above which a low memory condition will be reported; a value between 0 and 1
-     * @param checkCollectedMemory whether collected memory (i.e., memory after the last full GC) or current memory is
-     *            to be considered when determining a low memory condition
+     * @param checkCollectedMemory whether only collected memory (i.e., memory after the last full GC) or current memory
+     *            is to be considered when determining a low memory condition
      * @noreference This constructor is not intended to be referenced by clients. Only used in test cases.
      */
     private MemoryAlertSystem(final double usageThreshold, final boolean checkCollectedMemory) {
@@ -190,14 +191,11 @@ public final class MemoryAlertSystem {
         memoryBean.addNotificationListener(new NotificationListener() {
             @Override
             public void handleNotification(final Notification notification, final Object handback) {
-                if (checkCollectedMemory) {
-                    if (notification.getType().equals(MEMORY_COLLECTION_THRESHOLD_EXCEEDED)) {
-                        LOGGER.debugWithFormat("Memory collection threshold of %.0f%% exceeded after GC",
-                            m_usageThreshold * 100.0);
-                        usageThresholdEvent(notification);
-                    }
-                } else {
-                    // when notification is of type MEMORY_COLLECTION_EXCEEDED or MEMORY_COLLECTION_THRESHOLD_EXCEEDED
+                if (notification.getType().equals(MEMORY_COLLECTION_THRESHOLD_EXCEEDED)) {
+                    LOGGER.debugWithFormat("Memory collection threshold of %.0f%% exceeded after GC",
+                        m_usageThreshold * 100.0);
+                    usageThresholdEvent(notification);
+                } else if (!m_checkCollectedMemory && notification.getType().equals(MEMORY_THRESHOLD_EXCEEDED)) {
                     LOGGER.debugWithFormat("Memory threshold of %.0f%% exceeded", m_usageThreshold * 100.0);
                     usageThresholdEvent(notification);
                 }
@@ -296,9 +294,8 @@ public final class MemoryAlertSystem {
         }
 
         long warningThreshold = (long)(getMaximumMemory() * percentage);
-        if (m_checkCollectedMemory) {
-            m_memPool.setCollectionUsageThreshold(warningThreshold);
-        } else {
+        m_memPool.setCollectionUsageThreshold(warningThreshold);
+        if (!m_checkCollectedMemory) {
             m_memPool.setUsageThreshold(warningThreshold);
         }
     }
