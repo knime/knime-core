@@ -686,9 +686,12 @@ public class Buffer implements KNIMEStreamConstants {
         try {
             readMetaFromFile(metaIn, fileStoreDir);
         } catch (InvalidSettingsException ise) {
-            IOException ioe = new IOException("Unable to read meta information from file \"" + metaIn + "\"");
-            ioe.initCause(ise);
-            throw ioe;
+            String message = "Unable to read meta information from file.";
+            final String causeMessage = ise.getMessage();
+            if (causeMessage != null) {
+                message += " " + causeMessage;
+            }
+            throw new IOException(message, ise);
         }
         BufferTracker.getInstance().bufferCreated(this);
     }
