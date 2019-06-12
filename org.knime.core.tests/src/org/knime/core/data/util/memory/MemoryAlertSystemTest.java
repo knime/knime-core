@@ -51,7 +51,7 @@ package org.knime.core.data.util.memory;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -64,6 +64,7 @@ import org.knime.core.node.NodeLogger;
  * Testcase for {@link MemoryAlertSystem}.
  *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
 public class MemoryAlertSystemTest {
 
@@ -88,9 +89,8 @@ public class MemoryAlertSystemTest {
         assertThat("Cannot test because memory usage is already above threshold: " + MemoryAlertSystem.getUsage(),
             MemoryAlertSystem.getInstance().isMemoryLow(), is(false));
         m_memSystem = MemoryAlertSystem.getInstance();
-        NodeLogger.getLogger(getClass()).debug(
-            "Memory usage: " + MemoryAlertSystem.getUsedMemory() + "/" + MemoryAlertSystem.getMaximumMemory() + " => "
-                + MemoryAlertSystem.getUsage());
+        NodeLogger.getLogger(getClass()).debug("Memory usage: " + MemoryAlertSystem.getUsedMemory() + "/"
+            + MemoryAlertSystem.getMaximumMemory() + " => " + MemoryAlertSystem.getUsage());
         forceGC();
     }
 
@@ -120,8 +120,8 @@ public class MemoryAlertSystemTest {
         MemoryAlertListener listener = new MemoryAlertListener() {
             @Override
             protected boolean memoryAlert(final MemoryAlert alert) {
-                NodeLogger.getLogger(MemoryAlertSystemTest.class).debug(
-                    "Memory listener called, current usage is " + MemoryAlertSystem.getUsage());
+                NodeLogger.getLogger(MemoryAlertSystemTest.class)
+                    .debug("Memory listener called, current usage is " + MemoryAlertSystem.getUsage());
                 listenerCalled.set(true);
                 return false;
             }
@@ -130,7 +130,6 @@ public class MemoryAlertSystemTest {
         m_memSystem.addListener(listener);
         try {
             forceGC();
-            Thread.sleep(1000);
             assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(false));
 
@@ -139,7 +138,6 @@ public class MemoryAlertSystemTest {
                 bufs[i] = new byte[reserveSizeSplits.get(i)];
             }
             forceGC();
-            Thread.sleep(2000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(true));
         } finally {
@@ -168,7 +166,6 @@ public class MemoryAlertSystemTest {
         m_memSystem.addListener(listener);
         try {
             forceGC();
-            Thread.sleep(1000);
             assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(false));
 
@@ -177,7 +174,6 @@ public class MemoryAlertSystemTest {
                 bufs[i] = new byte[reserveSizeSplits.get(i)];
             }
             forceGC();
-            Thread.sleep(1000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.getAndSet(false), is(true));
 
@@ -189,30 +185,21 @@ public class MemoryAlertSystemTest {
     }
 
     /**
-     * Forces a GC run. By using soft reference {@link System#gc()} is called until the soft reference has been cleared.
+     * Forces a GC run. By using weak reference {@link System#gc()} is called until the weak reference has been cleared.
      *
      * @throws InterruptedException if the thread is interrupted
      */
     public static void forceGC() throws InterruptedException {
-        Object obj1 = new Object();
-        SoftReference<Object> ref1 = new SoftReference<>(obj1);
-        Object obj2 = new Object();
-        SoftReference<Object> ref2 = new SoftReference<>(obj2);
-        obj1 = null;
+        Object obj = new Object();
+        final WeakReference<Object> ref = new WeakReference<>(obj);
+        obj = null;
         int max = 10;
-        while ((ref1.get() != null) && (max-- > 0) && !Thread.currentThread().isInterrupted()) {
+        while ((ref.get() != null) && (max-- > 0) && !Thread.currentThread().isInterrupted()) {
             System.gc();
             Thread.sleep(50);
         }
 
-        obj2 = null;
-        max = 10;
-        while ((ref2.get() != null) && (max-- > 0) && !Thread.currentThread().isInterrupted()) {
-            System.gc();
-            Thread.sleep(50);
-        }
-
-        NodeLogger.getLogger(MemoryAlertSystemTest.class).debug(
-            "Called System.gc, memory usage is now " + MemoryAlertSystem.getUsage());
+        NodeLogger.getLogger(MemoryAlertSystemTest.class)
+            .debug("Called System.gc, memory usage is now " + MemoryAlertSystem.getUsage());
     }
 }
