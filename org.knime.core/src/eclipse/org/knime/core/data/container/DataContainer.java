@@ -839,18 +839,14 @@ public class DataContainer implements RowAppender {
      * @throws DuplicateKeyException If a duplicate is encountered.
      */
     protected void addRowKeyForDuplicateCheck(final RowKey key) {
-        //        synchronized (m_duplicateChecker) {
         try {
             m_duplicateChecker.addKey(key.toString());
         } catch (IOException ioe) {
             throw new DataContainerException(
                 ioe.getClass().getSimpleName() + " while checking for duplicate row IDs: " + ioe.getMessage(), ioe);
         } catch (DuplicateKeyException dke) {
-            throw new DuplicateKeyException(
-                "Encountered duplicate row ID  \"" + dke.getKey() + "\" at row number " + (m_buffer.size() + 1),
-                dke.getKey());
+            throw new DuplicateKeyException("Encountered duplicate row ID  \"" + dke.getKey() + "\"");
         }
-        //        }
     }
 
     /**
