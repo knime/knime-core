@@ -136,7 +136,7 @@ public final class ContextProperties {
      * Extracts the value of a context property.
      *
      * @param property the name of the context property.
-     * @return the non-{@code null}, but possibly emtpy, value of the context property.
+     * @return the non-{@code null}, but possibly empty, value of the context property.
      * @throws IllegalArgumentException of {@code property} is not the name of a context property.
      */
     public static String extractContextProperty(final String property) {
@@ -172,28 +172,29 @@ public final class ContextProperties {
         if (CONTEXT_PROPERTY_TEMP_LOCATION.equals(property)) {
             return manager.getContext().getTempLocation().getAbsolutePath();
         }
-        final AuthorInformation author = manager.getAuthorInformation();
-        if (author != null) {
+        final AuthorInformation authorInformation = manager.getAuthorInformation();
+        if (authorInformation != null) {
             if (CONTEXT_PROPERTY_AUTHOR.equals(property)) {
-                return author.getAuthor();
+                final String author = authorInformation.getAuthor();
+                return author != null ? author : "";
             }
             if (CONTEXT_PROPERTY_EDITOR.equals(property)) {
-                return author.getLastEditor().orElse(null);
+                return authorInformation.getLastEditor().orElse("");
             }
             if (CONTEXT_PROPERTY_CREATION_DATE.equals(property)) {
-                final Date creationDate = author.getAuthoredDate();
-                if (creationDate != null) {
-                    return creationDate.toString();
-                }
+                final Date creationDate = authorInformation.getAuthoredDate();
+                return creationDate != null ? creationDate.toString() : "";
             }
             if (CONTEXT_PROPERTY_LAST_MODIFIED.equals(property)) {
-                if (author.getLastEditDate().isPresent()) {
-                    return author.getLastEditDate().get().toString();
+                if (authorInformation.getLastEditDate().isPresent()) {
+                    return authorInformation.getLastEditDate().get().toString();
+                } else {
+                    return "";
                 }
             }
         } else if (CONTEXT_PROPERTY_AUTHOR.equals(property) || CONTEXT_PROPERTY_EDITOR.equals(property)
             || CONTEXT_PROPERTY_CREATION_DATE.equals(property) || CONTEXT_PROPERTY_LAST_MODIFIED.equals(property)) {
-            return null;
+            return "";
         }
 
         throw new IllegalArgumentException("Not a context property : \"" + property + '"');
