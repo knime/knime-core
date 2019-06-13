@@ -51,8 +51,8 @@ package org.knime.core.util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
@@ -172,25 +172,25 @@ public final class ContextProperties {
         if (CONTEXT_PROPERTY_TEMP_LOCATION.equals(property)) {
             return manager.getContext().getTempLocation().getAbsolutePath();
         }
-        final AuthorInformation authorInformation = manager.getAuthorInformation();
-        if (authorInformation != null) {
+        final AuthorInformation authInfo = manager.getAuthorInformation();
+        if (authInfo != null) {
+            final String author = Optional.ofNullable(authInfo.getAuthor()).orElse("");
+            final String dateCreated = Optional.ofNullable(authInfo.getAuthoredDate()).map(Object::toString).orElse("");
             if (CONTEXT_PROPERTY_AUTHOR.equals(property)) {
-                final String author = authorInformation.getAuthor();
-                return author != null ? author : "";
+                return author;
             }
             if (CONTEXT_PROPERTY_EDITOR.equals(property)) {
-                return authorInformation.getLastEditor().orElse("");
+                /** If there is no known last editor (e.g., since the workflow has just been created), the original
+                 * author is returned as last editor. */
+                return authInfo.getLastEditor().orElse(author);
             }
             if (CONTEXT_PROPERTY_CREATION_DATE.equals(property)) {
-                final Date creationDate = authorInformation.getAuthoredDate();
-                return creationDate != null ? creationDate.toString() : "";
+                return dateCreated;
             }
             if (CONTEXT_PROPERTY_LAST_MODIFIED.equals(property)) {
-                if (authorInformation.getLastEditDate().isPresent()) {
-                    return authorInformation.getLastEditDate().get().toString();
-                } else {
-                    return "";
-                }
+                /** If there is no known last edit date (e.g., since the workflow has just been created), the created
+                 * date is returned as last edit date. */
+                return authInfo.getLastEditDate().map(Object::toString).orElse(dateCreated);
             }
         } else if (CONTEXT_PROPERTY_AUTHOR.equals(property) || CONTEXT_PROPERTY_EDITOR.equals(property)
             || CONTEXT_PROPERTY_CREATION_DATE.equals(property) || CONTEXT_PROPERTY_LAST_MODIFIED.equals(property)) {
