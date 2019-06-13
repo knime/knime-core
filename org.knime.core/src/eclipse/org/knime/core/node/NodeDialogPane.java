@@ -84,6 +84,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.JTabbedPane;
+import javax.swing.LayoutFocusTraversalPolicy;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
@@ -261,6 +262,10 @@ public abstract class NodeDialogPane {
             new CopyOnWriteArrayList<FlowVariableModel>();
         m_flowVariableTab = new FlowVariablesTab();
         m_nodeContext = NodeContext.getContext();
+
+        // AP-9574 - Enable focus traversal in node dialogs (via TAB, SHIFT-TAB, CTRL-TAB and CTRL-SHIFT-TAB)
+        m_panel.setFocusTraversalPolicy(new LayoutFocusTraversalPolicy());
+        m_panel.setFocusTraversalPolicyProvider(true);
     }
 
     /** A logger initialized with the concrete runtime class.
