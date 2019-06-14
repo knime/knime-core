@@ -1118,12 +1118,15 @@ public final class SubNodeContainer extends SingleNodeContainer
                 isCanceled = ThreadPool.currentPool().runInvisible(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
-                        try {
-                            m_wfm.waitWhileInExecution(-1, TimeUnit.SECONDS);
-                            return false;
-                        } catch (InterruptedException e) {
-                            m_wfm.cancelExecution();
-                            return true;
+                        Boolean result = Boolean.FALSE;
+                        while (true) { // don't finish execution if there are nodes inside still executing (AP-11710)
+                            try {
+                                m_wfm.waitWhileInExecution(-1, TimeUnit.SECONDS);
+                                return result;
+                            } catch (InterruptedException e) {
+                                m_wfm.cancelExecution();
+                                result = Boolean.TRUE;
+                            }
                         }
                     }
                 });
