@@ -1140,9 +1140,12 @@ public final class SubNodeContainer extends SingleNodeContainer
             } else if (isCanceled) {
                 setNodeMessage(new NodeMessage(Type.WARNING, "Execution canceled"));
             } else if (!m_wfm.isFullyConnected(getVirtualOutNodeID())) {
-                setNodeMessage(new NodeMessage(Type.ERROR,
-                    "Input " + (m_wfm.getNodeContainer(getVirtualOutNodeID()).getNrInPorts() > 1
-                        ? "ports are not fully connected" : "port is not connected") + " (\"Component output\")"));
+                setNodeMessage(
+                    new NodeMessage(Type.ERROR,
+                        "Input "
+                            + (m_wfm.getNodeContainer(getVirtualOutNodeID()).getNrInPorts() > 2
+                                ? "ports are not fully connected" : "port is not connected")
+                            + " (\"Component output\")"));
             } else if ((unconnectedNodeCnt =
                 m_wfm.getWorkflow().getNodeIDs().stream().filter(n -> !m_wfm.isFullyConnected(n)).count()) > 0) {
                 setNodeMessage(new NodeMessage(Type.ERROR, "Component contains " + unconnectedNodeCnt
