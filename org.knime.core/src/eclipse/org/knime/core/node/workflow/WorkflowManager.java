@@ -3620,13 +3620,15 @@ public final class WorkflowManager extends NodeContainer
             } else {
                 throw new IllegalStateException("Not a sub- or metanode: " + node);
             }
-            // retrieve all nodes from metanode
+            // retrieve all nodes from metanode except for virtual nodes
             Collection<NodeContainer> ncs = subWFM.getNodeContainers();
-            NodeID[] orgIDs = new NodeID[ncs.size()];
+            NodeID[] orgIDs = new NodeID[ncs.size() - virtualNodes.size()];
             int i = 0;
             for (NodeContainer nc : ncs) {
-                orgIDs[i] = nc.getID();
-                i++;
+                if (!virtualNodes.contains(nc.getID())) {
+                    orgIDs[i] = nc.getID();
+                    i++;
+                }
             }
             // retrieve all workflow annotations
             Collection<WorkflowAnnotation> annos = subWFM.getWorkflowAnnotations();
@@ -3756,10 +3758,6 @@ public final class WorkflowManager extends NodeContainer
                     }
 
                 }
-            }
-            // remove virtual nodes
-            for (NodeID id : virtualNodes) {
-                removeNode(oldIDsHash.get(id));
             }
             // and finally remove old sub workflow
             this.removeNode(nodeID);
