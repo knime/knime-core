@@ -130,6 +130,7 @@ public class MemoryAlertSystemTest {
         m_memSystem.addListener(listener);
         try {
             forceGC();
+            Thread.sleep(1000);
             assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(false));
 
@@ -138,6 +139,7 @@ public class MemoryAlertSystemTest {
                 bufs[i] = new byte[reserveSizeSplits.get(i)];
             }
             forceGC();
+            Thread.sleep(1000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(true));
         } finally {
@@ -166,6 +168,7 @@ public class MemoryAlertSystemTest {
         m_memSystem.addListener(listener);
         try {
             forceGC();
+            Thread.sleep(1000);
             assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(false));
 
@@ -174,6 +177,7 @@ public class MemoryAlertSystemTest {
                 bufs[i] = new byte[reserveSizeSplits.get(i)];
             }
             forceGC();
+            Thread.sleep(1000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.getAndSet(false), is(true));
 
