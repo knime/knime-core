@@ -53,15 +53,17 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.knime.core.util.KnimeURIUtil.guessEntityType;
 import static org.knime.core.util.KnimeURIUtil.isHubURI;
+import static org.knime.core.util.KnimeURIUtil.HubEntityType.getHubEntityType;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.knime.core.util.KnimeURIUtil;
-import org.knime.core.util.KnimeURIUtil.Type;
+import org.knime.core.util.KnimeURIUtil.HubEntityType;
 
 /**
  * Tests {@link KnimeURIUtil}.
@@ -69,6 +71,13 @@ import org.knime.core.util.KnimeURIUtil.Type;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public class KnimeURIUtilTest {
+
+    // create a rule for an exception grabber that you can use across
+    // the methods in this test class
+
+    @SuppressWarnings("javadoc")
+    @Rule
+    public ExpectedException exceptionGrabber = ExpectedException.none();
 
     @SuppressWarnings("javadoc")
     @Test
@@ -92,58 +101,110 @@ public class KnimeURIUtilTest {
 
         // workflow, workflow groups, components specification user/space/
         URI knimeURI = new URI(prefix + "space/42/1.3/noFactory");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), is(Type.OBJECT));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.OBJECT));
 
         // extensions specification user/extension/extId and user/extension/extId/version
         knimeURI = new URI(prefix + "extensions/32492");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), is(Type.EXTENSION));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.EXTENSION));
 
         knimeURI = new URI(prefix + "extensions/32492/2.3");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), is(Type.EXTENSION));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.EXTENSION));
 
         // nodes specification user/extension/extId/version/nodeFactory
         knimeURI = new URI(prefix + "extensions/42/1.3/noFactory");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), is(Type.NODE));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.NODE));
 
         // === URIs with unkown type ===
 
-        // only host adress
+        // only host address
         knimeURI = new URI("https://hub.knime.com/");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), is(Type.UNKNOWN));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
 
         // only user name (too short URI)
         knimeURI = new URI(prefix);
-        assertThat("wrong enitity type", guessEntityType(knimeURI), is(Type.UNKNOWN));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        // no user name
+        knimeURI = new URI("https://hub.knime.com//extensions/2324");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI("https://hub.knime.com//space/2324");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI("https://hub.knime.com//space/42/1.3/noFactory");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        // trailing /
+        knimeURI = new URI(prefix + "space/42/1.3/noFactory/");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI(prefix + "extensions/32492/");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI(prefix + "extensions/32492/2.3/");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI(prefix + "extensions/42/1.3/noFactory/");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        // empty ending
+        knimeURI = new URI(prefix + "space/");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI(prefix + "extensions/");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI(prefix + "extensions/32492/");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI(prefix + "extensions/42/1.3/");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        // empty in between
+        knimeURI = new URI(prefix + "space//1.3/noFactory");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI(prefix + "space/42//noFactory");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI(prefix + "extensions//2.3");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI(prefix + "extensions//1.3/noFactory");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
+
+        knimeURI = new URI(prefix + "extensions/42//noFactory");
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), is(HubEntityType.UNKNOWN));
 
         // typos in identifier space
         knimeURI = new URI(prefix + "spaces/42/1.3/noFactory");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), not(Type.OBJECT));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), not(HubEntityType.OBJECT));
 
         // typos in extension identifier
         knimeURI = new URI(prefix + "extension/32492/2.3");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), not(Type.EXTENSION));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), not(HubEntityType.EXTENSION));
 
         // test too short extensions path
         knimeURI = new URI(prefix + "extensions/");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), not(Type.EXTENSION));
-        assertThat("wrong enitity type", guessEntityType(knimeURI), not(Type.NODE));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), not(HubEntityType.EXTENSION));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), not(HubEntityType.NODE));
 
         // test too long extensions path
         knimeURI = new URI(prefix + "extensions/42/1.3/noFactory/124020");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), not(Type.EXTENSION));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), not(HubEntityType.EXTENSION));
 
         // test too short nodes path
         knimeURI = new URI(prefix + "extension/42/1.3");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), not(Type.NODE));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), not(HubEntityType.NODE));
 
         // test too long nodes path
         knimeURI = new URI(prefix + "extension/42/1.3/noFactory/");
-        assertThat("wrong enitity type", guessEntityType(knimeURI), not(Type.NODE));
+        assertThat("wrong enitity type", getHubEntityType(knimeURI), not(HubEntityType.NODE));
     }
 
     @SuppressWarnings("javadoc")
     @Test
-    public void testEntityEndpointURIs() throws URISyntaxException {
+    public void testValidEntityEndpointURIs() throws URISyntaxException {
         final String prefix = "https://hub.knime.com/janedoe/";
         final String apiPrefix = "https://api.hub.knime.com/";
 
@@ -156,11 +217,80 @@ public class KnimeURIUtilTest {
             is(new URI(apiPrefix + "nodes/nodefac")));
 
         final String suffix = "manamana/babdibidibi/manamana/babdibidi";
-        knimeURI = new URI(prefix + "spaces/" + suffix);
+        knimeURI = new URI(prefix + "space/" + suffix);
         assertThat("wrong endpoint", KnimeURIUtil.getObjectEntityEndpointURI(knimeURI, false),
             is(new URI(apiPrefix + "knime/rest/v4/repository/Users/janedoe/" + suffix)));
         assertThat("wrong endpoint", KnimeURIUtil.getObjectEntityEndpointURI(knimeURI, true),
             is(new URI(apiPrefix + "knime/rest/v4/repository/Users/janedoe/" + suffix + ":data")));
+    }
+
+    @SuppressWarnings("javadoc")
+    @Test
+    public void testInvalidExtensionEndpointURIs() throws URISyntaxException {
+        URI knimeURI = new URI("https://lala.com/nothing");
+
+        exceptionGrabber.expect(IllegalArgumentException.class);
+        exceptionGrabber.expectMessage("The provided URI (" + knimeURI.toString() + ") is not a KNIME-Hub URI.");
+
+        KnimeURIUtil.getExtensionEndpointURI(knimeURI);
+    }
+
+    @SuppressWarnings("javadoc")
+    @Test
+    public void testInvalidNodeEndpointURIs() throws URISyntaxException {
+        URI knimeURI = new URI("https://lala.com/nothing");
+
+        exceptionGrabber.expect(IllegalArgumentException.class);
+        exceptionGrabber.expectMessage("The provided URI (" + knimeURI.toString() + ") is not a KNIME-Hub URI.");
+
+        KnimeURIUtil.getNodeEndpointURI(knimeURI);
+    }
+
+    @SuppressWarnings("javadoc")
+    @Test
+    public void testInvalidObjectEndpointURIs() throws URISyntaxException {
+        URI knimeURI = new URI("https://lala.com/nothing");
+
+        exceptionGrabber.expect(IllegalArgumentException.class);
+        exceptionGrabber.expectMessage("The provided URI (" + knimeURI.toString() + ") is not a KNIME-Hub URI.");
+
+        KnimeURIUtil.getObjectEntityEndpointURI(knimeURI, false);
+    }
+
+    @SuppressWarnings("javadoc")
+    @Test
+    public void testInvalidExtensionEndpointCall() throws URISyntaxException {
+        URI knimeURI = new URI("https://hub.knime.com/janedoe/");
+
+        exceptionGrabber.expect(IllegalArgumentException.class);
+        exceptionGrabber
+            .expectMessage("The provided URI does not match the expected type of " + HubEntityType.EXTENSION.name());
+
+        KnimeURIUtil.getExtensionEndpointURI(knimeURI);
+    }
+
+    @SuppressWarnings("javadoc")
+    @Test
+    public void testInvalidNodeEndpointCall() throws URISyntaxException {
+        URI knimeURI = new URI("https://hub.knime.com/janedoe/");
+
+        exceptionGrabber.expect(IllegalArgumentException.class);
+        exceptionGrabber
+            .expectMessage("The provided URI does not match the expected type of " + HubEntityType.NODE.name());
+
+        KnimeURIUtil.getNodeEndpointURI(knimeURI);
+    }
+
+    @SuppressWarnings("javadoc")
+    @Test
+    public void testInvalidObjectEndpointCall() throws URISyntaxException {
+        URI knimeURI = new URI("https://hub.knime.com/janedoe/");
+
+        exceptionGrabber.expect(IllegalArgumentException.class);
+        exceptionGrabber
+            .expectMessage("The provided URI does not match the expected type of " + HubEntityType.OBJECT.name());
+
+        KnimeURIUtil.getObjectEntityEndpointURI(knimeURI, true);
     }
 
 }

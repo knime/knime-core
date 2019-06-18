@@ -72,64 +72,74 @@ public final class KnimeURIUtil {
     /**
      * Type of a KNIME entity specified as a query parameter.
      */
-    public static enum Type {
+    public static enum HubEntityType {
+
             /**
              * An object from a space (either component, workflow group, workflow or file).
              */
-            OBJECT,
+            // matches <not-empty>/space(/<not-empty>)+ (with optional / at the beginning)
+            OBJECT("/+[^/]++/space/([^/]++/)*[^/]++"),
 
             /**
              * A KNIME node
              */
-            NODE,
+            // matches <not-empty>/extensions/<not-empty>/<not-empty>/<not-empty> (with optional / at the beginning)
+            NODE("/+[^/]++/extensions/([^/]++/){2}[^/]++"),
 
             /**
              * A KNIME extension
              */
-            EXTENSION,
+            // matches <not-empty>/extensions/<not-empty> and <not-empty>/extensions/<not-empty>/<not-empty>
+            // (with optional / at the beginning)
+            EXTENSION("/+[^/]++/extensions/([^/]++/){0,1}[^/]++"),
 
             /**
              * If the type couldn't be determined or is not known.
              */
-            UNKNOWN;
+            // IMPORTANT: has to be last, since it matches everything.
+            UNKNOWN(".*");
+
+        /** The pattern specified w.r.t. https://knime-com.atlassian.net/wiki/spaces/SPECS/pages/577404968/URL+Scheme */
+        private final Pattern m_pattern;
+
+        private HubEntityType(final String regex) {
+            m_pattern = Pattern.compile(regex);
+        }
+
+        private boolean matches(final String path) {
+            return m_pattern.matcher(path).matches();
+        }
+
+        /**
+         * Returns the type of the entity given the URL.
+         *
+         * Implemented according to URL Scheme
+         *
+         * @see <a href="https://knime-com.atlassian.net/wiki/spaces/SPECS/pages/577404968/URL+Scheme">URL scheme
+         *      (06/12/19)</a>
+         *
+         * @param knimeURI the URI to extract the type from
+         *
+         * @return the type
+         */
+        public static HubEntityType getHubEntityType(final URI knimeURI) {
+            if (!isHubURI(knimeURI)) {
+                return HubEntityType.UNKNOWN;
+            }
+            final String path = knimeURI.getPath();
+            for (final HubEntityType t : HubEntityType.values()) {
+                if (t.matches(path)) {
+                    return t;
+                }
+            }
+            // dead code since unkown matches everything
+            return HubEntityType.UNKNOWN;
+        }
+
     }
 
     private KnimeURIUtil() {
         //utility class
-    }
-
-    /**
-     * Guesses the type of the entity given the URL.
-     *
-     * Implemented according to URL Scheme https://knime-com.atlassian.net/wiki/spaces/SPECS/pages/577404968/URL+Scheme
-     * (06/12/19)
-     *
-     * @param knimeURI the URI to extract the type from
-     *
-     * @return the type
-     */
-    public static Type guessEntityType(final URI knimeURI) {
-        if (!isHubURI(knimeURI)) {
-            return Type.UNKNOWN;
-        }
-        final String[] split = splitPath(knimeURI);
-        if (split.length > 2) {
-            // handle extensions and nodes
-            if (split[1].equalsIgnoreCase("extensions")) {
-                // user/extensions/extId and user/extensions/extId/version
-                if (split.length == 3 || split.length == 4) {
-                    return Type.EXTENSION;
-                } else /* user/extensions/extId/version/nodeFactory */ if (split.length == 5) {
-                    return Type.NODE;
-                }
-            }
-            // handle space objects.
-            else if (split[1].equalsIgnoreCase("space")) {
-                return Type.OBJECT;
-            }
-        }
-
-        return Type.UNKNOWN;
     }
 
     /**
@@ -148,6 +158,7 @@ public final class KnimeURIUtil {
      * @return the object entity endpoint's URI
      */
     public static URI getObjectEntityEndpointURI(final URI knimeURI, final boolean download) {
+        checkURIValidity(knimeURI, HubEntityType.OBJECT);
         // TODO needs fix if we change backend API
         return getHubEndpoint(knimeURI, "/knime/rest/v4/repository/Users"
             + knimeURI.getPath().replaceFirst("/space", "") + (download ? ":data" : ""));
@@ -160,6 +171,7 @@ public final class KnimeURIUtil {
      * @return the node entity endpoint's URI
      */
     public static URI getNodeEndpointURI(final URI knimeURI) {
+        checkURIValidity(knimeURI, HubEntityType.NODE);
         // TODO needs fix if we change backend API
         return getHubEndpoint(knimeURI, "/nodes/" + splitPath(knimeURI)[NODE_FAC_PATH_IDX]);
     }
@@ -171,6 +183,7 @@ public final class KnimeURIUtil {
      * @return the extensions endpoint's URI
      */
     public static URI getExtensionEndpointURI(final URI knimeURI) {
+        checkURIValidity(knimeURI, HubEntityType.EXTENSION);
         // TODO needs fix if we change backend API
         return getHubEndpoint(knimeURI, "/extensions/" + splitPath(knimeURI)[EXT_ID_PATH_IDX]);
     }
@@ -186,18 +199,26 @@ public final class KnimeURIUtil {
         return HUB_HOST.matcher(knimeURI.getHost()).matches();
     }
 
+    private static void checkURIValidity(final URI knimeURI, final HubEntityType expectedType)
+        throws IllegalArgumentException {
+        if (!isHubURI(knimeURI)) {
+            throw new IllegalArgumentException(
+                "The provided URI (" + knimeURI.toString() + ") is not a KNIME-Hub URI.");
+        }
+        if (!expectedType.matches(knimeURI.getPath())) {
+            throw new IllegalArgumentException(
+                "The provided URI does not match the expected type of " + expectedType.name());
+        }
+    }
+
     private static URI getHubEndpoint(final URI knimeURI, final String path) {
-        if (isHubURI(knimeURI)) {
-            String scheme = knimeURI.getScheme();
-            String host = "api." + knimeURI.getHost();
-            try {
-                return new URI(scheme, host, path, null);
-            } catch (URISyntaxException ex) {
-                //should never happen -> implementation problem
-                throw new RuntimeException(ex);
-            }
-        } else {
-            return knimeURI;
+        final String scheme = knimeURI.getScheme();
+        final String host = "api." + knimeURI.getHost();
+        try {
+            return new URI(scheme, host, path, null);
+        } catch (URISyntaxException ex) {
+            //should never happen -> implementation problem
+            throw new RuntimeException(ex);
         }
     }
 
