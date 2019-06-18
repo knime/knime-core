@@ -50,6 +50,7 @@ package org.knime.core.util;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.regex.Pattern;
 
 /**
  * Utility class to deal with URIs referencing KNIME-specific resources (e.g. hub) potentially with some additional
@@ -61,6 +62,12 @@ import java.net.URISyntaxException;
  * @noreference This class is not intended to be referenced by clients.
  */
 public final class KnimeURIUtil {
+
+    private static final int NODE_FAC_PATH_IDX = 4;
+
+    private static final int EXT_ID_PATH_IDX = 2;
+
+    private static final Pattern HUB_HOST = Pattern.compile("(hub|hubdev)\\.knime\\.com");
 
     /**
      * Type of a KNIME entity specified as a query parameter.
@@ -109,10 +116,10 @@ public final class KnimeURIUtil {
         if (split.length > 2) {
             // handle extensions and nodes
             if (split[1].equalsIgnoreCase("extensions")) {
-                // user/extension/extId and user/extension/extId/version
+                // user/extensions/extId and user/extensions/extId/version
                 if (split.length == 3 || split.length == 4) {
                     return Type.EXTENSION;
-                } else /* user/extension/extId/version/nodeFactory */ if (split.length == 5) {
+                } else /* user/extensions/extId/version/nodeFactory */ if (split.length == 5) {
                     return Type.NODE;
                 }
             }
@@ -133,20 +140,39 @@ public final class KnimeURIUtil {
         return (path.startsWith("/") ? path.substring(1, path.length()) : path).split("/");
     }
 
-    public static URI getSpaceEntityEndpointURI(final URI knimeURI, final boolean download) {
+    /**
+     * Returns the object entity endpoint URI.
+     *
+     * @param knimeURI the knime URI
+     * @param download he download flag
+     * @return the object entity endpoint's URI
+     */
+    public static URI getObjectEntityEndpointURI(final URI knimeURI, final boolean download) {
         // TODO needs fix if we change backend API
         return getHubEndpoint(knimeURI, "/knime/rest/v4/repository/Users"
             + knimeURI.getPath().replaceFirst("/space", "") + (download ? ":data" : ""));
     }
 
+    /**
+     * Returns the node entities endpoint URI.
+     *
+     * @param knimeURI the knime URI
+     * @return the node entity endpoint's URI
+     */
     public static URI getNodeEndpointURI(final URI knimeURI) {
         // TODO needs fix if we change backend API
-        return getHubEndpoint(knimeURI, "/nodes/" + splitPath(knimeURI)[4]);
+        return getHubEndpoint(knimeURI, "/nodes/" + splitPath(knimeURI)[NODE_FAC_PATH_IDX]);
     }
 
+    /**
+     * Returns the extensions endpoint URI
+     *
+     * @param knimeURI the knime URI
+     * @return the extensions endpoint's URI
+     */
     public static URI getExtensionEndpointURI(final URI knimeURI) {
         // TODO needs fix if we change backend API
-        return getHubEndpoint(knimeURI, "/extensions/" + splitPath(knimeURI)[2]);
+        return getHubEndpoint(knimeURI, "/extensions/" + splitPath(knimeURI)[EXT_ID_PATH_IDX]);
     }
 
     /**
@@ -157,7 +183,7 @@ public final class KnimeURIUtil {
      * @return <code>true</code> if it's a 'hub'-URI
      */
     public static boolean isHubURI(final URI knimeURI) {
-        return knimeURI.getHost().matches("(hub|hubdev)\\.knime\\.com");
+        return HUB_HOST.matcher(knimeURI.getHost()).matches();
     }
 
     private static URI getHubEndpoint(final URI knimeURI, final String path) {

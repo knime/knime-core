@@ -208,7 +208,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
     /** @return the sourceURI */
     public URI getSourceURI() {
-        return KnimeURIUtil.getSpaceEntityEndpointURI(m_sourceURI, true);
+        return KnimeURIUtil.getObjectEntityEndpointURI(m_sourceURI, true);
     }
 
     /**
