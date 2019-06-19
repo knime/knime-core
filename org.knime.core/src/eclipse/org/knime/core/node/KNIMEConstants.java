@@ -557,13 +557,6 @@ public final class KNIMEConstants {
     /** Global flag indicating whether assertions are enabled or disabled. */
     public static final boolean ASSERTIONS_ENABLED;
 
-    /**
-     * The id of the examples mount point.
-     *
-     * @since 4.0
-     */
-    public static final String KNIME_EXAMPLES_MOUNT_ID = "EXAMPLES";
-
     private static String knimeID;
 
     /**
