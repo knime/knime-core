@@ -326,7 +326,7 @@ public class TestflowRunnerApplication implements IApplication {
             if (stringArgs[i] == null) {
                 i++;
             } else if (stringArgs[i].equals("-pattern")) {
-                System.err.println("-pattern is now depreacted try using -include instead which matches against the "
+                System.err.println("-pattern is now deprecated try using -include instead which matches against the "
                     + "path from the workflow root of each workflow");
                 if ((m_workflowNamePattern != null) || (m_workflowPathPattern != null)) {
                     System.err.println("Multiple -pattern/-include arguments not allowed");
