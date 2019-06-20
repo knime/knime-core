@@ -80,6 +80,7 @@ import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.RepositoryManager;
 import org.osgi.framework.FrameworkUtil;
 
+import com.knime.enterprise.client.filesystem.util.WorkflowDownloadApplication;
 import com.knime.enterprise.server.rest.api.DownloadApplication;
 import com.knime.enterprise.utility.PermissionException;
 
@@ -134,8 +135,8 @@ public class TestflowRunnerApplication implements IApplication {
 
         Object args = context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
 
-        if (!extractCommandLineArgs(args) || (m_rootDirs.isEmpty() && (m_serverUri == null || m_serverPath == null))
-                || ((m_xmlResultFile == null) && (m_xmlResultDir == null))) {
+        if (!extractCommandLineArgs(args) || (m_rootDirs.isEmpty() && (m_serverUri == null))
+            || ((m_xmlResultFile == null) && (m_xmlResultDir == null))) {
             printUsage();
             return EXIT_OK;
         }
@@ -165,7 +166,12 @@ public class TestflowRunnerApplication implements IApplication {
         }
 
         if (m_serverUri != null) {
-            m_rootDirs.add(downloadWorkflows());
+
+            if(m_serverPath ==null) {
+                m_rootDirs.add(downloadWorkflowsLegacy());
+            } else {
+                m_rootDirs.add(downloadWorkflows());
+            }
         }
 
         // this is to load the repository plug-in
@@ -196,8 +202,6 @@ public class TestflowRunnerApplication implements IApplication {
 
         return result.get();
     }
-
-
 
     private void dispatchLoop(final Display display) {
         while (!m_stopped) {
@@ -564,16 +568,30 @@ public class TestflowRunnerApplication implements IApplication {
         m_stopped = true;
     }
 
+    private File downloadWorkflowsLegacy() throws IOException, CoreException, URISyntaxException {
+        File tempDir = FileUtil.createTempDir("KNIME Testflow");
+        try {
+            WorkflowDownloadApplication.downloadWorkflows(m_serverUri, tempDir);
+            return tempDir;
+        } catch (NoClassDefFoundError err) {
+            Status status =
+                new Status(IStatus.ERROR, FrameworkUtil.getBundle(getClass()).getSymbolicName(),
+                    "Workflow download from server not available, it seems no server client is installed", err);
+            throw new CoreException(status);
+        }
+    }
+
     private File downloadWorkflows() throws IOException, CoreException, URISyntaxException, PermissionException,
-    InstantiationException, IllegalAccessException {
-    File tempDir = FileUtil.createTempDir("KNIME Testflow");
-    try {
-        DownloadApplication.downloadWorkflows(m_serverUri, m_serverPath, tempDir);
-        return tempDir;
-    } catch (NoClassDefFoundError err) {
-        Status status = new Status(IStatus.ERROR, FrameworkUtil.getBundle(getClass()).getSymbolicName(),
-            "Workflow download from server not available, it seems no server client is installed", err);
-        throw new CoreException(status);
+        InstantiationException, IllegalAccessException {
+        File tempDir = FileUtil.createTempDir("KNIME Testflow");
+        try {
+            DownloadApplication.downloadWorkflows(m_serverUri, m_serverPath, tempDir);
+            return tempDir;
+        } catch (NoClassDefFoundError err) {
+            Status status = new Status(IStatus.ERROR, FrameworkUtil.getBundle(getClass()).getSymbolicName(),
+                "Workflow download from server not available, it seems no server client is installed", err);
+            throw new CoreException(status);
+        }
     }
 }
 }
