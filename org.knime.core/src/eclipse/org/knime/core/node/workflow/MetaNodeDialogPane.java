@@ -225,7 +225,8 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         }
 
         if (m_nodes.isEmpty()) {
-            m_panel.add(new JLabel("No valid Quickform configurations."));
+            m_panel.add(new JLabel(
+                "<html>Component is not configurable.<br>Please include Configuration/Quickform nodes.</html>"));
         }
     }
 
