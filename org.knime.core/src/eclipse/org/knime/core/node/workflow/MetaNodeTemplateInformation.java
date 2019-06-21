@@ -58,7 +58,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.util.KnimeURIUtil;
 import org.knime.core.util.LoadVersion;
 
 /**
@@ -208,7 +207,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
     /** @return the sourceURI */
     public URI getSourceURI() {
-        return KnimeURIUtil.getObjectEntityEndpointURI(m_sourceURI, true);
+        return m_sourceURI;
     }
 
     /**

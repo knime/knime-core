@@ -154,17 +154,15 @@ public final class KnimeURIUtil {
      * Returns the object entity endpoint URI.
      *
      * @param knimeURI the knime URI
-     * @param download he download flag
      * @return the object entity endpoint's URI
      */
-    public static URI getObjectEntityEndpointURI(final URI knimeURI, final boolean download) {
+    public static URI getObjectEntityEndpointURI(final URI knimeURI) {
         if (!isHubURI(knimeURI)) {
             return knimeURI;
         }
-        checkURIValidity(knimeURI, HubEntityType.OBJECT);
         // TODO needs fix if we change backend API
-        return getHubEndpoint(knimeURI, "/knime/rest/v4/repository/Users"
-            + knimeURI.getPath().replaceFirst("/space", "") + (download ? ":data" : ""));
+        return getHubEndpoint(knimeURI,
+            "/knime/rest/v4/repository/Users" + knimeURI.getPath().replaceFirst("/space", ""));
     }
 
     /**
