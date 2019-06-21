@@ -1132,30 +1132,17 @@ public final class SubNodeContainer extends SingleNodeContainer
                 });
             } catch (ExecutionException ee) {
                 isCanceled = false;
-                LOGGER.error(ee.getCause().getClass().getSimpleName()
-                    + " while waiting for inner workflow to complete", ee);
+                LOGGER.error(ee.getCause().getClass().getSimpleName() + " while waiting for inner workflow to complete",
+                    ee);
             }
             final InternalNodeContainerState internalState = m_wfm.getInternalState();
             boolean allExecuted = internalState.isExecuted();
-            long unconnectedNodeCnt;
             if (allExecuted) {
                 setVirtualOutputIntoOutport(internalState);
             } else if (isCanceled) {
                 setNodeMessage(new NodeMessage(Type.WARNING, "Execution canceled"));
-            } else if (!m_wfm.isFullyConnected(getVirtualOutNodeID())) {
-                setNodeMessage(
-                    new NodeMessage(Type.ERROR,
-                        "Input "
-                            + (m_wfm.getNodeContainer(getVirtualOutNodeID()).getNrInPorts() > 2
-                                ? "ports are not fully connected" : "port is not connected")
-                            + " (\"Component output\")"));
-            } else if ((unconnectedNodeCnt =
-                m_wfm.getWorkflow().getNodeIDs().stream().filter(n -> !m_wfm.isFullyConnected(n)).count()) > 0) {
-                setNodeMessage(new NodeMessage(Type.ERROR, "Component contains " + unconnectedNodeCnt
-                    + " not fully connected " + (unconnectedNodeCnt > 1 ? "nodes" : "node")));
             } else {
-                setNodeMessage(
-                    new NodeMessage(Type.ERROR, "Error during execution:\n" + m_wfm.printNodeErrorSummary(0)));
+                setNodeMessage(new NodeMessage(Type.ERROR, m_wfm.printNodeErrorSummary()));
             }
             return allExecuted ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
         } finally {
