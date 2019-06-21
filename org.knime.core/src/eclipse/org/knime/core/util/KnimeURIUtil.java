@@ -158,6 +158,9 @@ public final class KnimeURIUtil {
      * @return the object entity endpoint's URI
      */
     public static URI getObjectEntityEndpointURI(final URI knimeURI, final boolean download) {
+        if (!isHubURI(knimeURI)) {
+            return knimeURI;
+        }
         checkURIValidity(knimeURI, HubEntityType.OBJECT);
         // TODO needs fix if we change backend API
         return getHubEndpoint(knimeURI, "/knime/rest/v4/repository/Users"
@@ -171,6 +174,9 @@ public final class KnimeURIUtil {
      * @return the node entity endpoint's URI
      */
     public static URI getNodeEndpointURI(final URI knimeURI) {
+        if (!isHubURI(knimeURI)) {
+            return knimeURI;
+        }
         checkURIValidity(knimeURI, HubEntityType.NODE);
         // TODO needs fix if we change backend API
         return getHubEndpoint(knimeURI, "/nodes/" + splitPath(knimeURI)[NODE_FAC_PATH_IDX]);
@@ -183,6 +189,9 @@ public final class KnimeURIUtil {
      * @return the extensions endpoint's URI
      */
     public static URI getExtensionEndpointURI(final URI knimeURI) {
+        if (!isHubURI(knimeURI)) {
+            return knimeURI;
+        }
         checkURIValidity(knimeURI, HubEntityType.EXTENSION);
         // TODO needs fix if we change backend API
         return getHubEndpoint(knimeURI, "/extensions/" + splitPath(knimeURI)[EXT_ID_PATH_IDX]);
@@ -201,10 +210,6 @@ public final class KnimeURIUtil {
 
     private static void checkURIValidity(final URI knimeURI, final HubEntityType expectedType)
         throws IllegalArgumentException {
-        if (!isHubURI(knimeURI)) {
-            throw new IllegalArgumentException(
-                "The provided URI (" + knimeURI.toString() + ") is not a KNIME-Hub URI.");
-        }
         if (!expectedType.matches(knimeURI.getPath())) {
             throw new IllegalArgumentException(
                 "The provided URI does not match the expected type of " + expectedType.name());

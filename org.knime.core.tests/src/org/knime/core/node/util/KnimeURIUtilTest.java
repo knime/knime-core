@@ -53,6 +53,9 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.knime.core.util.KnimeURIUtil.getExtensionEndpointURI;
+import static org.knime.core.util.KnimeURIUtil.getNodeEndpointURI;
+import static org.knime.core.util.KnimeURIUtil.getObjectEntityEndpointURI;
 import static org.knime.core.util.KnimeURIUtil.isHubURI;
 import static org.knime.core.util.KnimeURIUtil.HubEntityType.getHubEntityType;
 
@@ -209,52 +212,26 @@ public class KnimeURIUtilTest {
         final String apiPrefix = "https://api.hub.knime.com/";
 
         URI knimeURI = new URI(prefix + "extensions/32492/2.3");
-        assertThat("wrong endpoint", KnimeURIUtil.getExtensionEndpointURI(knimeURI),
-            is(new URI(apiPrefix + "extensions/32492")));
+        assertThat("wrong endpoint", getExtensionEndpointURI(knimeURI), is(new URI(apiPrefix + "extensions/32492")));
 
         knimeURI = new URI(prefix + "extensions/2348923/2.3/nodefac");
-        assertThat("wrong endpoint", KnimeURIUtil.getNodeEndpointURI(knimeURI),
-            is(new URI(apiPrefix + "nodes/nodefac")));
+        assertThat("wrong endpoint", getNodeEndpointURI(knimeURI), is(new URI(apiPrefix + "nodes/nodefac")));
 
         final String suffix = "manamana/babdibidibi/manamana/babdibidi";
         knimeURI = new URI(prefix + "space/" + suffix);
-        assertThat("wrong endpoint", KnimeURIUtil.getObjectEntityEndpointURI(knimeURI, false),
+        assertThat("wrong endpoint", getObjectEntityEndpointURI(knimeURI, false),
             is(new URI(apiPrefix + "knime/rest/v4/repository/Users/janedoe/" + suffix)));
-        assertThat("wrong endpoint", KnimeURIUtil.getObjectEntityEndpointURI(knimeURI, true),
+        assertThat("wrong endpoint", getObjectEntityEndpointURI(knimeURI, true),
             is(new URI(apiPrefix + "knime/rest/v4/repository/Users/janedoe/" + suffix + ":data")));
     }
 
     @SuppressWarnings("javadoc")
     @Test
-    public void testInvalidExtensionEndpointURIs() throws URISyntaxException {
+    public void testLocalURIEndpoints() throws URISyntaxException {
         URI knimeURI = new URI("https://lala.com/nothing");
-
-        exceptionGrabber.expect(IllegalArgumentException.class);
-        exceptionGrabber.expectMessage("The provided URI (" + knimeURI.toString() + ") is not a KNIME-Hub URI.");
-
-        KnimeURIUtil.getExtensionEndpointURI(knimeURI);
-    }
-
-    @SuppressWarnings("javadoc")
-    @Test
-    public void testInvalidNodeEndpointURIs() throws URISyntaxException {
-        URI knimeURI = new URI("https://lala.com/nothing");
-
-        exceptionGrabber.expect(IllegalArgumentException.class);
-        exceptionGrabber.expectMessage("The provided URI (" + knimeURI.toString() + ") is not a KNIME-Hub URI.");
-
-        KnimeURIUtil.getNodeEndpointURI(knimeURI);
-    }
-
-    @SuppressWarnings("javadoc")
-    @Test
-    public void testInvalidObjectEndpointURIs() throws URISyntaxException {
-        URI knimeURI = new URI("https://lala.com/nothing");
-
-        exceptionGrabber.expect(IllegalArgumentException.class);
-        exceptionGrabber.expectMessage("The provided URI (" + knimeURI.toString() + ") is not a KNIME-Hub URI.");
-
-        KnimeURIUtil.getObjectEntityEndpointURI(knimeURI, false);
+        assertThat("wrong extension endpoint URI", getExtensionEndpointURI(knimeURI), is(knimeURI));
+        assertThat("wrong node endpoint URI", getNodeEndpointURI(knimeURI), is(knimeURI));
+        assertThat("wrong object endpoint URI", getObjectEntityEndpointURI(knimeURI, false), is(knimeURI));
     }
 
     @SuppressWarnings("javadoc")
@@ -266,7 +243,7 @@ public class KnimeURIUtilTest {
         exceptionGrabber
             .expectMessage("The provided URI does not match the expected type of " + HubEntityType.EXTENSION.name());
 
-        KnimeURIUtil.getExtensionEndpointURI(knimeURI);
+        getExtensionEndpointURI(knimeURI);
     }
 
     @SuppressWarnings("javadoc")
@@ -278,7 +255,7 @@ public class KnimeURIUtilTest {
         exceptionGrabber
             .expectMessage("The provided URI does not match the expected type of " + HubEntityType.NODE.name());
 
-        KnimeURIUtil.getNodeEndpointURI(knimeURI);
+        getNodeEndpointURI(knimeURI);
     }
 
     @SuppressWarnings("javadoc")
@@ -290,7 +267,7 @@ public class KnimeURIUtilTest {
         exceptionGrabber
             .expectMessage("The provided URI does not match the expected type of " + HubEntityType.OBJECT.name());
 
-        KnimeURIUtil.getObjectEntityEndpointURI(knimeURI, true);
+        getObjectEntityEndpointURI(knimeURI, true);
     }
 
 }
