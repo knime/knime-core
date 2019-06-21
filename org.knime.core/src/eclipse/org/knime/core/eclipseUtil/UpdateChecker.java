@@ -86,6 +86,8 @@ public class UpdateChecker {
 
     private static final int NAME_INDEX = 4;
 
+    private static final int SHORT_NAME_INDEX = 5;
+
     /**
      * Information about an available update.
      *
@@ -96,6 +98,8 @@ public class UpdateChecker {
 
         private final String m_name;
 
+        private final String m_shortName;
+
         private final boolean m_updatePossible;
 
         /**
@@ -103,11 +107,14 @@ public class UpdateChecker {
          *
          * @param uri the URI to the new update site, never <code>null</code>
          * @param name a name for the update, never <code>null</code>
+         * @param shortName a short name for the update (e.g. version number)
          * @param updatePossible <code>true</code> if an direct update is possible, <code>false</code> otherwise
+         * @since 4.0
          */
-        public UpdateInfo(final URI uri, final String name, final boolean updatePossible) {
+        public UpdateInfo(final URI uri, final String name, final String shortName, final boolean updatePossible) {
             m_uri = uri;
             m_name = name;
+            m_shortName = shortName;
             m_updatePossible = updatePossible;
         }
 
@@ -121,12 +128,22 @@ public class UpdateChecker {
         }
 
         /**
-         * Returns the name for the update, e.g. "KNIME 2.10".
+         * Returns the name for the update, e.g. "KNIME Analytics Platform 4.1".
          *
          * @return a name for the update, never <code>null</code>
          */
         public String getName() {
             return m_name;
+        }
+
+        /**
+         * Returns a short name for the update, e.g. "4.1"
+         *
+         * @return a short name for the update
+         * @since 4.0
+         */
+        public String getShortName() {
+            return m_shortName;
         }
 
         /**
@@ -167,9 +184,10 @@ public class UpdateChecker {
                 String line;
                 while ((line = in.readLine()) != null) {
                     String[] parts = line.split("\t");
-                    if (parts.length >= 5) {
-                        if (Platform.getOS().equals(parts[OS_INDEX]) && Platform.getOSArch().equals(parts[ARCH_INDEX])) {
-                            return new UpdateInfo(new URI(parts[URL_INDEX]), parts[NAME_INDEX],
+                    if (parts.length >= 6) {
+                        if (Platform.getOS().equals(parts[OS_INDEX])
+                            && Platform.getOSArch().equals(parts[ARCH_INDEX])) {
+                            return new UpdateInfo(new URI(parts[URL_INDEX]), parts[NAME_INDEX], parts[SHORT_NAME_INDEX],
                                 Boolean.parseBoolean(parts[POSSIBLE_INDEX]));
                         }
                     }
