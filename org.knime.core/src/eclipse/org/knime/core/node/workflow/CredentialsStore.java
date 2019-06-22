@@ -426,7 +426,7 @@ public final class CredentialsStore implements Observer {
         /** {@inheritDoc} */
         @Override
         public String toString() {
-            return String.format("%s [login: %s, passwort set: %b]", m_name, m_login, m_password != null);
+            return String.format("%s [login: %s, password set: %b]", m_name, m_login, m_password != null);
         }
 
         void save(final NodeSettingsWO settings) {
