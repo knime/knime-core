@@ -219,10 +219,8 @@ public class KnimeURIUtilTest {
 
         final String suffix = "manamana/babdibidibi/manamana/babdibidi";
         knimeURI = new URI(prefix + "space/" + suffix);
-        assertThat("wrong endpoint", getObjectEntityEndpointURI(knimeURI, false),
+        assertThat("wrong endpoint", getObjectEntityEndpointURI(knimeURI),
             is(new URI(apiPrefix + "knime/rest/v4/repository/Users/janedoe/" + suffix)));
-        assertThat("wrong endpoint", getObjectEntityEndpointURI(knimeURI, true),
-            is(new URI(apiPrefix + "knime/rest/v4/repository/Users/janedoe/" + suffix + ":data")));
     }
 
     @SuppressWarnings("javadoc")
@@ -231,7 +229,7 @@ public class KnimeURIUtilTest {
         URI knimeURI = new URI("https://lala.com/nothing");
         assertThat("wrong extension endpoint URI", getExtensionEndpointURI(knimeURI), is(knimeURI));
         assertThat("wrong node endpoint URI", getNodeEndpointURI(knimeURI), is(knimeURI));
-        assertThat("wrong object endpoint URI", getObjectEntityEndpointURI(knimeURI, false), is(knimeURI));
+        assertThat("wrong object endpoint URI", getObjectEntityEndpointURI(knimeURI), is(knimeURI));
     }
 
     @SuppressWarnings("javadoc")
@@ -267,7 +265,7 @@ public class KnimeURIUtilTest {
         exceptionGrabber
             .expectMessage("The provided URI does not match the expected type of " + HubEntityType.OBJECT.name());
 
-        getObjectEntityEndpointURI(knimeURI, true);
+        getObjectEntityEndpointURI(knimeURI);
     }
 
 }

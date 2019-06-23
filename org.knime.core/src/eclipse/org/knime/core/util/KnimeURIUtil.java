@@ -160,9 +160,10 @@ public final class KnimeURIUtil {
         if (!isHubURI(knimeURI)) {
             return knimeURI;
         }
+        checkURIValidity(knimeURI, HubEntityType.OBJECT);
         // TODO needs fix if we change backend API
         return getHubEndpoint(knimeURI,
-            "/knime/rest/v4/repository/Users" + knimeURI.getPath().replaceFirst("/space", ""));
+            "/knime/rest/v4/repository/Users" + knimeURI.getPath().replaceFirst("/space/", "/"));
     }
 
     /**
