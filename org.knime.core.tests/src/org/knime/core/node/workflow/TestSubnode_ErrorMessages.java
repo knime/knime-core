@@ -72,6 +72,12 @@ public class TestSubnode_ErrorMessages extends WorkflowTestCase {
 
     private NodeID m_threeUnconnectedOneConnectedInternalNode;
 
+    private NodeID m_failingInnerMetaNode;
+
+    private NodeID m_failingMetaNode;
+
+    private NodeID m_insideMetaNodeFailingComponent;
+
     private NodeID m_allFine;
 
     /**
@@ -87,6 +93,13 @@ public class TestSubnode_ErrorMessages extends WorkflowTestCase {
         m_threeUnconnectedOutputPorts = new NodeID(baseID, 11);
         m_oneUnconnectedInternalNode = new NodeID(baseID, 9);
         m_threeUnconnectedOneConnectedInternalNode = new NodeID(baseID, 8);
+        m_failingInnerMetaNode = new NodeID(baseID, 17);
+        m_failingMetaNode = new NodeID(getManager()
+            .getNodeContainer(m_failingInnerMetaNode, SubNodeContainer.class, true).getWorkflowManager().getID(), 12);
+        m_insideMetaNodeFailingComponent =
+            new NodeID(getManager().getNodeContainer(m_failingInnerMetaNode, SubNodeContainer.class, true)
+                .getWorkflowManager().getNodeContainer(m_failingMetaNode, WorkflowManager.class, true).getID(), 11);
+
         m_allFine = new NodeID(baseID, 15);
     }
 
@@ -100,21 +113,47 @@ public class TestSubnode_ErrorMessages extends WorkflowTestCase {
         executeAllAndWait();
 
         // ensure that unconnected subnodecontainers failed
-        ensureSubnodeContainerFailed(m_oneUnconnectedOutputPort, "Input port is not connected (\"Component output\")");
-        ensureSubnodeContainerFailed(m_twoUnconnectedOneConnectedOutputPort,
-            "Input ports are not fully connected (\"Component output\")");
-        ensureSubnodeContainerFailed(m_threeUnconnectedOutputPorts,
-            "Input ports are not fully connected (\"Component output\")");
-        ensureSubnodeContainerFailed(m_oneUnconnectedInternalNode, "Component contains 1 not fully connected node");
+        ensureSubnodeContainerFailed(m_oneUnconnectedOutputPort, "Unconnected input port(s) for nodes:\n" + //
+            "\t- Component Output 0:7:0:9");
+        ensureSubnodeContainerFailed(m_twoUnconnectedOneConnectedOutputPort, "Unconnected input port(s) for nodes:" + //
+            "\n\t- Component Output 0:10:0:10");
+        ensureSubnodeContainerFailed(m_threeUnconnectedOutputPorts, "Unconnected input port(s) for nodes:\n" + //
+            "\t- Component Output 0:11:0:10");
+        ensureSubnodeContainerFailed(m_oneUnconnectedInternalNode, "Unconnected input port(s) for nodes:\n" + //
+            "\t- Column Filter 0:9:0:4");
         ensureSubnodeContainerFailed(m_threeUnconnectedOneConnectedInternalNode,
-            "Component contains 3 not fully connected nodes");
+            "Unconnected input port(s) for nodes:\n" + //
+                "\t- Column Filter 0:8:0:3\n" + //
+                "\t- Column Filter 0:8:0:4\n" + //
+                "\t- Column Filter 0:8:0:10");
 
-        // ensure that properly configured subnodecontainer was executed correctly
+        ensureSubnodeContainerFailed(m_failingInnerMetaNode, "Unconnected input port(s) for nodes:\n" + //
+            "\t- Component Output 0:17:0:10\n\n" + //
+            "Error during execution:\n" + //
+            "\t- Metanode 0:17:0:12");
+
+        checkState(m_failingMetaNode, InternalNodeContainerState.IDLE);
+
+        ensureSubnodeContainerFailed(
+            getManager().getNodeContainer(m_failingInnerMetaNode, SubNodeContainer.class, true).getWorkflowManager()
+                .getNodeContainer(m_failingMetaNode, WorkflowManager.class, true),
+            m_insideMetaNodeFailingComponent, "Unconnected input port(s) for nodes:\n" + //
+                "\t- Column Filter 0:17:0:12:11:0:9\n" + //
+                "\t- Component Output 0:17:0:12:11:0:13\n\n" + //
+                "Error during execution:\n" + //
+                "\t- Row Filter 0:17:0:12:11:0:7 : No row filter specified");
+
+        // ensure that the properly configured subnodecontainer was executed without any errors
         checkState(m_allFine, InternalNodeContainerState.EXECUTED);
     }
 
     private void ensureSubnodeContainerFailed(final NodeID subNodeContainerId, final String msg) throws Exception {
-        final SubNodeContainer subNC = getManager().getNodeContainer(subNodeContainerId, SubNodeContainer.class, true);
+        ensureSubnodeContainerFailed(getManager(), subNodeContainerId, msg);
+    }
+
+    private void ensureSubnodeContainerFailed(final WorkflowManager manager, final NodeID subNodeContainerId,
+        final String msg) throws Exception {
+        final SubNodeContainer subNC = manager.getNodeContainer(subNodeContainerId, SubNodeContainer.class, true);
         checkState(subNC, InternalNodeContainerState.IDLE);
         assertEquals(Type.ERROR, subNC.getNodeMessage().getMessageType());
         assertEquals(msg, subNC.getNodeMessage().getMessage());
