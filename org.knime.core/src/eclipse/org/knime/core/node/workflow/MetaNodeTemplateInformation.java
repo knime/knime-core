@@ -45,13 +45,10 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.knime.core.util.KnimeURIUtil.isHubURI;
-
 import java.net.URI;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
@@ -103,19 +100,6 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         }
     }
 
-    /**
-     * Link type (if template is linked).
-     * @since 4.0
-     */
-    public enum LinkType {
-        /** If not linked. */
-        None,
-        /** A web link, i.e. http(s):// */
-        Web,
-        /** A 'knime' link, i.e. knime:// */
-        Knime;
-    }
-
     /** */
     public enum UpdateStatus {
         /** Up to date. */
@@ -133,7 +117,6 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     private final TemplateType m_type;
     private final Date m_timestamp;
     private final URI m_sourceURI;
-    private final LinkType m_linkType;
 
     /** see {@link #getUpdateStatus()}. */
     private UpdateStatus m_updateStatus = UpdateStatus.UpToDate;
@@ -158,7 +141,6 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             m_sourceURI = null;
             m_timestamp = null;
             m_type = null;
-            m_linkType = LinkType.None;
             break;
         case Template:
             CheckUtils.checkNotNull(timestamp, "Template timestamp must not be null");
@@ -166,7 +148,6 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             m_sourceURI = null;
             m_type = type;
             m_timestamp = timestamp;
-            m_linkType = LinkType.None;
             break;
         case Link:
             CheckUtils.checkNotNull(uri, "Link URI must not be null");
@@ -174,19 +155,10 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             m_sourceURI = uri;
             m_type = null;
             m_timestamp = timestamp;
-            if (isWebLink(uri)) {
-                m_linkType = LinkType.Web;
-            } else {
-                m_linkType = LinkType.Knime;
-            }
             break;
         default:
             throw new IllegalStateException("Unsupported role " + role);
         }
-    }
-
-    private static boolean isWebLink(final URI uri) {
-        return uri.getScheme().startsWith("http");
     }
 
     /** @return the timestamp date or null if this is not a link. */
@@ -209,28 +181,9 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     public URI getSourceURI() {
         return m_sourceURI;
     }
-
-    /**
-     * @return an optional URI that references a web page (e.g. the respective page on the workflow hub)
-     * @since 4.0
-     */
-    public Optional<URI> getMetaNodePageURI() {
-        if (isWebLink(m_sourceURI) && isHubURI(m_sourceURI)) {
-            return Optional.of(m_sourceURI);
-        } else {
-            return Optional.empty();
-        }
-    }
-
     /** @return the role */
     public Role getRole() {
         return m_role;
-    }
-
-    /** @return the link type
-     * @since 4.0*/
-    public LinkType getLinkType() {
-        return m_linkType;
     }
 
     /** @return the type (non-null only for templates). */
@@ -297,7 +250,6 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         case Link:
             Date ts = getTimestamp();
             assert ts != null : "Templates must not have null timestamp";
-            assert !isWebLink(newSource);
             MetaNodeTemplateInformation newInfo = new MetaNodeTemplateInformation(Role.Link, null, newSource, ts);
             newInfo.m_updateStatus = m_updateStatus;
             return newInfo;
