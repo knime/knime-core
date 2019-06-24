@@ -98,11 +98,8 @@ public final class NodeContext {
 
     private static final NodeContext NO_CONTEXT = new NodeContext(null);
 
-    /** To debug AP-11270 -- Runaway NodeContexts pushed but not removed. */
-    private final String m_fullStackTraceAtConstructionTime;
-
     @SuppressWarnings("unused")
-    private StackTraceElement[] m_callStack; // only used for debugging
+    private String m_fullStackTraceAtConstructionTime; // only used for debugging
 
     static {
         CONTEXT_OBJECT_SUPPLIERS.add(new DefaultContextObjectSupplier());
@@ -115,9 +112,8 @@ public final class NodeContext {
     private NodeContext(final Object contextObject) {
         m_contextObjectRef = new WeakReference<Object>(contextObject);
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
-            m_callStack = Thread.currentThread().getStackTrace();
+            m_fullStackTraceAtConstructionTime = getStackTrace();
         }
-        m_fullStackTraceAtConstructionTime = getStackTrace();
     }
 
     private static String getStackTrace() {
@@ -204,8 +200,8 @@ public final class NodeContext {
             logger.debugWithoutContext(
                 "The context object has been garbage collected, you should not have such a context available");
             logger.debugWithoutContext("Current stacktrace: " + getStackTrace());
-            logger
-                .debugWithoutContext("Stacktrace at context construction time: " + m_fullStackTraceAtConstructionTime);
+//          logger
+//              .debugWithoutContext("Stacktrace at context construction time: " + m_fullStackTraceAtConstructionTime);
         }
         return obj;
     }
