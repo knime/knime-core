@@ -2767,13 +2767,7 @@ public class Buffer implements KNIMEStreamConstants {
 
                             final StringBuilder error = new StringBuilder();
                             error.append("Writing of table to file");
-                            Optional.ofNullable(m_nodeContext).map(NodeContext::getNodeContainer)
-                                .ifPresent(c -> error.append(" at node ").append(c.getNameWithID()));
-                            error.append(" encountered error: ");
-                            error.append(t.getClass().getSimpleName());
-                            if (t.getMessage() != null) {
-                                error.append(": " + t.getMessage());
-                            }
+                            appendNodeNameAndError(t, error);
 
                             LOGGER.error(error.toString(), t);
                             LOGGER.error("Table will be held in memory until node is cleared.");
@@ -2799,13 +2793,7 @@ public class Buffer implements KNIMEStreamConstants {
                         } catch (Throwable t) {
                             final StringBuilder error = new StringBuilder();
                             error.append("Clearing of table");
-                            Optional.ofNullable(m_nodeContext).map(NodeContext::getNodeContainer)
-                                .ifPresent(c -> error.append(" at node ").append(c.getNameWithID()));
-                            error.append(" encountered error: ");
-                            error.append(t.getClass().getSimpleName());
-                            if (t.getMessage() != null) {
-                                error.append(": " + t.getMessage());
-                            }
+                            appendNodeNameAndError(t, error);
 
                             LOGGER.debug(error.toString(), t);
                         }
@@ -2815,6 +2803,17 @@ public class Buffer implements KNIMEStreamConstants {
             }
 
             return null;
+        }
+
+        private void appendNodeNameAndError(final Throwable t, final StringBuilder error) {
+            Optional.ofNullable(m_nodeContext)//
+                .map(NodeContext::getNodeContainer)//
+                .ifPresent(c -> error.append(" at node ").append(c.getNameWithID()));
+            error.append(" encountered error: ");
+            error.append(t.getClass().getSimpleName());
+            if (t.getMessage() != null) {
+                error.append(": " + t.getMessage());
+            }
         }
 
     }

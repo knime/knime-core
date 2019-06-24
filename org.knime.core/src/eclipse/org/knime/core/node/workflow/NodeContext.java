@@ -88,9 +88,9 @@ import org.knime.core.node.NodeLogger;
  * @noreference
  */
 public final class NodeContext {
-    private static final ThreadLocal<Deque<NodeContext>> threadLocal = new ThreadLocal<Deque<NodeContext>>();
+    private static final ThreadLocal<Deque<NodeContext>> THREAD_LOCAL = new ThreadLocal<Deque<NodeContext>>();
 
-    private static final NodeLogger logger = NodeLogger.getLogger(NodeContext.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeContext.class);
 
     private static final List<ContextObjectSupplier> CONTEXT_OBJECT_SUPPLIERS = new ArrayList<ContextObjectSupplier>();
 
@@ -137,7 +137,7 @@ public final class NodeContext {
     public static void addContextObjectSupplier(final ContextObjectSupplier supplier) {
         CONTEXT_OBJECT_SUPPLIERS.add(supplier);
         if(CONTEXT_OBJECT_SUPPLIERS.size() > 2) {
-            logger.debugWithoutContext("There are more than 2 context object suppliers registered which is likely not necessary.");
+            LOGGER.debugWithoutContext("There are more than 2 context object suppliers registered which is likely not necessary.");
         }
     }
 
@@ -166,7 +166,7 @@ public final class NodeContext {
         }
 
         if (!res.isPresent()) {
-            logger.debugWithoutContext("Context object is available but cannot be turned into an object of class "
+            LOGGER.debugWithoutContext("Context object is available but cannot be turned into an object of class "
                 + contextObjectClass.getSimpleName() + ".");
         }
         return res;
@@ -197,10 +197,10 @@ public final class NodeContext {
     private final Object getContextObject() {
         Object obj = m_contextObjectRef.get();
         if (KNIMEConstants.ASSERTIONS_ENABLED && obj == null) {
-            logger.debugWithoutContext(
+            LOGGER.debugWithoutContext(
                 "The context object has been garbage collected, you should not have such a context available");
-            logger.debugWithoutContext("Current stacktrace: " + getStackTrace());
-//          logger
+            LOGGER.debugWithoutContext("Current stacktrace: " + getStackTrace());
+//          LOGGER
 //              .debugWithoutContext("Stacktrace at context construction time: " + m_fullStackTraceAtConstructionTime);
         }
         return obj;
@@ -277,12 +277,12 @@ public final class NodeContext {
      * @return a stack with node contexts
      */
     static Deque<NodeContext> getContextStack() {
-        Deque<NodeContext> stack = threadLocal.get();
+        Deque<NodeContext> stack = THREAD_LOCAL.get();
         if (stack == null) {
             stack = new ArrayDeque<NodeContext>(4);
-            threadLocal.set(stack);
+            THREAD_LOCAL.set(stack);
         } else if (stack.size() > 10) {
-            logger.coding("Node context stack has more than 10 elements (" + stack.size()
+            LOGGER.coding("Node context stack has more than 10 elements (" + stack.size()
                 + "), looks like we are leaking contexts somewhere");
         }
         return stack;
@@ -318,16 +318,16 @@ public final class NodeContext {
             if (workflowManager != null) {
                 final WorkflowContext workflowContext = workflowManager.getContext();
                 if (workflowContext != null) {
-                    logger.debug("Workflow user found: " + workflowContext.getUserid());
+                    LOGGER.debug("Workflow user found: " + workflowContext.getUserid());
                     return Optional.of(workflowContext.getUserid());
                 } else {
-                    logger.warn("Workflow context not available");
+                    LOGGER.warn("Workflow context not available");
                 }
             } else {
-                logger.warn("Workflow manager not available");
+                LOGGER.warn("Workflow manager not available");
             }
         } else {
-            logger.warn("Node context not available");
+            LOGGER.warn("Node context not available");
         }
         return Optional.empty();
     }
