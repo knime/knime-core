@@ -76,6 +76,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -135,13 +136,11 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LRUCache;
 import org.knime.core.util.MutableBoolean;
 import org.knime.core.util.ShutdownHelper;
-import org.knime.core.util.ThreadUtils.CallableWithContext;
 
 /**
  * A buffer writes the rows from a {@link DataContainer} to a file. This class serves as connector between the
@@ -2700,28 +2699,21 @@ public class Buffer implements KNIMEStreamConstants {
      * Background task that will write the output data. This is kept as static inner class in order to allow for a
      * garbage collection of the outer class (which indicates an early stopped buffer writing).
      */
-    private static final class ASyncWriteCallable extends CallableWithContext<Void> {
+    private static final class ASyncWriteCallable implements Callable<Void> {
 
         private final WeakReference<Buffer> m_bufferRef;
 
-        private final Optional<String> m_nodeName;
+        private final NodeContext m_nodeContext;
 
         ASyncWriteCallable(final Buffer buffer) {
             m_bufferRef = new WeakReference<>(buffer);
-
-            String nodeName = null;
-            final NodeContext ctx = NodeContext.getContext();
-            if (ctx != null) {
-                final NodeContainer cont = ctx.getNodeContainer();
-                if (cont != null) {
-                    nodeName = cont.getNameWithID();
-                }
-            }
-            m_nodeName = Optional.ofNullable(nodeName);
+            /** The node context may be null if the Buffer has been created outside of a node's context (e.g., in unit
+             * tests). This is also the reason why this class does not extend the CallableWithContect class. */
+            m_nodeContext = NodeContext.getContext();
         }
 
         @Override
-        protected Void callWithContext() throws Exception {
+        public final Void call() throws Exception {
             /**
              * we have to 100% make sure no methods that are synchronized on the buffer are called in here and
              * everything we call in here does not interfere with other methods potentially called asynchronously on
@@ -2733,6 +2725,7 @@ public class Buffer implements KNIMEStreamConstants {
                 return null;
             }
 
+            NodeContext.pushContext(m_nodeContext);
             try {
                 Buffer buffer = m_bufferRef.get();
                 if (buffer == null) {
@@ -2769,15 +2762,13 @@ public class Buffer implements KNIMEStreamConstants {
                 final Buffer buffer = m_bufferRef.get();
                 if (buffer != null) {
                     /** wait for potential asynchronous clear processes before checking value of m_isClearedLock */
-                    synchronized(buffer.m_isClearedLock) {
+                    synchronized (buffer.m_isClearedLock) {
                         if (!buffer.m_isClearedLock.booleanValue()) {
 
                             final StringBuilder error = new StringBuilder();
                             error.append("Writing of table to file");
-                            if (m_nodeName.isPresent()) {
-                                error.append(" at node ");
-                                error.append(m_nodeName.get());
-                            }
+                            Optional.ofNullable(m_nodeContext).map(NodeContext::getNodeContainer)
+                                .ifPresent(c -> error.append(" at node ").append(c.getNameWithID()));
                             error.append(" encountered error: ");
                             error.append(t.getClass().getSimpleName());
                             if (t.getMessage() != null) {
@@ -2808,10 +2799,8 @@ public class Buffer implements KNIMEStreamConstants {
                         } catch (Throwable t) {
                             final StringBuilder error = new StringBuilder();
                             error.append("Clearing of table");
-                            if (m_nodeName.isPresent()) {
-                                error.append(" at node ");
-                                error.append(m_nodeName.get());
-                            }
+                            Optional.ofNullable(m_nodeContext).map(NodeContext::getNodeContainer)
+                                .ifPresent(c -> error.append(" at node ").append(c.getNameWithID()));
                             error.append(" encountered error: ");
                             error.append(t.getClass().getSimpleName());
                             if (t.getMessage() != null) {
@@ -2822,6 +2811,7 @@ public class Buffer implements KNIMEStreamConstants {
                         }
                     }
                 }
+                NodeContext.removeLastContext();
             }
 
             return null;
