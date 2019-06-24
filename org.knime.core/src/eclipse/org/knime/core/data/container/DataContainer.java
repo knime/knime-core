@@ -93,11 +93,11 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.FileUtil;
-import org.knime.core.util.ThreadUtils.RunnableWithContext;
 
 /**
  * Buffer that collects <code>DataRow</code> objects and creates a <code>DataTable</code> on request. This data
@@ -1185,7 +1185,7 @@ public class DataContainer implements RowAppender {
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
-    private final class ContainerRunnable extends RunnableWithContext {
+    private final class ContainerRunnable implements Runnable {
 
         /** The data table domain creator. */
         private final DataTableDomainCreator m_dataTableDomainCreator;
@@ -1195,6 +1195,8 @@ public class DataContainer implements RowAppender {
 
         /** The current batch index. */
         private final long m_batchIdx;
+
+        private final NodeContext m_nodeContext;
 
         /**
          * Constructor.
@@ -1208,10 +1210,14 @@ public class DataContainer implements RowAppender {
             m_batchIdx = batchIdx;
             m_dataTableDomainCreator = domainCreator;
             m_dataTableDomainCreator.setBatchId(m_batchIdx);
+            /** The node context may be null if the DataContainer has been created outside of a node's context (e.g., in
+             * unit tests). This is also the reason why this class does not extend the RunnableWithContext class. */
+            m_nodeContext = NodeContext.getContext();
         }
 
         @Override
-        public void runWithContext() {
+        public final void run() {
+            NodeContext.pushContext(m_nodeContext);
             try {
                 if (m_writeThrowable.get() == null) {
                     final List<BlobSupportDataRow> blobRows = new ArrayList<>(m_rows.size());
@@ -1260,6 +1266,7 @@ public class DataContainer implements RowAppender {
             } finally {
                 m_domainUpdaterPool.add(m_dataTableDomainCreator);
                 m_numActiveContRunnables.release();
+                NodeContext.removeLastContext();
             }
         }
 
