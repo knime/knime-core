@@ -6220,86 +6220,39 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Prints a list of errors that occurred in this node.
+     * Prints a list of errors that occurred in this node and all subnodes
      *
+     * @param indent number of leading spaces
      * @return String of errors with their node ids
      * @since 4.0
      */
-    String printNodeErrorSummary() {
-        final String indent = new String("\t- ");
-        StringBuilder build = new StringBuilder();
+    String printNodeErrorSummary(final int indent) {
+        char[] indentChars = new char[indent];
+        Arrays.fill(indentChars, ' ');
+        String indentString = new String(indentChars);
+        StringBuilder build = new StringBuilder(indentString);
         try (WorkflowLock lock = lock()) {
-            String errors = printMissingInputConnectionErrorSummary(indent);
-            if (!errors.isEmpty()) {
-                build.append("Unconnected input port(s) for nodes:\n");
-                build.append(errors);
-            }
-            errors = printNodeExecutionErrorSummary(indent);
-            if (!errors.isEmpty()) {
-                if (build.length() > 0) {
-                    build.append("\n\n");
-                }
-                build.append("Error during execution:\n");
-                build.append(errors);
-            }
-        }
-        return build.toString();
-
-    }
-
-    /**
-     * Prints a list of nodes that have missing input port connections.
-     *
-     * @param indent the ident
-     * @return list of nodes (name + id) with missing input port connections
-     */
-    private String printMissingInputConnectionErrorSummary(final String indent) {
-        final StringBuilder build = new StringBuilder();
-        final NodeID[] unconnectedNodes =
-            m_workflow.getNodeIDs().stream().filter(n -> !isFullyConnected(n)).toArray(NodeID[]::new);
-        if (unconnectedNodes.length > 0) {
-            build.append(indent);
-            final String joiner = "\n" + indent;
-            build.append(Arrays.stream(unconnectedNodes).map(id -> getNodeContainer(id).getNameWithID())
-                .collect(Collectors.joining(joiner)));
-        }
-        return build.toString();
-    }
-
-    /**
-     * Prints a list of nodes that were not correctly executed.
-     *
-     * @param indent the indent
-     * @return a list of nodes that were not correctly executed
-     */
-    private String printNodeExecutionErrorSummary(final String indent) {
-        final StringBuilder build = new StringBuilder();
-        for (NodeID id : m_workflow.getNodeIDs()) {
-            final NodeContainer nc = m_workflow.getNode(id);
-            if (nc instanceof WorkflowManager && !((WorkflowManager)nc).printNodeErrorSummary().isEmpty()) {
-                build.append(indent);
-                build.append(nc.getNameWithID());
-                build.append("\n");
-            } else if (nc instanceof SubNodeContainer) {
-                build.append(indent);
-                build.append(nc.getNameWithID());
-                build.append("\n");
-            } else {
-                final NodeMessage nodeMessage = nc.getNodeMessage();
-                // Print messages from nodes that have an error message, and warning messages from nodes that
-                // failed to configure
-                if (nodeMessage.getMessageType() == Type.ERROR
-                    || (!nc.getNodeContainerState().isConfigured() && nodeMessage.getMessageType() == Type.WARNING)) {
-                    build.append(indent);
-                    build.append(nc.getNameWithID());
-                    build.append(" : ");
-                    build.append(StringUtils.removeStart(nodeMessage.getMessage(), Node.EXECUTE_FAILED_PREFIX));
-                    build.append("\n");
+            for (NodeID id : m_workflow.getNodeIDs()) {
+                NodeContainer nc = m_workflow.getNode(id);
+                if (nc instanceof WorkflowManager) {
+                    build.append(((WorkflowManager)nc).printNodeErrorSummary(indent + 2));
+                } else if (nc instanceof SubNodeContainer) {
+                    build.append(((SubNodeContainer)nc).getWorkflowManager().printNodeErrorSummary(indent + 6));
+                } else {
+                    final NodeMessage nodeMessage = nc.getNodeMessage();
+                    // Print messages from nodes that have an error message, and warning messages from
+                    // nodes that failed to configure
+                    if (nodeMessage.getMessageType() == Type.ERROR || (!nc.getNodeContainerState().isConfigured()
+                        && nodeMessage.getMessageType() == Type.WARNING)) {
+                        build.append(indentString);
+                        build.append("  ");
+                        build.append(nc.getNameWithID());
+                        build.append(" : ");
+                        build.append(StringUtils.removeStart(nodeMessage.getMessage(), Node.EXECUTE_FAILED_PREFIX));
+                        build.append("\n");
+                    }
                 }
             }
-        }
-        if (build.length() > 0) {
-            build.deleteCharAt(build.length() - 1);
         }
         return build.toString();
     }
