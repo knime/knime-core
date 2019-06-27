@@ -225,8 +225,13 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         }
 
         if (m_nodes.isEmpty()) {
-            m_panel.add(new JLabel(
-                "<html>Component is not configurable.<br>Please include Configuration/Quickform nodes.</html>"));
+            String msg;
+            if (m_usedInSubnode) {
+                msg = "Component is not configurable.<br>Please include Configuration nodes.";
+            } else {
+                msg = "Metanode is not configurable.";
+            }
+            m_panel.add(new JLabel("<html>" + msg + "</html>"));
         }
     }
 
