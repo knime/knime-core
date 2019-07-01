@@ -379,7 +379,13 @@ public class WorkflowLoadHelper {
         }
         if (templateInfo != null) {
             persistor.setOverwriteTemplateInformation(templateInfo.createLink(templateSourceURI));
-            persistor.setNameOverwrite(directory.getName());
+
+            if (templateSourceURI != null) {
+                final String path = templateSourceURI.getPath();
+                persistor.setNameOverwrite(path.substring(path.lastIndexOf('/') + 1));
+            } else {
+                persistor.setNameOverwrite(directory.getName());
+            }
         }
         if (isSetDirtyAfterLoad) {
             persistor.setDirtyAfterLoad();
