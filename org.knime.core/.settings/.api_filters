@@ -64,6 +64,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.KnimeURIUtil">
+        <filter comment="org.knime.core.KnimeURIUtil transformed to URIUtil" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.KnimeURIUtil"/>
+                <message_argument value="org.knime.core_4.0.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/DataTable.java" type="org.knime.core.data.DataTable">
         <filter id="405901410">
             <message_arguments>
