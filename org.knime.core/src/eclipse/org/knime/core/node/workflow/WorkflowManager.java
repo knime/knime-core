@@ -453,6 +453,15 @@ public final class WorkflowManager extends NodeContainer
             return null;
         } else if (directNCParent != null && parent == null) {
             // instance is used in a sub node container
+
+            /* Sync the annotation with the direct parent to fix AP-11150 as only the annotation of the metanode
+             * gets updated which is missed by this workflow manager. */
+            if (directNCParent instanceof SubNodeContainer) {
+                final SubNodeContainer container = (SubNodeContainer)directNCParent;
+                container.getNodeAnnotation().addUIInformationListener(
+                    e -> getNodeAnnotation().copyFrom(container.getNodeAnnotation().getData(), true));
+            }
+
             return directNCParent;
         } else if (directNCParent == null && parent != null) {
             // standard case: either a project or a metanode
