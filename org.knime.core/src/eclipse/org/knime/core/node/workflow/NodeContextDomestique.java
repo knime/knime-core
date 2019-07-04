@@ -44,29 +44,55 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jan 7, 2019 (hornm): created
+ *   Jul 4, 2019 (loki): created
  */
-package org.knime.core.ui;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.NodeContextDomestique;
-import org.knime.core.ui.node.workflow.ContextObjectSupplierUI;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.knime.core.node.workflow.NodeContext.ContextObjectSupplier;
 
 /**
+ * This class exists to circumvent a domino-fall of classloading and instantiation that occurs when the
+ * {@link NodeContext} class is used; see https://knime-com.atlassian.net/browse/AP-12159 for the history to
+ * this.
  *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @author loki der quaeler
+ * @since 4.0
  */
-public class CoreUIPlugin implements BundleActivator {
+public class NodeContextDomestique {
+    //   !!!!!!!!!!!!!!
+    // DO NOT ADD A STATIC INSTANCE OF NodeLogger TO THIS CLASS.
+    //   !!!!!!!!!!!!!!
+    private static final AtomicBoolean APPLICATION_START_UP_HAS_SATISFACTORILY_CONCLUDED = new AtomicBoolean(false);
+    private static final ArrayList<ContextObjectSupplier> PENDING_ADDITIONS = new ArrayList<>();
 
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        NodeContextDomestique.addContextObjectSupplier(new ContextObjectSupplierUI());
+    /**
+     * Registered a new context object suppliers to be used for object retrieval via
+     * #{@link NodeContext#getContextObjectForClass(Class)}.
+     *
+     * @param supplier object to register
+     */
+    public static void addContextObjectSupplier(final ContextObjectSupplier supplier) {
+        if (APPLICATION_START_UP_HAS_SATISFACTORILY_CONCLUDED.get()) {
+            NodeContext.addContextObjectSupplier(supplier);
+        } else {
+            PENDING_ADDITIONS.add(supplier);
+        }
     }
 
-    @Override
-    public void stop(final BundleContext context) throws Exception {
-        //
-    }
+    /**
+     * This method should be called from the <code>IApplication.start(IApplicationContext)</code> implementation at a
+     * point at which references to defining the user's workspace have concluded.
+     */
+    public static void applicationStartupIsAbleToUseNodeLogger() {
+        APPLICATION_START_UP_HAS_SATISFACTORILY_CONCLUDED.set(true);
 
+        for (final ContextObjectSupplier supplier : PENDING_ADDITIONS) {
+            NodeContext.addContextObjectSupplier(supplier);
+        }
+
+        PENDING_ADDITIONS.clear();
+    }
 }
