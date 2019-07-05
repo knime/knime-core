@@ -54,14 +54,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Appender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Layout;
@@ -298,9 +302,9 @@ public final class NodeLogger {
 
     private static Layout WF_DIR_LOG_FILE_LAYOUT = new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n");
 
-    /** As per log4j3.xml we only log 'knime' log out -- the loggers with these prefixes are the parents of all
-     * 'knime' logger.  */
-    private static final String[] KNIME_LOGGER_PREFIXES = new String[] {"com.knime", "org.knime"};
+    /** As per log4j-3.xml we only log 'knime' log out -- the loggers with these prefixes are the parents of all
+     * 'knime' logger. List is amended by 'NodeLogger' from other packages (e.g. partner extensions), see AP-12238 */
+    private static List<String> knownLoggerPrefixes = new ArrayList<>(Arrays.asList("com.knime", "org.knime"));
 
     /**
      * Inits Log4J logger and appends <code>System.out</code>,
@@ -412,7 +416,9 @@ public final class NodeLogger {
             }
         }
         final Level minimumLevelFinal = minimumLevel;
-        Arrays.stream(KNIME_LOGGER_PREFIXES).map(LogManager::getLogger).forEach(l -> l.setLevel(minimumLevelFinal));
+        synchronized (LOGGERS) {
+            knownLoggerPrefixes.stream().map(LogManager::getLogger).forEach(l -> l.setLevel(minimumLevelFinal));
+        }
     }
 
     private static void copyCurrentLog4j(final File dest, final String latestLog4jConfig) throws IOException {
@@ -588,10 +594,27 @@ public final class NodeLogger {
      */
     public static NodeLogger getLogger(final String s) {
         synchronized (LOGGERS) {
-            if (LOGGERS.containsKey(s)) {
-                return LOGGERS.get(s);
+            NodeLogger nodeLogger = LOGGERS.get(s);
+            if (nodeLogger != null) {
+                return nodeLogger;
             } else {
                 NodeLogger logger = new NodeLogger(s);
+                if (knownLoggerPrefixes.stream().noneMatch(prefix -> s.startsWith(prefix))) {
+                    // s = foo.bar.blah.ClassName
+
+                    // pkgName = foo.bar.blah
+                    String pkgName = StringUtils.substringBeforeLast(s, ".");
+                    if (StringUtils.isNotBlank(pkgName)) {
+                        for (Iterator<String> it = knownLoggerPrefixes.iterator(); it.hasNext();) {
+                            if (it.next().startsWith(pkgName)) {
+                                // remove foo.bar.blah.baz (subpackage)
+                                it.remove();
+                            }
+                        }
+                        knownLoggerPrefixes.add(pkgName);
+                        updateLog4JKNIMELoggerLevel();
+                    }
+                }
                 LOGGERS.put(s, logger);
                 return logger;
             }
