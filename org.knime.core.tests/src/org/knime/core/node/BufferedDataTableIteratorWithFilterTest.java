@@ -46,9 +46,12 @@
  */
 package org.knime.core.node;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.stream.IntStream;
 
@@ -100,8 +103,9 @@ public class BufferedDataTableIteratorWithFilterTest {
         new Node((NodeFactory)new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0])),
         SingleNodeContainer.MemoryPolicy.CacheSmallInMemory, NotInWorkflowDataRepository.newInstance());
 
-    private static BufferedDataTable createTable(final int rowCount, final boolean keepInMemory) {
-        final DataRow[] rows = IntStream.range(0, rowCount)
+    private static BufferedDataTable createTable(final int rowCount, final int indexOfFirstRow,
+        final boolean keepInMemory) {
+        final DataRow[] rows = IntStream.range(indexOfFirstRow, indexOfFirstRow + rowCount)
             .mapToObj(i -> new DefaultRow(new RowKey(Integer.toString(i)), new IntCell(i),
                 new StringCell(Integer.toString(i)), new LongCell(i), new DoubleCell(i),
                 i % 2 == 1 ? BooleanCell.TRUE : BooleanCell.FALSE))
@@ -123,7 +127,7 @@ public class BufferedDataTableIteratorWithFilterTest {
      */
     @Test
     public void testFromListIterator() {
-        BufferedDataTable table = createTable(100, true);
+        BufferedDataTable table = createTable(100, 0, true);
 
         try (final CloseableRowIterator rowIt = table.filter(FILTER_MOST).iterator()) {
             assertTrue(rowIt.hasNext());
@@ -142,7 +146,7 @@ public class BufferedDataTableIteratorWithFilterTest {
      */
     @Test
     public void testTableStoreCloseableRowIterator() {
-        BufferedDataTable table = createTable(100, false);
+        BufferedDataTable table = createTable(100, 0, false);
 
         try (final CloseableRowIterator rowIt = table.filter(FILTER_MOST).iterator()) {
             assertTrue(rowIt.hasNext());
@@ -152,6 +156,80 @@ public class BufferedDataTableIteratorWithFilterTest {
             assertTrue(rowIt.hasNext());
             assertEquals("16", rowIt.next().getKey().getString());
             assertFalse(rowIt.hasNext());
+        }
+    }
+
+    /** See AP-12239 -- iterating an empty 'concatenate table' will throw exception.
+     * @throws Exception ... */
+    @Test
+    public void testIterateEmptyConcatenateTableWithFilter() throws Exception {
+        BufferedDataTable table1 = createTable(0, 0, false);
+        BufferedDataTable table2 = createTable(0, 0, false);
+        BufferedDataTable concatenate = EXEC.createConcatenateTable(EXEC.createSubProgress(0), table1, table2);
+        assertThat("Table size", concatenate.size(), is(0L));
+        try (final CloseableRowIterator rowIt = concatenate.iterator()) {
+            while (rowIt.hasNext()) {
+                fail("Should not have any rows");
+            }
+        }
+        // for some reason we don't do validation of the 'from index'; probably because it's easier to hard code '0'
+        try (final CloseableRowIterator rowIt = concatenate.filter(TableFilter.filterRowsFromIndex(20)).iterator()) {
+            while (rowIt.hasNext()) {
+                fail("Should not have any rows");
+            }
+        }
+        try (final CloseableRowIterator rowIt = concatenate.filter(TableFilter.filterRowsToIndex(20)).iterator()) {
+            fail("Validation should have thrown exception");
+        } catch (IndexOutOfBoundsException iobe) {
+
+        }
+        try (final CloseableRowIterator rowIt = concatenate.filter(TableFilter.filterRangeOfRows(10, 20)).iterator()) {
+            fail("Validation should have thrown exception");
+        } catch (IndexOutOfBoundsException iobe) {
+
+        }
+    }
+
+    /** See AP-12239 -- iterating an empty 'concatenate table' will throw exception.
+     * @throws Exception ... */
+    @Test
+    public void testIterateConcatenateTableWithFilter() throws Exception {
+        BufferedDataTable table1 = createTable(3, 0, false);
+        BufferedDataTable table2 = createTable(4, 3, false);
+        BufferedDataTable concatenate = EXEC.createConcatenateTable(EXEC.createSubProgress(0), table1, table2);
+        assertThat("Table size", concatenate.size(), is(7L));
+        try (final CloseableRowIterator rowIt = concatenate.iterator()) {
+            int rowCount = 0;
+            while (rowIt.hasNext()) {
+                rowIt.next();
+                rowCount++;
+            }
+            assertThat("Iterator count", rowCount, is(7));
+        }
+        // for some reason we don't do validation of the 'from index'; probably because it's easier to hard code '0'
+        try (final CloseableRowIterator rowIt = concatenate.filter(TableFilter.filterRowsFromIndex(3)).iterator()) {
+            int rowCount = 0;
+            while (rowIt.hasNext()) {
+                rowIt.next();
+                rowCount++;
+            }
+            assertThat("Iterator count", rowCount, is(4));
+        }
+        try (final CloseableRowIterator rowIt = concatenate.filter(TableFilter.filterRowsToIndex(3)).iterator()) {
+            int rowCount = 0;
+            while (rowIt.hasNext()) {
+                rowIt.next();
+                rowCount++;
+            }
+            assertThat("Iterator count", rowCount, is(4));
+        }
+        try (final CloseableRowIterator rowIt = concatenate.filter(TableFilter.filterRangeOfRows(0, 0)).iterator()) {
+            int rowCount = 0;
+            while (rowIt.hasNext()) {
+                rowIt.next();
+                rowCount++;
+            }
+            assertThat("Iterator count", rowCount, is(1));
         }
     }
 

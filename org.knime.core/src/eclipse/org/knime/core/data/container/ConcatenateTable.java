@@ -400,7 +400,12 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         ConcatenateTableIteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
             m_filter = CheckUtils.checkArgumentNotNull(filter);
             m_exec = exec;
-            m_fromRowIndex = Math.max(m_filter.getFromRowIndex().orElse(0L), 0L);
+            // Think of empty tables and see AP-12239
+            if (size() > 0) {
+                m_fromRowIndex = Math.max(m_filter.getFromRowIndex().orElse(0L), 0L);
+            } else {
+                m_fromRowIndex = -1;
+            }
             m_toRowIndex = Math.min(m_filter.getToRowIndex().orElse(size() - 1), size() - 1);
             assert m_toRowIndex >= m_fromRowIndex;
 
