@@ -81,7 +81,7 @@ import org.knime.core.node.NodeLogger;
  * {@link #pushContext(Object)} and retrieved with {@link #getContextObjectForClass(Class)}. A
  * {@link ContextObjectSupplier} is responsible to turn the pushed objects into an object of the request class, if
  * possible (and the requested class differs from the one pushed). A context object supplier can be registered via
- * {@link NodeContextDomestique#addContextObjectSupplier(ContextObjectSupplier)}.
+ * {@link #addContextObjectSupplier(ContextObjectSupplier)}.
  *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.8
@@ -132,14 +132,9 @@ public final class NodeContext {
      * Registered a new context object suppliers to be used for object retrieval via
      * #{@link NodeContext#getContextObjectForClass(Class)}.
      *
-     * <b>Note</b> do not use this method directly, even if you can access it protection-wise; instead use
-     * {@link NodeContextDomestique#addContextObjectSupplier(ContextObjectSupplier)}
-     *
-     * See https://knime-com.atlassian.net/browse/AP-12159 for the reasons behind this.
-     *
      * @param supplier object to register
      */
-    static void addContextObjectSupplier(final ContextObjectSupplier supplier) {
+    public static void addContextObjectSupplier(final ContextObjectSupplier supplier) {
         CONTEXT_OBJECT_SUPPLIERS.add(supplier);
         if(CONTEXT_OBJECT_SUPPLIERS.size() > 2) {
             LOGGER.debugWithoutContext("There are more than 2 context object suppliers registered which is likely not necessary.");
