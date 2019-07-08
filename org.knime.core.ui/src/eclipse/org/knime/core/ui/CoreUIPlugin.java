@@ -48,7 +48,7 @@
  */
 package org.knime.core.ui;
 
-import org.knime.core.node.workflow.NodeContextDomestique;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.ui.node.workflow.ContextObjectSupplierUI;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -61,7 +61,7 @@ public class CoreUIPlugin implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        NodeContextDomestique.addContextObjectSupplier(new ContextObjectSupplierUI());
+        NodeContext.addContextObjectSupplier(new ContextObjectSupplierUI());
     }
 
     @Override
