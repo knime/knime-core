@@ -60,6 +60,7 @@ import org.knime.core.node.workflow.NodeContext.ContextObjectSupplier;
  *
  * @author loki der quaeler
  * @since 4.0
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class NodeContextDomestique {
     //   !!!!!!!!!!!!!!
