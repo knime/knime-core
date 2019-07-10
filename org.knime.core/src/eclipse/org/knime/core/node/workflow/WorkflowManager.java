@@ -458,8 +458,11 @@ public final class WorkflowManager extends NodeContainer
              * gets updated which is missed by this workflow manager. */
             if (directNCParent instanceof SubNodeContainer) {
                 final SubNodeContainer container = (SubNodeContainer)directNCParent;
-                container.getNodeAnnotation().addUIInformationListener(
-                    e -> getNodeAnnotation().copyFrom(container.getNodeAnnotation().getData(), true));
+                container.getNodeAnnotation().addUIInformationListener(e -> {
+                    if (!getNodeAnnotation().getData().equals(container.getNodeAnnotation().getData())) {
+                        getNodeAnnotation().copyFrom(container.getNodeAnnotation().getData(), true);
+                    }
+                });
             }
 
             return directNCParent;
