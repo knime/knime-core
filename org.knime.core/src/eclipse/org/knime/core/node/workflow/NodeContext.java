@@ -83,6 +83,10 @@ import org.knime.core.node.NodeLogger;
  * possible (and the requested class differs from the one pushed). A context object supplier can be registered via
  * {@link #addContextObjectSupplier(ContextObjectSupplier)}.
  *
+ * <b>Note:</b> Take care not to define {@link NodeLogger} as a static member of this class. See
+ *              https://knime-com.atlassian.net/browse/AP-12159
+ *      for background and discussion about this.
+ *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.8
  * @noreference
@@ -90,13 +94,12 @@ import org.knime.core.node.NodeLogger;
 public final class NodeContext {
     private static final ThreadLocal<Deque<NodeContext>> THREAD_LOCAL = new ThreadLocal<Deque<NodeContext>>();
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeContext.class);
-
     private static final List<ContextObjectSupplier> CONTEXT_OBJECT_SUPPLIERS = new ArrayList<ContextObjectSupplier>();
 
     private final WeakReference<Object> m_contextObjectRef;
 
-    private static final NodeContext NO_CONTEXT = new NodeContext(null);
+    // This was originally static final, constructed here - now you should use getNoContext().  See  https://knime-com.atlassian.net/browse/AP-12159
+    private static NodeContext NO_CONTEXT = null;
 
     @SuppressWarnings("unused")
     private String m_fullStackTraceAtConstructionTime; // only used for debugging
@@ -104,6 +107,16 @@ public final class NodeContext {
     static {
         CONTEXT_OBJECT_SUPPLIERS.add(new DefaultContextObjectSupplier());
     }
+
+    // See  https://knime-com.atlassian.net/browse/AP-12159
+    private static synchronized NodeContext getNoContext() {
+        if (NO_CONTEXT == null) {
+            NO_CONTEXT = new NodeContext(null);
+        }
+
+        return NO_CONTEXT;
+    }
+
 
     private NodeContext(final NodeContainer nodeContainer) {
         this((Object)nodeContainer);
@@ -119,13 +132,13 @@ public final class NodeContext {
     private static String getStackTrace() {
         Thread thread = Thread.currentThread();
         return new StringBuilder()
-        .append(thread.getName())
-        .append(" (")
-        .append(thread.getId())
-        .append("):\n")
-        .append(
-            Arrays.stream(thread.getStackTrace()).map(s -> s.toString()).collect(Collectors.joining("\n  ")))
-        .toString();
+                                            .append(thread.getName())
+                                            .append(" (")
+                                            .append(thread.getId())
+                                            .append("):\n")
+                                            .append(
+                                                Arrays.stream(thread.getStackTrace()).map(s -> s.toString()).collect(Collectors.joining("\n  ")))
+                                            .toString();
     }
 
     /**
@@ -137,7 +150,8 @@ public final class NodeContext {
     public static void addContextObjectSupplier(final ContextObjectSupplier supplier) {
         CONTEXT_OBJECT_SUPPLIERS.add(supplier);
         if(CONTEXT_OBJECT_SUPPLIERS.size() > 2) {
-            LOGGER.debugWithoutContext("There are more than 2 context object suppliers registered which is likely not necessary.");
+            NodeLogger.getLogger(NodeContext.class).debugWithoutContext(
+                "There are more than 2 context object suppliers registered which is likely not necessary.");
         }
     }
 
@@ -166,7 +180,7 @@ public final class NodeContext {
         }
 
         if (!res.isPresent()) {
-            LOGGER.debugWithoutContext("Context object is available but cannot be turned into an object of class "
+            NodeLogger.getLogger(NodeContext.class).debugWithoutContext("Context object is available but cannot be turned into an object of class "
                 + contextObjectClass.getSimpleName() + ".");
         }
         return res;
@@ -197,10 +211,10 @@ public final class NodeContext {
     private final Object getContextObject() {
         Object obj = m_contextObjectRef.get();
         if (KNIMEConstants.ASSERTIONS_ENABLED && obj == null) {
-            LOGGER.debugWithoutContext(
-                "The context object has been garbage collected, you should not have such a context available");
-            LOGGER.debugWithoutContext("Current stacktrace: " + getStackTrace());
-//          LOGGER
+            final NodeLogger logger = NodeLogger.getLogger(NodeContext.class);
+            logger.debugWithoutContext("The context object has been garbage collected, you should not have such a context available");
+            logger.debugWithoutContext("Current stacktrace: " + getStackTrace());
+//          logger
 //              .debugWithoutContext("Stacktrace at context construction time: " + m_fullStackTraceAtConstructionTime);
         }
         return obj;
@@ -212,8 +226,8 @@ public final class NodeContext {
      * @return a node context or <code>null</code>
      */
     public static NodeContext getContext() {
-        NodeContext ctx = getContextStack().peek();
-        if (ctx == NO_CONTEXT) {
+        final NodeContext ctx = getContextStack().peek();
+        if (ctx == getNoContext()) {
             return null;
         } else {
             return ctx;
@@ -262,9 +276,9 @@ public final class NodeContext {
      * @param context an existing context, may be <code>null</code>
      */
     public static void pushContext(final NodeContext context) {
-        Deque<NodeContext> stack = getContextStack();
+        final Deque<NodeContext> stack = getContextStack();
         if (context == null) {
-            stack.push(NO_CONTEXT);
+            stack.push(getNoContext());
         } else {
             stack.push(context);
         }
@@ -282,7 +296,7 @@ public final class NodeContext {
             stack = new ArrayDeque<NodeContext>(4);
             THREAD_LOCAL.set(stack);
         } else if (stack.size() > 10) {
-            LOGGER.coding("Node context stack has more than 10 elements (" + stack.size()
+            NodeLogger.getLogger(NodeContext.class).coding("Node context stack has more than 10 elements (" + stack.size()
                 + "), looks like we are leaking contexts somewhere");
         }
         return stack;
@@ -293,7 +307,7 @@ public final class NodeContext {
      */
     @Override
     public String toString() {
-        if (this == NO_CONTEXT) {
+        if (this == getNoContext()) {
             return "NO CONTEXT";
         } else {
             Object obj = m_contextObjectRef.get();
@@ -318,16 +332,16 @@ public final class NodeContext {
             if (workflowManager != null) {
                 final WorkflowContext workflowContext = workflowManager.getContext();
                 if (workflowContext != null) {
-                    LOGGER.debug("Workflow user found: " + workflowContext.getUserid());
+                    NodeLogger.getLogger(NodeContext.class).debug("Workflow user found: " + workflowContext.getUserid());
                     return Optional.of(workflowContext.getUserid());
                 } else {
-                    LOGGER.warn("Workflow context not available");
+                    NodeLogger.getLogger(NodeContext.class).warn("Workflow context not available");
                 }
             } else {
-                LOGGER.warn("Workflow manager not available");
+                NodeLogger.getLogger(NodeContext.class).warn("Workflow manager not available");
             }
         } else {
-            LOGGER.warn("Node context not available");
+            NodeLogger.getLogger(NodeContext.class).warn("Node context not available");
         }
         return Optional.empty();
     }
