@@ -24,7 +24,6 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.data.util.memory.MemoryAlertSystemTest;
 import org.knime.core.node.BufferedDataContainer;
@@ -141,23 +140,46 @@ public class AbstractColumnTableSorterTest {
      */
     @Test
     public void testSortingWithLimitedFileHandler() throws CanceledExecutionException, InvalidSettingsException {
-        BufferedDataTable bt = createRandomTable(50, 5000);
+        int cols = 2;
+        // the large number of rows is necessary because otherwise KNIME will not split the table up into chunks
+        int rows = 10;
+        int maxOpenContainers = 3;
+        testSortingWithLimitedFileHandlers(cols, rows, maxOpenContainers, () -> true);
+    }
+
+    /**
+     * Tests the sorting in the case where the number of columns exceeds the maximal number
+     * of open file handlers.
+     * In this case it isn't possible to reduce the number of file handlers via merging.
+     *
+     * @throws InvalidSettingsException
+     * @throws CanceledExecutionException
+     */
+    @Test
+    public void testMoreColumnsThanAllowedFileHandlers() throws InvalidSettingsException, CanceledExecutionException {
+        testSortingWithLimitedFileHandlers(501, 10, -1, () -> false);
+    }
+
+    /**
+     * @param cols
+     * @param rows
+     * @param maxOpenContainers -1 means that the number of open containers isn't set explicitly
+     * @throws InvalidSettingsException
+     * @throws CanceledExecutionException
+     */
+    private void testSortingWithLimitedFileHandlers(final int cols, final int rows, final int maxOpenContainers,
+        final MemoryActionIndicator memIndicator)
+        throws InvalidSettingsException, CanceledExecutionException {
+        BufferedDataTable bt = createRandomTable(cols, rows);
 
         ColumnBufferedDataTableSorter dataTableSorter =
             new ColumnBufferedDataTableSorter(bt.getDataTableSpec(), bt.size(), bt.getDataTableSpec()
                 .getColumnNames());
 
-        long usageThreshold = MemoryAlertSystem.getUsedMemory() + (100 << 20);  // more than 100 MB used
-        MemoryActionIndicator memIndicator = new MemoryActionIndicator() {
-            @Override
-            public boolean lowMemoryActionRequired() {
-                MemoryAlertSystem.getInstance();
-                return MemoryAlertSystem.getUsedMemory() > usageThreshold;
-            }
-        };
-
         dataTableSorter.setMemActionIndicator(memIndicator);
-        dataTableSorter.setMaxOpenContainers(60);
+        if (maxOpenContainers >= 0) {
+            dataTableSorter.setMaxOpenContainers(maxOpenContainers);
+        }
 
         final Comparator<DataRow> ascendingOrderAssertion =
             createAscendingOrderAssertingComparator(bt, bt.getDataTableSpec().getColumnNames());
@@ -193,9 +215,9 @@ public class AbstractColumnTableSorterTest {
                 rowVals[j] = new DoubleCell(random.nextDouble());
             }
             container.addRowToTable(new DefaultRow(Integer.toString(i), rowVals));
-            if (i % 1000 == 0) {
-                System.out.println("Added row: " + i);
-            }
+//            if (i % 1000 == 0) {
+//                System.out.println("Added row: " + i);
+//            }
         }
         container.close();
         return container.getTable();

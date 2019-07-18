@@ -311,35 +311,40 @@ abstract class AbstractColumnTableSorter {
     private List<Iterator<DataRow>> mergePartitions(final List<AbstractTableSorter> columnPartitions,
         final ExecutionMonitor exec, final int chunkCount) throws CanceledExecutionException {
         LOGGER.debug("Merging tables");
-        List<Iterator<DataRow>> partitionRowIterators = new ArrayList<Iterator<DataRow>>();
+        final List<Iterator<DataRow>> partitionRowIterators = new ArrayList<>();
 
-        int numberOfNeccessaryContainers = chunkCount * m_sortDescriptions.length;
-        if (numberOfNeccessaryContainers <= m_maxOpenContainers) {
-            exec.setProgress(1, "Merging Done.");
-            // we can open enough containers to merge all runs at one time.
-            // So there is no need to merge them separately
-            for (AbstractTableSorter clMs : columnPartitions) {
-                partitionRowIterators.add(clMs.mergeChunks(exec.createSubProgress(0), false));
-            }
-        } else {
-            int tmp = numberOfNeccessaryContainers;
-            double noOfColumnMergeSortToSortCompletely =
-                Math.ceil((numberOfNeccessaryContainers - m_maxOpenContainers) / (chunkCount - 1));
+        final int numberOfNecessaryContainers = chunkCount * m_sortDescriptions.length;
+        final Iterator<AbstractTableSorter> i = columnPartitions.iterator();
+        if (numberOfNecessaryContainers > m_maxOpenContainers && chunkCount > 1) {
+            // AP-12179: if chunkCount == 1, numberOfNecessaryContainers can still exceed maxOpenContainers if we have
+            // many sortDescriptions but in this case we can't reduce the number of containers by merging
 
-            //we have to merge some of the partitions completely before returning the final containers.
-            Iterator<AbstractTableSorter> i = columnPartitions.iterator();
+            // we have to merge some of the partitions completely before returning the final containers.
+            int tmp = numberOfNecessaryContainers;
+            final int numExcessContainers = numberOfNecessaryContainers - m_maxOpenContainers;
+            final double numExcessPartitions = numExcessContainers / chunkCount;
+            // merging a partition reduces the number of containers for this partition from chunkCount to 1
+            // thus after merging numExcessPartitions, we still have numExcessPartitions files more than allowed
+            // consequently we have to reduce more partitions to fall below maxOpenContainers
+            // AP-12179: In case of chunkCount == 1 this formula led to a division by zero but we now ensure
+            // in the if condition above that chunkCount is greater than 1.
+            final double numPartitionsToMergeSeparately = numExcessPartitions + Math.ceil(
+                numExcessPartitions / (chunkCount - 1));
             int index = 0;
             while (tmp > m_maxOpenContainers && i.hasNext()) {
                 partitionRowIterators.add(i.next().mergeChunks(
-                    exec.createSubProgress(index++ / noOfColumnMergeSortToSortCompletely), true));
-                // if we merge a run completely we save chunkCount of open files handles
+                    exec.createSubProgress(index / numPartitionsToMergeSeparately), true));
+                index++;
+                // if we merge a run completely we save chunkCount of open file handles
                 // but need obviously one for opening the result file.
                 tmp = tmp - chunkCount + 1;
             }
-            exec.setProgress(1, "Merging Done.");
-            while (i.hasNext()) {
-                partitionRowIterators.add(i.next().mergeChunks(exec.createSubProgress(0), false));
-            }
+        }
+        exec.setProgress(1, "Merging Done.");
+        // we can now open enough containers to merge all runs at one time.
+        // Hence the remaining containers don't need to be merged separately
+        while (i.hasNext()) {
+            partitionRowIterators.add(i.next().mergeChunks(exec.createSubProgress(0), false));
         }
         return partitionRowIterators;
     }
