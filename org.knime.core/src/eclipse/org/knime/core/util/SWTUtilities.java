@@ -48,11 +48,24 @@
  */
 package org.knime.core.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 
 /**
  * I did as best a search as i could to find a pre-existing class of this ilk (something that provides SWT related
@@ -152,5 +165,63 @@ public class SWTUtilities {
         if (o instanceof GridData) {
             ((GridData)o).exclude = !visible;
         }
+    }
+
+    /**
+     * This loads a font via our main workbench {@link Display}. The SWT method only takes a file path so we need write
+     * this font to a temporary file first (and we take an {@link InputStream} as we will be getting this asset usually
+     * out of bundle.) The SWT authors swear that once loaded into a given Display, it can be fetched from that Display
+     * instance, but this is not what testing bears out; we can still create an instance of {@link Font} referencing the
+     * correct name. We should cache this loading in the future.
+     *
+     * @param is a stream for a TTF; this will be closed by this method
+     * @param size the desired point size of the font
+     * @param style e.g {@link SWT#BOLD}
+     * @return an instance of {@link Font} if the load is successful - null if not; remember to dispose() when
+     *         appropriate
+     * @since 4.0
+     */
+    public static Font loadFontFromInputStream(final InputStream is, final int size, final int style) {
+        if (is == null) {
+            return null;
+        }
+
+        final Path tempDirectory = KNIMEConstants.getKNIMETempPath();
+        final String tempFontFileName = "font_" + System.currentTimeMillis()
+                                                + Integer.toHexString((int)(Math.random() * 10000.0)) + ".ttf";
+        final Path fontFile = tempDirectory.resolve(tempFontFileName);
+        String fontFileAbsolutePath = null;
+
+        try {
+            try (final ReadableByteChannel inputChannel = Channels.newChannel(is)) {
+                try (final FileChannel fontFileChannel = FileChannel.open(fontFile, StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
+                    fontFileChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
+
+                    fontFileAbsolutePath = fontFile.toString();
+                }
+            }
+
+            fontFile.toFile().deleteOnExit();
+        } catch (final IOException e) {
+            NodeLogger.getLogger(SWTUtilities.class).error("Error caught writing temporary font.", e);
+        }
+
+        if (fontFileAbsolutePath == null) {
+            return null;
+        }
+
+        final Display d = PlatformUI.getWorkbench().getDisplay();
+        d.loadFont(fontFileAbsolutePath);
+
+        try {
+            final String fontName = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, fontFile.toFile()).deriveFont(12).getFontName();
+
+            return new Font(d, fontName, size, style);
+        } catch (final Exception e) {
+            NodeLogger.getLogger(SWTUtilities.class).error("Error caught writing temporary font.", e);
+        }
+
+        return null;
     }
 }
