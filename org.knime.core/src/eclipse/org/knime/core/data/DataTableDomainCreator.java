@@ -470,6 +470,10 @@ public class DataTableDomainCreator {
                 for (final Entry<DataCell, Long> entry : dataTableDomainCreator.m_possVals[i].entrySet()) {
                     Map<DataCell, Long> vals = m_possVals[i];
                     if (!vals.containsKey(entry.getKey()) || vals.get(entry.getKey()) > entry.getValue()) {
+                        // removing the key fixes AP-12357, since re-inserting items does not change the
+                        // running order. Note that we know that all entries with the same batch index are
+                        // stored according to their running order
+                        vals.remove(entry.getKey());
                         vals.put(entry.getKey(), entry.getValue());
                         if ((m_possVals[i].size() > m_maxPossibleValues)) {
                             m_possVals[i] = null;
