@@ -58,6 +58,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Test;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
@@ -343,6 +344,7 @@ public class DataTableDomainCreatorTest {
     /**
      * Checks whether the default maximum of possible values is taken from the system property.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testDefaultNumberOfPossibleValues() {
         DataColumnSpecCreator colSpecCrea = new DataColumnSpecCreator("String col", StringCell.TYPE);
@@ -378,8 +380,8 @@ public class DataTableDomainCreatorTest {
         final DataColumnSpecCreator colSpecStringCrea = new DataColumnSpecCreator("String col", StringCell.TYPE);
         final DataColumnSpecCreator colSpecDoubleCrea = new DataColumnSpecCreator("Double col", DoubleCell.TYPE);
         final DataColumnSpecCreator colSpecIntCrea = new DataColumnSpecCreator("Int col", IntCell.TYPE);
-        final DataTableSpec tableSpec = new DataTableSpec(colSpecStringCrea.createSpec(), colSpecDoubleCrea.createSpec(),
-            colSpecIntCrea.createSpec());
+        final DataTableSpec tableSpec = new DataTableSpec(colSpecStringCrea.createSpec(),
+            colSpecDoubleCrea.createSpec(), colSpecIntCrea.createSpec());
 
         final RowKey rowKey = new RowKey("Row0");
 
@@ -410,11 +412,121 @@ public class DataTableDomainCreatorTest {
     }
 
     /**
+     * Checks that merges maintain proper domain order. Tests the fix for AP-12357.
+     */
+    @Test
+    public void testMergeDomainOrder() {
+        final DataColumnSpecCreator colSpecStringCrea = new DataColumnSpecCreator("String col", StringCell.TYPE);
+        final DataTableSpec tableSpec = new DataTableSpec(colSpecStringCrea.createSpec());
+
+        final RowKey rowKey = new RowKey("Row0");
+
+        final DataCell[] runningOrder = new DataCell[]{(new StringCell("A")), new StringCell("B")};
+        final DataCell[] revRunningOrder = runningOrder.clone();
+        ArrayUtils.reverse(revRunningOrder);
+        final DataCell[] extRunningOrder =
+            new DataCell[]{(new StringCell("A")), new StringCell("B"), new StringCell("C")};
+
+        final DataTableDomainCreator domainCreator_1 = new DataTableDomainCreator(tableSpec, false);
+        final DataTableDomainCreator domainCreator_2 = new DataTableDomainCreator(tableSpec, false);
+        final DataTableDomainCreator domainCreator_3 = new DataTableDomainCreator(tableSpec, false);
+        domainCreator_3.setBatchId(1);
+        final DataTableDomainCreator domainCreator_4 = new DataTableDomainCreator(tableSpec, false);
+        domainCreator_4.setBatchId(2);
+        final DataTableDomainCreator domainCreator_5 = new DataTableDomainCreator(tableSpec, false);
+        domainCreator_5.setBatchId(1);
+        final DataRow row1 = new DefaultRow(rowKey, runningOrder[0]);
+        final DataRow row2 = new DefaultRow(rowKey, runningOrder[1]);
+        final DataRow row3 = new DefaultRow(rowKey, extRunningOrder[2]);
+
+        domainCreator_1.updateDomain(row1);
+        domainCreator_1.updateDomain(row2);
+        domainCreator_4.updateDomain(row1);
+        domainCreator_4.updateDomain(row2);
+        // reserve insert order
+        domainCreator_2.updateDomain(row2);
+        domainCreator_2.updateDomain(row1);
+        domainCreator_3.updateDomain(row2);
+        domainCreator_3.updateDomain(row1);
+        domainCreator_5.updateDomain(row2);
+        domainCreator_5.updateDomain(row3);
+        domainCreator_5.updateDomain(row1);
+
+        // correct domain and merge order
+        final DataTableDomainCreator dC1_2 = new DataTableDomainCreator(domainCreator_1);
+        dC1_2.merge(domainCreator_2);
+
+        assertThat("Wrong domain running order", getDomainValues(dC1_2), is(runningOrder));
+
+        dC1_2.merge(domainCreator_1);
+        dC1_2.merge(domainCreator_2);
+        dC1_2.merge(domainCreator_3);
+
+        assertThat("Wrong domain running order", getDomainValues(dC1_2), is(runningOrder));
+
+        dC1_2.merge(domainCreator_5);
+        assertThat("Wrong domain running order", getDomainValues(dC1_2), is(extRunningOrder));
+
+
+        final DataTableDomainCreator dC1_3 = new DataTableDomainCreator(domainCreator_1);
+        dC1_3.merge(domainCreator_3);
+        assertThat("Wrong domain running order", getDomainValues(dC1_3), is(runningOrder));
+
+        final DataTableDomainCreator dC2_1 = new DataTableDomainCreator(domainCreator_2);
+        dC2_1.merge(domainCreator_1);
+        assertThat("Wrong domain running order", getDomainValues(dC2_1), is(revRunningOrder));
+
+        dC2_1.merge(domainCreator_4);
+        assertThat("Wrong domain running order", getDomainValues(dC2_1), is(revRunningOrder));
+
+        final DataTableDomainCreator dC2_3 = new DataTableDomainCreator(domainCreator_2);
+        dC2_3.merge(domainCreator_3);
+        assertThat("Wrong domain running order", getDomainValues(dC2_3), is(revRunningOrder));
+
+        // This tests AP-12357
+        final DataTableDomainCreator dC3_1 = new DataTableDomainCreator(domainCreator_3);
+
+        // should not change anything
+        dC3_1.merge(domainCreator_4);
+        assertThat("Wrong domain running order", getDomainValues(dC3_1), is(revRunningOrder));
+
+        // should change the order
+        dC3_1.merge(domainCreator_1);
+        assertThat("Wrong domain running order", getDomainValues(dC3_1), is(runningOrder));
+
+        // should not change anything
+        dC3_1.merge(domainCreator_2);
+        assertThat("Wrong domain running order", getDomainValues(dC3_1), is(runningOrder));
+
+        // should add 3 to the end
+        dC3_1.merge(domainCreator_5);
+        assertThat("Wrong domain running order", getDomainValues(dC3_1), is(extRunningOrder));
+
+        final DataTableDomainCreator dC3_2 = new DataTableDomainCreator(domainCreator_3);
+        dC3_2.merge(domainCreator_2);
+        assertThat("Wrong domain running order", getDomainValues(dC3_2), is(revRunningOrder));
+
+        final DataTableDomainCreator dC5_1 = new DataTableDomainCreator(domainCreator_5);
+        dC5_1.merge(domainCreator_1);
+        assertThat("Wrong domain running order", getDomainValues(dC5_1), is(extRunningOrder));
+
+    }
+
+    /**
+     * @param domainCreator
+     * @return
+     */
+    private static DataCell[] getDomainValues(final DataTableDomainCreator domainCreator) {
+        return domainCreator.createSpec().getColumnSpec(0).getDomain().getValues().toArray(new DataCell[0]);
+    }
+
+    /**
      * Tests that merge respects the maximum number of possible values.
      */
     @Test
     public void testMergeRespectsMaxValues() {
-        final DataTableSpec tableSpec = new DataTableSpec(new DataColumnSpecCreator("String col", StringCell.TYPE).createSpec());
+        final DataTableSpec tableSpec =
+            new DataTableSpec(new DataColumnSpecCreator("String col", StringCell.TYPE).createSpec());
 
         final RowKey rowKey = new RowKey("Row0");
 
@@ -435,10 +547,12 @@ public class DataTableDomainCreatorTest {
     /**
      * Checks that merge throws an exception if the spec's column names are different.
      */
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testMergeFailsIfColumnNamesAreDifferent() {
-        final DataTableSpec tableSpec_1 = new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
-        final DataTableSpec tableSpec_2 = new DataTableSpec(new DataColumnSpecCreator("Double col", IntCell.TYPE).createSpec());
+        final DataTableSpec tableSpec_1 =
+            new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
+        final DataTableSpec tableSpec_2 =
+            new DataTableSpec(new DataColumnSpecCreator("Double col", IntCell.TYPE).createSpec());
         final DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec_1, false);
         domainCreator.merge(new DataTableDomainCreator(tableSpec_2, false));
     }
@@ -446,22 +560,25 @@ public class DataTableDomainCreatorTest {
     /**
      * Checks that merge throws an exception if the spec's column types are different.
      */
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testMergeFailsIfColumnTypesAreDifferent() {
-        final DataTableSpec tableSpec_1 = new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
-        final DataTableSpec tableSpec_2 = new DataTableSpec(new DataColumnSpecCreator("Int col", DoubleCell.TYPE).createSpec());
+        final DataTableSpec tableSpec_1 =
+            new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
+        final DataTableSpec tableSpec_2 =
+            new DataTableSpec(new DataColumnSpecCreator("Int col", DoubleCell.TYPE).createSpec());
         final DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec_1, false);
         domainCreator.merge(new DataTableDomainCreator(tableSpec_2, false));
     }
 
-
     /**
      * Checks that merge throws an exception if the maximum number of possible values are different.
      */
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testMergeFailsIfMaxPossibleValuesAreDifferent() {
-        final DataTableSpec tableSpec_1 = new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
-        final DataTableSpec tableSpec_2 = new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
+        final DataTableSpec tableSpec_1 =
+            new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
+        final DataTableSpec tableSpec_2 =
+            new DataTableSpec(new DataColumnSpecCreator("Int col", IntCell.TYPE).createSpec());
         final DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec_1, false);
         domainCreator.setMaxPossibleValues(0);
         domainCreator.merge(new DataTableDomainCreator(tableSpec_2, false));
