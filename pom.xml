@@ -8,46 +8,65 @@
 	<parent>
 		<groupId>org.knime.maven</groupId>
 		<artifactId>parent-pom</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>4.1.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.knime</groupId>
 	<artifactId>knime-core</artifactId>
-	<version>3.8.0-SNAPSHOT</version>
+	<version>4.1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<properties>
-		<!--
-			Use Jenkins's project parameterization capabilities to set a string 
-			parameter named KNIME_TARGET_PLATFORM_P2 to the desired P2 update site value. 
-			For building locally you can set KNIME_TARGET_PLATFORM_P2 in the respective 
-			run configuration 'Environment' tab with a file:// or http:// URL value pointing 
-			to the desired P2 update site.
-		-->
-		<knime.target.platform.p2>${env.KNIME_TP_P2}</knime.target.platform.p2>
-		<knime.shared.p2>${env.KNIME_SHARED_P2}</knime.shared.p2>
+		<feature-branch-extension.branchListProperty>git.branch</feature-branch-extension.branchListProperty>
+		<feature-branch-extension.appendArtifactoryProperties>false</feature-branch-extension.appendArtifactoryProperties>
 	</properties>
 
 	<modules>
-		<module>org.knime.core</module>
-		<!-- <module>org.knime.core.tests</module> -->
 		<module>org.knime.core.data.uritype</module>
 		<module>org.knime.core.pmml</module>
+		<module>org.knime.core</module>
 		<module>org.knime.core.ui</module>
+		<module>org.knime.testing</module>
 		<module>org.knime.rsyntaxtextarea</module>
+		<module>org.knime.core.tests</module>
+		<module>org.knime.features.testing.core</module>
+		<module>org.knime.features.core</module>
 		<module>org.knime.update.core</module>
 	</modules>
 
 	<repositories>
 		<repository>
-			<id>org.knime.update.org</id>
-			<layout>p2</layout>
-			<url>${knime.target.platform.p2}</url>
-		</repository>
-		<repository>
-			<id>org.knime.update.shared</id>
+			<id>p2-knime-shared</id>
 			<layout>p2</layout>
 			<url>${knime.shared.p2}</url>
 		</repository>
+		<repository>
+			<id>p2-knime-tp</id>
+			<layout>p2</layout>
+			<url>${knime.tp.p2}</url>
+		</repository>
 	</repositories>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho.extras</groupId>
+				<artifactId>tycho-source-feature-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>source-feature</id>
+						<phase>package</phase>
+						<goals>
+							<goal>source-feature</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<excludes>
+						<plugin id="org.eclipse.ant.optional.junit" />
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

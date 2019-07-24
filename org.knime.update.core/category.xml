@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <bundle id="org.knime.core" version="3.8.0.qualifier"/>
-   <bundle id="org.knime.core.data.uritype" version="3.8.0.qualifier"/>
-   <bundle id="org.knime.core.pmml" version="3.8.0.qualifier"/>
-   <bundle id="org.knime.core.ui" version="3.8.0.qualifier"/>
-   <bundle id="org.knime.rsyntaxtextarea" version="3.8.0.qualifier"/>
+   <feature id="org.knime.features.core" />
+   <feature id="org.knime.features.core.source" />
+   <feature id="org.knime.features.testing.core" />
+   <feature id="org.knime.features.testing.core.source" />
+
+	<category-def name="knime-core" label="Build artifacts from knime-core">
+		<description>Build artifacts from knime-core</description>
+		<query><expression type="match">id ~= /.+/</expression></query>
+	</category-def>   
 </site>

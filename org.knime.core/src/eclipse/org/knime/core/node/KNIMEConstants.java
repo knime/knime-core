@@ -405,7 +405,7 @@ public final class KNIMEConstants {
     static {
         BUILD_DATE = "Nightly build";
         String versionString;
-        Bundle coreBundle = OSGIHelper.getBundle("org.knime.product");
+        Bundle coreBundle = OSGIHelper.getBundle("org.knime.core");
         if (coreBundle != null) {
             versionString = coreBundle.getHeaders().get("Bundle-Version")
                 .toString();
