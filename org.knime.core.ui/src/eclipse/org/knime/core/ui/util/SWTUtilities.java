@@ -46,7 +46,7 @@
  * History
  *   Aug 10, 2018 (loki): created
  */
-package org.knime.core.util;
+package org.knime.core.ui.util;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -86,10 +86,6 @@ public class SWTUtilities {
      *
      * This method will attempt to return the applicable Shell instance, by hook or by crook.
      *
-     * If we have a "SWT Utility Methods" class lurking somewhere, this might be better suited to go there; it is
-     * presently in this class only because the source problem arose due attempting to open dialogs in a KNIME
-     * application which was in the background.
-     *
      * @param display an instance of Display which contains the active shell; if this is null, this method will return
      *            null
      * @return a Shell instance which is the active shell for the application
@@ -126,10 +122,6 @@ public class SWTUtilities {
      * the application in the foreground), Display.getCurrent().getActiveShell() returns null.
      *
      * This method will attempt to return the applicable Shell instance, by hook or by crook.
-     *
-     * If we have a "SWT Utility Methods" class lurking somewhere, this might be better suited to go there; it is
-     * presently in this class only because the source problem arose due attempting to open dialogs in a KNIME
-     * application which was in the background.
      *
      * @return a Shell instance which is the active shell for the application
      */
