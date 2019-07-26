@@ -55,6 +55,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Optional;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
@@ -169,13 +170,13 @@ public class SWTUtilities {
      * @param is a stream for a TTF; this will be closed by this method
      * @param size the desired point size of the font
      * @param style e.g {@link SWT#BOLD}
-     * @return an instance of {@link Font} if the load is successful - null if not; remember to dispose() when
-     *         appropriate
+     * @return an instance of {@link Optional}, populated with an instance of {@link Font} if the load is successful;
+     *         remember to dispose() when appropriate
      * @since 4.0
      */
-    public static Font loadFontFromInputStream(final InputStream is, final int size, final int style) {
+    public static Optional<Font> loadFontFromInputStream(final InputStream is, final int size, final int style) {
         if (is == null) {
-            return null;
+            return Optional.empty();
         }
 
         final Path tempDirectory = KNIMEConstants.getKNIMETempPath();
@@ -200,20 +201,21 @@ public class SWTUtilities {
         }
 
         if (fontFileAbsolutePath == null) {
-            return null;
+            return Optional.empty();
         }
 
         final Display d = PlatformUI.getWorkbench().getDisplay();
         d.loadFont(fontFileAbsolutePath);
 
         try {
-            final String fontName = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, fontFile.toFile()).deriveFont(12).getFontName();
+            final String fontName =
+                java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, fontFile.toFile()).deriveFont(12).getFontName();
 
-            return new Font(d, fontName, size, style);
+            return Optional.of(new Font(d, fontName, size, style));
         } catch (final Exception e) {
             NodeLogger.getLogger(SWTUtilities.class).error("Error caught writing temporary font.", e);
         }
 
-        return null;
+        return Optional.empty();
     }
 }
