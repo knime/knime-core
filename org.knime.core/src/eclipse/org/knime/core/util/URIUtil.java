@@ -102,8 +102,13 @@ public final class URIUtil {
         return createEncodedURI(url.toString());
     }
 
-    private static boolean isURLEncoded(final String urlString) throws UnsupportedEncodingException {
-        return !URLDecoder.decode(urlString, StandardCharsets.UTF_8.name()).equals(urlString);
+    private static boolean isURLEncoded(final String urlStringWithoutQueryParams) throws UnsupportedEncodingException {
+        //in query parameters a ' ' (space) might be encoded as '+', but nowhere else
+        //-> encode every '+' to ensure that we take it literally (since we are only expecting urls without query params)
+        assert !urlStringWithoutQueryParams.contains("?");
+        String tmp = urlStringWithoutQueryParams.replaceAll("\\+", "%2B");
+        tmp = URLDecoder.decode(tmp, StandardCharsets.UTF_8.name());
+        return !tmp.equals(urlStringWithoutQueryParams);
     }
 
     private static URI createAndEncodeURI(final String uri) throws URIException, URISyntaxException {
