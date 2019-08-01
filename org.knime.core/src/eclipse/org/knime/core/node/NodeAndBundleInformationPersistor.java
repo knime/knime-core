@@ -56,6 +56,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.util.LoadVersion;
@@ -331,6 +332,32 @@ public final class NodeAndBundleInformationPersistor extends NodeAndBundleInform
 
     private static NodeAndBundleInformationPersistor create(final NodeFactory<? extends NodeModel> factory,
         final String nodeName) {
+        @SuppressWarnings("rawtypes")
+        final Class<? extends NodeFactory> facClass = factory.getClass();
+        Bundle bundle = null;
+        if (factory instanceof DynamicNodeFactory) {
+            @SuppressWarnings({"unchecked", "rawtypes"})
+            Optional<String> bundleName = ((DynamicNodeFactory)factory).getBundleName();
+            if (bundleName.isPresent()) {
+                bundle = Platform.getBundle(bundleName.get());
+            }
+        }
+        if (bundle == null) {
+            bundle = OSGIHelper.getBundle(facClass);
+        }
+
+        return create(factory, nodeName, bundle);
+    }
+
+    /**
+     * @param factory factory of a node, must not be <code>null</code>
+     * @param nodeName the node's name, can be <code>null</code>
+     * @param bundle the bundle to extract the information from, can be <code>null</code>
+     * @return a new information object based on the provided information
+     * @since 4.0
+    */
+    public static NodeAndBundleInformationPersistor create(final NodeFactory<? extends NodeModel> factory,
+        final String nodeName, final Bundle bundle) {
         String bundleSymbolicName = null;
         String bundleName = null;
         String bundleVendor = null;
@@ -340,9 +367,6 @@ public final class NodeAndBundleInformationPersistor extends NodeAndBundleInform
         String featureVendor = null;
         Version featureVersion = null;
 
-        @SuppressWarnings("rawtypes")
-        final Class<? extends NodeFactory> facClass = factory.getClass();
-        Bundle bundle = OSGIHelper.getBundle(facClass);
         if (bundle != null) {
             Dictionary<String, String> headers = bundle.getHeaders();
             bundleSymbolicName = bundle.getSymbolicName();
@@ -356,8 +380,8 @@ public final class NodeAndBundleInformationPersistor extends NodeAndBundleInform
             featureVendor = feature.map(f -> f.getProperty(IInstallableUnit.PROP_PROVIDER, null)).orElse(null);
             featureVersion = feature.map(f -> new Version(f.getVersion().toString())).orElse(null);
         }
-        return new NodeAndBundleInformationPersistor(facClass.getName(), bundleSymbolicName, bundleName, bundleVendor, nodeName,
-            bundleVersion, featureSymbolicName, featureName, featureVendor, featureVersion);
+        return new NodeAndBundleInformationPersistor(factory.getClass().getName(), bundleSymbolicName, bundleName,
+            bundleVendor, nodeName, bundleVersion, featureSymbolicName, featureName, featureVendor, featureVersion);
     }
 
     /** If feature or bundle name matches any in {@link #EXTENSION_RENAME_MAP} the string is modified so that

@@ -48,7 +48,9 @@
 package org.knime.core.node;
 
 import java.io.InputStream;
+import java.util.Optional;
 
+import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.node2012.KnimeNodeDocument;
 
 /**
@@ -134,4 +136,25 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
     protected boolean isDeprecatedInternal() {
         return super.isDeprecatedInternal();
     }
+
+    /**
+     * Overriding this method is usually not necessary!
+     *
+     * The only use case is if a deriving class (e.g. part of plugin A) uses information provided by yet another
+     * plugin B (i.e. plugin A has an extension point that is extended by plugin B). In consequence, in order for
+     * this node to work, plugin B needs to be available. However, if plugin B is not installed yet, the framework
+     * should be able to install it automatically based on the bundle information stored with the particular node. Thus,
+     * this method provides the necessary bundle information of plugin B that is finally stored with the node (since
+     * plugin B depends on plugin A - it uses plugin A's extension point - plugin A will be automatically installed,
+     * too).
+     *
+     * If this method is not overridden, it will return the encapsulating bundle from this {@link NodeFactory}.
+     *
+     * @return the bundle name or an empty optional if bundle name can not be provided
+     * @since 4.0
+     */
+    protected Optional<String> getBundleName() {
+        return Optional.ofNullable(OSGIHelper.getBundle(getClass())).map(b -> b.getSymbolicName());
+    }
+
 }
