@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.knime.core.node.FSConnectionFlowVariableProvider;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -74,6 +75,7 @@ public final class PortObjectIDSettings {
     private List<FlowVariable> m_flowVariables;
     private boolean m_copyData;
     private CredentialsProvider m_credentialsProvider;
+    private FSConnectionFlowVariableProvider m_fsConnectionsProvider;
 
     /** Constructor, which sets a null ID (no id). */
     public PortObjectIDSettings() {
@@ -109,24 +111,27 @@ public final class PortObjectIDSettings {
                 }
                 FlowVariable v;
                 switch (varType) {
-                case DOUBLE:
-                    v = new FlowVariable(name, child.getDouble("value"));
-                    break;
-                case INTEGER:
-                    v = new FlowVariable(name, child.getInt("value"));
-                    break;
-                case STRING:
-                    v = new FlowVariable(name, child.getString("value"));
-                    break;
-                case CREDENTIALS:
-                    CheckUtils.checkState(m_credentialsProvider != null, "No credentials provider set");
-                    ICredentials credentials = m_credentialsProvider.get(child.getString("value"));
-                    v = CredentialsStore.newCredentialsFlowVariable(
-                        credentials.getName(), credentials.getLogin(), credentials.getPassword(), false, false);
-                    break;
-                default:
-                    throw new InvalidSettingsException(
-                            "Unknown type " + varType);
+                    case DOUBLE:
+                        v = new FlowVariable(name, child.getDouble("value"));
+                        break;
+                    case INTEGER:
+                        v = new FlowVariable(name, child.getInt("value"));
+                        break;
+                    case STRING:
+                        v = new FlowVariable(name, child.getString("value"));
+                        break;
+                    case CREDENTIALS:
+                        CheckUtils.checkState(m_credentialsProvider != null, "No credentials provider set");
+                        ICredentials credentials = m_credentialsProvider.get(child.getString("value"));
+                        v = CredentialsStore.newCredentialsFlowVariable(credentials.getName(), credentials.getLogin(),
+                            credentials.getPassword(), false, false);
+                        break;
+                    case FS_CONNECTION:
+                        String flowVariableName = child.getString("value");
+                        v = m_fsConnectionsProvider.flowVariableFor(flowVariableName).orElse(null);
+                        break;
+                    default:
+                        throw new InvalidSettingsException("Unknown type " + varType);
                 }
                 m_flowVariables.add(v);
             }
@@ -158,6 +163,9 @@ public final class PortObjectIDSettings {
                 child.addString("value", fv.getStringValue());
                 break;
             case CREDENTIALS:
+                child.addString("value", fv.getName());
+                break;
+            case FS_CONNECTION:
                 child.addString("value", fv.getName());
                 break;
             default:
@@ -217,6 +225,16 @@ public final class PortObjectIDSettings {
      */
     public void setCredentialsProvider(final CredentialsProvider cp) {
         m_credentialsProvider = cp;
+    }
+
+    /**
+     * Sets the file system connection flow variable provider to read file system connection flow variables from.
+     * Only required for loading the settings.
+     *
+     * @param provider the file system connection flow variable provider
+     */
+    public void setFSConnectionFlowVariableProvider(final FSConnectionFlowVariableProvider provider) {
+        m_fsConnectionsProvider = provider;
     }
 
 }

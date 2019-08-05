@@ -155,18 +155,19 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             throw new NullPointerException("Arguments must not be null");
         }
         switch (desiredType) {
-        case STRING:
-            return true;
-        case DOUBLE:
-            return Type.DOUBLE.equals(actualType)
-            || Type.INTEGER.equals(actualType);
-        case INTEGER:
-            return Type.INTEGER.equals(actualType);
-        case CREDENTIALS:
-            return false;
-        default:
-            assert false : "unknown type: " + desiredType;
-            return false;
+            case STRING:
+                return true;
+            case DOUBLE:
+                return Type.DOUBLE.equals(actualType) || Type.INTEGER.equals(actualType);
+            case INTEGER:
+                return Type.INTEGER.equals(actualType);
+            case CREDENTIALS:
+                return false;
+            case FS_CONNECTION:
+                return false;
+            default:
+                assert false : "unknown type: " + desiredType;
+                return false;
         }
     }
 

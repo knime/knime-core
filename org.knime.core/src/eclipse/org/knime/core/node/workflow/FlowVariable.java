@@ -47,11 +47,12 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Objects;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue;
 
 /**
@@ -78,7 +79,12 @@ public final class FlowVariable extends FlowObject {
         STRING,
         /** Credentials, currently filtered from {@link FlowObjectStack#getAvailableFlowVariables()}.
          * @since 3.1 */
-        CREDENTIALS;
+        CREDENTIALS,
+        /**
+         * A key used to retrieve file system connections from the FSConnnectionRegistry.
+         * @since 4.1
+         */
+        FS_CONNECTION;
     }
 
     /** Scope of variable. */
@@ -136,6 +142,7 @@ public final class FlowVariable extends FlowObject {
     private double m_valueD = Double.NaN;
     private int m_valueI = 0;
     private CredentialsFlowVariableValue m_valueCredentials;
+    private FSConnectionFlowVariableValue m_valueFSConnection;
 
 
     private FlowVariable(final String name, final Type type,
@@ -226,6 +233,17 @@ public final class FlowVariable extends FlowObject {
         m_valueCredentials = CheckUtils.checkArgumentNotNull(valueC);
     }
 
+    /** create new FlowVariable containing a file system connection key. (Flow Scope)
+     *
+     * @param name of the variable
+     * @param fsConnection file system connection key object
+     * @noreference This constructor is not intended to be referenced by clients
+     */
+    FlowVariable(final String name, final FSConnectionFlowVariableValue fsConnection) {
+        this(name, Type.FS_CONNECTION, Scope.Flow);
+        m_valueFSConnection = CheckUtils.checkArgumentNotNull(fsConnection);
+    }
+
     /**
      * @return name of variable.
      */
@@ -294,15 +312,35 @@ public final class FlowVariable extends FlowObject {
     }
 
     /**
+     * Returns the file system connection key value, if present.
+     *
+     * @return the file system connection key value or null
+     * @since 4.1
+     * @noreference this method is not intended to be referenced by clients.
+     */
+    FSConnectionFlowVariableValue getFSConnectionValue() {
+        if (m_type != Type.FS_CONNECTION) {
+            return null;
+        }
+        return m_valueFSConnection;
+    }
+
+    /**
      * @return value of the variable as string (independent of type).
      * @since 2.6
      */
     public String getValueAsString() {
         switch (m_type) {
-        case DOUBLE: return Double.toString(m_valueD);
-        case INTEGER: return Integer.toString(m_valueI);
-        case STRING: return m_valueS;
-        case CREDENTIALS: return "Credentials: " + m_valueCredentials.getName();
+            case DOUBLE:
+                return Double.toString(m_valueD);
+            case INTEGER:
+                return Integer.toString(m_valueI);
+            case STRING:
+                return m_valueS;
+            case CREDENTIALS:
+                return "Credentials: " + m_valueCredentials.getName();
+            case FS_CONNECTION:
+                return m_valueFSConnection.connectionKey();
         }
         return "invalid type";
     }
@@ -315,21 +353,24 @@ public final class FlowVariable extends FlowObject {
         settings.addString("name", getName());
         settings.addString("class", getType().name());
         switch (getType()) {
-        case INTEGER:
-            settings.addInt("value", getIntValue());
-            break;
-        case DOUBLE:
-            settings.addDouble("value", getDoubleValue());
-            break;
-        case STRING:
-            settings.addString("value", getStringValue());
-            break;
-        case CREDENTIALS:
-            NodeSettingsWO subSettings = settings.addNodeSettings("value");
-            m_valueCredentials.save(subSettings);
-            break;
-        default:
-            assert false : "Unknown variable type: " + getType();
+            case INTEGER:
+                settings.addInt("value", getIntValue());
+                break;
+            case DOUBLE:
+                settings.addDouble("value", getDoubleValue());
+                break;
+            case STRING:
+                settings.addString("value", getStringValue());
+                break;
+            case CREDENTIALS:
+                NodeSettingsWO subSettings = settings.addNodeSettings("value");
+                m_valueCredentials.save(subSettings);
+                break;
+            case FS_CONNECTION:
+                settings.addString("value", getFSConnectionValue().connectionKey());
+                break;
+            default:
+                assert false : "Unknown variable type: " + getType();
         }
     }
 
@@ -355,22 +396,25 @@ public final class FlowVariable extends FlowObject {
         }
         FlowVariable v;
         switch (varType) {
-        case DOUBLE:
-            v = new FlowVariable(name, sub.getDouble("value"));
-            break;
-        case INTEGER:
-            v = new FlowVariable(name, sub.getInt("value"));
-            break;
-        case STRING:
-            v = new FlowVariable(name, sub.getString("value"));
-            break;
-        case CREDENTIALS:
-            NodeSettingsRO subSettings = sub.getNodeSettings("value");
-            CredentialsFlowVariableValue credentialsValue = CredentialsFlowVariableValue.load(subSettings);
-            v = new FlowVariable(name, credentialsValue);
-            break;
-        default:
-            throw new InvalidSettingsException("Unknown type " + varType);
+            case DOUBLE:
+                v = new FlowVariable(name, sub.getDouble("value"));
+                break;
+            case INTEGER:
+                v = new FlowVariable(name, sub.getInt("value"));
+                break;
+            case STRING:
+                v = new FlowVariable(name, sub.getString("value"));
+                break;
+            case CREDENTIALS:
+                NodeSettingsRO subSettings = sub.getNodeSettings("value");
+                CredentialsFlowVariableValue credentialsValue = CredentialsFlowVariableValue.load(subSettings);
+                v = new FlowVariable(name, credentialsValue);
+                break;
+            case FS_CONNECTION:
+                v = new FlowVariable(name, new FSConnectionFlowVariableValue(sub.getString("value")));
+                break;
+            default:
+                throw new InvalidSettingsException("Unknown type " + varType);
         }
         return v;
     }
@@ -386,6 +430,7 @@ public final class FlowVariable extends FlowObject {
         clone.m_valueI = m_valueI;
         clone.m_valueS = m_valueS;
         clone.m_valueCredentials = m_valueCredentials;
+        clone.m_valueFSConnection = m_valueFSConnection;
         return clone;
     }
 
@@ -394,11 +439,23 @@ public final class FlowVariable extends FlowObject {
     public String toString() {
         String value;
         switch (m_type) {
-        case DOUBLE: value = Double.toString(m_valueD); break;
-        case INTEGER: value = Integer.toString(m_valueI); break;
-        case STRING: value = m_valueS; break;
-        case CREDENTIALS: value = m_valueCredentials.toString(); break;
-        default: throw new InternalError("m_type must not be null");
+            case DOUBLE:
+                value = Double.toString(m_valueD);
+                break;
+            case INTEGER:
+                value = Integer.toString(m_valueI);
+                break;
+            case STRING:
+                value = m_valueS;
+                break;
+            case CREDENTIALS:
+                value = m_valueCredentials.toString();
+                break;
+            case FS_CONNECTION:
+                value = m_valueFSConnection.toString();
+                break;
+            default:
+                throw new InternalError("m_type must not be null");
         }
         return m_name + "\" (" + m_type + ": " + value + ")";
     }
@@ -429,11 +486,14 @@ public final class FlowVariable extends FlowObject {
             valueEqual = v.getIntValue() == getIntValue();
             break;
         case STRING:
-            valueEqual = ConvenienceMethods.areEqual(
-                    v.getStringValue(), getStringValue());
+            valueEqual = Objects.equals(v.getStringValue(), getStringValue());
             break;
         case CREDENTIALS:
-            valueEqual = ConvenienceMethods.areEqual(v.getCredentialsValue(), getCredentialsValue());
+            valueEqual = Objects.equals(v.getCredentialsValue(), getCredentialsValue());
+            break;
+        case FS_CONNECTION:
+                valueEqual =
+                    Objects.equals(v.getFSConnectionValue().connectionKey(), getFSConnectionValue().connectionKey());
             break;
         default:
             throw new IllegalStateException("Unsupported variable type "
