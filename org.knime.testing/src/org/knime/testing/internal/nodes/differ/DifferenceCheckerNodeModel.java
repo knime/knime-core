@@ -50,7 +50,6 @@ package org.knime.testing.internal.nodes.differ;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -392,9 +391,9 @@ class DifferenceCheckerNodeModel extends NodeModel {
             DataColumnDomain testDom = testColSpec.getDomain();
             DataColumnDomain refDom = refColSpec.getDomain();
             if (!refDom.equals(testDom)) {
-                checkPossibleValues(testColSpec, refColSpec, checker);
                 checkBounds(testColSpec, refColSpec, checker);
             }
+            checkPossibleValues(testColSpec, refColSpec, checker);
         }
     }
 
@@ -459,10 +458,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
             }
 
             List<DataCell> refValues = new ArrayList<DataCell>(refDom.getValues());
-            Collections.sort(refValues, refColSpec.getType().getComparator());
-
             List<DataCell> testValues = new ArrayList<DataCell>(testDom.getValues());
-            Collections.sort(testValues, testColSpec.getType().getComparator());
 
             for (int i = 0; i < testValues.size(); i++) {
                 DataCell refCell = refValues.get(i);
@@ -470,8 +466,8 @@ class DifferenceCheckerNodeModel extends NodeModel {
 
                 Result res = checker.check(refCell, testCell);
                 if (!res.ok()) {
-                    throw new IllegalStateException("Wrong possible value in column '" + refColSpec.getName() + "': "
-                            + res.getMessage());
+                    throw new IllegalStateException("Wrong possible values (or wrong order) in column '"
+                            + refColSpec.getName() + "': " + res.getMessage());
                 }
             }
         } else {
