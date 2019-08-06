@@ -52,8 +52,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.URIException;
 import org.knime.core.node.NodeLogger;
@@ -69,31 +69,35 @@ public final class URIUtil {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(URIUtil.class);
 
+    private static final Pattern ENCODED_PLUS_SIGN = Pattern.compile("%2B", Pattern.LITERAL);
+
     /**
-     * Converts a url-string to an encoded (if not already encoded) URI.
+     * Converts a url-string (without query parameters!) to an encoded (if not already encoded) URI.
      *
-     * @param url the string encode and turn into an URI
+     * @param urlWithoutQueryParams the string to encode and turn into an URI
      * @return the URI
      */
-    public static URI createEncodedURI(final String url) {
+    public static URI createEncodedURI(final String urlWithoutQueryParams) {
+        //make sure that no query parameters are contained
+        assert !urlWithoutQueryParams.contains("?");
         URI uri;
         try {
-            if (isURLEncoded(url.toString())) {
+            if (isURLEncoded(urlWithoutQueryParams.toString())) {
                 //URL is already encoded
-                uri = new URI(url);
+                uri = new URI(urlWithoutQueryParams);
             } else {
                 //URL is not yet encoded!
-                uri = createAndEncodeURI(url.toString());
+                uri = createAndEncodeURI(urlWithoutQueryParams.toString());
             }
         } catch (URISyntaxException | URIException | UnsupportedEncodingException e) {
-            LOGGER.error("The URL '" + url + "' couldn't be turned into an URI", e);
+            LOGGER.error("The URL '" + urlWithoutQueryParams + "' couldn't be turned into an URI", e);
             return null;
         }
         return uri;
     }
 
     /**
-     * Converts a URL to an encoded (if not already encoded) URI.
+     * Converts a URL (without query parameters!) to an encoded (if not already encoded) URI.
      *
      * @param url the string encode and turn into an URI
      * @return the URI
@@ -103,15 +107,16 @@ public final class URIUtil {
     }
 
     private static boolean isURLEncoded(final String urlStringWithoutQueryParams) throws UnsupportedEncodingException {
-        //in query parameters a ' ' (space) might be encoded as '+', but nowhere else
-        //-> encode every '+' to ensure that we take it literally (since we are only expecting urls without query params)
-        assert !urlStringWithoutQueryParams.contains("?");
-        String tmp = urlStringWithoutQueryParams.replaceAll("\\+", "%2B");
-        tmp = URLDecoder.decode(tmp, StandardCharsets.UTF_8.name());
-        return !tmp.equals(urlStringWithoutQueryParams);
+        //URL is already encoded if it contains a '%' which is not allowed in names of KNIME objects
+        //see org.knime.workbench.explorer.filesystem.ExplorerFileSystem.validateFilename(String)
+        return urlStringWithoutQueryParams.contains("%");
     }
 
     private static URI createAndEncodeURI(final String uri) throws URIException, URISyntaxException {
-        return new URI(new org.apache.commons.httpclient.URI(uri, false, StandardCharsets.UTF_8.name()).toString());
+        String encoded = new org.apache.commons.httpclient.URI(uri, false, StandardCharsets.UTF_8.name()).toString();
+        //'+' signs are usually taken literally (i.e. not encoded) in the path of an URL.
+        //However, the above function encodes it nevertheless and the line below reverts that
+        encoded = ENCODED_PLUS_SIGN.matcher(encoded).replaceAll("+");
+        return new URI(encoded);
     }
 }
