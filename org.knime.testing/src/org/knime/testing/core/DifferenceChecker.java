@@ -202,4 +202,14 @@ public interface DifferenceChecker<T extends DataValue> {
      * @return <code>true</code> if the domain should be ignored, <code>false</code> if it should be respected
      */
     boolean ignoreDomain();
+
+    /**
+     * if {@link #ignoreDomain()} is set then check the domain values but do not assert ordering of values. (Got
+     * introduced as part of AP-12523 in order to guarantee backward compatibility of old test workflows.)
+     *
+     * @return This property
+     */
+    default boolean ignoreDomainPossibleValuesOrdering() {
+        return false;
+    }
 }

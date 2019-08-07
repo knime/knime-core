@@ -196,9 +196,14 @@ class DifferenceCheckerSettings {
                 String checkerFactoryClass = columnConfig.getString("checkerFactory");
 
                 m_checkerPerColumn.put(columnName, checkerFactoryClass);
+                DifferenceChecker<? extends DataValue> checker =
+                        CheckerUtil.instance.getFactory(checkerFactoryClass).newChecker();
+
                 if (columnConfig.containsKey("internals")) {
                     NodeSettings internals = new NodeSettings("internals");
-                    columnConfig.getNodeSettings("internals").copyTo(internals);
+                    // wash settings through the DifferenceChecker instance (in case new fields need to be loaded)
+                    checker.loadSettings(columnConfig.getNodeSettings("internals"));
+                    checker.saveSettings(internals);
                     m_perColumnConfig.put(columnName, internals);
                 }
             }

@@ -460,6 +460,11 @@ class DifferenceCheckerNodeModel extends NodeModel {
             List<DataCell> refValues = new ArrayList<DataCell>(refDom.getValues());
             List<DataCell> testValues = new ArrayList<DataCell>(testDom.getValues());
 
+            if (checker.ignoreDomainPossibleValuesOrdering()) {
+                refValues.sort(refColSpec.getType().getComparator());
+                testValues.sort(testColSpec.getType().getComparator());
+            }
+
             for (int i = 0; i < testValues.size(); i++) {
                 DataCell refCell = refValues.get(i);
                 DataCell testCell = testValues.get(i);
@@ -467,7 +472,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
                 Result res = checker.check(refCell, testCell);
                 if (!res.ok()) {
                     throw new IllegalStateException("Wrong possible values (or wrong order) in column '"
-                            + refColSpec.getName() + "': " + res.getMessage());
+                        + refColSpec.getName() + "': " + res.getMessage());
                 }
             }
         } else {

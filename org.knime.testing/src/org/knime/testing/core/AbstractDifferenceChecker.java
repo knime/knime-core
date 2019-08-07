@@ -74,9 +74,22 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
 
     private final SettingsModelBoolean m_ignoreDomain = new SettingsModelBoolean("ignoreDomain", false);
 
+    // introduced as part of AP-12523
+    private final SettingsModelBoolean m_ignoreDomainPossibleValuesOrdering =
+        createIgnoreDomainPossibleValuesOrderingModel(m_ignoreDomain);
+
+    private static final SettingsModelBoolean createIgnoreDomainPossibleValuesOrderingModel(
+        final SettingsModelBoolean ignoreDomainsModel) {
+        SettingsModelBoolean result = new SettingsModelBoolean("ignoreDomainPossibleValuesOrdering", false);
+        ignoreDomainsModel.addChangeListener(e -> result.setEnabled(!ignoreDomainsModel.getBooleanValue()));
+        result.setEnabled(!ignoreDomainsModel.getBooleanValue());
+        return result;
+    }
+
     private DialogComponentBoolean m_ignorePropertiesComponent;
     private DialogComponentBoolean m_ignoreDomainComponent;
     private DialogComponentBoolean m_ignoreElementNamesComponent;
+    private DialogComponentBoolean m_ignoreDomainPossibleValuesOrderingComponent;
 
     /**
      * {@inheritDoc}
@@ -100,6 +113,15 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
             // ignore and use default
             m_ignoreColumnElementNames.setBooleanValue(false);
         }
+
+        try {
+            // added in 4.1
+            m_ignoreDomainPossibleValuesOrdering.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            // true here because old instances of the node ignore it (backward compatibility)
+            m_ignoreDomainPossibleValuesOrdering.setBooleanValue(true);
+        }
+
     }
 
     /**
@@ -127,6 +149,13 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
             m_ignoreDomain.setBooleanValue(false);
         }
 
+        try {
+            // added in 4.1
+            m_ignoreDomainPossibleValuesOrdering.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            // false here because new instance of the node check ordering
+            m_ignoreDomainPossibleValuesOrdering.setBooleanValue(false);
+        }
     }
 
     /**
@@ -137,6 +166,7 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
         m_ignoreColumnProperties.saveSettingsTo(settings);
         m_ignoreColumnElementNames.saveSettingsTo(settings);
         m_ignoreDomain.saveSettingsTo(settings);
+        m_ignoreDomainPossibleValuesOrdering.saveSettingsTo(settings);
     }
 
     /**
@@ -147,6 +177,7 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
         m_ignoreColumnProperties.validateSettings(settings);
         // don't check m_ignoreDomain, it was added in 2.11
         // don't check m_ignoreColumnElementNames, it was added in 3.3
+        // don't check m_ignoreDomainPossibleValuesOrdering, it was added in 4.1
     }
 
     /**
@@ -168,7 +199,14 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
             m_ignoreDomainComponent.setToolTipText("Ignores the domain (e.g. possible values, upper and lower bounds) "
                 + "in the data column spec");
         }
-        return Arrays.asList(m_ignorePropertiesComponent, m_ignoreElementNamesComponent, m_ignoreDomainComponent);
+        if (m_ignoreDomainPossibleValuesOrderingComponent == null) {
+            m_ignoreDomainPossibleValuesOrderingComponent = new DialogComponentBoolean(
+                m_ignoreDomainPossibleValuesOrdering, "Ignore ordering of possible values in domain");
+            m_ignoreDomainPossibleValuesOrderingComponent.setToolTipText(
+                "Ignores the ordering of values in the domain -- the set must be the same but ordering is ignored");
+        }
+        return Arrays.asList(m_ignorePropertiesComponent, m_ignoreElementNamesComponent, m_ignoreDomainComponent,
+            m_ignoreDomainPossibleValuesOrderingComponent);
     }
 
     /**
@@ -193,5 +231,13 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
     @Override
     public boolean ignoreDomain() {
         return m_ignoreDomain.getBooleanValue();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean ignoreDomainPossibleValuesOrdering() {
+        return m_ignoreDomainPossibleValuesOrdering.getBooleanValue();
     }
 }
