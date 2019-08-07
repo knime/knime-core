@@ -66,6 +66,7 @@ import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
@@ -83,6 +84,7 @@ import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowLoopContext;
@@ -273,11 +275,10 @@ public abstract class NodeModel implements ViewableModel {
         } else {
             m_inPortTypes = new PortType[inPortTypes.length];
             for (int i = 0; i < inPortTypes.length; i++) {
-                if (inPortTypes[i] == null) {
-                    throw new NullPointerException("InPortType[" + i
-                            + "] must not be null!");
-                }
-                m_inPortTypes[i] = inPortTypes[i];
+                PortType portType = inPortTypes[i];
+                CheckUtils.checkArgumentNotNull(portType, "InPortType[%d] must not be null!", i);
+                m_inPortTypes[i] =
+                    PortTypeRegistry.getInstance().getPortType(portType.getPortObjectClass(), portType.isOptional());
             }
         }
         if (outPortTypes == null) {
@@ -285,11 +286,10 @@ public abstract class NodeModel implements ViewableModel {
         } else {
             m_outPortTypes = new PortType[outPortTypes.length];
             for (int i = 0; i < outPortTypes.length; i++) {
-                if (outPortTypes[i] == null) {
-                    throw new NullPointerException("OutPortType[" + i
-                            + "] must not be null!");
-                }
-                m_outPortTypes[i] = outPortTypes[i];
+                PortType portType = outPortTypes[i];
+                CheckUtils.checkArgumentNotNull(portType, "OutPortType[%d] must not be null!", i);
+                m_outPortTypes[i] =
+                    PortTypeRegistry.getInstance().getPortType(portType.getPortObjectClass(), portType.isOptional());
             }
         }
 
