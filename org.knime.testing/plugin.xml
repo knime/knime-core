@@ -20,30 +20,7 @@
          point="org.knime.workbench.repository.nodes">
       <node
             category-path="/testing"
-            factory-class="org.knime.testing.node.disturber.DisturberNodeFactory"
-            />
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.node.differModelContent.DiffModelContentFactory"
-            />
-      <node
-            category-path="/testing"
             factory-class="org.knime.testing.node.blocking.BlockingNodeFactory"
-            >
-      </node>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.node.failing.FailingNodeFactory"
-            >
-      </node>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.node.credentialsvalidate.CredentialsValidateNodeFactory"
-            >
-      </node>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.node.datagenerator.TestDataNodeFactory"
             >
       </node>
       <node
@@ -51,87 +28,6 @@
             factory-class="org.knime.testing.node.executioncount.ExecutionCountNodeFactory"
             >
       </node>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.node.file.DifferFileNodeFactory"
-            >
-      </node>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.imagecomp.ImageCompNodeFactory"
-            >
-      </node>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.internal.nodes.differ.DifferenceCheckerNodeFactory"
-            >
-      </node>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.internal.nodes.image.ImageDifferNodeFactory"
-            >
-      </node>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.node.config.TestConfigNodeFactory"
-            >
-      </node>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.internal.nodes.pmml.PMMLDifferenceCheckerNodeFactory"
-            >
-      </node>
-      <node
-            category-path="/testing/filestore"
-            factory-class="org.knime.testing.node.filestore.create.FileStoreCreateNodeFactory"
-            >
-      </node>
-      <node
-            after="org.knime.testing.node.filestore.create.FileStoreCreateNodeFactory"
-            category-path="/testing/filestore"
-            factory-class="org.knime.testing.node.filestore.check.FileStoreTestNodeFactory"
-            >
-      </node>
-      <node
-            after="org.knime.testing.node.filestore.check.FileStoreTestNodeFactory"
-            category-path="/testing/filestore"
-            factory-class="org.knime.testing.node.filestore.createloopend.FileStoreCreateLoopEndNodeFactory"
-            >
-      </node>     
-      <node
-            after="org.knime.testing.node.filestore.createloopend.FileStoreCreateLoopEndNodeFactory"
-            category-path="/testing/filestore"
-            factory-class="org.knime.testing.node.filestore.fsloopend.LoopEndFileStorePortObjectTestNodeFactory"
-            >
-      </node>
-      <node
-            after="org.knime.testing.node.filestore.fsloopend.LoopEndFileStorePortObjectTestNodeFactory"
-            category-path="/testing/filestore"
-            factory-class="org.knime.testing.node.filestore.fsobject2cell.FileStoreObjectToCellNodeFactory"
-            >
-      </node>
-      <node
-            after="org.knime.testing.node.filestore.fsobject2cell.FileStoreObjectToCellNodeFactory"
-            category-path="/testing/filestore"
-            deprecated="false"
-            factory-class="org.knime.testing.node.blob.create.CreateTestBlobNodeFactory">
-      </node>
-      <node
-            after="org.knime.testing.node.blob.create.CreateTestBlobNodeFactory"
-            category-path="/testing/filestore"
-            deprecated="false"
-            factory-class="org.knime.testing.node.blob.verify.VerifyTestBlobNodeFactory">
-      </node>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.node.logging.LoggerOptionNodeFactory"
-            >
-      </node>
-      <node
-            category-path="/testing"
-            deprecated="false"
-            factory-class="org.knime.testing.node.database.DBConnectionCloserNodeFactory">
-      </node>     
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
@@ -140,29 +36,6 @@
             level-id="testing"
             name="Testing"
             path="/"/>
-      <category
-            description="Contains nodes to test the handling of file stores in the framework"
-            icon="icons/testing.png"
-            level-id="filestore"
-            locked="true"
-            name="File Stores and Blobs"
-            path="/testing"/>
-   </extension>
-   <extension
-	     id="KNIME_TESTING_APPLICATION"
-         point="org.eclipse.core.runtime.applications">
-      <application>
-         <run class="org.knime.testing.core.KNIMETestingApplication"/>
-      </application>
-   </extension>
-   <extension
-         id="KNIME_PRINT_NODES_STDOUT_APPLICATION"
-         point="org.eclipse.core.runtime.applications">
-      <application>
-         <run
-               class="org.knime.testing.core.KNIMEPrintNodesStdOutApplication">
-         </run>
-      </application>
    </extension>
    <extension
          point="org.knime.testing.DifferenceCheckerFactory">
@@ -196,30 +69,6 @@
       <DifferenceCheckerFactory
             class="org.knime.testing.internal.diffcheckers.XMLChecker$Factory">
       </DifferenceCheckerFactory>
-   </extension>
-   <extension
-         id="NGTestflowRunner"
-         point="org.eclipse.core.runtime.applications">
-      <application
-            cardinality="singleton-global"
-            thread="main"
-            visible="true">
-         <run
-               class="org.knime.testing.core.ng.TestflowRunnerApplication">
-         </run>
-      </application>
-   </extension>
-   <extension
-         id="NGUnittestRunner"
-         point="org.eclipse.core.runtime.applications">
-      <application
-            cardinality="singleton-global"
-            thread="main"
-            visible="true">
-         <run
-               class="org.knime.testing.core.ng.UnittestRunnerApplication">
-         </run>
-      </application>
    </extension>
    <extension
          point="org.knime.core.DataType">

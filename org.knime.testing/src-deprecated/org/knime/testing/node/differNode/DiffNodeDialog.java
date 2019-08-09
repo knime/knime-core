@@ -67,14 +67,11 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.testing.internal.nodes.image.ImageDifferNodeFactory;
 
 
 /**
  *
  * @author ritmeier, University of Konstanz
- * @deprecated use the new image comparator {@link ImageDifferNodeFactory} and the extension point for difference
- *             checker instead
  */
 @Deprecated
 public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
