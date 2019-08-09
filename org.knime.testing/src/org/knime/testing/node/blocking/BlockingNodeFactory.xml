@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other">
+	<name>Block Programmatically</name>
+	
+	<shortDescription>
+		Uses a lock to hold the execution until a prgrammatic 
+		"release" is triggered.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			<p>
+			 This node is part of the workflow manager test framework. It's
+			 used to simulate a long processing job. It uses a 
+			 java.util.concurrent.Lock object to stall. Using this node makes 
+			 only sense if used in unit tests. 
+			</p>
+		</intro>
+		<option name="Lock ID">
+		  ID of the lock being used. Must be present in the global lock 
+		  repository (i.e. programmatically added beforehand).
+		</option>		
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Any input table">Any input table</inPort>
+		<outPort index="0" name="Copy of input table">Copy of input table</outPort>
+	</ports>	
+</knimeNode>

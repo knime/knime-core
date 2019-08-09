@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+   <extension-point id="TestcaseCollector" name="TestcaseCollector" schema="schema/org.knime.testing.TestcaseCollector.exsd"/>
+   <extension-point id="DifferenceCheckerFactory" name="DifferenceCheckerFactory" schema="schema/org.knime.testing.DifferenceCheckerFactory.exsd"/>
+   <extension-point id="TestrunJanitor" name="TestrunJanitor" schema="schema/org.knime.core.testing.TestrunJanitor.exsd"/>
+   <!-- This is an example for providing an own category 
+      <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            description="Category containing my nodes"
+            icon="icons/default.png"
+            level-id="myNodes"
+            name="My nodes"
+            path="/"/>
+   </extension>
+   -->
+   
+   <extension
+         point="org.knime.workbench.repository.nodes">
+      <node
+            category-path="/testing"
+            factory-class="org.knime.testing.node.blocking.BlockingNodeFactory"
+            >
+      </node>
+      <node
+            category-path="/testing"
+            factory-class="org.knime.testing.node.executioncount.ExecutionCountNodeFactory"
+            >
+      </node>
+   </extension>
+   <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            icon="icons/testing.png"
+            level-id="testing"
+            name="Testing"
+            path="/"/>
+   </extension>
+   <extension
+         point="org.knime.testing.DifferenceCheckerFactory">
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.EqualityChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.EpsilonNumberChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.StringChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.PngPHashChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.PngDHashChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.PngFullDifferenceChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.PngHistogramDifferenceChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.URIContentDifferenceChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.IgnoreChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.XMLChecker$Factory">
+      </DifferenceCheckerFactory>
+   </extension>
+   <extension
+         point="org.knime.core.DataType">
+      <DataType
+            cellClass="org.knime.testing.data.filestore.LargeFileStoreCell">
+         <serializer
+               cellClass="org.knime.testing.data.filestore.LargeFileStoreCell"
+               serializerClass="org.knime.testing.data.filestore.LargeFileStoreCell$Serializer">
+         </serializer>
+      </DataType>
+   </extension>
+   <extension
+         point="org.knime.core.PortType">
+      <portType
+            hidden="true"
+            name="Large Filestore"
+            objectClass="org.knime.testing.data.filestore.LargeFileStorePortObject"
+            objectSerializer="org.knime.testing.data.filestore.LargeFileStorePortObject$Serializer"
+            specClass="org.knime.testing.data.filestore.LargeFileStorePortObjectSpec"
+            specSerializer="org.knime.testing.data.filestore.LargeFileStorePortObjectSpec$Serializer">
+      </portType>
+   </extension>
+   <extension
+         point="org.knime.core.NodeExecutionJobManagerFactory">
+      <NodeExecutionJobManagerFactory
+            JobManagerFactory="org.knime.testing.streaming.testexecutor.StreamingTestNodeExecutionJobManagerFactory">
+      </NodeExecutionJobManagerFactory>
+   </extension>
+</plugin>
