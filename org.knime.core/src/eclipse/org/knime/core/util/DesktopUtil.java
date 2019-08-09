@@ -55,6 +55,7 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FilenameUtils;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PartInitException;
@@ -184,4 +185,36 @@ public final class DesktopUtil {
         });
     }
 
+    /**
+     * Opens a mailto-URL using the system default program. If it fails and error will be logged.
+     *
+     * @param url to be opened. Has to start with "mailto:".
+     * @since 4.1
+     * @throws IllegalArgumentException if argument is null
+     */
+    public static void mailTo(final URL url) {
+        CheckUtils.checkArgumentNotNull(url);
+        Display.getDefault().asyncExec(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    // Linux has the problem that '///' is added as a prefix for the mail addresses, hence the
+                    // workaround with xdg-open. If xdg-open fails we use the normal Program.launch().
+                    // (see: https://stackoverflow.com/questions/33479781/swt-program-launch-mail-client )
+                    if (Platform.OS_LINUX.equals(Platform.getOS())) {
+                        Runtime.getRuntime().exec("xdg-open " + url.toString());
+                        return;
+                    }
+                } catch (Exception ex) {
+                    // do nothing.
+                }
+                if (!Program.launch(url.toString())) {
+                    // failed, log error.
+                    LOGGER.error("Could not open mail client for mail address \""
+                        + url.toString().replace("mailto:", "") + "\"");
+                }
+            }
+        });
+    }
 }
