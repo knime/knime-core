@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.knime.features.testingapplication"
+      id="org.knime.features.testing.core"
       label="KNIME Testing Framework"
       version="4.0.0.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland"
@@ -728,10 +728,6 @@ license terms applicable to such Node, including when such Node is
 propagated with or for interoperation with KNIME.
    </license>
 
-   <requires>
-      <import plugin="org.junit"/>
-   </requires>
-
    <plugin
          id="org.knime.testing"
          download-size="0"
@@ -745,12 +741,5 @@ propagated with or for interoperation with KNIME.
          version="0.0.0"
          fragment="true"
          unpack="false"/>
-
-   <plugin
-         id="org.knime.testing.application"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"/>
 
 </feature>
