@@ -67,7 +67,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 public class LoopStartWritableFileStoreHandler
     extends WriteFileStoreHandler implements ILoopStartWriteFileStoreHandler {
 
-    private static final byte[] OUTER_LOOP_PATH = new byte[] {};
+    private static final int[] OUTER_LOOP_PATH = new int[] {};
 
     private final FlowLoopContext m_flowLoopContext;
     private final NativeNodeContainer m_startNodeContainer;
@@ -126,14 +126,14 @@ public class LoopStartWritableFileStoreHandler
     /** {@inheritDoc} */
     @Override
     public synchronized FileStore createFileStoreInNestedLoop(
-            final String name, final byte[] nestedLoopPath, final int iterationIndex)
+            final String name, final int[] nestedLoopPath, final int iterationIndex)
             throws IOException {
         return createFileStoreInternal(name, nestedLoopPath, iterationIndex);
     }
 
     /** {@inheritDoc} */
     @Override
-    FileStore createFileStoreInternal(final String name, final byte[] nestedLoopPath,
+    FileStore createFileStoreInternal(final String name, final int[] nestedLoopPath,
         final int iterationIndex) throws IOException {
         markStartNodeDirty();
         return super.createFileStoreInternal(name, nestedLoopPath, iterationIndex);
@@ -170,14 +170,14 @@ public class LoopStartWritableFileStoreHandler
 
     /** {@inheritDoc} */
     @Override
-    public byte[] createNestedLoopPath() {
-        return new byte[] {m_nestedLoopIdentifierProvider.checkOut()};
+    public int[] createNestedLoopPath() {
+        return new int[] {m_nestedLoopIdentifierProvider.checkOut()};
     }
 
     /** {@inheritDoc} */
     @Override
-    public void clearNestedLoopPath(final byte childByte) {
-        m_nestedLoopIdentifierProvider.checkIn(childByte);
+    public void clearNestedLoopPath(final int child) {
+        m_nestedLoopIdentifierProvider.checkIn(child);
     }
 
     /** {@inheritDoc} */
@@ -191,19 +191,16 @@ public class LoopStartWritableFileStoreHandler
     }
 
     static final class NestedLoopIdentifierProvider {
-        private final BitSet m_childBytesInUse = new BitSet(Byte.MAX_VALUE);
+        private final BitSet m_childsInUse = new BitSet();
 
-        synchronized byte checkOut() {
-            int nextByteAvailable = m_childBytesInUse.nextClearBit(0);
-            if (nextByteAvailable > Byte.MAX_VALUE) {
-                throw new IllegalStateException("Too many nested loops: " + nextByteAvailable);
-            }
-            m_childBytesInUse.set(nextByteAvailable);
-            return (byte) nextByteAvailable;
+        synchronized int checkOut() {
+            int nextSlotAvailable = m_childsInUse.nextClearBit(0);
+            m_childsInUse.set(nextSlotAvailable);
+            return nextSlotAvailable;
         }
 
-        synchronized void checkIn(final byte value) {
-            m_childBytesInUse.clear(value);
+        synchronized void checkIn(final int value) {
+            m_childsInUse.clear(value);
         }
 
     }

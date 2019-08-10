@@ -270,7 +270,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     }
 
     FileStore createFileStoreInternal(final String name,
-            final byte[] nestedLoopPath, final int iterationIndex) throws IOException {
+            final int[] nestedLoopPath, final int iterationIndex) throws IOException {
         assert Thread.holdsLock(this);
         CheckUtils.checkArgumentNotNull(name, "Argument must not be null.");
         if (name.startsWith(".")) {

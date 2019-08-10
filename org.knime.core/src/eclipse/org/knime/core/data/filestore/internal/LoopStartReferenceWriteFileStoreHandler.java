@@ -70,7 +70,7 @@ import org.knime.core.node.workflow.FlowLoopContext;
 public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStartWriteFileStoreHandler {
 
     private final ILoopStartWriteFileStoreHandler m_reference;
-    private final byte[] m_thisNestedLoopPath;
+    private final int[] m_thisNestedLoopPath;
     private final NestedLoopIdentifierProvider m_nestedLoopIdentifierProvider;
 
     private final FlowLoopContext m_flowLoopContext;
@@ -189,7 +189,7 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
     /** {@inheritDoc} */
     @Override
     public FileStore createFileStoreInNestedLoop(final String name,
-            final byte[] nestedLoopPath, final int iterationIndex) throws IOException {
+            final int[] nestedLoopPath, final int iterationIndex) throws IOException {
         return m_reference.createFileStoreInNestedLoop(name, nestedLoopPath, iterationIndex);
     }
 
@@ -209,17 +209,17 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
 
     /** {@inheritDoc} */
     @Override
-    public synchronized byte[] createNestedLoopPath() {
-        byte childByte = m_nestedLoopIdentifierProvider.checkOut();
-        byte[] result = Arrays.copyOf(m_thisNestedLoopPath, m_thisNestedLoopPath.length + 1);
-        result[m_thisNestedLoopPath.length] = childByte;
+    public synchronized int[] createNestedLoopPath() {
+        int child = m_nestedLoopIdentifierProvider.checkOut();
+        int[] result = Arrays.copyOf(m_thisNestedLoopPath, m_thisNestedLoopPath.length + 1);
+        result[m_thisNestedLoopPath.length] = child;
         return result;
     }
 
     /** {@inheritDoc} */
     @Override
-    public void clearNestedLoopPath(final byte childByte) {
-        m_nestedLoopIdentifierProvider.checkIn(childByte);
+    public void clearNestedLoopPath(final int child) {
+        m_nestedLoopIdentifierProvider.checkIn(child);
     }
 
     /** {@inheritDoc} */
@@ -228,7 +228,7 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
         if (!key.getStoreUUID().equals(getOutmostLoopStartStoreUUID())) {
             return false;
         }
-        byte[] keyNestedLoopPath = key.getNestedLoopPath();
+        int[] keyNestedLoopPath = key.getNestedLoopPath();
         if (keyNestedLoopPath == null || keyNestedLoopPath.length < m_thisNestedLoopPath.length) {
             return false;
         }

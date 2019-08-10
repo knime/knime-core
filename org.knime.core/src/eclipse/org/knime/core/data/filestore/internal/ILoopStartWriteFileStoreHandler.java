@@ -62,14 +62,14 @@ public interface ILoopStartWriteFileStoreHandler extends IWriteFileStoreHandler 
 
     public void onLoopEndFinish(final FileStoresInLoopCache endNodeCacheWithKeysToPersist) throws CanceledExecutionException;
 
-    public byte[] createNestedLoopPath();
+    public int[] createNestedLoopPath();
 
-    public void clearNestedLoopPath(final byte childByte);
+    public void clearNestedLoopPath(final int child);
 
     public FileStore createFileStoreInLoopBody(final String name) throws IOException;
 
     public FileStore createFileStoreInNestedLoop(final String name,
-            final byte[] nestedLoopPath, final int iterationIndex) throws IOException;
+            final int[] nestedLoopPath, final int iterationIndex) throws IOException;
 
     public void addFileStoreKeysFromNestedLoop(final FileStoresInLoopCache endNodeCacheWithKeysToPersist);
 
