@@ -52,6 +52,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
@@ -64,8 +65,14 @@ import org.knime.core.node.ModelContentWO;
  */
 public final class FileStoreKey implements Comparable<FileStoreKey> {
 
+    /** Version number, introduced in 4.0.1 for 'large' loop counts. */
+    private static final int VERSION_NUM = -20190808;
+
     private final UUID m_storeUUID;
-    private final byte[] m_nestedLoopPath;
+    /** Prior KNIME 4.0.1 this was a byte[]. The save/load methods are changed so that it reads/writes backward
+     * compatibly unless there are a large number of parallel loops (see AP-6372).
+     */
+    private final int[] m_nestedLoopPath;
     private final int m_iterationIndex;
     private final int m_index;
     private final String m_name;
@@ -73,7 +80,7 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
      * @param index
      * @param name */
     public FileStoreKey(final UUID storeUUID, final int index,
-            final byte[] nestedLoopPath,
+            final int[] nestedLoopPath,
             final int iterationIndex,
             final String name) {
         if (name == null || storeUUID == null) {
@@ -98,7 +105,7 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
     }
 
     /** @return the nestedLoopPath */
-    public byte[] getNestedLoopPath() {
+    public int[] getNestedLoopPath() {
         return m_nestedLoopPath;
     }
 
@@ -133,8 +140,18 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
         output.writeUTF(m_name);
         output.writeInt(m_iterationIndex);
         if (m_iterationIndex >= 0) {
-            output.writeInt(m_nestedLoopPath.length);
-            output.write(m_nestedLoopPath);
+            int maximum = IntStream.of(m_nestedLoopPath).max().orElse(0);
+            if (maximum > Byte.MAX_VALUE) { // see m_nestedLoopPath javadoc for details
+                output.writeInt(VERSION_NUM); // version number, introduced in 4.0.1 for 'large' loop counts
+                output.writeInt(m_nestedLoopPath.length);
+                for (int i : m_nestedLoopPath) {
+                    output.writeInt(i);
+                }
+            } else {
+                output.writeInt(m_nestedLoopPath.length);
+                byte[] asBytes = toByteArray(m_nestedLoopPath);
+                output.write(asBytes);
+            }
         }
     }
 
@@ -143,11 +160,23 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
         int index = input.readInt();
         String name = input.readUTF();
         int iterationIndex = input.readInt();
-        byte[] nestedLoopPath = null;
+        int[] nestedLoopPath = null;
         if (iterationIndex >= 0) {
-            int nestedLoopPathLength = input.readInt();
-            nestedLoopPath = new byte[nestedLoopPathLength];
-            input.readFully(nestedLoopPath);
+            int i = input.readInt();
+            if (i != VERSION_NUM) { // all values fit into byte (see m_nestedLoopPath for details)
+                int nestedLoopPathLength = i;
+                byte[] nestedLoopPathBytes = new byte[nestedLoopPathLength];
+                input.readFully(nestedLoopPathBytes);
+                nestedLoopPath = toIntArray(nestedLoopPathBytes);
+            } else {
+                // (i represent the version number -- this implementation only understands (and assumes) -20190808)
+                int nestedLoopPathLength = input.readInt();
+                nestedLoopPath = new int[nestedLoopPathLength];
+                for (int c = 0; c < nestedLoopPathLength; c++) {
+                    nestedLoopPath[c] = input.readInt();
+                }
+            }
+
         }
         return new FileStoreKey(uuid, index, nestedLoopPath, iterationIndex, name);
     }
@@ -158,7 +187,13 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
         output.addString("name", m_name);
         output.addInt("iterationIndex", m_iterationIndex);
         if (m_iterationIndex >= 0) {
-            output.addByteArray("nestedLoopPath", m_nestedLoopPath);
+            int maximum = IntStream.of(m_nestedLoopPath).max().orElse(0);
+            if (maximum > Byte.MAX_VALUE) {          // see m_nestedLoopPath javadoc for details
+                output.addInt("version", VERSION_NUM); // version number, introduced in 4.0.1 for 'large' loop counts
+                output.addIntArray("nestedLoopPathInt", m_nestedLoopPath);
+            } else {
+                output.addByteArray("nestedLoopPath", toByteArray(m_nestedLoopPath));
+            }
         }
     }
 
@@ -173,9 +208,14 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
         int index = input.getInt("index");
         String name = input.getString("name");
         int iterationIndex = input.getInt("iterationIndex");
-        byte[] nestedLoopPath = null;
+        int[] nestedLoopPath = null;
         if (iterationIndex >= 0) {
-            nestedLoopPath = input.getByteArray("nestedLoopPath");
+            int version = input.getInt("version", 0); // added in 4.0.1, see #save and m_nestedLoopPath javadoc
+            if (version != VERSION_NUM) { // all values fit into byte (see m_nestedLoopPath for details)
+                nestedLoopPath = toIntArray(input.getByteArray("nestedLoopPath"));
+            } else {
+                nestedLoopPath = input.getIntArray("nestedLoopPathInt");
+            }
         }
         return new FileStoreKey(storeUUID, index, nestedLoopPath, iterationIndex, name);
     }
@@ -247,8 +287,8 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
         int thisNestedLoopLength = m_nestedLoopPath == null ? 0 : m_nestedLoopPath.length;
         int oNestedLoopLength = o.m_nestedLoopPath == null ? 0 : o.m_nestedLoopPath.length;
         for (int i = 0; i < Math.max(oNestedLoopLength, thisNestedLoopLength); i++) {
-            Byte thisV = getValueFromArray(m_nestedLoopPath, i);
-            Byte oV = getValueFromArray(o.m_nestedLoopPath, i);
+            Integer thisV = getValueFromArray(m_nestedLoopPath, i);
+            Integer oV = getValueFromArray(o.m_nestedLoopPath, i);
             comp = thisV.compareTo(oV);
             if (comp != 0) {
                 return comp;
@@ -264,11 +304,27 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
         return 0;
     }
 
-    Byte getValueFromArray(final byte[] array, final int index) {
+    private static Integer getValueFromArray(final int[] array, final int index) {
         if (array == null || array.length >= index - 1) {
-            return Byte.valueOf((byte)-1);
+            return Integer.valueOf(-1);
         }
-        return Byte.valueOf(array[index]);
+        return Integer.valueOf(array[index]);
+    }
+
+    private static int[] toIntArray(final byte[] bytes) {
+        int[] result = new int[bytes.length];
+        for (int i = 0; i < bytes.length; i++) {
+            result[i] = bytes[i];
+        }
+        return result;
+    }
+
+    private static byte[] toByteArray(final int[] ints) {
+        byte[] result = new byte[ints.length];
+        for (int i = 0; i < ints.length; i++) {
+            result[i] = (byte)ints[i];
+        }
+        return result;
     }
 
 }
