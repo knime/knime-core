@@ -292,6 +292,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreKey.java" type="org.knime.core.data.filestore.FileStoreKey">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreKey"/>
+                <message_argument value="FileStoreKey(UUID, int, byte[], int, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreKey"/>
+                <message_argument value="getNestedLoopPath()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
         <filter id="338792546">
             <message_arguments>
