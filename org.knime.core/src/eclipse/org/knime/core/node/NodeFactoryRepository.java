@@ -93,16 +93,24 @@ final class NodeFactoryRepository {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
 
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID_NODES);
-        assert point != null : "Invalid extension point id: " + EXT_POINT_ID_NODES;
-        Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
-            .filter(e -> (e.getAttribute("factory-class") != null))
-            .forEach(e -> m_nodeFactories.put(e.getAttribute("factory-class"), e));
+        if (point != null) {
+            Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
+                .filter(e -> (e.getAttribute("factory-class") != null))
+                .forEach(e -> m_nodeFactories.put(e.getAttribute("factory-class"), e));
+        } else {
+            NodeLogger.getLogger(getClass())
+                .error("Could not find extension point " + EXT_POINT_ID_NODES + ", no nodes will be available.");
+        }
 
         point = registry.getExtensionPoint(EXT_POINT_ID_NODE_SETS);
-        assert point != null : "Invalid extension point id: " + EXT_POINT_ID_NODE_SETS;
-        Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
-            .filter(e -> (e.getAttribute("factory-class") != null))
-            .forEach(e -> m_nodesetFactories.put(e.getAttribute("factory-class"), e));
+        if (point != null) {
+            Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
+                .filter(e -> (e.getAttribute("factory-class") != null))
+                .forEach(e -> m_nodesetFactories.put(e.getAttribute("factory-class"), e));
+        } else {
+            NodeLogger.getLogger(getClass()).error(
+                "Could not find extension point " + EXT_POINT_ID_NODE_SETS + ", no dynamic nodes will be available.");
+        }
     }
 
     /**
