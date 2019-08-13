@@ -38,39 +38,6 @@
             path="/"/>
    </extension>
    <extension
-         point="org.knime.testing.DifferenceCheckerFactory">
-      <DifferenceCheckerFactory
-            class="org.knime.testing.internal.diffcheckers.EqualityChecker$Factory">
-      </DifferenceCheckerFactory>
-      <DifferenceCheckerFactory
-            class="org.knime.testing.internal.diffcheckers.EpsilonNumberChecker$Factory">
-      </DifferenceCheckerFactory>
-      <DifferenceCheckerFactory
-            class="org.knime.testing.internal.diffcheckers.StringChecker$Factory">
-      </DifferenceCheckerFactory>
-      <DifferenceCheckerFactory
-            class="org.knime.testing.internal.diffcheckers.PngPHashChecker$Factory">
-      </DifferenceCheckerFactory>
-      <DifferenceCheckerFactory
-            class="org.knime.testing.internal.diffcheckers.PngDHashChecker$Factory">
-      </DifferenceCheckerFactory>
-      <DifferenceCheckerFactory
-            class="org.knime.testing.internal.diffcheckers.PngFullDifferenceChecker$Factory">
-      </DifferenceCheckerFactory>
-      <DifferenceCheckerFactory
-            class="org.knime.testing.internal.diffcheckers.PngHistogramDifferenceChecker$Factory">
-      </DifferenceCheckerFactory>
-      <DifferenceCheckerFactory
-            class="org.knime.testing.internal.diffcheckers.URIContentDifferenceChecker$Factory">
-      </DifferenceCheckerFactory>
-      <DifferenceCheckerFactory
-            class="org.knime.testing.internal.diffcheckers.IgnoreChecker$Factory">
-      </DifferenceCheckerFactory>
-      <DifferenceCheckerFactory
-            class="org.knime.testing.internal.diffcheckers.XMLChecker$Factory">
-      </DifferenceCheckerFactory>
-   </extension>
-   <extension
          point="org.knime.core.DataType">
       <DataType
             cellClass="org.knime.testing.data.filestore.LargeFileStoreCell">
