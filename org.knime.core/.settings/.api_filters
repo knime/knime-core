@@ -3,7 +3,7 @@
     <resource path="META-INF/MANIFEST.MF">
         <filter id="924844039">
             <message_arguments>
-                <message_argument value="4.0.0"/>
+                <message_argument value="4.0.1"/>
                 <message_argument value="4.0.0"/>
             </message_arguments>
         </filter>
@@ -76,7 +76,7 @@
         <filter comment="org.knime.core.KnimeURIUtil transformed to URIUtil" id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.util.KnimeURIUtil"/>
-                <message_argument value="org.knime.core_4.0.0"/>
+                <message_argument value="org.knime.core_4.0.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -84,7 +84,7 @@
         <filter comment="moved to org.knime.core.ui.util" id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.util.SWTUtilities"/>
-                <message_argument value="org.knime.core_4.0.0"/>
+                <message_argument value="org.knime.core_4.0.1"/>
             </message_arguments>
         </filter>
     </resource>
