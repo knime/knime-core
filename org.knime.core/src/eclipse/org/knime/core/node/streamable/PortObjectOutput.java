@@ -48,6 +48,7 @@
 package org.knime.core.node.streamable;
 
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 
 /** Non-data row output (any {@link PortObject} except for
  * {@link org.knime.core.node.BufferedDataTable}).
@@ -67,5 +68,14 @@ public class PortObjectOutput extends PortOutput {
     /** @return the portObject */
     public PortObject getPortObject() {
         return m_portObject;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setInactive() {
+        m_portObject = InactiveBranchPortObject.INSTANCE;
+
     }
 }

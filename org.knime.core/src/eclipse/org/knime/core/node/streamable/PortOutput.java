@@ -47,6 +47,8 @@
  */
 package org.knime.core.node.streamable;
 
+import org.knime.core.node.port.inactive.InactiveBranchConsumer;
+
 /**
  * Describes the output handle of a node. Clients will always need to deal with
  * either a {@link RowOutput} (for data ports) or a {@link PortObjectOutput}
@@ -64,5 +66,14 @@ package org.knime.core.node.streamable;
  * @since 2.6
  */
 public abstract class PortOutput {
+
+    /**
+     * Sets the port output to inactive. I.e. all subsequent nodes are ignored till a {@link InactiveBranchConsumer}.
+     *
+     * @since 4.1
+     */
+    public void setInactive() {
+        //
+    }
 
 }

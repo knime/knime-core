@@ -1707,7 +1707,9 @@ public abstract class NodeModel implements ViewableModel {
 
                 for (int i = 0; i < outputs.length; i++) {
                     if (outObjects[i] != null) { //port objects happen to be null for instance at the loop end-node when the iteration is continued
-                        if (getOutPortType(i).equals(BufferedDataTable.TYPE)) {
+                        if (outObjects[i] instanceof InactiveBranchPortObject) {
+                            outputs[i].setInactive();
+                        } else if (getOutPortType(i).equals(BufferedDataTable.TYPE)) {
                             ((RowOutput)outputs[i]).setFully((BufferedDataTable)outObjects[i]);
                         } else {
                             ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
