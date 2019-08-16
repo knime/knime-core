@@ -5818,6 +5818,8 @@ public final class WorkflowManager extends NodeContainer
                 return false;
             }
 
+            boolean doConfigure = false;
+
             // configure node only if it's not yet running, queued or done.
             // This can happen if the WFM queues a node which has more than
             // one predecessor with populated output ports but one of the
@@ -5828,95 +5830,15 @@ public final class WorkflowManager extends NodeContainer
                 case CONFIGURED:
                 case UNCONFIGURED_MARKEDFOREXEC:
                 case CONFIGURED_MARKEDFOREXEC:
+                    doConfigure = true;
+                    break;
+                case EXECUTINGREMOTELY:
                     // nodes can be EXECUTINGREMOTELY when loaded (reconnect to a
                     // grid/server) -- also these nodes will be configured() on load
-                case EXECUTINGREMOTELY:
-                    // the stack that previously would have been propagated,
-                    // used to track changes
-                    FlowObjectStack oldFOS = snc.createOutFlowObjectStack();
-                    // create new FlowObjectStack
-                    boolean flowStackConflict = false;
-                    FlowObjectStack scsc;
-                    try {
-                        scsc = createAndSetFlowObjectStackFor(snc, sos);
-                    } catch (IllegalFlowObjectStackException e) {
-                        LOGGER.warn("Unable to merge flow object stacks: " + e.getMessage(), e);
-                        scsc = new FlowObjectStack(sncID);
-                        flowStackConflict = true;
-                    }
-                    snc.setCredentialsStore(m_credentialsStore);
-                    // update backwards reference for loops
-                    if (snc.isModelCompatibleTo(LoopEndNode.class)) {
-                        // if this is an END to a loop, make sure it knows its head
-                        // (for both: active and inactive loops)
-                        Node sncNode = ((NativeNodeContainer)snc).getNode();
-                        FlowLoopContext slc = scsc.peek(FlowLoopContext.class);
-                        if (slc == null) {
-                            // no head found - ignore during configure!
-                            sncNode.setLoopStartNode(null);
-                        } else {
-                            // loop seems to be correctly wired - set head
-                            NodeContainer headNode = m_workflow.getNode(slc.getOwner());
-                            if (headNode == null) {
-                                // odd: head is not in the same workflow,
-                                // ignore as well during configure
-                                sncNode.setLoopStartNode(null);
-                            } else {
-                                // head found, let the end node know about it:
-                                sncNode.setLoopStartNode(((NativeNodeContainer)headNode).getNode());
-                            }
-                        }
-                    }
-                    // update HiLiteHandlers on inports of SNC only
-                    // TODO think about it... happens magically
-                    for (int i = 0; i < inCount; i++) {
-                        snc.setInHiLiteHandler(i, hiliteHdls[i]);
-                    }
-                    // remember HiLiteHandler on OUTPORTS of all nodes!
-                    HiLiteHandler[] oldHdl = new HiLiteHandler[snc.getNrOutPorts()];
-                    for (int i = 0; i < oldHdl.length; i++) {
-                        oldHdl[i] = snc.getOutPort(i).getHiLiteHandler();
-                    }
-                    // configure node itself
-                    boolean outputSpecsChanged = false;
-                    if (flowStackConflict) {
-                        // can't be configured due to stack clash.
-                        // make sure execution from here on is canceled
-                        disableNodeForExecution(sncID);
-                        // and reset node if it's not reset already
-                        // (ought to be red with this type of error!)
-                        if (!snc.getInternalState().equals(IDLE)) {
-                            // if not already idle make sure it is!
-                            invokeResetOnSingleNodeContainer(snc);
-                        }
-                        // report the problem
-                        snc.setNodeMessage(NodeMessage.merge(oldMessage,
-                            NodeMessage.newError("Can't merge FlowVariable Stacks! (likely a loop problem.)")));
-                        // different outputs - empty ports!
-                        outputSpecsChanged = true;
-                    } else {
-                        outputSpecsChanged = snc.configure(inSpecs, keepNodeMessage);
-                    }
-                    // NOTE:
-                    // no need to clean stacks of LoopEnd nodes - done automagically
-                    // inside the getFlowObjectStack of the ports of LoopEnd
-                    // Nodes.
-
-                    // check if FlowObjectStacks have changed
-                    boolean stackChanged = false;
-                    FlowObjectStack newFOS = snc.createOutFlowObjectStack();
-                    stackChanged = !newFOS.equals(oldFOS);
-                    // check if HiLiteHandlers have changed
-                    boolean hiLiteHdlsChanged = false;
-                    for (int i = 0; i < oldHdl.length; i++) {
-                        HiLiteHandler hdl = snc.getOutPort(i).getHiLiteHandler();
-                        hiLiteHdlsChanged |= (hdl != oldHdl[i]);
-                    }
-                    configurationChanged = (outputSpecsChanged || stackChanged || hiLiteHdlsChanged);
-                    // and finally check if we can queue this node!
-                    if (snc.getInternalState().equals(UNCONFIGURED_MARKEDFOREXEC)
-                        || snc.getInternalState().equals(CONFIGURED_MARKEDFOREXEC)) {
-                        queueIfQueuable(snc);
+                    if (snc.findJobManager().canDisconnect(getExecutionJob())) {
+                        // see AP-9290 -- in order to properly check we whether we are in 'loading' state we would need
+                        // additional AP -- decided that this workaround will be OK as most job manager are not remote
+                        doConfigure = true;
                     }
                     break;
                 case EXECUTED:
@@ -5942,6 +5864,95 @@ public final class WorkflowManager extends NodeContainer
                 default:
                     LOGGER
                         .error("configure found weird state (" + snc.getInternalState() + "): " + snc.getNameWithID());
+            }
+            if (doConfigure) {
+                // the stack that previously would have been propagated,
+                // used to track changes
+                FlowObjectStack oldFOS = snc.createOutFlowObjectStack();
+                // create new FlowObjectStack
+                boolean flowStackConflict = false;
+                FlowObjectStack scsc;
+                try {
+                    scsc = createAndSetFlowObjectStackFor(snc, sos);
+                } catch (IllegalFlowObjectStackException e) {
+                    LOGGER.warn("Unable to merge flow object stacks: " + e.getMessage(), e);
+                    scsc = new FlowObjectStack(sncID);
+                    flowStackConflict = true;
+                }
+                snc.setCredentialsStore(m_credentialsStore);
+                // update backwards reference for loops
+                if (snc.isModelCompatibleTo(LoopEndNode.class)) {
+                    // if this is an END to a loop, make sure it knows its head
+                    // (for both: active and inactive loops)
+                    Node sncNode = ((NativeNodeContainer)snc).getNode();
+                    FlowLoopContext slc = scsc.peek(FlowLoopContext.class);
+                    if (slc == null) {
+                        // no head found - ignore during configure!
+                        sncNode.setLoopStartNode(null);
+                    } else {
+                        // loop seems to be correctly wired - set head
+                        NodeContainer headNode = m_workflow.getNode(slc.getOwner());
+                        if (headNode == null) {
+                            // odd: head is not in the same workflow,
+                            // ignore as well during configure
+                            sncNode.setLoopStartNode(null);
+                        } else {
+                            // head found, let the end node know about it:
+                            sncNode.setLoopStartNode(((NativeNodeContainer)headNode).getNode());
+                        }
+                    }
+                }
+                // update HiLiteHandlers on inports of SNC only
+                // TODO think about it... happens magically
+                for (int i = 0; i < inCount; i++) {
+                    snc.setInHiLiteHandler(i, hiliteHdls[i]);
+                }
+                // remember HiLiteHandler on OUTPORTS of all nodes!
+                HiLiteHandler[] oldHdl = new HiLiteHandler[snc.getNrOutPorts()];
+                for (int i = 0; i < oldHdl.length; i++) {
+                    oldHdl[i] = snc.getOutPort(i).getHiLiteHandler();
+                }
+                // configure node itself
+                boolean outputSpecsChanged = false;
+                if (flowStackConflict) {
+                    // can't be configured due to stack clash.
+                    // make sure execution from here on is canceled
+                    disableNodeForExecution(sncID);
+                    // and reset node if it's not reset already
+                    // (ought to be red with this type of error!)
+                    if (!snc.getInternalState().equals(IDLE)) {
+                        // if not already idle make sure it is!
+                        invokeResetOnSingleNodeContainer(snc);
+                    }
+                    // report the problem
+                    snc.setNodeMessage(NodeMessage.merge(oldMessage,
+                        NodeMessage.newError("Can't merge FlowVariable Stacks! (likely a loop problem.)")));
+                    // different outputs - empty ports!
+                    outputSpecsChanged = true;
+                } else {
+                    outputSpecsChanged = snc.configure(inSpecs, keepNodeMessage);
+                }
+                // NOTE:
+                // no need to clean stacks of LoopEnd nodes - done automagically
+                // inside the getFlowObjectStack of the ports of LoopEnd
+                // Nodes.
+
+                // check if FlowObjectStacks have changed
+                boolean stackChanged = false;
+                FlowObjectStack newFOS = snc.createOutFlowObjectStack();
+                stackChanged = !newFOS.equals(oldFOS);
+                // check if HiLiteHandlers have changed
+                boolean hiLiteHdlsChanged = false;
+                for (int i = 0; i < oldHdl.length; i++) {
+                    HiLiteHandler hdl = snc.getOutPort(i).getHiLiteHandler();
+                    hiLiteHdlsChanged |= (hdl != oldHdl[i]);
+                }
+                configurationChanged = (outputSpecsChanged || stackChanged || hiLiteHdlsChanged);
+                // and finally check if we can queue this node!
+                if (snc.getInternalState().equals(UNCONFIGURED_MARKEDFOREXEC)
+                    || snc.getInternalState().equals(CONFIGURED_MARKEDFOREXEC)) {
+                    queueIfQueuable(snc);
+                }
             }
         }
         return configurationChanged;
