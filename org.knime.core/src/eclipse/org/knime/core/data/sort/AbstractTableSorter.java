@@ -63,14 +63,12 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
@@ -863,107 +861,6 @@ abstract class AbstractTableSorter {
         @Override
         public void remove() {
             throw new UnsupportedOperationException();
-        }
-    }
-
-    /**
-     * The private class RowComparator is used to compare two DataRows. It implements the Comparator-interface, so we
-     * can use the Arrays.sort method to sort an array of DataRows.
-     */
-    private static final class RowComparator implements Comparator<DataRow> {
-
-        /**
-         * The included column indices.
-         */
-        private final int[] m_indices;
-
-        /**
-         * The comparators for the different columns (value in array is null if sorted according to row key). Fetched at
-         * constructor time to reduce number of DataType accesses during compare() call
-         */
-        private final DataValueComparator[] m_colComparators;
-
-        /**
-         * Array containing information about the sort order for each column. true: ascending false: descending
-         */
-        private final boolean[] m_sortAscending;
-
-        /**
-         * Missing vals always at end (if not then they just smaller than any non-missing).
-         */
-        private final boolean m_sortMissingsToEnd;
-
-        /**
-         * @param indices Array of sort column indices.
-         * @param sortAscending Sort order.
-         * @param sortMissingsToEnd Missing at bottom.
-         * @param spec The spec to the table.
-         */
-        RowComparator(final int[] indices, final boolean[] sortAscending, final boolean sortMissingsToEnd,
-            final DataTableSpec spec) {
-            m_indices = indices;
-            m_colComparators = new DataValueComparator[indices.length];
-            for (int i = 0; i < m_indices.length; i++) {
-                // only if the cell is in the includeList
-                // -1 is RowKey!
-                if (m_indices[i] == -1) {
-                    m_colComparators[i] = null;
-                } else {
-                    m_colComparators[i] = spec.getColumnSpec(m_indices[i]).getType().getComparator();
-                }
-            }
-            m_sortAscending = sortAscending;
-            m_sortMissingsToEnd = sortMissingsToEnd;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public int compare(final DataRow dr1, final DataRow dr2) {
-
-            if (dr1 == dr2) {
-                return 0;
-            }
-            if (dr1 == null) {
-                return 1;
-            }
-            if (dr2 == null) {
-                return -1;
-            }
-
-            assert (dr1.getNumCells() == dr2.getNumCells());
-
-            for (int i = 0; i < m_indices.length; i++) {
-
-                // only if the cell is in the includeList
-                // -1 is RowKey!
-                int cellComparison;
-                if (m_indices[i] == -1) {
-                    String k1 = dr1.getKey().getString();
-                    String k2 = dr2.getKey().getString();
-                    cellComparison = k1.compareTo(k2);
-                } else {
-                    final DataCell c1 = dr1.getCell(m_indices[i]);
-                    final DataCell c2 = dr2.getCell(m_indices[i]);
-                    final boolean c1Missing = c1.isMissing();
-                    final boolean c2Missing = c2.isMissing();
-                    if (m_sortMissingsToEnd && (c1Missing || c2Missing)) {
-                        if (c1Missing && c2Missing) {
-                            cellComparison = 0;
-                        } else if (c1Missing) {
-                            cellComparison = m_sortAscending[i] ? +1 : -1;
-                        } else { // c2.isMissing()
-                            cellComparison = m_sortAscending[i] ? -1 : +1;
-                        }
-                    } else {
-                        final DataValueComparator comp = m_colComparators[i];
-                        cellComparison = comp.compare(c1, c2);
-                    }
-                }
-                if (cellComparison != 0) {
-                    return (m_sortAscending[i] ? cellComparison : -cellComparison);
-                }
-            }
-            return 0; // all cells in the DataRow have the same value
         }
     }
 
