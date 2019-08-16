@@ -180,7 +180,9 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
                 PortObject[] inObjects = new PortObject[getNrInPorts()];
                 for (int i = 0; i < inObjects.length; i++) {
                     PortType inPortType = getInPortType(i);
-                    if (BufferedDataTable.TYPE.equals(inPortType)) {
+                    if (inputs[i].isInactive()) {
+                        inObjects[i] = InactiveBranchPortObject.INSTANCE;
+                    } else if (BufferedDataTable.TYPE.equals(inPortType)) {
                         BufferedDataContainer container = exec.createDataContainer((DataTableSpec)inSpecs[i]);
                         DataRow r;
                         while ((r = ((RowInput)inputs[i]).poll()) != null) {

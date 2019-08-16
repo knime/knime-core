@@ -47,6 +47,8 @@
  */
 package org.knime.core.node.streamable;
 
+import org.knime.core.node.port.inactive.InactiveBranchConsumer;
+
 /** Input for a streamable operator. Clients will always need to deal with
  * either {@link RowInput} or {@link PortObjectInput} depending upon their input
  * port role.
@@ -56,5 +58,17 @@ package org.knime.core.node.streamable;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public abstract class PortInput {
+
+    /**
+     * Method blocks till 'inactive' status is known. Ordinary nodes (not implementing {@link InactiveBranchConsumer})
+     * this method will always return false as there client code is not called when input is inactive.
+     *
+     * @return whether the port is inactive (i.e. part of an inactive branch)
+     * @throws InterruptedException
+     * @since 4.1
+     */
+    public boolean isInactive() throws InterruptedException {
+        return false;
+    }
 
 }

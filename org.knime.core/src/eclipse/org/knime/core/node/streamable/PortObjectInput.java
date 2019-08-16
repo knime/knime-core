@@ -48,6 +48,7 @@
 package org.knime.core.node.streamable;
 
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 
 /** A general port object input. Objects of this class are used for input ports,
  * which are non-distributable and non-streamable.
@@ -70,6 +71,14 @@ public class PortObjectInput extends PortInput {
     /** @return the object */
     public PortObject getPortObject() {
         return m_portObject;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isInactive() {
+        return m_portObject instanceof InactiveBranchPortObject;
     }
 
 }
