@@ -50,12 +50,20 @@ import java.util.Arrays;
 import java.util.Deque;
 
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.util.StringFormat;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
 
 /** Runnable that represents the execution of a node. This abstract class
  * defines the overall procedure of an execution including setup (e.g. to copy
@@ -174,7 +182,17 @@ public abstract class NodeExecutionJob implements Runnable {
                 m_logger.debug(m_nc.getNameWithID() + " Start execute");
                 if (executeInactive) {
                     SingleNodeContainer snc = (SingleNodeContainer)m_nc;
-                    status = snc.performExecuteNode(getPortObjects());
+                    if (snc instanceof NativeNodeContainer || (snc instanceof SubNodeContainer
+                        && ((SubNodeContainer)snc).getWorkflowManager().isLocalWFM())) {
+                        //in case of a native node or a component with the default executor
+                        status = snc.performExecuteNode(getPortObjects());
+                    } else {
+                        // in case of a component with a custom executor:
+                        // just set all contained nodes to inactive and bypass the executor
+                        ExecutionMonitor exec = new ExecutionMonitor();
+                        LoadResult loadRes = new LoadResult("Inactive");
+                        status = setInactiveDeep(snc, null, exec, loadRes);
+                    }
                 } else {
                     status = mainExecute();
                 }
@@ -211,6 +229,59 @@ public abstract class NodeExecutionJob implements Runnable {
                 logError(e);
             }
         }
+    }
+
+    /**
+     * Recursively sets all (contained) nodes (and therewith their out ports) to inactive.
+     */
+    private NodeContainerExecutionStatus setInactiveDeep(final NodeContainer nc, final WorkflowExecutionResult wfmRes,
+        final ExecutionMonitor exec, final LoadResult loadRes) {
+        NodeContainerExecutionResult res;
+        if (nc instanceof NativeNodeContainer) {
+            NativeNodeContainer nnc = (NativeNodeContainer) nc;
+            if (nnc.getNodeModel() instanceof VirtualSubNodeOutputNodeModel) {
+                //in order to set the VirtualSubNodeExchange
+                ((VirtualSubNodeOutputNodeModel)nnc.getNodeModel())
+                    .setInternalPortObjects(createInactivePortObjects(nnc.getNrOutPorts()));
+            }
+            // doesn't actually execute the node, i.e. won't touch the NodeModel's execute-method because the inports are all inactive
+            // it's the only way to set the node's outputs to inactive port objects
+            nnc.performExecuteNode(createInactivePortObjects(nnc.getNrInPorts()));
+            NativeNodeContainerExecutionResult nativeRes = new NativeNodeContainerExecutionResult();
+            nativeRes.setNodeExecutionResult(nnc.getNode().createInactiveNodeExecutionResult());
+            res = nativeRes;
+        } else if (nc instanceof WorkflowManager) {
+            WorkflowExecutionResult wfmRes2 = new WorkflowExecutionResult(nc.getID());
+            for (NodeContainer n : ((WorkflowManager)nc).getNodeContainers()) {
+                setInactiveDeep(n, wfmRes2, exec, loadRes);
+            }
+            nc.loadExecutionResult(wfmRes2, exec, loadRes);
+            res = wfmRes2;
+        } else {
+            assert nc instanceof SubNodeContainer;
+            SubNodeContainer snc = (SubNodeContainer) nc;
+            SubnodeContainerExecutionResult subNodeRes = new SubnodeContainerExecutionResult(nc.getID());
+            WorkflowExecutionResult wfmRes2 = new WorkflowExecutionResult(new NodeID(nc.getID(), 0));
+            setInactiveDeep(snc.getVirtualInNode(), wfmRes2, exec, loadRes);
+            setInactiveDeep(snc.getVirtualOutNode(), wfmRes2, exec, loadRes);
+            for (NodeContainer n : ((SubNodeContainer)nc).getWorkflowManager().getNodeContainers()) {
+                setInactiveDeep(n, wfmRes2, exec, loadRes);
+            }
+            subNodeRes.setWorkflowExecutionResult(wfmRes2);
+            res = subNodeRes;
+        }
+        res.setSuccess(true);
+        nc.loadExecutionResult(res, exec, loadRes);
+        if (wfmRes != null) {
+            wfmRes.addNodeExecutionResult(nc.getID(), res);
+        }
+        return res;
+    }
+
+    private static PortObject[] createInactivePortObjects(final int count) {
+        PortObject[] res = new PortObject[count];
+        Arrays.fill(res, InactiveBranchPortObject.INSTANCE);
+        return res;
     }
 
     private void logError(final Throwable e) {
