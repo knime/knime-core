@@ -54,7 +54,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValueComparator;
-import org.knime.core.node.util.CheckUtils;
 
 /**
  * The RowComparator is used to compare two DataRows. It implements the Comparator-interface, so we can use the
@@ -122,7 +121,7 @@ public final class RowComparator implements Comparator<DataRow> {
             return -1;
         }
 
-        CheckUtils.checkArgument(dr1.getNumCells() == dr2.getNumCells(),
+        assert dr1.getNumCells() == dr2.getNumCells() : String.format(
             "The rows %s and %s don't contain the same number of cells.", dr1.getKey(), dr2.getKey());
 
         for (int i = 0; i < m_indices.length; i++) {
