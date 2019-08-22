@@ -55,17 +55,23 @@ import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.NodeID;
 
 /**
- * File store handler used for non-start nodes that are part of a loop body (not the loop end). They
- * forward all calls to the file store handler associated with the loop start.
+ * File store handler used for non-start nodes that are part of a loop body (not the loop end). They forward all calls
+ * to the file store handler associated with the loop start.
+ *
+ * Can also be used to create a file store handler that delegates to another {@link IWriteFileStoreHandler} - see
+ * {@link #ReferenceWriteFileStoreHandler(WriteFileStoreHandler, NodeID)}.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHandler {
 
-    private final ILoopStartWriteFileStoreHandler m_reference;
+    private final IWriteFileStoreHandler m_reference;
     private InternalDuplicateChecker m_duplicateChecker;
+    private NodeID m_nodeId;
 
     /**
      * @param reference */
@@ -74,6 +80,17 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
             throw new NullPointerException("Argument must not be null.");
         }
         m_reference = reference;
+    }
+
+    /**
+     * @param reference the file store handler to delegate to
+     * @param nodeId the node id of the node this file store handler belongs to
+     */
+    public ReferenceWriteFileStoreHandler(final IWriteFileStoreHandler reference, final NodeID nodeId) {
+        CheckUtils.checkArgumentNotNull(reference);
+        CheckUtils.checkArgumentNotNull(nodeId);
+        m_reference = reference;
+        m_nodeId = nodeId;
     }
 
     /** {@inheritDoc} */
@@ -126,7 +143,12 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
             throw new IOException("File store handler \"" + toString() + "\" is read only/closed");
         }
         m_duplicateChecker.add(name);
-        return m_reference.createFileStoreInLoopBody(name);
+        if (m_reference instanceof ILoopStartWriteFileStoreHandler) {
+            return ((ILoopStartWriteFileStoreHandler)m_reference).createFileStoreInLoopBody(name);
+        } else {
+            assert m_nodeId != null;
+            return m_reference.createFileStore(name + "#" + m_nodeId);
+        }
     }
 
     /** {@inheritDoc} */

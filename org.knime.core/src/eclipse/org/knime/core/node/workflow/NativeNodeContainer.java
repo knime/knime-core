@@ -417,8 +417,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 } else {
                     setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
                 }
-                IWriteFileStoreHandler fsh = initFileStore(getParent().getWorkflowDataRepository());
-                m_node.setFileStoreHandler(fsh);
                 break;
             default:
                 throwIllegalStateException();
@@ -455,8 +453,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 // ideally opening the file store handler would be done in "mimicRemoteExecuting" (consistently to
                 // performStateTransitionEXECUTING) but remote execution isn't split up that nicely - there is only
                 // pre-execute and executed
-                IWriteFileStoreHandler fsh = initFileStore(getParent().getWorkflowDataRepository());
-                m_node.setFileStoreHandler(fsh);
+                initLocalFileStoreHandler();
                 setInternalState(InternalNodeContainerState.PREEXECUTE);
                 break;
             case EXECUTED:
@@ -651,7 +648,38 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
-    private IWriteFileStoreHandler initFileStore(final WorkflowDataRepository dataRepository) {
+    /**
+     * Initializes and sets the {@link IFileStoreHandler} of this node by indirectly forwarding/using/referencing the
+     * file store handler of the passed node. I.e. where the respective files are written to is determined by the file
+     * store handler of the given node (not this node).
+     *
+     * Note: the provided node need to have an already initialized file store handler of type
+     * {@link IWriteFileStoreHandler}.
+     *
+     * @param nnc the node to which file store handler to reference
+     * @since 4.1
+     */
+    public void initFileStoreHandlerReference(final NativeNodeContainer nnc) {
+        assert nnc != null;
+        assert nnc.getNode().getFileStoreHandler() instanceof IWriteFileStoreHandler;
+        IWriteFileStoreHandler targetFSHandler = (IWriteFileStoreHandler)nnc.getNode().getFileStoreHandler();
+        IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
+        if (oldFSHandler instanceof IWriteFileStoreHandler) {
+            oldFSHandler.clearAndDispose();
+        }
+        IWriteFileStoreHandler newFSHandler = new ReferenceWriteFileStoreHandler(targetFSHandler, getID());
+        m_node.setFileStoreHandler(newFSHandler);
+    }
+
+    /**
+     * Initializes and sets a local {@link IFileStoreHandler} for this node if needed. Local file store handlers write
+     * the respective files into a dedicated local directory associated with this node.
+     *
+     * Needs to be done explicitly, e.g., by an {@link NodeExecutionJob} that takes care of the node execution.
+     *
+     * @since 4.1
+     */
+    public void initLocalFileStoreHandler() {
         final FlowObjectStack flowObjectStack = getFlowObjectStack();
         FlowLoopContext upstreamFLC = flowObjectStack.peek(FlowLoopContext.class);
         if (upstreamFLC == null) {
@@ -673,6 +701,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
         IWriteFileStoreHandler newFSHandler;
 
+        WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
         if (innerFLC == null && upstreamFLC == null) {
             // node is not a start node and not contained in a loop
             if (oldFSHandler instanceof IWriteFileStoreHandler) {
@@ -721,7 +750,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 newFSHandler.addToRepository(dataRepository);
             }
         }
-        return newFSHandler;
+        m_node.setFileStoreHandler(newFSHandler);
     }
 
     /** Disposes file store handler (if set) and sets it to null. Called from reset and cleanup.

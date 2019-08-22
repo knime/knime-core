@@ -292,11 +292,17 @@ public abstract class NodeExecutionJob implements Runnable {
      */
     protected abstract boolean isReConnecting();
 
-    /** Called right after the node has switched to the {@link InternalNodeContainerState#PREEXECUTE}
-     * state. Remote job executors will setup the execution environment in this
-     * step and therefore overwrite this (empty) method. */
+    /**
+     * Called right after the node has switched to the {@link InternalNodeContainerState#PREEXECUTE} state. Remote job
+     * executors will setup the execution environment in this step and therefore overwrite this method.
+     *
+     * Per default the file store handlers of {@link NativeNodeContainer}s will be initialized.
+     */
     protected void beforeExecute() {
         // possibly overwritten by sub-classes
+        if (getNodeContainer() instanceof NativeNodeContainer) {
+            ((NativeNodeContainer)getNodeContainer()).initLocalFileStoreHandler();
+        }
     }
 
     /** Called when the main execution takes place. The node will be in the
