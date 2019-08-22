@@ -59,6 +59,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.ILoopStartWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -638,13 +639,14 @@ public class NativeNodeContainer extends SingleNodeContainer {
         if (fsh instanceof IWriteFileStoreHandler) {
             ((IWriteFileStoreHandler)fsh).close();
         } else {
-            // can be null if run through 3rd party executor
-            // might be not an IWriteFileStoreHandler if restored loop is executed
+            // * can be null if run through 3rd party executor
+            // * might be not an IWriteFileStoreHandler if restored loop is executed
+            // * can be an EmptyFileStoreHandler if node is in an inactive branch
             // (this will result in a failure before model#execute is called)
-            assert !success || fsh == null : String.format("Must not be \"%s\" in execute, node \"%s\"",
-                fsh.getClass().getSimpleName(), getNameWithID());
+            assert !success || fsh == null || fsh instanceof EmptyFileStoreHandler : String
+                .format("Must not be \"%s\" in execute, node \"%s\"", fsh.getClass().getSimpleName(), getNameWithID());
             LOGGER.debug("Can't close file store handler, not writable: "
-                    + (fsh == null ? "<null>" : fsh.getClass().getSimpleName()));
+                + (fsh == null ? "<null>" : fsh.getClass().getSimpleName()));
         }
     }
 

@@ -1329,7 +1329,8 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Called immediately before execution to open the file store handler.
+     * Called immediately before execution to open the file store handler. Does nothing if the set file store handler is
+     * not of type {@link IWriteFileStoreHandler}.
      *
      * @param ec The (freshly created) file store handler
      * @since 2.12
@@ -1337,7 +1338,7 @@ public final class Node implements NodeModelWarningListener {
     public void openFileStoreHandler(final ExecutionContext ec) {
         // this call requires the FSH to be set on the node (ideally NativeNodeContainer.createExecutionContext
         // would take a FSH as argument but it became API unfortunately)
-        CheckUtils.checkState(m_fileStoreHandler != null, "No file store handler set on node");
+        // also: can be null if node is in an inactive branch -> no file store handler is initialized in that case
         if (m_fileStoreHandler instanceof IWriteFileStoreHandler)  {
             ((IWriteFileStoreHandler)m_fileStoreHandler).open(ec);
         }
