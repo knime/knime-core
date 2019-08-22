@@ -660,8 +660,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * @since 4.1
      */
     public void initFileStoreHandlerReference(final NativeNodeContainer nnc) {
-        assert nnc != null;
-        assert nnc.getNode().getFileStoreHandler() instanceof IWriteFileStoreHandler;
         IWriteFileStoreHandler targetFSHandler = (IWriteFileStoreHandler)nnc.getNode().getFileStoreHandler();
         IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
         if (oldFSHandler instanceof IWriteFileStoreHandler) {
