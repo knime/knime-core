@@ -354,7 +354,7 @@ public final class NodeAndBundleInformationPersistor extends NodeAndBundleInform
      * @param nodeName the node's name, can be <code>null</code>
      * @param bundle the bundle to extract the information from, can be <code>null</code>
      * @return a new information object based on the provided information
-     * @since 4.0
+     * @since 4.1
     */
     public static NodeAndBundleInformationPersistor create(final NodeFactory<? extends NodeModel> factory,
         final String nodeName, final Bundle bundle) {
