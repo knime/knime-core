@@ -392,7 +392,7 @@ public class DataContainer implements RowAppender {
 
     private void addRowToTableWrite(final DataRow row) {
         // let's do every possible sanity check
-        validateSpecCompatiblity(row);
+        assert validateSpecCompatiblity(row);
         m_domainCreator.updateDomain(row);
         addRowKeyForDuplicateCheck(row.getKey());
         m_buffer.addRow(row, false, m_forceCopyOfBlobs);
@@ -404,7 +404,7 @@ public class DataContainer implements RowAppender {
      * @param row the row to validate
      *
      */
-    private void validateSpecCompatiblity(final DataRow row) {
+    private boolean validateSpecCompatiblity(final DataRow row) {
         int numCells = row.getNumCells();
         RowKey key = row.getKey();
         if (numCells != m_spec.getNumColumns()) {
@@ -438,7 +438,8 @@ public class DataContainer implements RowAppender {
                     + ") in row \"" + key + "\" is " + runtimeType.toString() + " and does "
                     + "not comply with its supposed superclass " + columnClass.toString());
             }
-        } // for all cells
+        }
+        return true;
     }
 
     /**
@@ -1222,7 +1223,7 @@ public class DataContainer implements RowAppender {
                 if (m_writeThrowable.get() == null) {
                     final List<BlobSupportDataRow> blobRows = new ArrayList<>(m_rows.size());
                     for (final DataRow row : m_rows) {
-                        validateSpecCompatiblity(row);
+                        assert validateSpecCompatiblity(row);
                         m_dataTableDomainCreator.updateDomain(row);
                         addRowKeyForDuplicateCheck(row.getKey());
                         blobRows.add(m_buffer.saveBlobsAndFileStores(row, m_forceCopyOfBlobs));
