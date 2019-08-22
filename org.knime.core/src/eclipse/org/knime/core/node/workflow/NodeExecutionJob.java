@@ -239,11 +239,6 @@ public abstract class NodeExecutionJob implements Runnable {
         NodeContainerExecutionResult res;
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer nnc = (NativeNodeContainer) nc;
-            if (nnc.getNodeModel() instanceof VirtualSubNodeOutputNodeModel) {
-                //in order to set the VirtualSubNodeExchange
-                ((VirtualSubNodeOutputNodeModel)nnc.getNodeModel())
-                    .setInternalPortObjects(createInactivePortObjects(nnc.getNrOutPorts()));
-            }
             // doesn't actually execute the node, i.e. won't touch the NodeModel's execute-method because the inports are all inactive
             // it's the only way to set the node's outputs to inactive port objects
             nnc.performExecuteNode(createInactivePortObjects(nnc.getNrInPorts()));
@@ -258,16 +253,16 @@ public abstract class NodeExecutionJob implements Runnable {
             nc.loadExecutionResult(wfmRes2, exec, loadRes);
             res = wfmRes2;
         } else {
-            assert nc instanceof SubNodeContainer;
             SubNodeContainer snc = (SubNodeContainer) nc;
             SubnodeContainerExecutionResult subNodeRes = new SubnodeContainerExecutionResult(nc.getID());
             WorkflowExecutionResult wfmRes2 = new WorkflowExecutionResult(new NodeID(nc.getID(), 0));
-            setInactiveDeep(snc.getVirtualInNode(), wfmRes2, exec, loadRes);
-            setInactiveDeep(snc.getVirtualOutNode(), wfmRes2, exec, loadRes);
-            for (NodeContainer n : ((SubNodeContainer)nc).getWorkflowManager().getNodeContainers()) {
+            VirtualSubNodeOutputNodeModel outputNodeModel = snc.getVirtualOutNodeModel();
+            //in order to set the VirtualSubNodeExchange
+            outputNodeModel.setInternalPortObjects(createInactivePortObjects(nc.getNrOutPorts()));
+            subNodeRes.setWorkflowExecutionResult(wfmRes2);
+            for (NodeContainer n : snc.getWorkflowManager().getNodeContainers()) {
                 setInactiveDeep(n, wfmRes2, exec, loadRes);
             }
-            subNodeRes.setWorkflowExecutionResult(wfmRes2);
             res = subNodeRes;
         }
         res.setSuccess(true);
