@@ -699,7 +699,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         assert !(this.isModelCompatibleTo(LoopStartNode.class)) || getID().equals(innerStartNodeID);
 
         IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
-        IWriteFileStoreHandler newFSHandler;
+        IWriteFileStoreHandler newFSHandler = null;
 
         WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
         if (innerFLC == null && upstreamFLC == null) {
@@ -738,19 +738,24 @@ public class NativeNodeContainer extends SingleNodeContainer {
             // ordinary node contained in loop
             assert innerFLC == null && upstreamFLC != null;
             ILoopStartWriteFileStoreHandler upStreamFSHandler = upstreamFLC.getFileStoreHandler();
+            //Note on a potentially null-upStreamFSHandler:
+            //nodes in inactive branches don't have a file store handler set
+            //-> need to be taken into consideration when setting up the file store handler for an 'InactiveBranchConsumer-loop end'
             if (this.isModelCompatibleTo(LoopEndNode.class)) {
                 if (upstreamFLC.getIterationIndex() > 0) {
                     newFSHandler = (IWriteFileStoreHandler)oldFSHandler;
-                } else {
+                } else if(upStreamFSHandler != null){
                     newFSHandler = new LoopEndWriteFileStoreHandler(upStreamFSHandler);
                     newFSHandler.addToRepository(dataRepository);
                 }
-            } else {
+            } else if(upStreamFSHandler != null){
                 newFSHandler = new ReferenceWriteFileStoreHandler(upStreamFSHandler);
                 newFSHandler.addToRepository(dataRepository);
             }
         }
-        m_node.setFileStoreHandler(newFSHandler);
+        if (newFSHandler != null) {
+            m_node.setFileStoreHandler(newFSHandler);
+        }
     }
 
     /** Disposes file store handler (if set) and sets it to null. Called from reset and cleanup.
