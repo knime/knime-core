@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.testing.core"
       label="KNIME Testing Framework"
-      version="4.0.0.qualifier"
+      version="4.1.0.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland"
       plugin="org.knime.testing">
 
