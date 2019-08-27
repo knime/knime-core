@@ -99,6 +99,14 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
      * {@inheritDoc}
      */
     @Override
+    protected String getCustomThreadName(final String originalThreadName) {
+        return originalThreadName + "-" + getNodeContainer().getNameWithID();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean isReConnecting() {
         return false;
     }

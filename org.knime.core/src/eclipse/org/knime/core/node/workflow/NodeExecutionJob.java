@@ -113,14 +113,35 @@ public abstract class NodeExecutionJob implements Runnable {
         Deque<NodeContext> savedContextStack = new ArrayDeque<NodeContext>(contextStack);
         contextStack.clear();
 
+        final String origThreadName = Thread.currentThread().getName();
+        final String customThreadName = getCustomThreadName(origThreadName);
+        if (!origThreadName.equals(customThreadName)) {
+            Thread.currentThread().setName(customThreadName);
+        }
+
         NodeContext.pushContext(m_nc);
         try {
-            internalRun();
+           internalRun();
         } finally {
             NodeContext.removeLastContext();
             assert contextStack.size() == 0 : "Context stack is not empty although it should be";
             contextStack.addAll(savedContextStack);
+            if (!origThreadName.equals(customThreadName)) {
+                Thread.currentThread().setName(origThreadName);
+            }
         }
+    }
+
+    /**
+     * Returns a custom name for the thread the node is executed in. Thread name will be reset to its original name
+     * once execution is finished.
+     *
+     * @param originalThreadName the original thread name optionally to be combined into a the new thread name
+     * @return the new thread name
+     * @since 4.1
+     */
+    protected String getCustomThreadName(final String originalThreadName) {
+        return originalThreadName;
     }
 
     /**
