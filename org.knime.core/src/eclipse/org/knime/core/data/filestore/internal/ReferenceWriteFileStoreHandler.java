@@ -57,6 +57,7 @@ import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.util.FileUtil;
 
 /**
  * File store handler used for non-start nodes that are part of a loop body (not the loop end). They forward all calls
@@ -147,7 +148,7 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
             return ((ILoopStartWriteFileStoreHandler)m_reference).createFileStoreInLoopBody(name);
         } else {
             assert m_nodeId != null;
-            return m_reference.createFileStore(name + "#" + m_nodeId);
+            return m_reference.createFileStore(FileUtil.getValidFileName(name + "#" + m_nodeId, 0));
         }
     }
 
