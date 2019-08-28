@@ -170,4 +170,13 @@ public class BufferedDataTableView extends JComponent implements PortObjectView 
         m_dataView.setDataTable(null);
     }
 
+    /**
+     * @return the panel containing the table view
+     * @since 4.1
+     */
+    public TableView getTableView() {
+        return m_dataView;
+    }
+
+
 }
