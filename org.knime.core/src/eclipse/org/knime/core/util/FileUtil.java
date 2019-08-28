@@ -120,8 +120,10 @@ public final class FileUtil {
 
     private static final AtomicLong TEMP_DIR_UNIFIER = new AtomicLong((int)(100000 * Math.random()));
 
+    private static final int DEFAULT_URL_TIMEOUT_MILLIS = 1000;
+
     // timeout when connecting to or reading from URLs
-    private static int urlTimeout = 1000;
+    private static int urlTimeout = DEFAULT_URL_TIMEOUT_MILLIS;
 
     private static final boolean IS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
 
@@ -153,6 +155,11 @@ public final class FileUtil {
             } catch (NumberFormatException ex) {
                 LOGGER.error("Illegal value for property "
                         + KNIMEConstants.PROPERTY_URL_TIMEOUT + ": " + to);
+            }
+            if (urlTimeout < 0) {
+                LOGGER.errorWithFormat("Illegal (negative) value for property %s: %d",
+                    KNIMEConstants.PROPERTY_URL_TIMEOUT, urlTimeout);
+                urlTimeout = DEFAULT_URL_TIMEOUT_MILLIS;
             }
         }
     }
@@ -1350,6 +1357,17 @@ public final class FileUtil {
             stream = new FileInputStream(file);
         }
         return new BufferedInputStream(stream);
+    }
+
+    /** Get default timeout in milliseconds. Default is {@value #DEFAULT_URL_TIMEOUT_MILLIS} but can be changed via the
+     * {@link KNIMEConstants#PROPERTY_URL_TIMEOUT} property. This value is used when any of the openInput/Output
+     * methods are called without timeout argument.
+     *
+     * @return The default timeout when connecting (and often also reading) remote resources.
+     * @since 4.1
+     */
+    public static int getDefaultURLTimeoutMillis() {
+        return urlTimeout;
     }
 
     /**
