@@ -81,17 +81,17 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     /** Just list the two JSON Output nodes. */
     @Test
     public void testOutputNamesPositive() throws Exception {
-        List<ExternalNodeDataHandle> outputNodeList =
-                getManager().getExternalNodeDataHandles(OutputNode.class, o -> o.getExternalOutput());
+        List<ExternalParameterHandle<ExternalNodeData>> outputNodeList = getManager().getExternalParameterHandles(
+            OutputNode.class, o -> o.getExternalOutput().getID(), o -> o.getExternalOutput(), true, true);
         Assert.assertThat("Wrong number of output nodes", outputNodeList.size(), is(2));
         List<String> shortNames = outputNodeList.stream()
-                .map(ExternalNodeDataHandle::getParameterNameShort)
+                .map(ExternalParameterHandle::getParameterNameShort)
                 .collect(Collectors.toList());
         Assert.assertThat("Wrong 'uniquified' output parameter names", shortNames,
             hasItems("output-not-unique-4", "output-not-unique-8"));
 
         List<String> fullyQualifiedNames = outputNodeList.stream()
-                .map(ExternalNodeDataHandle::getParameterNameFullyQualified)
+                .map(ExternalParameterHandle::getParameterNameFullyQualified)
                 .collect(Collectors.toList());
         Assert.assertThat("Wrong 'fully qualified' output parameter names", fullyQualifiedNames,
             hasItems("output-not-unique-4", "output-not-unique-8"));
@@ -100,12 +100,12 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     /** List the various input nodes with their name, either as-is or appended by node id. */
     @Test
     public void testInputNamesPositive() throws Exception {
-        List<ExternalNodeDataHandle> inputNodes =
-                getManager().getExternalNodeDataHandles(InputNode.class, InputNode::getInputData);
+        List<ExternalParameterHandle<ExternalNodeData>> inputNodes = getManager().getExternalParameterHandles(
+            InputNode.class, i -> i.getInputData().getID(), InputNode::getInputData, true, true);
         Assert.assertThat("Wrong number of input nodes", inputNodes.size(), is(5));
 
         List<String> shortNames = inputNodes.stream()
-                .map(ExternalNodeDataHandle::getParameterNameShort)
+                .map(ExternalParameterHandle::getParameterNameShort)
                 .collect(Collectors.toList());
 
         Assert.assertThat("Wrong 'uniquified' input parameter names", shortNames, hasItems("input-unique",
@@ -113,7 +113,7 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
             "input-not-unique-2", "input-not-unique-10:2", "input-not-unique-9", "input-not-unique-7:9:2"));
 
         List<String> fullyQualifiedNames = inputNodes.stream()
-                .map(ExternalNodeDataHandle::getParameterNameFullyQualified)
+                .map(ExternalParameterHandle::getParameterNameFullyQualified)
                 .collect(Collectors.toList());
         Assert.assertThat("Wrong 'fully qualifed' input parameter names", fullyQualifiedNames,
             hasItems("input-unique-1", "input-not-unique-2", "input-not-unique-10:2", "input-not-unique-9",

@@ -317,6 +317,10 @@ public abstract class WorkflowTestCase {
         return null;
     }
 
+    protected File getArtifactsDirectory(final File workflowDirectory) {
+        return new File(workflowDirectory, WorkflowSaveHook.ARTIFACTS_FOLDER_NAME);
+    }
+
     protected static int countFilesInDirectory(final File directory) {
         int count = 0;
         for (File child : directory.listFiles()) {
