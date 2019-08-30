@@ -2049,7 +2049,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** {@inheritDoc} */
     @Override
     public boolean isInactive() {
-        return false;
+        return getVirtualInNode().isInactive();
     }
 
     /** {@inheritDoc} */
