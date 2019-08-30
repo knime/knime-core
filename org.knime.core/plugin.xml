@@ -622,5 +622,8 @@
       <WorkflowSaveHook
             class="org.knime.core.openapi.OpenAPIDefinitionGenerator">
       </WorkflowSaveHook>
+      <WorkflowSaveHook
+            class="org.knime.core.openapi.ConfigDefinitionGenerator">
+      </WorkflowSaveHook>
    </extension>
 </plugin>

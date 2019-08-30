@@ -50,18 +50,22 @@ package org.knime.core.node.workflow;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.ExternalNodeData;
+import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.util.CheckUtils;
 
 /**
- * Class used internally in the {@link WorkflowManager} to describe the relevant pieces of a node that is used as a REST
- * parameter. It wraps {@link ExternalNodeData} along with the parameter name, unified across all REST parameters in the
- * workflow. The latter is important in case two nodes in the workflow use the same parameter name ... it's suffixed
- * with the node's ID.
+ * Class used internally in the {@link WorkflowManager} to describe the relevant pieces of a node that is used as a
+ * external parameter (e.g. injected via REST). The parameter values can be, e.g., configuration values for
+ * {@link DialogNode}s or input values for {@link InputNode}s. It wraps the parameterized value object along with the
+ * parameter name, unified across all parameters in the workflow. The latter is important in case two nodes in the
+ * workflow use the same parameter name ... it's suffixed with the node's ID.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-final class ExternalNodeDataHandle {
+final class ExternalParameterHandle<V> {
 
     private final String m_parameterNameShort;
 
@@ -69,16 +73,18 @@ final class ExternalNodeDataHandle {
 
     private final NativeNodeContainer m_ownerNodeContainer;
 
-    private final ExternalNodeData m_externalNodeData;
+    private V m_parameterValue;
 
     /**
      * @param parameterNameShort e.g. "foo-bar" or "foo-bar-9:3"
      * @param parameterNameFullyQualified e.g. "foo-bar-9:3"
      * @param ownerNodeContainer e.g. the node that contributes or receives the REST parameter.
-     * @param externalNodeData the actual data.
+     * @param externalParameterValue the actual data, can be <code>null</code> if this handle is only used to set a new
+     *            parameter value
+     * @param parameterKey the unique id for the parameter (i.e. parameter name without node id)
      */
-    ExternalNodeDataHandle(final String parameterNameShort, final String parameterNameFullyQualified,
-        final NativeNodeContainer ownerNodeContainer, final ExternalNodeData externalNodeData) {
+    ExternalParameterHandle(final String parameterNameShort, final String parameterNameFullyQualified,
+        final NativeNodeContainer ownerNodeContainer, final V externalParameterValue, final String parameterKey) {
         m_parameterNameShort = CheckUtils.checkNotNull(parameterNameShort);
         m_parameterNameFullyQualified = CheckUtils.checkNotNull(parameterNameFullyQualified);
         CheckUtils.checkArgument(StringUtils.startsWith(parameterNameFullyQualified, parameterNameShort),
@@ -88,10 +94,10 @@ final class ExternalNodeDataHandle {
             "No match on \"%s\" (regex \"%s\")", parameterNameShort, ExternalNodeData.PARAMETER_NAME_PATTERN.pattern());
 
         m_ownerNodeContainer = CheckUtils.checkNotNull(ownerNodeContainer);
-        m_externalNodeData = CheckUtils.checkNotNull(externalNodeData);
-        CheckUtils.checkArgument(StringUtils.startsWith(parameterNameShort, m_externalNodeData.getID()),
+        m_parameterValue = externalParameterValue;
+        CheckUtils.checkArgument(StringUtils.startsWith(parameterNameShort, parameterKey),
             "Parameter name \"%s\"doesn't start with name as configured in node \"%\"", m_parameterNameShort,
-            externalNodeData.getID());
+            parameterKey);
     }
 
     /** @return the parameterNameShort, not null. */
@@ -110,8 +116,8 @@ final class ExternalNodeDataHandle {
     }
 
     /** @return the externalNodeData */
-    ExternalNodeData getExternalNodeData() {
-        return m_externalNodeData;
+    V getParameterValue() {
+        return m_parameterValue;
     }
 
     @Override
@@ -120,7 +126,7 @@ final class ExternalNodeDataHandle {
         builder.append("parameterNameShort", m_parameterNameShort);
         builder.append("parameterNameFullyQualified", m_parameterNameFullyQualified);
         builder.append("ownerNodeContainer", m_ownerNodeContainer);
-        builder.append("externalNodeData", m_externalNodeData);
+        builder.append("parameterValue", m_parameterValue);
         return builder.build();
     }
 

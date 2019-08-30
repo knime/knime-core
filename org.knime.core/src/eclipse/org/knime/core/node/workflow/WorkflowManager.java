@@ -103,6 +103,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import javax.json.JsonException;
+import javax.json.JsonValue;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -132,6 +135,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.dialog.DialogNode;
+import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
@@ -9491,10 +9495,11 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.12
      */
     public Map<String, ExternalNodeData> getInputNodes() {
-        List<ExternalNodeDataHandle> inputNodes = getExternalNodeDataHandles(InputNode.class, i -> i.getInputData());
+        List<ExternalParameterHandle<ExternalNodeData>> inputNodes = getExternalParameterHandles(InputNode.class,
+            i -> i.getInputData().getID(), i -> i.getInputData(), true, true);
         return inputNodes.stream().collect(Collectors.toMap(
-            ExternalNodeDataHandle::getParameterNameFullyQualified,
-            ExternalNodeDataHandle::getExternalNodeData));
+            ExternalParameterHandle::getParameterNameFullyQualified,
+            ExternalParameterHandle::getParameterValue));
     }
 
     /**
@@ -9507,48 +9512,8 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.12
      */
     public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
-        try (WorkflowLock lock = lock()) {
-            CheckUtils.checkState(!getNodeContainerState().isExecutionInProgress(),
-                "Cannot apply new parameters - workflow still in execution");
-
-            List<ExternalNodeDataHandle> inputNodes =
-                    getExternalNodeDataHandles(InputNode.class, i -> i.getInputData());
-
-            // will contain all nodes that need a new data object
-            List<Pair<NativeNodeContainer, ExternalNodeData>> valuesToSetList = new LinkedList<>();
-
-            // find all the nodes, remember them and do some validation -- do not set new value yet.
-            for (Map.Entry<String, ExternalNodeData> entry : input.entrySet()) {
-                final String userParameter = entry.getKey();
-                Matcher parameterNameMatcher = ExternalNodeData.PARAMETER_NAME_PATTERN.matcher(userParameter);
-
-                Optional<ExternalNodeDataHandle> matchingNodeOptional;
-                if (parameterNameMatcher.matches()) { // fully qualified (e.g. "param-name-32:34")
-                    matchingNodeOptional = inputNodes.stream()
-                        .filter(e -> e.getParameterNameFullyQualified().equals(userParameter)).findFirst();
-                } else { // short notation, e.g. "param-name"
-                    matchingNodeOptional = inputNodes.stream()
-                            .filter(e -> e.getParameterNameShort().equals(userParameter)).findFirst();
-                }
-                ExternalNodeDataHandle matchingNode =
-                    matchingNodeOptional.orElseThrow(() -> new InvalidSettingsException(String.format(
-                        "Parameter name \"%s\" doesn't match any node in the workflow, valid parameter names are: %s",
-                        userParameter, inputNodes.stream().map(e -> "\"" + e.getParameterNameShort() + "\"")
-                            .collect(Collectors.joining(", ", "[", "]")))));
-                NativeNodeContainer nnc = matchingNode.getOwnerNodeContainer();
-                ((InputNode)nnc.getNodeModel()).validateInputData(entry.getValue());
-                valuesToSetList.add(Pair.create(nnc, entry.getValue()));
-            }
-
-            // finally set the new (validated) value
-            for (Pair<NativeNodeContainer, ExternalNodeData> t : valuesToSetList) {
-                NativeNodeContainer inputNodeNC = t.getFirst();
-                ExternalNodeData data = t.getSecond();
-                LOGGER.debugWithFormat("Setting new parameter for node \"%s\"", inputNodeNC.getNameWithID());
-                ((InputNode)inputNodeNC.getNodeModel()).setInputData(data);
-                inputNodeNC.getParent().resetAndConfigureNode(inputNodeNC.getID());
-            }
-        }
+        setExternalParameterValues(input, InputNode.class, i -> i.getInputData().getID(),
+            (n, v) -> n.validateInputData(v), (n, v) -> n.setInputData(v), true, true);
     }
 
     /**
@@ -9559,31 +9524,143 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.12
      */
     public Map<String, ExternalNodeData> getExternalOutputs() {
-        List<ExternalNodeDataHandle> outputNodes =
-                getExternalNodeDataHandles(OutputNode.class, i -> i.getExternalOutput());
-            return outputNodes.stream().collect(Collectors.toMap(
-                ExternalNodeDataHandle::getParameterNameFullyQualified,
-                ExternalNodeDataHandle::getExternalNodeData));
+        List<ExternalParameterHandle<ExternalNodeData>> outputNodes = getExternalParameterHandles(OutputNode.class,
+            o -> o.getExternalOutput().getID(), o -> o.getExternalOutput(), true, true);
+          return outputNodes.stream().collect(Collectors.toMap(
+                ExternalParameterHandle::getParameterNameFullyQualified,
+                ExternalParameterHandle::getParameterValue));
+    }
+
+    /**
+     * Returns all {@link DialogNode}'s (aka configuration nodes) on the top level.
+     *
+     * @return a map of the node's parameter name to the node
+     *
+     * @since 4.1
+     */
+    @SuppressWarnings("rawtypes")
+    public Map<String, DialogNode> getConfigurationNodes() {
+        List<ExternalParameterHandle<DialogNode>> inputNodes =
+            getExternalParameterHandles(DialogNode.class, i -> i.getParameterName(), i -> i, false, false);
+        return inputNodes.stream().collect(Collectors.toMap(ExternalParameterHandle::getParameterNameFullyQualified,
+            ExternalParameterHandle::getParameterValue));
+    }
+
+    /**
+     * Sets the configuration of the nodes referenced by the given parameter names. Only considers nodes on the top
+     * level. Respective nodes will be reset.
+     *
+     * @param configuration a map of parameter names and the new to be set configuration value as json
+     * @throws InvalidSettingsException if there is no node for a given parameter name or the validation of the new
+     *             configuration value failed
+     * @throws JsonException if configuration couldn't be parsed from the json object
+     *
+     * @since 4.1
+     */
+    @SuppressWarnings("unchecked")
+    public void setConfigurationNodes(final Map<String, JsonValue> configuration)
+        throws InvalidSettingsException, JsonException {
+        setExternalParameterValues(configuration, DialogNode.class, i -> i.getParameterName(), (n, v) -> {
+            DialogNodeValue val = n.createEmptyDialogValue();
+            val.loadFromJson(v);
+            n.validateDialogValue(val);
+        }, (n, v) -> {
+            DialogNodeValue val = n.createEmptyDialogValue();
+            val.loadFromJson(v);
+            n.setDialogValue(val);
+        }, false, false);
+    }
+
+    private interface BiConsumer<T, V> {
+        void accept(T model, V value) throws InvalidSettingsException;
+    }
+
+    /**
+     * Set external parameter values to nodes (e.g. {@link InputNode}s, {@link OutputNode}s or {@link DialogNode}s)
+     * referenced by a (unique) parameter name.
+     *
+     * @param input a map from the parameter name (referencing a node) to the parameter value to be set
+     * @param nodeModelClass the node type the values are injected into, e.g. {@link InputNode}, {@link OutputNode} or
+     *            {@link DialogNode}
+     * @param getParamName function to extract the parameter name from a node of respective type (which varies between
+     *            the node types)
+     * @param validateParamValue function to validate the parameter value using the node of the respective type
+     * @param setParamValue function that sets the parameter value into the node of the respective type
+     * @param recurseIntoMetaNodes Whether to recurse into contained metanodes
+     * @param recurseIntoSubnodes Whether to recurse into contained components
+     * @throws InvalidSettingsException if a parameter name doesn't match a node or the value validation failed
+     */
+    @SuppressWarnings("unchecked")
+    private <T, V> void setExternalParameterValues(final Map<String, V> input, final Class<T> nodeModelClass,
+        final Function<T, String> getParamName, final BiConsumer<T, V> validateParamValue,
+        final BiConsumer<T, V> setParamValue, final boolean recurseIntoMetaNodes, final boolean recurseIntoSubnodes)
+        throws InvalidSettingsException {
+        try (WorkflowLock lock = lock()) {
+            CheckUtils.checkState(!getNodeContainerState().isExecutionInProgress(),
+                "Cannot apply new parameters - workflow still in execution");
+
+            List<ExternalParameterHandle<V>> inputNodes = getExternalParameterHandles(nodeModelClass, getParamName, null,
+                recurseIntoMetaNodes, recurseIntoSubnodes);
+
+            // will contain all nodes that need a new data object
+            List<Pair<NativeNodeContainer, V>> valuesToSetList = new LinkedList<>();
+
+            // find all the nodes, remember them and do some validation -- do not set new value yet.
+            for (Map.Entry<String, V> entry : input.entrySet()) {
+                final String userParameter = entry.getKey();
+                Matcher parameterNameMatcher = ExternalNodeData.PARAMETER_NAME_PATTERN.matcher(userParameter);
+
+                Optional<ExternalParameterHandle<V>> matchingNodeOptional;
+                if (parameterNameMatcher.matches()) { // fully qualified (e.g. "param-name-32:34")
+                    matchingNodeOptional = inputNodes.stream()
+                        .filter(e -> e.getParameterNameFullyQualified().equals(userParameter)).findFirst();
+                } else { // short notation, e.g. "param-name"
+                    matchingNodeOptional = inputNodes.stream()
+                            .filter(e -> e.getParameterNameShort().equals(userParameter)).findFirst();
+                }
+                ExternalParameterHandle<V> matchingNode =
+                    matchingNodeOptional.orElseThrow(() -> new InvalidSettingsException(String.format(
+                        "Parameter name \"%s\" doesn't match any node in the workflow, valid parameter names are: %s",
+                        userParameter, inputNodes.stream().map(e -> "\"" + e.getParameterNameShort() + "\"")
+                            .collect(Collectors.joining(", ", "[", "]")))));
+                NativeNodeContainer nnc = matchingNode.getOwnerNodeContainer();
+                validateParamValue.accept((T)nnc.getNodeModel(), entry.getValue());
+                valuesToSetList.add(Pair.create(nnc, entry.getValue()));
+            }
+
+            // finally set the new (validated) value
+            for (Pair<NativeNodeContainer, V> t : valuesToSetList) {
+                NativeNodeContainer inputNodeNC = t.getFirst();
+                V value = t.getSecond();
+                LOGGER.debugWithFormat("Setting new parameter for node \"%s\"", inputNodeNC.getNameWithID());
+                setParamValue.accept((T) inputNodeNC.getNodeModel(), value);
+                inputNodeNC.getParent().resetAndConfigureNode(inputNodeNC.getID());
+            }
+        }
     }
 
     /**
      * Implementation of {@link #getInputNodes()} and {@link #getExternalOutputs()}.
      *
      * @param nodeModelClass either {@link InputNode}.class or {@link OutputNode}.class.
-     * @param retriever resolves the data object from the input or output.
+     * @param getParamKey resolves the parameter key from the input or output.
+     * @param getParamValue TODO
+     * @param recurseIntoMetaNodes Whether to recurse into contained metanodes.
+     * @param recurseIntoSubnodes Whether to recurse into contained components.
      * @return List of nodes with their parameter names unified.
      */
     // package scope for tests
-    <T> List<ExternalNodeDataHandle> getExternalNodeDataHandles(final Class<T> nodeModelClass,
-        final Function<T, ExternalNodeData> retriever) {
-        List<ExternalNodeDataHandle> result = new ArrayList<>();
+    <T, V> List<ExternalParameterHandle<V>> getExternalParameterHandles(final Class<T> nodeModelClass,
+        final Function<T, String> getParamKey, final Function<T, V> getParamValue, final boolean recurseIntoMetaNodes,
+        final boolean recurseIntoSubnodes) {
+        List<ExternalParameterHandle<V>> result = new ArrayList<>();
         try (WorkflowLock lock = lock()) {
-            Map<NodeID, T> externalNodeDataMap = findNodes(nodeModelClass, NodeModelFilter.all(), true, true);
+            Map<NodeID, T> externalParameterMap =
+                findNodes(nodeModelClass, NodeModelFilter.all(), recurseIntoMetaNodes, recurseIntoSubnodes);
             // get all "parameter names" from all nodes in the workflow in order to see if there are name conflicts;
             // occurrence map like {"string-input" -> 1, "foo" -> 1, "bar" -> 3}
-            Map<String, Long> parameterNamesToCountMap = externalNodeDataMap.values().stream()
-                    .map(retriever).map(extNodeData -> extNodeData.getID())
-                    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+            Map<String, Long> parameterNamesToCountMap = externalParameterMap.values().stream().map(getParamKey)
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
             parameterNamesToCountMap.values().removeAll(Collections.singleton(Long.valueOf(1L)));
             Set<String> nonUniqueParameterNames = parameterNamesToCountMap.keySet();
             if (!nonUniqueParameterNames.isEmpty() ) {
@@ -9593,10 +9670,10 @@ public final class WorkflowManager extends NodeContainer
             }
 
             // create result list, make keys unique where needed but also retain the fully qualified parameter name
-            for (Map.Entry<NodeID, T> entry : externalNodeDataMap.entrySet()) {
+            for (Map.Entry<NodeID, T> entry : externalParameterMap.entrySet()) {
                 NodeID nodeID = entry.getKey();
-                ExternalNodeData nodeData = retriever.apply(entry.getValue());
-                String parameterNameShort = nodeData.getID();
+                String parameterNameShort = getParamKey.apply(entry.getValue());
+                String parameterKey = parameterNameShort;
                 // this ID = 0:3, nodeID = 0:3:5:0:2:2 => nodeIDRelativePath = 5:0:2:2
                 String nodeIDRelativePath = StringUtils.removeStart(nodeID.toString(), getID().toString() + ":");
                 // nodeIDRelativePath = 5:0:2:2 --> 5:2:2 (':0' are internals of a subnode)
@@ -9606,8 +9683,12 @@ public final class WorkflowManager extends NodeContainer
                 if (nonUniqueParameterNames.contains(parameterNameShort)) {
                     parameterNameShort = parameterNameFullyQualified;
                 }
-                result.add(new ExternalNodeDataHandle(parameterNameShort, parameterNameFullyQualified,
-                    (NativeNodeContainer)findNodeContainer(nodeID), nodeData));
+                V paramValue = null;
+                if (getParamValue != null) {
+                    paramValue = getParamValue.apply(entry.getValue());
+                }
+                result.add(new ExternalParameterHandle<V>(parameterNameShort, parameterNameFullyQualified,
+                    (NativeNodeContainer)findNodeContainer(nodeID), paramValue, parameterKey));
             }
             return result;
         }
