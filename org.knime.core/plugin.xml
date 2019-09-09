@@ -247,6 +247,13 @@
                rendererFactoryClass="org.knime.core.data.renderer.ImageValueRenderer$Factory"
                suggestAsDefault="false">
          </renderer>
+      </dataValue>
+      <dataValue
+            valueClass="org.knime.core.data.probability.ProbabilityDistributionValue">
+         <renderer
+               rendererFactoryClass="org.knime.core.data.probability.ProbabilityDistributionValueRenderer$DefaultRendererFactory"
+               suggestAsDefault="true">
+         </renderer>
       </dataValue>      
    </extension>
    <extension
@@ -498,6 +505,14 @@
          <serializer
                cellClass="org.knime.core.data.xml.PMMLBlobCell"
                serializerClass="org.knime.core.data.xml.PMMLBlobCell$PMMLSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.probability.ProbabilityDistributionCell"
+            factoryClass="org.knime.core.data.probability.ProbabilityDistributionCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.probability.ProbabilityDistributionCell"
+               serializerClass="org.knime.core.data.probability.ProbabilityDistributionCell$ProbabilityDistributionSerializer">
          </serializer>
       </DataType>
    </extension>
