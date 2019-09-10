@@ -9485,8 +9485,7 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Get quickform nodes on the root level along with their currently set value. These are all
-     * {@link org.knime.core.node.dialog.DialogNode} including special nodes like "JSON Input".
+     * Get the currently set value of all input nodes (i.e. {@link InputNode}s) on the root level.
      *
      * <p>
      * Method is used to allow clients to retrieve an example input.
@@ -9503,11 +9502,11 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Counterpart to {@link #getInputNodes()} - it sets new values into quickform nodes on the root level. All nodes as
-     * per map argument will be reset as part of this call.
+     * Counterpart to {@link #getInputNodes()} - it sets new values into input nodes on the root level. All nodes as per
+     * map argument will be reset as part of this call.
      *
-     * @param input a map from {@link org.knime.core.node.dialog.DialogNode#getParameterName() node's parameter name} to
-     *            its (JSON or string object value). Invalid entries cause an exception.
+     * @param input a map from node's parameter name to its (JSON or string object value). Invalid entries cause an
+     *            exception.
      * @throws InvalidSettingsException If parameter name is not valid or a not uniquely defined in the workflow.
      * @since 2.12
      */
@@ -9533,6 +9532,9 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * Returns the default values as json of all {@link DialogNode}'s (aka configuration nodes) on the top level.
+     *
+     * <p>
+     * Method is used to allow clients to retrieve an example configuration.
      *
      * @return a map of the node's parameter name to the node's default value as json
      *
