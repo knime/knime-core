@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.core.openapi;
+package org.knime.core.node.workflow.artifacts;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -65,6 +65,7 @@ import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowSaveHook;
+import org.knime.core.openapi.OpenAPIDefinitionGenerator;
 
 /**
  * {@link WorkflowSaveHook} that saves the top-level input configurations (defined by {@link DialogNode}s, aka
@@ -76,10 +77,10 @@ import org.knime.core.node.workflow.WorkflowSaveHook;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 4.1
  */
-public class ConfigDefinitionGenerator extends WorkflowSaveHook {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ConfigDefinitionGenerator.class);
+public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowConfigArtifactsGenerator.class);
 
-    private static final ConfigDefinitionGenerator INSTANCE = new ConfigDefinitionGenerator();
+    private static final WorkflowConfigArtifactsGenerator INSTANCE = new WorkflowConfigArtifactsGenerator();
 
     private JsonWriterFactory m_writerFactory =
         Json.createWriterFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
@@ -104,7 +105,7 @@ public class ConfigDefinitionGenerator extends WorkflowSaveHook {
      *
      * @return the singleton instance
      */
-    public static final ConfigDefinitionGenerator getInstance() {
+    public static final WorkflowConfigArtifactsGenerator getInstance() {
         return INSTANCE;
     }
 
