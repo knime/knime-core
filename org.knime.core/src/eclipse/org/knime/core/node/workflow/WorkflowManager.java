@@ -9532,18 +9532,18 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Returns all {@link DialogNode}'s (aka configuration nodes) on the top level.
+     * Returns the default values as json of all {@link DialogNode}'s (aka configuration nodes) on the top level.
      *
-     * @return a map of the node's parameter name to the node
+     * @return a map of the node's parameter name to the node's default value as json
      *
      * @since 4.1
      */
     @SuppressWarnings("rawtypes")
-    public Map<String, DialogNode> getConfigurationNodes() {
+    public Map<String, JsonValue> getConfigurationNodes() {
         List<ExternalParameterHandle<DialogNode>> inputNodes =
             getExternalParameterHandles(DialogNode.class, i -> i.getParameterName(), i -> i, false, false);
         return inputNodes.stream().collect(Collectors.toMap(ExternalParameterHandle::getParameterNameFullyQualified,
-            ExternalParameterHandle::getParameterValue));
+            h -> h.getParameterValue().getDefaultValue().toJson()));
     }
 
     /**

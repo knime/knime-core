@@ -54,6 +54,7 @@ import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
 import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 import javax.json.stream.JsonGenerator;
@@ -107,14 +108,12 @@ public class ConfigDefinitionGenerator extends WorkflowSaveHook {
         return INSTANCE;
     }
 
-    @SuppressWarnings("rawtypes")
     private static JsonObject extractTopLevelConfiguration(final WorkflowManager wfm) {
         JsonObjectBuilder root = Json.createObjectBuilder();
-        Map<String, DialogNode> configurationNodes = wfm.getConfigurationNodes();
+        Map<String, JsonValue> configurationNodes = wfm.getConfigurationNodes();
         if (!configurationNodes.isEmpty()) {
             configurationNodes.entrySet().forEach(e -> {
-                root.add(e.getKey(),
-                    OpenAPIDefinitionGenerator.translateToSchema(e.getValue().getDefaultValue().toJson()));
+                root.add(e.getKey(), OpenAPIDefinitionGenerator.translateToSchema(e.getValue()));
             });
         }
         return root.build();
@@ -174,7 +173,6 @@ public class ConfigDefinitionGenerator extends WorkflowSaveHook {
     public void onSave(final WorkflowManager workflow, final boolean isSaveData, final File artifactsFolder)
         throws IOException {
         JsonObject config = extractTopLevelConfiguration(workflow);
-
         if (!config.isEmpty()) {
             LOGGER.debug("Writing configuration of workflow " + workflow.getName());
             try (FileOutputStream fos = new FileOutputStream(new File(artifactsFolder, CONFIGURATION_FILE));
