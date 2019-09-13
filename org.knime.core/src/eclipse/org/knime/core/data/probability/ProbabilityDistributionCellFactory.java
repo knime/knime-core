@@ -104,7 +104,7 @@ public final class ProbabilityDistributionCellFactory implements DataCellFactory
     }
 
     private static boolean sumUpToOne(final double a, final double epsilon) {
-        return Math.abs(a - 1.0d) <= epsilon;
+        return Math.abs(a - 1.0d) < epsilon;
     }
 
     /**
