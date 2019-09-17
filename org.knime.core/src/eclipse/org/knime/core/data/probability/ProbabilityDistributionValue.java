@@ -80,6 +80,15 @@ public interface ProbabilityDistributionValue extends DataValue {
     double getProbability(int index);
 
     /**
+     * Returns the position of the highest probability.
+     * The lowest index with the highest probability is returned if there are multiple
+     * probabilities with the highest value (e.g. in a uniform distribution).
+     *
+     * @return the index of the highest probability
+     */
+    int getMaxProbIndex();
+
+    /**
      * Returns the number of classes and corresponding probabilities.
      *
      * @return the size of the list

@@ -74,8 +74,24 @@ public final class ProbabilityDistributionCell extends DataCell implements Proba
 
     private final double[] m_probabilities;
 
+    private final int m_argMax;
+
     ProbabilityDistributionCell(final double[] probabilities) {
         m_probabilities = probabilities;
+        m_argMax = argMax(probabilities);
+    }
+
+    private static int argMax(final double[] array) {
+        int argMax = 0;
+        double max = array[0];
+        for (int i = 1; i < array.length; i++) {
+            final double e = array[i];
+            if (e > max) {
+                max = e;
+                argMax = i;
+            }
+        }
+        return argMax;
     }
 
     /**
@@ -84,6 +100,14 @@ public final class ProbabilityDistributionCell extends DataCell implements Proba
     @Override
     public double getProbability(final int index) {
         return m_probabilities[index];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getMaxProbIndex() {
+        return m_argMax;
     }
 
     @Override
@@ -144,4 +168,5 @@ public final class ProbabilityDistributionCell extends DataCell implements Proba
             }
         }
     }
+
 }
