@@ -9541,11 +9541,11 @@ public final class WorkflowManager extends NodeContainer
      * @since 4.1
      */
     @SuppressWarnings("rawtypes")
-    public Map<String, JsonValue> getConfigurationNodes() {
+    public Map<String, DialogNode> getConfigurationNodes() {
         List<ExternalParameterHandle<DialogNode>> inputNodes =
             getExternalParameterHandles(DialogNode.class, i -> i.getParameterName(), i -> i, false, false);
-        return inputNodes.stream().collect(Collectors.toMap(ExternalParameterHandle::getParameterNameFullyQualified,
-            h -> h.getParameterValue().getDefaultValue().toJson()));
+        return inputNodes.stream().collect(
+            Collectors.toMap(ExternalParameterHandle::getParameterNameFullyQualified, h -> h.getParameterValue()));
     }
 
     /**

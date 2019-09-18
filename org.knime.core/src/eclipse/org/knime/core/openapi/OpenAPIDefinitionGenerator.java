@@ -213,10 +213,8 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      *
      * @param v the json value
      * @return the resulting json
-     *
-     * @since 4.1
      */
-    public static JsonObjectBuilder translateToSchema(final JsonValue v) {
+    private static JsonObjectBuilder translateToSchema(final JsonValue v) {
         final JsonObjectBuilder node = Json.createObjectBuilder();
 
         if (v instanceof JsonObject) {
