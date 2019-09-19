@@ -9661,10 +9661,19 @@ public final class WorkflowManager extends NodeContainer
                 findNodes(nodeModelClass, NodeModelFilter.all(), recurseIntoMetaNodes, recurseIntoSubnodes);
             // get all "parameter names" from all nodes in the workflow in order to see if there are name conflicts;
             // occurrence map like {"string-input" -> 1, "foo" -> 1, "bar" -> 3}
-            Map<String, Long> parameterNamesToCountMap = externalParameterMap.values().stream().map(getParamKey)
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-            parameterNamesToCountMap.values().removeAll(Collections.singleton(Long.valueOf(1L)));
-            Set<String> nonUniqueParameterNames = parameterNamesToCountMap.keySet();
+            final Set<String> parameterNames = new HashSet<>();
+            final Set<String> nonUniqueParameterNames = new HashSet<>();
+            for (final Map.Entry<NodeID, T> entry : externalParameterMap.entrySet()) {
+                NodeContext.pushContext(findNodeContainer(entry.getKey()));
+                try {
+                    final String paramName = getParamKey.apply(entry.getValue());
+                    if (!parameterNames.add(paramName)) {
+                        nonUniqueParameterNames.add(paramName);
+                    }
+                } finally {
+                    NodeContext.removeLastContext();
+                }
+            }
             if (!nonUniqueParameterNames.isEmpty() ) {
                 LOGGER.warnWithFormat("Workflow contains nodes with duplicate parameter name "
                     + "(will be made unique by appending node IDs): %s",
@@ -9673,24 +9682,32 @@ public final class WorkflowManager extends NodeContainer
 
             // create result list, make keys unique where needed but also retain the fully qualified parameter name
             for (Map.Entry<NodeID, T> entry : externalParameterMap.entrySet()) {
-                NodeID nodeID = entry.getKey();
-                String parameterNameShort = getParamKey.apply(entry.getValue());
-                String parameterKey = parameterNameShort;
-                // this ID = 0:3, nodeID = 0:3:5:0:2:2 => nodeIDRelativePath = 5:0:2:2
-                String nodeIDRelativePath = StringUtils.removeStart(nodeID.toString(), getID().toString() + ":");
-                // nodeIDRelativePath = 5:0:2:2 --> 5:2:2 (':0' are internals of a subnode)
-                nodeIDRelativePath = StringUtils.remove(nodeIDRelativePath, ":0");
-                String parameterNameFullyQualified =
+                final NodeID nodeID = entry.getKey();
+                final NodeContainer nodeContainer = findNodeContainer(nodeID);
+                NodeContext.pushContext(nodeContainer);
+                try {
+                    String parameterNameShort = getParamKey.apply(entry.getValue());
+                    String parameterKey = parameterNameShort;
+                    // this ID = 0:3, nodeID = 0:3:5:0:2:2 => nodeIDRelativePath = 5:0:2:2
+                    String nodeIDRelativePath = StringUtils.removeStart(nodeID.toString(), getID().toString() + ":");
+                    // nodeIDRelativePath = 5:0:2:2 --> 5:2:2 (':0' are internals of a subnode)
+                    nodeIDRelativePath = StringUtils.remove(nodeIDRelativePath, ":0");
+                    String parameterNameFullyQualified =
                         (parameterNameShort.isEmpty() ? "" : parameterNameShort + "-") + nodeIDRelativePath;
-                if (nonUniqueParameterNames.contains(parameterNameShort)) {
-                    parameterNameShort = parameterNameFullyQualified;
+                    if (nonUniqueParameterNames.contains(parameterNameShort)) {
+                        parameterNameShort = parameterNameFullyQualified;
+                    }
+                    V paramValue = null;
+
+                    if (getParamValue != null) {
+                        paramValue = getParamValue.apply(entry.getValue());
+                    }
+
+                    result.add(new ExternalParameterHandle<V>(parameterNameShort, parameterNameFullyQualified,
+                        (NativeNodeContainer)nodeContainer, paramValue, parameterKey));
+                } finally {
+                    NodeContext.removeLastContext();
                 }
-                V paramValue = null;
-                if (getParamValue != null) {
-                    paramValue = getParamValue.apply(entry.getValue());
-                }
-                result.add(new ExternalParameterHandle<V>(parameterNameShort, parameterNameFullyQualified,
-                    (NativeNodeContainer)findNodeContainer(nodeID), paramValue, parameterKey));
             }
             return result;
         }
