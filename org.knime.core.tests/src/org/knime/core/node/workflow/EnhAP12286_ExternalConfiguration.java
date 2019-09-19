@@ -66,6 +66,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
 
@@ -156,7 +157,7 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
         executeAllAndWait();
         checkState(m_stringConfiguration_1, InternalNodeContainerState.EXECUTED);
 
-        Map<String, JsonValue> configurationNodes = getManager().getConfigurationNodes();
+        Map<String, DialogNode> configurationNodes = getManager().getConfigurationNodes();
         assertThat("unexptected number of config nodes", configurationNodes.size(), is(14));
 
         Map<String, JsonValue> configuration = new HashMap<>();
