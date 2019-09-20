@@ -108,7 +108,11 @@ public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
             }
         });
 
-        fileChooser.setSelectedFile(createFileFromPath(selectedFile));
+        final File selected = createFileFromPath(selectedFile);
+        fileChooser.setSelectedFile(selected);
+        if (selected.isDirectory()) {
+            fileChooser.setCurrentDirectory(selected);
+        }
 
         /* This if construct is result of a fix for bug 5841.
         * showDialog does not resolve localized folder names correctly under Mac OS,
