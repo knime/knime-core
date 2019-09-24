@@ -110,7 +110,7 @@ public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
 
         final File selected = createFileFromPath(selectedFile);
         fileChooser.setSelectedFile(selected);
-        if (selected.isDirectory()) {
+        if (selected != null && selected.isDirectory()) {
             fileChooser.setCurrentDirectory(selected);
         }
 
