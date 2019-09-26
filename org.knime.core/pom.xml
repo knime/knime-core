@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.knime</groupId>
 		<artifactId>knime-core</artifactId>
-		<version>4.1.0-SNAPSHOT</version>
+		<version>${revision}${changelist}</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -47,6 +47,8 @@
                 </configuration>
             </plugin>
             <plugin>
+                <!-- This is required so that XMLBeans don't end up in the main Jar file, too. They are already
+                     in lib/schemas.jar. -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.1.0</version>
