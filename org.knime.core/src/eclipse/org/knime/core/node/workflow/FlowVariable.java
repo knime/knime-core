@@ -47,6 +47,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Optional;
+
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -118,31 +120,37 @@ public final class FlowVariable extends FlowObject {
             return m_prefix;
         }
 
-        /** Throws IllegalFlowObjectStackException if the name of the variable
-         * is inconsistent for this scope.
+        /**
+         * Throws {@link IllegalFlowVariableNameException} if the name of the variable is inconsistent for this scope.
+         *
          * @param name Name to test
-         * @throws IllegalFlowObjectStackException If name is invalid
+         * @throws IllegalFlowVariableNameException If name is invalid
          */
         public void verifyName(final String name) {
             if (m_prefix.length() > 0 && !name.startsWith(m_prefix)) {
-                throw new IllegalFlowObjectStackException(
-                        "Invalid " + name()
-                        + " variable, name must start with \""
-                        +  m_prefix + "\": " + name);
+                throw new IllegalFlowVariableNameException(
+                    "Invalid " + name() + " variable, name must start with \"" + m_prefix + "\": " + name);
             }
-            switch (this) {
-            case Flow:
-                if (name.startsWith(Global.m_prefix)
-                        || name.startsWith(Local.m_prefix)) {
-                    throw new IllegalFlowObjectStackException(
-                            "Invalid flow variable, invalid prefix: "
-                            + name);
+            if (this == Flow) {
+                final Optional<String> reservedPrefix = getReservedPrefix(name);
+                if (reservedPrefix.isPresent()) {
+                    throw new IllegalFlowVariableNameException(
+                        String.format(
+                            "The flow variable '%s' has a reserved prefix ('%s'). Please change the name.", name,
+                            reservedPrefix.get()));
                 }
-                break;
-            default:
-                // ignore
             }
         }
+
+        private static Optional<String> getReservedPrefix(final String name) {
+            if (name.startsWith(Local.m_prefix)) {
+                return Optional.of(Local.m_prefix);
+            } else if (name.startsWith(Global.m_prefix)) {
+                return Optional.of(Global.m_prefix);
+            } else {
+                return Optional.empty();
+            }
+    }
     }
 
     private final Scope m_scope;
