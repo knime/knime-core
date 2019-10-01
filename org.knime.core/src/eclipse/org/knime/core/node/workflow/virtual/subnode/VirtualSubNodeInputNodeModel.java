@@ -115,18 +115,18 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
                 assert inputs.length == 0;
-                PortObject[] dataFromParent = ArrayUtils.remove(m_subNodeContainer.fetchInputDataFromParent(), 0);
+                PortObject[] inputData = ArrayUtils.remove(m_subNodeContainer.fetchInputData(exec), 0);
                 for (int i = 0; i < outputs.length; i++) {
                     if (BufferedDataTable.TYPE.equals(getOutPortType(i))) {
                         // stream port content if it's data
-                        BufferedDataTable bdt = (BufferedDataTable)(dataFromParent[i]);
+                        BufferedDataTable bdt = (BufferedDataTable)(inputData[i]);
                         RowOutput rowOutput = (RowOutput)outputs[i];
                         for (DataRow dr : bdt) {
                             rowOutput.push(dr);
                         }
                         rowOutput.close();
                     } else {
-                        ((PortObjectOutput)outputs[i]).setPortObject(dataFromParent[i]);
+                        ((PortObjectOutput)outputs[i]).setPortObject(inputData[i]);
                     }
                 }
             }
@@ -151,8 +151,8 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
     protected PortObject[] executeModel(final PortObject[] rawData,
         final ExecutionEnvironment exEnv, final ExecutionContext exec) throws Exception {
         CheckUtils.checkNotNull(m_subNodeContainer, "No Component container set");
-        PortObject[] dataFromParent = m_subNodeContainer.fetchInputDataFromParent();
-        if (dataFromParent == null) {
+        PortObject[] inputData = m_subNodeContainer.fetchInputData(exec);
+        if (inputData == null) {
             setWarningMessage("Not all inputs available");
             Thread.currentThread().interrupt();
             return null;
@@ -160,14 +160,14 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
         // a node is marked as inactive if any of its inputs is inactive, including the flow variable port to which
         // the plain "execute" method has no access.
         boolean containsInactive = false;
-        for (PortObject o : dataFromParent) {
+        for (PortObject o : inputData) {
             if (o instanceof InactiveBranchPortObject) {
                 containsInactive = true;
                 break;
             }
         }
         if (containsInactive) {
-            PortObject[] clone = ArrayUtils.clone(dataFromParent);
+            PortObject[] clone = ArrayUtils.clone(inputData);
             Arrays.fill(clone, InactiveBranchPortObject.INSTANCE);
             return clone;
         } else {
@@ -179,11 +179,11 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
             throws Exception {
-        PortObject[] dataFromParent = m_subNodeContainer.fetchInputDataFromParent();
+        PortObject[] inputData = m_subNodeContainer.fetchInputData(exec);
         pushFlowVariables();
-        PortObject[] resultData = new PortObject[dataFromParent.length - 1];
-        for (int i = 1; i < dataFromParent.length; i++) {
-            PortObject o = dataFromParent[i];
+        PortObject[] resultData = new PortObject[inputData.length - 1];
+        for (int i = 1; i < inputData.length; i++) {
+            PortObject o = inputData[i];
             resultData[i - 1] = o instanceof BufferedDataTable ? exec.createWrappedTable((BufferedDataTable)o) : o;
         }
         return resultData;
@@ -226,13 +226,13 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
             setWarningMessage("Guessing defaults (excluding all variables)");
             m_configuration = VirtualSubNodeInputConfiguration.newDefault(m_numberOfPorts);
         }
-        PortObjectSpec[] specsFromParent = m_subNodeContainer.fetchInputSpecFromParent();
-        final PortObjectSpec[] specsFromParentNoFlowVar = ArrayUtils.removeAll(specsFromParent, 0);
-        int firstNullIndex = ArrayUtils.indexOf(specsFromParentNoFlowVar, null);
+        PortObjectSpec[] inputSpecs = m_subNodeContainer.fetchInputSpec();
+        final PortObjectSpec[] specsNoFlowVar = ArrayUtils.removeAll(inputSpecs, 0);
+        int firstNullIndex = ArrayUtils.indexOf(specsNoFlowVar, null);
         CheckUtils.checkSetting(firstNullIndex < 0,
             "Component input port %d is not connected or doesn't have meta data", firstNullIndex);
         pushFlowVariables();
-        return specsFromParentNoFlowVar;
+        return specsNoFlowVar;
     }
 
     /**

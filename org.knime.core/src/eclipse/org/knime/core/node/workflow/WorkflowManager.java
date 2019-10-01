@@ -693,8 +693,14 @@ public final class WorkflowManager extends NodeContainer
                 ((WorkflowManager)nc).shutdown();
                 removeNode(id);
                 LOGGER.debug("Project " + nameAndID + " removed (" + m_workflow.getNrNodes() + " remaining)");
+            } else if (nc instanceof SubNodeContainer) {
+                final String nameAndID = "\"" + nc.getNameWithID() + "\"";
+                LOGGER.debug("Removing component project " + nameAndID);
+                ((SubNodeContainer)nc).getWorkflowManager().shutdown();
+                removeNode(id);
+                LOGGER.debug("Component project " + nameAndID + " removed (" + m_workflow.getNrNodes() + " remaining)");
             } else {
-                throw new IllegalArgumentException("Node: " + id + " is not a project!");
+                throw new IllegalArgumentException("Node: " + id + " is neither a workflow nor component project!");
             }
         }
     }
@@ -922,11 +928,12 @@ public final class WorkflowManager extends NodeContainer
      */
     private void addNodeContainer(final NodeContainer nodeContainer, final boolean propagateChanges) {
         try (WorkflowLock lock = assertLock()) {
-            if (this == ROOT && !(nodeContainer instanceof WorkflowManager)) {
+            if (this == ROOT && nodeContainer instanceof NativeNodeContainer) {
                 throw new IllegalStateException(
-                    "Can't add ordinary node to root " + "workflow, use createAndAddProject() first");
+                    "Can't add native node to root " + "workflow, use createAndAddProject() first");
             }
-            if (this == ROOT && (nodeContainer.getNrInPorts() != 0 || nodeContainer.getNrOutPorts() != 0)) {
+            if (this == ROOT && (nodeContainer.getNrInPorts() != 0 || nodeContainer.getNrOutPorts() != 0)
+                && !(nodeContainer instanceof SubNodeContainer)) {
                 throw new IllegalStateException(
                     "Can't add sub workflow to root " + " workflow, use createProject() instead");
             }
@@ -5817,8 +5824,15 @@ public final class WorkflowManager extends NodeContainer
                 return false;
             }
             if (!canConfigureNodes()) {
-                snc.setNodeMessage(NodeMessage.merge(oldMessage,
-                    NodeMessage.newWarning("Outer workflow does not have input data, execute it first")));
+                String message;
+                if (snc.getParent().getDirectNCParent() instanceof SubNodeContainer
+                    && snc.getParent().getDirectNCParent().getDirectNCParent() == WorkflowManager.ROOT) {
+                    //if node is part of component that is _not_ embedded in a parent workflow
+                    message = "No example input data stored with component";
+                } else {
+                    message = "Outer workflow does not have input data, execute it first";
+                }
+                snc.setNodeMessage(NodeMessage.merge(oldMessage, NodeMessage.newWarning(message)));
                 return false;
             }
 

@@ -57,6 +57,7 @@ import java.util.Map;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.util.LockFailedException;
 
@@ -79,6 +80,29 @@ public interface NodeContainerTemplate {
      */
     public MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException, LockFailedException, InvalidSettingsException;
+
+    /**
+     * Extracts and saves this metanode or component into a separate directory as a 'template'.
+     *
+     * Note: if a template is to be saved with input data, make sure to run this method in a non-UI-thread since the
+     * save (and potential upload) might take a while.
+     *
+     * @param directory the directory to save the template to
+     * @param exec to report the progress while saving the example data
+     * @param exampleInputData the example input data to be stored with the template or <code>null</code> if none, will
+     *            only be used if template to save is embedded in a workflow
+     * @return additional template information
+     * @throws IOException If an IO error occurs
+     * @throws CanceledExecutionException If execution is canceled during the operation
+     * @throws LockFailedException If locking failed
+     * @throws InvalidSettingsException if defaults can't be set (meta node settings to be reverted in template)
+     * @since 4.1
+     */
+    public default MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec,
+        final PortObject[] exampleInputData)
+        throws IOException, CanceledExecutionException, LockFailedException, InvalidSettingsException {
+        return saveAsTemplate(directory, exec);
+    }
 
     /** Set new template info (not null!), fire events.
      * @param tI the new templateInformation */

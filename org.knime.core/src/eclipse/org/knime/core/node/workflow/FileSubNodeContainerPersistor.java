@@ -46,16 +46,26 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
@@ -63,12 +73,17 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 
@@ -480,6 +495,192 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         settings.addString("customCSS", subnodeNC.getCssStyles());
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();
         FileWorkflowPersistor.save(workflowManager, nodeDirRef, exec, saveHelper);
+    }
+
+    /**
+     * Helper to save example input data with a component.
+     *
+     * @param portObjects the example data to be stored
+     * @param nodeDir the node directory of the component
+     * @param exec to report progress while saving the data
+     * @return settings that contain the file location and file names, port types, etc.
+     */
+    static NodeSettingsRO saveExampleInputData(final PortObject[] portObjects, final File nodeDir,
+        final ExecutionMonitor exec) throws FileNotFoundException, IOException, CanceledExecutionException {
+        final int portObjectsCount = portObjects.length;
+        NodeSettings settings = new NodeSettings("exampleInputData");
+        String subDirName = "exampleInputData";
+        File subDirFile = new File(nodeDir, subDirName);
+        settings.addString("location", subDirName);
+        NodeSettingsWO portSettings = settings.addNodeSettings("content");
+        FileUtil.deleteRecursively(subDirFile);
+        subDirFile.mkdirs();
+
+        exec.setMessage("Saving example data");
+        for (int i = 0; i < portObjectsCount; i++) {
+            PortObject t = portObjects[i];
+            String objName = "object_" + i + ".zip";
+            ExecutionMonitor subProgress = exec.createSubProgress(1.0 / portObjectsCount);
+            NodeSettingsWO singlePortSetting = portSettings.addNodeSettings(objName);
+            File portFile = new File(subDirFile, objName);
+            singlePortSetting.addInt("index", i);
+            if (t == null) {
+                singlePortSetting.addString("type", "null");
+            } else if (t instanceof BufferedDataTable) {
+                BufferedDataTable table = (BufferedDataTable)t;
+                DataContainer.writeToZip(table, portFile, exec);
+                singlePortSetting.addString("type", "table");
+                singlePortSetting.addString("table_file", objName);
+            } else if(t instanceof FlowVariablePortObject) {
+                singlePortSetting.addString("type", "flow-vars");
+            } else {
+                singlePortSetting.addString("type", "non-table");
+                singlePortSetting.addString("port_file", objName);
+                PortUtil.writeObjectToFile(t, portFile, exec);
+            }
+            subProgress.setProgress(1.0);
+        }
+        return settings;
+    }
+
+    /**
+     * Helper to copy the example input data from one component to another (new) component.
+     *
+     * @param sourceNodeDir the directory of the source component
+     * @param exampleInputDataInfo the 'meta data' of the input data that holds the location, file names, port types
+     *            etc.
+     * @param targetNodeDir the directory to copy the data
+     * @throws InvalidSettingsException if the passed settings don't contain the desired information
+     * @throws IOException if the copying failed
+     */
+    static void copyExampleInputData(final File sourceNodeDir, final NodeSettingsRO exampleInputDataInfo,
+        final File targetNodeDir) throws InvalidSettingsException, IOException {
+        String dataDirName = exampleInputDataInfo.getString("location");
+        FileUtil.copyDir(new File(sourceNodeDir, dataDirName), new File(targetNodeDir, dataDirName));
+    }
+
+    /**
+     * Helper to load the example data spec stored with a component
+     *
+     * @param settings settings that contain information required to restore the data, i.e. the location, file names,
+     *            port types etc.
+     * @param nodeDir the directory of the component to load the data spec from
+     * @return the loaded port object specs
+     * @throws IOException if the data files couldn't be read
+     * @throws InvalidSettingsException if the provided settings are not as expected
+     */
+    static PortObjectSpec[] loadExampleInputSpecs(final NodeSettingsRO settings, final ReferencedFile nodeDir)
+        throws IOException, InvalidSettingsException {
+        String subDirName = settings.getString("location");
+        ReferencedFile subDirFile = new ReferencedFile(nodeDir, subDirName);
+        NodeSettingsRO portSettings = settings.getNodeSettings("content");
+        Set<String> keySet = portSettings.keySet();
+        PortObjectSpec[] result = new PortObjectSpec[keySet.size()];
+        for (String s : keySet) {
+            NodeSettingsRO singlePortSetting = portSettings.getNodeSettings(s);
+            int index = singlePortSetting.getInt("index");
+            if (index < 0 || index >= result.length) {
+                throw new InvalidSettingsException("Invalid index: " + index);
+            }
+            String type = singlePortSetting.getString("type");
+            PortObjectSpec spec = null;
+            if ("null".equals(type)) {
+                // object stays null
+            } else if ("table".equals(type)) {
+                String fileName = singlePortSetting.getString("table_file");
+                if (fileName != null) {
+                    File portFile = new File(subDirFile.getFile(), fileName);
+                    InputStream in = FileUtil.openInputStream(portFile.toString());
+                    // must not use ZipFile here as it is known to have memory problems
+                    // on large files, see e.g.
+                    // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5077277
+                    try (ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(in))) {
+                        ZipEntry entry = zipIn.getNextEntry();
+                        // hardcoded constants here as we do not want additional
+                        // functionality to DataContainer ... at least not yet.
+                        if ("spec.xml".equals(entry != null ? entry.getName() : "")) {
+                            NodeSettingsRO settingsFile = NodeSettings.loadFromXML(zipIn);
+                            try {
+                                NodeSettingsRO specSettings = settingsFile.getNodeSettings("table.spec");
+                                spec = DataTableSpec.load(specSettings);
+                            } catch (InvalidSettingsException ise) {
+                                IOException ioe = new IOException("Unable to read spec from file");
+                                ioe.initCause(ise);
+                                throw ioe;
+                            }
+                        } else {
+                            return null;
+                        }
+                    }
+                }
+            } else if ("flow-vars".equals(type)) {
+                spec = FlowVariablePortObjectSpec.INSTANCE;
+            } else if ("non-table".equals(type)) {
+                String fileName = singlePortSetting.getString("port_file");
+                if (fileName != null) {
+                    File portFile = new File(subDirFile.getFile(), fileName);
+                    spec = PortUtil.readObjectSpecFromFile(portFile);
+                }
+            } else {
+                CheckUtils.checkSetting(false, "Unknown object reference %s", type);
+            }
+            result[index] = spec;
+        }
+        return result;
+    }
+
+    /**
+     * Helper to load example data stored with a component.
+     *
+     * @param settings settings that contain information required to restore the data, i.e. the location, file names,
+     *            port types etc.
+     * @param nodeDir the component directory to load the data from
+     * @param exec to report progress, listen to cancel events, and, most important, to create the new buffered data
+     *            tables
+     * @return the loaded port objects
+     * @throws IOException if the data files couldn't be read
+     * @throws InvalidSettingsException if the provided settings are not as expected
+     */
+    static PortObject[] loadExampleInputData(final NodeSettingsRO settings, final ReferencedFile nodeDir,
+        final ExecutionContext exec) throws IOException, InvalidSettingsException, CanceledExecutionException {
+        String subDirName = settings.getString("location");
+        ReferencedFile subDirFile = new ReferencedFile(nodeDir, subDirName);
+        NodeSettingsRO portSettings = settings.getNodeSettings("content");
+        Set<String> keySet = portSettings.keySet();
+        PortObject[] result = new PortObject[keySet.size()];
+        for (String s : keySet) {
+            ExecutionMonitor subProgress = exec.createSubProgress(1.0 / result.length);
+            NodeSettingsRO singlePortSetting = portSettings.getNodeSettings(s);
+            int index = singlePortSetting.getInt("index");
+            if (index < 0 || index >= result.length) {
+                throw new InvalidSettingsException("Invalid index: " + index);
+            }
+            String type = singlePortSetting.getString("type");
+            PortObject object = null;
+            if ("null".equals(type)) {
+                // object stays null
+            } else if ("table".equals(type)) {
+                String dataFileName = singlePortSetting.getString("table_file");
+                if (dataFileName != null) {
+                    File portFile = new File(subDirFile.getFile(), dataFileName);
+                    ContainerTable t = DataContainer.readFromZip(portFile);
+                    object = exec.createBufferedDataTable(t, subProgress);
+                }
+            } else if("flow-vars".equals(type)) {
+                object = FlowVariablePortObject.INSTANCE;
+            } else if ("non-table".equals(type)) {
+                String dataFileName = singlePortSetting.getString("port_file");
+                if (dataFileName != null) {
+                    File portFile = new File(subDirFile.getFile(), dataFileName);
+                    object = PortUtil.readObjectFromFile(portFile, exec);
+                }
+            } else {
+                CheckUtils.checkSetting(false, "Unknown object reference %s", type);
+            }
+            result[index] = object;
+            subProgress.setProgress(1.0);
+        }
+        return result;
     }
 
     /**

@@ -90,6 +90,8 @@ public class WorkflowLoadHelper {
 
     private final boolean m_isTemplate;
 
+    private final boolean m_isTemplateProject;
+
     private final WorkflowContext m_workflowContext;
 
     /** How to proceed when a workflow written with a future KNIME version is
@@ -114,8 +116,7 @@ public class WorkflowLoadHelper {
      * @since 2.8
      */
     public WorkflowLoadHelper(final File workflowLocation) {
-        m_isTemplate = false;
-        m_workflowContext = new WorkflowContext.Factory(workflowLocation).createContext();
+        this(false, new WorkflowContext.Factory(workflowLocation).createContext());
     }
 
     /**
@@ -125,8 +126,7 @@ public class WorkflowLoadHelper {
      * @since 2.8
      */
     public WorkflowLoadHelper(final WorkflowContext workflowContext) {
-        m_isTemplate = false;
-        m_workflowContext = workflowContext;
+        this(false, workflowContext);
     }
 
 
@@ -138,15 +138,33 @@ public class WorkflowLoadHelper {
      * @since 3.4
      */
     public WorkflowLoadHelper(final boolean isTemplate, final WorkflowContext workflowContext) {
+        this(isTemplate, false, workflowContext);
+    }
+
+    /**
+     * Creates a new load helper with the given workflow context.
+     *
+     * @param isTemplate whether this is a template loader
+     * @param isTemplateProject whether this template is a template project, i.e. not part of a workflow. If
+     *            <code>true</code>, <code>isTemplate</code> must be <code>true</code>, too.
+     * @param workflowContext a workflow context
+     * @since 4.1
+     * @throws IllegalStateException if <code>isTemplateProject</code> is <code>true</code>, but <code>isTemplate</code>
+     *             isn't
+     */
+    public WorkflowLoadHelper(final boolean isTemplate, final boolean isTemplateProject,
+        final WorkflowContext workflowContext) {
+        if (isTemplateProject && !isTemplate) {
+            throw new IllegalStateException("A template project is a template, too");
+        }
         m_isTemplate = isTemplate;
+        m_isTemplateProject = isTemplateProject;
         m_workflowContext = workflowContext;
     }
 
-
     /** @param isTemplate whether this is a template loader */
     public WorkflowLoadHelper(final boolean isTemplate) {
-        m_isTemplate = isTemplate;
-        m_workflowContext = null;
+        this(isTemplate, null);
     }
 
     /**
@@ -202,13 +220,26 @@ public class WorkflowLoadHelper {
         return UnknownKNIMEVersionLoadPolicy.Abort;
     }
 
-    /** Returns true if the workflow is a template flow, i.e. it will be
-     * disconnected from the location where it is loaded from and data will
-     * not be imported.
+    /**
+     * Returns true if the workflow is a template flow.
+     *
      * @return If flow is a template flow (defaults to <code>false</code>).
      */
     public boolean isTemplateFlow() {
         return m_isTemplate;
+    }
+
+
+    /**
+     * Returns <code>true</code> if the workflow is a template project, i.e. a template not embedded in a workflow. If
+     * <code>false</code> (i.e. template is embedded in a workflow),it will be disconnected from the location where it
+     * is loaded from and data will not be imported.
+     *
+     * @return if the template is a project
+     * @since 4.1
+     */
+    public boolean isTemplateProject() {
+        return m_isTemplateProject;
     }
 
     /** Get the name of the *.knime file. This is "template.knime" for
@@ -331,7 +362,7 @@ public class WorkflowLoadHelper {
         final MetaNodeTemplateInformation templateInfo;
         if (isTemplateFlow() && templateSourceURI != null) {
             try {
-                templateInfo = MetaNodeTemplateInformation.load(settings, version);
+                templateInfo = MetaNodeTemplateInformation.load(settings, version, isTemplateProject());
                 CheckUtils.checkSetting(Role.Template.equals(templateInfo.getRole()),
                     "Role is not '%s' but '%s'", Role.Template, templateInfo.getRole());
             } catch (InvalidSettingsException e) {

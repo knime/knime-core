@@ -252,7 +252,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         m_nodeLocks = persistor.getNodeLocks();
 
         setNodeMessage(persistor.getNodeMessage());
-        if (!persistor.getLoadHelper().isTemplateFlow()) {
+        if (!persistor.getLoadHelper().isTemplateFlow() || persistor.getLoadHelper().isTemplateProject()) {
             m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
         }
     }

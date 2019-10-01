@@ -57,6 +57,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -502,11 +503,30 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
     }
 
+    /**
+     * Called from virtual input node when executed - in possibly executes nodes in the parent wfm and then fetches the
+     * data from it. Or, if not embedded in a workflow, (optional) example data is read in from disk.
+     *
+     * @param exec for reading example data in
+     *
+     * @return the component data input (incl. mandatory flow var port object).
+     * @throws ExecutionException any exception thrown while waiting for upstream nodes to finish execution.
+     */
+    public PortObject[] fetchInputData(final ExecutionContext exec) throws ExecutionException {
+        if (exec != null) {
+            PortObject[] exampleInputData = fetchExampleInputData(exec);
+            if (exampleInputData != null) {
+                return exampleInputData;
+            }
+        }
+        return fetchInputDataFromParent();
+    }
+
     /** Fetches input specs of subnode, including mandatory flow var port. Used by virtual sub node input during
      * configuration.
      * @return input specs from subnode (as available from connected outports).
      */
-    public PortObjectSpec[] fetchInputSpecFromParent() {
+    private PortObjectSpec[] fetchInputSpecFromParent() {
         PortObjectSpec[] results = new PortObjectSpec[getNrInPorts()];
         final WorkflowManager parent = getParent();
         // might be not yet or no longer in workflow (e.g. part of construction)
@@ -514,6 +534,48 @@ public final class SubNodeContainer extends SingleNodeContainer
             parent.assembleInputSpecs(getID(), results);
         }
         return results;
+    }
+
+    /**
+     * Fetches input specs of subnode, including mandatory flow var port. Used by virtual sub node input during
+     * configuration.
+     *
+     * @return input specs from subnode (as available from connected outports).
+     */
+    public PortObjectSpec[] fetchInputSpec() {
+        PortObjectSpec[] exampleInputSpec = fetchExampleInputSpec();
+        if (exampleInputSpec != null) {
+            return exampleInputSpec;
+        }
+        return fetchInputSpecFromParent();
+    }
+
+    private PortObject[] fetchExampleInputData(final ExecutionContext exec) {
+        if (hasExampleInputData() && getNodeContainerDirectory() != null) {
+            try {
+                return FileSubNodeContainerPersistor.loadExampleInputData(
+                    getTemplateInformation().getExampleInputDataInfo().get(), getNodeContainerDirectory(), exec);
+            } catch (IOException | InvalidSettingsException | CanceledExecutionException ex) {
+                //should never happen
+                throw new RuntimeException(ex);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private PortObjectSpec[] fetchExampleInputSpec() {
+        if (hasExampleInputData() && getNodeContainerDirectory() != null) {
+            try {
+                return FileSubNodeContainerPersistor.loadExampleInputSpecs(
+                    getTemplateInformation().getExampleInputDataInfo().get(), getNodeContainerDirectory());
+            } catch (IOException | InvalidSettingsException ex) {
+                //should never happen
+                throw new RuntimeException(ex);
+            }
+        } else {
+            return null;
+        }
     }
 
     /* -------------------- Subnode specific -------------- */
@@ -1900,7 +1962,12 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public FlowObjectStack getFlowObjectStack() {
-        return m_incomingStack;
+        if (hasExampleInputData() && !getTemplateInformation().getIncomingFlowVariables().isEmpty()) {
+            return FlowObjectStack.createFromFlowVariableList(getTemplateInformation().getIncomingFlowVariables(),
+                getID());
+        } else {
+            return m_incomingStack;
+        }
     }
 
     /**
@@ -2193,11 +2260,18 @@ public final class SubNodeContainer extends SingleNodeContainer
             if (!parent.containsNodeContainer(getID())) { // called during set-up (loading via constructor)
                 return false;
             }
+            if (isProject() && hasExampleInputData()) {
+                return true;
+            }
             if (!parent.assembleInputData(getID(), new PortObject[getNrInPorts()])) {
                 return false;
             }
             return directNCParent.canConfigureNodes();
         }
+    }
+
+    private boolean hasExampleInputData() {
+        return getTemplateInformation().getExampleInputDataInfo().isPresent();
     }
 
     /** {@inheritDoc} */
@@ -2210,7 +2284,13 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** {@inheritDoc} */
     @Override
     public boolean isWriteProtected() {
-        return getParent().isWriteProtected() || Role.Link.equals(getTemplateInformation().getRole());
+        if (getParent().isWriteProtected()) {
+            return true;
+        } else if (isProject()) {
+            return false;
+        } else {
+            return Role.Link.equals(getTemplateInformation().getRole());
+        }
     }
 
     /** {@inheritDoc} */
@@ -2271,6 +2351,14 @@ public final class SubNodeContainer extends SingleNodeContainer
     @Override
     public MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException, LockFailedException, InvalidSettingsException {
+        return saveAsTemplate(directory, exec, null);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec,
+        final PortObject[] exampleInputData)
+        throws IOException, CanceledExecutionException, LockFailedException, InvalidSettingsException {
         WorkflowManager tempParent = WorkflowManager.lazyInitTemplateWorkflowRoot();
         SubNodeContainer copy = null;
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
@@ -2292,17 +2380,42 @@ public final class SubNodeContainer extends SingleNodeContainer
                 NodeSettings newSettings = new NodeSettings("new settings");
                 sncSettings.save(newSettings);
                 copy.loadSettings(newSettings);
-                MetaNodeTemplateInformation template =
-                        MetaNodeTemplateInformation.createNewTemplate(SubNodeContainer.class);
                 synchronized (copy.m_nodeMutex) {
-                    copy.setTemplateInformation(template);
+                    NodeSettingsRO exampleInputDataInfo = null;
+                    List<FlowVariable> incomingFlowVariables = Collections.emptyList();
+                    if (!isProject() && exampleInputData != null) {
+                        //if this component is embedded in a workflow
+                        //and example data needs to be saved with it
+                        exampleInputDataInfo = FileSubNodeContainerPersistor.saveExampleInputData(exampleInputData,
+                            workflowDirRef.getFile(), exec);
+                        incomingFlowVariables = new ArrayList<>(
+                            Node.invokeGetAvailableFlowVariables(getVirtualInNodeModel(), FlowVariable.Type.values())
+                                .values());
+                    } else if (isProject() && copy.hasExampleInputData()) {
+                        //save a component that is not embedded in a workflow
+                        //and has example data
+                        exampleInputDataInfo = copy.getTemplateInformation().getExampleInputDataInfo().get();
+                        incomingFlowVariables = copy.getTemplateInformation().getIncomingFlowVariables();
+                        if (!directory.equals(getNodeContainerDirectory().getFile())) {
+                            //~save as -> copy example data over
+                            FileSubNodeContainerPersistor.copyExampleInputData(getNodeContainerDirectory().getFile(),
+                                exampleInputDataInfo, directory);
+                        }
+                        unsetDirty();
+                    }
                     copy.setName(null);
+
+                    MetaNodeTemplateInformation template =
+                        MetaNodeTemplateInformation.createNewTemplate(exampleInputDataInfo, incomingFlowVariables);
+                    copy.setTemplateInformation(template);
                     NodeSettings templateSettings = MetaNodeTemplateInformation.createNodeSettingsForTemplate(copy);
-                    templateSettings.saveToXML(new FileOutputStream(
-                        new File(workflowDirRef.getFile(), WorkflowPersistor.TEMPLATE_FILE)));
-                    FileSingleNodeContainerPersistor.save(copy, workflowDirRef, exec, new WorkflowSaveHelper(true, false));
+                    templateSettings.saveToXML(
+                        new FileOutputStream(new File(workflowDirRef.getFile(), WorkflowPersistor.TEMPLATE_FILE)));
+
+                    FileSingleNodeContainerPersistor.save(copy, workflowDirRef, exec,
+                        new WorkflowSaveHelper(true, false));
+                    return template;
                 }
-                return template;
             }
         } finally {
             if (copy != null) {
@@ -2310,6 +2423,14 @@ public final class SubNodeContainer extends SingleNodeContainer
             }
             workflowDirRef.unlock();
         }
+    }
+
+    /**
+     * @return <code>true</code> if the component is embedded in a workflow, <code>false</code> if component has been
+     *         opened directly
+     */
+    private boolean isProject() {
+        return getParent() == WorkflowManager.ROOT;
     }
 
     /**
