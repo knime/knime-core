@@ -94,28 +94,11 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
     private JsonWriterFactory m_writerFactory =
         Json.createWriterFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
 
-    /**
-     * Name of the file that contains the configuration parameter names and their default values.
-     */
-    private static final String CONFIGURATION_FILE = "workflow-configuration.json";
-
-    /**
-     * Name of the file that contains the configuration representation.
-     */
-    private static final String CONFIGURATION_REPRESENTATION_FILE = "workflow-configuration-representation.json";
-
-    /**
-     * Name of the file that contains the workflow variables and their set values.
-     */
-    private static final String WORKFLOW_VARIABLES_FILE = "workflow-variables.json";
-
-    /**
-     * Name of the file that contains the workflow variables and their set values.
-     */
-    private static final String WORKFLOW_CREDENTIALS_FILE = "workflow-credentials.json";
-
     private final ObjectMapper m_mapper;
 
+    /**
+     * Generates a new artifacts generator.
+     */
     public WorkflowConfigArtifactsGenerator() {
         m_mapper = new ObjectMapper();
         m_mapper.registerModule(new JSR353Module());
@@ -138,15 +121,13 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
     }
 
     @SuppressWarnings("rawtypes")
-    private static JsonObject extractTopLevelConfiguration(final WorkflowManager wfm) {
-        JsonObjectBuilder root = Json.createObjectBuilder();
+    private static void extractTopLevelConfiguration(final WorkflowManager wfm, final JsonObjectBuilder builder) {
         Map<String, DialogNode> configurationNodes = wfm.getConfigurationNodes();
         if (!configurationNodes.isEmpty()) {
             configurationNodes.entrySet().forEach(e -> {
-                root.add(e.getKey(), e.getValue().getDefaultValue().toJson());
+                builder.add(e.getKey(), e.getValue().getDefaultValue().toJson());
             });
         }
-        return root.build();
     }
 
     @SuppressWarnings("rawtypes")
@@ -169,9 +150,8 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
         return root.build();
     }
 
-    private static JsonObject extractWorkflowVariables(final WorkflowManager wfm) {
+    private static void extractWorkflowVariables(final WorkflowManager wfm, final JsonObjectBuilder builder) {
         List<FlowVariable> workflowVariables = wfm.getWorkflowVariables();
-        JsonObjectBuilder list = Json.createObjectBuilder();
         for (FlowVariable v : workflowVariables) {
             JsonObjectBuilder val = Json.createObjectBuilder();
             switch (v.getType()) {
@@ -202,30 +182,26 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
                 default:
                     throw new IllegalStateException("Unexpected flow variable type: " + v.getType());
             }
-            list.add(v.getName(), val);
+            builder.add(CoreConstants.WORKFLOW_VARIABLES + v.getName(), val);
         }
-        return list.build();
     }
 
-    private static JsonObject extractWorkflowCredentials(final WorkflowManager wfm) {
+    private static void extractWorkflowCredentials(final WorkflowManager wfm, final JsonObjectBuilder builder) {
         Iterable<Credentials> credentials = wfm.getCredentialsStore().getCredentials();
-        JsonObjectBuilder list = Json.createObjectBuilder();
         for (Credentials c : credentials) {
             JsonObjectBuilder val = Json.createObjectBuilder();
             val.add("type", "object");
-            JsonObjectBuilder props = Json.createObjectBuilder();
             JsonObjectBuilder login = Json.createObjectBuilder();
             login.add("type", "string");
             login.add("default", c.getLogin());
-            props.add("login", login);
+            val.add("login", login);
             JsonObjectBuilder pwd = Json.createObjectBuilder();
             pwd.add("type", "string");
-            props.add("password", pwd);
-            val.add("properties", props);
+            pwd.addNull("default");
+            val.add("password", pwd);
 
-            list.add(c.getName(), val);
+            builder.add(CoreConstants.WORKFLOW_CREDENTIALS + c.getName(), val);
         }
-        return list.build();
     }
 
     /**
@@ -234,10 +210,18 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
     @Override
     public void onSave(final WorkflowManager workflow, final boolean isSaveData, final File artifactsFolder)
         throws IOException {
-        JsonObject config = extractTopLevelConfiguration(workflow);
+        final JsonObjectBuilder confBuilder = Json.createObjectBuilder();
+
+        extractTopLevelConfiguration(workflow, confBuilder);
+        extractWorkflowVariables(workflow, confBuilder);
+        extractWorkflowCredentials(workflow, confBuilder);
+
+        final JsonObject config = confBuilder.build();
+
         if (!config.isEmpty()) {
             LOGGER.debug("Writing configuration of workflow " + workflow.getName());
-            try (FileOutputStream fos = new FileOutputStream(new File(artifactsFolder, CONFIGURATION_FILE));
+            try (FileOutputStream fos =
+                new FileOutputStream(new File(artifactsFolder, CoreConstants.CONFIGURATION_FILE));
                     JsonWriter out = m_writerFactory.createWriter(fos)) {
                 out.write(config);
             }
@@ -246,27 +230,10 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
         JsonObject representation = extractTopLevelConfigurationRepresentation(workflow);
         if (!representation.isEmpty()) {
             LOGGER.debug("Writing configuration representation of workflow " + workflow.getName());
-            try (FileOutputStream fos = new FileOutputStream(new File(artifactsFolder, CONFIGURATION_REPRESENTATION_FILE));
+            try (FileOutputStream fos =
+                new FileOutputStream(new File(artifactsFolder, CoreConstants.CONFIGURATION_REPRESENTATION_FILE));
                     JsonWriter out = m_writerFactory.createWriter(fos)) {
                 out.write(representation);
-            }
-        }
-
-        JsonObject flowVars = extractWorkflowVariables(workflow);
-        if (!flowVars.isEmpty()) {
-            LOGGER.debug("Writing flow variables of workflow " + workflow.getName());
-            try (FileOutputStream fos = new FileOutputStream(new File(artifactsFolder, WORKFLOW_VARIABLES_FILE));
-                    JsonWriter out = m_writerFactory.createWriter(fos)) {
-                out.write(flowVars);
-            }
-        }
-
-        JsonObject credentials = extractWorkflowCredentials(workflow);
-        if (!credentials.isEmpty()) {
-            LOGGER.debug("Writing credentials of workflow " + workflow.getName());
-            try (FileOutputStream fos = new FileOutputStream(new File(artifactsFolder, WORKFLOW_CREDENTIALS_FILE));
-                    JsonWriter out = m_writerFactory.createWriter(fos)) {
-                out.write(credentials);
             }
         }
     }

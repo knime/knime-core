@@ -9544,8 +9544,9 @@ public final class WorkflowManager extends NodeContainer
     public Map<String, DialogNode> getConfigurationNodes() {
         List<ExternalParameterHandle<DialogNode>> inputNodes =
             getExternalParameterHandles(DialogNode.class, i -> i.getParameterName(), i -> i, false, false);
-        return inputNodes.stream().collect(
-            Collectors.toMap(ExternalParameterHandle::getParameterNameFullyQualified, h -> h.getParameterValue()));
+        return inputNodes.stream().filter(e -> !InputNode.class.isAssignableFrom(e.getParameterValue().getClass()))
+            .collect(
+                Collectors.toMap(ExternalParameterHandle::getParameterNameFullyQualified, h -> h.getParameterValue()));
     }
 
     /**

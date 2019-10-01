@@ -68,6 +68,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.util.CoreConstants;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -127,23 +128,20 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
         //check for expected artifacts
         File artifactsDirectory = getArtifactsDirectory(m_workflowDir);
         File workflowConfig = new File(artifactsDirectory, "workflow-configuration.json");
-        File workflowVars = new File(artifactsDirectory, "workflow-variables.json");
-        File workflowCreds = new File(artifactsDirectory, "workflow-credentials.json");
         assertTrue("'workflow-configuration.json' missing", workflowConfig.exists());
-        assertTrue("'workflow-variables.json' missing", workflowVars.exists());
-        assertTrue("'workflow-credentials.json' missing", workflowCreds.exists());
 
         //test few random samples of the file content
         String workflowConfigContent = FileUtils.readFileToString(workflowConfig, StandardCharsets.UTF_8);
         assertThat("unexpected file content", workflowConfigContent, containsString("entry1"));
         assertThat("unexpected file content", workflowConfigContent, containsString("multiple-selection-14"));
-        String workflowVarsContent = FileUtils.readFileToString(workflowVars, StandardCharsets.UTF_8);
-        assertThat("unexpected file content", workflowVarsContent, containsString("test2"));
-        assertThat("unexpected file content", workflowVarsContent, containsString("213.0"));
-        String workflowCredsContent = FileUtils.readFileToString(workflowCreds, StandardCharsets.UTF_8);
-        assertThat("unexpected file content", workflowCredsContent, containsString("password"));
-        assertThat("unexpected file content", workflowCredsContent, containsString("properties"));
-        assertThat("unexpected file content", workflowCredsContent, containsString("test2"));
+        assertThat("unexpected file content", workflowConfigContent,
+            containsString(CoreConstants.WORKFLOW_VARIABLES + "test2"));
+        assertThat("unexpected file content", workflowConfigContent,
+            containsString("213.0"));
+        assertThat("unexpected file content", workflowConfigContent,
+            containsString("password"));
+        assertThat("unexpected file content", workflowConfigContent,
+            containsString(CoreConstants.WORKFLOW_CREDENTIALS + "test2"));
     }
 
     /**
