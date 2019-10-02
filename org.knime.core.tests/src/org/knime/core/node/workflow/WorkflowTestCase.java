@@ -50,6 +50,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,10 +67,13 @@ import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 
 /**
@@ -127,6 +131,21 @@ public abstract class WorkflowTestCase {
                     LoadResultEntryType.Warning));
             }
         }
+        return loadResult;
+    }
+
+    /**
+     * Loads a component as project.
+     */
+    protected MetaNodeLinkUpdateResult loadComponent(final File componentDir, final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper)
+        throws IOException, InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException {
+        URI componentURI = componentDir.toURI();
+        TemplateNodeContainerPersistor loadPersistor =
+            loadHelper.createTemplateLoadPersistor(componentDir, componentURI);
+        MetaNodeLinkUpdateResult loadResult =
+            new MetaNodeLinkUpdateResult("Shared instance from \"" + componentURI + "\"");
+        WorkflowManager.ROOT.load(loadPersistor, loadResult, exec, false);
         return loadResult;
     }
 
