@@ -107,6 +107,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
     private final JRadioButton m_typeNone;
     private final JRadioButton m_typeUser;
     private final JRadioButton m_typeUserPwd;
+    private final JRadioButton m_typePwd;
     private final JRadioButton m_typeCredential;
     private final JRadioButton m_typeKerberos;
 
@@ -121,11 +122,17 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
     private final JLabel m_usernameLabel = new JLabel("Username:", SwingConstants.LEFT);
     private final JLabel m_passwordLabel = new JLabel("Password:", SwingConstants.LEFT);
 
+    private final JPasswordField m_passwordOnlyField = new JPasswordField(20);
+
+    private final JLabel m_passwordOnlyLabel = new JLabel("Password:", SwingConstants.LEFT);
+
     private final Component m_credentialPanel = getCredentialPanel();
 
     private final Component m_userPanel = getUserPanel();
 
     private final Component m_userPwdPanel = getUserPwdPanel();
+
+    private final Component m_pwdPanel = getPwdPanel();
 
     private final String m_label;
 
@@ -212,6 +219,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         m_typeNone = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.NONE, m_authenticationType, this);
         m_typeUser = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.USER, m_authenticationType, this);
         m_typeUserPwd = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.USER_PWD, m_authenticationType, this);
+        m_typePwd = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.PWD, m_authenticationType, this);
         m_typeCredential = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.CREDENTIALS, m_authenticationType, this);
         m_typeKerberos = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.KERBEROS, m_authenticationType, this);
 
@@ -272,6 +280,21 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         });
 
         m_passwordField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(final DocumentEvent e) {
+                updateModel();
+            }
+            @Override
+            public void removeUpdate(final DocumentEvent e) {
+                updateModel();
+            }
+            @Override
+            public void changedUpdate(final DocumentEvent e) {
+                updateModel();
+            }
+        });
+
+        m_passwordOnlyField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(final DocumentEvent e) {
                 updateModel();
@@ -347,6 +370,15 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
             authBox.add(m_userPwdPanel, gbc);
         }
 
+        if (m_supportedTypes.contains(AuthenticationType.PWD)) {
+            if (m_supportedTypes.size() > 1) {
+                gbc.gridy++;
+                authBox.add(m_typePwd, gbc);
+            }
+            gbc.gridy++;
+            authBox.add(m_pwdPanel, gbc);
+        }
+
         if (m_supportedTypes.contains(AuthenticationType.KERBEROS)) {
             gbc.gridy++;
             authBox.add(m_typeKerberos, gbc);
@@ -418,6 +450,25 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         return panel;
     }
 
+    private JPanel getPwdPanel() {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
+        panel.add(m_passwordOnlyLabel, gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        gbc.insets = NEUTRAL_INSET;
+        gbc.ipadx = 10;
+        panel.add(m_passwordOnlyField, gbc);
+        return panel;
+    }
+
     private Component getCredentialPanel() {
         final JPanel panel = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = new GridBagConstraints();
@@ -455,6 +506,12 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
                 final char[] password = m_passwordField.getPassword();
                 if (password != null && password.length > 1) {
                     pwd = new String(password);
+                }
+                break;
+            case PWD:
+                final char[] passwordOnly = m_passwordOnlyField.getPassword();
+                if (passwordOnly != null && passwordOnly.length > 1) {
+                    pwd = new String(passwordOnly);
                 }
                 break;
             default:
@@ -520,6 +577,20 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
                     updateNoListener(m_passwordField, modelPwd);
                 }
             }
+
+        } else if (model.getAuthenticationType().equals(AuthenticationType.PWD)) {
+            //update the password field
+            if (model.getPassword() != null) {
+                String modelPwd = model.getPassword();
+                char[] password = m_passwordOnlyField.getPassword();
+                String componentPwd = null;
+                if (password != null && password.length > 1) {
+                    componentPwd = new String(password);
+                }
+                if (!Objects.equals(componentPwd, modelPwd)) {
+                    updateNoListener(m_passwordOnlyField, modelPwd);
+                }
+            }
         }
 
         updatePanel();
@@ -534,6 +605,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         m_credentialPanel.setVisible(m_typeCredential.isSelected());
         m_userPwdPanel.setVisible(m_typeUserPwd.isSelected());
         m_userPanel.setVisible(m_typeUser.isSelected());
+        m_pwdPanel.setVisible(m_typePwd.isSelected());
     }
 
     private static void updateNoListener(final JTextField txtField, final String text) {
@@ -573,9 +645,11 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         m_usernameOnlyField.setEnabled(enabled);
         m_usernameField.setEnabled(enabled);
         m_passwordField.setEnabled(enabled);
+        m_passwordOnlyField.setEnabled(enabled);
         m_typeCredential.setEnabled(enabled);
         m_typeUser.setEnabled(enabled);
         m_typeUserPwd.setEnabled(enabled);
+        m_typePwd.setEnabled(enabled);
         m_typeKerberos.setEnabled(enabled);
     }
 
@@ -649,6 +723,17 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      */
     public void setPasswordLabel(final String passwordLabel) {
         m_passwordLabel.setText(passwordLabel);
+        updateComponent();
+    }
+
+    /**
+     * Set the text displayed in the passwordOnlyLabel
+     *
+     * @param passwordOnlyLabel the label text to be set
+     * @since 4.1
+     */
+    public void setPasswordOnlyLabel(final String passwordOnlyLabel) {
+        m_passwordOnlyLabel.setText(passwordOnlyLabel);
         updateComponent();
     }
 }

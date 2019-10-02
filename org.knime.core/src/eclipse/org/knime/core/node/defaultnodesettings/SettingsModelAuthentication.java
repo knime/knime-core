@@ -91,6 +91,11 @@ public final class SettingsModelAuthentication extends SettingsModel {
         USER("Username", "Username based authentication. No password required."),
         /** Authentication with username and password. */
         USER_PWD("Username & password", "Username and password based authentication"),
+        /**
+         * Authentication with password.
+         * @since 4.1
+         */
+        PWD("Password", "Password based authentication. No username required."),
         /** Authentication with workflow credentials. */
         CREDENTIALS("Credentials", "Workflow credentials"),
         /** Authentication with workflow credentials. */
@@ -238,6 +243,11 @@ public final class SettingsModelAuthentication extends SettingsModel {
                 if (userName == null || userName.isEmpty()) {
                     throw new InvalidSettingsException("Please enter a valid user name");
                 }
+                if (pwd == null || pwd.isEmpty()) {
+                    throw new InvalidSettingsException("Please enter a valid password");
+                }
+                break;
+            case PWD:
                 if (pwd == null || pwd.isEmpty()) {
                     throw new InvalidSettingsException("Please enter a valid password");
                 }
