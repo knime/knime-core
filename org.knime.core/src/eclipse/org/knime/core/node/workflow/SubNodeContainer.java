@@ -556,8 +556,9 @@ public final class SubNodeContainer extends SingleNodeContainer
                 return FileSubNodeContainerPersistor.loadExampleInputData(
                     getTemplateInformation().getExampleInputDataInfo().get(), getNodeContainerDirectory(), exec);
             } catch (IOException | InvalidSettingsException | CanceledExecutionException ex) {
-                //should never happen
-                throw new RuntimeException(ex);
+                //can happen in rare cases
+                //e.g. if a data value implementation is not available (missing plugin)
+                throw new IllegalStateException("Example input data cannot be read. See log for details.", ex);
             }
         } else {
             return null;
@@ -570,8 +571,10 @@ public final class SubNodeContainer extends SingleNodeContainer
                 return FileSubNodeContainerPersistor.loadExampleInputSpecs(
                     getTemplateInformation().getExampleInputDataInfo().get(), getNodeContainerDirectory());
             } catch (IOException | InvalidSettingsException ex) {
-                //should never happen
-                throw new RuntimeException(ex);
+                //can happen in rare cases
+                //e.g. if a data value implementation is not available (missing plugin)
+                throw new IllegalStateException("Example input data specification cannot be read. See log for details.",
+                    ex);
             }
         } else {
             return null;
