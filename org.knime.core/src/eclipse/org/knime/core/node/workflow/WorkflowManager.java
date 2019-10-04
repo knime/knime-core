@@ -7956,7 +7956,7 @@ public final class WorkflowManager extends NodeContainer
                         subResult.addError(warning, true);
                         break;
                     default:
-                        subResult.addWarning(warning);
+                        subResult.addNodeStateChangedWarning(warning);
                 }
                 cont.setDirty();
             }

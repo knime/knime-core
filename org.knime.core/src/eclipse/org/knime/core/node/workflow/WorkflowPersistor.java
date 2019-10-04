@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.knime.core.data.container.storage.TableStoreFormatInformation;
@@ -415,13 +416,32 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             DataLoadError
         }
 
+        /**
+         * @since 4.1
+         */
+        public enum LoadResultEntryCause {
+            NodeStateChanged
+        }
+
         private final LoadResultEntryType m_type;
         private final String m_message;
+        private final LoadResultEntryCause m_cause;
 
         public LoadResultEntry(
                 final LoadResultEntryType type, final String message) {
+            this(type, message, null);
+        }
+
+        /**
+         * @param type the type of entry ~severity
+         * @param message the message
+         * @param cause an optional cause of the entry
+         * @since 4.1
+         */
+        public LoadResultEntry(final LoadResultEntryType type, final String message, final LoadResultEntryCause cause) {
             m_type = type;
             m_message = message;
+            m_cause = cause;
         }
 
         /**
@@ -436,6 +456,14 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          */
         public String getMessage() {
             return m_message;
+        }
+
+        /**
+         * @return the optional cause of the entry
+         * @since 4.1
+         */
+        public Optional<LoadResultEntryCause> getCause() {
+            return Optional.ofNullable(m_cause);
         }
 
         /**
@@ -528,6 +556,14 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         public void addWarning(final String warning) {
             LoadResultEntryType t = LoadResultEntryType.Warning;
             m_errors.add(new LoadResultEntry(t, warning));
+        }
+
+        /**
+         * @since 4.1
+         */
+        public void addNodeStateChangedWarning(final String message) {
+            LoadResultEntryType t = LoadResultEntryType.Warning;
+            m_errors.add(new LoadResultEntry(t, message, LoadResultEntryCause.NodeStateChanged));
         }
 
         public void addChildError(final LoadResult loadResult) {
