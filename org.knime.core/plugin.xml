@@ -251,7 +251,15 @@
       <dataValue
             valueClass="org.knime.core.data.probability.ProbabilityDistributionValue">
          <renderer
-               rendererFactoryClass="org.knime.core.data.probability.ProbabilityDistributionValueRenderer$DefaultRendererFactory"
+               rendererFactoryClass="org.knime.core.data.probability.renderer.ProbabilityDistributionBarChartRenderer$BarChartRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.probability.renderer.ProbabilityDistributionMajorityClassRenderer$MajorityClassRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.probability.renderer.ProbabilityDistributionClassNameRenderer$ClassNameRendererFactory"
                suggestAsDefault="true">
          </renderer>
       </dataValue>      

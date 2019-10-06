@@ -44,37 +44,52 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 28, 2019 (Simon Schmid, KNIME GmbH, Konstanz, Germany): created
+ *   Oct 17, 2019 (Perla Gjoka, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.data.probability;
+package org.knime.core.data.probability.renderer;
 
-import java.util.Arrays;
+import java.util.List;
 
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.probability.ProbabilityDistributionValue;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
 /**
- * Generic renderer for {@link ProbabilityDistributionValue} which prints each probability separated by commas.
+ * Renderer for {@link ProbabilityDistributionValue} which prints the majority class name, followed by the
+ * corresponding probability percentage.
  *
- * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
- * @since 4.1
+ * @author Perla Gjoka, KNIME GmbH, Konstanz, Germany
  */
-public final class ProbabilityDistributionValueRenderer extends DefaultDataValueRenderer {
+final class ProbabilityDistributionMajorityClassRenderer extends DefaultDataValueRenderer {
 
-    /** */
+    private final DataColumnSpec m_spec;
+
     private static final long serialVersionUID = 1L;
 
-    private static final ProbabilityDistributionValueRenderer INSTANCE = new ProbabilityDistributionValueRenderer();
+    private static final String DESCRIPTION_PROB_DISTR = "Majority class and probability";
 
-    private static final String DESCRIPTION_PROB_DISTR = "Probability Distribution";
-
-    private ProbabilityDistributionValueRenderer() {
+    private ProbabilityDistributionMajorityClassRenderer(final DataColumnSpec spec) {
+        m_spec = spec;
     }
 
     /**
-     * @return "Probability Distribution" {@inheritDoc}
+     * Returns true if the selected {@link DataColumnSpec} contains element names, which are not null or empty, since
+     * they are needed to define the class names and if the data type of the selected column is compatible with
+     * {@link ProbabilityDistributionValue}, which is the expected type.
+     *
+     * @return {@code true} if {@link DataColumnSpec} is accepted, {@code false} otherwise.
+     */
+    @Override
+    public boolean accepts(final DataColumnSpec spec) {
+        return (spec.getElementNames() != null && !spec.getElementNames().isEmpty()
+            && spec.getType().isCompatible(ProbabilityDistributionValue.class));
+    }
+
+    /**
+     *
+     * @return "Majority class and probability"
      */
     @Override
     public String getDescription() {
@@ -84,19 +99,22 @@ public final class ProbabilityDistributionValueRenderer extends DefaultDataValue
     @Override
     protected void setValue(final Object value) {
         if (value instanceof ProbabilityDistributionValue) {
-            ProbabilityDistributionValue probDistrValue = (ProbabilityDistributionValue)value;
-            double[] values = new double[probDistrValue.size()];
-            for (int i = 0; i < probDistrValue.size(); i++) {
-                values[i] = probDistrValue.getProbability(i);
-            }
-            super.setValue(Arrays.toString(values));
+            final ProbabilityDistributionValue probDistrValue = (ProbabilityDistributionValue)value;
+            final List<String> classNames = m_spec.getElementNames();
+            final int index = probDistrValue.getMaxProbIndex();
+            super.setValue(
+                String.format("%s: %.2f%%", classNames.get(index), probDistrValue.getProbability(index) * 100));
         } else {
             super.setValue(value);
         }
     }
 
-    /** Renderer factory registered through extension point. */
-    public static final class DefaultRendererFactory extends AbstractDataValueRendererFactory {
+    /**
+     * Renderer factory registered through extension point.
+     *
+     * @author Perla Gjoka, KNIME GmbH, Konstanz, Germany
+     */
+    public static final class MajorityClassRendererFactory extends AbstractDataValueRendererFactory {
 
         @Override
         public String getDescription() {
@@ -105,7 +123,7 @@ public final class ProbabilityDistributionValueRenderer extends DefaultDataValue
 
         @Override
         public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
-            return INSTANCE;
+            return new ProbabilityDistributionMajorityClassRenderer(colSpec);
         }
     }
 }
