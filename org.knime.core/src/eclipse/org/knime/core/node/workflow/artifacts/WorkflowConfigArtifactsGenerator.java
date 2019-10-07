@@ -122,7 +122,7 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
 
     @SuppressWarnings("rawtypes")
     private static void extractTopLevelConfiguration(final WorkflowManager wfm, final JsonObjectBuilder builder) {
-        Map<String, DialogNode> configurationNodes = wfm.getConfigurationNodes();
+        Map<String, DialogNode> configurationNodes = wfm.getConfigurationNodes(true);
         if (!configurationNodes.isEmpty()) {
             configurationNodes.entrySet().forEach(e -> {
                 builder.add(e.getKey(), e.getValue().getDefaultValue().toJson());
@@ -133,7 +133,7 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
     @SuppressWarnings("rawtypes")
     private JsonObject extractTopLevelConfigurationRepresentation(final WorkflowManager wfm) {
         final JsonObjectBuilder root = Json.createObjectBuilder();
-        final Map<String, DialogNode> configurationNodes = wfm.getConfigurationNodes();
+        final Map<String, DialogNode> configurationNodes = wfm.getConfigurationNodes(true);
 
         if (!configurationNodes.isEmpty()) {
             configurationNodes.entrySet().stream().filter(e -> m_mapper.canSerialize(e.getClass())).forEach(e -> {

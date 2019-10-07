@@ -1,88 +1,5 @@
 
 {
-    "value-filter-14":{
-        "@class":"org.knime.js.base.node.configuration.filter.value.ValueFilterDialogNodeRepresentation",
-        "label":"Label",
-        "description":"Enter Description",
-        "required":true,
-        "defaultValue":{
-            "@class":"org.knime.js.base.node.configuration.filter.value.ValueFilterDialogNodeValue",
-            "values":[
-                "Cluster_0",
-                "Cluster_2"
-            ],
-            "column":"Cluster Membership"
-        },
-        "currentValue":{
-            "@class":"org.knime.js.base.node.configuration.filter.value.ValueFilterDialogNodeValue",
-            "values":[
-                "Cluster_0",
-                "Cluster_2"
-            ],
-            "column":"Cluster Membership"
-        },
-        "lockColumn":false,
-        "possibleValues":{
-            "Cluster Membership":[
-                "Cluster_0",
-                "Cluster_1",
-                "Cluster_2",
-                "Cluster_3"
-            ]
-        },
-        "type":"Twinlist",
-        "limitNumberVisOptions":false,
-        "numberVisOptions":10,
-        "possibleColumns":[
-            "Cluster Membership"
-        ]
-    },
-    "single-selection-15":{
-        "@class":"org.knime.js.base.node.configuration.selection.single.SingleSelectionDialogNodeRepresentation",
-        "label":"Label",
-        "description":"Enter Description",
-        "required":true,
-        "defaultValue":{
-            "@class":"org.knime.js.base.node.configuration.selection.single.SingleSelectionDialogNodeValue",
-            "value":[
-                "test2"
-            ]
-        },
-        "currentValue":{
-            "@class":"org.knime.js.base.node.configuration.selection.single.SingleSelectionDialogNodeValue",
-            "value":[
-                "test2"
-            ]
-        },
-        "possibleChoices":[
-            "test1",
-            "test2",
-            "test3"
-        ],
-        "type":"Dropdown",
-        "limitNumberVisOptions":false,
-        "numberVisOptions":10
-    },
-    "file-input-7":{
-        "@class":"org.knime.js.base.node.configuration.input.fileupload.FileDialogNodeRepresentation",
-        "label":"Label",
-        "description":"Enter Description",
-        "required":true,
-        "defaultValue":{
-            "@class":"org.knime.js.base.node.configuration.input.fileupload.FileUploadDialogNodeValue",
-            "pathValid":true,
-            "path":"/tmp"
-        },
-        "currentValue":{
-            "@class":"org.knime.js.base.node.configuration.input.fileupload.FileUploadDialogNodeValue",
-            "pathValid":true,
-            "path":"/tmp"
-        },
-        "fileTypes":[
-        ],
-        "disableoutput":false,
-        "errormessage":""
-    },
     "multiple-selection-13":{
         "@class":"org.knime.js.base.node.configuration.selection.multiple.MultipleSelectionDialogNodeRepresentation",
         "label":"Label",
@@ -202,6 +119,32 @@
             "boolean":false
         }
     },
+    "single-selection-15":{
+        "@class":"org.knime.js.base.node.configuration.selection.single.SingleSelectionDialogNodeRepresentation",
+        "label":"Label",
+        "description":"Enter Description",
+        "required":true,
+        "defaultValue":{
+            "@class":"org.knime.js.base.node.configuration.selection.single.SingleSelectionDialogNodeValue",
+            "value":[
+                "test2"
+            ]
+        },
+        "currentValue":{
+            "@class":"org.knime.js.base.node.configuration.selection.single.SingleSelectionDialogNodeValue",
+            "value":[
+                "test2"
+            ]
+        },
+        "possibleChoices":[
+            "test1",
+            "test2",
+            "test3"
+        ],
+        "type":"Dropdown",
+        "limitNumberVisOptions":false,
+        "numberVisOptions":10
+    },
     "file-chooser-input-9":{
         "@class":"org.knime.js.base.node.configuration.input.filechooser.FileChooserDialogNodeRepresentation",
         "label":"Label",
@@ -236,94 +179,25 @@
         "multipleSelection":false,
         "errormessage":""
     },
-    "column-filter-11":{
-        "@class":"org.knime.js.base.node.configuration.filter.column.ColumnFilterDialogNodeRepresentation",
+    "file-input-7":{
+        "@class":"org.knime.js.base.node.configuration.input.fileupload.FileDialogNodeRepresentation",
         "label":"Label",
         "description":"Enter Description",
         "required":true,
         "defaultValue":{
-            "@class":"org.knime.js.base.node.configuration.filter.column.ColumnFilterDialogNodeValue",
-            "columns":[
-                "Universe_0_0",
-                "Universe_0_1",
-                "Universe_1_1"
-            ]
+            "@class":"org.knime.js.base.node.configuration.input.fileupload.FileUploadDialogNodeValue",
+            "pathValid":true,
+            "path":"/tmp"
         },
         "currentValue":{
-            "@class":"org.knime.js.base.node.configuration.filter.column.ColumnFilterDialogNodeValue",
-            "columns":[
-                "Universe_0_0",
-                "Universe_0_1",
-                "Universe_1_1"
-            ]
+            "@class":"org.knime.js.base.node.configuration.input.fileupload.FileUploadDialogNodeValue",
+            "pathValid":true,
+            "path":"/tmp"
         },
-        "possibleColumns":[
-            "Universe_0_0",
-            "Universe_0_1",
-            "Universe_1_0",
-            "Universe_1_1",
-            "Cluster Membership"
+        "fileTypes":[
         ],
-        "type":"Twinlist",
-        "limitNumberVisOptions":false,
-        "numberVisOptions":10,
-        "spec":"{\"name\":\"settings\",\"value\":{\"column_spec_4\":{\"type\":\"tree\",\"value\":{\"column_properties\":{\"type\":\"tree\",\"value\":{}},\"column_name\":{\"type\":\"string\",\"value\":\"Cluster Membership\"},\"element_names\":{\"type\":\"tree\",\"value\":{\"array-size\":{\"type\":\"int\",\"value\":0}}},\"column_domain\":{\"type\":\"tree\",\"value\":{\"possible_values\":{\"type\":\"tree\",\"value\":{\"0\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.StringCell\"},\"org.knime.core.data.def.StringCell\":{\"type\":\"tree\",\"value\":{\"StringCell\":{\"type\":\"string\",\"value\":\"Cluster_0\"}}}}},\"1\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.StringCell\"},\"org.knime.core.data.def.StringCell\":{\"type\":\"tree\",\"value\":{\"StringCell\":{\"type\":\"string\",\"value\":\"Cluster_1\"}}}}},\"2\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.StringCell\"},\"org.knime.core.data.def.StringCell\":{\"type\":\"tree\",\"value\":{\"StringCell\":{\"type\":\"string\",\"value\":\"Cluster_2\"}}}}},\"3\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.StringCell\"},\"org.knime.core.data.def.StringCell\":{\"type\":\"tree\",\"value\":{\"StringCell\":{\"type\":\"string\",\"value\":\"Cluster_3\"}}}}},\"array-size\":{\"type\":\"int\",\"value\":4}}}}},\"column_type\":{\"type\":\"tree\",\"value\":{\"cell_class\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.StringCell\"}}}}},\"column_spec_3\":{\"type\":\"tree\",\"value\":{\"column_properties\":{\"type\":\"tree\",\"value\":{\"universe_name\":{\"type\":\"string\",\"value\":\"Universe_1\"}}},\"column_name\":{\"type\":\"string\",\"value\":\"Universe_1_1\"},\"element_names\":{\"type\":\"tree\",\"value\":{\"array-size\":{\"type\":\"int\",\"value\":0}}},\"column_domain\":{\"type\":\"tree\",\"value\":{\"lower_bound\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"},\"org.knime.core.data.def.DoubleCell\":{\"type\":\"tree\",\"value\":{\"DoubleCell\":{\"type\":\"double\",\"value\":3.6283305089845896E-4}}}}},\"upper_bound\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"},\"org.knime.core.data.def.DoubleCell\":{\"type\":\"tree\",\"value\":{\"DoubleCell\":{\"type\":\"double\",\"value\":0.9995962931369766}}}}}}},\"column_type\":{\"type\":\"tree\",\"value\":{\"cell_class\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"}}}}},\"number_columns\":{\"type\":\"int\",\"value\":5},\"spec_name\":{\"type\":\"string\",\"value\":\"default\"},\"column_spec_0\":{\"type\":\"tree\",\"value\":{\"column_properties\":{\"type\":\"tree\",\"value\":{\"universe_name\":{\"type\":\"string\",\"value\":\"Universe_0\"}}},\"column_name\":{\"type\":\"string\",\"value\":\"Universe_0_0\"},\"element_names\":{\"type\":\"tree\",\"value\":{\"array-size\":{\"type\":\"int\",\"value\":0}}},\"column_domain\":{\"type\":\"tree\",\"value\":{\"lower_bound\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"},\"org.knime.core.data.def.DoubleCell\":{\"type\":\"tree\",\"value\":{\"DoubleCell\":{\"type\":\"double\",\"value\":6.63660782223019E-5}}}}},\"upper_bound\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"},\"org.knime.core.data.def.DoubleCell\":{\"type\":\"tree\",\"value\":{\"DoubleCell\":{\"type\":\"double\",\"value\":0.9999485820338795}}}}}}},\"column_type\":{\"type\":\"tree\",\"value\":{\"cell_class\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"}}}}},\"column_spec_2\":{\"type\":\"tree\",\"value\":{\"column_properties\":{\"type\":\"tree\",\"value\":{\"universe_name\":{\"type\":\"string\",\"value\":\"Universe_1\"}}},\"column_name\":{\"type\":\"string\",\"value\":\"Universe_1_0\"},\"element_names\":{\"type\":\"tree\",\"value\":{\"array-size\":{\"type\":\"int\",\"value\":0}}},\"column_domain\":{\"type\":\"tree\",\"value\":{\"lower_bound\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"},\"org.knime.core.data.def.DoubleCell\":{\"type\":\"tree\",\"value\":{\"DoubleCell\":{\"type\":\"double\",\"value\":2.546429377827675E-4}}}}},\"upper_bound\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"},\"org.knime.core.data.def.DoubleCell\":{\"type\":\"tree\",\"value\":{\"DoubleCell\":{\"type\":\"double\",\"value\":0.9997435337997306}}}}}}},\"column_type\":{\"type\":\"tree\",\"value\":{\"cell_class\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"}}}}},\"column_spec_1\":{\"type\":\"tree\",\"value\":{\"column_properties\":{\"type\":\"tree\",\"value\":{\"universe_name\":{\"type\":\"string\",\"value\":\"Universe_0\"}}},\"column_name\":{\"type\":\"string\",\"value\":\"Universe_0_1\"},\"element_names\":{\"type\":\"tree\",\"value\":{\"array-size\":{\"type\":\"int\",\"value\":0}}},\"column_domain\":{\"type\":\"tree\",\"value\":{\"lower_bound\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"},\"org.knime.core.data.def.DoubleCell\":{\"type\":\"tree\",\"value\":{\"DoubleCell\":{\"type\":\"double\",\"value\":3.714065788380794E-5}}}}},\"upper_bound\":{\"type\":\"tree\",\"value\":{\"datacell\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"},\"org.knime.core.data.def.DoubleCell\":{\"type\":\"tree\",\"value\":{\"DoubleCell\":{\"type\":\"double\",\"value\":0.9994823408389898}}}}}}},\"column_type\":{\"type\":\"tree\",\"value\":{\"cell_class\":{\"type\":\"string\",\"value\":\"org.knime.core.data.def.DoubleCell\"}}}}}}}"
-    },
-    "value-selection-16":{
-        "@class":"org.knime.js.base.node.configuration.selection.value.ValueSelectionDialogNodeRepresentation",
-        "label":"Label",
-        "description":"Enter Description",
-        "required":true,
-        "defaultValue":{
-            "@class":"org.knime.js.base.node.configuration.selection.value.ValueSelectionDialogNodeValue",
-            "column":"Cluster Membership",
-            "value":"Cluster_1"
-        },
-        "currentValue":{
-            "@class":"org.knime.js.base.node.configuration.selection.value.ValueSelectionDialogNodeValue",
-            "column":"Cluster Membership",
-            "value":"Cluster_1"
-        },
-        "columnType":"All",
-        "lockColumn":false,
-        "possibleValues":{
-            "Cluster Membership":[
-                "Cluster_0",
-                "Cluster_1",
-                "Cluster_2",
-                "Cluster_3"
-            ]
-        },
-        "type":"Dropdown",
-        "limitNumberVisOptions":false,
-        "numberVisOptions":10,
-        "possibleColumns":[
-            "Cluster Membership"
-        ]
-    },
-    "column-selection-12":{
-        "@class":"org.knime.js.base.node.configuration.selection.column.ColumnSelectionDialogNodeRepresenation",
-        "label":"Label",
-        "description":"Enter Description",
-        "required":true,
-        "defaultValue":{
-            "@class":"org.knime.js.base.node.configuration.selection.column.ColumnSelectionDialogNodeValue",
-            "column":"Universe_0_0"
-        },
-        "currentValue":{
-            "@class":"org.knime.js.base.node.configuration.selection.column.ColumnSelectionDialogNodeValue",
-            "column":"Universe_0_0"
-        },
-        "possibleColumns":[
-            "Universe_0_0",
-            "Universe_0_1",
-            "Universe_1_0",
-            "Universe_1_1",
-            "Cluster Membership"
-        ],
-        "type":"Dropdown",
-        "limitNumberVisOptions":false,
-        "numberVisOptions":10
+        "disableoutput":false,
+        "errormessage":""
     },
     "integer-slider-6":{
         "@class":"org.knime.js.base.node.configuration.input.slider.IntegerSliderDialogNodeRepresentation",
@@ -975,14 +849,14 @@
         "required":true,
         "defaultValue":{
             "@class":"org.knime.js.base.node.configuration.input.credentials.CredentialsDialogNodeValue",
-            "magicDefaultPassword":"*************",
             "isSavePassword":true,
+            "magicDefaultPassword":"*************",
             "username":"test"
         },
         "currentValue":{
             "@class":"org.knime.js.base.node.configuration.input.credentials.CredentialsDialogNodeValue",
-            "magicDefaultPassword":"*************",
             "isSavePassword":true,
+            "magicDefaultPassword":"*************",
             "username":"test"
         },
         "promptUsername":true,

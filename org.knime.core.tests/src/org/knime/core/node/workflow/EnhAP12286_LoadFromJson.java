@@ -49,7 +49,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -109,10 +108,14 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
     @Test
     public void testSaveWorkflowConfiguration() throws Exception {
         File artifactsDirectory = getArtifactsDirectory(m_workflowDir);
-        File workflowConfig = new File(artifactsDirectory, "workflow-configuration.json");
-        assertTrue("'workflow-configuration.json' missing", workflowConfig.exists());
+        File expectedWorkflowConfig = new File(m_workflowDir, "/Data/workflow-configuration.json");
+        File actualWorkflowConfig = new File(artifactsDirectory, "workflow-configuration.json");
 
-        String workflowConfigContent = FileUtils.readFileToString(workflowConfig, StandardCharsets.UTF_8);
+        JsonObject expectedConfigContent = null;
+
+        try (final JsonReader reader = Json.createReader(FileUtils.openInputStream(expectedWorkflowConfig))) {
+            expectedConfigContent = reader.readObject();
+        }
 
         //modify the workflow
         executeAllAndWait();
@@ -120,9 +123,28 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
         //... and save
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
 
-        String workflowConfigContent2 = FileUtils.readFileToString(workflowConfig, StandardCharsets.UTF_8);
+        assertTrue("'workflow-configuration.json' missing", actualWorkflowConfig.exists());
+        JsonObject actualConfigContent = null;
 
-        assertThat("Configuration changed", workflowConfigContent, is(workflowConfigContent2));
+        try (final JsonReader reader = Json.createReader(FileUtils.openInputStream(actualWorkflowConfig))) {
+            actualConfigContent = reader.readObject();
+        }
+
+        assertThat("Configuration changed", expectedConfigContent, is(actualConfigContent));
+
+        expectedWorkflowConfig = new File(m_workflowDir, "/Data/workflow-configuration-representation.json");
+        actualWorkflowConfig = new File(artifactsDirectory, "workflow-configuration-representation.json");
+
+        assertTrue("'workflow-configuration.json' missing", actualWorkflowConfig.exists());
+
+        try (final JsonReader reader = Json.createReader(FileUtils.openInputStream(expectedWorkflowConfig))) {
+            expectedConfigContent = reader.readObject();
+        }
+        try (final JsonReader reader = Json.createReader(FileUtils.openInputStream(actualWorkflowConfig))) {
+            actualConfigContent = reader.readObject();
+        }
+
+        assertThat("Configuration changed", expectedConfigContent, is(actualConfigContent));
     }
 
     /**
@@ -133,7 +155,7 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
     @Test
     public void testLoadFromJson() throws Exception {
         File input = new File(m_workflowDir, "/Data/input.json");
-        File conf = new File(m_workflowDir, "/Data/workflow-configuration.json");
+        File conf = new File(m_workflowDir, "/Data/workflow-configuration-updated.json");
         JsonObject workflowConfigContentExp = null;// FileUtils.readFileToString(conf, StandardCharsets.UTF_8);
         JsonObject inputJson = null;
 
@@ -152,7 +174,7 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
 
         getManager().setConfigurationNodes(inputMap);
 
-        for (Entry<String, DialogNode> entry : getManager().getConfigurationNodes().entrySet()) {
+        for (Entry<String, DialogNode> entry : getManager().getConfigurationNodes(false).entrySet()) {
             final JsonValue expectedValue = workflowConfigContentExp.get(entry.getKey());
             final JsonValue actualValue = entry.getValue().getDialogValue().toJson();
 

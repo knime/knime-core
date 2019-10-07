@@ -4,50 +4,50 @@
         "type":"object",
         "column":{
             "type":"string",
-            "default":"Cluster Membership"
+            "default":"Cluster Membership Changed"
         },
         "values":{
             "type":"array",
             "default":[
-                "Cluster_0",
-                "Cluster_2"
+                "Cluster_1",
+                "Cluster_3"
             ]
         }
     },
     "single-selection-15":{
         "type":"string",
-        "default":"test2"
+        "default":"newVal"
     },
     "file-input-7":{
         "type":"string",
-        "default":"/tmp"
+        "default":"/tmp3"
     },
     "multiple-selection-13":{
         "type":"array",
         "default":[
-            "test1",
-            "test3"
+            "test3",
+            "test4"
         ]
     },
     "list-box-input-8":{
         "type":"string",
-        "default":"test1\ntest2\ntest3"
+        "default":"test1\ntest3"
     },
     "double-input-4":{
         "type":"number",
-        "default":4.0
+        "default":4.5
     },
     "string-input-10":{
         "type":"string",
-        "default":"test string"
+        "default":"test string new"
     },
     "integer-input-5":{
         "type":"integer",
-        "default":3
+        "default":5
     },
     "boolean-input-1":{
         "type":"boolean",
-        "default":false
+        "default":true
     },
     "file-chooser-input-9":{
         "type":"array",
@@ -56,7 +56,7 @@
                 "type":"object",
                 "path":{
                     "type":"string",
-                    "default":"knime://Nightly-Tests/out/out_mprel_fvar.kntable"
+                    "default":"knime://Nightly-Tests/out/out.kntable"
                 },
                 "fileType":{
                     "type":"string",
@@ -69,7 +69,6 @@
         "type":"array",
         "default":[
             "Universe_0_0",
-            "Universe_0_1",
             "Universe_1_1"
         ]
     },
@@ -77,54 +76,54 @@
         "type":"object",
         "column":{
             "type":"string",
-            "default":"Cluster Membership"
+            "default":"Cluster Membership new"
         },
         "value":{
             "type":"string",
-            "default":"Cluster_1"
+            "default":"Cluster_2"
         }
     },
     "column-selection-12":{
         "type":"string",
-        "default":"Universe_0_0"
+        "default":"Universe_1_0"
     },
     "integer-slider-6":{
-        "typer":"integer",
-        "default":50.0
+        "type":"integer",
+        "default":51.0
     },
     "date-input-3":{
         "type":"string",
         "format":"ZonedDateTime",
-        "default":"2019-09-27T08:32:03+02:00[Europe/Berlin]"
+        "default":"2022-10-27T18:42:33+02:00[Europe/Berlin]"
     },
     "credentials-2":{
         "type":"object",
         "username":{
             "type":"string",
-            "default":"test"
+            "default":"test new"
         },
         "password":{
             "type":"string",
-            "default":"*************"
+            "default":null
         }
     },
     "knime.var.double":{
         "type":"number",
-        "default":1.0
+        "default":1.1
     },
     "knime.var.integer":{
         "type":"integer",
-        "default":3
+        "default":6
     },
     "knime.var.string":{
         "type":"string",
-        "default":"test"
+        "default":"test new"
     },
     "knime.cred.wf_credentials":{
         "type":"object",
         "login":{
             "type":"string",
-            "default":"miau"
+            "default":"miau user"
         },
         "password":{
             "type":"string",

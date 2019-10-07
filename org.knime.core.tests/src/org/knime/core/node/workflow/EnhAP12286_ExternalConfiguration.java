@@ -155,7 +155,7 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
         executeAllAndWait();
         checkState(m_stringConfiguration_1, InternalNodeContainerState.EXECUTED);
 
-        Map<String, DialogNode> configurationNodes = getManager().getConfigurationNodes();
+        Map<String, DialogNode> configurationNodes = getManager().getConfigurationNodes(true);
         assertThat("unexptected number of config nodes", configurationNodes.size(), is(14));
 
         Map<String, JsonValue> configuration = new HashMap<>();

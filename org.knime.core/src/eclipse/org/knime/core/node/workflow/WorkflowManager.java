@@ -9536,15 +9536,18 @@ public final class WorkflowManager extends NodeContainer
      * <p>
      * Method is used to allow clients to retrieve an example configuration.
      *
+     * @param excludeNonSources <code>true</code> if non source nodes shall be excluded, <code>false</code> otherwise
      * @return a map of the node's parameter name to the node's default value as json
      *
      * @since 4.1
      */
     @SuppressWarnings("rawtypes")
-    public Map<String, DialogNode> getConfigurationNodes() {
-        List<ExternalParameterHandle<DialogNode>> inputNodes =
+    public Map<String, DialogNode> getConfigurationNodes(final boolean excludeNonSources) {
+        final List<ExternalParameterHandle<DialogNode>> inputNodes =
             getExternalParameterHandles(DialogNode.class, i -> i.getParameterName(), i -> i, false, false);
-        return inputNodes.stream().filter(e -> !InputNode.class.isAssignableFrom(e.getParameterValue().getClass()))
+        return inputNodes.stream()
+            .filter(e -> !InputNode.class.isAssignableFrom(e.getParameterValue().getClass())
+                && (!excludeNonSources || isSourceNode(e.getOwnerNodeContainer().getID())))
             .collect(
                 Collectors.toMap(ExternalParameterHandle::getParameterNameFullyQualified, h -> h.getParameterValue()));
     }
