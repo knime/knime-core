@@ -98,7 +98,7 @@ public interface ProbabilityDistributionValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     class ProbabilityDistributionUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = SharedIcons.TYPE_COLLECTION.get();
+        private static final Icon ICON = SharedIcons.TYPE_PROBABILITY_DISTRIBUTION.get();
 
         /** Only subclasses are allowed to instantiate this class. */
         protected ProbabilityDistributionUtilityFactory() {

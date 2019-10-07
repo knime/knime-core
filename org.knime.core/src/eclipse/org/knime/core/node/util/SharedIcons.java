@@ -206,6 +206,9 @@ public enum SharedIcons {
     /** credentials password input type icon
      * @since 3.7 **/
     TYPE_PASSWORD("icons/credentials_password.png"),
+    /** Probability distribution type icon
+     * @since 4.1 **/
+    TYPE_PROBABILITY_DISTRIBUTION("icons/probability_distribution.png"),
     /**
      * Flow variables
      */
