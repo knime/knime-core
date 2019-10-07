@@ -900,6 +900,18 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * Returns <code>true</code> if the workflow manager has a component (={@link SubNodeContainer}) as direct parent
+     * which is not embedded in a workflow but directly opened as component project.
+     *
+     * @return <code>true</code> if the parent is a component project, i.e. a component (sub node) not embedded in a
+     *         workflow
+     * @since 4.1
+     */
+    public boolean isComponentProjectWFM() {
+        return getDirectNCParent() instanceof SubNodeContainer && ((SubNodeContainer)getDirectNCParent()).isProject();
+    }
+
+    /**
      * Creates new metanode from a persistor instance.
      *
      * @param persistor to read from
@@ -5825,9 +5837,7 @@ public final class WorkflowManager extends NodeContainer
             }
             if (!canConfigureNodes()) {
                 String message;
-                if (snc.getParent().getDirectNCParent() instanceof SubNodeContainer
-                    && snc.getParent().getDirectNCParent().getDirectNCParent() == WorkflowManager.ROOT) {
-                    //if node is part of component that is _not_ embedded in a parent workflow
+                if (snc.getParent().isComponentProjectWFM()) {
                     message = "No example input data stored with component";
                 } else {
                     message = "Outer workflow does not have input data, execute it first";

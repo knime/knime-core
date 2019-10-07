@@ -2438,7 +2438,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @return <code>true</code> if the component is embedded in a workflow, <code>false</code> if component has been
      *         opened directly
      */
-    private boolean isProject() {
+    boolean isProject() {
         return getParent() == WorkflowManager.ROOT;
     }
 
