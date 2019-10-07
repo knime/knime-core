@@ -53,6 +53,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryCause;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
@@ -106,7 +109,7 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         component.saveAsTemplate(componentDir, new ExecutionMonitor(), inputData);
         WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
         MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
-        //TODO check load result
+        assertComponentLoadingResult(loadResult, 8); //nodes are expected to change state their from IDLE to CONFIGURED on load
         SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
         WorkflowManager wfm = componentProject.getWorkflowManager();
         wfm.executeAllAndWaitUntilDone();
@@ -119,7 +122,7 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         /* save and open without example input data */
         component.saveAsTemplate(componentDir, new ExecutionMonitor());
         loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
-        //TODO check load result
+        assertComponentLoadingResult(loadResult, 0); //no state changes expected since no example data available
         componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
         NativeNodeContainer componentInput = componentProject.getVirtualInNode();
         NodeMessage nodeMessage = componentInput.getNodeMessage();
@@ -127,6 +130,77 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         assertThat("unexpected warning message", nodeMessage.getMessage(),
             is("No example input data stored with component"));
         WorkflowManager.ROOT.removeProject(componentProject.getID());
+    }
 
+    /**
+     * Saves, loads, saves as and re-loads a component. Makes sure, among other things, that component nodes are saved
+     * in IDLE-state, no matter what.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testSaveAsAndOpenComponent() throws Exception {
+        /* save a component */
+        SubNodeContainer component = (SubNodeContainer)getManager().getNodeContainer(m_component_10);
+        File componentDir = FileUtil.createTempDir(getClass().getSimpleName());
+        PortObject[] inputData = component.fetchInputDataFromParent();
+        component.saveAsTemplate(componentDir, new ExecutionMonitor(), inputData);
+
+        /* load and save a component project with data to another location, re-load and execute */
+        //first load
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
+        MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
+        SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
+
+        //save as
+        File componentDir2 = FileUtil.createTempDir(getClass().getSimpleName());
+        componentProject.saveAsTemplate(componentDir2, new ExecutionMonitor(), null);
+
+        //re-load
+        loadResult = loadComponent(componentDir2, new ExecutionMonitor(), loadHelper);
+        assertComponentLoadingResult(loadResult, 8); //nodes are expected to change their state from IDLE to CONFIGURED on load
+        SubNodeContainer componentProject2 = (SubNodeContainer)loadResult.getLoadedInstance();
+        WorkflowManager wfm = componentProject2.getWorkflowManager();
+        wfm.executeAllAndWaitUntilDone();
+        assertThat(
+            "Execution of shared component failed. Node messages: "
+                + wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
+            componentProject2.getVirtualOutNode().getInternalState(), is(InternalNodeContainerState.EXECUTED));
+
+        //clean-up
+        WorkflowManager.ROOT.removeProject(componentProject.getID());
+        WorkflowManager.ROOT.removeProject(componentProject2.getID());
+    }
+
+    private void assertComponentLoadingResult(final LoadResult lr, final int expectedNodeStateChanges) {
+        int numNodeStateChanges = assertComponentLoadingResult(lr.getChildren());
+        assertThat("unexpected number of node state changes", numNodeStateChanges, is(expectedNodeStateChanges));
+    }
+
+    private int assertComponentLoadingResult(final LoadResultEntry[] entries) {
+        int countNodeStateChanges = 0;
+        for (LoadResultEntry entry : entries) {
+            if (entry.getChildren().length == 0) {
+                switch (entry.getType()) {
+                    case DataLoadError:
+                    case Error:
+                        throw new AssertionError("Component loaded with errors");
+                    case Warning:
+                        if (entry.getCause().isPresent()) {
+                            if (entry.getCause().get().equals(LoadResultEntryCause.NodeStateChanged)) {
+                                countNodeStateChanges++;
+                            } else {
+                                throw new AssertionError(
+                                    "Component loaded with warning that are NOT due to node state changes");
+                            }
+                        }
+                    default:
+
+                }
+            } else {
+                countNodeStateChanges += assertComponentLoadingResult(entry.getChildren());
+            }
+        }
+        return countNodeStateChanges;
     }
 }

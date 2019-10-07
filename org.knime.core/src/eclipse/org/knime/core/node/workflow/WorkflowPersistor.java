@@ -438,7 +438,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          * @param cause an optional cause of the entry
          * @since 4.1
          */
-        public LoadResultEntry(final LoadResultEntryType type, final String message, final LoadResultEntryCause cause) {
+        LoadResultEntry(final LoadResultEntryType type, final String message, final LoadResultEntryCause cause) {
             m_type = type;
             m_message = message;
             m_cause = cause;
