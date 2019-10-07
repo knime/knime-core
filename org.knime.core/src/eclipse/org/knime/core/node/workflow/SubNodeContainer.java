@@ -2406,6 +2406,12 @@ public final class SubNodeContainer extends SingleNodeContainer
                         }
                         unsetDirty();
                     }
+                    if (isProject()) {
+                        //makes sure that all contained nodes are IDLE
+                        //templates/components are always saved in IDLE-state
+                        //(for non-project templates it's done during copy above)
+                        copy.getWorkflowManager().resetAndConfigureAll();
+                    }
                     copy.setName(null);
 
                     MetaNodeTemplateInformation template =
