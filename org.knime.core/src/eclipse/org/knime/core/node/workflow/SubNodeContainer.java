@@ -766,7 +766,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @param text The text to add
      * @param defaultTextIfEmpty Text to show if <code>text</code> is empty.
      */
-    private void addText(final Element element, final String text, final String defaultTextIfEmpty) {
+    private static void addText(final Element element, final String text, final String defaultTextIfEmpty) {
         Document doc = element.getOwnerDocument();
         String[] splitText = (text.isEmpty() ? defaultTextIfEmpty : text).split("\n");
         for (int i = 0; i < splitText.length; i++) {
@@ -2001,7 +2001,17 @@ public final class SubNodeContainer extends SingleNodeContainer
     public void setLayoutJSONString(final String layoutJSONString) {
         if (!StringUtils.equals(m_layoutJSONString, layoutJSONString)) {
             m_layoutJSONString = layoutJSONString;
-            setDirty();
+            if (isProject()) {
+                //differently handled if this is a component project
+                //otherwise the setDirty event will just be past to the parent (which is ROOT)
+                getChangesTracker().ifPresent(ct -> ct.otherChange());
+                //for consistency
+                if (!getWorkflowManager().isDirty()) {
+                    getWorkflowManager().setDirty();
+                }
+            } else {
+                setDirty();
+            }
         }
     }
 
@@ -2523,6 +2533,4 @@ public final class SubNodeContainer extends SingleNodeContainer
             return getWorkflowManager().canPerformReset();
         }
     }
-
-
 }

@@ -45,13 +45,16 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
@@ -170,6 +173,78 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         //clean-up
         WorkflowManager.ROOT.removeProject(componentProject.getID());
         WorkflowManager.ROOT.removeProject(componentProject2.getID());
+    }
+
+    /**
+     * Tests the changes tracker for a component project in order to verify that node state changes and other changes
+     * are tracked and distinguished correctly.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testChangesTrackerForComponentProject() throws Exception {
+        /* save a component and load a copmonent project */
+        SubNodeContainer component = (SubNodeContainer)getManager().getNodeContainer(m_component_10);
+        File componentDir = FileUtil.createTempDir(getClass().getSimpleName());
+        PortObject[] inputData = component.fetchInputDataFromParent();
+        component.saveAsTemplate(componentDir, new ExecutionMonitor(), inputData);
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
+        MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
+        SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
+
+        /* the actual tests */
+        assertFalse("changes tracker should not be initialised", componentProject.getChangesTracker().isPresent());
+        componentProject.initChangesTracker();
+        WorkflowManager wfm = componentProject.getWorkflowManager();
+
+        //execute node
+        wfm.executeAllAndWaitUntilDone();
+        assertFalse("no other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
+        assertTrue("node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+
+        //reset node
+        wfm.resetAndConfigureNode(componentProject.getVirtualOutNodeID());
+        assertFalse("no other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
+        assertTrue("node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+
+        //save
+        componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //should reset the changes tracker
+        assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+
+        //change view layout
+        componentProject.setLayoutJSONString("{}");
+        assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
+        assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+
+        //reset all
+        componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
+        wfm.resetAndConfigureAll();
+        assertFalse("no other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
+
+        NodeID stringManipulation_9 = new NodeID(wfm.getID(), 9);
+        //change node settings
+        componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
+        NodeSettings settings = new NodeSettings("settings");
+        wfm.getNodeContainer(stringManipulation_9).saveSettings(settings);
+        wfm.loadNodeSettings(stringManipulation_9, settings);
+        assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
+        assertTrue("node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+
+        //delete connection
+        componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
+        wfm.removeConnection(wfm.getConnection(new ConnectionID(stringManipulation_9, 1)));
+        assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
+        //node state changes expected to IDLE
+        assertTrue("node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+
+        //delete node
+        componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
+        wfm.removeNode(stringManipulation_9);
+        assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
+        assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+
+        //clean-up
+        WorkflowManager.ROOT.removeProject(componentProject.getID());
     }
 
     private void assertComponentLoadingResult(final LoadResult lr, final int expectedNodeStateChanges) {

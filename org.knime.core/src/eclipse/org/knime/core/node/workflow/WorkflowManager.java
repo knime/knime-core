@@ -626,6 +626,27 @@ public final class WorkflowManager extends NodeContainer
         }
     }
 
+    /**
+     * Analogon to {@link #getProjectWFM()} but for project components.
+     *
+     * @return the project component or <code>null</code> not (part of) a component project but a workflow project
+     * @since 4.1
+     */
+    public SubNodeContainer getProjectComponent() {
+        if (isProject()) {
+            return null;
+        } else if (isComponentProjectWFM()) {
+            return (SubNodeContainer)getDirectNCParent();
+        } else {
+            NodeContainerParent directNCParent = getDirectNCParent();
+            if (directNCParent instanceof WorkflowManager) {
+                return ((WorkflowManager)directNCParent).getProjectComponent();
+            } else {
+                return ((WorkflowManager)directNCParent.getDirectNCParent()).getProjectComponent();
+            }
+        }
+    }
+
     //    public WorkflowManager getProjectFor(final NodeContainer nc) {
     //        NodeContainerParent ncParent;
     //        do {
@@ -911,7 +932,7 @@ public final class WorkflowManager extends NodeContainer
         return getDirectNCParent() instanceof SubNodeContainer && ((SubNodeContainer)getDirectNCParent()).isProject();
     }
 
-    /**
+   /**
      * Creates new metanode from a persistor instance.
      *
      * @param persistor to read from
@@ -1788,6 +1809,7 @@ public final class WorkflowManager extends NodeContainer
                     ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM(false);
                     configureNodeAndSuccessors(id, false);
                 }
+                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_SETTINGS_CHANGED, id, null, null));
             } else {
                 throw new IllegalStateException(
                     "Cannot load settings into node; it is executing or has executing successors");
@@ -7281,7 +7303,10 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param evt event
      */
-    private final void notifyWorkflowListeners(final WorkflowEvent evt) {
+    final void notifyWorkflowListeners(final WorkflowEvent evt) {
+        if (!evt.getType().equals(WorkflowEvent.Type.WORKFLOW_DIRTY)) {
+            findChangesTracker().ifPresent(ct -> ct.otherChange());
+        }
         if (m_wfmListeners.isEmpty()) {
             return;
         }

@@ -77,6 +77,9 @@ public class WorkflowEvent {
      NODE_ADDED,
      /** Event: node removed from workflow. */
      NODE_REMOVED,
+     /** Event: node setting of a node in the workflow changed
+     * @since 4.1*/
+     NODE_SETTINGS_CHANGED,
      /** Event: annotation added to workflow. */
      ANNOTATION_ADDED,
      /** Event: annotation removed from workflow. */
