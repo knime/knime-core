@@ -49,9 +49,11 @@
 package org.knime.core.util;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import java.net.URI;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -70,10 +72,20 @@ public class URIUtilTest {
         String url = "https://hubdev.knime.com/hornm/space/Component3 sdguh4r & f -   ff äöü+ß=)(}{[]$§!";
         String urlEncoded = "https://hubdev.knime.com/hornm/space/Component3%20sdguh4r%20&%20f%20-%20%20%20ff%20%C3%A4%C3%B6%C3%BC+%C3%9F=)(%7D%7B%5B%5D$%C2%A7!";
 
-        URI uriFromURL = URIUtil.createEncodedURI(url);
-        URI uriFromEncodedURL = URIUtil.createEncodedURI(urlEncoded);
-        assertThat("unexpected encoded url", uriFromURL.toString(), is(urlEncoded));
-        assertThat("unexpected encoded url", uriFromEncodedURL.toString(), is(urlEncoded));
+        Optional<URI> uriFromURL = URIUtil.createEncodedURI(url);
+        Optional<URI> uriFromEncodedURL = URIUtil.createEncodedURI(urlEncoded);
+        assertThat("unexpected encoded url", uriFromURL.get().toString(), is(urlEncoded));
+        assertThat("unexpected encoded url", uriFromEncodedURL.get().toString(), is(urlEncoded));
     }
+
+    /**
+     * Test for https://knime-com.atlassian.net/browse/AP-12874.
+     */
+    @Test
+    public void testAP12874() {
+        String url = "http://test.de/path?test";
+        assertFalse(URIUtil.createEncodedURI(url).isPresent());
+    }
+
 
 }

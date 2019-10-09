@@ -53,6 +53,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.URIException;
@@ -75,12 +76,12 @@ public final class URIUtil {
      * Converts a url-string (without query parameters!) to an encoded (if not already encoded) URI.
      *
      * @param urlWithoutQueryParams the string to encode and turn into an URI
-     * @return the URI or <code>null</code> if it couldn't be encoded
+     * @return the URI or an empty optional if it couldn't be encoded
      */
-    public static URI createEncodedURI(final String urlWithoutQueryParams) {
+    public static Optional<URI> createEncodedURI(final String urlWithoutQueryParams) {
         //make sure that no query parameters are contained
         if (urlWithoutQueryParams == null || urlWithoutQueryParams.contains("?")) {
-            return null;
+            return Optional.empty();
         }
         URI uri;
         try {
@@ -93,20 +94,20 @@ public final class URIUtil {
             }
         } catch (URISyntaxException | URIException | UnsupportedEncodingException e) {
             LOGGER.error("The URL '" + urlWithoutQueryParams + "' couldn't be turned into an URI", e);
-            return null;
+            return Optional.empty();
         }
-        return uri;
+        return Optional.ofNullable(uri);
     }
 
     /**
      * Converts a URL (without query parameters!) to an encoded (if not already encoded) URI.
      *
      * @param url the string encode and turn into an URI
-     * @return the URI or <code>null</code> if it couldn't be encoded
+     * @return the URI or an empty optional if it couldn't be encoded (or the passed URL is <code>null</code>)
      */
-    public static URI createEncodedURI(final URL url) {
+    public static Optional<URI> createEncodedURI(final URL url) {
         if(url == null) {
-            return null;
+            return Optional.empty();
         }
         return createEncodedURI(url.toString());
     }
