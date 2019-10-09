@@ -272,8 +272,8 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
     /**
-     * @return example input data stored with a component that is not embedded in a workflow or an empty optional, if
-     *         non available
+     * @return example input data stored with a component template/project (i.e. a component not embedded in a
+     *         workflow), or an empty optional, if non available
      *
      * @since 4.1
      */
@@ -282,8 +282,8 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
     /**
-     * @return incoming flow variables stored with a component that is not embedded in a workflow. Never
-     *         <code>null</code>, possibly empty
+     * @return incoming flow variables stored with a component template/project (i.e. component not embedded in a
+     *         workflow). Never <code>null</code>, possibly empty
      * @since 4.1
      */
     public List<FlowVariable> getIncomingFlowVariables() {
@@ -303,7 +303,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     /**
      * Saves this object to the argument settings, optionally including the information about example input data. The
      * later is only required if the respective node is a "shared" template, i.e. stored outside of a workflow. In that
-     * case, the information is stored into the {@link WorkflowPersistor#TEMPLATE_FILE} file.
+     * case, the information is eventually stored into the {@link WorkflowPersistor#TEMPLATE_FILE} file.
      *
      * @param settings to save to
      *
@@ -423,7 +423,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
     /**
-     * Load information from argument, throw {@link InvalidSettingsException} if that fails.
+     * Load information from argument, throws a {@link InvalidSettingsException} if that fails.
      *
      * @param settings To load from.
      * @param version The version this workflow is loading from

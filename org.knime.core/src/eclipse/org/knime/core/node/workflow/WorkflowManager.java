@@ -627,7 +627,8 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Analogon to {@link #getProjectWFM()} but for project components.
+     * Analogon to {@link #getProjectWFM()} but for project components. Will traverse the hierarchy to find the project
+     * component.
      *
      * @return the project component or <code>null</code> not (part of) a component project but a workflow project
      * @since 4.1

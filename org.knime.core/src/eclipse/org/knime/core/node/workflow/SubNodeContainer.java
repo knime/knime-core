@@ -504,7 +504,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
-     * Called from virtual input node when executed - in possibly executes nodes in the parent wfm and then fetches the
+     * Called from virtual input node when executed - it possibly executes nodes in the parent wfm and then fetches the
      * data from it. Or, if not embedded in a workflow, (optional) example data is read in from disk.
      *
      * @param exec for reading example data in
@@ -537,10 +537,10 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
-     * Fetches input specs of subnode, including mandatory flow var port. Used by virtual sub node input during
+     * Fetches input specs of a component, including mandatory flow var port. Used by virtual component input during
      * configuration.
      *
-     * @return input specs from subnode (as available from connected outports).
+     * @return input specs from component (as available from connected outports).
      */
     public PortObjectSpec[] fetchInputSpec() {
         PortObjectSpec[] exampleInputSpec = fetchExampleInputSpec();
@@ -2445,8 +2445,8 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
-     * @return <code>true</code> if the component is embedded in a workflow, <code>false</code> if component has been
-     *         opened directly
+     * @return <code>true</code> if the component is directly loaded as a project, <code>false</code> if component is
+     *         part of/embedded in a workflow
      */
     boolean isProject() {
         return getParent() == WorkflowManager.ROOT;

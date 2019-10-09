@@ -232,7 +232,7 @@ public class WorkflowLoadHelper {
 
     /**
      * Returns <code>true</code> if the workflow is a template project, i.e. a template not embedded in a workflow. If
-     * <code>false</code> (i.e. template is embedded in a workflow),it will be disconnected from the location where it
+     * <code>false</code> (i.e. template is embedded in a workflow), it will be disconnected from the location where it
      * is loaded from and data will not be imported.
      *
      * @return if the template is a project
