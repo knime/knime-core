@@ -75,11 +75,13 @@ public final class URIUtil {
      * Converts a url-string (without query parameters!) to an encoded (if not already encoded) URI.
      *
      * @param urlWithoutQueryParams the string to encode and turn into an URI
-     * @return the URI
+     * @return the URI or <code>null</code> if it couldn't be encoded
      */
     public static URI createEncodedURI(final String urlWithoutQueryParams) {
         //make sure that no query parameters are contained
-        assert !urlWithoutQueryParams.contains("?");
+        if (urlWithoutQueryParams == null || urlWithoutQueryParams.contains("?")) {
+            return null;
+        }
         URI uri;
         try {
             if (isURLEncoded(urlWithoutQueryParams.toString())) {
@@ -100,9 +102,12 @@ public final class URIUtil {
      * Converts a URL (without query parameters!) to an encoded (if not already encoded) URI.
      *
      * @param url the string encode and turn into an URI
-     * @return the URI
+     * @return the URI or <code>null</code> if it couldn't be encoded
      */
     public static URI createEncodedURI(final URL url) {
+        if(url == null) {
+            return null;
+        }
         return createEncodedURI(url.toString());
     }
 
