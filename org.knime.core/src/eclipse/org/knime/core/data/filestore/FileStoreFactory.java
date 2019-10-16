@@ -97,6 +97,21 @@ public abstract class FileStoreFactory {
         return exec != null ? createWorkflowFileStoreFactory(exec) : createNotInWorkflowFileStoreFactory();
     }
 
+
+    /**
+     * Helper method that either calls the {@link #createNotInWorkflowFileStoreFactory()} if the
+     * {@link ExecutionContext} is not provided or the {@link #createWorkflowFileStoreFactory(ExecutionContext)} if it
+     * is provided.
+     * @param exec (optional) {@link ExecutionContext}
+     * @param prefix the file name prefix to use when creating the {@link FileStore}
+     * @return {@link FileStoreFactory} to use
+     * @since 4.1
+     */
+    public static final FileStoreFactory createFileStoreFactory(final ExecutionContext exec, final String prefix) {
+        return exec != null ? createWorkflowFileStoreFactory(exec, prefix)
+            : createNotInWorkflowFileStoreFactory(prefix);
+    }
+
     /** Creates a factory whose file stores are part of the workflow. The factory delegates to
      * {@link ExecutionContext#createFileStore(String)}.
      * @param exec The non-null execution context.
@@ -104,26 +119,49 @@ public abstract class FileStoreFactory {
      * @since 2.7
      */
     public static final FileStoreFactory createWorkflowFileStoreFactory(final ExecutionContext exec) {
-        return new WorkflowFileStoreFactory(exec);
+        return createWorkflowFileStoreFactory(exec, null);
     }
 
+    /** Creates a factory whose file stores are part of the workflow. The factory delegates to
+     * {@link ExecutionContext#createFileStore(String)}.
+     * @param exec The non-null execution context.
+     * @param prefix the file name prefix to use when creating the {@link FileStore}
+     * @return A file store factory that creates file stores as part of the workflow.
+     * @since 4.1
+     */
+    public static final FileStoreFactory createWorkflowFileStoreFactory(final ExecutionContext exec,
+        final String prefix) {
+        return new WorkflowFileStoreFactory(exec, prefix);
+    }
+
+    /** Creates a factory whose generated file stores are not part of the workflow. It's used in isolated
+     * data tables (such as used in views).
+     * @param prefix the file name prefix to use when creating the {@link FileStore}
+     * @return Such a new factory.
+     * @since 4.1
+     */
+    public static final FileStoreFactory createNotInWorkflowFileStoreFactory(final String prefix) {
+        NotInWorkflowWriteFileStoreHandler fsh = new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID());
+        fsh.open();
+        return new NotInWorkflowFileStoreFactory(fsh, prefix);
+    }
     /** Creates a factory whose generated file stores are not part of the workflow. It's used in isolated
      * data tables (such as used in views).
      * @return Such a new factory.
      * @since 2.7
      */
     public static final FileStoreFactory createNotInWorkflowFileStoreFactory() {
-        NotInWorkflowWriteFileStoreHandler fsh = new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID());
-        fsh.open();
-        return new NotInWorkflowFileStoreFactory(fsh);
+        return createNotInWorkflowFileStoreFactory(null);
     }
 
     /** Implementation that creates file stores associated with the workflow (execution context). */
     static final class WorkflowFileStoreFactory extends FileStoreFactory {
 
-        private ExecutionContext m_exec;
+        private final ExecutionContext m_exec;
+        private final String m_prefix;
 
-        WorkflowFileStoreFactory(final ExecutionContext exec) {
+        WorkflowFileStoreFactory(final ExecutionContext exec, final String prefix) {
+            m_prefix = prefix;
             if (exec == null) {
                 throw new NullPointerException("exec must not be null");
             }
@@ -132,7 +170,8 @@ public abstract class FileStoreFactory {
 
         @Override
         public FileStore createFileStore(final String relativePath) throws IOException {
-            return m_exec.createFileStore(relativePath);
+            final String path = m_prefix != null ? m_prefix + relativePath : relativePath;
+            return m_exec.createFileStore(path);
         }
 
         /**
@@ -155,17 +194,20 @@ public abstract class FileStoreFactory {
     private static final class NotInWorkflowFileStoreFactory extends FileStoreFactory {
 
         private final NotInWorkflowWriteFileStoreHandler m_notInWorkflowWriteFileStoreHandler;
+        private final String m_prefix;
 
-        NotInWorkflowFileStoreFactory(final NotInWorkflowWriteFileStoreHandler fsh) {
+        NotInWorkflowFileStoreFactory(final NotInWorkflowWriteFileStoreHandler fsh, final String prefix) {
             if (fsh == null) {
                 throw new NullPointerException("exec must not be null");
             }
             m_notInWorkflowWriteFileStoreHandler = fsh;
+            m_prefix = prefix;
         }
 
         @Override
         public FileStore createFileStore(final String relativePath) throws IOException {
-            return m_notInWorkflowWriteFileStoreHandler.createFileStore(relativePath);
+            final String path = m_prefix != null ? m_prefix + relativePath : relativePath;
+            return m_notInWorkflowWriteFileStoreHandler.createFileStore(path);
         }
 
         /**
