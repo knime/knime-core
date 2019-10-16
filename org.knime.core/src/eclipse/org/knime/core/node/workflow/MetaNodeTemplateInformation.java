@@ -134,9 +134,15 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         this(Role.None, null, null, null, null, null);
     }
 
-    /** Create new template with all infos.
+    /**
+     * Create new template with all infos.
+     *
      * @param role The role.
      * @param type the type (non-null for templates, null for links)
+     * @param exampleInputInfo see {@link #getExampleInputDataInfo()}, <code>null</code> if not a component project
+     *            metadata
+     * @param incomingFlowVariables see {@link #getIncomingFlowVariables()}, <code>null</code> if not component project
+     *            metadata
      */
     private MetaNodeTemplateInformation(final Role role, final TemplateType type, final URI uri, final Date timestamp,
         final NodeSettingsRO exampleInputDataInfo, final List<FlowVariable> incomingFlowVariables) {
@@ -228,15 +234,31 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      *         of this object.
      * @throws IllegalStateException If this object is not a template. */
     public MetaNodeTemplateInformation createLink(final URI sourceURI) {
+        return createLink(sourceURI, false);
+    }
+
+    /**
+     * Create a new link template info based on this template, which is supposed to be accessible under the argument
+     * URI.
+     *
+     * @param sourceURI The sourceURI, must not be null.
+     * @param includeExampleInputDataInfo whether to include the example input data info in the new instance (if info is
+     *            available)
+     * @return a new template linking to the argument URI, using the timestamp of this object.
+     * @throws IllegalStateException If this object is not a template.
+     * @since 4.1
+     */
+    public MetaNodeTemplateInformation createLink(final URI sourceURI, final boolean includeExampleInputDataInfo) {
         if (sourceURI == null) {
             throw new NullPointerException("Can't create link to null URI");
         }
         switch (getRole()) {
         case Template:
             Date ts = getTimestamp();
-            assert ts != null : "Templates must not have null timestamp";
-            return new MetaNodeTemplateInformation(Role.Link, null, sourceURI, ts, m_exampleInputDataInfo,
-                 m_incomingFlowVariables);
+                assert ts != null : "Templates must not have null timestamp";
+                return new MetaNodeTemplateInformation(Role.Link, null, sourceURI, ts,
+                    includeExampleInputDataInfo ? m_exampleInputDataInfo : null,
+                    includeExampleInputDataInfo ? m_incomingFlowVariables : null);
             default:
             throw new IllegalStateException("Can't link to metanode of role"
                     + " \"" + getRole() + "\" (URI: \"" + sourceURI + "\")");

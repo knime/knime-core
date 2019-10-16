@@ -409,7 +409,7 @@ public class WorkflowLoadHelper {
             }
         }
         if (templateInfo != null) {
-            persistor.setOverwriteTemplateInformation(templateInfo.createLink(templateSourceURI));
+            persistor.setOverwriteTemplateInformation(templateInfo.createLink(templateSourceURI, isTemplateProject()));
 
             if (templateSourceURI != null) {
                 final String path = templateSourceURI.getPath();
