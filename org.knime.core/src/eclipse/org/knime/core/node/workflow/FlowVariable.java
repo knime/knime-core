@@ -171,8 +171,7 @@ public final class FlowVariable extends FlowObject {
     }
 
     private <T> FlowVariable(final String name, final VariableType<T> type, final T value, final Scope scope) {
-        this(name, CheckUtils.checkArgumentNotNull(type, "Type must not be null")
-            .newValue(CheckUtils.checkArgumentNotNull(value, "Value must not be null")), scope);
+        this(name, CheckUtils.checkArgumentNotNull(type, "Type must not be null").newValue(value), scope);
     }
 
     /**
@@ -227,7 +226,8 @@ public final class FlowVariable extends FlowObject {
      * @noreference This constructor is not intended to be referenced by clients.
      */
     public FlowVariable(final String name, final CredentialsFlowVariableValue valueC) {
-        this(name, CredentialsType.INSTANCE, valueC, Scope.Flow);
+        this(name, CredentialsType.INSTANCE, CheckUtils.checkArgumentNotNull(valueC, "Value must not be null"),
+            Scope.Flow);
     }
 
     /**
@@ -238,7 +238,8 @@ public final class FlowVariable extends FlowObject {
      * @noreference This constructor is not intended to be referenced by clients.
      */
     public FlowVariable(final String name, final FSConnectionFlowVariableValue fsConnection) {
-        this(name, FSConnectionType.INSTANCE, fsConnection, Scope.Flow);
+        this(name, FSConnectionType.INSTANCE, CheckUtils.checkArgumentNotNull(fsConnection, "Value must not be null"),
+            Scope.Flow);
     }
 
     /**

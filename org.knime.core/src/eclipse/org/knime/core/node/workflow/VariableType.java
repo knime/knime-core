@@ -88,7 +88,7 @@ public abstract class VariableType<T> {
 
         private VariableValue(final VariableType<T> type, final T value) {
             m_type = CheckUtils.checkArgumentNotNull(type);
-            m_value = CheckUtils.checkArgumentNotNull(value);
+            m_value = value;
         }
 
         String asString() {
