@@ -554,7 +554,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         if (hasExampleInputData() && getNodeContainerDirectory() != null) {
             try {
                 return FileSubNodeContainerPersistor.loadExampleInputData(
-                    getTemplateInformation().getExampleInputDataInfo().get(), getNodeContainerDirectory(), exec);
+                    getTemplateInformation().getExampleInputDataInfo().get(),
+                    getArtifactsDir(getNodeContainerDirectory()), exec);
             } catch (IOException | InvalidSettingsException | CanceledExecutionException ex) {
                 //can happen in rare cases
                 //e.g. if a data value implementation is not available (missing plugin)
@@ -569,7 +570,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         if (hasExampleInputData() && getNodeContainerDirectory() != null) {
             try {
                 return FileSubNodeContainerPersistor.loadExampleInputSpecs(
-                    getTemplateInformation().getExampleInputDataInfo().get(), getNodeContainerDirectory());
+                    getTemplateInformation().getExampleInputDataInfo().get(),
+                    getArtifactsDir(getNodeContainerDirectory()));
             } catch (IOException | InvalidSettingsException ex) {
                 //can happen in rare cases
                 //e.g. if a data value implementation is not available (missing plugin)
@@ -2377,6 +2379,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
         directory.mkdir();
         workflowDirRef.lock();
+        ReferencedFile artifactsDirRef = getArtifactsDir(workflowDirRef);
         try {
             WorkflowCopyContent.Builder cntBuilder = WorkflowCopyContent.builder();
             cntBuilder.setNodeIDs(getID());
@@ -2400,7 +2403,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                         //if this component is embedded in a workflow
                         //and example data needs to be saved with it
                         exampleInputDataInfo = FileSubNodeContainerPersistor.saveExampleInputData(exampleInputData,
-                            workflowDirRef.getFile(), exec);
+                            artifactsDirRef.getFile(), exec);
                         incomingFlowVariables = new ArrayList<>(
                             Node.invokeGetAvailableFlowVariables(getVirtualInNodeModel(), FlowVariable.Type.values())
                                 .values());
@@ -2442,6 +2445,10 @@ public final class SubNodeContainer extends SingleNodeContainer
             }
             workflowDirRef.unlock();
         }
+    }
+
+    private static ReferencedFile getArtifactsDir(final ReferencedFile workflowDirRef) {
+        return new ReferencedFile(workflowDirRef, ".artifacts");
     }
 
     /**
