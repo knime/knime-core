@@ -1382,7 +1382,6 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     final void pushFlowVariable(final FlowVariable variable) {
-        CheckUtils.checkArgumentNotNull(m_outgoingFlowObjectStack, "Outgoing flow object stack must not be null.");
         m_outgoingFlowObjectStack.push(variable);
     }
 
