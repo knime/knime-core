@@ -143,4 +143,27 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/artifacts/WorkflowConfigArtifactsGenerator.java" type="org.knime.core.node.workflow.artifacts.WorkflowConfigArtifactsGenerator">
+        <filter id="623939596">
+            <message_arguments>
+                <message_argument value="ConfigurationType"/>
+                <message_argument value="WorkflowConfigArtifactsGenerator"/>
+                <message_argument value="CONFIGURATION_REPRESENTATION"/>
+            </message_arguments>
+        </filter>
+        <filter id="623939596">
+            <message_arguments>
+                <message_argument value="ConfigurationType"/>
+                <message_argument value="WorkflowConfigArtifactsGenerator"/>
+                <message_argument value="CONFIGURATION_TEMPLATE"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="ConfigurationType"/>
+                <message_argument value="WorkflowConfigArtifactsGenerator"/>
+                <message_argument value="getFileName()"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
