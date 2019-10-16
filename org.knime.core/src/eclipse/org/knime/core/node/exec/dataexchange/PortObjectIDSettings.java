@@ -56,8 +56,13 @@ import org.knime.core.node.FSConnectionFlowVariableProvider;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
+import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.ICredentials;
+import org.knime.core.node.workflow.VariableType.CredentialsType;
+import org.knime.core.node.workflow.VariableType.FSConnectionType;
 
 /**
  * Settings helper that reads/writes the port object ID that is used by the {@link PortObjectRepository}.
@@ -92,9 +97,28 @@ public final class PortObjectIDSettings {
         if (settings.containsKey("flowVariables")) {
             NodeSettingsRO sub = settings.getNodeSettings("flowVariables");
             for (String key : sub.keySet()) {
-                NodeSettingsRO child = sub.getNodeSettings(key);
+                final NodeSettingsRO child = sub.getNodeSettings(key);
 
-                final FlowVariable v = FlowVariable.load(child);
+                final String name = child.getString("name");
+                final String typeS = child.getString("class");
+                if (typeS == null || name == null) {
+                    throw new InvalidSettingsException("name or type is null");
+                }
+
+                final FlowVariable v;
+                /* Flow variables of types Credentials and FSConnection are handled separately, using the
+                 * credentialsProvider and fsConnectionProvider members, respectively. */
+                if (typeS.equals(CredentialsType.INSTANCE.getIdentifier())) {
+                    CheckUtils.checkState(m_credentialsProvider != null, "No credentials provider set");
+                    final ICredentials credentials = m_credentialsProvider.get(name);
+                    v = CredentialsStore.newCredentialsFlowVariable(credentials.getName(), credentials.getLogin(),
+                        credentials.getPassword(), false, false);
+                } else if (typeS.equals(FSConnectionType.INSTANCE.getIdentifier())) {
+                    v = m_fsConnectionsProvider.flowVariableFor(name).orElse(null);
+                } else {
+                    v = FlowVariable.load(child);
+                }
+
                 m_flowVariables.add(v);
             }
         }

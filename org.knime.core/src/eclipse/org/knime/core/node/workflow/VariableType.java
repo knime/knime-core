@@ -613,7 +613,13 @@ public abstract class VariableType<T> {
         }
     }
 
-    static final class CredentialsType extends VariableType<CredentialsFlowVariableValue> {
+    /**
+     * Singleton type of {@link FlowVariable} for handling arrays of CredentialsFlowVariableValue values. The singleton
+     * instance is accessible via the {@link CredentialsType#INSTANCE} field.
+     *
+     * @since 4.1
+     */
+    public static final class CredentialsType extends VariableType<CredentialsFlowVariableValue> {
 
         private static final class CredentialsValue extends VariableValue<CredentialsFlowVariableValue> {
 
@@ -627,7 +633,10 @@ public abstract class VariableType<T> {
             }
         }
 
-        static final CredentialsType INSTANCE = new CredentialsType();
+        /**
+         * The singleton instance of the {@link CredentialsType} type.
+         */
+        public static final CredentialsType INSTANCE = new CredentialsType();
 
         @SuppressWarnings("deprecation")
         @Override
@@ -749,7 +758,12 @@ public abstract class VariableType<T> {
         return SharedIcons.FLOWVAR_GENERAL.get();
     }
 
-    String getIdentifier() {
+    /**
+     * Method for obtaining the String that uniquely identifies a {@link VariableType}.
+     *
+     * @return the type's unique identifier
+     */
+    public String getIdentifier() {
         @SuppressWarnings("deprecation")
         final boolean isOtherType = getType().equals(FlowVariable.Type.OTHER);
         return isOtherType ? getClass().getSimpleName().replace("Type", "").toUpperCase() : getType().toString();
