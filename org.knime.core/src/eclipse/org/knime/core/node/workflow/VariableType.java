@@ -154,6 +154,10 @@ public abstract class VariableType<T> {
          */
         public static final BooleanType INSTANCE = new BooleanType();
 
+        private BooleanType() {
+            //singleton
+        }
+
         @Override
         public Icon getIcon() {
             return SharedIcons.FLOWVAR_BOOLEAN.get();
@@ -443,6 +447,10 @@ public abstract class VariableType<T> {
          */
         public static final LongType INSTANCE = new LongType();
 
+        private LongType() {
+            //singleton
+        }
+
         @Override
         public Icon getIcon() {
             return SharedIcons.FLOWVAR_LONG.get();
@@ -638,6 +646,10 @@ public abstract class VariableType<T> {
          */
         public static final CredentialsType INSTANCE = new CredentialsType();
 
+        private CredentialsType() {
+           // singleton
+        }
+
         @SuppressWarnings("deprecation")
         @Override
         FlowVariable.Type getType() {
@@ -686,6 +698,10 @@ public abstract class VariableType<T> {
          * The singleton instance of the {@link FSConnectionType} type.
          */
         public static final FSConnectionType INSTANCE = new FSConnectionType();
+
+        private FSConnectionType() {
+            // singleton
+        }
 
         @Override
         VariableValue<FSConnectionFlowVariableValue> loadValue(final NodeSettingsRO settings)
