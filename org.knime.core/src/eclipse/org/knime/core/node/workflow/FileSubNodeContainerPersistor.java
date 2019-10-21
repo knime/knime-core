@@ -665,6 +665,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
                     File portFile = new File(subDirFile.getFile(), dataFileName);
                     ContainerTable t = DataContainer.readFromZip(portFile);
                     object = exec.createBufferedDataTable(t, subProgress);
+                    t.clear();
                 }
             } else if("flow-vars".equals(type)) {
                 object = FlowVariablePortObject.INSTANCE;

@@ -630,14 +630,14 @@ public final class WorkflowManager extends NodeContainer
      * Analogon to {@link #getProjectWFM()} but for project components. Will traverse the hierarchy to find the project
      * component.
      *
-     * @return the project component or <code>null</code> not (part of) a component project but a workflow project
+     * @return the project component or an empty optional if not (part of) a component project but a workflow project
      * @since 4.1
      */
-    public SubNodeContainer getProjectComponent() {
+    public Optional<SubNodeContainer> getProjectComponent() {
         if (isProject()) {
-            return null;
+            return Optional.empty();
         } else if (isComponentProjectWFM()) {
-            return (SubNodeContainer)getDirectNCParent();
+            return Optional.ofNullable((SubNodeContainer)getDirectNCParent());
         } else {
             NodeContainerParent directNCParent = getDirectNCParent();
             if (directNCParent instanceof WorkflowManager) {

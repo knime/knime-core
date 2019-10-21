@@ -262,6 +262,9 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     private MetaNodeTemplateInformation m_templateInformation;
 
+    /** Caches the example input data spec */
+    private PortObjectSpec[] m_exampleInputDataSpec;
+
     /** Load workflow from persistor.
      *
      * @param parent ...
@@ -568,16 +571,19 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     private PortObjectSpec[] fetchExampleInputSpec() {
         if (hasExampleInputData() && getNodeContainerDirectory() != null) {
-            try {
-                return FileSubNodeContainerPersistor.loadExampleInputSpecs(
-                    getTemplateInformation().getExampleInputDataInfo().get(),
-                    getArtifactsDir(getNodeContainerDirectory()));
-            } catch (IOException | InvalidSettingsException ex) {
-                //can happen in rare cases
-                //e.g. if a data value implementation is not available (missing plugin)
-                throw new IllegalStateException("Example input data specification cannot be read. See log for details.",
-                    ex);
+            if (m_exampleInputDataSpec == null) {
+                try {
+                    m_exampleInputDataSpec = FileSubNodeContainerPersistor.loadExampleInputSpecs(
+                        getTemplateInformation().getExampleInputDataInfo().get(),
+                        getArtifactsDir(getNodeContainerDirectory()));
+                } catch (IOException | InvalidSettingsException ex) {
+                    //can happen in rare cases
+                    //e.g. if a data value implementation is not available (missing plugin)
+                    throw new IllegalStateException(
+                        "Example input data specification cannot be read. See log for details.", ex);
+                }
             }
+            return m_exampleInputDataSpec;
         } else {
             return null;
         }
