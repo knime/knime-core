@@ -584,7 +584,7 @@
       </portType>
       <portType
             color="#ff4b4b"
-            name="Flowvariable"
+            name="Flow Variable"
             objectClass="org.knime.core.node.port.flowvariable.FlowVariablePortObject"
             objectSerializer="org.knime.core.node.port.flowvariable.FlowVariablePortObject$Serializer"
             specClass="org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec"
