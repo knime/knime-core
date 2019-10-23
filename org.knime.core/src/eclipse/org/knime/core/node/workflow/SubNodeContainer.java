@@ -2420,8 +2420,9 @@ public final class SubNodeContainer extends SingleNodeContainer
                         incomingFlowVariables = copy.getTemplateInformation().getIncomingFlowVariables();
                         if (!directory.equals(getNodeContainerDirectory().getFile())) {
                             //~save as -> copy example data over
-                            FileSubNodeContainerPersistor.copyExampleInputData(getNodeContainerDirectory().getFile(),
-                                exampleInputDataInfo, directory);
+                            FileSubNodeContainerPersistor.copyExampleInputData(
+                                getArtifactsDir(getNodeContainerDirectory()).getFile(), exampleInputDataInfo,
+                                getArtifactsDir(workflowDirRef).getFile());
                         }
                         unsetDirty();
                     }
