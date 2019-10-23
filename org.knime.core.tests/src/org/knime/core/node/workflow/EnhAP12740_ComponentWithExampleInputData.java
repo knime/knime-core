@@ -50,10 +50,17 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -73,6 +80,8 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
     private File m_workflowDir;
 
     private NodeID m_component_10;
+
+    private List<NodeID> m_loadedComponentNodeIDs = new ArrayList<>();
 
     /**
      * Creates and copies the workflow into a temporary directory.
@@ -120,7 +129,6 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
             "Execution of shared component failed. Node messages: "
                 + wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
             componentProject.getVirtualOutNode().getInternalState(), is(InternalNodeContainerState.EXECUTED));
-        WorkflowManager.ROOT.removeProject(componentProject.getID());
 
         /* save and open without example input data */
         component.saveAsTemplate(componentDir, new ExecutionMonitor());
@@ -132,7 +140,6 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         assertThat("warning message expected", nodeMessage.getMessageType(), is(NodeMessage.Type.WARNING));
         assertThat("unexpected warning message", nodeMessage.getMessage(),
             is("No example input data stored with component"));
-        WorkflowManager.ROOT.removeProject(componentProject.getID());
     }
 
     /**
@@ -169,10 +176,6 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
             "Execution of shared component failed. Node messages: "
                 + wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
             componentProject2.getVirtualOutNode().getInternalState(), is(InternalNodeContainerState.EXECUTED));
-
-        //clean-up
-        WorkflowManager.ROOT.removeProject(componentProject.getID());
-        WorkflowManager.ROOT.removeProject(componentProject2.getID());
     }
 
     /**
@@ -242,9 +245,16 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         wfm.removeNode(stringManipulation_9);
         assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
         assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+    }
 
-        //clean-up
-        WorkflowManager.ROOT.removeProject(componentProject.getID());
+    /**
+     * Removes loaded components from the project map.
+     */
+    @After
+    public void closeLoadedComponents() {
+        for (NodeID id : m_loadedComponentNodeIDs) {
+            WorkflowManager.ROOT.removeProject(id);
+        }
     }
 
     private void assertComponentLoadingResult(final LoadResult lr, final int expectedNodeStateChanges) {
@@ -278,4 +288,18 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         }
         return countNodeStateChanges;
     }
+
+    private MetaNodeLinkUpdateResult loadComponent(final File componentDir, final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper)
+        throws IOException, InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException {
+        URI componentURI = componentDir.toURI();
+        TemplateNodeContainerPersistor loadPersistor =
+            loadHelper.createTemplateLoadPersistor(componentDir, componentURI);
+        MetaNodeLinkUpdateResult loadResult =
+            new MetaNodeLinkUpdateResult("Shared instance from \"" + componentURI + "\"");
+        WorkflowManager.ROOT.load(loadPersistor, loadResult, exec, false);
+        m_loadedComponentNodeIDs.add(loadResult.getLoadedInstance().getID());
+        return loadResult;
+    }
+
 }
