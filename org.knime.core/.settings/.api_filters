@@ -166,4 +166,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/util/GUIDeadlockDetector.java" type="org.knime.core.util.GUIDeadlockDetector">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.GUIDeadlockDetector"/>
+                <message_argument value="createStacktrace()"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

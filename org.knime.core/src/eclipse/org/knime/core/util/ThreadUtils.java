@@ -46,6 +46,11 @@
  */
 package org.knime.core.util;
 
+import java.lang.management.LockInfo;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MonitorInfo;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -61,7 +66,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 
 /**
- * This class contains utility methods for handling {@link NodeContext}s with new threads.
+ * This class contains utility methods for handling {@link NodeContext}s with new threads
+ * and other useful threading related functionality.
  *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.8
@@ -486,5 +492,91 @@ public final class ThreadUtils {
                 runnable.run();
             }
         };
+    }
+
+    /**
+     * Creates stacktraces of all threads and returns it as a string. The string is not guaranteed to be 'future'
+     * compatible (format may change). The method is only meant to be used for debugging/error-logging.
+     *
+     * @return the full stacktraces of all JVM threads as a string, not null.
+     * @since 4.1
+     */
+    public static String getJVMStacktraces() {
+        StringBuilder buf = new StringBuilder(4096);
+
+        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+        for (ThreadInfo ti : bean.dumpAllThreads(true, true)) {
+            fillStackFromThread(ti, buf);
+        }
+
+        long[] deadlockedThreads = bean.findDeadlockedThreads();
+        if ((deadlockedThreads != null) && (deadlockedThreads.length > 0)) {
+            buf.append("\nDEADLOCKED THREADS\n");
+            for (ThreadInfo ti : bean.getThreadInfo(deadlockedThreads)) {
+                buf.append('\t').append(ti.getThreadId()).append('\t').append(ti.getThreadName()).append("\t(")
+                    .append(ti.getThreadState().name()).append(")\n");
+            }
+        }
+
+        return buf.toString();
+    }
+
+    private static void fillStackFromThread(final ThreadInfo ti, final StringBuilder buf) {
+        buf.append("\"" + ti.getThreadName() + "\" Id=" + ti.getThreadId() + " " + ti.getThreadState());
+        if (ti.getLockName() != null) {
+            buf.append(" on " + ti.getLockName());
+        }
+        if (ti.getLockOwnerName() != null) {
+            buf.append(" owned by \"" + ti.getLockOwnerName() + "\" Id=" + ti.getLockOwnerId());
+        }
+        if (ti.isSuspended()) {
+            buf.append(" (suspended)");
+        }
+        if (ti.isInNative()) {
+            buf.append(" (in native)");
+        }
+        buf.append('\n');
+        int i = 0;
+        for (StackTraceElement ste : ti.getStackTrace()) {
+            buf.append("\tat " + ste.toString());
+            buf.append('\n');
+            if ((i == 0) && (ti.getLockInfo() != null)) {
+                Thread.State ts = ti.getThreadState();
+                switch (ts) {
+                    case BLOCKED:
+                        buf.append("\t-  blocked on " + ti.getLockInfo());
+                        buf.append('\n');
+                        break;
+                    case WAITING:
+                        buf.append("\t-  waiting on " + ti.getLockInfo());
+                        buf.append('\n');
+                        break;
+                    case TIMED_WAITING:
+                        buf.append("\t-  waiting on " + ti.getLockInfo());
+                        buf.append('\n');
+                        break;
+                    default:
+                }
+            }
+
+            for (MonitorInfo mi : ti.getLockedMonitors()) {
+                if (mi.getLockedStackDepth() == i) {
+                    buf.append("\t-  locked " + mi);
+                    buf.append('\n');
+                }
+            }
+            i++;
+        }
+
+        LockInfo[] locks = ti.getLockedSynchronizers();
+        if (locks.length > 0) {
+            buf.append("\n\tNumber of locked synchronizers = " + locks.length);
+            buf.append('\n');
+            for (LockInfo li : locks) {
+                buf.append("\t- " + li);
+                buf.append('\n');
+            }
+        }
+        buf.append('\n');
     }
 }
