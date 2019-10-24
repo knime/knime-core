@@ -2424,13 +2424,14 @@ public final class SubNodeContainer extends SingleNodeContainer
                                 getArtifactsDir(getNodeContainerDirectory()).getFile(), exampleInputDataInfo,
                                 getArtifactsDir(workflowDirRef).getFile());
                         }
-                        unsetDirty();
                     }
                     if (isProject()) {
                         //makes sure that all contained nodes are IDLE
                         //templates/components are always saved in IDLE-state
                         //(for non-project templates it's done during copy above)
                         copy.getWorkflowManager().resetAndConfigureAll();
+
+                        unsetDirty();
                     }
                     copy.setName(null);
 
