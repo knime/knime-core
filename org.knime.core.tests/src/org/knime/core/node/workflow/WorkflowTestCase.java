@@ -71,6 +71,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.util.ThreadUtils;
 
 /**
  *
@@ -515,6 +516,10 @@ public abstract class WorkflowTestCase {
                 String error = "Cannot remove workflow, dump follows";
                 m_logger.error(error);
                 dumpWorkflowToLog(m_manager);
+                m_logger.info("########## JVM Call Stacks (start) ##########");
+                dumpLineBreakStringToLog(ThreadUtils.getJVMStacktraces());
+                m_logger.info("########## JVM Call Stacks (end) ############");
+                dumpLineBreakStringToLog(error);
                 fail(error);
             }
             WorkflowManager.ROOT.removeProject(m_manager.getID());
