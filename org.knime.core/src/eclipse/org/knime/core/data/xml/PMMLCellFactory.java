@@ -58,6 +58,7 @@ import org.knime.core.data.DataCellFactory.FromComplexString;
 import org.knime.core.data.DataCellFactory.FromInputStream;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.BlobDataCell;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -196,6 +197,7 @@ public class PMMLCellFactory implements FromComplexString, FromInputStream {
      * {@inheritDoc}
      * @since 3.0
      */
+    @DataCellFactoryMethod(name = "String")
     @Override
     public DataCell createCell(final String input) {
         try {
@@ -218,6 +220,7 @@ public class PMMLCellFactory implements FromComplexString, FromInputStream {
      * {@inheritDoc}
      * @since 3.0
      */
+    @DataCellFactoryMethod(name = "InputStream")
     @Override
     public DataCell createCell(final InputStream input) throws IOException {
         try {

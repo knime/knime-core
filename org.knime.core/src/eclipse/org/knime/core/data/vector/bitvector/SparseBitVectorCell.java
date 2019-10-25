@@ -59,6 +59,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 
 /**
  * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
@@ -247,6 +248,29 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
         public DataCell createCell(final String input) {
             BigInteger big = new BigInteger(input, 2);
             return new SparseBitVectorCell(new SparseBitVector(big.toString(16)));
+        }
+
+
+        /**
+         * Creates a new SparseBitVectorCell from the hex representation in the
+         * passed string. Only characters <code>'0' - '9'</code>,
+         * <code>'A' - 'F'</code>and <code>'a' - 'f'</code> are allowed. The
+         * character at string position <code>(length - 1)</code> represents the
+         * bits with index 0 to 3 in the vector. The character at position 0
+         * represents the bits with the highest indices. The length of the vector
+         * created is the length of the string times 4 (as each character represents
+         * four bits).
+         *
+         * @param hexString containing the hex value to initialize the vector with
+         * @return the {@link SparseBitVectorCell}
+         * @throws IllegalArgumentException if <code>hexString</code> contains
+         *             characters other then the hex characters (i.e.
+         *             <code>0 - 9, A - F, and 'a' - 'f'</code>)
+         * @since 4.1
+         */
+        @DataCellFactoryMethod(name = "String (Hex\u2192Sparse)")
+        public static DataCell createCellFromHexString(final String hexString) {
+            return new SparseBitVectorCell(new SparseBitVector(hexString));
         }
 
         /**

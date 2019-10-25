@@ -128,7 +128,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @throws XMLStreamException
      * @throws NullPointerException if argument is null
      */
-    @DataCellFactoryMethod(name = "String (XML)")
+    @DataCellFactoryMethod(name = "String")
     public static DataCell create(final String xml) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
         if (xml == null) {
@@ -249,6 +249,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * {@inheritDoc}
      * @since 3.0
      */
+    @DataCellFactoryMethod(name = "InputStream")
     @Override
     public DataCell createCell(final InputStream input) throws IOException {
         try {

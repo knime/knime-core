@@ -376,7 +376,8 @@
       </DataType>
      
       <DataType
-            cellClass="org.knime.core.data.vector.bitvector.SparseBitVectorCell">
+            cellClass="org.knime.core.data.vector.bitvector.SparseBitVectorCell"
+            factoryClass="org.knime.core.data.vector.bitvector.SparseBitVectorCell$Factory">
          <serializer
                cellClass="org.knime.core.data.vector.bitvector.SparseBitVectorCell"
                serializerClass="org.knime.core.data.vector.bitvector.SparseBitVectorCell$SparseBitVectorSerializer">

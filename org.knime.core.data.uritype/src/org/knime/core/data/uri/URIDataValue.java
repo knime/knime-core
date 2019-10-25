@@ -51,6 +51,7 @@ import javax.swing.Icon;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.data.convert.DataValueAccessMethod;
 
 /**
  *
@@ -69,6 +70,13 @@ public interface URIDataValue extends DataValue {
      * @return A String value.
      */
     URIContent getURIContent();
+
+    /**
+     * @return A String value.
+     * @since 4.1
+     */
+    @DataValueAccessMethod(name = "String")
+    String getStringValue();
 
     /**
      * Implementations of the meta information of this value class.

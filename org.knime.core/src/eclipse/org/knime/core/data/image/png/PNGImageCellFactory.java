@@ -56,6 +56,7 @@ import javax.imageio.ImageIO;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellFactory.FromInputStream;
 import org.knime.core.data.DataType;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 
 /**
  * Factory for {@link PNGImageCell}s.
@@ -80,6 +81,7 @@ public class PNGImageCellFactory implements FromInputStream {
     /**
      * {@inheritDoc}
      */
+    @DataCellFactoryMethod(name = "InputStream")
     @Override
     public DataCell createCell(final InputStream input) throws IOException {
         return create(input);

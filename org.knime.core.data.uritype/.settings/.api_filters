@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.core.data.uritype" version="2">
+    <resource path="src/org/knime/core/data/uri/URIDataValue.java" type="org.knime.core.data.uri.URIDataValue">
+        <filter comment="Add getStringValue() method for type mapping" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.uri.URIDataValue"/>
+                <message_argument value="getStringValue()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

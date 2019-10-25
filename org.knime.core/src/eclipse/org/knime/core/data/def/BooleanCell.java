@@ -272,6 +272,7 @@ public final class BooleanCell extends DataCell implements BooleanValue,
          *
          * Uses {@link Boolean#parseBoolean(String)} to convert the string into a boolean.
          */
+        @DataCellFactoryMethod(name = "String")
         @Override
         public DataCell createCell(final String s) {
             return create(s);
