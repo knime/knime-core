@@ -111,6 +111,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="Node(NodeFactory&lt;NodeModel&gt;, NodeCreationContext)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/util/AbstractJFileChooserBrowser.java" type="org.knime.core.node.util.AbstractJFileChooserBrowser">
         <filter id="576725006">
             <message_arguments>
@@ -171,6 +179,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.util.GUIDeadlockDetector"/>
                 <message_argument value="createStacktrace()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="addNodeAndApplyContext(NodeFactory&lt;?&gt;, NodeCreationContext)"/>
             </message_arguments>
         </filter>
     </resource>

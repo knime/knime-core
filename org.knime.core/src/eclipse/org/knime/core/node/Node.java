@@ -61,6 +61,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -79,6 +80,7 @@ import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.dialog.ValueControlledDialogPane;
 import org.knime.core.node.dialog.ValueControlledNode;
 import org.knime.core.node.interactive.InteractiveNode;
@@ -245,6 +247,8 @@ public final class Node implements NodeModelWarningListener {
     // cases then
     private final Object m_configureLock = new Object();
 
+    private final ModifiableNodeCreationConfiguration m_creationConfig;
+
     /**
      * Creates a new node by retrieving the model, dialog, and views, from the
      * specified <code>NodeFactory</code>. Also initializes the input and output
@@ -260,22 +264,32 @@ public final class Node implements NodeModelWarningListener {
         this(nodeFactory, null);
     }
 
-    public Node(final NodeFactory<NodeModel> nodeFactory,
-            final NodeCreationContext context) {
+    /**
+     * Constructor.
+     *
+     * @param nodeFactory the node factory
+     * @param creationConfig the node creation configuration
+     * @noreference This constructor is not intended to be referenced by clients.
+     */
+    public Node(final NodeFactory<NodeModel> nodeFactory, final ModifiableNodeCreationConfiguration creationConfig) {
         if (nodeFactory == null) {
             throw new IllegalArgumentException("NodeFactory must not be null.");
         }
         m_factory = nodeFactory;
+        if (creationConfig == null && m_factory instanceof ConfigurableNodeFactory) {
+            m_creationConfig = ((ConfigurableNodeFactory<NodeModel>)m_factory).createNodeCreationConfig();
+        } else {
+            m_creationConfig = creationConfig;
+        }
         m_name = m_factory.getNodeName().intern();
-        m_model = m_factory.callCreateNodeModel(context);
+        m_model = m_factory.callCreateNodeModel(m_creationConfig);
         m_model.addWarningListener(this);
         m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();
         // create an extra input port (index: 0) for the optional variables.
         m_inputs = new Input[m_model.getNrInPorts() + 1];
         m_inputs[0] = new Input("Variable Inport", FlowVariablePortObject.TYPE_OPTIONAL);
         for (int i = 1; i < m_inputs.length; i++) {
-            m_inputs[i] = new Input(m_factory.getInportName(i - 1),
-                    m_model.getInPortType(i - 1));
+            m_inputs[i] = new Input(m_factory.getInportName(i - 1), m_model.getInPortType(i - 1));
         }
 
         // create an extra output port (index: 0) for the variables.
@@ -687,6 +701,16 @@ public final class Node implements NodeModelWarningListener {
      */
     public void setName(final String nodeName) {
         m_name = nodeName.intern();
+    }
+
+    /**
+     * Returns a deep copy of the creation configuration of this node.
+     *
+     * @return deep copy of the node creation configuration
+     * @since 4.1
+     */
+    public Optional<ModifiableNodeCreationConfiguration> getCopyOfCreationConfig() {
+        return Optional.ofNullable(m_creationConfig).map(ModifiableNodeCreationConfiguration::copy);
     }
 
     /**

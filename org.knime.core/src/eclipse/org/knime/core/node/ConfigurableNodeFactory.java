@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,51 +44,58 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   06.06.2011 (meinl): created
+ *   Oct 10, 2019 (Mark Ortmann, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.core.node;
 
 import java.util.Optional;
 
+import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.context.ports.impl.PortsConfigurationBuilder;
 
 /**
- * This extension of {@link NodeFactory} is used in order to create a new node in a certain context. Implementors who
- * wish that their nodes can be used in a context (e.g. when a file is dropped onto the workflow editor) should extend
- * this class instead of {@link NodeFactory} and register the factory in the plugin.xml (in addition to the normal
- * registration).
+ * A node factory that supports the creation of nodes that support, e.g., configurable ports or file drag and drop.
  *
- * @param <T> any subclass of {@link NodeModel}
- * @author Thorsten Meinl, University of Konstanz
- * @deprecated implement {@link ConfigurableNodeFactory} instead
+ * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @param <T> the concrete type of the {@link NodeModel}
+ * @since 4.1
  */
-@Deprecated
-public abstract class ContextAwareNodeFactory<T extends NodeModel> extends ConfigurableNodeFactory<T> {
-
-    @Override
-    public Optional<PortsConfigurationBuilder> createPortsConfigBuilder() {
-        return Optional.empty();
-    }
-
-    @Override
-    protected T createNodeModel(final NodeCreationConfiguration creationConfig) {
-        // if the url config is set it cannot be null - framework takes care
-        if (creationConfig.getURLConfig().isPresent()) {
-            createNodeModel(new NodeCreationContext(creationConfig.getURLConfig().get().getUrl()));
-        }
-        return createNodeModel();
-    }
-
-    @Override
-    abstract public T createNodeModel();
+public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeFactory<T> {
 
     /**
-     * Creates a new node model.
      *
-     * @param context the context in which the node should be created
-     * @return a node model
+     * {@inheritDoc}
+     *
+     * @deprecated framework doesn't invoke this method for classes extending {@code ConfigurableNodeFactory}.
      */
     @Override
-    public abstract T createNodeModel(final NodeCreationContext context);
+    @Deprecated
+    public T createNodeModel() {
+        // We cannot make this method final as it otherwise would break backwards compatibility w.r.t.
+        // ContextAwareNodeFactory. Anyways, never invoked expect this method is explicitly called.
+        throw new UnsupportedOperationException("Method invocation not supported by ConfigurableNodeFactory");
+    }
+
+    /**
+     * Creates the node creation configuration.
+     *
+     * @return the node creation configuration
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public final ModifiableNodeCreationConfiguration createNodeCreationConfig() {
+        return new ModifiableNodeCreationConfiguration(
+            createPortsConfigBuilder().map(PortsConfigurationBuilder::build).orElse(null));
+    }
+
+    /**
+     * Returns an instance of {@code PortConfigurationBuilder} if the node supports configurable input, output or input
+     * and output ports.
+     *
+     * @return an optional instance of {@link PortsConfigurationBuilder}
+     */
+    public abstract Optional<PortsConfigurationBuilder> createPortsConfigBuilder();
+
+    @Override
+    protected abstract T createNodeModel(final NodeCreationConfiguration creationConfig);
 }

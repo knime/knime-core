@@ -123,7 +123,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactory.NodeType;
@@ -134,6 +133,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.ExternalNodeData;
@@ -751,25 +751,30 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * @param factory ...
-     * @param context the context provided by the framework (e.g. the URL of the file that was dragged on the canvas)
+     * @param creationConfig the creation configuration provided by the framework (e.g. the URL of the file that was
+     *            dragged on the canvas)
      * @return the node id of the created node.
+     * @since 4.1
      */
-    public NodeID addNodeAndApplyContext(final NodeFactory<?> factory, final NodeCreationContext context) {
-        return internalAddNewNode(factory, context);
+    public NodeID addNodeAndApplyContext(final NodeFactory<?> factory,
+        final ModifiableNodeCreationConfiguration creationConfig) {
+        return internalAddNewNode(factory, creationConfig);
     }
 
     @SuppressWarnings("unchecked")
-    private NodeID internalAddNewNode(final NodeFactory<?> factory, final NodeCreationContext context) {
+    private NodeID internalAddNewNode(final NodeFactory<?> factory,
+        final ModifiableNodeCreationConfiguration creationConfig) {
         try (WorkflowLock lock = lock()) {
             // TODO synchronize to avoid messing with running workflows!
             assert factory != null;
             // insert node
             NodeID newID = m_workflow.createUniqueID();
             NativeNodeContainer container =
-                new NativeNodeContainer(this, new Node((NodeFactory<NodeModel>)factory, context), newID);
+                new NativeNodeContainer(this, new Node((NodeFactory<NodeModel>)factory, creationConfig), newID);
             addNodeContainer(container, true);
             configureNodeAndSuccessors(newID, true);
-            if (context != null) { // save node settings if source URL/context was provided (bug 5772)
+            // save node settings if source URL/context was provided (bug 5772)
+            if (creationConfig.getURLConfig().isPresent()) {
                 container.saveNodeSettingsToDefault();
             }
             LOGGER.debug("Added new node " + newID);
