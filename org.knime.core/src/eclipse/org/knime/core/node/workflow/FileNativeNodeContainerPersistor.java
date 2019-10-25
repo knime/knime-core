@@ -57,11 +57,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.InvalidSettingsException;
@@ -75,6 +77,7 @@ import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
@@ -205,7 +208,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             throw new NodeFactoryUnknownException(error, nodeInfo, additionalFactorySettings, e);
         }
         m_nodeAndBundleInformation = nodeInfo;
-        m_node = new Node(nodeFactory);
+        m_node = new Node(nodeFactory, loadCreationConfig(settings, nodeFactory).orElse(null));
     }
 
     /** {@inheritDoc} */
@@ -352,6 +355,21 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             }
             throw ex;
         }
+    }
+
+    private static Optional<ModifiableNodeCreationConfiguration> loadCreationConfig(final NodeSettingsRO settings,
+        final NodeFactory<NodeModel> factory) throws InvalidSettingsException {
+        if (factory instanceof ConfigurableNodeFactory) {
+            final ModifiableNodeCreationConfiguration creationConfig =
+                (((ConfigurableNodeFactory<NodeModel>)factory).createNodeCreationConfig());
+            try {
+                creationConfig.loadSettingsFrom(settings);
+            } catch (final InvalidSettingsException e) {
+                throw new InvalidSettingsException("Unable to load creation context", e.getCause());
+            }
+            return Optional.of(creationConfig);
+        }
+        return Optional.empty();
     }
 
     /** {@inheritDoc} */
@@ -512,6 +530,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         final ExecutionMonitor execMon, final ReferencedFile nodeDirRef,
         final boolean isSaveData) throws IOException, CanceledExecutionException {
         saveNodeFactory(settings, nnc);
+        saveCreationConfig(settings, nnc.getNode());
         FileNodePersistor.save(nnc, settings, execMon, nodeDirRef,
             isSaveData && nnc.getInternalState().equals(InternalNodeContainerState.EXECUTED));
     }
@@ -524,6 +543,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
         NodeSettingsWO subSets = settings.addNodeSettings("factory_settings");
         node.getFactory().saveAdditionalFactorySettings(subSets);
+    }
+
+    private static void saveCreationConfig(final NodeSettingsWO settings, final Node node) {
+        node.getCopyOfCreationConfig().ifPresent(config -> config.saveSettingsTo(settings));
     }
 
 }

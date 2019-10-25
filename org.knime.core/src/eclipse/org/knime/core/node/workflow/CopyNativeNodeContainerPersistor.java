@@ -58,6 +58,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
@@ -89,6 +90,8 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
      */
     private Node m_lastCreatedNode;
 
+    private final ModifiableNodeCreationConfiguration m_creationConfig;
+
     /**
      * @param original
      * @param preserveDeletableFlag
@@ -99,13 +102,14 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
         super(original, preserveDeletableFlag, isUndoableDeleteCommand);
         Node originalNode = original.getNode();
         m_nodeFactory = originalNode.getFactory();
+        m_creationConfig = originalNode.getCopyOfCreationConfig().orElse(null);
         m_nodePersistor = originalNode.createCopyPersistor();
     }
 
     /** {@inheritDoc} */
     @Override
     public Node getNode() {
-        Node node = new Node(m_nodeFactory);
+        Node node = new Node(m_nodeFactory, m_creationConfig);
         // we don't load any settings into the node instance here as this method is called
         // from the constructor of SingleNodeContainer - it doesn't have a context set and therefore
         // cannot resolve URLs etc (knime://knime.workflow/some-path)
