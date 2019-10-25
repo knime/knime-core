@@ -774,7 +774,7 @@ public final class WorkflowManager extends NodeContainer
             addNodeContainer(container, true);
             configureNodeAndSuccessors(newID, true);
             // save node settings if source URL/context was provided (bug 5772)
-            if (creationConfig.getURLConfig().isPresent()) {
+            if (creationConfig != null && creationConfig.getURLConfig().isPresent()) {
                 container.saveNodeSettingsToDefault();
             }
             LOGGER.debug("Added new node " + newID);
