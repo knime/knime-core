@@ -57,6 +57,7 @@ import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -118,7 +119,13 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
 
     @Override
     public NodeID createAndAddNode(final NodeFactory<?> factory, final NodeUIInformation uiInfo) {
-        NodeID nodeID = unwrap().createAndAddNode(factory);
+        return createAndAddNode(factory, uiInfo, null);
+    }
+
+    @Override
+    public NodeID createAndAddNode(final NodeFactory<?> factory, final NodeUIInformation uiInfo,
+        final ModifiableNodeCreationConfiguration creationConfig) {
+        NodeID nodeID = unwrap().addNodeAndApplyContext(factory, creationConfig);
         unwrap().getNodeContainer(nodeID).setUIInformation(uiInfo);
         return nodeID;
     }

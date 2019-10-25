@@ -58,6 +58,7 @@ import java.util.concurrent.TimeUnit;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.interactive.InteractiveNode;
@@ -162,6 +163,18 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      * @return newly created (unique) NodeID
      */
     NodeID createAndAddNode(NodeFactory<?> factory, NodeUIInformation uiInfo);
+
+    /**
+     * Uses given factory to create a new node w.r.t. the creation configuration and then adds it to the workflow
+     * manager. We will automatically find the next available free index for the new node within the given prefix.
+     *
+     * @param factory the factory representing the new node
+     * @param uiInfo essentially the position of the new node
+     * @param creationConfig the node creation configuration
+     * @return newly created (unique) NodeID
+     */
+    NodeID createAndAddNode(NodeFactory<?> factory, NodeUIInformation uiInfo,
+        final ModifiableNodeCreationConfiguration creationConfig);
 
 //    /** Create new Node based on given factory uid and add to workflow.
 //     *
