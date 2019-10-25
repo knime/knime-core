@@ -94,7 +94,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
      *
      * @return an optional instance of {@link PortsConfigurationBuilder}
      */
-    public abstract Optional<PortsConfigurationBuilder> createPortsConfigBuilder();
+    protected abstract Optional<PortsConfigurationBuilder> createPortsConfigBuilder();
 
     @Override
     protected abstract T createNodeModel(final NodeCreationConfiguration creationConfig);
