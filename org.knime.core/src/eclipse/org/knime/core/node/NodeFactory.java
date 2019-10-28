@@ -583,6 +583,20 @@ public abstract class NodeFactory<T extends NodeModel> {
 
 
     /**
+     * Creates and returns a new node dialog pane, if {@link #hasDialog()} returns <code>true</code>.
+     *
+     * @param creationConfig the node creation configuration
+     * @return a new {@link NodeModel}
+     * @since 4.1
+     */
+    protected NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig) {
+        // normally correct implementations overwrite this
+        m_logger.coding("If you register a node to be created in a certain"
+            + " context, you should extend ConfigurableNodeFactory");
+        return createNodeDialogPane();
+    }
+
+    /**
      * Returns the icon for the node.
      *
      * @return the node's icon

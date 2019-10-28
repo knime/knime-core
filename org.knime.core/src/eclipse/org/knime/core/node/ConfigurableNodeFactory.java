@@ -77,6 +77,14 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         throw new UnsupportedOperationException("Method invocation not supported by ConfigurableNodeFactory");
     }
 
+    @Override
+    @Deprecated
+    protected NodeDialogPane createNodeDialogPane(){
+        // We cannot make this method final as it otherwise would break backwards compatibility w.r.t.
+        // ContextAwareNodeFactory. Anyways, never invoked expect this method is explicitly called.
+        throw new UnsupportedOperationException("Method invocation not supported by ConfigurableNodeFactory");
+    }
+
     /**
      * Creates the node creation configuration.
      *
@@ -98,4 +106,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
 
     @Override
     protected abstract T createNodeModel(final NodeCreationConfiguration creationConfig);
+
+    @Override
+    protected abstract NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig);
 }

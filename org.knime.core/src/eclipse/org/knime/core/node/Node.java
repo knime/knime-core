@@ -81,6 +81,7 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
+import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.dialog.ValueControlledDialogPane;
 import org.knime.core.node.dialog.ValueControlledNode;
 import org.knime.core.node.interactive.InteractiveNode;
@@ -2142,7 +2143,7 @@ public final class Node implements NodeModelWarningListener {
     public NodeDialogPane getDialogPane() {
         if (m_dialogPane == null) {
             if (hasDialog()) {
-                m_dialogPane = createDialogPane(getFactory(), getNrOutPorts(), true);
+                m_dialogPane = createDialogPane(getFactory(), getNrOutPorts(), true, m_creationConfig);
             } else {
                 throw new IllegalStateException("Can't return dialog pane, node has no dialog!");
             }
@@ -2163,14 +2164,37 @@ public final class Node implements NodeModelWarningListener {
      */
     public static NodeDialogPane createDialogPane(final NodeFactory<NodeModel> factory, final int nrOutPorts,
         final boolean addJobMgrTab) {
-        AtomicReference<NodeDialogPane> dialogPane = new AtomicReference<>();
+        return createDialogPane(factory, nrOutPorts, addJobMgrTab, null);
+    }
+
+    /**
+     * Helper method to create a node dialog pane from a {@link NodeFactory} instance.
+     *
+     * @param factory the factory instance to create the node dialog pane from
+     * @param nrOutPorts the number of output ports (mainly used to determine whether to add a misc tab)
+     * @param addJobMgrTab whether the job manager tab should be added
+     * @param creationConfig the node creation configuration
+     *
+     * @return Reference to dialog pane.
+     * @throws IllegalStateException If node has no dialog.
+     * @since 4.1
+     */
+    public static NodeDialogPane createDialogPane(final NodeFactory<NodeModel> factory, final int nrOutPorts,
+        final boolean addJobMgrTab, final NodeCreationConfiguration creationConfig) {
+        AtomicReference<NodeDialogPane> dialogPaneRef = new AtomicReference<>();
         if (factory.hasDialog()) {
             final AtomicReference<Throwable> exRef = new AtomicReference<Throwable>();
             Runnable r = new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        dialogPane.set(factory.createNodeDialogPane());
+                        final NodeDialogPane dialogPane;
+                        if (creationConfig != null) {
+                            dialogPane = factory.createNodeDialogPane(creationConfig);
+                        } else {
+                            dialogPane = factory.createNodeDialogPane();
+                        }
+                        dialogPaneRef.set(dialogPane);
                     } catch (Throwable ex) {
                         exRef.set(ex);
                     }
@@ -2189,17 +2213,17 @@ public final class Node implements NodeModelWarningListener {
                 // not possible since createNodeDialogPane does not throw Exceptions
             }
         } else {
-            dialogPane.set(new EmptyNodeDialogPane());
+            dialogPaneRef.set(new EmptyNodeDialogPane());
         }
         if (nrOutPorts > 0) {
-            dialogPane.get().addMiscTab();
+            dialogPaneRef.get().addMiscTab();
         }
         if (addJobMgrTab && NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
             // TODO: set the splittype depending on the nodemodel
             SplitType splitType = SplitType.USER;
-            dialogPane.get().addJobMgrTab(splitType);
+            dialogPaneRef.get().addJobMgrTab(splitType);
         }
-        return dialogPane.get();
+        return dialogPaneRef.get();
     }
 
     /**

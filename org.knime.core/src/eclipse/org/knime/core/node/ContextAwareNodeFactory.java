@@ -66,7 +66,7 @@ import org.knime.core.node.context.ports.impl.PortsConfigurationBuilder;
 public abstract class ContextAwareNodeFactory<T extends NodeModel> extends ConfigurableNodeFactory<T> {
 
     @Override
-    public Optional<PortsConfigurationBuilder> createPortsConfigBuilder() {
+    protected Optional<PortsConfigurationBuilder> createPortsConfigBuilder() {
         return Optional.empty();
     }
 
@@ -82,6 +82,9 @@ public abstract class ContextAwareNodeFactory<T extends NodeModel> extends Confi
     @Override
     abstract public T createNodeModel();
 
+    @Override
+    abstract protected NodeDialogPane createNodeDialogPane();
+
     /**
      * Creates a new node model.
      *
@@ -90,4 +93,9 @@ public abstract class ContextAwareNodeFactory<T extends NodeModel> extends Confi
      */
     @Override
     public abstract T createNodeModel(final NodeCreationContext context);
+
+    @Override
+    protected NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig) {
+        return createNodeDialogPane();
+    }
 }
