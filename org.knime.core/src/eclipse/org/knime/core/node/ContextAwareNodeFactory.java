@@ -74,7 +74,7 @@ public abstract class ContextAwareNodeFactory<T extends NodeModel> extends Confi
     protected T createNodeModel(final NodeCreationConfiguration creationConfig) {
         // if the url config is set it cannot be null - framework takes care
         if (creationConfig.getURLConfig().isPresent()) {
-            createNodeModel(new NodeCreationContext(creationConfig.getURLConfig().get().getUrl()));
+            return createNodeModel(new NodeCreationContext(creationConfig.getURLConfig().get().getUrl()));
         }
         return createNodeModel();
     }
