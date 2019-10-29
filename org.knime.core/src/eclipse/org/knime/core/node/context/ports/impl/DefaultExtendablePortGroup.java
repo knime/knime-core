@@ -64,7 +64,7 @@ import org.knime.core.node.port.PortType;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-final class DefaultExtendablePortGroup implements ExtendablePortGroup {
+public final class DefaultExtendablePortGroup implements ExtendablePortGroup {
 
     private final PortType[] m_fixedTypes;
 
@@ -78,14 +78,31 @@ final class DefaultExtendablePortGroup implements ExtendablePortGroup {
 
     private final int m_maxAdditionalPorts;
 
-    DefaultExtendablePortGroup(final PortType[] fixedPorts, final PortType[] supportedTypes,
+    /**
+     * Constructor.
+     *
+     * @param fixedPortTypes the fixed port types
+     * @param supportedTypes the supported port types
+     * @param definesInputPorts flag indicating whether this port group defines input ports
+     * @param definesOutputPorts flag indicating whether this port group defines output ports
+     */
+    public DefaultExtendablePortGroup(final PortType[] fixedPortTypes, final PortType[] supportedTypes,
         final boolean definesInputPorts, final boolean definesOutputPorts) {
-        this(fixedPorts, supportedTypes, definesInputPorts, definesOutputPorts, Integer.MAX_VALUE);
+        this(fixedPortTypes, supportedTypes, definesInputPorts, definesOutputPorts, Integer.MAX_VALUE);
     }
 
-    DefaultExtendablePortGroup(final PortType[] fixedPorts, final PortType[] supportedTypes,
+    /**
+     * Constructor.
+     *
+     * @param fixedPortTypes the fixed port types
+     * @param supportedTypes the supported port types
+     * @param definesInputPorts flag indicating whether this port group defines input ports
+     * @param definesOutputPorts flag indicating whether this port group defines output ports
+     * @param maxAdditionalPorts the maximum number of additional ports
+     */
+    public DefaultExtendablePortGroup(final PortType[] fixedPortTypes, final PortType[] supportedTypes,
         final boolean definesInputPorts, final boolean definesOutputPorts, final int maxAdditionalPorts) {
-        m_fixedTypes = fixedPorts;
+        m_fixedTypes = fixedPortTypes;
         m_supportedTypes = supportedTypes;
         m_configuredTypes = new ArrayList<>();
         m_definesInputPorts = definesInputPorts;
@@ -93,10 +110,10 @@ final class DefaultExtendablePortGroup implements ExtendablePortGroup {
         m_maxAdditionalPorts = maxAdditionalPorts;
     }
 
-    private DefaultExtendablePortGroup(final PortType[] fixedPorts, final PortType[] supportedTypes,
+    private DefaultExtendablePortGroup(final PortType[] fixedPortTypes, final PortType[] supportedTypes,
         final List<PortType> configuredPorts, final boolean definesInputPorts, final boolean definesOutputPorts,
         final int maxAdditionalPorts) {
-        m_fixedTypes = fixedPorts;
+        m_fixedTypes = fixedPortTypes;
         m_supportedTypes = supportedTypes;
         m_configuredTypes = configuredPorts;
         m_definesInputPorts = definesInputPorts;
@@ -167,9 +184,6 @@ final class DefaultExtendablePortGroup implements ExtendablePortGroup {
         return m_configuredTypes.remove(m_configuredTypes.size() - 1);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public PortType[] getSupportedPortTypes() {
         return m_supportedTypes;

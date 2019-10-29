@@ -50,7 +50,6 @@ package org.knime.core.node;
 import java.util.Optional;
 
 import org.knime.core.node.context.NodeCreationConfiguration;
-import org.knime.core.node.context.ports.impl.PortsConfigurationBuilder;
 
 /**
  * This extension of {@link NodeFactory} is used in order to create a new node in a certain context. Implementors who

@@ -63,6 +63,7 @@ import org.knime.core.node.context.ports.PortsConfiguration;
 import org.knime.core.node.port.PortType;
 
 /**
+ * Class allowing to access the user defined node ports.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */

@@ -48,11 +48,18 @@
  */
 package org.knime.core.node;
 
+import java.util.LinkedHashMap;
 import java.util.Optional;
 
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
-import org.knime.core.node.context.ports.impl.PortsConfigurationBuilder;
+import org.knime.core.node.context.ports.ModifiablePortsConfiguration;
+import org.knime.core.node.context.ports.PortGroupConfiguration;
+import org.knime.core.node.context.ports.impl.DefaultExtendablePortGroup;
+import org.knime.core.node.context.ports.impl.DefaultFixedPortGroup;
+import org.knime.core.node.context.ports.impl.DefaultModifiablePortsConfiguration;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * A node factory that supports the creation of nodes that support, e.g., configurable ports or file drag and drop.
@@ -79,7 +86,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
 
     @Override
     @Deprecated
-    protected NodeDialogPane createNodeDialogPane(){
+    protected NodeDialogPane createNodeDialogPane() {
         // We cannot make this method final as it otherwise would break backwards compatibility w.r.t.
         // ContextAwareNodeFactory. Anyways, never invoked expect this method is explicitly called.
         throw new UnsupportedOperationException("Method invocation not supported by ConfigurableNodeFactory");
@@ -109,4 +116,306 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
 
     @Override
     protected abstract NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig);
+
+    /**
+     * Builder to create an instance of {@linkplain PortGroupConfiguration a port group configurations}. The order in
+     * which the port groups are added defines the node's port order.
+     *
+     * <p>
+     * Three different port group types are available.
+     * <ol>
+     * <li>Fixed port group, i.e., port groups that cannot be modified by the user
+     * <li>Optional port group, i.e., a port group with [0,1] ports. Initially the optional port is not set
+     * <li>Extendable port group, i.e., a port group with [0,n] fixed ports and [0,n] additional ports
+     * <li>Exchangebale port group, i.e., a port group with exactly one port whose port type can be exchanged
+     * </ol>
+     * Note that for all but the fixed port group a set of different ports can be defined from which the user can
+     * choose.
+     * </p>
+     *
+     * <p>
+     * Every port group, independent of its type, can either specify input, output ports, or both. If an extendable port
+     * group defines input as well as output ports adding a new port will create a new input port as well as output port
+     * of the very same type.
+     * <p>
+     *
+     * <p>
+     * Example: The following code will create a node where
+     * <ul>
+     * <li>the first set of input ports is optional and can either be a BufferedDataTable or PMMLPort
+     * <li>the second set of input ports is extendable, but has at least one port, and only BufferedDataTables can be
+     * added
+     * <li>the third set of input/output ports is fixed with one input-output port of type PMML (fist port within this
+     * group) and one of type BufferedDataTable (second port within this group)
+     * </ul>
+     *
+     * <pre>
+     * <code>
+     *     final PortsConfigurationBuilder builder = new PortsConfigurationBuilder();
+     *     builder.addOptionalInputPortGroup("Optional input port example", BufferedDataTable.TYPE,
+     *         PMMLPortObject.TYPE);
+     *     builder.addExtendableInputPortGroup("Extendable input port example", new PortType[]{BufferedDataTable.TYPE},
+     *         BufferedDataTable.TYPE);
+     *     builder.addFixedInputPortGroup("Fixed input and output port example", PMMLPortObject.TYPE,
+     *         BufferedDataTable.TYPE);
+     * </code>
+     * </pre>
+     * </p>
+     *
+     * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+     */
+    protected static final class PortsConfigurationBuilder {
+
+        private final LinkedHashMap<String, PortGroupConfiguration> m_portConfigs;
+
+        /**
+         * Constructor.
+         */
+        public PortsConfigurationBuilder() {
+            m_portConfigs = new LinkedHashMap<>();
+        }
+
+        /**
+         * Creates the {@code ModifiablePortsConfiguration}.
+         *
+         * @return an instance of {@code ModifiablePortsConfiguration}
+         * @noreference This method is not intended to be referenced by clients.
+         */
+        private ModifiablePortsConfiguration build() {
+            return new DefaultModifiablePortsConfiguration(m_portConfigs);
+        }
+
+        /**
+         * Adds a static input port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param fixedPortTypes the fixed port types
+         */
+        public void addFixedInputPortGroup(final String pGrpIdentifier, final PortType... fixedPortTypes) {
+            addFixedPortGroup(pGrpIdentifier, fixedPortTypes, true, false);
+        }
+
+        /**
+         * Adds a static output port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param fixedPortTypes the fixed port types
+         */
+        public void addFixedOutputPortGroup(final String pGrpIdentifier, final PortType... fixedPortTypes) {
+            addFixedPortGroup(pGrpIdentifier, fixedPortTypes, false, true);
+        }
+
+        /**
+         * Adds a static port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param fixedPortTypes the fixed port types
+         */
+        public void addFixedPortGroup(final String pGrpIdentifier, final PortType... fixedPortTypes) {
+            addFixedPortGroup(pGrpIdentifier, fixedPortTypes, true, true);
+        }
+
+        private void addFixedPortGroup(final String pGrpIdentifier, final PortType[] fixedPortTypes,
+            final boolean definesInputPorts, final boolean definesOutputPorts) {
+            validateStaticPortGroupArguments(pGrpIdentifier, fixedPortTypes);
+            m_portConfigs.put(pGrpIdentifier,
+                new DefaultFixedPortGroup(fixedPortTypes, definesInputPorts, definesOutputPorts));
+        }
+
+        /**
+         * Adds an extendable input port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param supportedTypes the supported port types
+         */
+        public void addExtendableInputPortGroup(final String pGrpIdentifier, final PortType... supportedTypes) {
+            addExtendableInputPortGroup(pGrpIdentifier, new PortType[0], supportedTypes);
+        }
+
+        /**
+         * Adds an extendable input port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param fixedPortTypes the fixed port types
+         * @param supportedTypes the supported port types
+         */
+        public void addExtendableInputPortGroup(final String pGrpIdentifier, final PortType[] fixedPortTypes,
+            final PortType... supportedTypes) {
+            addExtendablePortGroup(pGrpIdentifier, fixedPortTypes, supportedTypes, true, false);
+        }
+
+        /**
+         * Adds an extendable output port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param supportedTypes the supported port types
+         */
+        public void addExtendableOutputPortGroup(final String pGrpIdentifier, final PortType... supportedTypes) {
+            addExtendableOutputPortGroup(pGrpIdentifier, new PortType[0], supportedTypes);
+        }
+
+        /**
+         * Adds an extendable output port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param fixedPortTypes the fixed port types
+         * @param supportedTypes the supported port types
+         */
+        public void addExtendableOutputPortGroup(final String pGrpIdentifier, final PortType[] fixedPortTypes,
+            final PortType... supportedTypes) {
+            addExtendablePortGroup(pGrpIdentifier, fixedPortTypes, supportedTypes, false, true);
+        }
+
+        /**
+         * Adds an extendable port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param supportedTypes the supported port types
+         */
+        public void addExtendablePortGroup(final String pGrpIdentifier, final PortType... supportedTypes) {
+            addExtendablePortGroup(pGrpIdentifier, new PortType[0], supportedTypes);
+        }
+
+        /**
+         * Adds an extendable port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param fixedPortTypes the fixed port types
+         * @param supportedTypes the supported port types
+         */
+        public void addExtendablePortGroup(final String pGrpIdentifier, final PortType[] fixedPortTypes,
+            final PortType... supportedTypes) {
+            addExtendablePortGroup(pGrpIdentifier, fixedPortTypes, supportedTypes, true, true);
+        }
+
+        private void addExtendablePortGroup(final String pGrpIdentifier, final PortType[] fixedPortTypes,
+            final PortType[] supportedTypes, final boolean definesInputPorts, final boolean definesOutputPorts) {
+            validateExtendablePortGroupArguments(pGrpIdentifier, fixedPortTypes, supportedTypes);
+            m_portConfigs.put(pGrpIdentifier,
+                new DefaultExtendablePortGroup(fixedPortTypes, supportedTypes, definesInputPorts, definesOutputPorts));
+        }
+
+        /**
+         * Adds an optional input port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param optionalPorts the optional port types
+         */
+        public void addOptionalInputPortGroup(final String pGrpIdentifier, final PortType... optionalPorts) {
+            addOptionalPortGroup(pGrpIdentifier, optionalPorts, true, false);
+        }
+
+        /**
+         * Adds an optional output port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param optionalPorts the optional port types
+         */
+        public void addOptionalOutputPortGroup(final String pGrpIdentifier, final PortType... optionalPorts) {
+            addOptionalPortGroup(pGrpIdentifier, optionalPorts, false, true);
+
+        }
+
+        /**
+         * Adds an optional port group configuration.
+         *
+         * @param pGrpIdentifier the port group identifier
+         * @param optionalPorts the optional port types
+         */
+        public void addOptionalPortGroup(final String pGrpIdentifier, final PortType... optionalPorts) {
+            addOptionalPortGroup(pGrpIdentifier, optionalPorts, true, true);
+        }
+
+        private void addOptionalPortGroup(final String pGrpIdentifier, final PortType[] optionalPorts,
+            final boolean definesInputPorts, final boolean definesOutputPorts) {
+            validateOptionalPortGroupArguments(pGrpIdentifier, optionalPorts);
+            m_portConfigs.put(pGrpIdentifier, new DefaultExtendablePortGroup(new PortType[]{}, optionalPorts,
+                definesInputPorts, definesOutputPorts, 1));
+        }
+
+        private void validatePortGrpIdentifier(final String pGrpIdentifier) {
+            CheckUtils.checkArgument(!m_portConfigs.containsKey(pGrpIdentifier),
+                "A port group with the given name already exists");
+            CheckUtils.checkArgument(pGrpIdentifier != null && !pGrpIdentifier.isEmpty(),
+                "The group identifier has to contain at least one character");
+        }
+
+        private void validateStaticPortGroupArguments(final String pGrpIdentifier, final PortType... staticPortTypes) {
+            validatePortGrpIdentifier(pGrpIdentifier);
+            CheckUtils.checkArgumentNotNull(staticPortTypes, "The static port types cannot be null");
+            CheckUtils.checkArgument(staticPortTypes != null && staticPortTypes.length > 0,
+                "At least one static port type has to be set");
+        }
+
+        private void validateExtendablePortGroupArguments(final String pGrpIdentifier, final PortType[] staticPorts,
+            final PortType[] supportedTypes) {
+            validatePortGrpIdentifier(pGrpIdentifier);
+            CheckUtils.checkArgumentNotNull(staticPorts, "The static ports cannot be null");
+            CheckUtils.checkArgumentNotNull(supportedTypes, "The supported port types cannot be null");
+            CheckUtils.checkArgument(supportedTypes != null && supportedTypes.length > 0,
+                "The supported port types have to contain at least element");
+        }
+
+        private void validateOptionalPortGroupArguments(final String pGrpIdentifier, final PortType... optionalPorts) {
+            validatePortGrpIdentifier(pGrpIdentifier);
+            CheckUtils.checkArgumentNotNull(optionalPorts, "The optional ports cannot be null");
+            CheckUtils.checkArgument(optionalPorts != null && optionalPorts.length > 0,
+                "The optional ports have to contain at least one element");
+        }
+
+        //    TODO: Uncomment to support exchangeable port groups
+        //    /**
+        //     * Adds an exchangeable input port group configuration.
+        //     *
+        //     * @param pGrpIdentifier the port group identifier
+        //     * @param defaultType the default port type
+        //     * @param supportedTypes the supported port types (has to include the default type itself)
+        //     */
+        //    public void addExchangeableInputPortGroup(final String pGrpIdentifier, final PortType defaultType,
+        //        final PortType... supportedTypes) {
+        //        addExchangeablePortGroup(pGrpIdentifier, defaultType, supportedTypes, true, false);
+        //    }
+        //
+        //    /**
+        //     * Adds an exchangeable output port group configuration.
+        //     *
+        //     * @param pGrpIdentifier the port group identifier
+        //     * @param defaultType the default port type
+        //     * @param supportedTypes the supported port types (has to include the default type itself)
+        //     */
+        //    public void addExchangeableOutputPortGroup(final String pGrpIdentifier, final PortType defaultType,
+        //        final PortType... supportedTypes) {
+        //        addExchangeablePortGroup(pGrpIdentifier, defaultType, supportedTypes, false, true);
+        //    }
+        //
+        //    /**
+        //     * Adds an exchangeable port group configuration.
+        //     *
+        //     * @param pGrpIdentifier the port group identifier
+        //     * @param defaultType the default port type
+        //     * @param supportedTypes the supported port types (has to include the default type itself)
+        //     */
+        //    public void addExchangeablePortGroup(final String pGrpIdentifier, final PortType defaultType,
+        //        final PortType... supportedTypes) {
+        //        addExchangeablePortGroup(pGrpIdentifier, defaultType, supportedTypes, true, true);
+        //    }
+        //
+        //    private void addExchangeablePortGroup(final String pGrpIdentifier, final PortType defaultType,
+        //        final PortType[] supportedTypes, final boolean definesInputPort, final boolean definesOutputPort) {
+        //        validateExchangeablePortGroupArguments(pGrpIdentifier, defaultType, supportedTypes);
+        //        m_portConfigs.put(pGrpIdentifier,
+        //            new ExchangeablePortGroup(defaultType, supportedTypes, definesInputPort, definesOutputPort));
+        //    }
+        //
+        //    private void validateExchangeablePortGroupArguments(final String pGrpIdentifier, final PortType defaultType,
+        //        final PortType... supportedTypes) {
+        //        validatePortGrpIdentifier(pGrpIdentifier);
+        //        CheckUtils.checkArgumentNotNull(defaultType, "The default port type cannot be null");
+        //        CheckUtils.checkArgumentNotNull(supportedTypes, "The supported port types cannot be null");
+        //        CheckUtils.checkArgument(supportedTypes != null && supportedTypes.length > 1,
+        //            "The supported types have to contain at least two elements");
+        //        CheckUtils.checkArgument(ArrayUtils.contains(supportedTypes, defaultType),
+        //            "The supported port types have to contain the default port type");
+        //    }
+    }
 }

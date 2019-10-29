@@ -95,10 +95,12 @@ public final class DefaultModifiableURLConfiguration extends DefaultURLConfigura
     }
 
     /**
-     * Creates and initializes an instance of {@code URLConfiguration} if the settings contain corresponding entries.
+     * Creates and initializes an instance of {@code DefaultModifiableURLConfiguration} if the settings contain
+     * corresponding entries.
      *
-     * @param settings the settings potentially holding the {@code URLConfiguration} settings
-     * @return an instance of {@code URLConfiguration} if the settings hold corresponding entries and null otherwise
+     * @param settings the settings potentially holding the {@code DefaultModifiableURLConfiguration} settings
+     * @return an instance of {@code DefaultModifiableURLConfiguration} if the settings hold corresponding entries and
+     *         null otherwise
      */
     public static Optional<DefaultModifiableURLConfiguration> loadFromSettings(final NodeSettingsRO settings) {
         // nothing to do here until we implement save and load

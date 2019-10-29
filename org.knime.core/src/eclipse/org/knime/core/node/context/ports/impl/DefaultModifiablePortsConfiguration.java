@@ -68,18 +68,19 @@ import org.knime.core.node.context.ports.PortsConfiguration;
 import org.knime.core.node.port.PortType;
 
 /**
+ * Class allowing to change input/output ports of a node.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-final class DefaultModifiablePortsConfiguration extends DefaultPortsConfiguration
+public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfiguration
     implements ModifiablePortsConfiguration {
 
     /**
      * Constructor.
      *
-     * @param portGroups
+     * @param portGroups the port groups
      */
-    DefaultModifiablePortsConfiguration(final Map<String, PortGroupConfiguration> portGroups) {
+    public DefaultModifiablePortsConfiguration(final Map<String, PortGroupConfiguration> portGroups) {
         super(portGroups);
     }
 

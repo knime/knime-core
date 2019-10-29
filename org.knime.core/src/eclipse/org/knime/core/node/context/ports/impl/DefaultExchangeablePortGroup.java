@@ -59,7 +59,7 @@ import org.knime.core.node.port.PortType;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-final class DefaultExchangeablePortGroup implements ExchangeablePortGroup {
+public final class DefaultExchangeablePortGroup implements ExchangeablePortGroup {
 
     private PortType m_curType;
 
@@ -69,7 +69,15 @@ final class DefaultExchangeablePortGroup implements ExchangeablePortGroup {
 
     private final boolean m_definesOutputPorts;
 
-    DefaultExchangeablePortGroup(final PortType defaultType, final PortType[] supportedTypes,
+    /**
+     * Constructor.
+     *
+     * @param defaultType the default port type
+     * @param supportedTypes the supported port types has to include the default type
+     * @param definesInputPorts flag indicating whether this port group defines input ports
+     * @param definesOutputPorts flag indicating whether this port group defines output ports
+     */
+    public DefaultExchangeablePortGroup(final PortType defaultType, final PortType[] supportedTypes,
         final boolean definesInputPorts, final boolean definesOutputPorts) {
         m_curType = defaultType;
         m_supportedTypes = supportedTypes;

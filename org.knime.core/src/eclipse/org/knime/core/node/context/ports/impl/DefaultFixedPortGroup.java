@@ -55,28 +55,35 @@ import org.knime.core.node.context.ports.PortGroupConfiguration;
 import org.knime.core.node.port.PortType;
 
 /**
- * A static port group, i.e., a port group whose ports cannot be changed.
+ * A fixed port group, i.e., a port group whose ports cannot be changed.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-final class DefaultStaticPortGroup implements PortGroupConfiguration {
+public final class DefaultFixedPortGroup implements PortGroupConfiguration {
 
-    private final PortType[] m_staticPortTypes;
+    private final PortType[] m_fixedPortTypes;
 
     private final boolean m_definesInputPorts;
 
     private final boolean m_definesOutputPorts;
 
-    DefaultStaticPortGroup(final PortType[] staticPortTypes, final boolean definesInputPorts,
+    /**
+     * Constructor.
+     *
+     * @param fixedPortTypes the fixed ports
+     * @param definesInputPorts flag indicating whether this port group defines input ports
+     * @param definesOutputPorts flag indicating whether this port group defines output ports
+     */
+    public DefaultFixedPortGroup(final PortType[] fixedPortTypes, final boolean definesInputPorts,
         final boolean definesOutputPorts) {
-        m_staticPortTypes = staticPortTypes;
+        m_fixedPortTypes = fixedPortTypes;
         m_definesInputPorts = definesInputPorts;
         m_definesOutputPorts = definesOutputPorts;
     }
 
     @Override
-    public DefaultStaticPortGroup copy() {
-        return new DefaultStaticPortGroup(m_staticPortTypes.clone(), m_definesInputPorts, m_definesOutputPorts);
+    public DefaultFixedPortGroup copy() {
+        return new DefaultFixedPortGroup(m_fixedPortTypes.clone(), m_definesInputPorts, m_definesOutputPorts);
     }
 
     @Override
@@ -102,7 +109,7 @@ final class DefaultStaticPortGroup implements PortGroupConfiguration {
     @Override
     public PortType[] getInputPorts() {
         if (definesInputPorts()) {
-            return m_staticPortTypes;
+            return m_fixedPortTypes;
         }
         throw UNSUPPORTED_INPUT_OPERATION;
     }
@@ -110,7 +117,7 @@ final class DefaultStaticPortGroup implements PortGroupConfiguration {
     @Override
     public PortType[] getOutputPorts() {
         if (definesOutputPorts()) {
-            return m_staticPortTypes;
+            return m_fixedPortTypes;
         }
         throw UNSUPPORTED_OUTPUT_OPERATION;
     }
