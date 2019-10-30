@@ -47,64 +47,43 @@
 package org.knime.core.node.util.filter.variable;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.FlowVariableListCellRenderer.FlowVariableCell;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.VariableType;
 
 /**
- * Class that filters FlowVariables based on the given set of FlowVariable.Types.
+ * Class that filters {@link FlowVariable FlowVariables} based on a given set of {@link VariableType VariableTypes}.
  *
- * @author Patrick Winter, KNIME AG, Zurich, Switzerland
- * @deprecated use {@link VariableTypeFilter} instead.
- * @since 2.9
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
+ * @since 4.1
  */
-@Deprecated
-public class FlowVariableTypeFilter extends InputFilter<FlowVariableCell> {
+public class VariableTypeFilter extends InputFilter<FlowVariableCell> {
 
-    private final FlowVariable.Type[] m_filterTypes;
+    private final Set<VariableType<?>> m_acceptedTypes;
 
     /**
-     * Creates a new FlowVariableTypeFilter.
+     * Creates a new VariableTypeFilter.
      *
-     * @param filterValueTypes The types that are accepted
+     * @param acceptedTypes the types that are accepted
+     * @since 4.1
      */
-    public FlowVariableTypeFilter(final FlowVariable.Type... filterValueTypes) {
-        if (filterValueTypes == null || filterValueTypes.length == 0) {
-            throw new NullPointerException("Types must not be null");
-        }
-        final List<FlowVariable.Type> list = Arrays.asList(filterValueTypes);
-        if (list.contains(null)) {
-            throw new NullPointerException("List of value types must not contain null elements.");
-        }
-        m_filterTypes = filterValueTypes;
+    public VariableTypeFilter(final VariableType<?>... acceptedTypes) {
+        CheckUtils.checkArgumentNotNull(acceptedTypes, "Accepted types must not be null.");
+        m_acceptedTypes = Arrays.stream(acceptedTypes).collect(Collectors.toSet());
     }
 
     /**
-     * @param flowVariableCell The cell containing the flow variable
+     * @param cell the cell containing the flow variable
      * @return true if the flow variable cell should be included, false otherwise
-     * @since 2.10
      */
     @Override
-    public final boolean include(final FlowVariableCell flowVariableCell) {
-        if (flowVariableCell.isValid()) {
-            return include(flowVariableCell.getFlowVariable());
-        }
-        return true;
-    }
-
-    /**
-     * @param flowVariable The flow variable to check
-     * @return true if the flow variable should be included, false otherwise
-     */
-    public final boolean include(final FlowVariable flowVariable) {
-        for (final FlowVariable.Type ty : m_filterTypes) {
-            if (flowVariable.getType() == ty) {
-                return true;
-            }
-        }
-        return false;
+    public final boolean include(final FlowVariableCell cell) {
+        return cell.isValid() ? m_acceptedTypes.contains(cell.getFlowVariable().getVariableType()) : true;
     }
 
 }
