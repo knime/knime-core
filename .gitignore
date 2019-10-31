@@ -4,4 +4,4 @@ target/
 */build/
 *.jar
 */.polyglot.build.properties 
-**/flattened-pom.xml
+**/.flattened-pom.xml
