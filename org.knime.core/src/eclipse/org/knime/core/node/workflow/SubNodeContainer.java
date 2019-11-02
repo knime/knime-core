@@ -680,6 +680,69 @@ public final class SubNodeContainer extends SingleNodeContainer
             getWorkflowManager().saveNodeSettingsToDefault(getVirtualOutNodeID());
         }
     }
+
+    /**
+     * @return a DOM which describes only the port connections.
+     */
+    public Element getXMLDescriptionForPorts() {
+        final VirtualSubNodeInputNodeModel inNode = getVirtualInNodeModel();
+        final VirtualSubNodeOutputNodeModel outNode = getVirtualOutNodeModel();
+
+        try {
+            // Document
+            final Document doc =
+                NodeDescription.getDocumentBuilderFactory().newDocumentBuilder().getDOMImplementation()
+                      .createDocument("http://knime.org/node2012", "knimeNode", null);
+
+            addPortDescriptionToElement(doc, inNode, outNode);
+
+            // we avoid validating the document since we don't include certain elements like 'name'
+            return (new NodeDescription27Proxy(doc, false)).getXMLDescription();
+        } catch (ParserConfigurationException | DOMException | XmlException e) {
+            LOGGER.warn("Could not generate ports description", e);
+        }
+
+        return null;
+    }
+
+    private static void addPortDescriptionToElement(final Document doc, final VirtualSubNodeInputNodeModel inNode,
+            final VirtualSubNodeOutputNodeModel outNode) throws DOMException, ParserConfigurationException, XmlException {
+        final String[] inPortNames = inNode.getPortNames();
+        final String[] inPortDescriptions = inNode.getPortDescriptions();
+        final String[] outPortNames = outNode.getPortNames();
+        final String[] outPortDescriptions = outNode.getPortDescriptions();
+
+        final Element knimeNode = doc.getDocumentElement();
+        final Element ports = doc.createElement("ports");
+        knimeNode.appendChild(ports);
+        // inPort
+        for (int i = 0; i < inPortNames.length; i++) {
+            final Element inPort = doc.createElement("inPort");
+            ports.appendChild(inPort);
+            inPort.setAttribute("index", "" + i);
+            inPort.setAttribute("name", inPortNames[i]);
+            String defaultText = NO_DESCRIPTION_SET;
+            if (i == 0) {
+                defaultText += "\nChange this label by browsing the input node contained in the Component "
+                        + "and changing its configuration.";
+            }
+            addText(inPort, inPortDescriptions[i], defaultText);
+        }
+        // outPort
+        for (int i = 0; i < outPortNames.length; i++) {
+            final Element outPort = doc.createElement("outPort");
+            ports.appendChild(outPort);
+            outPort.setAttribute("index", "" + i);
+            outPort.setAttribute("name", outPortNames[i]);
+            String defaultText = NO_DESCRIPTION_SET;
+            if (i == 0) {
+                defaultText += "\nChange this label by browsing the output node contained in the Component "
+                        + "and changing its configuration.";
+            }
+            addText(outPort, outPortDescriptions[i], defaultText);
+        }
+    }
+
     /* -------------------- NodeContainer info properties -------------- */
 
     @SuppressWarnings("rawtypes")
@@ -688,9 +751,9 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public Element getXMLDescription() {
-        VirtualSubNodeInputNodeModel inNode = getVirtualInNodeModel();
-        VirtualSubNodeOutputNodeModel outNode = getVirtualOutNodeModel();
-        String description = inNode.getSubNodeDescription();
+        final VirtualSubNodeInputNodeModel inNode = getVirtualInNodeModel();
+        final VirtualSubNodeOutputNodeModel outNode = getVirtualOutNodeModel();
+        final String description = inNode.getSubNodeDescription();
         String sDescription;
         if (StringUtils.isEmpty(description)) {
             sDescription = "";
@@ -698,15 +761,13 @@ public final class SubNodeContainer extends SingleNodeContainer
             sDescription = StringUtils.split(description, ".\n")[0];
             sDescription = StringUtils.abbreviate(sDescription, 200);
         }
-        String[] inPortNames = inNode.getPortNames();
-        String[] inPortDescriptions = inNode.getPortDescriptions();
-        String[] outPortNames = outNode.getPortNames();
-        String[] outPortDescriptions = outNode.getPortDescriptions();
-        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, new EnabledDialogNodeModelFilter(), false);
-        List<String> optionNames = new ArrayList<String>();
-        List<String> optionDescriptions = new ArrayList<String>();
-        for (DialogNode dialogNode : nodes.values()) {
-            DialogNodeRepresentation representation = dialogNode.getDialogRepresentation();
+
+        final Map<NodeID, DialogNode> nodes =
+            m_wfm.findNodes(DialogNode.class, new EnabledDialogNodeModelFilter(), false);
+        final List<String> optionNames = new ArrayList<String>();
+        final List<String> optionDescriptions = new ArrayList<String>();
+        for (final DialogNode dialogNode : nodes.values()) {
+            final DialogNodeRepresentation representation = dialogNode.getDialogRepresentation();
             if (representation instanceof SubNodeDescriptionProvider) {
                 optionNames.add(((SubNodeDescriptionProvider)representation).getLabel());
                 optionDescriptions.add(((SubNodeDescriptionProvider)representation).getDescription());
@@ -714,65 +775,39 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         try {
             // Document
-            Document doc =
+            final Document doc =
                 NodeDescription.getDocumentBuilderFactory().newDocumentBuilder().getDOMImplementation()
                       .createDocument("http://knime.org/node2012", "knimeNode", null);
             // knimeNode
-            Element knimeNode = doc.getDocumentElement();
+            final Element knimeNode = doc.getDocumentElement();
             knimeNode.setAttribute("type", "Unknown");
             knimeNode.setAttribute("icon", "subnode.png");
             // name
-            Element name = doc.createElement("name");
+            final Element name = doc.createElement("name");
             knimeNode.appendChild(name);
             name.appendChild(doc.createTextNode(getName()));
             // shortDescription
-            Element shortDescription = doc.createElement("shortDescription");
+            final Element shortDescription = doc.createElement("shortDescription");
             knimeNode.appendChild(shortDescription);
             addText(shortDescription, sDescription, NO_DESCRIPTION_SET);
             // fullDescription
-            Element fullDescription = doc.createElement("fullDescription");
+            final Element fullDescription = doc.createElement("fullDescription");
             knimeNode.appendChild(fullDescription);
             // intro
-            Element intro = doc.createElement("intro");
+            final Element intro = doc.createElement("intro");
             fullDescription.appendChild(intro);
             addText(intro, description, NO_DESCRIPTION_SET + "\nIn order to set a description browse the input node "
                     + "contained in the Component and change its configuration.");
             // option
             for (int i = 0; i < optionNames.size(); i++) {
-                Element option = doc.createElement("option");
+                final Element option = doc.createElement("option");
                 fullDescription.appendChild(option);
                 option.setAttribute("name", optionNames.get(i));
                 addText(option, optionDescriptions.get(i), "");
             }
-            // ports
-            Element ports = doc.createElement("ports");
-            knimeNode.appendChild(ports);
-            // inPort
-            for (int i = 0; i < inPortNames.length; i++) {
-                Element inPort = doc.createElement("inPort");
-                ports.appendChild(inPort);
-                inPort.setAttribute("index", "" + i);
-                inPort.setAttribute("name", inPortNames[i]);
-                String defaultText = NO_DESCRIPTION_SET;
-                if (i == 0) {
-                    defaultText += "\nChange this label by browsing the input node contained in the Component "
-                            + "and changing its configuration.";
-                }
-                addText(inPort, inPortDescriptions[i], defaultText);
-            }
-            // outPort
-            for (int i = 0; i < outPortNames.length; i++) {
-                Element outPort = doc.createElement("outPort");
-                ports.appendChild(outPort);
-                outPort.setAttribute("index", "" + i);
-                outPort.setAttribute("name", outPortNames[i]);
-                String defaultText = NO_DESCRIPTION_SET;
-                if (i == 0) {
-                    defaultText += "\nChange this label by browsing the output node contained in the Component "
-                            + "and changing its configuration.";
-                }
-                addText(outPort, outPortDescriptions[i], defaultText);
-            }
+
+            addPortDescriptionToElement(doc, inNode, outNode);
+
             return new NodeDescription27Proxy(doc).getXMLDescription();
         } catch (ParserConfigurationException | DOMException | XmlException e) {
             LOGGER.warn("Could not generate Component description", e);

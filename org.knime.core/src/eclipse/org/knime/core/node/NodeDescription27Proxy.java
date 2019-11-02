@@ -84,6 +84,7 @@ public final class NodeDescription27Proxy extends NodeDescription {
         OPTIONS.setLoadSubstituteNamespaces(namespaceMap);
     }
 
+
     private final KnimeNodeDocument m_document;
 
     /**
@@ -95,11 +96,20 @@ public final class NodeDescription27Proxy extends NodeDescription {
      * @throws XmlException if something goes wrong while analyzing the XML structure
      */
     public NodeDescription27Proxy(final Document doc) throws XmlException {
-        m_document = KnimeNodeDocument.Factory.parse(doc.getDocumentElement(), OPTIONS);
-        setIsDeprecated(m_document.getKnimeNode().getDeprecated().equals(Deprecated.TRUE));
-        if (KNIMEConstants.ASSERTIONS_ENABLED) {
-            validate();
-        }
+        this(KnimeNodeDocument.Factory.parse(doc.getDocumentElement(), OPTIONS), KNIMEConstants.ASSERTIONS_ENABLED);
+    }
+
+    /**
+     * Creates a new proxy object using the given XML document, and optionally validates the document.
+     *
+     * @param doc the XML document of the node description XML file
+     * @param validateDocument if true, the contents of the XML are checked against the XML schema and any errors are
+     *            reported via the logger.
+     * @throws XmlException if something goes wrong while analyzing the XML structure
+     * @since 4.1
+     */
+    public NodeDescription27Proxy(final Document doc, final boolean validateDocument) throws XmlException {
+        this(KnimeNodeDocument.Factory.parse(doc.getDocumentElement(), OPTIONS), validateDocument);
     }
 
     /**
@@ -110,9 +120,21 @@ public final class NodeDescription27Proxy extends NodeDescription {
      * @param doc a knime node document
      */
     public NodeDescription27Proxy(final KnimeNodeDocument doc) {
+        this(doc, KNIMEConstants.ASSERTIONS_ENABLED);
+    }
+
+    /**
+     * Creates a new proxy object using the given knime node document, and optionally validates the document.
+     *
+     * @param doc a knime node document
+     * @param validateDocument if true, the contents of the XML are checked against the XML schema and any errors are
+     *            reported via the logger.
+     * @since 4.1
+     */
+    public NodeDescription27Proxy(final KnimeNodeDocument doc, final boolean validateDocument) {
         m_document = doc;
         setIsDeprecated(m_document.getKnimeNode().getDeprecated().equals(Deprecated.TRUE));
-        if (KNIMEConstants.ASSERTIONS_ENABLED) {
+        if (validateDocument) {
             validate();
         }
     }
