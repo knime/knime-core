@@ -127,6 +127,7 @@ public final class NodeTimer {
 
     private final NodeContainer m_parent;
     private long m_startTime;
+    private long m_lastStartTime;
     private long m_lastExecutionDuration;
     private long m_executionDurationSinceReset;
     private long m_executionDurationOverall;
@@ -758,8 +759,17 @@ public final class NodeTimer {
         return m_numberOfExecutionsOverall;
     }
 
+    /**
+     * @return time when node has been started the last time (format is the same as returned by
+     *         {@link System#currentTimeMillis()}), -1 if node hasn't been started, yet
+     */
+    public long getStartTime() {
+        return m_lastStartTime;
+    }
+
     private void initialize() {
         m_startTime = -1;
+        m_lastStartTime = -1;
         m_lastExecutionDuration = -1;
         m_executionDurationSinceReset = 0;
         m_numberOfExecutionsSinceReset = 0;
@@ -788,6 +798,7 @@ public final class NodeTimer {
             String cname = getCanonicalName(m_parent);
             GLOBAL_TIMER.addExecutionTime(cname, success, m_lastExecutionDuration);
         }
+        m_lastStartTime = m_startTime;
         m_startTime = -1;
     }
 
