@@ -480,7 +480,8 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                     .filter(o -> o instanceof FlowVariable)//
                     .map(o -> (FlowVariable)o)//
                     .filter(v -> typesAsList.contains(v.getVariableType()))//
-                    .collect(Collectors.toMap(FlowVariable::getName, Function.identity(), (v1, v2) -> v1)));
+                    .collect(Collectors.toMap(FlowVariable::getName, Function.identity(), (v1, v2) -> v1,
+                        LinkedHashMap::new)));
         }
     }
 

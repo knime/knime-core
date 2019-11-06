@@ -1497,7 +1497,7 @@ public abstract class NodeModel implements ViewableModel {
             .map(s -> s.getAvailableFlowVariables(types).entrySet().stream()).orElseGet(Stream::empty),
             Optional.ofNullable(m_outgoingFlowObjectStack)//
             .map(s -> s.getAvailableFlowVariables(types).entrySet().stream()).orElseGet(Stream::empty))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1)));
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new)));
     }
 
     /**
