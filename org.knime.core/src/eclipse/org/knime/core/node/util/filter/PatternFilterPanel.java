@@ -71,7 +71,9 @@ import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.text.DefaultCaret;
 
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.filter.PatternFilterConfiguration.PatternFilterType;
 
@@ -192,6 +194,10 @@ public class PatternFilterPanel<T> extends JPanel {
             panel.add(m_additionalCheckbox, gbc);
             m_additionalCheckbox.setSelected(false);
             m_additionalCheckBoxValue = m_additionalCheckbox.isSelected();
+        }
+        if (Platform.getOS().equals(Platform.OS_MACOSX)) {
+            // see AP-13012
+            m_pattern.setCaret(new DefaultCaret());
         }
         m_pattern.addCaretListener(new CaretListener() {
             @Override
