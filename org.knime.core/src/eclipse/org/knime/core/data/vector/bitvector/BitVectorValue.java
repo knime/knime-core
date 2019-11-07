@@ -148,7 +148,6 @@ public interface BitVectorValue extends DataValue {
      *
      * @return the hex representation of this bit vector.
      */
-    @DataValueAccessMethod(name = "String")
     String toHexString();
 
     /**
@@ -162,6 +161,7 @@ public interface BitVectorValue extends DataValue {
      *
      * @return the binary (0/1) representation of this bit vector.
      */
+    @DataValueAccessMethod(name = "String")
     String toBinaryString();
 
     /**
