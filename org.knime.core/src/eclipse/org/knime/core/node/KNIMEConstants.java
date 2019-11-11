@@ -197,6 +197,15 @@ public final class KNIMEConstants {
     public static final String PROPERTY_TABLE_CACHE = "knime.table.cache";
 
     /**
+     * Java property to discourage KNIME from triggering a full stop-the-world garbage collection. Note that (a)
+     * individual nodes are allowed to disregard this setting and (b) the garbage collector may independently decide
+     * that a full stop-the-world garbage collection is warranted.
+     *
+     * @since 4.0
+     */
+    public static final String PROPERTY_DISCOURAGE_GC = "knime.discourage.gc";
+
+    /**
      * Java property to enable/disable table stream compression. Compression results in smaller temp-file sizes but also
      * (sometimes significant) longer runtime. By default {@code Gzip} is used.
      * <p>
