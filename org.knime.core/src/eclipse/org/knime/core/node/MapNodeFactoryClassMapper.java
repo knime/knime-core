@@ -65,30 +65,22 @@ public abstract class MapNodeFactoryClassMapper extends NodeFactoryClassMapper {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MapNodeFactoryClassMapper.class);
 
-    private final Map<String, Class<? extends NodeFactory<? extends NodeModel>>> m_map;
+    private Map<String, Class<? extends NodeFactory<? extends NodeModel>>> m_map;
 
     /**
-     * Creates a {@link NodeFactoryClassMapper} which maps classes with the given key-value pairs.
-     *
-     * @param map a {@code Map} which maps node factory class names to the appropriate corresponding {@link NodeFactory}
-     *            class. The contained {@link NodeFactory} class objects are expected to have a public no args
-     *            constructor such that {@link Class#newInstance()} succeeds.
-     */
-    protected MapNodeFactoryClassMapper(final Map<String, Class<? extends NodeFactory<? extends NodeModel>>> map) {
-        m_map = map == null ? Collections.emptyMap() : map;
-    }
-
-    /**
-     * Returns the {@code Map} which backs this {@link NodeFactoryClassMapper}.
+     * Returns the read only {@code Map} which backs this {@link NodeFactoryClassMapper}.
      * <p>
      * The returned {@code Map} should contain keys corresponding to the "old" node factory class names and values which
      * are the corresponding updated factory class objects.
      * </p>
      *
-     * @return the {@code Map} for this mapper
+     * @return the read only {@code Map} for this mapper
      */
-    public Map<String, Class<? extends NodeFactory<? extends NodeModel>>> getMap() {
-        return Collections.unmodifiableMap(m_map);
+    public final Map<String, Class<? extends NodeFactory<? extends NodeModel>>> getMap() {
+        if (m_map == null) {
+            setMap();
+        }
+        return m_map;
     }
 
     /**
@@ -96,9 +88,9 @@ public abstract class MapNodeFactoryClassMapper extends NodeFactoryClassMapper {
      */
     @Override
     public final NodeFactory<? extends NodeModel> mapFactoryClassName(final String factoryClassName) {
-        for (final String key : m_map.keySet()) {
+        for (final String key : getMap().keySet()) {
             if (key.equals(factoryClassName)) {
-                final Class<? extends NodeFactory<? extends NodeModel>> nodeFactoryClass = m_map.get(key);
+                final Class<? extends NodeFactory<? extends NodeModel>> nodeFactoryClass = getMap().get(key);
                 try {
                     return nodeFactoryClass.newInstance();
                 } catch (final InstantiationException | IllegalAccessException ex) {
@@ -110,4 +102,32 @@ public abstract class MapNodeFactoryClassMapper extends NodeFactoryClassMapper {
         return null;
     }
 
+    /**
+     * Returns the {@code Map} which backs this {@link NodeFactoryClassMapper}.
+     * <p>
+     * The returned {@code Map} should contain keys corresponding to the "old" node factory class names and values which
+     * are the corresponding updated factory class objects.
+     * </p>
+     *
+     * <p>
+     * This method is for internal use only, the {@link #getMap()} method calls this method and ensures the returned
+     * {@code Map} is read only and non-null.
+     * </p>
+     *
+     * @return {@code Map} for this mapper
+     */
+    protected abstract Map<String, Class<? extends NodeFactory<? extends NodeModel>>> getMapInternal();
+
+    // -- helper methods --
+
+    /**
+     * This method calls {@link #getMapInternal()}, and caches the result.
+     */
+    private synchronized void setMap() {
+        if (m_map != null) {
+            return;
+        }
+        final Map<String, Class<? extends NodeFactory<? extends NodeModel>>> returnedMap = getMapInternal();
+        m_map = returnedMap == null ? Collections.emptyMap() : Collections.unmodifiableMap(returnedMap);
+    }
 }

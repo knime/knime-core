@@ -70,32 +70,23 @@ public abstract class RegexNodeFactoryClassMapper extends NodeFactoryClassMapper
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RegexNodeFactoryClassMapper.class);
 
-    private final Map<String, Pair<String, String>> m_regexRules;
+    private Map<String, Pair<String, String>> m_regexRules;
 
     /**
-     * Creates a new regex mapper with the given rules.
-     *
-     * @param regexRules a {@code Map}. The keys should be a regex pattern for matching factory classes, that should be
-     *            mapped by this mapper. The map values should be a {@link Pair} where the first {@code Object} is the
-     *            regex pattern to match and replace, and the second {@code Object} is the literal replacement
-     *            {@code String}.
-     */
-    protected RegexNodeFactoryClassMapper(final Map<String, Pair<String, String>> regexRules) {
-        m_regexRules = regexRules == null ? Collections.emptyMap() : regexRules;
-    }
-
-    /**
-     * Returns the {@code Map} containing the regex rules for this mapper.
+     * Returns a read only {@code Map} containing the regex rules for this mapper.
      * <p>
      * The {@code Map} should have keys which represent the regex patterns to try and match. The map values should be a
      * {@link Pair} where the first {@code Object} is the regex pattern to match and replace, and the second
      * {@code Object} is the literal replacement {@code String}.
      * </p>
      *
-     * @return a {@code Map} containing this mappers regex rules
+     * @return a read only {@code Map} containing this mappers regex rules
      */
-    public Map<String, Pair<String, String>> getRegexRules() {
-        return Collections.unmodifiableMap(m_regexRules);
+    public final Map<String, Pair<String, String>> getRegexRules() {
+        if (m_regexRules == null) {
+            setRegexRules();
+        }
+        return m_regexRules;
     }
 
     /**
@@ -104,9 +95,9 @@ public abstract class RegexNodeFactoryClassMapper extends NodeFactoryClassMapper
     @Override
     @SuppressWarnings("unchecked")
     public final NodeFactory<? extends NodeModel> mapFactoryClassName(final String factoryClassName) {
-        for (final String regexPattern : m_regexRules.keySet()) {
+        for (final String regexPattern : getRegexRules().keySet()) {
             if (factoryClassName.matches(regexPattern)) {
-                final Pair<String, String> replacement = m_regexRules.get(regexPattern);
+                final Pair<String, String> replacement = getRegexRules().get(regexPattern);
                 final String newClassName =
                     factoryClassName.replaceAll(replacement.getFirst(), replacement.getSecond());
                 try {
@@ -119,4 +110,33 @@ public abstract class RegexNodeFactoryClassMapper extends NodeFactoryClassMapper
         return null;
     }
 
+    /**
+     * Returns the {@code Map} containing the regex rules for this mapper.
+     * <p>
+     * The {@code Map} should have keys which represent the regex patterns to try and match. The map values should be a
+     * {@link Pair} where the first {@code Object} is the regex pattern to match and replace, and the second
+     * {@code Object} is the literal replacement {@code String}.
+     * </p>
+     *
+     * <p>
+     * This method is for internal use only, the {@link #getRegexRules()} method calls this method and ensures the
+     * returned {@code Map} is read only and non-null.
+     * </p>
+     *
+     * @return a {@code Map} containing this mappers regex rules
+     */
+    protected abstract Map<String, Pair<String, String>> getRegexRulesInternal();
+
+    // -- helper methods --
+
+    /**
+     * This method calls {@link #getRegexRulesInternal()}, and caches the result.
+     */
+    private synchronized void setRegexRules() {
+        if (m_regexRules != null) {
+            return;
+        }
+        final Map<String, Pair<String, String>> returned = getRegexRules();
+        m_regexRules = returned == null ? Collections.emptyMap() : Collections.unmodifiableMap(returned);
+    }
 }
