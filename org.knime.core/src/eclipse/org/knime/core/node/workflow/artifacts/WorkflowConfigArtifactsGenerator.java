@@ -55,12 +55,15 @@ import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 import javax.json.stream.JsonGenerator;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.dialog.DialogNode;
+import org.knime.core.node.dialog.SubNodeDescriptionProvider;
 import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -126,9 +129,24 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
         Map<String, DialogNode> configurationNodes = wfm.getConfigurationNodes(true);
         if (!configurationNodes.isEmpty()) {
             configurationNodes.entrySet().forEach(e -> {
-                builder.add(e.getKey(), e.getValue().getDefaultValue().toJson());
+                final JsonValue value = e.getValue().getDefaultValue().toJson();
+                if (e.getValue().getDialogRepresentation() instanceof SubNodeDescriptionProvider
+                    && value.getValueType() == ValueType.OBJECT) {
+                    final JsonObject object = enrich((JsonObject)value, "label",
+                        ((SubNodeDescriptionProvider)e.getValue().getDialogRepresentation()).getLabel());
+                    builder.add(e.getKey(), object);
+                } else {
+                    builder.add(e.getKey(), value);
+                }
             });
         }
+    }
+
+    private static JsonObject enrich(final JsonObject source, final String key, final String value) {
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        builder.add(key, value);
+        source.entrySet().forEach(e -> builder.add(e.getKey(), e.getValue()));
+        return builder.build();
     }
 
     @SuppressWarnings("rawtypes")
