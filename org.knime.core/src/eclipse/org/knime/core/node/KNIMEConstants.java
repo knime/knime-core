@@ -201,7 +201,7 @@ public final class KNIMEConstants {
      * individual nodes are allowed to disregard this setting and (b) the garbage collector may independently decide
      * that a full stop-the-world garbage collection is warranted.
      *
-     * @since 4.0
+     * @since 4.1
      */
     public static final String PROPERTY_DISCOURAGE_GC = "knime.discourage.gc";
 
