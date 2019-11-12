@@ -376,6 +376,25 @@ public class Buffer implements KNIMEStreamConstants {
         ENABLE_LRU = tableCache.equals("LRU");
     }
 
+    /** See {@link KNIMEConstants#PROPERTY_DISCOURAGE_GC}. */
+    private static final String PROPERTY_DISCOURAGE_GC = KNIMEConstants.PROPERTY_DISCOURAGE_GC;
+
+    private static final boolean DEF_DISCOURAGE_GC = true;
+
+    private static final boolean DISCOURAGE_GC;
+    static {
+        boolean discourageGc = DEF_DISCOURAGE_GC;
+        final String discourageGcString = System.getProperty(PROPERTY_DISCOURAGE_GC);
+        if (discourageGcString != null) {
+            if (discourageGcString.equals("true")) {
+                discourageGc = true;
+            } else if (discourageGcString.equals("false")) {
+                discourageGc = false;
+            }
+        }
+        DISCOURAGE_GC = discourageGc;
+    }
+
     /** A cache for holding tables in memory. */
     private static final BufferCache CACHE = new BufferCache();
 
@@ -1983,7 +2002,7 @@ public class Buffer implements KNIMEStreamConstants {
                 + " You can tweak the limit by changing the \""
                 + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "\" java property.");
         }
-        if (count % MAX_FILES_TO_CREATE_BEFORE_GC == 0) {
+        if (count % MAX_FILES_TO_CREATE_BEFORE_GC == 0 && !DISCOURAGE_GC) {
             LOGGER.debug("created " + count + " files, performing garbage collection to release handles");
             System.gc();
         }
@@ -2305,7 +2324,7 @@ public class Buffer implements KNIMEStreamConstants {
                 while ((first = m_filesToDeleteList.poll()) != null) {
                     String type = first.isFile() ? "file" : "directory";
                     boolean deleted = deleteRecursively(first);
-                    if (!deleted && first.exists()) {
+                    if (!deleted && first.exists() && !DISCOURAGE_GC) {
                         // note: although all input streams are closed, the
                         // file can't be deleted. If we call the gc, it
                         // works. No clue. That only happens on windows!
