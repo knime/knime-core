@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
@@ -104,6 +105,8 @@ public final class DataColumnSpec {
     /** Holds the FilterHandler if one was set or null. */
     private final FilterHandler m_filterHandler;
 
+    private final DataColumnMetaDataManager m_metaDataManager;
+
     /** Config key for the column name. */
     private static final String CFG_COLUMN_NAME = "column_name";
 
@@ -131,6 +134,9 @@ public final class DataColumnSpec {
     /** Config key for the FilterHandler. */
     private static final String CFG_FILTER = "filter_handler";
 
+    /** Config key for the MetaData. */
+    private static final String CFG_META_DATA = "meta_data";
+
     /**
      * Constructor taking all properties of this column spec as arguments. It
      * creates a read-only <code>DataColumnSpec</code> and should only be
@@ -147,10 +153,9 @@ public final class DataColumnSpec {
      * @param shapeHdl the <code>ShapeHandler</code> or <code>null</code>
      * @throws IllegalArgumentException if either column name, type, domain, or properties are <code>null</code>
      */
-    DataColumnSpec(final String name, final String[] elNames,
-            final DataType type, final DataColumnDomain domain,
-            final DataColumnProperties props, final SizeHandler sizeHdl,
-            final ColorHandler colorHdl, final ShapeHandler shapeHdl, final FilterHandler filterHdl) {
+    DataColumnSpec(final String name, final String[] elNames, final DataType type, final DataColumnDomain domain,
+        final DataColumnProperties props, final SizeHandler sizeHdl, final ColorHandler colorHdl,
+        final ShapeHandler shapeHdl, final FilterHandler filterHdl, final DataColumnMetaDataManager metaData) {
         final String nullError = "Do not init DataColumnSpec with null arguments!";
         List<String> elNamesAsList = Collections.unmodifiableList(
             Arrays.asList(CheckUtils.checkArgumentNotNull(elNames, nullError)));
@@ -165,6 +170,7 @@ public final class DataColumnSpec {
         m_colorHandler = colorHdl;
         m_shapeHandler = shapeHdl;
         m_filterHandler = filterHdl;
+        m_metaDataManager = metaData;
     }
 
     /**
@@ -241,7 +247,7 @@ public final class DataColumnSpec {
      * Returns the <code>ShapeHandler</code> defined on this column, if
      * available. Otherwise <code>null</code> will be returned.
      *
-     * @return atached <code>ShapeHandler</code> or <code>null</code>
+     * @return attached <code>ShapeHandler</code> or <code>null</code>
      */
     public ShapeHandler getShapeHandler() {
         return m_shapeHandler;
@@ -265,6 +271,22 @@ public final class DataColumnSpec {
      */
     public Optional<FilterHandler> getFilterHandler() {
         return Optional.ofNullable(m_filterHandler);
+    }
+
+    DataColumnMetaDataManager getMetaDataManager() {
+        return m_metaDataManager;
+    }
+
+    /**
+     * Retrieves the {@link DataColumnMetaData} of class <b>metaDataClass</b>.
+     * An empty {@link Optional} is returned if no {@link DataColumnMetaData} of class <b>metaDataClass</b> is available.
+     *
+     * @param metaDataClass the type of {@link DataColumnMetaData} to be retrieved
+     * @return the {@link DataColumnMetaData} for type <b>metaDataClass</b>
+     * @since 4.1
+     */
+    public <M extends DataColumnMetaData> Optional<M> getMetaDataOfType(final Class<M> metaDataClass) {
+        return m_metaDataManager.getMetaDataOfType(metaDataClass);
     }
 
     /**
@@ -312,7 +334,8 @@ public final class DataColumnSpec {
             && getType().equals(cspec.getType())
             && getDomain().equals(cspec.getDomain())
             && getProperties().equals(cspec.getProperties())
-            && getElementNames().equals(cspec.getElementNames());
+            && getElementNames().equals(cspec.getElementNames())
+            && getMetaDataManager().equals(cspec.getMetaDataManager());
         return areEqual
                 && Objects.equals(m_colorHandler, cspec.m_colorHandler)
                 && Objects.equals(m_sizeHandler, cspec.m_sizeHandler)
@@ -367,6 +390,7 @@ public final class DataColumnSpec {
         if (m_filterHandler != null) {
             m_filterHandler.save(config.addConfig(CFG_FILTER));
         }
+        m_metaDataManager.save(config.addConfig(CFG_META_DATA));
     }
 
     /**
@@ -408,7 +432,14 @@ public final class DataColumnSpec {
         if (config.containsKey(CFG_FILTER)) {
             filter = FilterHandler.load(config.getConfig(CFG_FILTER));
         }
-        return new DataColumnSpec(name, elNames, type, domain, properties, size, color, shape, filter);
+        final DataColumnMetaDataManager metaDataManager;
+        if (config.containsKey(CFG_META_DATA)) {
+            metaDataManager = DataColumnMetaDataManager.load(config.getConfig(CFG_META_DATA));
+        } else {
+            // create an empty meta data object to avoid issues with NPEs
+            metaDataManager = DataColumnMetaDataManager.EMPTY;
+        }
+        return new DataColumnSpec(name, elNames, type, domain, properties, size, color, shape, filter, metaDataManager);
     }
 
 } // DataColumnSpec

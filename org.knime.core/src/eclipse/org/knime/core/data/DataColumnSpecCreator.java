@@ -50,6 +50,7 @@
 package org.knime.core.data;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -57,12 +58,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.IntPredicate;
 
+import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
 import org.knime.core.data.property.filter.FilterHandler;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * A factory class to create a {@link DataColumnSpec} (as the only way from
@@ -116,6 +120,11 @@ public final class DataColumnSpecCreator {
     private String[] m_elementNames;
 
     /**
+     * Creator for the object managing meta data.
+     */
+    private DataColumnMetaDataManager.Creator m_metaDataCreator;
+
+    /**
      * Counter that is used when the setName() method is called with an
      * empty string. It will create an artificial name with a guaranteed
      * unique index.
@@ -137,6 +146,7 @@ public final class DataColumnSpecCreator {
         setType(type);
         setDomain(new DataColumnDomain(null, null, null));
         setProperties(new DataColumnProperties());
+        m_metaDataCreator = new DataColumnMetaDataManager.Creator();
     }
 
     /**
@@ -164,6 +174,183 @@ public final class DataColumnSpecCreator {
         m_colorHandler = cspec.getColorHandler();
         // property filter
         m_filterHandler = cspec.getFilterHandler().orElse(null);
+        m_metaDataCreator = new DataColumnMetaDataManager.Creator(cspec.getMetaDataManager());
+    }
+
+    private void updateType(final DataType other) {
+        if (m_type.equals(other)) {
+            return; // same type -> no update necessary
+        }
+        // the types differ so we have to use a common super type instead
+        final DataType common = DataType.getCommonSuperType(m_type, other);
+        assert common.isASuperTypeOf(m_type);
+        assert common.isASuperTypeOf(other);
+        m_type = common;
+    }
+
+    /**
+     * Options for the {@link DataColumnSpecCreator#merge(DataColumnSpec, Set)} method.
+     *
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+     * @since 4.1
+     */
+    public enum MergeOptions {
+            /**
+             * Allow the data type of the merged columns to differ. In this case the {@link DataColumnSpecCreator} will
+             * have the common super-type returned by {@link DataType#getCommonSuperType(DataType, DataType)} after the
+             * merge is completed.
+             */
+            ALLOW_VARYING_TYPES,
+            /**
+             * Allow the element names of the merged columns to differ. If this option is used, the element names of the
+             * second column are dropped.
+             */
+            ALLOW_VARYING_ELEMENT_NAMES;
+    }
+
+    /**
+     * Merges the existing {@link DataColumnSpec} with a second
+     * {@link DataColumnSpec}.
+     * If <b>allowDifferentTypes</b> is set to true, the common supertype of this {@link DataColumnSpecCreator}
+     *  and {@link DataColumnSpec cspec2} is determined, otherwise the types
+     *  must be equal or an {@link IllegalArgumentException} is thrown.
+     * The domain information, meta data and properties from both DataColumnSpecs are merged,
+     * Color, Shape and Size-Handlers are compared (must be equal).
+     *
+     * @param cspec2 the second {@link DataColumnSpec}.
+     * @param options
+     *
+     * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec...)
+     * @throws IllegalArgumentException if the structure (name and depending on <b>allowDifferentTypes</b> type) does
+     *             not match, if the domain or meta data cannot be merged, if the Color-,
+     *             Shape- or SizeHandlers are different or the sub element
+     *             names are not equal.
+     *
+     * @since 4.1
+     */
+    public void merge(final DataColumnSpec cspec2, final Set<MergeOptions> options) {
+        final boolean allowVaryingTypes = options.contains(MergeOptions.ALLOW_VARYING_TYPES);
+        CheckUtils.checkArgument(isCompatible(cspec2, allowVaryingTypes),
+            "Structures of DataColumnSpecs do not match.");
+        if (allowVaryingTypes) {
+            updateType(cspec2.getType());
+        }
+        mergeDomains(cspec2.getDomain());
+        m_metaDataCreator.merge(cspec2.getMetaDataManager());
+        mergeColorHandlers(cspec2.getColorHandler());
+        mergeShapeHandlers(cspec2.getShapeHandler());
+        mergeSizeHandlers(cspec2.getSizeHandler());
+        mergeFilterHandlers(cspec2.getFilterHandler().orElse(null));
+        mergeProperties(cspec2.getProperties());
+        mergeElementNames(cspec2.getElementNames(), options.contains(MergeOptions.ALLOW_VARYING_ELEMENT_NAMES));
+    }
+
+    private void mergeElementNames(final List<String> elementNames, final boolean allowVaryingElementNames) {
+        String[] elNames2Array = elementNames.toArray(new String[elementNames.size()]);
+        String[] elNamesArray =
+            m_elementNames == null ? new String[]{m_name} : m_elementNames;
+        if (!Arrays.deepEquals(elNamesArray, elNames2Array) && !allowVaryingElementNames) {
+            throw new IllegalArgumentException("Element names are not equal");
+        }
+    }
+
+    /**
+     * Takes the intersection of the properties
+     */
+    private void mergeProperties(final DataColumnProperties prop2) {
+        Map<String, String> mergedProps = new HashMap<>();
+        Enumeration<String> e = m_properties.properties();
+        while (e.hasMoreElements()) {
+            String key = e.nextElement();
+            String value = m_properties.getProperty(key);
+            if (prop2.getProperty(key) != null
+                    && prop2.getProperty(key).equals(value)) {
+                mergedProps.put(key, value);
+            }
+        }
+
+        if (mergedProps.size() != m_properties.size()) {
+            setProperties(new DataColumnProperties(mergedProps));
+        }
+    }
+
+    private void mergeFilterHandlers(final FilterHandler filterHandler) {
+        if (!Objects.equals(m_filterHandler, filterHandler)) {
+            LOGGER.warn("Column has already a filter handler attached, ignoring new handler.");
+        }
+    }
+
+    private void mergeSizeHandlers(final SizeHandler sizeHandler2) {
+        if (!Objects.equals(m_sizeHandler, sizeHandler2)) {
+            LOGGER.warn("Column has already a size handler attached, ignoring new handler.");
+        }
+    }
+
+    private void mergeShapeHandlers(final ShapeHandler shapeHandler2) {
+        if (!Objects.equals(m_shapeHandler, shapeHandler2)) {
+            LOGGER.warn("Column has already a shape handler attached, ignoring new handler.");
+        }
+    }
+
+    private void mergeColorHandlers(final ColorHandler colorHandler2) {
+        if (!Objects.equals(m_colorHandler, colorHandler2)) {
+            LOGGER.warn("Column has already a color handler attached, ignoring new handler.");
+        }
+    }
+
+    private Set<DataCell> mergePossibleValues(final Set<DataCell> oValues) {
+        final Set<DataCell> myValues = m_domain.getValues();
+        Set<DataCell> newValues;
+        if (myValues == null || oValues == null) {
+            newValues = null;
+        } else if (myValues.equals(oValues)) {
+            newValues = myValues;
+        } else {
+            newValues = new LinkedHashSet<>(myValues);
+            newValues.addAll(oValues);
+        }
+        return newValues;
+    }
+
+    private static DataCell mergeBound(final DataCell myBound, final DataCell otherBound,
+        final DataValueComparator comparator, final IntPredicate takeOther) {
+        if (myBound == null || otherBound == null) {
+            return null;
+        } else if (myBound.equals(otherBound)) {
+            return myBound;
+        } else if (takeOther.test(comparator.compare(myBound, otherBound))) {
+            return otherBound;
+        } else {
+            return myBound;
+        }
+    }
+
+    private void mergeDomains(final DataColumnDomain domain2) {
+        boolean hasDomainChanged = false;
+        final Set<DataCell> newValues = mergePossibleValues(domain2.getValues());
+        // != is safe because we return m_domain.getValues() if the other domain has the same values
+        hasDomainChanged |= newValues != m_domain.getValues();
+
+        DataValueComparator comparator = m_type.getComparator();
+
+        final DataCell myLower = m_domain.getLowerBound();
+        final DataCell newLower = mergeBound(myLower, domain2.getLowerBound(), comparator, i -> i > 0);
+        hasDomainChanged |= newLower != myLower;
+
+        final DataCell myUpper = m_domain.getUpperBound();
+        DataCell newUpper = mergeBound(myUpper, domain2.getUpperBound(), comparator, i1 -> i1 < 0);
+        hasDomainChanged |= newUpper != myUpper;
+        if (hasDomainChanged) {
+            setDomain(new DataColumnDomain(newLower, newUpper, newValues));
+        }
+    }
+
+    /**
+     * The spec is compatible if it has the same name and depending on whether the type should
+     * be enforced, the same type.
+     */
+    private boolean isCompatible(final DataColumnSpec cspec2, final boolean allowDifferentType) {
+        return cspec2.getName().equals(m_name) && (allowDifferentType || cspec2.getType().equals(m_type));
     }
 
     /**
@@ -181,112 +368,7 @@ public final class DataColumnSpecCreator {
      *             names are not equal.
      */
     public void merge(final DataColumnSpec cspec2) {
-        if (!cspec2.getName().equals(m_name)
-                || !cspec2.getType().equals(m_type)) {
-            throw new IllegalArgumentException("Structures of DataColumnSpecs"
-                    + " do not match.");
-        }
-
-        DataColumnDomain domain2 = cspec2.getDomain();
-        boolean hasDomainChanged = false;
-        final Set<DataCell> myValues = m_domain.getValues();
-        final Set<DataCell> oValues = domain2.getValues();
-        Set<DataCell> newValues;
-        if (myValues == null || oValues == null) {
-            newValues = null;
-            hasDomainChanged |= myValues != null;
-        } else if (myValues.equals(oValues)) {
-            newValues = myValues;
-        } else {
-            newValues = new LinkedHashSet<DataCell>(myValues);
-            newValues.addAll(oValues);
-            hasDomainChanged = true;
-        }
-
-        DataValueComparator comparator = m_type.getComparator();
-
-        final DataCell myLower = m_domain.getLowerBound();
-        final DataCell oLower = domain2.getLowerBound();
-        DataCell newLower;
-        if (myLower == null || oLower == null) {
-            newLower = null;
-            hasDomainChanged |= myLower != null;
-        } else if (myLower.equals(oLower)) {
-            newLower = myLower;
-        } else if (comparator.compare(myLower, oLower) > 0) {
-            newLower = oLower;
-            hasDomainChanged = true;
-        } else {
-            newLower = myLower;
-        }
-
-        final DataCell myUpper = m_domain.getUpperBound();
-        final DataCell oUpper = domain2.getUpperBound();
-        DataCell newUpper;
-        if (myUpper == null || oUpper == null) {
-            newUpper = null;
-            hasDomainChanged |= myUpper != null;
-        } else if (myUpper.equals(oUpper)) {
-            newUpper = myUpper;
-        } else if (comparator.compare(myUpper, oUpper) < 0) {
-            newUpper = oUpper;
-            hasDomainChanged = true;
-        } else {
-            newUpper = myUpper;
-        }
-
-
-        if (hasDomainChanged) {
-            setDomain(new DataColumnDomain(newLower, newUpper, newValues));
-        }
-
-        // check for redundant color handler
-        ColorHandler colorHandler2 = cspec2.getColorHandler();
-        if (!Objects.equals(m_colorHandler, colorHandler2)) {
-            LOGGER.warn("Column has already a color handler attached, ignoring new handler.");
-        }
-
-        // check for redundant shape handler
-        ShapeHandler shapeHandler2 = cspec2.getShapeHandler();
-        if (!Objects.equals(m_shapeHandler, shapeHandler2)) {
-            LOGGER.warn("Column has already a shape handler attached, ignoring new handler.");
-        }
-
-        // check for redundant size handler
-        SizeHandler sizeHandler2 = cspec2.getSizeHandler();
-        if (!Objects.equals(m_sizeHandler, sizeHandler2)) {
-            LOGGER.warn("Column has already a size handler attached, ignoring new handler.");
-        }
-
-        // check for redundant filter handler
-        FilterHandler filterHandler = cspec2.getFilterHandler().orElse(null);
-        if (!Objects.equals(m_filterHandler, filterHandler)) {
-            LOGGER.warn("Column has already a filter handler attached, ignoring new handler.");
-        }
-
-        // merge properties, take intersection
-        DataColumnProperties prop2 = cspec2.getProperties();
-        Map<String, String> mergedProps = new HashMap<String, String>();
-        Enumeration<String> e = m_properties.properties();
-        while (e.hasMoreElements()) {
-            String key = e.nextElement();
-            String value = m_properties.getProperty(key);
-            if (prop2.getProperty(key) != null
-                    && prop2.getProperty(key).equals(value)) {
-                mergedProps.put(key, value);
-            }
-        }
-
-        if (mergedProps.size() != m_properties.size()) {
-            setProperties(new DataColumnProperties(mergedProps));
-        }
-        List<String> elNames2 = cspec2.getElementNames();
-        String[] elNames2Array = elNames2.toArray(new String[elNames2.size()]);
-        String[] elNamesArray =
-            m_elementNames == null ? new String[]{m_name} : m_elementNames;
-        if (!Arrays.deepEquals(elNamesArray, elNames2Array)) {
-            throw new IllegalArgumentException("Element names are not equal");
-        }
+        merge(cspec2, EnumSet.noneOf(MergeOptions.class));
     }
 
     /**
@@ -415,6 +497,50 @@ public final class DataColumnSpecCreator {
     }
 
     /**
+     * Adds the provided {@link DataColumnMetaData metaData} by either overwriting existing meta data for the
+     * associated DataValue (<b>overwrite</b> set to true)
+     * or merging it with existing meta data (overwrite set to false).
+     *
+     * @param metaData the {@link DataColumnMetaData} to add
+     * @param overwrite if set to true, any stored meta data for the type {@link DataColumnMetaData metaData}
+     * refers to is ovewritten, otherwise the meta data is merged
+     * (potentially leading to an exception if the merge fails)
+     * @since 4.1
+     */
+    public void addMetaData(final DataColumnMetaData metaData, final boolean overwrite) {
+        m_metaDataCreator.addMetaData(metaData, overwrite);
+    }
+
+    /**
+     * Removes {@link DataColumnMetaData} of class <b>metaDataClass</b>.
+     *
+     * @param metaDataClass the class of the {@link DataColumnMetaData} that should be removed
+     * @since 4.1
+     */
+    public void removeMetaData(final Class<? extends DataColumnMetaData> metaDataClass) {
+        m_metaDataCreator.remove(metaDataClass);
+    }
+
+    /**
+     * Drops all {@link DataColumnMetaData} stored in the column creator.
+     *
+     * @since 4.1
+     */
+    public void removeAllMetaData() {
+        m_metaDataCreator.clear();
+    }
+
+    /**
+     * Returns the {@link DataType} of this {@link DataColumnSpecCreator}.
+     *
+     * @return the {@link DataType}
+     * @since 4.1
+     */
+    public DataType getType() {
+        return m_type;
+    }
+
+    /**
      * Removes all handlers from this creator which are then set to
      * <code>null</code> for the next call of <code>#createSpec()</code>.
      */
@@ -434,7 +560,7 @@ public final class DataColumnSpecCreator {
     public DataColumnSpec createSpec() {
         String[] elNames =
             m_elementNames == null ? new String[0] : m_elementNames;
-        return new DataColumnSpec(m_name, elNames, m_type, m_domain,
-                m_properties, m_sizeHandler, m_colorHandler, m_shapeHandler, m_filterHandler);
+        return new DataColumnSpec(m_name, elNames, m_type, m_domain, m_properties, m_sizeHandler, m_colorHandler,
+            m_shapeHandler, m_filterHandler, m_metaDataCreator.create());
     }
 }
