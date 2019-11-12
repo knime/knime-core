@@ -53,9 +53,13 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -65,6 +69,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.meta.TestDataColumnMetaData;
 
 /**
  * Testcases for {@link DataTableDomainCreator}.
@@ -582,6 +587,50 @@ public class DataTableDomainCreatorTest {
         final DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec_1, false);
         domainCreator.setMaxPossibleValues(0);
         domainCreator.merge(new DataTableDomainCreator(tableSpec_2, false));
+    }
+
+    /**
+     * Tests whether meta data is computed correctly.
+     */
+    @Test
+    public void testMetaData() {
+        DataColumnSpecCreator csc = new DataColumnSpecCreator("String col", StringCell.TYPE);
+        DataTableSpec tableSpec = new DataTableSpec(csc.createSpec());
+
+        DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec, false);
+        assertThat(getMetaData(domainCreator), is(new TestDataColumnMetaData(Collections.emptyList())));
+
+        domainCreator.updateDomain(new DefaultRow("test", "A"));
+        assertThat(getMetaData(domainCreator), is(new TestDataColumnMetaData(Arrays.asList("A"))));
+
+        domainCreator.updateDomain(new DefaultRow("test", "B"));
+        assertThat(getMetaData(domainCreator), is(new TestDataColumnMetaData(Arrays.asList("A", "B"))));
+    }
+
+    private static TestDataColumnMetaData getMetaData(final DataTableDomainCreator domainCreator) {
+        DataColumnSpec spec = domainCreator.createSpec().getColumnSpec(0);
+        Optional<TestDataColumnMetaData> optMetaData = spec.getMetaDataOfType(TestDataColumnMetaData.class);
+        assertThat(optMetaData.isPresent(), is(true));
+        return optMetaData.get();
+    }
+
+    /**
+     * Tests whether the initialization with existing meta data works correctly.
+     */
+    @Test
+    public void testInitMetaData() {
+        DataColumnSpecCreator csc = new DataColumnSpecCreator("String col", StringCell.TYPE);
+        List<String> values = Arrays.asList("X", "Y", "Z");
+        TestDataColumnMetaData metaData = new TestDataColumnMetaData(values);
+        csc.addMetaData(metaData, true);
+        DataTableSpec tableSpec = new DataTableSpec(csc.createSpec());
+
+        DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec, true);
+        assertThat(getMetaData(domainCreator), is(metaData));
+        List<String> concat = new ArrayList<>(values);
+        concat.add("A");
+        domainCreator.updateDomain(new DefaultRow("test", "A"));
+        assertThat(getMetaData(domainCreator), is(new TestDataColumnMetaData(concat)));
     }
 
 }

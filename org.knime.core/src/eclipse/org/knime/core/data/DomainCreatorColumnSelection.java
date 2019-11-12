@@ -46,6 +46,8 @@
  */
 package org.knime.core.data;
 
+import java.util.function.Predicate;
+
 /**
  * Defines which columns are effected by the DataTableDomainCreator.
  *
@@ -53,6 +55,7 @@ package org.knime.core.data;
  * @since 2.10
  */
 public interface DomainCreatorColumnSelection {
+
     /**
      * Whether to create or recreate the domain for the specific column.
      *
@@ -70,4 +73,33 @@ public interface DomainCreatorColumnSelection {
      *         not be dropped
      */
     boolean dropDomain(DataColumnSpec colSpec);
+
+    /**
+     * Convenience factory method for simple {@link DomainCreatorColumnSelection} instances. Creates the
+     * {@link DomainCreatorColumnSelection} by composing {@link Predicate createPredicate} and {@link Predicate
+     * dropPredicate}.
+     * @param dropDomainPredicate called by the returned object whenever its
+     *            {@link DomainCreatorColumnSelection#dropDomain(DataColumnSpec)} method is called
+     * @param createDomainPredicate called by the returned object whenever its
+     *            {@link DomainCreatorColumnSelection#createDomain(DataColumnSpec)} method is called
+     *
+     * @return a {@link DomainCreatorColumnSelection} whose behavior is specified by the provided predicates
+     * @since 4.1
+     */
+    static DomainCreatorColumnSelection create(final Predicate<DataColumnSpec> dropDomainPredicate,
+        final Predicate<DataColumnSpec> createDomainPredicate) {
+        return new DomainCreatorColumnSelection() {
+
+            @Override
+            public boolean createDomain(final DataColumnSpec colSpec) {
+                return createDomainPredicate.test(colSpec);
+            }
+
+            @Override
+            public boolean dropDomain(final DataColumnSpec colSpec) {
+                return dropDomainPredicate.test(colSpec);
+            }
+
+        };
+    }
 }

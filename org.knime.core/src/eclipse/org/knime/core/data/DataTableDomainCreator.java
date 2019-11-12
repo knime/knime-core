@@ -46,6 +46,7 @@
  */
 package org.knime.core.data;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -55,6 +56,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.knime.core.data.DataColumnMetaDataCalculators.MetaDataCalculator;
 import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.BufferedDataTable;
@@ -95,6 +97,8 @@ public class DataTableDomainCreator {
 
     private final DataValueComparator[] m_comparators;
 
+    private final MetaDataCalculator[] m_metaDataCalculators;
+
     /** The batch id. */
     private long m_batchId;
 
@@ -107,10 +111,29 @@ public class DataTableDomainCreator {
      * @param domainValuesColumnSelection defines columns to recreate or drop domain values
      * @param domainMinMaxColumnSelection defines columns to recreate or drop min, max values of the domain
      */
-    @SuppressWarnings("unchecked")
     public DataTableDomainCreator(final DataTableSpec inputSpec,
         final DomainCreatorColumnSelection domainValuesColumnSelection,
         final DomainCreatorColumnSelection domainMinMaxColumnSelection) {
+        this(inputSpec, domainValuesColumnSelection, domainMinMaxColumnSelection,
+            DomainCreatorColumnSelection.create(c -> true, c -> true));
+    }
+
+    /**
+     * A new instance that recreates the domain of certains columns. Which columns are processed and if the domains
+     * should be initialized with the domain from the incoming table can be controlled by the two
+     * {@link DomainCreatorColumnSelection} arguments.
+     *
+     * @param inputSpec the spec of the input/original table
+     * @param domainValuesColumnSelection defines columns to recreate or drop domain values
+     * @param domainMinMaxColumnSelection defines columns to recreate or drop min, max values of the domain
+     * @param metaDataColumnSelection defines columns to calculate metaData for
+     * @since 4.1
+     */
+    @SuppressWarnings("unchecked")
+    public DataTableDomainCreator(final DataTableSpec inputSpec,
+        final DomainCreatorColumnSelection domainValuesColumnSelection,
+        final DomainCreatorColumnSelection domainMinMaxColumnSelection,
+        final DomainCreatorColumnSelection metaDataColumnSelection) {
         m_inputSpec = inputSpec;
         m_mins = new DataCell[inputSpec.getNumColumns()];
         m_minsMissing = new boolean[inputSpec.getNumColumns()];
@@ -121,6 +144,7 @@ public class DataTableDomainCreator {
         m_domainValuesColumnSelection = domainValuesColumnSelection;
         m_domainMinMaxColumnSelection = domainMinMaxColumnSelection;
         m_maxPossibleValues = DataContainerSettings.getDefault().getMaxDomainValues();
+        m_metaDataCalculators = new MetaDataCalculator[inputSpec.getNumColumns()];
 
         int i = 0;
         for (DataColumnSpec colSpec : inputSpec) {
@@ -135,7 +159,7 @@ public class DataTableDomainCreator {
                             (v1, v2) -> {
                                 throw new IllegalStateException();
                             }, //
-                            () -> new LinkedHashMap<>()));
+                            LinkedHashMap::new));
                 } else {
                     // since we're doing a lot of checks for whether a DataCell is contained in the set of possible
                     // values, we should reduce the amount of expected hash collisions by creating a sufficiently
@@ -167,6 +191,9 @@ public class DataTableDomainCreator {
             if (m_maxs[i] != null) {
                 m_maxsMissing[i] = m_maxs[i].isMissing();
             }
+
+            m_metaDataCalculators[i] = DataColumnMetaDataCalculators.createCalculator(colSpec,
+                metaDataColumnSelection.dropDomain(colSpec), metaDataColumnSelection.createDomain(colSpec));
             i++;
         }
     }
@@ -180,27 +207,10 @@ public class DataTableDomainCreator {
      *            spec, <code>false</code> if the domain should be initially empty
      */
     public DataTableDomainCreator(final DataTableSpec inputSpec, final boolean initDomain) {
-        this(inputSpec, new DomainCreatorColumnSelection() {
-            @Override
-            public boolean createDomain(final DataColumnSpec colSpec) {
-                return colSpec.getType().isCompatible(NominalValue.class);
-            }
-
-            @Override
-            public boolean dropDomain(final DataColumnSpec colSpec) {
-                return !initDomain;
-            }
-        }, new DomainCreatorColumnSelection() {
-            @Override
-            public boolean createDomain(final DataColumnSpec colSpec) {
-                return colSpec.getType().isCompatible(BoundedValue.class);
-            }
-
-            @Override
-            public boolean dropDomain(final DataColumnSpec colSpec) {
-                return !initDomain;
-            }
-        });
+        this(inputSpec,
+            DomainCreatorColumnSelection.create(c -> !initDomain, c -> c.getType().isCompatible(NominalValue.class)),
+            DomainCreatorColumnSelection.create(c -> !initDomain, c -> c.getType().isCompatible(BoundedValue.class)),
+            DomainCreatorColumnSelection.create(c -> !initDomain, c -> true));
     }
 
     /**
@@ -227,6 +237,8 @@ public class DataTableDomainCreator {
         }
         m_comparators = toCopy.m_comparators.clone();
         m_batchId = toCopy.m_batchId;
+        m_metaDataCalculators = Arrays.stream(toCopy.m_metaDataCalculators).map(DataColumnMetaDataCalculators::copy)
+            .toArray(MetaDataCalculator[]::new);
     }
 
     /**
@@ -349,6 +361,9 @@ public class DataTableDomainCreator {
 
             DataColumnSpecCreator specCreator = new DataColumnSpecCreator(original);
             specCreator.setDomain(domainCreator.createDomain());
+            // existing meta data is overwritten because the respective creator was initialized
+            // with the existing meta data if the provided configuration required it
+            m_metaDataCalculators[i].createMetaData().forEach(m -> specCreator.addMetaData(m, true));
             outColSpecs[i] = specCreator.createSpec();
         }
 
@@ -378,6 +393,7 @@ public class DataTableDomainCreator {
         int i = 0;
         for (DataCell c : row) {
             updateMinMax(i, c, m_mins, m_maxs, m_comparators);
+            m_metaDataCalculators[i].update(c);
             i++;
         }
     }
@@ -493,6 +509,7 @@ public class DataTableDomainCreator {
             if (!dataTableDomainCreator.m_maxsMissing[i] && otherMax != null) {
                 updateMax(i, m_maxs, otherMax, comparator);
             }
+            DataColumnMetaDataCalculators.merge(m_metaDataCalculators[i], dataTableDomainCreator.m_metaDataCalculators[i]);
         }
     }
 
