@@ -46,45 +46,45 @@
  * History
  *   Oct 17, 2019 (Perla Gjoka, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.data.probability.renderer;
-
-import java.util.List;
+package org.knime.core.data.probability.nominal.renderer;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.probability.ProbabilityDistributionValue;
+import org.knime.core.data.probability.nominal.NominalDistributionValue;
+import org.knime.core.data.probability.nominal.NominalDistributionValueMetaData;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
 /**
- * Renderer for {@link ProbabilityDistributionValue} which prints the majority class name, followed by the
- * corresponding probability percentage.
+ * Renderer for {@link ProbabilityDistributionValue} which prints the majority class name, followed by the corresponding
+ * probability percentage.
  *
  * @author Perla Gjoka, KNIME GmbH, Konstanz, Germany
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class ProbabilityDistributionMajorityClassRenderer extends DefaultDataValueRenderer {
+final class NominalDistributionMajorityClassRenderer extends DefaultDataValueRenderer {
 
-    private final DataColumnSpec m_spec;
+    private final NominalDistributionValueMetaData m_metaData;
 
     private static final long serialVersionUID = 1L;
 
     private static final String DESCRIPTION_PROB_DISTR = "Majority class and probability";
 
-    private ProbabilityDistributionMajorityClassRenderer(final DataColumnSpec spec) {
-        m_spec = spec;
+    private NominalDistributionMajorityClassRenderer(final DataColumnSpec spec) {
+        m_metaData = NominalDistributionValueRendererUtil.extractMetaData(spec);
     }
 
     /**
      * Returns true if the selected {@link DataColumnSpec} contains element names, which are not null or empty, since
      * they are needed to define the class names and if the data type of the selected column is compatible with
-     * {@link ProbabilityDistributionValue}, which is the expected type.
+     * {@link NominalDistributionValue}, which is the expected type.
      *
      * @return {@code true} if {@link DataColumnSpec} is accepted, {@code false} otherwise.
      */
     @Override
     public boolean accepts(final DataColumnSpec spec) {
-        return (spec.getElementNames() != null && !spec.getElementNames().isEmpty()
-            && spec.getType().isCompatible(ProbabilityDistributionValue.class));
+        return NominalDistributionValueRendererUtil.accepts(spec);
     }
 
     /**
@@ -98,12 +98,14 @@ final class ProbabilityDistributionMajorityClassRenderer extends DefaultDataValu
 
     @Override
     protected void setValue(final Object value) {
-        if (value instanceof ProbabilityDistributionValue) {
-            final ProbabilityDistributionValue probDistrValue = (ProbabilityDistributionValue)value;
-            final List<String> classNames = m_spec.getElementNames();
-            final int index = probDistrValue.getMaxProbIndex();
+        if (value instanceof NominalDistributionValue) {
+            final NominalDistributionValue probDistrValue = (NominalDistributionValue)value;
+            final String majority = m_metaData.getValues().stream()
+                .max(
+                    (s1, s2) -> Double.compare(probDistrValue.getProbability(s1), probDistrValue.getProbability(s2)))
+                .orElseThrow(() -> new IllegalStateException("Empty nominal distribution value encountered."));
             super.setValue(
-                String.format("%s: %.2f%%", classNames.get(index), probDistrValue.getProbability(index) * 100));
+                String.format("%s: %.2f%%", majority, probDistrValue.getProbability(majority) * 100));
         } else {
             super.setValue(value);
         }
@@ -123,7 +125,7 @@ final class ProbabilityDistributionMajorityClassRenderer extends DefaultDataValu
 
         @Override
         public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
-            return new ProbabilityDistributionMajorityClassRenderer(colSpec);
+            return new NominalDistributionMajorityClassRenderer(colSpec);
         }
     }
 }

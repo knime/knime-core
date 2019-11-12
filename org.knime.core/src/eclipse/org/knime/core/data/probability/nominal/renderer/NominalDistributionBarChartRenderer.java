@@ -46,7 +46,7 @@
  * History
  *   Sep 27, 2019 (Perla Gjoka, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.data.probability.renderer;
+package org.knime.core.data.probability.nominal.renderer;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -54,53 +54,58 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
-import java.util.List;
+import java.util.Collection;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.probability.ProbabilityDistributionValue;
+import org.knime.core.data.probability.nominal.NominalDistributionValue;
+import org.knime.core.data.probability.nominal.NominalDistributionValueMetaData;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
 import org.knime.core.data.renderer.DataValueRenderer;
 
+import com.google.common.collect.Iterators;
+
 /**
- * Renderer for {@link ProbabilityDistributionValue} which shows the probability distribution values as a bar chart.
+ * Renderer for {@link NominalDistributionValue} which shows the probability distribution values as a bar chart.
  * Hovering one of the bars triggers a tooltip which shows the class name and the probability percentage for the
  * corresponding bar.
  *
  * @author Perla Gjoka, KNIME GmbH, Konstanz, Germany
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class ProbabilityDistributionBarChartRenderer extends AbstractPainterDataValueRenderer {
+final class NominalDistributionBarChartRenderer extends AbstractPainterDataValueRenderer {
 
     private static final long serialVersionUID = 1L;
 
     private static final String DESCRIPTION_PROB_DISTR = "Bar Chart";
 
-    private final DataColumnSpec m_spec;
+    private final NominalDistributionValueMetaData m_metaData;
 
-    private ProbabilityDistributionValue m_value;
+    private NominalDistributionValue m_value;
 
     private int m_cellWidth;
 
-    private ProbabilityDistributionBarChartRenderer(final DataColumnSpec spec) {
-        m_spec = spec;
+    private NominalDistributionBarChartRenderer(final DataColumnSpec spec) {
+        m_metaData = spec.getMetaDataOfType(NominalDistributionValueMetaData.class)
+            .orElseThrow(() -> new IllegalStateException("Nominal distribution column without meta data encountered."));
     }
 
     /**
      * Returns true if the {@link DataColumnSpec} selected contains element names, which are not null or empty, since
      * they are needed to define the class names and if the data type of the selected column is compatible with
-     * {@link ProbabilityDistributionValue}, which is the expected type.
+     * {@link NominalDistributionValue}, which is the expected type.
      *
      * @return {@code true} if the {@link DataColumnSpec} is accepted, {@code false} otherwise.
      */
     @Override
     public boolean accepts(final DataColumnSpec spec) {
-        return (spec.getElementNames() != null && !spec.getElementNames().isEmpty()
-            && spec.getType().isCompatible(ProbabilityDistributionValue.class));
+        return (spec.getType().isCompatible(NominalDistributionValue.class)
+            && spec.getMetaDataOfType(NominalDistributionValueMetaData.class).isPresent());
     }
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(m_spec.getElementNames().size() * 50, 60);
+        return new Dimension(m_metaData.size() * 50, 60);
     }
 
     /**
@@ -121,10 +126,11 @@ final class ProbabilityDistributionBarChartRenderer extends AbstractPainterDataV
     @Override
     public String getToolTipText(final MouseEvent event) {
         final int pointX = event.getX();
-        final int whichBar = pointX / (m_cellWidth / m_value.size());
-        if (whichBar >= 0 && whichBar < m_value.size()) {
-            return String.format("%s: %.2f%%", m_spec.getElementNames().get(whichBar),
-                m_value.getProbability(whichBar) * 100);
+        final int whichBar = pointX / (m_cellWidth / m_metaData.size());
+        if (whichBar >= 0 && whichBar < m_metaData.size()) {
+            final String value = Iterators.get(m_metaData.getValues().iterator(), whichBar);
+            return String.format("%s: %.2f%%", value,
+                m_value.getProbability(value) * 100);
         }
         return null;
     }
@@ -141,13 +147,13 @@ final class ProbabilityDistributionBarChartRenderer extends AbstractPainterDataV
             return;
         }
         m_cellWidth = Math.abs(getWidth()) - 10;
-        final int rectWidth = m_cellWidth / m_value.size();
+        final int rectWidth = m_cellWidth / m_metaData.size();
         final Graphics2D g2d = (Graphics2D)g.create();
-        final List<String> probClasses = m_spec.getElementNames();
+        final Collection<String> probClasses = m_metaData.getValues();
         double minProb = Double.POSITIVE_INFINITY;
         double maxProb = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < probClasses.size(); i++) {
-            final double prob = m_value.getProbability(i);
+        for (String value : probClasses) {
+            final double prob = m_value.getProbability(value);
             if (prob > maxProb) {
                 maxProb = prob;
             }
@@ -156,15 +162,18 @@ final class ProbabilityDistributionBarChartRenderer extends AbstractPainterDataV
                 minProb = prob;
             }
         }
-        for (int i = 0; i < probClasses.size(); i++) {
+        int i = 0;
+        for (String value : probClasses) {
             final int cellHeight = Math.abs(getHeight()) - 10;
-            final int rectHeight = (int)calculateRectHeight(m_value.getProbability(i), cellHeight, minProb, maxProb);
+            final int rectHeight =
+                (int)calculateRectHeight(m_value.getProbability(value), cellHeight, minProb, maxProb);
             g2d.setPaint(Color.ORANGE);
             g2d.setStroke(new BasicStroke(1));
             final int barStartPoint = cellHeight + 5 - rectHeight;
             g2d.fillRect(rectWidth * i + 5, barStartPoint, rectWidth, rectHeight);
             g2d.setPaint(Color.BLACK);
             g2d.drawRect(rectWidth * i + 5, barStartPoint, rectWidth, rectHeight);
+            i++;
         }
         g2d.dispose();
     }
@@ -185,8 +194,8 @@ final class ProbabilityDistributionBarChartRenderer extends AbstractPainterDataV
 
     @Override
     protected void setValue(final Object value) {
-        if (value instanceof ProbabilityDistributionValue) {
-            m_value = (ProbabilityDistributionValue)value;
+        if (value instanceof NominalDistributionValue) {
+            m_value = (NominalDistributionValue)value;
         } else {
             m_value = null;
         }
@@ -206,7 +215,7 @@ final class ProbabilityDistributionBarChartRenderer extends AbstractPainterDataV
 
         @Override
         public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
-            return new ProbabilityDistributionBarChartRenderer(colSpec);
+            return new NominalDistributionBarChartRenderer(colSpec);
         }
     }
 }

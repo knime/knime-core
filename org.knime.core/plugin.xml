@@ -250,18 +250,18 @@
          </renderer>
       </dataValue>
       <dataValue
-            valueClass="org.knime.core.data.probability.ProbabilityDistributionValue">
+            valueClass="org.knime.core.data.probability.nominal.NominalDistributionValue">
          <renderer
-               rendererFactoryClass="org.knime.core.data.probability.renderer.ProbabilityDistributionBarChartRenderer$BarChartRendererFactory"
-               suggestAsDefault="false">
-         </renderer>
-         <renderer
-               rendererFactoryClass="org.knime.core.data.probability.renderer.ProbabilityDistributionMajorityClassRenderer$MajorityClassRendererFactory"
-               suggestAsDefault="false">
-         </renderer>
-         <renderer
-               rendererFactoryClass="org.knime.core.data.probability.renderer.ProbabilityDistributionClassNameRenderer$ClassNameRendererFactory"
+               rendererFactoryClass="org.knime.core.data.probability.nominal.renderer.NominalDistributionClassNameRenderer$ClassNameRendererFactory"
                suggestAsDefault="true">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.probability.nominal.renderer.NominalDistributionMajorityClassRenderer$MajorityClassRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.probability.nominal.renderer.NominalDistributionBarChartRenderer$BarChartRendererFactory"
+               suggestAsDefault="false">
          </renderer>
       </dataValue>      
    </extension>
