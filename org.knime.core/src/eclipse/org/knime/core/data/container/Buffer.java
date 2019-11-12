@@ -1623,7 +1623,8 @@ public class Buffer implements KNIMEStreamConstants {
                 m_useBackIntoMemoryIterator = false;
                 final BackIntoMemoryIterator backIntoMemoryIt = new BackIntoMemoryIterator(iterator(), size());
                 m_backIntoMemoryIteratorRef = new WeakReference<BackIntoMemoryIterator>(backIntoMemoryIt);
-                final CloseableRowIterator listIt = new FromListIterator(backIntoMemoryIt.getList(), backIntoMemoryIt);
+                final CloseableRowIterator listIt =
+                    new FromListIterator(backIntoMemoryIt.getList(), backIntoMemoryIt, exec);
                 return filter == null ? listIt : new FilterDelegateRowIterator(listIt, filter, size(), exec);
             }
 
@@ -1648,7 +1649,8 @@ public class Buffer implements KNIMEStreamConstants {
                     // We never store more than 2^31 rows in memory, therefore it's safe to cast to int.
                     final int fromIndex = (int)Math.min(Integer.MAX_VALUE, filter.getFromRowIndex().orElse(0l));
                     final int toIndex = (int)Math.min(Integer.MAX_VALUE, filter.getToRowIndex().orElse(size() - 1));
-                    final FromListRangeIterator rangeIterator = new FromListRangeIterator(list, fromIndex, toIndex);
+                    final FromListRangeIterator rangeIterator =
+                        new FromListRangeIterator(list, fromIndex, toIndex, exec);
 
                     /**
                      * In a future world (a world of predicates, see AP-11805), the filter might be configured to keep
@@ -1659,22 +1661,22 @@ public class Buffer implements KNIMEStreamConstants {
                      * provided with a copied filter with adjusted from- and toRowIndices.
                      */
                     final TableFilter offsetFilter = new TableFilter.Builder(filter)//
-                            .withFromRowIndex(0)//
-                            .withToRowIndex(toIndex - fromIndex)//
-                            .build();
+                        .withFromRowIndex(0)//
+                        .withToRowIndex(toIndex - fromIndex)//
+                        .build();
                     return new FilterDelegateRowIterator(rangeIterator, offsetFilter, size(), exec);
                 }
 
                 // Case 4: We are currently iterating the table back into memory and want to apply a filter.
                 else {
-                    return new FilterDelegateRowIterator(new FromListIterator(list, backIntoMemoryIt), filter, size(),
-                        exec);
+                    return new FilterDelegateRowIterator(new FromListIterator(list, backIntoMemoryIt, exec), filter,
+                        size(), exec);
                 }
 
             }
 
             // Case 5: We have at least parts of the table in memory and don't want to apply a filter.
-            return new FromListIterator(list, backIntoMemoryIt);
+            return new FromListIterator(list, backIntoMemoryIt, exec);
         }
     }
 
@@ -2125,23 +2127,29 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Iterator to be used when all data is kept in a list in memory. It uses access by index and allows to itarate over
-     * a range of rows.
+     * Iterator that reads a range of rows from a list that is weakly-referenced in memory. Should the list be
+     * garbage-collected, the iterator is able to use a fallback that reads rows from disk.
      */
-    private class FromListRangeIterator extends CloseableRowIterator {
+    private abstract class FromListFallBackFromFileIterator extends CloseableRowIterator {
 
-        private final List<BlobSupportDataRow> m_list;
-
-        private int m_nextIndex;
+        private final WeakReference<List<BlobSupportDataRow>> m_listRef;
 
         private final int m_toIndex;
 
-        FromListRangeIterator(final List<BlobSupportDataRow> list, final int fromIndex, final int toIndex) {
+        private final ExecutionMonitor m_exec;
+
+        int m_nextIndex;
+
+        private TableStoreCloseableRowIterator m_fallBackFromFileIterator;
+
+        private FromListFallBackFromFileIterator(final List<BlobSupportDataRow> list, final int fromIndex,
+            final int toIndex, final ExecutionMonitor exec) {
             assert fromIndex >= 0;
             assert toIndex < size();
-            m_list = list;
-            m_nextIndex = fromIndex;
+            m_listRef = new WeakReference<>(list);
             m_toIndex = toIndex;
+            m_exec = exec;
+            m_nextIndex = fromIndex;
         }
 
         @Override
@@ -2149,18 +2157,58 @@ public class Buffer implements KNIMEStreamConstants {
             return m_nextIndex <= m_toIndex;
         }
 
+        void initFallBackFromFileIterator() {
+            m_fallBackFromFileIterator =
+                m_outputReader.iteratorWithFilter(TableFilter.filterRangeOfRows(m_nextIndex, m_toIndex), m_exec);
+        }
+
         @Override
         public DataRow next() {
             if (!hasNext()) {
                 throw new NoSuchElementException("No more rows in buffer");
             }
-            return m_list.get(m_nextIndex++);
+
+            // case 1: list has been garbage-collected; use fallback
+            if (m_fallBackFromFileIterator != null) {
+                m_nextIndex++;
+                return m_fallBackFromFileIterator.next();
+            }
+
+            final List<BlobSupportDataRow> list = m_listRef.get();
+            if (list == null) {
+                initFallBackFromFileIterator();
+                return next();
+            }
+
+            // case 2: list in memory, proceed
+            return nextFromList(list);
         }
+
+        abstract DataRow nextFromList(final List<BlobSupportDataRow> list);
 
         @Override
         public void close() {
             m_nextIndex = (int) size();
         }
+
+    }
+
+    /**
+     * Iterator to be used when all data is kept in a list in memory. It uses access by index and allows to iterate over
+     * a range of rows.
+     */
+    private final class FromListRangeIterator extends FromListFallBackFromFileIterator {
+
+        private FromListRangeIterator(final List<BlobSupportDataRow> list, final int fromIndex, final int toIndex,
+            final ExecutionMonitor exec) {
+            super(list, fromIndex, toIndex, exec);
+        }
+
+        @Override
+        DataRow nextFromList(final List<BlobSupportDataRow> list) {
+            return list.get(m_nextIndex++);
+        }
+
     }
 
     /**
@@ -2169,69 +2217,56 @@ public class Buffer implements KNIMEStreamConstants {
      * may be simultaneously modified while reading (in case the content is fetched from disk and restored in memory).
      * This object is used when all rows fit in memory (no file).
      */
-    private class FromListIterator extends CloseableRowIterator {
+    private final class FromListIterator extends FromListFallBackFromFileIterator {
 
-        private BackIntoMemoryIterator m_backIntoMemoryIterator;
+    	private BackIntoMemoryIterator m_backIntoMemoryIterator;
 
-        private List<BlobSupportDataRow> m_list;
-
-        // do not use iterator here, see inner class comment
-        private int m_nextIndex = 0;
-
-        FromListIterator(final List<BlobSupportDataRow> list, final BackIntoMemoryIterator backIntoMemoryIterator) {
-            m_list = list;
+        private FromListIterator(final List<BlobSupportDataRow> list,
+            final BackIntoMemoryIterator backIntoMemoryIterator, final ExecutionMonitor exec) {
+            super(list, 0, (int) size() - 1, exec);
             m_backIntoMemoryIterator = backIntoMemoryIterator;
+            MemoryAlertSystem.getInstanceUncollected().addListener(new MemoryAlertListener() {
+                @Override
+                protected boolean memoryAlert(final MemoryAlert alert) {
+                	m_backIntoMemoryIterator = null;
+                    return true;
+                }
+            });
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        public boolean hasNext() {
-            return m_nextIndex < size();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DataRow next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException("No more rows in buffer");
-            }
-
-            Object semaphore = m_backIntoMemoryIterator != null ? m_backIntoMemoryIterator : FromListIterator.this;
+        DataRow nextFromList(final List<BlobSupportDataRow> list) {
+        	final BackIntoMemoryIterator backIntoMemoryIterator = m_backIntoMemoryIterator;
+        	// need to synchronize access to list, as it is potentially modified by the backIntoMemoryIterator
+            final Object semaphore = backIntoMemoryIterator != null ? backIntoMemoryIterator : this;
             synchronized (semaphore) {
-                // need to synchronize access to the list as the list is
-                // potentially modified by the backIntoMemoryIterator
-                if (m_nextIndex < m_list.size()) {
-                    return m_list.get(m_nextIndex++);
+
+                // case 2a: read from memory
+                if (m_nextIndex < list.size()) {
+                    return list.get(m_nextIndex++);
                 }
-                if (m_backIntoMemoryIterator == null) {
-                    throw new InternalError(
-                        "DataRow list contains fewer elements than buffer (" + m_list.size() + " vs. " + size() + ")");
+
+                // a memory alert has caused the reference on the back into memory iterator to be dropped; use fallback
+                if (backIntoMemoryIterator == null) {
+                    initFallBackFromFileIterator();
+                    return next();
                 }
-                BlobSupportDataRow next = (BlobSupportDataRow)m_backIntoMemoryIterator.next();
+
+                // case 2b: read from file back into memory
+                final BlobSupportDataRow next = (BlobSupportDataRow)backIntoMemoryIterator.next();
                 if (next == null) {
                     throw new InternalError("Unable to restore data row from disk");
                 }
-                m_list.add(next);
+                list.add(next);
                 // once we've read all rows back into memory, ...
                 if (++m_nextIndex >= size()) {
-                    assert !m_backIntoMemoryIterator.hasNext() : "File iterator returns more rows than buffer contains";
+                	assert !backIntoMemoryIterator.hasNext() : "File iterator returns more rows than buffer contains";
                     m_backIntoMemoryIterator = null;
-
-                    m_list = null;
                 }
                 return next;
             }
         }
 
-        /** {@inheritDoc} */
-        @Override
-        public void close() {
-            m_nextIndex = (int)size();
-        }
     }
 
     /**
