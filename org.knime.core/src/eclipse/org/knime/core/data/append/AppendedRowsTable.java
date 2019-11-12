@@ -45,20 +45,16 @@
  */
 package org.knime.core.data.append;
 
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomain;
-import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataColumnSpecCreator.MergeOptions;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.append.AppendedRowsIterator.PairSupplier;
 import org.knime.core.node.ExecutionMonitor;
@@ -82,6 +78,12 @@ import org.knime.core.util.Pair;
  * @since 3.1
  */
 public class AppendedRowsTable implements DataTable {
+
+    /**
+     * The options {@link DataColumnSpecCreator#merge(DataColumnSpec, java.util.Set)} is called with.
+     */
+    private static final EnumSet<MergeOptions> MERGE_OPTIONS =
+        EnumSet.of(MergeOptions.ALLOW_VARYING_TYPES, MergeOptions.ALLOW_VARYING_ELEMENT_NAMES);
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(AppendedRowsTable.class);
@@ -221,73 +223,35 @@ public class AppendedRowsTable implements DataTable {
      */
     public static final DataTableSpec generateDataTableSpec(
             final DataTableSpec... tableSpecs) {
-        // memorize the first column spec in the argument array for
-        // each column name, we use it later on to initialize the column
-        // spec creator.
-        LinkedHashMap<String, DataColumnSpec> columnSet =
-            new LinkedHashMap<String, DataColumnSpec>();
-        LinkedHashMap<String, DataType> typeSet =
-            new LinkedHashMap<String, DataType>();
-        LinkedHashMap<String, DataColumnDomain> domainSet =
-            new LinkedHashMap<String, DataColumnDomain>();
-
-        // create final data table spec
-        for (int i = 0; i < tableSpecs.length; i++) {
-            DataTableSpec cur = tableSpecs[i];
-            for (int c = 0; c < cur.getNumColumns(); c++) {
-                DataColumnSpec colSpec = cur.getColumnSpec(c);
-                String colName = colSpec.getName();
-                // set the spec for this column if not yet done
-                if (!columnSet.containsKey(colName)) {
-                    columnSet.put(colName, colSpec);
+        final LinkedHashMap<String, DataColumnSpecCreator> colCreatorSet = new LinkedHashMap<>();
+        for (DataTableSpec tableSpec : tableSpecs) {
+            for (DataColumnSpec colSpec : tableSpec) {
+                final String colName = colSpec.getName();
+                final DataColumnSpecCreator colCreator = colCreatorSet.get(colName);
+                if (colCreator == null) {
+                    // new column -> initialize the creator
+                    colCreatorSet.put(colName, new DataColumnSpecCreator(colSpec));
+                } else {
+                    // known column -> merge the specs
+                    mergeSpec(colSpec, colCreator);
                 }
-                DataType colType = colSpec.getType();
-                DataColumnDomain colDomain = colSpec.getDomain();
-
-                // duplicates are welcome - but only if they match the type
-                if (typeSet.containsKey(colName)) {
-                    DataType oldType = typeSet.get(colName);
-                    DataColumnDomain oldDomain = domainSet.get(colName);
-                    // the base type they share
-                    DataType type = DataType.getCommonSuperType(oldType,
-                            colType);
-                    assert type.isASuperTypeOf(oldType);
-                    assert type.isASuperTypeOf(colType);
-                    // that shouldn't happen though, eh: shit happens.
-                    if (!oldType.equals(type)) {
-                        LOGGER.info("Confusing data types for column \""
-                                + colName + "\": " + oldType.toString()
-                                + " vs. " + colType.toString() + "\n"
-                                + "Using common base type " + type.toString());
-                        // that must not change the order.
-                        typeSet.put(colName, type);
-                    }
-                    DataColumnDomain newDomain = merge(oldDomain, colDomain,
-                            type.getComparator());
-                    domainSet.put(colName, newDomain);
-                } else { // doesn't contain the key
-                    typeSet.put(colName, colType);
-                    domainSet.put(colName, colDomain);
-                }
-            } // for all columns in the current table spec
-        } // for all tables
-
-        DataColumnSpec[] colSpecs = new DataColumnSpec[typeSet.size()];
-        int i = 0;
-        for (Map.Entry<String, DataType> entry : typeSet.entrySet()) {
-            String name = entry.getKey();
-            DataType type = entry.getValue();
-            // domain is null, if we did not remember it (e.g. "keepDomain" was
-            // false)
-            DataColumnDomain domain = domainSet.get(name);
-            DataColumnSpec initSpec = columnSet.get(name);
-            DataColumnSpecCreator specCreator = new DataColumnSpecCreator(
-                    initSpec);
-            specCreator.setDomain(domain);
-            specCreator.setType(type);
-            colSpecs[i++] = specCreator.createSpec();
+            }
         }
-        return new DataTableSpec(colSpecs);
+        return new DataTableSpec(
+            colCreatorSet.values().stream().map(DataColumnSpecCreator::createSpec).toArray(DataColumnSpec[]::new));
+    }
+
+    private static void mergeSpec(final DataColumnSpec colSpec, final DataColumnSpecCreator colCreator) {
+        final DataType oldType = colCreator.getType();
+        colCreator.merge(colSpec, MERGE_OPTIONS);
+        // that shouldn't happen though, eh: shit happens.
+        DataType type = colCreator.getType();
+        if (!oldType.equals(type)) {
+            LOGGER.info("Confusing data types for column \""
+                    + colSpec.getName() + "\": " + oldType.toString()
+                    + " vs. " + colSpec.getType().toString() + "\n"
+                    + "Using common base type " + type.toString());
+        }
     }
 
     /*
@@ -301,40 +265,5 @@ public class AppendedRowsTable implements DataTable {
             tableSpecs[i] = tables[i].getDataTableSpec();
         }
         return generateDataTableSpec(tableSpecs);
-    }
-
-    /*
-     * Merges two domains of the same column, i.e. emerging from different
-     * tables, min max will be updated (if possible) and the possible value set.
-     */
-    private static final DataColumnDomain merge(final DataColumnDomain d1,
-            final DataColumnDomain d2, final DataValueComparator comp) {
-        final DataCell d1Min = d1.getLowerBound();
-        final DataCell d1Max = d1.getUpperBound();
-        final DataCell d2Min = d2.getLowerBound();
-        final DataCell d2Max = d2.getUpperBound();
-        final Set<DataCell> d1Poss = d1.getValues();
-        final Set<DataCell> d2Poss = d2.getValues();
-        final DataCell newMin;
-        if (d1Min == null || d2Min == null) {
-            newMin = null;
-        } else {
-            newMin = comp.compare(d1Min, d2Min) < 0 ? d1Min : d2Min;
-        }
-        final DataCell newMax;
-        if (d1Max == null || d2Max == null) {
-            newMax = null;
-        } else {
-            newMax = comp.compare(d1Max, d2Max) > 0 ? d1Max : d2Max;
-        }
-        final Set<DataCell> newPoss;
-        if (d1Poss == null || d2Poss == null) {
-            newPoss = null;
-        } else {
-            newPoss = new LinkedHashSet<DataCell>(d1Poss);
-            newPoss.addAll(d2Poss);
-        }
-        return new DataColumnDomainCreator(newPoss, newMin, newMax)
-                .createDomain();
     }
 }
