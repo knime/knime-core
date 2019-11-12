@@ -95,7 +95,7 @@ public abstract class MapNodeFactoryClassMapper extends NodeFactoryClassMapper {
      * {@inheritDoc}
      */
     @Override
-    public NodeFactory<? extends NodeModel> mapFactoryClassName(final String factoryClassName) {
+    public final NodeFactory<? extends NodeModel> mapFactoryClassName(final String factoryClassName) {
         for (final String key : m_map.keySet()) {
             if (key.equals(factoryClassName)) {
                 final Class<? extends NodeFactory<? extends NodeModel>> nodeFactoryClass = m_map.get(key);

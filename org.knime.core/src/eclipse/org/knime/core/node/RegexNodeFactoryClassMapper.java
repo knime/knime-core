@@ -103,7 +103,7 @@ public abstract class RegexNodeFactoryClassMapper extends NodeFactoryClassMapper
      */
     @Override
     @SuppressWarnings("unchecked")
-    public NodeFactory<? extends NodeModel> mapFactoryClassName(final String factoryClassName) {
+    public final NodeFactory<? extends NodeModel> mapFactoryClassName(final String factoryClassName) {
         for (final String regexPattern : m_regexRules.keySet()) {
             if (factoryClassName.matches(regexPattern)) {
                 final Pair<String, String> replacement = m_regexRules.get(regexPattern);
