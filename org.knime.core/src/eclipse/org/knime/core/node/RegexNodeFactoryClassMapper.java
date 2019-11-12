@@ -57,6 +57,11 @@ import org.knime.core.util.Pair;
 /**
  * Base class for {@link NodeFactoryClassMapper}s which map factory classes via regex rules.
  *
+ * <p>
+ * This class exposes the regex rules used for the node mappings, such that the mappings can be replicated in other
+ * platforms.
+ * </p>
+ *
  * @author Alison Walter, KNIME GmbH, Konstanz, Germany
  * @since 4.1
  */

@@ -54,6 +54,10 @@ import java.util.Map;
 /**
  * Base class for {@link NodeFactoryClassMapper}s which map via concrete key-value pairs.
  *
+ * <p>
+ * This class exposes the node mappings, such that the mappings can be replicated in other platforms.
+ * </p>
+ *
  * @author Alison Walter, KNIME GmbH, Konstanz, Germany
  * @since 4.1
  */
