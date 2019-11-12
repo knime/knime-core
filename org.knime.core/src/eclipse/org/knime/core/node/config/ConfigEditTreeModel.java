@@ -156,9 +156,9 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
     public static ConfigEditTreeModel create(final ConfigBase settingsTree,
             final ConfigBaseRO variablesMask) throws InvalidSettingsException {
         // if we don't find the version number in the variable tree, we're reading a variable tree exported in version 1
-    	final Version version = Version.valueOf(variablesMask.getString(VERSION_KEY, Version.V_2008_04_08.name()));
-        final ConfigBaseRO variableTree =
-            version.equals(Version.V_2008_04_08) ? variablesMask : variablesMask.getConfigBase(TREE_KEY);
+        final Version version = Version.valueOf(variablesMask.getString(VERSION_KEY, Version.V_2008_04_08.name()));
+        final ConfigBaseRO variableTree = version.equals(Version.V_2008_04_08) || !variablesMask.containsKey(TREE_KEY)
+            ? variablesMask : variablesMask.getConfigBase(TREE_KEY);
         final ConfigEditTreeNode rootNode = new ConfigEditTreeNode(settingsTree, null, version);
         recursiveAdd(rootNode, settingsTree, variableTree);
         final ConfigEditTreeModel result = new ConfigEditTreeModel(rootNode);
