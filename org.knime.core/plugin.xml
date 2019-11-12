@@ -15,6 +15,7 @@
    <extension-point id="DataCellToJavaConverter" name="DataCellToJavaConverter" schema="schema/DataCellToJavaConverter.exsd"/>
    <extension-point id="WorkflowSaveHook" name="Extensions that are run after a workflow is saved to disc" schema="schema/WorkflowSaveHook.exsd"/>
    <extension-point id="FileSystemBrowser" name="FileSystemBrowser" schema="schema/FileSystemBrowser.exsd"/>
+   <extension-point id="DataColumnMetaDataType" name="DataColumnMetaDataType" schema="schema/DataColumnMetaDataType.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory

@@ -33,4 +33,10 @@
             class="org.knime.core.util.TestWorkflowSaveHook">
       </WorkflowSaveHook>
    </extension>
+   <extension
+         point="org.knime.core.DataColumnMetaDataType">
+      <DataColumnMetaData
+            dataColumnMetaDataExtension="org.knime.core.data.meta.TestDataColumnMetaData$TestMetaDataExtension">
+      </DataColumnMetaData>
+   </extension>
 </fragment>
