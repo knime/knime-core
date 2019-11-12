@@ -525,6 +525,13 @@
                serializerClass="org.knime.core.data.probability.ProbabilityDistributionCell$ProbabilityDistributionSerializer">
          </serializer>
       </DataType>
+      <DataType
+            cellClass="org.knime.core.data.probability.nominal.NominalDistributionCell">
+         <serializer
+               cellClass="org.knime.core.data.probability.nominal.NominalDistributionCell"
+               serializerClass="org.knime.core.data.probability.nominal.NominalDistributionCell$NominalDistributionSerializer">
+         </serializer>
+      </DataType>
    </extension>
    <extension
          point="org.knime.core.PortType">
@@ -650,5 +657,11 @@
       <WorkflowSaveHook
             class="org.knime.core.node.workflow.artifacts.WorkflowConfigArtifactsGenerator">
       </WorkflowSaveHook>
+   </extension>
+   <extension
+         point="org.knime.core.DataColumnMetaDataType">
+      <DataColumnMetaData
+            dataColumnMetaDataExtension="org.knime.core.data.probability.nominal.NominalDistributionValueMetaDataExtension">
+      </DataColumnMetaData>
    </extension>
 </plugin>
