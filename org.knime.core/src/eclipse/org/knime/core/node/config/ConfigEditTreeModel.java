@@ -140,21 +140,25 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
 
     private static final String VERSION_KEY = "version";
 
+    private static final String TREE_KEY = "tree";
+
     private final CopyOnWriteArrayList<ConfigEditTreeEventListener> m_listeners;
 
     /** Factory method that parses the settings tree and constructs a new
      * object of this class. It will use the mask as given by the second
      * argument (which may be null, however).
      * @param settingsTree The original settings object.
-     * @param variableTree The variables mask.
+     * @param variablesMask The variables mask.
      * @return a new object of this class.
      * @throws InvalidSettingsException If setting can't be parsed
      * @noreference This method is not intended to be referenced by clients.
      */
     public static ConfigEditTreeModel create(final ConfigBase settingsTree,
-            final ConfigBaseRO variableTree) throws InvalidSettingsException {
+            final ConfigBaseRO variablesMask) throws InvalidSettingsException {
         // if we don't find the version number in the variable tree, we're reading a variable tree exported in version 1
-    	final Version version = Version.valueOf(variableTree.getString(VERSION_KEY, Version.V_2008_04_08.name()));
+    	final Version version = Version.valueOf(variablesMask.getString(VERSION_KEY, Version.V_2008_04_08.name()));
+        final ConfigBaseRO variableTree =
+            version.equals(Version.V_2008_04_08) ? variablesMask : variablesMask.getConfigBase(TREE_KEY);
         final ConfigEditTreeNode rootNode = new ConfigEditTreeNode(settingsTree, null, version);
         recursiveAdd(rootNode, settingsTree, variableTree);
         final ConfigEditTreeModel result = new ConfigEditTreeModel(rootNode);
@@ -605,8 +609,12 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 String key = getConfigEntry().getKey();
                 subConfig = variableTree.addConfigBase(key);
             } else {
-                subConfig = variableTree;
-                subConfig.addString(VERSION_KEY, m_version.name());
+                if (m_version.equals(Version.V_2008_04_08)) {
+                    subConfig = variableTree;
+                } else {
+                    variableTree.addString(VERSION_KEY, m_version.name());
+                    subConfig = variableTree.addConfigBase(TREE_KEY);
+                }
             }
             if (getUserObject().isLeaf()) {
                 subConfig.addString(CFG_USED_VALUE, getUseVariableName());
