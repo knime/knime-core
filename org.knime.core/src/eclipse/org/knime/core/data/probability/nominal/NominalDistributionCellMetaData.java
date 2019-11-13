@@ -63,10 +63,9 @@ import java.util.concurrent.ExecutionException;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
-import org.knime.core.data.probability.ProbabilityDistributionCell;
 
 /**
- * Holds information shared by multiple {@link ProbabilityDistributionCell ProbabilityDistributionCells} created by the
+ * Holds information shared by multiple {@link NominalDistributionCell NominalDistributionCells} created by the
  * same process e.g. the values the distribution is defined over.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany

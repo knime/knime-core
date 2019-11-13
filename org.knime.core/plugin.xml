@@ -518,14 +518,6 @@
          </serializer>
       </DataType>
       <DataType
-            cellClass="org.knime.core.data.probability.ProbabilityDistributionCell"
-            factoryClass="org.knime.core.data.probability.ProbabilityDistributionCellFactory">
-         <serializer
-               cellClass="org.knime.core.data.probability.ProbabilityDistributionCell"
-               serializerClass="org.knime.core.data.probability.ProbabilityDistributionCell$ProbabilityDistributionSerializer">
-         </serializer>
-      </DataType>
-      <DataType
             cellClass="org.knime.core.data.probability.nominal.NominalDistributionCell">
          <serializer
                cellClass="org.knime.core.data.probability.nominal.NominalDistributionCell"

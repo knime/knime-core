@@ -49,7 +49,6 @@
 package org.knime.core.data.probability.nominal.renderer;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.probability.ProbabilityDistributionValue;
 import org.knime.core.data.probability.nominal.NominalDistributionValue;
 import org.knime.core.data.probability.nominal.NominalDistributionValueMetaData;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
@@ -57,7 +56,7 @@ import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
 /**
- * Renderer for {@link ProbabilityDistributionValue} which prints the majority class name, followed by the corresponding
+ * Renderer for {@link NominalDistributionValue} which prints the majority class name, followed by the corresponding
  * probability percentage.
  *
  * @author Perla Gjoka, KNIME GmbH, Konstanz, Germany
