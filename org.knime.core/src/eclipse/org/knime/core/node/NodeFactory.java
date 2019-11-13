@@ -258,6 +258,15 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
+     * Returns the original node description.
+     *
+     * @return the original node description
+     */
+    NodeDescription getNodeDescription() {
+        return m_nodeDescription;
+    }
+
+    /**
      * Adds information about the bundle/feature in which this node resides to the XML description tree. Note that the
      * bundle information does not have a namespace!
      */
@@ -483,26 +492,31 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Access method for {@link #createNodeModel()}. If assertions are enabled, this method will
-     * also do sanity checks for the correct labeling of the port description:
-     * The port count (in, out) is only available in the
-     * NodeModel. The first time, this method is called, the port count is
-     * retrieved from the NodeModel and the xml description is validated against
-     * the info from the model. If inconsistencies are identified, log messages
-     * will be written and the full description of the node is adapted such that
-     * the user (preferably the implementor) immediately sees the problem.
+     * Access method for {@link #createNodeModel()}. If assertions are enabled, this method will also do sanity checks
+     * for the correct labeling of the port description: The port count (in, out) is only available in the NodeModel.
+     * The first time, this method is called, the port count is retrieved from the NodeModel and the xml description is
+     * validated against the info from the model. If inconsistencies are identified, log messages will be written and
+     * the full description of the node is adapted such that the user (preferably the implementor) immediately sees the
+     * problem.
      *
+     * @param creationConfig the creation configuration
+     * @param adaptedDescription the node description
      * @return the model as from createNodeModel()
      */
-    final T callCreateNodeModel(final NodeCreationConfiguration creationConfig) {
+    final T callCreateNodeModel(final NodeCreationConfiguration creationConfig,
+        final NodeDescription adaptedDescription) {
         T result;
+        final NodeDescription description;
         if (creationConfig == null) {
             result = createNodeModel();
+            description = m_nodeDescription;
         } else {
+            assert adaptedDescription != null;
             result = createNodeModel(creationConfig);
+            description = adaptedDescription;
         }
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
-            checkConsistency(result);
+            checkConsistency(result, description);
         }
         return result;
     }
@@ -606,36 +620,36 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Called when the NodeModel is instantiated the first time. We do some
-     * sanity checks here, for instance: Do the number of ports in the xml match
-     * with the port count in the node model...
+     * Called when the NodeModel is instantiated the first time. We do some sanity checks here, for instance: Do the
+     * number of ports in the xml match with the port count in the node model...
      *
      * @param m the NodeModel to check against
+     * @param nodeDescription the node description
      */
-    private void checkConsistency(final NodeModel m) {
-        if (m_nodeDescription instanceof NoDescriptionProxy) {
+    private void checkConsistency(final NodeModel m, final NodeDescription nodeDescription) {
+        if (nodeDescription instanceof NoDescriptionProxy) {
             // no description available at all; this has already been reported
             return;
         }
 
-        if (getNrNodeViews() != m_nodeDescription.getViewCount()) {
+        if (getNrNodeViews() != nodeDescription.getViewCount()) {
             m_logger.coding("Missing or surplus view description");
         }
 
         for (int i = 0; i < m.getNrInPorts(); i++) {
-            if (m_nodeDescription.getInportName(i) == null) {
+            if (nodeDescription.getInportName(i) == null) {
                 m_logger.coding("Missing description for input port " + i);
             }
         }
 
         for (int i = 0; i < m.getNrOutPorts(); i++) {
-            if (m_nodeDescription.getOutportName(i) == null) {
+            if (nodeDescription.getOutportName(i) == null) {
                 m_logger.coding("Missing description for output port " + i);
             }
         }
 
         for (int i = 0; i < m_nodeDescription.getViewCount(); i++) {
-            if (m_nodeDescription.getViewDescription(i) == null) {
+            if (nodeDescription.getViewDescription(i) == null) {
                 m_logger.coding("Missing description for view " + i);
             }
         }

@@ -52,6 +52,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.xmlbeans.XmlObject;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.context.ports.ModifiablePortsConfiguration;
 import org.w3c.dom.Element;
 
 /**
@@ -224,6 +225,16 @@ public abstract class NodeDescription {
         return m_deprecated;
     }
 
+    /**
+     * Returns an updated instance of the node description. This is required if the node contains configurable ports.
+     *
+     * @param portsConfiguration the ports configuration can be {@code null}
+     * @return an updated version of the node description
+     *
+     */
+    NodeDescription createUpdatedNodeDescription(final ModifiablePortsConfiguration portsConfiguration) {
+        return this;
+    }
 
     /** Get a singleton instance of a {@link DocumentBuilderFactory}, initialized lazy.
      * @return That singleton instance.

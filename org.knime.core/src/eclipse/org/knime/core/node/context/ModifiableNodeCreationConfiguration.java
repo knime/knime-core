@@ -64,6 +64,8 @@ import org.knime.core.node.context.url.impl.DefaultModifiableURLConfiguration;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  * @noreference This class is not intended to be referenced by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ *
  */
 public final class ModifiableNodeCreationConfiguration extends NodeCreationConfiguration
     implements DeepCopy<ModifiableNodeCreationConfiguration>, NodeSettingsPersistable {

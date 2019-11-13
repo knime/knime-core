@@ -250,6 +250,8 @@ public final class Node implements NodeModelWarningListener {
 
     private final ModifiableNodeCreationConfiguration m_creationConfig;
 
+    private final NodeDescription m_adaptedNodeDescription;
+
     /**
      * Creates a new node by retrieving the model, dialog, and views, from the
      * specified <code>NodeFactory</code>. Also initializes the input and output
@@ -278,19 +280,27 @@ public final class Node implements NodeModelWarningListener {
         }
         m_factory = nodeFactory;
         if (creationConfig == null && m_factory instanceof ConfigurableNodeFactory) {
+            // TODO: optional of nullable ist sinnlos wir wissen dass es null ist
             m_creationConfig = ((ConfigurableNodeFactory<NodeModel>)m_factory).createNodeCreationConfig();
         } else {
             m_creationConfig = creationConfig;
         }
-        m_name = m_factory.getNodeName().intern();
-        m_model = m_factory.callCreateNodeModel(m_creationConfig);
+        if (m_creationConfig != null) {
+            m_adaptedNodeDescription = m_factory.getNodeDescription()
+                .createUpdatedNodeDescription(m_creationConfig.getPortConfig().orElse(null));
+        } else {
+            m_adaptedNodeDescription = null;
+        }
+        m_name = m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getNodeName().intern()
+            : m_factory.getNodeName().intern();
+        m_model = m_factory.callCreateNodeModel(m_creationConfig, m_adaptedNodeDescription);
         m_model.addWarningListener(this);
         m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();
         // create an extra input port (index: 0) for the optional variables.
         m_inputs = new Input[m_model.getNrInPorts() + 1];
         m_inputs[0] = new Input("Variable Inport", FlowVariablePortObject.TYPE_OPTIONAL);
         for (int i = 1; i < m_inputs.length; i++) {
-            m_inputs[i] = new Input(m_factory.getInportName(i - 1), m_model.getInPortType(i - 1));
+            m_inputs[i] = new Input(getInportDescriptionName(i), m_model.getInPortType(i - 1));
         }
 
         // create an extra output port (index: 0) for the variables.
@@ -305,7 +315,7 @@ public final class Node implements NodeModelWarningListener {
         for (int i = 1; i < m_outputs.length; i++) {
             m_outputs[i] = new Output();
             m_outputs[i].type = m_model.getOutPortType(i - 1);
-            m_outputs[i].name = m_factory.getOutportName(i - 1);
+            m_outputs[i].name = getOutportDescriptionName(i);
             m_outputs[i].spec = null;
             m_outputs[i].object = null;
             m_outputs[i].summary = null;
@@ -679,19 +689,19 @@ public final class Node implements NodeModelWarningListener {
      * @return The node's type.
      */
     public NodeType getType() {
-        return m_factory.getType();
+        return m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getType() : m_factory.getType();
     }
 
     /**
-     * The XML description can be used with the
-     * <code>NodeFactoryHTMLCreator</code> in order to get a converted HTML
+     * The XML description can be used with the <code>NodeFactoryHTMLCreator</code> in order to get a converted HTML
      * description of it, which fits the overall KNIME HTML style.
      *
      * @return XML description of the node
      * @see org.knime.core.node.NodeFactory#getXMLDescription()
      */
     public Element getXMLDescription() {
-        return m_factory.getXMLDescription();
+        return m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getXMLDescription()
+            : m_factory.getXMLDescription();
     }
 
     /**
@@ -740,8 +750,8 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Return the name of the port as specified by the node factory (which
-     * takes it from the node description).
+     * Return the name of the port as specified by the node factory (which takes it from the node description).
+     *
      * @param index the port index
      * @return the name of the port as specified by the node factory.
      */
@@ -749,7 +759,8 @@ public final class Node implements NodeModelWarningListener {
         if (index <= 0) {
             return "Variable Inport";
         }
-        return m_factory.getInportName(index - 1);
+        return m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getInportName(index - 1)
+            : m_factory.getInportName(index - 1);
     }
 
     /**
@@ -775,8 +786,8 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Return the name of the port as specified by the node factory (which
-     * takes it from the node description).
+     * Return the name of the port as specified by the node factory (which takes it from the node description).
+     *
      * @param index the port index
      * @return the name of the port as specified by the node factory.
      */
@@ -784,7 +795,8 @@ public final class Node implements NodeModelWarningListener {
         if (index <= 0) {
             return "Variable Outport";
         }
-        return m_factory.getOutportName(index - 1);
+        return m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getOutportName(index - 1)
+            : m_factory.getOutportName(index - 1);
     }
 
     /**
@@ -1966,9 +1978,9 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.8
      */
     public String getInteractiveViewName() {
-        return hasInteractiveView() || hasWizardView()
-            ? StringUtils.defaultIfEmpty(m_factory.getInteractiveViewName(), "MISSING VIEW NAME IN NODE DESCRIPTION")
-            : null;
+        return hasInteractiveView() || hasWizardView() ? StringUtils.defaultIfEmpty(m_adaptedNodeDescription != null
+            ? m_adaptedNodeDescription.getInteractiveViewName() : m_factory.getInteractiveViewName(),
+            "MISSING VIEW NAME IN NODE DESCRIPTION") : null;
     }
 
     /**

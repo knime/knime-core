@@ -37,6 +37,7 @@
                         <sourceSchema>Node_v2.8.xsd</sourceSchema>
                         <sourceSchema>Node_v3.1.xsd</sourceSchema>
                         <sourceSchema>Node_v3.6.xsd</sourceSchema>
+                        <sourceSchema>Node_v4.1.xsd</sourceSchema>
                     </sourceSchemas>
                     <sourceGenerationDirectory>src/xmlbeans</sourceGenerationDirectory>
                     <xmlConfigs>
