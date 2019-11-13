@@ -1,6 +1,7 @@
 
 {
     "multiple-selection-13":{
+        "label":"Label",
         "type":"array",
         "default":[
             "test1",
@@ -8,30 +9,37 @@
         ]
     },
     "list-box-input-8":{
+        "label":"Label",
         "type":"string",
         "default":"test1\ntest2\ntest3"
     },
     "double-input-4":{
+        "label":"Label",
         "type":"number",
         "default":4.0
     },
     "string-input-10":{
+        "label":"Label",
         "type":"string",
         "default":"test string"
     },
     "integer-input-5":{
+        "label":"Label",
         "type":"integer",
         "default":3
     },
     "boolean-input-1":{
+        "label":"Label",
         "type":"boolean",
         "default":false
     },
     "single-selection-15":{
+        "label":"Label",
         "type":"string",
         "default":"test2"
     },
     "file-chooser-input-9":{
+        "label":"Label",
         "type":"array",
         "default":[
             {
@@ -48,19 +56,23 @@
         ]
     },
     "file-input-7":{
+        "label":"Label",
         "type":"string",
         "default":"/tmp"
     },
     "integer-slider-6":{
+        "label":"Label",
         "type":"integer",
         "default":50.0
     },
     "date-input-3":{
+        "label":"Label",
         "type":"string",
         "format":"ZonedDateTime",
         "default":"2019-09-27T08:32:03+02:00[Europe/Berlin]"
     },
     "credentials-2":{
+        "label":"Label",
         "type":"object",
         "username":{
             "type":"string",
