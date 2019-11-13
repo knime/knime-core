@@ -1,0 +1,353 @@
+/*
+ * ------------------------------------------------------------------------
+ *
+ *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Website: http://www.knime.com; Email: contact@knime.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Nov 12, 2019 (hornm): created
+ */
+package org.knime.core.node.workflow;
+
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.LoadVersion;
+import org.knime.core.util.Pair;
+
+/**
+ * Represents general metadata associated with a component (i.e. a {@link SubNodeContainer}.
+ *
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ *
+ * @since 4.1
+ */
+public class ComponentMetadata {
+
+    /**
+     * An empty metadata object.
+     */
+    public static final ComponentMetadata NONE = ComponentMetadata.builder().build();
+
+    private static final String CFG_METADATA = "metadata";
+
+    private String m_description;
+
+    //TODO introduce dedicated component type!
+    private NodeType m_type;
+
+    private byte[] m_icon;
+
+    private String[] m_inPortNames;
+
+    private String[] m_inPortDescriptions;
+
+    private String[] m_outPortNames;
+
+    private String[] m_outPortDescriptions;
+
+    private ComponentMetadata(final ComponentMetadataBuilder builder) {
+        m_description = builder.m_description;
+        m_type = builder.m_type;
+        m_icon = builder.m_icon != null ? builder.m_icon.clone() : null;
+        if (!builder.m_inPorts.isEmpty()) {
+            m_inPortNames = builder.m_inPorts.stream().map(p -> p.getFirst()).toArray(s -> new String[s]);
+            m_inPortDescriptions = builder.m_inPorts.stream().map(p -> p.getSecond()).toArray(s -> new String[s]);
+        }
+        if (!builder.m_outPorts.isEmpty()) {
+            m_outPortNames = builder.m_outPorts.stream().map(p -> p.getFirst()).toArray(s -> new String[s]);
+            m_outPortDescriptions = builder.m_outPorts.stream().map(p -> p.getSecond()).toArray(s -> new String[s]);
+        }
+    }
+
+    private ComponentMetadata() {
+        //deserialization
+    }
+
+    /**
+     * @return the description
+     */
+    public Optional<String> getDescription() {
+        return Optional.ofNullable(m_description);
+    }
+
+    /**
+     * @return the type
+     */
+    public Optional<NodeType> getType() {
+        return Optional.ofNullable(m_type);
+    }
+
+    /**
+     * @return the icon
+     */
+    public Optional<byte[]> getIcon() {
+        return Optional.ofNullable(m_icon);
+    }
+
+    /**
+     * @return in-port names
+     */
+    public Optional<String[]> getInPortNames() {
+        return Optional.ofNullable(m_inPortNames);
+    }
+
+    /**
+     * @return in-port descriptions
+     */
+    public Optional<String[]> getInPortDescriptions() {
+        return Optional.ofNullable(m_inPortDescriptions);
+    }
+
+    /**
+     * @return out-port names
+     */
+    public Optional<String[]> getOutPortNames() {
+        return Optional.ofNullable(m_outPortNames);
+    }
+
+    /**
+     * @return out-port descriptions
+     */
+    public Optional<String[]> getOutPortDescriptions() {
+        return Optional.ofNullable(m_outPortDescriptions);
+    }
+
+    /**
+     * Load information from argument, throw {@link InvalidSettingsException} if that fails.
+     *
+     * @param settings To load from.
+     * @param version The version this workflow is loading from
+     * @return a new metadata object loaded from the argument settings.
+     * @throws InvalidSettingsException If that fails.
+     */
+    public static ComponentMetadata load(final NodeSettingsRO settings, final LoadVersion version)
+        throws InvalidSettingsException {
+        if (!settings.containsKey(CFG_METADATA)) {
+            return ComponentMetadata.NONE;
+        }
+        NodeSettingsRO nestedSettings = settings.getNodeSettings(CFG_METADATA);
+        ComponentMetadata metadata = new ComponentMetadata();
+        metadata.m_description = nestedSettings.getString("description", null);
+        metadata.m_type =
+            nestedSettings.containsKey("type") ? NodeType.valueOf(nestedSettings.getString("type")) : null;
+        metadata.m_icon =
+            nestedSettings.containsKey("icon") ? Base64.getDecoder().decode(nestedSettings.getString("icon")) : null;
+
+        if (nestedSettings.containsKey("inPorts")) {
+            metadata.m_inPortNames = nestedSettings.getNodeSettings("inPorts").getStringArray("names");
+            metadata.m_inPortDescriptions = nestedSettings.getNodeSettings("inPorts").getStringArray("descriptions");
+        }
+
+        if (nestedSettings.containsKey("outPorts")) {
+            metadata.m_outPortNames = nestedSettings.getNodeSettings("outPorts").getStringArray("names");
+            metadata.m_outPortDescriptions = nestedSettings.getNodeSettings("outPorts").getStringArray("descriptions");
+        }
+        return metadata;
+    }
+
+    /**
+     * Saves this object to the argument settings.
+     *
+     * @param settings To save to.
+     */
+    public void save(final NodeSettingsWO settings) {
+        NodeSettingsWO nestedSettings = settings.addNodeSettings(CFG_METADATA);
+        if (m_description != null) {
+            nestedSettings.addString("description", m_description);
+        }
+        if (m_type != null) {
+            nestedSettings.addString("type", m_type.toString());
+        }
+        if (m_icon != null) {
+            nestedSettings.addString("icon", Base64.getEncoder().encodeToString(m_icon));
+        }
+        if (m_inPortNames != null) {
+            NodeSettingsWO ports = nestedSettings.addNodeSettings("inPorts");
+            ports.addStringArray("names", m_inPortNames);
+            ports.addStringArray("descriptions", m_inPortDescriptions);
+        }
+        if (m_outPortNames != null) {
+            NodeSettingsWO ports = nestedSettings.addNodeSettings("outPorts");
+            ports.addStringArray("names", m_outPortNames);
+            ports.addStringArray("descriptions", m_outPortDescriptions);
+        }
+    }
+
+    /**
+     * @return a new builder instance
+     */
+    public static ComponentMetadataBuilder builder() {
+        return new ComponentMetadataBuilder();
+    }
+
+    /**
+     * Copy builder.
+     *
+     * @param metadata the metadata to initialize the builder with
+     * @return a new builder instance with pre-initialized with the properties of the passed metadata object
+     */
+    public static ComponentMetadataBuilder builder(final ComponentMetadata metadata) {
+        ComponentMetadataBuilder builder = new ComponentMetadataBuilder();
+        builder.m_description = metadata.m_description;
+        if (metadata.m_icon != null) {
+            builder.m_icon = metadata.m_icon.clone();
+        }
+        builder.m_type = metadata.m_type;
+        builder.m_inPorts = new ArrayList<>();
+        if (metadata.m_inPortNames != null) {
+            for (int i = 0; i < metadata.m_inPortNames.length; i++) {
+                builder.m_inPorts.add(Pair.create(metadata.m_inPortNames[i], metadata.m_inPortDescriptions[i]));
+            }
+        }
+        if (metadata.m_outPortNames != null) {
+            for (int i = 0; i < metadata.m_outPortNames.length; i++) {
+                builder.m_outPorts.add(Pair.create(metadata.m_outPortNames[i], metadata.m_outPortDescriptions[i]));
+            }
+        }
+        return builder;
+    }
+
+    /**
+     * Helps building a component metadata instances.
+     */
+    public static class ComponentMetadataBuilder {
+
+        private String m_description;
+
+        private byte[] m_icon;
+
+        private NodeType m_type;
+
+        private List<Pair<String, String>> m_inPorts = new ArrayList<>();
+
+        private List<Pair<String, String>> m_outPorts = new ArrayList<>();
+
+        /**
+         * @param description
+         * @return this builder
+         */
+        public ComponentMetadataBuilder description(final String description) {
+            m_description = description;
+            return this;
+        }
+
+        /**
+         * @param type
+         * @return this builder
+         */
+        public ComponentMetadataBuilder type(final NodeType type) {
+            m_type = type;
+            return this;
+        }
+
+        /**
+         * @param icon
+         * @return this builder
+         */
+        public ComponentMetadataBuilder icon(final byte[] icon) {
+            m_icon = icon;
+            return this;
+        }
+
+        /**
+         * Adds a new in-port name and description. The port index corresponds to the order of adding it.
+         *
+         * @param name the port name
+         * @param description the port description
+         * @return this builder
+         */
+        public ComponentMetadataBuilder addInPortNameAndDescription(final String name, final String description) {
+            m_inPorts.add(Pair.create(name, description));
+            return this;
+        }
+
+        /**
+         * Adds a new out-port name and description. The port index corresponds to the order of adding it.
+         *
+         * @param name the port name
+         * @param description the port description
+         * @return this builder
+         */
+        public ComponentMetadataBuilder addOutPortNameAndDescription(final String name, final String description) {
+            m_outPorts.add(Pair.create(name, description));
+            return this;
+        }
+
+        /**
+         * Removes the already added in-port names and descriptions.
+         *
+         * @return this builder
+         */
+        public ComponentMetadataBuilder clearInPorts() {
+            m_inPorts.clear();
+            return this;
+        }
+
+        /**
+         * Removes the already added out-port names and descriptions.
+         *
+         * @return this builder
+         */
+        public ComponentMetadataBuilder clearOutPorts() {
+            m_outPorts.clear();
+            return this;
+        }
+
+        /**
+         * Creates a new instance from this builder.
+         *
+         * @return the new instance
+         */
+        public ComponentMetadata build() {
+            return new ComponentMetadata(this);
+        }
+
+    }
+
+}

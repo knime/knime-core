@@ -48,9 +48,11 @@ package org.knime.core.node.workflow;
 
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
@@ -120,6 +122,7 @@ import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.wizard.CSSModifiable;
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -261,6 +264,8 @@ public final class SubNodeContainer extends SingleNodeContainer
     private boolean m_hideInWizard;
     private String m_customCSS;
 
+    private ComponentMetadata m_metadata;
+
     private MetaNodeTemplateInformation m_templateInformation;
 
     /** Caches the example input data spec */
@@ -306,6 +311,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 m_inHiliteHandler[i - 1] = new HiLiteHandler();
             }
         }
+        m_metadata = persistor.getMetadata();
         m_templateInformation = persistor.getTemplateInformation();
     }
 
@@ -685,16 +691,13 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @return a DOM which describes only the port connections.
      */
     public Element getXMLDescriptionForPorts() {
-        final VirtualSubNodeInputNodeModel inNode = getVirtualInNodeModel();
-        final VirtualSubNodeOutputNodeModel outNode = getVirtualOutNodeModel();
-
         try {
             // Document
             final Document doc =
                 NodeDescription.getDocumentBuilderFactory().newDocumentBuilder().getDOMImplementation()
                       .createDocument("http://knime.org/node2012", "knimeNode", null);
 
-            addPortDescriptionToElement(doc, inNode, outNode);
+            addPortDescriptionToElement(doc, getMetadata());
 
             // we avoid validating the document since we don't include certain elements like 'name'
             return (new NodeDescription27Proxy(doc, false)).getXMLDescription();
@@ -705,12 +708,12 @@ public final class SubNodeContainer extends SingleNodeContainer
         return null;
     }
 
-    private static void addPortDescriptionToElement(final Document doc, final VirtualSubNodeInputNodeModel inNode,
-            final VirtualSubNodeOutputNodeModel outNode) throws DOMException, ParserConfigurationException, XmlException {
-        final String[] inPortNames = inNode.getPortNames();
-        final String[] inPortDescriptions = inNode.getPortDescriptions();
-        final String[] outPortNames = outNode.getPortNames();
-        final String[] outPortDescriptions = outNode.getPortDescriptions();
+    private static void addPortDescriptionToElement(final Document doc, final ComponentMetadata metadata)
+        throws DOMException, ParserConfigurationException, XmlException {
+        final String[] inPortNames = metadata.getInPortNames().get();
+        final String[] inPortDescriptions = metadata.getInPortDescriptions().get();
+        final String[] outPortNames = metadata.getOutPortNames().get();
+        final String[] outPortDescriptions = metadata.getOutPortDescriptions().get();
 
         final Element knimeNode = doc.getDocumentElement();
         final Element ports = doc.createElement("ports");
@@ -753,7 +756,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     public Element getXMLDescription() {
         final VirtualSubNodeInputNodeModel inNode = getVirtualInNodeModel();
         final VirtualSubNodeOutputNodeModel outNode = getVirtualOutNodeModel();
-        final String description = inNode.getSubNodeDescription();
+        final String description = getMetadata().getDescription().orElse(null);
         String sDescription;
         if (StringUtils.isEmpty(description)) {
             sDescription = "";
@@ -806,7 +809,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 addText(option, optionDescriptions.get(i), "");
             }
 
-            addPortDescriptionToElement(doc, inNode, outNode);
+            addPortDescriptionToElement(doc, getMetadata());
 
             return new NodeDescription27Proxy(doc).getXMLDescription();
         } catch (ParserConfigurationException | DOMException | XmlException e) {
@@ -857,7 +860,23 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public URL getIcon() {
-        return SubNodeContainer.class.getResource("virtual/subnode/empty.png");
+        if (m_metadata.getIcon().isPresent()) {
+            return null;
+        } else {
+            return SubNodeContainer.class.getResource("virtual/subnode/empty.png");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<InputStream> getIconAsStream() {
+        if (m_metadata.getIcon().isPresent()) {
+            return Optional.of(new ByteArrayInputStream(m_metadata.getIcon().get()));
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -2419,6 +2438,104 @@ public final class SubNodeContainer extends SingleNodeContainer
     @Override
     public WorkflowManager getProjectWFM() {
         return getDirectNCParent().getProjectWFM();
+    }
+
+    /**
+     * Sets (and overrides) the component's metadata and notifies possible change listeners.
+     *
+     * @param metadata
+     */
+    public void setMetadata(final ComponentMetadata metadata) {
+        m_metadata = metadata;
+        notifyNodePropertyChangedListener(NodeProperty.ComponentMetadata);
+    }
+
+    /**
+     * Returns the metadata stored with the component.
+     *
+     * The port names and descriptions are adopted to the number of ports (i.e. either cut-off or filled with empty
+     * values).
+     *
+     * Legacy: if no metadata is stored with the component itself, component description, port names and port
+     * descriptions are taken from the component input/output nodes, if available.
+     *
+     * @return the component metadata
+     */
+    public ComponentMetadata getMetadata() {
+        if (m_metadata == null) {
+            return ComponentMetadata.NONE;
+        }
+
+        ComponentMetadataBuilder builder = null;
+        if (!m_metadata.getDescription().isPresent() && getVirtualInNodeModel().getSubNodeDescription() != null) {
+            //take node description from virtual input node if none is set
+            builder = getOrCreate(builder).description(getVirtualInNodeModel().getSubNodeDescription());
+        }
+
+        String[] portNames = null;
+        String[] portDescriptions = null;
+        if (!m_metadata.getInPortNames().isPresent()) {
+            //take port descriptions from virtual input node if none is set
+            portNames = getVirtualInNodeModel().getPortNames();
+            portDescriptions = getVirtualInNodeModel().getPortDescriptions();
+        } else if (m_metadata.getInPortNames().get().length != getNrInPorts()) {
+            //sync number of port names/descriptions with the actual ports number -> fill or cut-off
+            portNames = m_metadata.getInPortNames().get();
+            int orgLength = portNames.length;
+            portDescriptions = m_metadata.getInPortDescriptions().get();
+            portNames = Arrays.copyOf(portNames, getNrInPorts());
+            portDescriptions = Arrays.copyOf(portDescriptions, getNrInPorts());
+            for (int i = orgLength; i < getNrInPorts(); i++) {
+                portNames[i] = "";
+                portDescriptions[i] = "";
+            }
+        }
+        if (portNames != null) {
+            builder = getOrCreate(builder);
+            builder.clearInPorts();
+            for (int i = 0; i < portNames.length; i++) {
+                builder.addInPortNameAndDescription(portNames[i], portDescriptions[i]);
+            }
+        }
+
+        portNames = null;
+        portDescriptions = null;
+        if (!m_metadata.getOutPortNames().isPresent()) {
+            //take port descriptions from virtual output node if none is set
+            portNames = getVirtualOutNodeModel().getPortNames();
+            portDescriptions = getVirtualOutNodeModel().getPortDescriptions();
+        } else if (m_metadata.getOutPortNames().get().length != getNrOutPorts()) {
+            //sync number of port names/descriptions with the actual ports number -> fill or cut-off
+            portNames = m_metadata.getOutPortNames().get();
+            int orgLength = portNames.length;
+            portDescriptions = m_metadata.getOutPortDescriptions().get();
+            portNames = Arrays.copyOf(portNames, getNrOutPorts());
+            portDescriptions = Arrays.copyOf(portDescriptions, getNrOutPorts());
+            for (int i = orgLength; i < getNrOutPorts(); i++) {
+                portNames[i] = "";
+                portDescriptions[i] = "";
+            }
+        }
+        if (portNames != null) {
+            builder = getOrCreate(builder);
+            builder.clearOutPorts();
+            for (int i = 0; i < portNames.length; i++) {
+                builder.addOutPortNameAndDescription(portNames[i], portDescriptions[i]);
+            }
+        }
+
+        if (builder != null) {
+            m_metadata = builder.build();
+        }
+        return m_metadata;
+    }
+
+    private ComponentMetadataBuilder getOrCreate(final ComponentMetadataBuilder builder) {
+        if (builder == null) {
+            return ComponentMetadata.builder(m_metadata);
+        } else {
+            return builder;
+        }
     }
 
     /* -------- template handling ----- */

@@ -79,5 +79,10 @@ public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor 
     /** @since 3.7 */
     String getCssStyles();
 
+    /**
+     * @since 4.1
+     */
+    ComponentMetadata getMetadata();
+
     MetaNodeTemplateInformation getTemplateInformation();
 }

@@ -46,7 +46,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.node.BufferedDataTable;
@@ -70,6 +69,7 @@ public class CopySubNodeContainerPersistor
     private final String m_layoutJSONString;
     private final boolean m_hideInWizard;
     private final String m_customCSS;
+    private ComponentMetadata m_componentMetadata;
     private final MetaNodeTemplateInformation m_templateInformation;
 
     /**
@@ -104,6 +104,7 @@ public class CopySubNodeContainerPersistor
         m_layoutJSONString = new String(original.getLayoutJSONString());
         m_hideInWizard = original.isHideInWizard();
         m_customCSS = new String(original.getCssStyles());
+        m_componentMetadata = original.getMetadata();
         m_templateInformation = original.getTemplateInformation().clone();
     }
 
@@ -175,6 +176,14 @@ public class CopySubNodeContainerPersistor
     @Override
     public String getCssStyles() {
         return m_customCSS;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ComponentMetadata getMetadata() {
+        return m_componentMetadata;
     }
 
     /**

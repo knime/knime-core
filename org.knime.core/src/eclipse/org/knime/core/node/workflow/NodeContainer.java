@@ -44,6 +44,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -1296,7 +1297,21 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @since 3.1 */
     public abstract FlowObjectStack getFlowObjectStack();
 
+    /**
+     * @return the icon's URL or <code>null</code> if there is no icon or icon is available as stream (see
+     *         {@link #getIconAsStream()}
+     */
     public abstract URL getIcon();
+
+    /**
+     * @return an icon as input stream or an empty optional if there is no icon or the icon is available as URL (see
+     *         {@link #getIcon()})
+     *
+     * @since 4.1
+     */
+    public Optional<InputStream> getIconAsStream() {
+        return Optional.empty();
+    }
 
     public abstract NodeType getType();
 

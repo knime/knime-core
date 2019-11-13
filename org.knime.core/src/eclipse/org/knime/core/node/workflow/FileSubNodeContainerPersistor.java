@@ -113,6 +113,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private boolean m_hideInWizard;
 
+    private ComponentMetadata m_componentMetadata;
+
     private MetaNodeTemplateInformation m_templateInformation;
 
     /**
@@ -294,6 +296,16 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
                 setDirtyAfterLoad();
                 continue;
             }
+        }
+
+        try {
+            m_componentMetadata = ComponentMetadata.load(nodeSettings, getLoadVersion());
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load component metadata: " + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            result.addError(error);
+            m_componentMetadata = ComponentMetadata.NONE;
         }
 
         try {
@@ -489,6 +501,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             NodeSettingsWO portTypeSettings = inportSetting.addNodeSettings("type");
             virtualOutNode.getInPort(i).getPortType().save(portTypeSettings);
         }
+        subnodeNC.getMetadata().save(settings);
         subnodeNC.getTemplateInformation().save(settings);
         settings.addString("layoutJSON", subnodeNC.getLayoutJSONString());
         settings.addBoolean("hideInWizard", subnodeNC.isHideInWizard());
@@ -682,6 +695,11 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             subProgress.setProgress(1.0);
         }
         return result;
+    }
+
+    @Override
+    public ComponentMetadata getMetadata() {
+        return m_componentMetadata;
     }
 
     /**

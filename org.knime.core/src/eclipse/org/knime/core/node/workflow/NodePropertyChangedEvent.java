@@ -68,7 +68,12 @@ public class NodePropertyChangedEvent extends EventObject {
         LockStatus,
         /** Metanode ports have changed.
          * @since 2.6*/
-        MetaNodePorts
+        MetaNodePorts,
+        /**
+         * Component metadata (such as icon) has changed.
+         * @since 4.1
+         */
+        ComponentMetadata;
     }
 
     /** Create new event.
