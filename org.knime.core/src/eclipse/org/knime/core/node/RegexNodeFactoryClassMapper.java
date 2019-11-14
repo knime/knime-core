@@ -136,7 +136,7 @@ public abstract class RegexNodeFactoryClassMapper extends NodeFactoryClassMapper
         if (m_regexRules != null) {
             return;
         }
-        final Map<String, Pair<String, String>> returned = getRegexRules();
+        final Map<String, Pair<String, String>> returned = getRegexRulesInternal();
         m_regexRules = returned == null ? Collections.emptyMap() : Collections.unmodifiableMap(returned);
     }
 }
