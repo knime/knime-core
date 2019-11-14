@@ -85,6 +85,8 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     /**
      * Enum for all node types.
+     *
+     * N.B New additions to this enum should also be added to org.knime.workbench.editor2.figures.DisplayableNodeType
      */
     public static enum NodeType {
         /** A data producing node. */

@@ -856,6 +856,13 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
+     * @return an {@code Optional} of {@code NodeFactory.NodeType} if there has been a custom one set in the metadata
+     */
+    public Optional<NodeType> getCustomNodeType() {
+        return m_metadata.getType();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
