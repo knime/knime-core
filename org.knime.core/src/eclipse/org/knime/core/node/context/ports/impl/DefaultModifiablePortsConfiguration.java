@@ -179,6 +179,10 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
                 Arrays.stream(entry.getValue()).forEach(idx -> portMapping.put(idx + offset, -1));
             }
         }
+
+        // add additional entry for flow variable connections
+        portMapping.put(0, 0);
+
         return portMapping;
     }
 
