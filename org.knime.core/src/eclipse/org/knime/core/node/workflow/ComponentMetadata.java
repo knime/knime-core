@@ -50,10 +50,13 @@ package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -68,6 +71,69 @@ import org.knime.core.util.Pair;
  * @since 4.1
  */
 public class ComponentMetadata {
+    /**
+     * An enum which wraps the {@code NodeFactory.NodeType} enum with display text; for the time being, we are
+     *  not wrapping an {@code Image} like we do with DisplayableNodeType for two reasons, both dealing with the
+     *  plugin in which this class sits:
+     *      1. I've been told we're trying to keep SWT related assets out of knime-core
+     *      2. The PNG assets which we use currently sit in, and i assume the new versions will also sit in,
+     *              knime-workbench.
+     */
+    public enum ComponentType {
+        /** A learning node. */
+        LEARNER("Learner", NodeFactory.NodeType.Learner),
+        /** A data manipulating node. */
+        MANIPULATOR("Manipulator", NodeFactory.NodeType.Manipulator),
+        /** A predicting node. */
+        PREDICTOR("Predictor", NodeFactory.NodeType.Predictor),
+        /** A data consuming node. */
+        SINK("Sink", NodeFactory.NodeType.Sink),
+        /** A data producing node. */
+        SOURCE("Source", NodeFactory.NodeType.Source),
+        /** A visualizing node. */
+        VISUALIZER("Visualizer", NodeFactory.NodeType.Visualizer);
+
+
+        private static final Map<NodeFactory.NodeType, ComponentType> NODE_TYPE_DISPLAYABLE_MAP = new HashMap<>();
+
+        /**
+         * Given the {@code NodeFactory.NodeType}, return the mapped instance of this enum.
+         *
+         * @param nodeType
+         * @return the instance of this enum which wraps the parameter value enum
+         */
+        public synchronized static ComponentType getTypeForNodeType(final NodeFactory.NodeType nodeType) {
+            if (NODE_TYPE_DISPLAYABLE_MAP.size() == 0) {
+                for (final ComponentType ct : ComponentType.values()) {
+                    NODE_TYPE_DISPLAYABLE_MAP.put(ct.getNodeType(), ct);
+                }
+            }
+            return NODE_TYPE_DISPLAYABLE_MAP.get(nodeType);
+        }
+
+
+        private final String m_displayText;
+        private final NodeFactory.NodeType m_nodeType;
+
+        private ComponentType(final String name, final NodeFactory.NodeType nodeType) {
+            m_displayText = name;
+            m_nodeType = nodeType;
+        }
+
+        /**
+         * @return the human readable text representing this enum
+         */
+        public String getDisplayText() {
+            return m_displayText;
+        }
+
+        /**
+         * @return the {@code NodeFactory.NodeType} which this enum instance wraps.
+         */
+        public NodeFactory.NodeType getNodeType() {
+            return m_nodeType;
+        }
+    }
 
     /**
      * An empty metadata object.
