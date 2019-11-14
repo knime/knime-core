@@ -60,6 +60,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.BooleanCell;
@@ -67,6 +68,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.util.memory.MemoryAlertSystemTest;
 import org.knime.core.util.Pair;
 
@@ -221,6 +223,40 @@ public class BufferCacheTest {
         final BufferCache cache) {
         for (Pair<Buffer, List<BlobSupportDataRow>> table : tables) {
             cache.get(table.getFirst());
+        }
+    }
+
+    /**
+     * Tests that when a memory alert is thrown while an in-memory table is being iterated over, that table is
+     * garbage-collected and iteration continues by reading the flushed table from disk.
+     *
+     * @throws InterruptedException thrown when the thread is unexpectedly interrupted during sleep
+     */
+    @Test(timeout = 2000)
+    public void testTableDroppedWhileIteratedOver() throws InterruptedException {
+        // generate a table, put it into the cache and wait for it being flushed to disk
+        final Buffer table = DataContainerTest.generateMediumSizedTable();
+        while (!table.isFlushedToDisk()) {
+            Thread.sleep(10);
+        }
+
+        final DataRow refRow = table.iterator().next();
+        try (final CloseableRowIterator iterator = table.iterator()) {
+
+            // send a memory alert and wait for the table to be garbage-collected
+            MemoryAlertSystem.getInstanceUncollected().sendMemoryAlert();
+            MemoryAlertSystemTest.forceGC();
+            while (table.isHeldInMemory()) {
+                MemoryAlertSystemTest.forceGC();
+                Thread.sleep(10);
+            }
+
+            // check that despite being garbage collected, the table can still be iterated over
+            final DataRow row = iterator.next();
+            Assert.assertEquals("Row key in row ", row.getKey(), refRow.getKey());
+            for (int j = 0; j < refRow.getNumCells(); j++) {
+                Assert.assertEquals("Cell " + j + " in Row ", refRow.getCell(j), row.getCell(j));
+            }
         }
     }
 

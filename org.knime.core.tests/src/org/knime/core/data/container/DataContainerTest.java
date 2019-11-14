@@ -833,7 +833,7 @@ public class DataContainerTest extends TestCase {
      *
      * @return a medium-sized tables
      */
-    private static Buffer generateMediumSizedTable() {
+    static Buffer generateMediumSizedTable() {
         // in particular, we simply instantiate a tiny container and add a slighlty larger number of rows to it
         final DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, 10, false);
         final int count = 20;
