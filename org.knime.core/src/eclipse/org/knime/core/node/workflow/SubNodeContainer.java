@@ -727,8 +727,8 @@ public final class SubNodeContainer extends SingleNodeContainer
             inPort.setAttribute("name", inPortNames[i]);
             String defaultText = NO_DESCRIPTION_SET;
             if (i == 0) {
-                defaultText += "\nChange this label by browsing the input node contained in the Component "
-                        + "and changing its configuration.";
+                defaultText += "\nChange this label by opening the Component "
+                        + "and editing its metadata.";
             }
             addText(inPort, inPortDescriptions[i], defaultText);
         }
@@ -740,8 +740,8 @@ public final class SubNodeContainer extends SingleNodeContainer
             outPort.setAttribute("name", outPortNames[i]);
             String defaultText = NO_DESCRIPTION_SET;
             if (i == 0) {
-                defaultText += "\nChange this label by browsing the output node contained in the Component "
-                        + "and changing its configuration.";
+                defaultText += "\nChange this label by opening the Component "
+                        + "and editing its metadata.";
             }
             addText(outPort, outPortDescriptions[i], defaultText);
         }
