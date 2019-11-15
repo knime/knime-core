@@ -57,7 +57,6 @@ import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.LoadVersion;
@@ -144,8 +143,7 @@ public class ComponentMetadata {
 
     private String m_description;
 
-    //TODO introduce dedicated component type!
-    private NodeType m_type;
+    private ComponentType m_type;
 
     private byte[] m_icon;
 
@@ -185,7 +183,7 @@ public class ComponentMetadata {
     /**
      * @return the type
      */
-    public Optional<NodeType> getType() {
+    public Optional<ComponentType> getType() {
         return Optional.ofNullable(m_type);
     }
 
@@ -241,7 +239,7 @@ public class ComponentMetadata {
         ComponentMetadata metadata = new ComponentMetadata();
         metadata.m_description = nestedSettings.getString("description", null);
         metadata.m_type =
-            nestedSettings.containsKey("type") ? NodeType.valueOf(nestedSettings.getString("type")) : null;
+            nestedSettings.containsKey("type") ? ComponentType.valueOf(nestedSettings.getString("type")) : null;
         metadata.m_icon =
             nestedSettings.containsKey("icon") ? Base64.getDecoder().decode(nestedSettings.getString("icon")) : null;
 
@@ -328,7 +326,7 @@ public class ComponentMetadata {
 
         private byte[] m_icon;
 
-        private NodeType m_type;
+        private ComponentType m_type;
 
         private List<Pair<String, String>> m_inPorts = new ArrayList<>();
 
@@ -347,7 +345,7 @@ public class ComponentMetadata {
          * @param type
          * @return this builder
          */
-        public ComponentMetadataBuilder type(final NodeType type) {
+        public ComponentMetadataBuilder type(final ComponentType type) {
             m_type = type;
             return this;
         }

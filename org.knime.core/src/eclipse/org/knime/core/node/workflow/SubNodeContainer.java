@@ -890,7 +890,11 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public NodeType getType() {
-        return NodeType.Subnode;
+        if (m_metadata.getType().isPresent()) {
+            return m_metadata.getType().get().getNodeType();
+        } else {
+            return NodeType.Subnode;
+        }
     }
 
     /**
@@ -2454,6 +2458,8 @@ public final class SubNodeContainer extends SingleNodeContainer
     public void setMetadata(final ComponentMetadata metadata) {
         m_metadata = metadata;
         notifyNodePropertyChangedListener(NodeProperty.ComponentMetadata);
+        refreshPortNames();
+        setDirty();
     }
 
     /**
@@ -2480,18 +2486,19 @@ public final class SubNodeContainer extends SingleNodeContainer
 
         String[] portNames = null;
         String[] portDescriptions = null;
+        int nrInPorts = getNrInPorts() - 1;
         if (!m_metadata.getInPortNames().isPresent()) {
             //take port descriptions from virtual input node if none is set
             portNames = getVirtualInNodeModel().getPortNames();
             portDescriptions = getVirtualInNodeModel().getPortDescriptions();
-        } else if (m_metadata.getInPortNames().get().length != getNrInPorts() - 1) {
+        } else if (m_metadata.getInPortNames().get().length != nrInPorts) {
             //sync number of port names/descriptions with the actual ports number -> fill or cut-off
             portNames = m_metadata.getInPortNames().get();
             int orgLength = portNames.length;
             portDescriptions = m_metadata.getInPortDescriptions().get();
-            portNames = Arrays.copyOf(portNames, getNrInPorts());
-            portDescriptions = Arrays.copyOf(portDescriptions, getNrInPorts());
-            for (int i = orgLength; i < getNrInPorts(); i++) {
+            portNames = Arrays.copyOf(portNames, nrInPorts);
+            portDescriptions = Arrays.copyOf(portDescriptions, nrInPorts);
+            for (int i = orgLength; i < nrInPorts - 1; i++) {
                 portNames[i] = "";
                 portDescriptions[i] = "";
             }
@@ -2506,18 +2513,19 @@ public final class SubNodeContainer extends SingleNodeContainer
 
         portNames = null;
         portDescriptions = null;
+        int nrOutPorts = getNrOutPorts() - 1;
         if (!m_metadata.getOutPortNames().isPresent()) {
             //take port descriptions from virtual output node if none is set
             portNames = getVirtualOutNodeModel().getPortNames();
             portDescriptions = getVirtualOutNodeModel().getPortDescriptions();
-        } else if (m_metadata.getOutPortNames().get().length != getNrOutPorts() - 1) {
+        } else if (m_metadata.getOutPortNames().get().length != nrOutPorts) {
             //sync number of port names/descriptions with the actual ports number -> fill or cut-off
             portNames = m_metadata.getOutPortNames().get();
             int orgLength = portNames.length;
             portDescriptions = m_metadata.getOutPortDescriptions().get();
-            portNames = Arrays.copyOf(portNames, getNrOutPorts());
-            portDescriptions = Arrays.copyOf(portDescriptions, getNrOutPorts());
-            for (int i = orgLength; i < getNrOutPorts(); i++) {
+            portNames = Arrays.copyOf(portNames, nrOutPorts);
+            portDescriptions = Arrays.copyOf(portDescriptions, nrOutPorts);
+            for (int i = orgLength; i < nrOutPorts; i++) {
                 portNames[i] = "";
                 portDescriptions[i] = "";
             }
