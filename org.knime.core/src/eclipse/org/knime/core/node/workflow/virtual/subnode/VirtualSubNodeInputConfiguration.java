@@ -54,7 +54,6 @@ import java.util.Map;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -62,158 +61,64 @@ import org.knime.core.node.workflow.FlowVariable;
  * <p>No API.
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
-final class VirtualSubNodeInputConfiguration {
-
-    /**
-     * Default name for ports, '?' will be replaced with the ports number (starting by 1).
-     */
-    private static final String DEFAULT_PORT_NAME = "Port ?";
-
-    /**
-     * Default description for ports, '?' will be replaced with the ports number (starting by 1).
-     */
-    private static final String DEFAULT_PORT_DESCRIPTION = "";
-
-    private int m_numberOfPorts;
-
-    private FlowVariableFilterConfiguration m_filterConfiguration;
-    private String m_flowVariablePrefix;
-
+final class VirtualSubNodeInputConfiguration extends AbstractVirtualSubNodeConfiguration {
     private String m_subNodeDescription;
-    private String[] m_portNames;
-    private String[] m_portDescriptions;
 
     /**
      * @param numberOfPorts The number of out ports of this virtual in node
      */
     public VirtualSubNodeInputConfiguration(final int numberOfPorts) {
-        m_numberOfPorts = numberOfPorts;
-    }
-
-    /** @return the filterConfiguration (possibly null if not assigned). */
-    FlowVariableFilterConfiguration getFilterConfiguration() {
-        return m_filterConfiguration;
-    }
-
-    /** @return create empty configuration. */
-    static FlowVariableFilterConfiguration createFilterConfiguration() {
-        return new FlowVariableFilterConfiguration("variable-filter");
-    }
-
-    /** @param f the filterConfiguration to set */
-    void setFilterConfiguration(final FlowVariableFilterConfiguration f) {
-        m_filterConfiguration = f;
-    }
-
-    /** @return the flowVariablePrefix or null */
-    String getFlowVariablePrefix() {
-        return m_flowVariablePrefix;
-    }
-
-    /** @param flowVariablePrefix the flowVariablePrefix to set (or null). */
-    void setFlowVariablePrefix(final String flowVariablePrefix) {
-        m_flowVariablePrefix = flowVariablePrefix;
+        super(numberOfPorts);
     }
 
     /**
      * @return The sub node description.
+     * @deprecated component metadata should be used
      */
+    @Deprecated
     String getSubNodeDescription() {
         return m_subNodeDescription;
     }
 
     /**
      * @param subNodeDescription The sub node description.
+     * @deprecated component metadata should be used
      */
+    @Deprecated
     void setSubNodeDescription(final String subNodeDescription) {
         m_subNodeDescription = subNodeDescription;
     }
 
     /**
-     * @return Array of port names.
-     */
-    String[] getPortNames() {
-        return m_portNames;
-    }
-
-    /**
-     * @param portNames Array of port names.
-     */
-    void setPortNames(final String[] portNames) {
-        m_portNames = portNames;
-    }
-
-    /**
-     * @return Array of port descriptions.
-     */
-    String[] getPortDescriptions() {
-        return m_portDescriptions;
-    }
-
-    /**
-     * @param portDescriptions Array of port descriptions.
-     */
-    void setPortDescriptions(final String[] portDescriptions) {
-        m_portDescriptions = portDescriptions;
-    }
-
-    /** Save current config to argument.
+     * Save current config to argument.
      * @param settings ...
      */
+    @Override
     void saveConfiguration(final NodeSettingsWO settings) {
-        if (m_filterConfiguration != null) {
-            m_filterConfiguration.saveConfiguration(settings);
-            settings.addString("variable-prefix", m_flowVariablePrefix);
-        }
+        super.saveConfiguration(settings);
         settings.addString("sub-node-description", m_subNodeDescription);
-        settings.addStringArray("port-names", m_portNames);
-        settings.addStringArray("port-descriptions", m_portDescriptions);
     }
 
-    /** Load routine to be called from dialog.
+    /**
+     * Load routine to be called from dialog.
      * @param settings ...
      * @param variableMap all available flow variables
      */
+    @Override
     void loadConfigurationInDialog(final NodeSettingsRO settings, final Map<String, FlowVariable> variableMap) {
-        m_filterConfiguration = createFilterConfiguration();
-        m_filterConfiguration.loadConfigurationInDialog(settings, variableMap);
-        m_flowVariablePrefix = settings.getString("variable-prefix", null);
+        super.loadConfigurationInDialog(settings, variableMap);
         m_subNodeDescription = settings.getString("sub-node-description", "");
-        m_portNames = correctedPortNames(settings.getStringArray("port-names", new String[0]), m_numberOfPorts);
-        m_portDescriptions =
-            correctedPortDescriptions(settings.getStringArray("port-descriptions", new String[0]), m_numberOfPorts);
     }
 
-    /** Load routine for model implementation.
+    /**
+     * Load routine for model implementation.
      * @param settings ...
      * @throws InvalidSettingsException if incomplete or invalid.
      */
+    @Override
     void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_filterConfiguration = createFilterConfiguration();
-        m_filterConfiguration.loadConfigurationInModel(settings);
-        m_flowVariablePrefix = settings.getString("variable-prefix");
+        super.loadConfigurationInModel(settings);
         m_subNodeDescription = settings.getString("sub-node-description");
-        m_portNames = correctedPortNames(settings.getStringArray("port-names"), m_numberOfPorts);
-        m_portDescriptions = correctedPortDescriptions(settings.getStringArray("port-descriptions"), m_numberOfPorts);
-    }
-
-    private static String[] correctedPortNames(final String[] portNames, final int numberOfPorts) {
-        String[] correctedPortNames = new String[numberOfPorts];
-        for (int i = 0; i < correctedPortNames.length; i++) {
-            String name = i < portNames.length ? portNames[i] : DEFAULT_PORT_NAME.replace("?", "" + (i + 1));
-            correctedPortNames[i] = name;
-        }
-        return correctedPortNames;
-    }
-
-    private static String[] correctedPortDescriptions(final String[] portDescriptions, final int numberOfPorts) {
-        String[] correctedPortDescriptions = new String[numberOfPorts];
-        for (int i = 0; i < correctedPortDescriptions.length; i++) {
-            String description =
-                i < portDescriptions.length ? portDescriptions[i] : DEFAULT_PORT_DESCRIPTION.replace("?", "" + (i + 1));
-            correctedPortDescriptions[i] = description;
-        }
-        return correctedPortDescriptions;
     }
 
     /** @param numberOfPorts The number of output ports of this virtual in node
@@ -228,5 +133,4 @@ final class VirtualSubNodeInputConfiguration {
         r.m_portDescriptions = correctedPortDescriptions(new String[0], numberOfPorts);
         return r;
     }
-
 }
