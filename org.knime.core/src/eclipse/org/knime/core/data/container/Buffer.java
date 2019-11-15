@@ -2160,6 +2160,7 @@ public class Buffer implements KNIMEStreamConstants {
         void initFallBackFromFileIterator() {
             m_fallBackFromFileIterator =
                 m_outputReader.iteratorWithFilter(TableFilter.filterRangeOfRows(m_nextIndex, m_toIndex), m_exec);
+            m_fallBackFromFileIterator.setBuffer(Buffer.this);
         }
 
         @Override
