@@ -137,6 +137,8 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LRUCache;
 import org.knime.core.util.MutableBoolean;
@@ -2787,6 +2789,20 @@ public class Buffer implements KNIMEStreamConstants {
                     /** Buffer was already discarded (no rows added) */
                     return null;
                 }
+                /** The workflow context has already been discarded or the workflow's temp directory has been deleted
+                 * (e.g., due to workflow close)*/
+                final WorkflowManager wfm = m_nodeContext.getWorkflowManager();
+                if (wfm == null) {
+                    return null;
+                }
+                final WorkflowContext workflowContext = wfm.getContext();
+                if (workflowContext == null) {
+                    return null;
+                }
+                if (!workflowContext.getTempLocation().isDirectory()) {
+                    return null;
+                }
+                
                 buffer.ensureWriterIsOpen();
                 final List<BlobSupportDataRow> list = CACHE.getSilent(buffer).get();
                 final AbstractTableStoreWriter outputWriter = buffer.m_outputWriter;
