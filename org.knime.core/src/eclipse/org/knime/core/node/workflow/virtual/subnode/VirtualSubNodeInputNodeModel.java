@@ -301,14 +301,18 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
 
     /**
      * @return Description for the sub node
+     * @deprecated use {@link SubNodeContainer#getMetadata()} instead
      */
+    @Deprecated
     public String getSubNodeDescription() {
         return m_configuration.getSubNodeDescription();
     }
 
     /**
      * @return Names of the ports
+     * @deprecated use {@link SubNodeContainer#getMetadata()} instead
      */
+    @Deprecated
     public String[] getPortNames() {
         return m_configuration.getPortNames();
     }
@@ -316,6 +320,7 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
     /**
      * @return Descriptions of the ports
      */
+    @Deprecated
     public String[] getPortDescriptions() {
         return m_configuration.getPortDescriptions();
     }

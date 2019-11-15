@@ -310,16 +310,21 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
         CheckUtils.checkState(m_configuration != null, "No configuration available");
         m_configuration.getFilterConfiguration().loadDefaults(getAvailableFlowVariables(), true);
     }
+
     /**
      * @return Names of the ports
+     * @deprecated use {@link SubNodeContainer#getMetadata()} instead
      */
+    @Deprecated
     public String[] getPortNames() {
         return m_configuration.getPortNames();
     }
 
     /**
      * @return Descriptions of the ports
+     * @deprecated use {@link SubNodeContainer#getMetadata()} instead
      */
+    @Deprecated
     public String[] getPortDescriptions() {
         return m_configuration.getPortDescriptions();
     }

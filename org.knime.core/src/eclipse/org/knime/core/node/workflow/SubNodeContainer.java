@@ -392,6 +392,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_wfmListener = createAndAddWorkflowListener();
         setInternalState(m_wfm.getInternalState());
         m_templateInformation = MetaNodeTemplateInformation.NONE;
+        m_metadata = ComponentMetadata.NONE;
 
         postLoadWFM();
     }
@@ -710,10 +711,10 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     private static void addPortDescriptionToElement(final Document doc, final ComponentMetadata metadata)
         throws DOMException, ParserConfigurationException, XmlException {
-        final String[] inPortNames = metadata.getInPortNames().get();
-        final String[] inPortDescriptions = metadata.getInPortDescriptions().get();
-        final String[] outPortNames = metadata.getOutPortNames().get();
-        final String[] outPortDescriptions = metadata.getOutPortDescriptions().get();
+        final String[] inPortNames = metadata.getInPortNames().orElse(new String[0]);
+        final String[] inPortDescriptions = metadata.getInPortDescriptions().orElse(new String[0]);
+        final String[] outPortNames = metadata.getOutPortNames().orElse(new String[0]);
+        final String[] outPortDescriptions = metadata.getOutPortDescriptions().orElse(new String[0]);
 
         final Element knimeNode = doc.getDocumentElement();
         final Element ports = doc.createElement("ports");
@@ -754,8 +755,6 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public Element getXMLDescription() {
-        final VirtualSubNodeInputNodeModel inNode = getVirtualInNodeModel();
-        final VirtualSubNodeOutputNodeModel outNode = getVirtualOutNodeModel();
         final String description = getMetadata().getDescription().orElse(null);
         String sDescription;
         if (StringUtils.isEmpty(description)) {
@@ -819,8 +818,8 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     private void refreshPortNames() {
-        String[] inPortNames = getVirtualInNodeModel().getPortNames();
-        String[] outPortNames = getVirtualOutNodeModel().getPortNames();
+        String[] inPortNames = getMetadata().getInPortNames().orElse(new String[0]);
+        String[] outPortNames = getMetadata().getOutPortNames().orElse(new String[0]);
         for (int i = 0; i < inPortNames.length; i++) {
             getInPort(i + 1).setPortName(inPortNames[i]);
         }
@@ -2485,7 +2484,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             //take port descriptions from virtual input node if none is set
             portNames = getVirtualInNodeModel().getPortNames();
             portDescriptions = getVirtualInNodeModel().getPortDescriptions();
-        } else if (m_metadata.getInPortNames().get().length != getNrInPorts()) {
+        } else if (m_metadata.getInPortNames().get().length != getNrInPorts() - 1) {
             //sync number of port names/descriptions with the actual ports number -> fill or cut-off
             portNames = m_metadata.getInPortNames().get();
             int orgLength = portNames.length;
@@ -2511,7 +2510,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             //take port descriptions from virtual output node if none is set
             portNames = getVirtualOutNodeModel().getPortNames();
             portDescriptions = getVirtualOutNodeModel().getPortDescriptions();
-        } else if (m_metadata.getOutPortNames().get().length != getNrOutPorts()) {
+        } else if (m_metadata.getOutPortNames().get().length != getNrOutPorts() - 1) {
             //sync number of port names/descriptions with the actual ports number -> fill or cut-off
             portNames = m_metadata.getOutPortNames().get();
             int orgLength = portNames.length;
