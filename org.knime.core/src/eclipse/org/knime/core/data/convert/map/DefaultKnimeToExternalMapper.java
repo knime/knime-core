@@ -115,10 +115,16 @@ class DefaultKnimeToExternalMapper<D extends Destination<?>, P extends ConsumerP
                     cell.isMissing() ? null : converterConsumerPair.getFirst().convertUnsafe(cell),
                     parameters[converterConsumerPairIterator.previousIndex()]);
             }
-        } catch (final MappingException mappingException) {
-            throw mappingException;
         } catch (final Exception exception) {
-            throw new MappingException(exception.getMessage(), exception);
+            //always unwrap the exception and return a new MappingException with the cause message
+            final Throwable cause = exception.getCause();
+            final String message;
+            if (cause != null) {
+                message = cause.getMessage();
+            } else {
+                message = "Data type mapping exception";
+            }
+            throw new MappingException(message, cause);
         }
     }
 }
