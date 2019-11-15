@@ -1,6 +1,7 @@
 package org.knime.core.data.convert.map;
 
 import java.util.HashMap;
+import java.util.function.IntFunction;
 import java.util.stream.Stream;
 
 import org.knime.core.data.DataCell;
@@ -113,6 +114,44 @@ import org.knime.core.node.ExecutionContext;
  */
 public class MappingFramework {
 
+    /**
+     * Creates a mapper that will execute mapping and writing operations from KNIME to external types.
+     * <p>
+     * Repeatedly using the same created instance is more efficient than calling the corresponding static {@code map}
+     * methods of this class. However if any objects produced by the {@link ConsumptionPath} arguments has mutable
+     * state, then using the less efficient static methods is the safe option.
+     * </p>
+     *
+     * @param <D> the type of the mapping and consumption processes' destination.
+     * @param <P> the type of the consumption processes' parameters.
+     * @param paths the consumption paths for each cell (column).
+     * @return a {@link KnimeToExternalMapper} object.
+     * @throws NullPointerException if {@code paths} or any of its elements is {@code null}.
+     * @since 4.1
+     */
+    public static <D extends Destination<?>, P extends ConsumerParameters<D>> KnimeToExternalMapper<D, P>
+        createMapper(final ConsumptionPath... paths) {
+        return new DefaultKnimeToExternalMapper<>(paths);
+    }
+
+    /**
+     * Creates a mapper that will execute reading and mapping operations from external to KNIME types.
+     *
+     * @param <S> the type of the mapping and production processes' source.
+     * @param <P> the type of the production processes' parameters.
+     * @param fileStoreFactoryFunction the function that accepts a cell (column) index and produces a file store factory
+     *            for the cell factory that requires it.
+     * @param paths the production paths for each cell (column).
+     * @return a {@link ExternalToKnimeMapper} object.
+     * @throws NullPointerException if {@code fileStoreFactoryFunction}, {@code paths}, or any of {@code paths}'
+     *             elements is {@code null}.
+     * @since 4.1
+     */
+    public static <S extends Source<?>, P extends ProducerParameters<S>> ExternalToKnimeMapper<S, P>
+        createMapper(final IntFunction<FileStoreFactory> fileStoreFactoryFunction, final ProductionPath... paths) {
+        return new DefaultExternalToKnimeMapper<>(fileStoreFactoryFunction, paths);
+    }
+
     /* Do not instantiate */
     private MappingFramework() {
     }
@@ -190,6 +229,7 @@ public class MappingFramework {
         m_sourceTypes.put(sourceType, registry);
         return registry;
     }
+
     /**
      * Creates a {@link DataRowProducer} that allows to produce data rows from a given {@link Source source} using a
      * given {@link ProductionPath mapping}.
@@ -212,6 +252,7 @@ public class MappingFramework {
     /**
      * Creates a {@link DataRowProducer} that allows to produce data rows from a given {@link Source source} using a
      * given {@link ProductionPath mapping}.
+     *
      * @param fileStoreFactory {@link FileStoreFactory} which may be used for creating {@link CellFactory}s.
      * @param source The source from which to create data rows.
      * @param mapping Per-{@link DataCell cell} production paths that describe the mapping from source to data cell.
@@ -236,7 +277,7 @@ public class MappingFramework {
      * @param context Execution context potentially required to create converters
      * @return The DataRow which contains the data read from the source
      * @throws Exception If conversion fails
-     * @param <ST> Source type
+     * @param <S> Source type
      * @param <PP> Producer parameters subclass
      * @see #map(RowKey, FileStoreFactory, Source, ProductionPath[], ProducerParameters[])
      */
@@ -255,13 +296,13 @@ public class MappingFramework {
      * @param params Per column parameters for the producers used
      * @return The DataRow which contains the data read from the source
      * @throws Exception If conversion fails
-     * @param <ST> Source type
+     * @param <S> Source type
      * @param <PP> Producer parameters subclass
      * @since 4.0
      */
     public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRow map(final RowKey key,
-        final FileStoreFactory fileStoreFactory, final S source, final ProductionPath[] mapping,
-        final PP[] params) throws Exception {
+        final FileStoreFactory fileStoreFactory, final S source, final ProductionPath[] mapping, final PP[] params)
+        throws Exception {
 
         final DataCell[] cells = new DataCell[mapping.length];
 
@@ -314,7 +355,7 @@ public class MappingFramework {
      *            external type.
      * @param params Per column parameters for the consumers used
      * @throws Exception If an exception occurs during conversion or mapping
-     * @param <DT> Destination type
+     * @param <D> Destination type
      * @param <CP> Consumer parameters subclass
      */
     public static <D extends Destination<?>, CP extends ConsumerParameters<D>> void map(final DataRow row, final D dest,
