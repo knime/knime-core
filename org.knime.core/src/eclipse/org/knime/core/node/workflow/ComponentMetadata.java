@@ -77,8 +77,9 @@ public class ComponentMetadata {
      *      1. I've been told we're trying to keep SWT related assets out of knime-core
      *      2. The PNG assets which we use currently sit in, and i assume the new versions will also sit in,
      *              knime-workbench.
+     *  @author loki
      */
-    public enum ComponentType {
+    public enum ComponentNodeType {
         /** A learning node. */
         LEARNER("Learner", NodeFactory.NodeType.Learner),
         /** A data manipulating node. */
@@ -93,7 +94,7 @@ public class ComponentMetadata {
         VISUALIZER("Visualizer", NodeFactory.NodeType.Visualizer);
 
 
-        private static final Map<NodeFactory.NodeType, ComponentType> NODE_TYPE_DISPLAYABLE_MAP = new HashMap<>();
+        private static final Map<NodeFactory.NodeType, ComponentNodeType> NODE_TYPE_DISPLAYABLE_MAP = new HashMap<>();
 
         /**
          * Given the {@code NodeFactory.NodeType}, return the mapped instance of this enum.
@@ -101,10 +102,10 @@ public class ComponentMetadata {
          * @param nodeType
          * @return the instance of this enum which wraps the parameter value enum
          */
-        public synchronized static ComponentType getTypeForNodeType(final NodeFactory.NodeType nodeType) {
+        public synchronized static ComponentNodeType getTypeForNodeType(final NodeFactory.NodeType nodeType) {
             if (NODE_TYPE_DISPLAYABLE_MAP.size() == 0) {
-                for (final ComponentType ct : ComponentType.values()) {
-                    NODE_TYPE_DISPLAYABLE_MAP.put(ct.getNodeType(), ct);
+                for (final ComponentNodeType ct : ComponentNodeType.values()) {
+                    NODE_TYPE_DISPLAYABLE_MAP.put(ct.getType(), ct);
                 }
             }
             return NODE_TYPE_DISPLAYABLE_MAP.get(nodeType);
@@ -114,7 +115,7 @@ public class ComponentMetadata {
         private final String m_displayText;
         private final NodeFactory.NodeType m_nodeType;
 
-        private ComponentType(final String name, final NodeFactory.NodeType nodeType) {
+        private ComponentNodeType(final String name, final NodeFactory.NodeType nodeType) {
             m_displayText = name;
             m_nodeType = nodeType;
         }
@@ -129,7 +130,7 @@ public class ComponentMetadata {
         /**
          * @return the {@code NodeFactory.NodeType} which this enum instance wraps.
          */
-        public NodeFactory.NodeType getNodeType() {
+        public NodeFactory.NodeType getType() {
             return m_nodeType;
         }
     }
@@ -143,7 +144,7 @@ public class ComponentMetadata {
 
     private String m_description;
 
-    private ComponentType m_type;
+    private ComponentNodeType m_type;
 
     private byte[] m_icon;
 
@@ -183,7 +184,7 @@ public class ComponentMetadata {
     /**
      * @return the type
      */
-    public Optional<ComponentType> getType() {
+    public Optional<ComponentNodeType> getNodeType() {
         return Optional.ofNullable(m_type);
     }
 
@@ -239,7 +240,7 @@ public class ComponentMetadata {
         ComponentMetadata metadata = new ComponentMetadata();
         metadata.m_description = nestedSettings.getString("description", null);
         metadata.m_type =
-            nestedSettings.containsKey("type") ? ComponentType.valueOf(nestedSettings.getString("type")) : null;
+            nestedSettings.containsKey("type") ? ComponentNodeType.valueOf(nestedSettings.getString("type")) : null;
         metadata.m_icon =
             nestedSettings.containsKey("icon") ? Base64.getDecoder().decode(nestedSettings.getString("icon")) : null;
 
@@ -326,7 +327,7 @@ public class ComponentMetadata {
 
         private byte[] m_icon;
 
-        private ComponentType m_type;
+        private ComponentNodeType m_type;
 
         private List<Pair<String, String>> m_inPorts = new ArrayList<>();
 
@@ -345,7 +346,7 @@ public class ComponentMetadata {
          * @param type
          * @return this builder
          */
-        public ComponentMetadataBuilder type(final ComponentType type) {
+        public ComponentMetadataBuilder type(final ComponentNodeType type) {
             m_type = type;
             return this;
         }

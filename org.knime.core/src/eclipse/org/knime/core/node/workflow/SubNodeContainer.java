@@ -890,8 +890,8 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public NodeType getType() {
-        if (m_metadata.getType().isPresent()) {
-            return m_metadata.getType().get().getNodeType();
+        if (m_metadata.getNodeType().isPresent()) {
+            return m_metadata.getNodeType().get().getType();
         } else {
             return NodeType.Subnode;
         }
