@@ -2783,7 +2783,7 @@ public class Buffer implements KNIMEStreamConstants {
             NodeContext.pushContext(m_nodeContext);
             try {
                 Buffer buffer = m_bufferRef.get();
-                if (buffer == null) {
+                if (buffer == null || buffer.m_isClearedLock.booleanValue()) {
                     /** Buffer was already discarded (no rows added) */
                     return null;
                 }
