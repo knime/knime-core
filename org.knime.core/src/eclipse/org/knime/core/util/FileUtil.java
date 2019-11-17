@@ -70,6 +70,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -82,6 +83,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -924,6 +926,8 @@ public final class FileUtil {
             LOGGER.error("Temp folder \"" + workflowContext.getTempLocation().getAbsolutePath()
                 + "\" does not exist (associated with node context \"" + nodeContext
                 + "\") - using fallback temp folder (\"" + fallbackDir.getAbsolutePath() + "\"");
+            LOGGER.debug("Current class stack:\n  " + Arrays.stream(Thread.currentThread().getStackTrace())
+                .map(s -> s.toString()).collect(Collectors.joining("\n  ")));
             return fallbackDir;
         } else {
             return workflowContext.getTempLocation();
