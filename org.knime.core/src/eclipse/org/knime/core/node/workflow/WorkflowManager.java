@@ -5766,6 +5766,9 @@ public final class WorkflowManager extends NodeContainer
             NodeOutPort[] predOutPorts = assemblePredecessorOutPorts(id);
             for (int i = 0; i < predOutPorts.length; i++) {
                 NodeOutPort p = predOutPorts[i];
+                while (p instanceof NodeOutPortWrapper) {
+                    p = ((NodeOutPortWrapper)p).getUnderlyingPort();
+                }
                 if (p == null) { // unconnected port
                     // accept only if inport is optional
                     if (!nc.getInPort(i).getPortType().isOptional()) {
@@ -5868,7 +5871,7 @@ public final class WorkflowManager extends NodeContainer
                 if (snc.getParent().isComponentProjectWFM()) {
                     message = "No example input data stored with component";
                 } else {
-                    message = "Outer workflow does not have input data, execute it first";
+                    message = "Component does not have input data, execute upstream nodes first";
                 }
                 snc.setNodeMessage(NodeMessage.merge(oldMessage, NodeMessage.newWarning(message)));
                 return false;
@@ -6299,41 +6302,114 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Prints a list of errors that occurred in this node and all subnodes
-     *
-     * @param indent number of leading spaces
-     * @return String of errors with their node ids
-     * @since 4.0
+     * Attempts to extract the useful errors by identifying the errors in the workflow. Some smart filtering is applied:
+     * <ul>
+     * <li>Unconnected inputs are more important than errors</li>
+     * <li>Show only messages that are 'left' in the workflow (in a breadth-first search ordering)</li>
+     * <li>No duplicated error messages</li>
+     * <li>At most three messages</li>
+     * </ul>
+     * @return String of errors
+     * @see #getNodeWarningSummary()
+     * @since 4.1
      */
-    String printNodeErrorSummary(final int indent) {
-        char[] indentChars = new char[indent];
-        Arrays.fill(indentChars, ' ');
-        String indentString = new String(indentChars);
-        StringBuilder build = new StringBuilder(indentString);
+    Optional<String> getNodeErrorSummary() {
         try (WorkflowLock lock = lock()) {
-            for (NodeID id : m_workflow.getNodeIDs()) {
+            Map<NodeContainer, String> erroredNodes = new LinkedHashMap<>();
+            Set<NodeContainer> notFullyConnectedNodes = new LinkedHashSet<>();
+
+            Set<NodeID> downstreamNodesOfErroredNodes = new HashSet<>(); // these will be skipped
+
+            // traverse breadth first and a node with errors will suppress errors on their downstream nodes
+            Collection<NodeID> nodes = m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet();
+            for (NodeID id : nodes) {
                 NodeContainer nc = m_workflow.getNode(id);
-                if (nc instanceof WorkflowManager) {
-                    build.append(((WorkflowManager)nc).printNodeErrorSummary(indent + 2));
-                } else if (nc instanceof SubNodeContainer) {
-                    build.append(((SubNodeContainer)nc).getWorkflowManager().printNodeErrorSummary(indent + 6));
+                final NodeMessage nodeMessage = nc.getNodeMessage();
+                if (downstreamNodesOfErroredNodes.contains(id)) {
+                    // ignore; allowed to fail
+                    continue;
+                }
+                // first: check if not fully connected (NB. WFM may or may not be fully connected)
+                if (!(nc instanceof WorkflowManager) && !isFullyConnected(id)) {
+                    notFullyConnectedNodes.add(nc);
+                    if (!downstreamNodesOfErroredNodes.contains(id)) {
+                        Set<NodeID> successors = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id, false).keySet();
+                        downstreamNodesOfErroredNodes.addAll(successors);
+                    }
                 } else {
-                    final NodeMessage nodeMessage = nc.getNodeMessage();
-                    // Print messages from nodes that have an error message, and warning messages from
-                    // nodes that failed to configure
-                    if (nodeMessage.getMessageType() == Type.ERROR || (!nc.getNodeContainerState().isConfigured()
-                        && nodeMessage.getMessageType() == Type.WARNING)) {
-                        build.append(indentString);
-                        build.append("  ");
-                        build.append(nc.getNameWithID());
-                        build.append(" : ");
-                        build.append(StringUtils.removeStart(nodeMessage.getMessage(), Node.EXECUTE_FAILED_PREFIX));
-                        build.append("\n");
+                    String msg = null;
+                    if (nodeMessage.getMessageType() == Type.ERROR) {
+                        msg = StringUtils.removeStart(nodeMessage.getMessage(), Node.EXECUTE_FAILED_PREFIX);
+                        msg = StringUtils.removeStart(msg, "\n");
+                    } else if (nc instanceof WorkflowManager && !nc.getInternalState().isExecuted()) {
+                        msg = ((WorkflowManager)nc).getNodeErrorSummary().orElse(null);
+                    }
+                    if (msg != null) {
+                        if (!erroredNodes.values().contains(msg)) { // no duplicates of the same message
+                            erroredNodes.put(nc, msg);
+                        }
+                        Set<NodeID> successors = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id, false).keySet();
+                        downstreamNodesOfErroredNodes.addAll(successors);
                     }
                 }
             }
+            StringBuilder errorStringBuilder = new StringBuilder();
+            if (!notFullyConnectedNodes.isEmpty()) {
+                if (notFullyConnectedNodes.size() == 1) {
+                    errorStringBuilder.append("Contains an unconnected node (\"")//
+                        .append(notFullyConnectedNodes.iterator().next().getNameWithID())//
+                        .append("\")");
+                } else {
+                    errorStringBuilder.append("Contains ")//
+                        .append(notFullyConnectedNodes.size()).append(" unconnected nodes");
+                }
+            } else if (!erroredNodes.isEmpty()) {
+                errorStringBuilder.append(erroredNodes.entrySet().stream().limit(3)//
+                    .map(entry -> entry.getKey().getNameWithID() + ": " + entry.getValue())//
+                    .collect(Collectors.joining("\n")));
+            }
+            return errorStringBuilder.length() == 0 ? Optional.empty() : Optional.of(errorStringBuilder.toString());
         }
-        return build.toString();
+    }
+
+    /**
+     * Similar to {@link #getNodeErrorSummary()} but the same logic applied to node warning messages. Used as
+     * 'fallback' when the workflow failed to execute but there are no errors. Nodes having failing during configuration
+     * ("No configuration available") will have no error message but a warning.
+
+     * @return String of warnings, if any.
+     * @since 4.1
+     */
+    Optional<String> getNodeWarningSummary() {
+        try (WorkflowLock lock = lock()) {
+            Map<NodeContainer, String> warnedNodes = new LinkedHashMap<>();
+
+            Set<NodeID> downstreamNodesOfWarnedNodes = new HashSet<>();
+
+            // traverse breadth first and a node with error/warning/etc will suppress errors on downstream nodes
+            Collection<NodeID> nodes = m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet();
+            for (NodeID id : nodes) {
+                if (downstreamNodesOfWarnedNodes.contains(id)) {
+                    continue;
+                }
+                NodeContainer nc = m_workflow.getNode(id);
+                final NodeMessage nodeMessage = nc.getNodeMessage();
+                if (!nc.getNodeContainerState().isConfigured() && nodeMessage.getMessageType() == Type.WARNING) {
+                    String msg = nodeMessage.getMessage();
+                    if (!warnedNodes.values().contains(msg)) { // no duplicates of the same message
+                        warnedNodes.put(nc, msg);
+                    }
+                    Set<NodeID> successors = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id, false).keySet();
+                    downstreamNodesOfWarnedNodes.addAll(successors);
+                }
+            }
+            if (!warnedNodes.isEmpty()) {
+                return Optional.of(warnedNodes.entrySet().stream().limit(3)//
+                    .map(entry -> entry.getKey().getNameWithID() + ": " + entry.getValue())//
+                    .collect(Collectors.joining("\n")));
+            }
+            return Optional.empty();
+        }
     }
 
     /** {@inheritDoc} */
@@ -7918,8 +7994,8 @@ public final class WorkflowManager extends NodeContainer
                 }
                 inStack = new FlowObjectStack(cont.getID(), predStacks);
             } catch (IllegalFlowObjectStackException ex) {
-                subResult.addError("Errors creating flow object stack for " + "node \"" + cont.getNameWithID()
-                    + "\", (resetting " + "flow variables): " + ex.getMessage());
+                subResult.addError("Errors creating flow object stack for node \"" + cont.getNameWithID()
+                    + "\", (resetting flow variables): " + ex.getMessage());
                 needsReset = true;
                 inStack = new FlowObjectStack(cont.getID());
             }

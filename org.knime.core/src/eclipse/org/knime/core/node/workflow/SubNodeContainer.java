@@ -70,6 +70,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -122,7 +123,6 @@ import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
-import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
@@ -236,6 +236,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     private final WorkflowManager m_wfm;
 
     private NodeStateChangeListener m_wfmStateChangeListener;
+    private WorkflowListener m_wfmListener; // to reset this node's NodeMessage on change
 
     private NodeInPort[] m_inports;
     private HiLiteHandler[] m_inHiliteHandler;
@@ -382,6 +383,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_virtualOutNodeIDSuffix = outNodeID.getIndex();
         getVirtualInNodeModel().setSubNodeContainer(this);
         m_wfmStateChangeListener = createAndAddStateListener();
+        m_wfmListener = createAndAddWorkflowListener();
         setInternalState(m_wfm.getInternalState());
         m_templateInformation = MetaNodeTemplateInformation.NONE;
 
@@ -438,6 +440,36 @@ public final class SubNodeContainer extends SingleNodeContainer
             }
         }
         return Pair.create(new int[] {xmin, ymin}, new int[] {xmax, ymax});
+    }
+
+    /** Creates listener, adds it to m_wfm and sets the class field. */
+    private WorkflowListener createAndAddWorkflowListener() {
+        WorkflowListener listener = e -> onWFMStructureChange(e);
+        m_wfm.addListener(listener);
+        return listener;
+    }
+
+    /** Called by listener on inner workflow; will unset the {@link NodeMessage} when the inner workflow changes. */
+    private void onWFMStructureChange(final WorkflowEvent state) {
+        if (!m_isPerformingActionCalledFromParent) {
+            switch (state.getType()) {
+                case CONNECTION_ADDED:
+                case CONNECTION_REMOVED:
+                case NODE_ADDED:
+                case NODE_REMOVED:
+                case NODE_SETTINGS_CHANGED:
+                    String msg = m_wfm.getNodeErrorSummary().orElseGet(() -> m_wfm.getNodeWarningSummary().orElse(null));
+                    if (msg == null) {
+                        setNodeMessage(NodeMessage.NONE);
+                    } else {
+                        setNodeMessage(NodeMessage.newWarning(msg));
+                    }
+                    break;
+                default:
+                    // annotation change, dirty state change
+
+            }
+        }
     }
 
     /** Creates listener, adds it to m_wfm and sets the class field. */
@@ -1054,6 +1086,10 @@ public final class SubNodeContainer extends SingleNodeContainer
                 default:
                     newState = internalState;
             }
+            String msg = m_wfm.getNodeErrorSummary().orElseGet(() -> m_wfm.getNodeWarningSummary().orElse(null));
+            if (msg != null) {
+                setNodeMessage(NodeMessage.merge(oldMessage, NodeMessage.newWarning(msg)));
+            }
             setVirtualOutputIntoOutport(newState);
             setInternalState(newState);
             if (nch != null) {
@@ -1213,10 +1249,11 @@ public final class SubNodeContainer extends SingleNodeContainer
             if (allExecuted) {
                 setVirtualOutputIntoOutport(internalState);
             } else if (isCanceled) {
-                setNodeMessage(new NodeMessage(Type.WARNING, "Execution canceled"));
+                setNodeMessage(NodeMessage.newWarning("Execution canceled"));
             } else {
-                setNodeMessage(
-                    new NodeMessage(Type.ERROR, "Error during execution:\n" + m_wfm.printNodeErrorSummary(0)));
+                String msg = m_wfm.getNodeErrorSummary()//
+                        .orElseGet(() -> m_wfm.getNodeWarningSummary().orElse("<reason unknown>"));
+                setNodeMessage(NodeMessage.newError(Node.EXECUTE_FAILED_PREFIX + "\n" + msg));
             }
             return allExecuted ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
         } finally {
@@ -1332,6 +1369,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         super.cleanup();
         getVirtualInNodeModel().setSubNodeContainer(null);
         m_wfm.removeNodeStateChangeListener(m_wfmStateChangeListener);
+        m_wfm.removeListener(m_wfmListener);
         m_wfm.cleanup();
     }
 
@@ -1774,6 +1812,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         setVirtualOutputIntoOutport(m_wfm.getInternalState());
         m_wfmStateChangeListener = createAndAddStateListener();
+        m_wfmListener = createAndAddWorkflowListener();
         getInPort(0).setPortName("Variable Inport");
         getOutPort(0).setPortName("Variable Outport");
         getVirtualInNode().addNodeStateChangeListener(new RefreshPortNamesListener());
