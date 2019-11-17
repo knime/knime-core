@@ -138,7 +138,7 @@ public class Bug5517_NodeMessagesFromWFM extends WorkflowTestCase {
             Pair<String, NodeMessage> m = it.next();
             NodeMessage msg = m.getSecond();
             if (NodeMessage.Type.WARNING.equals(msg.getMessageType())
-                    && msg.getMessage().contains("Outer workflow does not have input data")) {
+                    && msg.getMessage().contains("Component does not have input data, execute upstream nodes first")) {
                 it.remove();
                 break;
             }
