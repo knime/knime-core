@@ -2783,8 +2783,13 @@ public class Buffer implements KNIMEStreamConstants {
             NodeContext.pushContext(m_nodeContext);
             try {
                 Buffer buffer = m_bufferRef.get();
-                if (buffer == null || buffer.m_isClearedLock.booleanValue()) {
+                if (buffer == null) {
+                    LOGGER.debug("Attempting to swap a Buffer that was already garbage collected ... will ignore.");
                     /** Buffer was already discarded (no rows added) */
+                    return null;
+                } else if (buffer.m_isClearedLock.booleanValue()) {
+                    LOGGER.debugWithFormat("Attempting to swap a Buffer that was already clear()'ed... "
+                        + "will ignore (%s)", buffer.m_lifecycle.getClass().getSimpleName());
                     return null;
                 }
                 buffer.ensureWriterIsOpen();
