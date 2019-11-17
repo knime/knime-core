@@ -119,17 +119,50 @@ public final class MemoryAlertSystem {
     private static final MemoryPoolMXBean OLD_GEN_POOL = findTenuredGenPool();
 
     /**
-     * The threshold of medium memory usage that triggers a memory event. The threshold is set to
+     * The threshold of collected old generation heap space usage that triggers a memory event. The threshold is set to
      * 90% of the total memory minus 128MB.
      */
     public static final double DEFAULT_USAGE_THRESHOLD = 0.9 - ((128 << 20) / (double) getMaximumMemory());
 
+    /**
+     * Instance that emits memory alerts when collected old generation heap space (i.e., space after the last
+     * full garbage collection) is nearing exhaustion.
+     */
     private static final MemoryAlertSystem INSTANCE = new MemoryAlertSystem(DEFAULT_USAGE_THRESHOLD, true);
 
     private final static boolean IS_G1 = ManagementFactory.getGarbageCollectorMXBeans().stream()
             .map(GarbageCollectorMXBean::getName).anyMatch(n -> n.equals("G1 Old Generation"));
 
-    private static final MemoryAlertSystem INSTANCE_UNCOLLECTED = new MemoryAlertSystem(DEFAULT_USAGE_THRESHOLD, false);
+    /**
+     * The threshold of current old generation heap space usage that triggers a memory event. It should not be higher
+     * than the {@link #DEFAULT_USAGE_THRESHOLD}. It should also be above the initiating heap occupancy percent (IHOP)
+     * of G1 (and other concurrent GCs), which is set to 0.45 by deault. If this threshold were to be set below the IHOP
+     * percentage, we can end up in a state of near-permanent memory alert, since the garbage collector won't bother
+     * collecting garbage when heap occupancy is below IHOP. If this threshold were to be set close to the IHOP
+     * percentage, the uncollected memory alert system will emit an alert around the time the first (concurrent) garbage
+     * collection run is triggered, which is probably too early. For more information, see the comments in AP-12939.
+     */
+    private static final double DEFAULT_USAGE_THRESHOLD_UNCOLLECTED;
+    static {
+        double ihop = .45d;
+        for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
+            if (arg.startsWith("-XX:InitiatingHeapOccupancyPercent=")) {
+                try {
+                    ihop = Integer.parseInt(arg.substring(35)) / 100d;
+                } catch (NumberFormatException e) {
+                }
+            }
+        }
+        DEFAULT_USAGE_THRESHOLD_UNCOLLECTED = Math.min(DEFAULT_USAGE_THRESHOLD, (DEFAULT_USAGE_THRESHOLD + ihop) / 2);
+    }
+
+    /**
+     * Instance that emits memory alerts when current old generation heap space exceeds the threshold at which garbage
+     * collection is triggered. Currently only supported when the G1 garbage collector is enabled (see
+     * {@link #getInstanceUncollected()}).
+     */
+    private static final MemoryAlertSystem INSTANCE_UNCOLLECTED =
+        new MemoryAlertSystem(DEFAULT_USAGE_THRESHOLD_UNCOLLECTED, false);
 
     /* Standard Logger */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MemoryAlertSystem.class);
@@ -443,8 +476,8 @@ public final class MemoryAlertSystem {
     }
 
     /**
-     * Instance of {@link MemoryAlertSystem} that emits memory alerts based on collected old generation heap space,
-     * i.e., space after the last full garbage collection.
+     * Instance of {@link MemoryAlertSystem} that emits memory alerts when collected old generation heap space (i.e.,
+     * space after the last full garbage collection) is nearing exhaustion.
      *
      * @return the instance for collected old generation heap space
      */
@@ -453,9 +486,9 @@ public final class MemoryAlertSystem {
     }
 
     /**
-     * Instance of {@link MemoryAlertSystem} that emits memory alerts based on current old generation heap space.
-     * Currently only supported when the G1 garbage collector is enabled. Will return {@link #getInstance()} when
-     * another garbage collector is enabled.
+     * Instance of {@link MemoryAlertSystem} that emits memory alerts when current old generation heap space exceeds the
+     * threshold at which garbage collection is triggered. Currently only supported when the G1 garbage collector is
+     * enabled. Will return {@link #getInstance()} when another garbage collector is enabled.
      *
      * @return the instance for current old generation heap space
      * @since 4.0
