@@ -926,7 +926,7 @@ public final class FileUtil {
             LOGGER.error("Temp folder \"" + workflowContext.getTempLocation().getAbsolutePath()
                 + "\" does not exist (associated with node context \"" + nodeContext
                 + "\") - using fallback temp folder (\"" + fallbackDir.getAbsolutePath() + "\"");
-            LOGGER.debug("Current class stack:\n  " + Arrays.stream(Thread.currentThread().getStackTrace())
+            LOGGER.debug("Current call stack:\n  " + Arrays.stream(Thread.currentThread().getStackTrace())
                 .map(s -> s.toString()).collect(Collectors.joining("\n  ")));
             return fallbackDir;
         } else {

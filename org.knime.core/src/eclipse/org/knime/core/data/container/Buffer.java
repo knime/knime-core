@@ -137,6 +137,8 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LRUCache;
 import org.knime.core.util.MutableBoolean;
@@ -2792,6 +2794,20 @@ public class Buffer implements KNIMEStreamConstants {
                         + "will ignore (%s)", buffer.m_lifecycle.getClass().getSimpleName());
                     return null;
                 }
+                // START -- DEBUG output to chase memory leak that _only_ occurs when running automated tests
+                if (m_nodeContext != null) {
+                    final WorkflowManager wfm = m_nodeContext.getWorkflowManager();
+                    if (wfm != null) {
+                        final WorkflowContext workflowContext = wfm.getContext();
+                        if (workflowContext != null) {
+                            if (!workflowContext.getTempLocation().isDirectory()) {
+                                LOGGER.debugWithFormat("Buffer stack trace at construction time:\n%s",
+                                    buffer.m_fullStackTraceAtConstructionTime);
+                            }
+                        }
+                    }
+                }
+                // END -- DEBUG output to chase memory leak that _only_ occurs when running automated tests
                 buffer.ensureWriterIsOpen();
                 final List<BlobSupportDataRow> list = CACHE.getSilent(buffer).get();
                 final AbstractTableStoreWriter outputWriter = buffer.m_outputWriter;
