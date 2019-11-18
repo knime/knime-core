@@ -1158,12 +1158,16 @@ public class DataContainer implements RowAppender {
      * @since 3.6
      */
     public static final File createTempFile(final String suffix) throws IOException {
+        return createTempFile(FileUtil.getWorkflowTempDir(), suffix);
+    }
+
+    static final File createTempFile(final File dir, final String suffix) throws IOException {
         String date;
         synchronized (DATE_FORMAT) {
             date = DATE_FORMAT.format(new Date());
         }
         String fileName = "knime_container_" + date + "_";
-        File f = FileUtil.createTempFile(fileName, suffix);
+        File f = FileUtil.createTempFile(fileName, suffix, dir, true);
         f.deleteOnExit();
         return f;
     }
