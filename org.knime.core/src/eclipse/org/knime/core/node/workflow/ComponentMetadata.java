@@ -54,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
@@ -246,17 +247,33 @@ public final class ComponentMetadata {
         builder.icon(
             nestedSettings.containsKey("icon") ? Base64.getDecoder().decode(nestedSettings.getString("icon")) : null);
 
-        if (nestedSettings.containsKey("inPorts")) {
-            String[] names = nestedSettings.getNodeSettings("inPorts").getStringArray("names");
-            String[] descs = nestedSettings.getNodeSettings("inPorts").getStringArray("descriptions");
+        if (nestedSettings.containsKey("inports")) {
+            NodeSettingsRO inports = nestedSettings.getNodeSettings("inports");
+            Set<String> keySet = inports.keySet();
+            String[] names = new String[keySet.size()];
+            String[] descs = new String[keySet.size()];
+            for (String key : keySet) {
+                NodeSettingsRO port = inports.getNodeSettings(key);
+                int index = port.getInt("index", -1) - 1;
+                names[index] = port.getString("name");
+                descs[index] = port.getString("description");
+            }
             for (int i = 0; i < names.length; i++) {
                 builder.addInPortNameAndDescription(names[i], descs[i]);
             }
         }
 
-        if (nestedSettings.containsKey("outPorts")) {
-            String[] names = nestedSettings.getNodeSettings("outPorts").getStringArray("names");
-            String[] descs = nestedSettings.getNodeSettings("outPorts").getStringArray("descriptions");
+        if (nestedSettings.containsKey("outports")) {
+            NodeSettingsRO outports = nestedSettings.getNodeSettings("outports");
+            Set<String> keySet = outports.keySet();
+            String[] names = new String[keySet.size()];
+            String[] descs = new String[keySet.size()];
+            for (String key : keySet) {
+                NodeSettingsRO port = outports.getNodeSettings(key);
+                int index = port.getInt("index", -1) - 1;
+                names[index] = port.getString("name");
+                descs[index] = port.getString("description");
+            }
             for (int i = 0; i < names.length; i++) {
                 builder.addOutPortNameAndDescription(names[i], descs[i]);
             }
@@ -284,14 +301,22 @@ public final class ComponentMetadata {
             nestedSettings.addString("icon", Base64.getEncoder().encodeToString(m_icon));
         }
         if (m_inPortNames != null) {
-            NodeSettingsWO ports = nestedSettings.addNodeSettings("inPorts");
-            ports.addStringArray("names", m_inPortNames);
-            ports.addStringArray("descriptions", m_inPortDescriptions);
+            NodeSettingsWO ports = nestedSettings.addNodeSettings("inports");
+            for (int i = 0; i < m_inPortNames.length; i++) {
+                NodeSettingsWO port = ports.addNodeSettings("inport_" + (i + 1));
+                port.addString("name", m_inPortNames[i]);
+                port.addString("description", m_inPortDescriptions[i]);
+                port.addInt("index", i + 1);
+            }
         }
         if (m_outPortNames != null) {
-            NodeSettingsWO ports = nestedSettings.addNodeSettings("outPorts");
-            ports.addStringArray("names", m_outPortNames);
-            ports.addStringArray("descriptions", m_outPortDescriptions);
+            NodeSettingsWO ports = nestedSettings.addNodeSettings("outports");
+            for (int i = 0; i < m_outPortNames.length; i++) {
+                NodeSettingsWO port = ports.addNodeSettings("outport_" + (i + 1));
+                port.addString("name", m_outPortNames[i]);
+                port.addString("description", m_outPortDescriptions[i]);
+                port.addInt("index", i + 1);
+            }
         }
     }
 
