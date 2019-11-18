@@ -265,6 +265,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     private String m_customCSS;
 
     private ComponentMetadata m_metadata;
+    private boolean m_legacyMetadataLoaded;
 
     private MetaNodeTemplateInformation m_templateInformation;
 
@@ -818,8 +819,17 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     private void refreshPortNames() {
-        String[] inPortNames = getMetadata().getInPortNames().orElse(new String[0]);
-        String[] outPortNames = getMetadata().getOutPortNames().orElse(new String[0]);
+        String[] inPortNames;
+        String[] outPortNames;
+
+        if (m_metadata == null) {
+            inPortNames = new String[getNrInPorts() - 1];
+            outPortNames = new String[getNrOutPorts() - 1];
+        } else {
+            syncNrPortsWithMetadata();
+            inPortNames = m_metadata.getInPortNames().orElse(new String[getNrInPorts() - 1]);
+            outPortNames = m_metadata.getOutPortNames().orElse(new String[getNrOutPorts() - 1]);
+        }
         for (int i = 0; i < inPortNames.length; i++) {
             getInPort(i + 1).setPortName(inPortNames[i]);
         }
@@ -2457,7 +2467,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     public void setMetadata(final ComponentMetadata metadata) {
         m_metadata = metadata;
-        if (getWorkflowManager().getLoadVersion() == LoadVersion.V4010) {
+        if (FileWorkflowPersistor.getSaveVersion() == LoadVersion.V4010) {
             transferMetadataToInOutNodes(metadata);
         }
         notifyNodePropertyChangedListener(NodeProperty.ComponentMetadata);
@@ -2536,77 +2546,84 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @SuppressWarnings("deprecation")
     public ComponentMetadata getMetadata() {
-        if (m_metadata == null) {
-            return ComponentMetadata.NONE;
-        }
-
-        ComponentMetadataBuilder builder = null;
-        String[] inPortNames = null;
-        String[] inPortDescriptions = null;
-        String[] outPortNames = null;
-        String[] outPortDescriptions = null;
         LoadVersion loadVersion = getWorkflowManager().getLoadVersion();
-        if (loadVersion != null && loadVersion.isOlderThan(LoadVersion.V4010)) {
+        if ((m_metadata == null || m_metadata == ComponentMetadata.NONE) && !m_legacyMetadataLoaded
+            && loadVersion != null && loadVersion.isOlderThan(LoadVersion.V4010)) {
             //take node description from virtual input node
-            builder = getOrCreate(builder).description(getVirtualInNodeModel().getSubNodeDescription());
+            ComponentMetadataBuilder builder = ComponentMetadata.builder();
+            builder.description(getVirtualInNodeModel().getSubNodeDescription());
+
+            String[] inPortNames;
+            String[] inPortDescriptions;
+            String[] outPortNames;
+            String[] outPortDescriptions;
 
             //take port descriptions from virtual input node
             inPortNames = getVirtualInNodeModel().getPortNames();
             inPortDescriptions = getVirtualInNodeModel().getPortDescriptions();
+            for (int i = 0; i < inPortNames.length; i++) {
+                builder.addInPortNameAndDescription(inPortNames[i], inPortDescriptions[i]);
+            }
 
             //take port descriptions from virtual output node
             outPortNames = getVirtualOutNodeModel().getPortNames();
             outPortDescriptions = getVirtualOutNodeModel().getPortDescriptions();
-        } else {
-            int nrInPorts = getNrInPorts() - 1;
-            if (m_metadata.getInPortNames().isPresent() && m_metadata.getInPortNames().get().length != nrInPorts) {
-                //sync number of port names/descriptions with the actual ports number -> fill or cut-off
-                inPortNames = m_metadata.getInPortNames().get();
-                int orgLength = inPortNames.length;
-                inPortDescriptions = m_metadata.getInPortDescriptions().get();
-                inPortNames = Arrays.copyOf(inPortNames, nrInPorts);
-                inPortDescriptions = Arrays.copyOf(inPortDescriptions, nrInPorts);
-                for (int i = orgLength; i < nrInPorts - 1; i++) {
-                    inPortNames[i] = "";
-                    inPortDescriptions[i] = "";
-                }
-            }
-
-            int nrOutPorts = getNrOutPorts() - 1;
-            if (m_metadata.getInPortNames().isPresent() && m_metadata.getOutPortNames().get().length != nrOutPorts) {
-                //sync number of port names/descriptions with the actual ports number -> fill or cut-off
-                outPortNames = m_metadata.getOutPortNames().get();
-                int orgLength = outPortNames.length;
-                outPortDescriptions = m_metadata.getOutPortDescriptions().get();
-                outPortNames = Arrays.copyOf(outPortNames, nrOutPorts);
-                outPortDescriptions = Arrays.copyOf(outPortDescriptions, nrOutPorts);
-                for (int i = orgLength; i < nrOutPorts; i++) {
-                    outPortNames[i] = "";
-                    outPortDescriptions[i] = "";
-                }
-            }
-        }
-
-        if (inPortNames != null) {
-            builder = getOrCreate(builder);
-            builder.clearInPorts();
-            for (int i = 0; i < inPortNames.length; i++) {
-                builder.addInPortNameAndDescription(inPortNames[i], inPortDescriptions[i]);
-            }
-        }
-
-        if (outPortNames != null) {
-            builder = getOrCreate(builder);
-            builder.clearOutPorts();
             for (int i = 0; i < outPortNames.length; i++) {
                 builder.addOutPortNameAndDescription(outPortNames[i], outPortDescriptions[i]);
             }
+            m_metadata = builder.build();
+            m_legacyMetadataLoaded = true;
+        }
+        if (m_metadata == null || m_metadata == ComponentMetadata.NONE) {
+            return ComponentMetadata.NONE;
+        }
+        syncNrPortsWithMetadata();
+        return m_metadata;
+    }
+
+    private void syncNrPortsWithMetadata() {
+        /* sync number of port names/descriptions with the actual ports number -> fill or cut-off */
+        int nrInPorts = getNrInPorts() - 1;
+        ComponentMetadataBuilder builder = null;
+        if (m_metadata.getInPortNames().isPresent() && m_metadata.getInPortNames().get().length != nrInPorts) {
+            String[] portNames = m_metadata.getInPortNames().get();
+            int orgLength = portNames.length;
+            String[] portDescriptions = m_metadata.getInPortDescriptions().get();
+            portNames = Arrays.copyOf(portNames, nrInPorts);
+            portDescriptions = Arrays.copyOf(portDescriptions, nrInPorts);
+            for (int i = orgLength; i < nrInPorts; i++) {
+                portNames[i] = "Port " + (i + 1);
+                portDescriptions[i] = "";
+            }
+            builder = getOrCreate(builder);
+            builder.clearInPorts();
+            for (int i = 0; i < portNames.length; i++) {
+                builder.addInPortNameAndDescription(portNames[i], portDescriptions[i]);
+            }
+        }
+
+        int nrOutPorts = getNrOutPorts() - 1;
+        if (m_metadata.getOutPortNames().isPresent() && m_metadata.getOutPortNames().get().length != nrOutPorts) {
+            String[] portNames = m_metadata.getOutPortNames().get();
+            int orgLength = portNames.length;
+            String[] portDescriptions = m_metadata.getOutPortDescriptions().get();
+            portNames = Arrays.copyOf(portNames, nrOutPorts);
+            portDescriptions = Arrays.copyOf(portDescriptions, nrOutPorts);
+            for (int i = orgLength; i < nrOutPorts; i++) {
+                portNames[i] = "Port " + (i + 1);
+                portDescriptions[i] = "";
+            }
+            builder = getOrCreate(builder);
+            builder.clearOutPorts();
+            for (int i = 0; i < portNames.length; i++) {
+                builder.addOutPortNameAndDescription(portNames[i], portDescriptions[i]);
+            }
+
         }
 
         if (builder != null) {
             m_metadata = builder.build();
         }
-        return m_metadata;
     }
 
     private ComponentMetadataBuilder getOrCreate(final ComponentMetadataBuilder builder) {

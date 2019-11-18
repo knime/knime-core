@@ -262,6 +262,9 @@ public class ComponentMetadata {
      * @param settings To save to.
      */
     public void save(final NodeSettingsWO settings) {
+        if (this == NONE) {
+            return;
+        }
         NodeSettingsWO nestedSettings = settings.addNodeSettings(CFG_METADATA);
         if (m_description != null) {
             nestedSettings.addString("description", m_description);
