@@ -509,7 +509,8 @@ public class DataTableDomainCreator {
             if (!dataTableDomainCreator.m_maxsMissing[i] && otherMax != null) {
                 updateMax(i, m_maxs, otherMax, comparator);
             }
-            DataColumnMetaDataCalculators.merge(m_metaDataCalculators[i], dataTableDomainCreator.m_metaDataCalculators[i]);
+            DataColumnMetaDataCalculators.merge(m_metaDataCalculators[i],
+                dataTableDomainCreator.m_metaDataCalculators[i]);
         }
     }
 

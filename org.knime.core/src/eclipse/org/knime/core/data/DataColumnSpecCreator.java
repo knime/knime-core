@@ -210,15 +210,12 @@ public final class DataColumnSpecCreator {
 
     /**
      * Merges the existing {@link DataColumnSpec} with a second
-     * {@link DataColumnSpec}.
-     * If <b>allowDifferentTypes</b> is set to true, the common supertype of this {@link DataColumnSpecCreator}
-     *  and {@link DataColumnSpec cspec2} is determined, otherwise the types
-     *  must be equal or an {@link IllegalArgumentException} is thrown.
+     * {@link DataColumnSpec} using the provided {@link MergeOptions options}.
      * The domain information, meta data and properties from both DataColumnSpecs are merged,
      * Color, Shape and Size-Handlers are compared (must be equal).
      *
      * @param cspec2 the second {@link DataColumnSpec}.
-     * @param options
+     * @param options the {@link MergeOptions} for merging
      *
      * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec...)
      * @throws IllegalArgumentException if the structure (name and depending on <b>allowDifferentTypes</b> type) does

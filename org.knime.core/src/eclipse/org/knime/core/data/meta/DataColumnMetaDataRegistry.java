@@ -180,7 +180,7 @@ public enum DataColumnMetaDataRegistry {
      * @return a new {@link DataColumnMetaDataCreator} initialized with the information from {@link DataColumnMetaData
      *         metaData}
      */
-    public <T extends DataColumnMetaData> DataColumnMetaDataCreator<T> getCreator(final T metaData) {
+    public <T extends DataColumnMetaData> DataColumnMetaDataCreator<T> getInitializedCreator(final T metaData) {
         Class<T> metaDataClass = getClass(metaData);
         return getCreator(metaDataClass).merge(metaData);
     }
@@ -227,7 +227,7 @@ public enum DataColumnMetaDataRegistry {
      * @return true if there is at least one {@link DataColumnMetaDataCreator} that can generate
      *         {@link DataColumnMetaData} for {@link DataType type}
      */
-    public boolean hasMetaData(final DataType type) {
+    boolean hasMetaData(final DataType type) {
         return type.getValueClasses().stream().anyMatch(
             d -> m_creatorFactories.values().stream().anyMatch(m -> m.getDataValueClass().isAssignableFrom(d)));
     }

@@ -65,8 +65,8 @@ public interface DataColumnMetaDataCreator<T extends DataColumnMetaData> extends
 
     /**
      * Updates the meta data according to the contents of cell.</br>
-     * Missing values and incompatible cell types (e.g. in a transposed table) must not cause
-     * an exception and should simply be ignored.
+     * Missing values and incompatible cell types (e.g. in a transposed table) must not cause an exception and should
+     * simply be ignored.
      *
      * @param cell whose information should (if possible) be included in the meta data
      */
@@ -75,24 +75,22 @@ public interface DataColumnMetaDataCreator<T extends DataColumnMetaData> extends
     /**
      * Creates the {@link DataColumnMetaData} corresponding to the current state of this creator.</br>
      * It must be possible to call this method multiple times even if the creator is still updated and
-     * {@link DataColumnMetaData metaData objects} created in different calls must be independent from each other
-     * i.e. they may not share any mutable objects.
+     * {@link DataColumnMetaData metaData objects} created in different calls must be independent from each other i.e.
+     * they may not share any mutable objects.
      *
      * @return the {@link DataColumnMetaData} containing the meta data at the current state of this creator
      */
     T create();
 
     /**
-     * Creates a deep copy of this creator i.e. calling update on the copied creator
-     * has no effect on this creator.
+     * Creates a deep copy of this creator i.e. calling update on the copied creator has no effect on this creator.
      *
      * @return a deep copy of this creator
      */
     DataColumnMetaDataCreator<T> copy();
 
     /**
-     * Merges two {@link DataColumnMetaDataCreator creators} by including the data
-     * from <b>other</b> into this creator.
+     * Merges two {@link DataColumnMetaDataCreator creators} by including the data from <b>other</b> into this creator.
      *
      * @param other the creator to merge into this creator
      * @return this creator for method chaining

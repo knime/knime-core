@@ -63,9 +63,10 @@ import org.knime.core.node.util.CheckUtils;
 /**
  * Provides calculators that can calculate meta data from actual data.<br/>
  * This is done by retrieving the {@link DataColumnMetaDataCreator creators} for all {@link DataValue} interfaces the
- * {@link DataType} of the current column contains that declare that they have {@link DataColumnMetaData}. A {@link DataValue} has
- * {@link DataColumnMetaData} if its {@link UtilityFactory} returns true in {@link UtilityFactory#hasMetaData()} in which case
- * {@link UtilityFactory#getMetaDataCreator()} must return an instance of {@link DataColumnMetaDataCreator}.
+ * {@link DataType} of the current column contains that declare that they have {@link DataColumnMetaData}. A
+ * {@link DataValue} has {@link DataColumnMetaData} if its {@link UtilityFactory} returns {@code true} in
+ * {@link UtilityFactory#hasMetaData()} in which case {@link UtilityFactory#getMetaDataCreator()} must return an
+ * instance of {@link DataColumnMetaDataCreator}.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
@@ -91,9 +92,11 @@ final class DataColumnMetaDataCalculators {
         void update(final DataCell cell);
 
         /**
-         * Creates a {@link List} of {@link DataColumnMetaData} object corresponding to the information observed so far.<br/>
-         * The returned {@link DataColumnMetaData} must be independent of this {@link MetaDataCalculator} and subsequent calls to
-         * {@link MetaDataCalculator#update(DataCell)} are allowed and must not change already created {@link DataColumnMetaData}.
+         * Creates a {@link List} of {@link DataColumnMetaData} object corresponding to the information observed so
+         * far.<br/>
+         * The returned {@link DataColumnMetaData} must be independent of this {@link MetaDataCalculator} and subsequent
+         * calls to {@link MetaDataCalculator#update(DataCell)} are allowed and must not change already created
+         * {@link DataColumnMetaData}.
          *
          * @return the list of {@link DataColumnMetaData} corresponding to the information observed so far
          */
@@ -104,7 +107,8 @@ final class DataColumnMetaDataCalculators {
      * Creates a {@link MetaDataCalculator} for {@link DataColumnSpec colSpec} and the provided options.
      *
      * @param colSpec the {@link DataColumnSpec} for which to create a {@link MetaDataCalculator}
-     * @param dropMetaData whether the {@link DataColumnMetaData} stored in {@link DataColumnSpec colSpec} should be dropped
+     * @param dropMetaData whether the {@link DataColumnMetaData} stored in {@link DataColumnSpec colSpec} should be
+     *            dropped
      * @param createMetaData whether new {@link DataColumnMetaData} should be created from the data
      * @return a {@link MetaDataCalculator} for {@link DataColumnSpec colSpec} that behaves according to the provided
      *         options
@@ -189,7 +193,8 @@ final class DataColumnMetaDataCalculators {
 
         // the compatibility of creator and other is ensured at runtime
         @SuppressWarnings("unchecked")
-        private static void merge(@SuppressWarnings("rawtypes") final DataColumnMetaDataCreator creator, final DataColumnMetaData other) {
+        private static void merge(@SuppressWarnings("rawtypes") final DataColumnMetaDataCreator creator,
+            final DataColumnMetaData other) {
             CheckUtils.checkState(creator.getMetaDataClass().isInstance(other),
                 "Expected meta data of class '%s' but received meta data of class '%s'.",
                 creator.getMetaDataClass().getName(), other.getClass().getName());
@@ -197,8 +202,8 @@ final class DataColumnMetaDataCalculators {
         }
 
         /**
-         * Copies <b>toCopy</b> by also copying all {@link DataColumnMetaDataCreator DataValueMetaDataCreators} it contains. This
-         * means that any later change to <b>toCopy</b> does NOT affect the newly created instance.
+         * Copies <b>toCopy</b> by also copying all {@link DataColumnMetaDataCreator DataValueMetaDataCreators} it
+         * contains. This means that any later change to <b>toCopy</b> does NOT affect the newly created instance.
          *
          * @param toCopy the MetaDataCalculator to copy
          */

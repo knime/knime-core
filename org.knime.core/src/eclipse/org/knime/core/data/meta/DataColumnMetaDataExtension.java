@@ -51,7 +51,8 @@ package org.knime.core.data.meta;
 import org.knime.core.data.DataValue;
 
 /**
- * Bundles a {@link DataColumnMetaData} type with its {@link DataColumnMetaDataCreator} and {@link DataColumnMetaDataSerializer}.<br/>
+ * Bundles a {@link DataColumnMetaData} type with its {@link DataColumnMetaDataCreator} and
+ * {@link DataColumnMetaDataSerializer}.<br/>
  * This class is registered at the MetaDataType extension point.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
@@ -64,19 +65,28 @@ import org.knime.core.data.DataValue;
 public interface DataColumnMetaDataExtension<T extends DataColumnMetaData> extends DataColumnMetaDataFramework<T> {
 
     /**
-     * @return the type of {@link DataValue} the {@link DataColumnMetaData} associated with this factory is concerned with
+     * Provides the class of {@link DataValue} that a {@link DataColumnMetaDataCreator} created by this object can
+     * consume in order to create a {@link DataColumnMetaData} object.
+     *
+     * @return the type of {@link DataValue} the {@link DataColumnMetaData} associated with this factory is concerned
+     *         with
      */
     Class<? extends DataValue> getDataValueClass();
 
     /**
+     * Creates a fresh {@link DataColumnMetaData} that can consume cells implementing the {@link DataValue} class
+     * returned by {@link DataColumnMetaDataExtension#getDataValueClass()}.
+     *
      * @return a fresh {@link DataColumnMetaDataCreator} instance
      */
     DataColumnMetaDataCreator<T> create();
 
     /**
+     * Creates a {@link DataColumnMetaDataSerializer} that can be used to serialize {@link DataColumnMetaData} objects
+     * of the type associated with this class.
+     *
      * @return creates a {@link DataColumnMetaDataSerializer}
      */
     DataColumnMetaDataSerializer<T> createSerializer();
-
 
 }

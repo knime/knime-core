@@ -66,7 +66,7 @@ import org.knime.core.node.util.CheckUtils;
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 4.1
  */
-public class NominalDistributionCellFactory {
+public final class NominalDistributionCellFactory {
 
     /**
      * The {@link DataType} of cells created by this factory.

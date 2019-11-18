@@ -69,7 +69,7 @@ import org.knime.core.node.util.CheckUtils;
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 4.1
  */
-public class NominalDistributionCell extends FileStoreCell implements NominalDistributionValue {
+public final class NominalDistributionCell extends FileStoreCell implements NominalDistributionValue {
 
     static final DataType TYPE = DataType.getType(NominalDistributionCell.class);
 

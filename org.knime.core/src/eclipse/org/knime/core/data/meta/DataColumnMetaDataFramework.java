@@ -58,7 +58,7 @@ package org.knime.core.data.meta;
  * @noreference This interface is not intended to be referenced by clients. Pending API.
  * @since 4.1
  */
-public interface DataColumnMetaDataFramework <T extends DataColumnMetaData> {
+public interface DataColumnMetaDataFramework<T extends DataColumnMetaData> {
 
     /**
      * @return the class of {@link DataColumnMetaData} this framework object is concerned with

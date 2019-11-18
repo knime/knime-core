@@ -64,7 +64,8 @@ import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.util.CheckUtils;
 
 /**
- * Manages {@link DataColumnMetaData} for a {@link DataColumnSpec}. Currently, only {@link DataColumnMetaData} is supported.
+ * Manages {@link DataColumnMetaData} for a {@link DataColumnSpec}. Currently, only {@link DataColumnMetaData} is
+ * supported.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
@@ -74,7 +75,8 @@ final class DataColumnMetaDataManager {
 
     static final DataColumnMetaDataManager EMPTY = new DataColumnMetaDataManager(Collections.emptyMap());
 
-    private DataColumnMetaDataManager(final Map<Class<? extends DataColumnMetaData>, DataColumnMetaData> valueMetaDataMap) {
+    private DataColumnMetaDataManager(
+        final Map<Class<? extends DataColumnMetaData>, DataColumnMetaData> valueMetaDataMap) {
         m_valueMetaDataMap = valueMetaDataMap;
     }
 
@@ -90,19 +92,16 @@ final class DataColumnMetaDataManager {
     }
 
     void save(final ConfigWO config) {
-        m_valueMetaDataMap.forEach((k, v) -> save(k, k.cast(v), config));
+        m_valueMetaDataMap.forEach((k, v) -> save(k, v, config));
     }
 
     @SuppressWarnings("unchecked") // we check compatibility programmatically
-    private static <M extends DataColumnMetaData> void save(final Class<M> metaDataClass, final DataColumnMetaData metaData,
-        final ConfigWO config) {
+    private static <M extends DataColumnMetaData> void save(final Class<M> metaDataClass,
+        final DataColumnMetaData metaData, final ConfigWO config) {
         @SuppressWarnings("rawtypes") // unfortunately necessary to satisfy the compiler
-        final DataColumnMetaDataSerializer serializer =
-            DataColumnMetaDataRegistry.INSTANCE.getSerializer(metaDataClass).orElseThrow(() -> new IllegalStateException(
+        final DataColumnMetaDataSerializer serializer = DataColumnMetaDataRegistry.INSTANCE.getSerializer(metaDataClass)
+            .orElseThrow(() -> new IllegalStateException(
                 String.format("There is no serializer registered for meta data '%s'.", metaDataClass.getName())));
-        CheckUtils.checkState(serializer.getMetaDataClass().isInstance(metaData),
-            "The serializer expected meta data of type '%s' but received meta data of type '%s'.",
-            serializer.getMetaDataClass().getName(), metaData.getClass().getName());
         serializer.save(metaData, config.addConfig(metaDataClass.getName()));
     }
 
@@ -119,9 +118,6 @@ final class DataColumnMetaDataManager {
         return new DataColumnMetaDataManager(metaDataMap);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(final Object obj) {
         if (obj == null) {
@@ -136,9 +132,6 @@ final class DataColumnMetaDataManager {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return m_valueMetaDataMap.hashCode();
@@ -157,8 +150,8 @@ final class DataColumnMetaDataManager {
         }
 
         Creator(final DataColumnMetaDataManager metaData) {
-            m_valueMetaDataMap = metaData.m_valueMetaDataMap.values().stream()
-                .collect(Collectors.toMap(DataColumnMetaData::getClass, DataColumnMetaDataRegistry.INSTANCE::getCreator));
+            m_valueMetaDataMap = metaData.m_valueMetaDataMap.values().stream().collect(Collectors
+                .toMap(DataColumnMetaData::getClass, DataColumnMetaDataRegistry.INSTANCE::getInitializedCreator));
         }
 
         private <T extends DataColumnMetaData> DataColumnMetaDataCreator<T> getCreator(final Class<T> metaDataClass) {
@@ -170,10 +163,12 @@ final class DataColumnMetaDataManager {
             return typedCreator;
         }
 
-        <T extends DataColumnMetaData> DataColumnMetaDataManager.Creator addMetaData(final T metaData, final boolean overwrite) {
+        <T extends DataColumnMetaData> DataColumnMetaDataManager.Creator addMetaData(final T metaData,
+            final boolean overwrite) {
             final Class<T> metaDataClass = DataColumnMetaDataRegistry.INSTANCE.getClass(metaData);
             if (overwrite) {
-                m_valueMetaDataMap.put(metaDataClass, DataColumnMetaDataRegistry.INSTANCE.getCreator(metaData));
+                m_valueMetaDataMap.put(metaDataClass,
+                    DataColumnMetaDataRegistry.INSTANCE.getInitializedCreator(metaData));
             } else {
                 final DataColumnMetaDataCreator<T> creator = getCreator(metaDataClass);
                 creator.merge(metaData);
@@ -201,8 +196,8 @@ final class DataColumnMetaDataManager {
         }
 
         private <M extends DataColumnMetaData> void mergeHelper(final M metaData) {
-            m_valueMetaDataMap.merge(metaData.getClass(), DataColumnMetaDataRegistry.INSTANCE.getCreator(metaData),
-                DataColumnMetaDataCreator::merge);
+            m_valueMetaDataMap.merge(metaData.getClass(),
+                DataColumnMetaDataRegistry.INSTANCE.getInitializedCreator(metaData), DataColumnMetaDataCreator::merge);
         }
 
         DataColumnMetaDataManager create() {

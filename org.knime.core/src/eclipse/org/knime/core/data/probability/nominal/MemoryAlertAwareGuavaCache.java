@@ -103,8 +103,8 @@ final class MemoryAlertAwareGuavaCache {
      * Associates value with key in this cache. If the cache previously contained a value associated with key, the old
      * value is replaced by value.
      *
-     * @param key
-     * @param value
+     * @param key under which to store <b>value</b>
+     * @param value to store
      */
     synchronized void put(final FileStoreKey key, final Object value) {
         if (m_gate.tryAcquire()) {
@@ -119,7 +119,7 @@ final class MemoryAlertAwareGuavaCache {
      * Returns the value associated with key in this cache, or <code>Optional.empty</code> if there is no cached value
      * for key.
      *
-     * @param key
+     * @param key to fetch value for
      * @return the value associated with key
      */
     private Optional<Object> get(final UUID key) {
@@ -159,7 +159,7 @@ final class MemoryAlertAwareGuavaCache {
     /**
      * Removes the cache entry associated with the specified key.
      *
-     * @param key
+     * @param key to remove value of
      */
     public void remove(final UUID key) {
         m_cache.invalidate(key);

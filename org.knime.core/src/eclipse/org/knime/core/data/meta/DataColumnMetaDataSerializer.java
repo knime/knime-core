@@ -53,7 +53,8 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
 /**
- * Serializer for {@link DataColumnMetaData} used to save and restore {@link DataColumnMetaData} objects to and from config files. <br/>
+ * Serializer for {@link DataColumnMetaData} used to save and restore {@link DataColumnMetaData} objects to and from
+ * config files. <br/>
  * Typically, a serializer will be implemented as private static class of a MetaData object, so it can access the
  * private fields and constructors of its associated {@link DataColumnMetaData} class.
  *
@@ -64,7 +65,7 @@ import org.knime.core.node.config.ConfigWO;
  * @noimplement This interface is not intended to be implemented by clients. Pending API.
  * @since 4.1
  */
-public interface DataColumnMetaDataSerializer <T extends DataColumnMetaData> extends DataColumnMetaDataFramework<T> {
+public interface DataColumnMetaDataSerializer<T extends DataColumnMetaData> extends DataColumnMetaDataFramework<T> {
 
     /**
      * Saves {@link DataColumnMetaData metaData} to {@link ConfigWO config}.
