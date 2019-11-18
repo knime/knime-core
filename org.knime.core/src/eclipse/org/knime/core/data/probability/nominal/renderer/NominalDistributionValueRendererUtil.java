@@ -69,7 +69,6 @@ final class NominalDistributionValueRendererUtil {
     }
 
     static NominalDistributionValueMetaData extractMetaData(final DataColumnSpec spec) {
-        return spec.getMetaDataOfType(NominalDistributionValueMetaData.class)
-            .orElseThrow(() -> new IllegalStateException("Nominal distribution column without meta data encountered."));
+        return NominalDistributionValueMetaData.extractFromSpec(spec);
     }
 }

@@ -86,8 +86,7 @@ final class NominalDistributionBarChartRenderer extends AbstractPainterDataValue
     private int m_cellWidth;
 
     private NominalDistributionBarChartRenderer(final DataColumnSpec spec) {
-        m_metaData = spec.getMetaDataOfType(NominalDistributionValueMetaData.class)
-            .orElseThrow(() -> new IllegalStateException("Nominal distribution column without meta data encountered."));
+        m_metaData = NominalDistributionValueMetaData.extractFromSpec(spec);
     }
 
     /**

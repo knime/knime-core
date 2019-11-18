@@ -52,11 +52,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
-import org.knime.core.node.util.CheckUtils;
 
 /**
  * Generic renderer for {@link NominalDistributionValue} which prints each probability separated by commas.
@@ -99,13 +97,7 @@ public final class NominalDistributionValueRenderer extends DefaultDataValueRend
 
     private NominalDistributionValueMetaData getMetaData() {
         final DataColumnSpec spec = getColSpec();
-        final DataColumnMetaData metaData =
-            spec.getMetaDataOfType(NominalDistributionValueMetaData.class)
-                .orElseThrow(() -> new IllegalStateException("No meta data available."));
-        CheckUtils.checkState(metaData instanceof NominalDistributionValueMetaData,
-            "The meta data of a NominalDistributionValue must be of type %s but was of type %s instead.",
-            NominalDistributionValueMetaData.class.getName(), metaData.getClass().getName());
-        return (NominalDistributionValueMetaData)metaData;
+        return NominalDistributionValueMetaData.extractFromSpec(spec);
     }
 
     /** Renderer factory registered through extension point. */

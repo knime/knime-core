@@ -54,6 +54,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.meta.DataColumnMetaDataSerializer;
 import org.knime.core.node.InvalidSettingsException;
@@ -62,14 +64,32 @@ import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.util.CheckUtils;
 
 /**
- * Holds the set of values a nominal probability distribution column is defined over.
- * Note that the internal data structure is a LinkedHashSet, so the order of the values
- * provided in the constructor is preserved.
+ * Holds the set of values a nominal probability distribution column is defined over. Note that the internal data
+ * structure is a LinkedHashSet, so the order of the values provided in the constructor is preserved.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 4.1
  */
 public final class NominalDistributionValueMetaData implements DataColumnMetaData {
+
+    /**
+     * Extracts the {@link NominalDistributionValueMetaData} from the given {@link DataColumnSpec columnSpec} and throws
+     * an {@link IllegalStateException} exception if no meta data is available.
+     *
+     * @param columnSpec the {@link DataColumnSpec} from which to extract the meta data
+     * @return the {@link NominalDistributionValueMetaData} stored in {@link DataColumnSpec columnSpec}
+     * @throws IllegalArgumentException if the {@link DataType} of {@link DataColumnSpec columnSpec} is not compatible
+     *             with nominal distributions
+     * @throws IllegalStateException if {@link DataColumnSpec columnSpec} does not store the required meta data
+     */
+    public static NominalDistributionValueMetaData extractFromSpec(final DataColumnSpec columnSpec) {
+        CheckUtils.checkArgument(columnSpec.getType().isCompatible(NominalDistributionValue.class),
+            "The provided column spec '%s' is not compatible with nominal distributions.", columnSpec);
+        return columnSpec.getMetaDataOfType(NominalDistributionValueMetaData.class)
+            .orElseThrow(() -> new IllegalStateException(
+                String.format("Nominal distribution column '%s' without meta data encountered. %s", columnSpec,
+                    "Execute preceding nodes or apply a Domain Calculator.")));
+    }
 
     static final String CFG_VALUES = "values";
 
