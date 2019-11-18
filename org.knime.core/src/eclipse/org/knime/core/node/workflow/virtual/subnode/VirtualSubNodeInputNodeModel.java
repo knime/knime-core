@@ -326,6 +326,36 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
     }
 
     /**
+     * @param desc
+     * @deprecated use {@link SubNodeContainer#getMetadata()} instead
+     * @since 4.1
+     */
+    @Deprecated
+    public void setSubNodeDescription(final String desc) {
+        m_configuration.setSubNodeDescription(desc);
+   }
+
+    /**
+     * @param names
+     * @since 4.1
+     * @deprecated use {@link SubNodeContainer#getMetadata()}
+     */
+    @Deprecated
+    public void setPortNames(final String[] names) {
+        m_configuration.setPortNames(names);
+    }
+
+    /**
+     * @param descs
+     * @since 4.1
+     * @deprecated use {@link SubNodeContainer#getMetadata()}
+     */
+    @Deprecated
+    public void setPortDescriptions(final String[] descs) {
+        m_configuration.setPortDescriptions(descs);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

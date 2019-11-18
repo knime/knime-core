@@ -329,6 +329,26 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
         return m_configuration.getPortDescriptions();
     }
 
+    /**
+     * @param names
+     * @since 4.1
+     * @deprecated use {@link SubNodeContainer#getMetadata()}
+     */
+    @Deprecated
+    public void setPortNames(final String[] names) {
+        m_configuration.setPortNames(names);
+    }
+
+    /**
+     * @param descs
+     * @since 4.1
+     * @deprecated use {@link SubNodeContainer#getMetadata()}
+     */
+    @Deprecated
+    public void setPortDescriptions(final String[] descs) {
+        m_configuration.setPortDescriptions(descs);
+    }
+
     /** {@inheritDoc}
      * @since 3.1*/
     @Override

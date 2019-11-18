@@ -2457,9 +2457,70 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     public void setMetadata(final ComponentMetadata metadata) {
         m_metadata = metadata;
+        if (getWorkflowManager().getLoadVersion() == LoadVersion.V4010) {
+            transferMetadataToInOutNodes(metadata);
+        }
         notifyNodePropertyChangedListener(NodeProperty.ComponentMetadata);
         refreshPortNames();
         setDirty();
+    }
+
+    @SuppressWarnings("deprecation")
+    private void transferMetadataToInOutNodes(final ComponentMetadata metadata) {
+        //redundantly save the descriptions in the component in- and output-nodes for backwards-compatibility
+        VirtualSubNodeInputNodeModel inNode = getVirtualInNodeModel();
+        VirtualSubNodeOutputNodeModel outNode = getVirtualOutNodeModel();
+        boolean inNodeChanged = false;
+        inNodeChanged |= metadata.getDescription().map(d -> {
+            if (!inNode.getSubNodeDescription().equals(d)) {
+                inNode.setSubNodeDescription(d);
+                return true;
+            } else {
+                return false;
+            }
+        }).orElse(false);
+        inNodeChanged |= metadata.getInPortNames().map(n -> {
+            if (!Arrays.equals(inNode.getPortNames(), n)) {
+                inNode.setPortNames(n);
+                return true;
+            } else {
+                return false;
+            }
+        }).orElse(false);
+        inNodeChanged |= metadata.getInPortDescriptions().map(d -> {
+            if (!Arrays.equals(inNode.getPortNames(), d)) {
+                inNode.setPortDescriptions(d);
+                return true;
+            } else {
+                return false;
+            }
+        }).orElse(false);
+        boolean outNodeChanged = false;
+        outNodeChanged |= metadata.getOutPortNames().map(n -> {
+            if (!Arrays.equals(inNode.getPortNames(), n)) {
+                outNode.setPortNames(n);
+                return true;
+            } else {
+                return false;
+            }
+        }).orElse(false);
+        outNodeChanged |= metadata.getOutPortDescriptions().map(d -> {
+            if (!Arrays.equals(inNode.getPortNames(), d)) {
+                outNode.setPortDescriptions(d);
+                return true;
+            } else {
+                return false;
+            }
+        }).orElse(false);
+
+        if (inNodeChanged) {
+            getVirtualInNode().saveNodeSettingsToDefault();
+            getVirtualInNode().setDirty();
+        }
+        if (outNodeChanged) {
+            getVirtualOutNode().saveNodeSettingsToDefault();
+            getVirtualOutNode().setDirty();
+        }
     }
 
     /**
@@ -2468,73 +2529,77 @@ public final class SubNodeContainer extends SingleNodeContainer
      * The port names and descriptions are adopted to the number of ports (i.e. either cut-off or filled with empty
      * values).
      *
-     * Legacy: if no metadata is stored with the component itself, component description, port names and port
+     * Legacy: if workflow load version older than {@link LoadVersion#V4010}, component description, port names and port
      * descriptions are taken from the component input/output nodes, if available.
      *
      * @return the component metadata
      */
+    @SuppressWarnings("deprecation")
     public ComponentMetadata getMetadata() {
         if (m_metadata == null) {
             return ComponentMetadata.NONE;
         }
 
         ComponentMetadataBuilder builder = null;
-        if (!m_metadata.getDescription().isPresent() && getVirtualInNodeModel().getSubNodeDescription() != null) {
-            //take node description from virtual input node if none is set
+        String[] inPortNames = null;
+        String[] inPortDescriptions = null;
+        String[] outPortNames = null;
+        String[] outPortDescriptions = null;
+        LoadVersion loadVersion = getWorkflowManager().getLoadVersion();
+        if (loadVersion != null && loadVersion.isOlderThan(LoadVersion.V4010)) {
+            //take node description from virtual input node
             builder = getOrCreate(builder).description(getVirtualInNodeModel().getSubNodeDescription());
-        }
 
-        String[] portNames = null;
-        String[] portDescriptions = null;
-        int nrInPorts = getNrInPorts() - 1;
-        if (!m_metadata.getInPortNames().isPresent()) {
-            //take port descriptions from virtual input node if none is set
-            portNames = getVirtualInNodeModel().getPortNames();
-            portDescriptions = getVirtualInNodeModel().getPortDescriptions();
-        } else if (m_metadata.getInPortNames().get().length != nrInPorts) {
-            //sync number of port names/descriptions with the actual ports number -> fill or cut-off
-            portNames = m_metadata.getInPortNames().get();
-            int orgLength = portNames.length;
-            portDescriptions = m_metadata.getInPortDescriptions().get();
-            portNames = Arrays.copyOf(portNames, nrInPorts);
-            portDescriptions = Arrays.copyOf(portDescriptions, nrInPorts);
-            for (int i = orgLength; i < nrInPorts - 1; i++) {
-                portNames[i] = "";
-                portDescriptions[i] = "";
+            //take port descriptions from virtual input node
+            inPortNames = getVirtualInNodeModel().getPortNames();
+            inPortDescriptions = getVirtualInNodeModel().getPortDescriptions();
+
+            //take port descriptions from virtual output node
+            outPortNames = getVirtualOutNodeModel().getPortNames();
+            outPortDescriptions = getVirtualOutNodeModel().getPortDescriptions();
+        } else {
+            int nrInPorts = getNrInPorts() - 1;
+            if (m_metadata.getInPortNames().isPresent() && m_metadata.getInPortNames().get().length != nrInPorts) {
+                //sync number of port names/descriptions with the actual ports number -> fill or cut-off
+                inPortNames = m_metadata.getInPortNames().get();
+                int orgLength = inPortNames.length;
+                inPortDescriptions = m_metadata.getInPortDescriptions().get();
+                inPortNames = Arrays.copyOf(inPortNames, nrInPorts);
+                inPortDescriptions = Arrays.copyOf(inPortDescriptions, nrInPorts);
+                for (int i = orgLength; i < nrInPorts - 1; i++) {
+                    inPortNames[i] = "";
+                    inPortDescriptions[i] = "";
+                }
+            }
+
+            int nrOutPorts = getNrOutPorts() - 1;
+            if (m_metadata.getInPortNames().isPresent() && m_metadata.getOutPortNames().get().length != nrOutPorts) {
+                //sync number of port names/descriptions with the actual ports number -> fill or cut-off
+                outPortNames = m_metadata.getOutPortNames().get();
+                int orgLength = outPortNames.length;
+                outPortDescriptions = m_metadata.getOutPortDescriptions().get();
+                outPortNames = Arrays.copyOf(outPortNames, nrOutPorts);
+                outPortDescriptions = Arrays.copyOf(outPortDescriptions, nrOutPorts);
+                for (int i = orgLength; i < nrOutPorts; i++) {
+                    outPortNames[i] = "";
+                    outPortDescriptions[i] = "";
+                }
             }
         }
-        if (portNames != null) {
+
+        if (inPortNames != null) {
             builder = getOrCreate(builder);
             builder.clearInPorts();
-            for (int i = 0; i < portNames.length; i++) {
-                builder.addInPortNameAndDescription(portNames[i], portDescriptions[i]);
+            for (int i = 0; i < inPortNames.length; i++) {
+                builder.addInPortNameAndDescription(inPortNames[i], inPortDescriptions[i]);
             }
         }
 
-        portNames = null;
-        portDescriptions = null;
-        int nrOutPorts = getNrOutPorts() - 1;
-        if (!m_metadata.getOutPortNames().isPresent()) {
-            //take port descriptions from virtual output node if none is set
-            portNames = getVirtualOutNodeModel().getPortNames();
-            portDescriptions = getVirtualOutNodeModel().getPortDescriptions();
-        } else if (m_metadata.getOutPortNames().get().length != nrOutPorts) {
-            //sync number of port names/descriptions with the actual ports number -> fill or cut-off
-            portNames = m_metadata.getOutPortNames().get();
-            int orgLength = portNames.length;
-            portDescriptions = m_metadata.getOutPortDescriptions().get();
-            portNames = Arrays.copyOf(portNames, nrOutPorts);
-            portDescriptions = Arrays.copyOf(portDescriptions, nrOutPorts);
-            for (int i = orgLength; i < nrOutPorts; i++) {
-                portNames[i] = "";
-                portDescriptions[i] = "";
-            }
-        }
-        if (portNames != null) {
+        if (outPortNames != null) {
             builder = getOrCreate(builder);
             builder.clearOutPorts();
-            for (int i = 0; i < portNames.length; i++) {
-                builder.addOutPortNameAndDescription(portNames[i], portDescriptions[i]);
+            for (int i = 0; i < outPortNames.length; i++) {
+                builder.addOutPortNameAndDescription(outPortNames[i], outPortDescriptions[i]);
             }
         }
 
