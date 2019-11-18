@@ -1304,13 +1304,13 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     public abstract URL getIcon();
 
     /**
-     * @return an icon as input stream or an empty optional if there is no icon or the icon is available as URL (see
-     *         {@link #getIcon()})
+     * @return an icon as input stream or null if there is no icon or the icon is available as URL (see
+     *         {@link #getIcon()}). The input stream encodes the image in PNG format.
      *
      * @since 4.1
      */
-    public Optional<InputStream> getIconAsStream() {
-        return Optional.empty();
+    public InputStream getIconAsStream() {
+        return null;
     }
 
     public abstract NodeType getType();

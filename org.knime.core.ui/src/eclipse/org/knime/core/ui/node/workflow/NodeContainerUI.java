@@ -50,7 +50,6 @@ package org.knime.core.ui.node.workflow;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialog;
@@ -342,8 +341,8 @@ public interface NodeContainerUI extends NodeProgressListener, NodeContainerStat
 
     URL getIcon();
 
-    default Optional<InputStream> getIconAsStream() {
-        return Optional.empty();
+    default InputStream getIconAsStream() {
+        return null;
     }
 
     NodeType getType();

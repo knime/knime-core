@@ -69,7 +69,7 @@ import org.knime.core.util.Pair;
  *
  * @since 4.1
  */
-public class ComponentMetadata {
+public final class ComponentMetadata {
     /**
      * An enum which wraps the {@code NodeFactory.NodeType} enum with display text; for the time being, we are
      *  not wrapping an {@code Image} like we do with DisplayableNodeType for two reasons, both dealing with the
@@ -142,19 +142,19 @@ public class ComponentMetadata {
 
     private static final String CFG_METADATA = "metadata";
 
-    private String m_description;
+    private final String m_description;
 
-    private ComponentNodeType m_type;
+    private final ComponentNodeType m_type;
 
-    private byte[] m_icon;
+    private final byte[] m_icon;
 
-    private String[] m_inPortNames;
+    private final String[] m_inPortNames;
 
-    private String[] m_inPortDescriptions;
+    private final String[] m_inPortDescriptions;
 
-    private String[] m_outPortNames;
+    private final String[] m_outPortNames;
 
-    private String[] m_outPortDescriptions;
+    private final String[] m_outPortDescriptions;
 
     private ComponentMetadata(final ComponentMetadataBuilder builder) {
         m_description = builder.m_description;
@@ -163,15 +163,17 @@ public class ComponentMetadata {
         if (!builder.m_inPorts.isEmpty()) {
             m_inPortNames = builder.m_inPorts.stream().map(p -> p.getFirst()).toArray(s -> new String[s]);
             m_inPortDescriptions = builder.m_inPorts.stream().map(p -> p.getSecond()).toArray(s -> new String[s]);
+        } else {
+            m_inPortNames = null;
+            m_inPortDescriptions = null;
         }
         if (!builder.m_outPorts.isEmpty()) {
             m_outPortNames = builder.m_outPorts.stream().map(p -> p.getFirst()).toArray(s -> new String[s]);
             m_outPortDescriptions = builder.m_outPorts.stream().map(p -> p.getSecond()).toArray(s -> new String[s]);
+        } else {
+            m_outPortNames = null;
+            m_outPortDescriptions = null;
         }
-    }
-
-    private ComponentMetadata() {
-        //deserialization
     }
 
     /**
@@ -237,23 +239,29 @@ public class ComponentMetadata {
             return ComponentMetadata.NONE;
         }
         NodeSettingsRO nestedSettings = settings.getNodeSettings(CFG_METADATA);
-        ComponentMetadata metadata = new ComponentMetadata();
-        metadata.m_description = nestedSettings.getString("description", null);
-        metadata.m_type =
-            nestedSettings.containsKey("type") ? ComponentNodeType.valueOf(nestedSettings.getString("type")) : null;
-        metadata.m_icon =
-            nestedSettings.containsKey("icon") ? Base64.getDecoder().decode(nestedSettings.getString("icon")) : null;
+        ComponentMetadataBuilder builder = ComponentMetadata.builder();
+        builder.description(nestedSettings.getString("description", null));
+        builder.type(
+            nestedSettings.containsKey("type") ? ComponentNodeType.valueOf(nestedSettings.getString("type")) : null);
+        builder.icon(
+            nestedSettings.containsKey("icon") ? Base64.getDecoder().decode(nestedSettings.getString("icon")) : null);
 
         if (nestedSettings.containsKey("inPorts")) {
-            metadata.m_inPortNames = nestedSettings.getNodeSettings("inPorts").getStringArray("names");
-            metadata.m_inPortDescriptions = nestedSettings.getNodeSettings("inPorts").getStringArray("descriptions");
+            String[] names = nestedSettings.getNodeSettings("inPorts").getStringArray("names");
+            String[] descs = nestedSettings.getNodeSettings("inPorts").getStringArray("descriptions");
+            for (int i = 0; i < names.length; i++) {
+                builder.addInPortNameAndDescription(names[i], descs[i]);
+            }
         }
 
         if (nestedSettings.containsKey("outPorts")) {
-            metadata.m_outPortNames = nestedSettings.getNodeSettings("outPorts").getStringArray("names");
-            metadata.m_outPortDescriptions = nestedSettings.getNodeSettings("outPorts").getStringArray("descriptions");
+            String[] names = nestedSettings.getNodeSettings("outPorts").getStringArray("names");
+            String[] descs = nestedSettings.getNodeSettings("outPorts").getStringArray("descriptions");
+            for (int i = 0; i < names.length; i++) {
+                builder.addOutPortNameAndDescription(names[i], descs[i]);
+            }
         }
-        return metadata;
+        return builder.build();
     }
 
     /**

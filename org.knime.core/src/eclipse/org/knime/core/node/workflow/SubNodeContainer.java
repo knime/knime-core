@@ -72,7 +72,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -265,7 +264,6 @@ public final class SubNodeContainer extends SingleNodeContainer
     private String m_customCSS;
 
     private ComponentMetadata m_metadata;
-    private boolean m_legacyMetadataLoaded;
 
     private MetaNodeTemplateInformation m_templateInformation;
 
@@ -865,13 +863,6 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
-     * @return an {@code Optional} of {@code NodeFactory.NodeType} if there has been a custom one set in the metadata
-     */
-    public Optional<NodeType> getCustomNodeType() {
-        return m_metadata.getType();
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -887,11 +878,11 @@ public final class SubNodeContainer extends SingleNodeContainer
      * {@inheritDoc}
      */
     @Override
-    public Optional<InputStream> getIconAsStream() {
+    public InputStream getIconAsStream() {
         if (m_metadata.getIcon().isPresent()) {
-            return Optional.of(new ByteArrayInputStream(m_metadata.getIcon().get()));
+            return new ByteArrayInputStream(m_metadata.getIcon().get());
         } else {
-            return Optional.empty();
+            return null;
         }
     }
 
@@ -900,11 +891,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public NodeType getType() {
-        if (m_metadata.getNodeType().isPresent()) {
-            return m_metadata.getNodeType().get().getType();
-        } else {
-            return NodeType.Subnode;
-        }
+        return m_metadata.getNodeType().map(t -> t.getType()).orElse(NodeType.Subnode);
     }
 
     /**
@@ -1869,6 +1856,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             }
         }
         checkInOutNodesAfterLoad(subNodePersistor, loadResult);
+        loadLegacyPortNamesAndDescriptionsFromInOutNodes();
         // put data input output node if it was executed;
         final NativeNodeContainer virtualOutNode = getVirtualOutNode();
         LoadVersion l = nodePersistor instanceof FileSingleNodeContainerPersistor
@@ -1893,6 +1881,36 @@ public final class SubNodeContainer extends SingleNodeContainer
         getVirtualOutNode().addNodeStateChangeListener(new RefreshPortNamesListener());
         refreshPortNames();
         return null;
+    }
+
+    @SuppressWarnings("deprecation")
+    private void loadLegacyPortNamesAndDescriptionsFromInOutNodes() {
+        LoadVersion loadVersion = getWorkflowManager().getLoadVersion();
+        if (loadVersion != null && loadVersion.isOlderThan(LoadVersion.V4010)) {
+            //take node description from virtual input node
+            ComponentMetadataBuilder builder = ComponentMetadata.builder();
+            builder.description(getVirtualInNodeModel().getSubNodeDescription());
+
+            String[] inPortNames;
+            String[] inPortDescriptions;
+            String[] outPortNames;
+            String[] outPortDescriptions;
+
+            //take port descriptions from virtual input node
+            inPortNames = getVirtualInNodeModel().getPortNames();
+            inPortDescriptions = getVirtualInNodeModel().getPortDescriptions();
+            for (int i = 0; i < inPortNames.length; i++) {
+                builder.addInPortNameAndDescription(inPortNames[i], inPortDescriptions[i]);
+            }
+
+            //take port descriptions from virtual output node
+            outPortNames = getVirtualOutNodeModel().getPortNames();
+            outPortDescriptions = getVirtualOutNodeModel().getPortDescriptions();
+            for (int i = 0; i < outPortNames.length; i++) {
+                builder.addOutPortNameAndDescription(outPortNames[i], outPortDescriptions[i]);
+            }
+            m_metadata = builder.build();
+        }
     }
 
     /** Fixes in- and output nodes after loading (in case they don't exist or have errors). */
@@ -2467,9 +2485,10 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     public void setMetadata(final ComponentMetadata metadata) {
         m_metadata = metadata;
-        if (FileWorkflowPersistor.getSaveVersion() == LoadVersion.V4010) {
-            transferMetadataToInOutNodes(metadata);
-        }
+
+        //TODO remove in next release cycle (today 2019-11-18)
+        transferMetadataToInOutNodes(metadata);
+
         notifyNodePropertyChangedListener(NodeProperty.ComponentMetadata);
         refreshPortNames();
         setDirty();
@@ -2544,36 +2563,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      *
      * @return the component metadata
      */
-    @SuppressWarnings("deprecation")
     public ComponentMetadata getMetadata() {
-        LoadVersion loadVersion = getWorkflowManager().getLoadVersion();
-        if ((m_metadata == null || m_metadata == ComponentMetadata.NONE) && !m_legacyMetadataLoaded
-            && loadVersion != null && loadVersion.isOlderThan(LoadVersion.V4010)) {
-            //take node description from virtual input node
-            ComponentMetadataBuilder builder = ComponentMetadata.builder();
-            builder.description(getVirtualInNodeModel().getSubNodeDescription());
-
-            String[] inPortNames;
-            String[] inPortDescriptions;
-            String[] outPortNames;
-            String[] outPortDescriptions;
-
-            //take port descriptions from virtual input node
-            inPortNames = getVirtualInNodeModel().getPortNames();
-            inPortDescriptions = getVirtualInNodeModel().getPortDescriptions();
-            for (int i = 0; i < inPortNames.length; i++) {
-                builder.addInPortNameAndDescription(inPortNames[i], inPortDescriptions[i]);
-            }
-
-            //take port descriptions from virtual output node
-            outPortNames = getVirtualOutNodeModel().getPortNames();
-            outPortDescriptions = getVirtualOutNodeModel().getPortDescriptions();
-            for (int i = 0; i < outPortNames.length; i++) {
-                builder.addOutPortNameAndDescription(outPortNames[i], outPortDescriptions[i]);
-            }
-            m_metadata = builder.build();
-            m_legacyMetadataLoaded = true;
-        }
         if (m_metadata == null || m_metadata == ComponentMetadata.NONE) {
             return ComponentMetadata.NONE;
         }

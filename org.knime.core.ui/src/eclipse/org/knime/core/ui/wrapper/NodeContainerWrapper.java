@@ -50,7 +50,6 @@ package org.knime.core.ui.wrapper;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -346,7 +345,7 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
     }
 
     @Override
-    public Optional<InputStream> getIconAsStream() {
+    public InputStream getIconAsStream() {
         return unwrap().getIconAsStream();
     }
 
