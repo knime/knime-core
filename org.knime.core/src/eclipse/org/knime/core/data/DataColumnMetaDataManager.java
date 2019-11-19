@@ -59,6 +59,7 @@ import org.knime.core.data.meta.DataColumnMetaDataCreator;
 import org.knime.core.data.meta.DataColumnMetaDataRegistry;
 import org.knime.core.data.meta.DataColumnMetaDataSerializer;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.util.CheckUtils;
@@ -109,11 +110,15 @@ final class DataColumnMetaDataManager {
         final Map<Class<? extends DataColumnMetaData>, DataColumnMetaData> metaDataMap = new HashMap<>();
 
         for (String key : config) {
-            final DataColumnMetaDataSerializer<?> serializer =
-                DataColumnMetaDataRegistry.INSTANCE.getSerializer(key).orElseThrow(() -> new InvalidSettingsException(
-                    String.format("Unknown meta data class '%s' encountered. Are you missing an extension?", key)));
-            final DataColumnMetaData metaData = serializer.load(config.getConfig(key));
-            metaDataMap.put(metaData.getClass(), metaData);
+            final Optional<DataColumnMetaDataSerializer<?>> serializer =
+                DataColumnMetaDataRegistry.INSTANCE.getSerializer(key);
+            if (serializer.isPresent()) {
+                final DataColumnMetaData metaData = serializer.get().load(config.getConfig(key));
+                metaDataMap.put(metaData.getClass(), metaData);
+            } else {
+                NodeLogger.getLogger(DataColumnMetaDataManager.class).errorWithFormat(
+                    "There is no serializer registered for meta data '%s'. Are you missing an extension?", key);
+            }
         }
         return new DataColumnMetaDataManager(metaDataMap);
     }
