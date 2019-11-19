@@ -57,7 +57,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
 import org.knime.core.data.DataColumnMetaDataCalculators.MetaDataCalculator;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.meta.DataColumnMetaData;
@@ -86,7 +85,6 @@ public class DataColumnMetaDataCalculatorsTest {
      * Ensures that the MetaDataCalculator that drops the meta data and doesn't create new meta data is always the same
      * object.
      */
-    @Test
     public void testDropWithoutCreateSingleton() {
         MetaDataCalculator first =
             DataColumnMetaDataCalculators.createCalculator(createColSpec("first", StringCell.TYPE), true, false);
@@ -104,7 +102,6 @@ public class DataColumnMetaDataCalculatorsTest {
     /**
      * Tests a MetaDataCalculator that drops the existing meta data and doesn't create new meta data.
      */
-    @Test
     public void testDropNoCreate() {
         final MetaDataCalculator mdc = createMdc(true, false);
         testMetaDataCalculator(mdc, Collections.emptyList());
@@ -113,7 +110,6 @@ public class DataColumnMetaDataCalculatorsTest {
     /**
      * Tests a MetaDataCalculator that drops the existing meta data and creates new meta data.
      */
-    @Test
     public void testDropCreate() {
         final MetaDataCalculator mdc = createMdc(true, true);
         testMetaDataCalculator(mdc, Collections.singletonList(new TestDataColumnMetaData(TEST_VALUES)));
@@ -122,7 +118,6 @@ public class DataColumnMetaDataCalculatorsTest {
     /**
      * Tests a MetaDataCalculator that is initialized with the existing meta data.
      */
-    @Test
     public void testNoDropCreate() {
         final MetaDataCalculator mdc = createMdc(false, true);
         final List<String> concat = new ArrayList<>(INITIAL_VALUES);
@@ -134,7 +129,6 @@ public class DataColumnMetaDataCalculatorsTest {
      * Tests a MetaDataCalculator that is initialized with the existing meta data but doesn't
      * update it.
      */
-    @Test
     public void testNoDropNoCreate() {
         final MetaDataCalculator mdc = createMdc(false, false);
         testMetaDataCalculator(mdc, Collections.singletonList(INITIAL_META_DATA));
@@ -143,7 +137,6 @@ public class DataColumnMetaDataCalculatorsTest {
     /**
      * Test copying MetaDataCalculator objects.
      */
-    @Test
     public void testCopy() {
         // test the singleton property for the case where meta data is dropped and not recreated
         final MetaDataCalculator dropNoCreate = createMdc(true, false);
@@ -160,7 +153,6 @@ public class DataColumnMetaDataCalculatorsTest {
     /**
      * Tests merging MetaDataCalculator objects.
      */
-    @Test
     public void testMerge() {
         final MetaDataCalculator noDropNoCreate = createMdc(false, false);
         final MetaDataCalculator dropCreate = createMdc(true, true);

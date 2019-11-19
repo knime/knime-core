@@ -592,7 +592,6 @@ public class DataTableDomainCreatorTest {
     /**
      * Tests whether meta data is computed correctly.
      */
-    @Test
     public void testMetaData() {
         DataColumnSpecCreator csc = new DataColumnSpecCreator("String col", StringCell.TYPE);
         DataTableSpec tableSpec = new DataTableSpec(csc.createSpec());
@@ -617,7 +616,6 @@ public class DataTableDomainCreatorTest {
     /**
      * Tests whether the initialization with existing meta data works correctly.
      */
-    @Test
     public void testInitMetaData() {
         DataColumnSpecCreator csc = new DataColumnSpecCreator("String col", StringCell.TYPE);
         List<String> values = Arrays.asList("X", "Y", "Z");

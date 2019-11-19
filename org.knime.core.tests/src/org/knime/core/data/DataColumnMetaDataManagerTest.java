@@ -55,7 +55,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
 
-import org.junit.Test;
 import org.knime.core.data.meta.TestDataColumnMetaData;
 import org.knime.core.data.meta.TestDataColumnMetaData.TestMetaDataCreator;
 import org.knime.core.node.InvalidSettingsException;
@@ -73,7 +72,6 @@ public class DataColumnMetaDataManagerTest {
     /**
      * Tests the creation of meta data managers.
      */
-    @Test
     public void testCreation() {
         final DataColumnMetaDataManager.Creator creator = new DataColumnMetaDataManager.Creator();
         creator.addMetaData(TEST_META_DATA, false);
@@ -86,7 +84,6 @@ public class DataColumnMetaDataManagerTest {
     /**
      * Tests overwriting meta data in the creator.
      */
-    @Test
     public void testCreatorAddMetaDataOverwrite() {
         final DataColumnMetaDataManager.Creator creator = new DataColumnMetaDataManager.Creator();
         creator.addMetaData(TEST_META_DATA, true);
@@ -101,7 +98,6 @@ public class DataColumnMetaDataManagerTest {
     /**
      * Tests merging meta data in the creator.
      */
-    @Test
     public void testCreatorAddMetaDataMerge() {
         final DataColumnMetaDataManager.Creator creator = new DataColumnMetaDataManager.Creator();
         creator.addMetaData(TEST_META_DATA, true);
@@ -117,7 +113,6 @@ public class DataColumnMetaDataManagerTest {
     /**
      * Tests the initialization of a creator with existing meta data.
      */
-    @Test
     public void testInitializedCreator() {
         final DataColumnMetaDataManager.Creator originCreator = new DataColumnMetaDataManager.Creator();
         originCreator.addMetaData(TEST_META_DATA, true);
@@ -132,7 +127,6 @@ public class DataColumnMetaDataManagerTest {
     /**
      * Tests the removal of particular meta data.
      */
-    @Test
     public void testCreatorRemove() {
         final DataColumnMetaDataManager.Creator creator = new DataColumnMetaDataManager.Creator();
         creator.addMetaData(TEST_META_DATA, true);
@@ -144,7 +138,6 @@ public class DataColumnMetaDataManagerTest {
     /**
      * Tests the removal of all meta data.
      */
-    @Test
     public void testCreatorClear() {
         final DataColumnMetaDataManager.Creator creator = new DataColumnMetaDataManager.Creator();
         creator.addMetaData(TEST_META_DATA, true);
@@ -156,7 +149,6 @@ public class DataColumnMetaDataManagerTest {
     /**
      * Tests merging a MetaDataManager into an existing creator.
      */
-    @Test
     public void testCreatorMerge() {
         final DataColumnMetaDataManager.Creator creator = new DataColumnMetaDataManager.Creator();
         creator.addMetaData(TEST_META_DATA, true);
@@ -171,7 +163,6 @@ public class DataColumnMetaDataManagerTest {
      *
      * @throws InvalidSettingsException should not be thrown
      */
-    @Test
     public void testSave() throws InvalidSettingsException {
         final DataColumnMetaDataManager mgr = new DataColumnMetaDataManager.Creator().addMetaData(TEST_META_DATA, true).create();
         final ModelContent config = new ModelContent("test");
@@ -186,7 +177,6 @@ public class DataColumnMetaDataManagerTest {
      *
      * @throws InvalidSettingsException should not be thrown
      */
-    @Test
     public void testLoad() throws InvalidSettingsException {
         final DataColumnMetaDataManager mgr = new DataColumnMetaDataManager.Creator().addMetaData(TEST_META_DATA, true).create();
         final ModelContent config = new ModelContent("test");

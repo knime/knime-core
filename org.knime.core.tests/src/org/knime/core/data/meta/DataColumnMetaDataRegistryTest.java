@@ -61,10 +61,9 @@ import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.data.meta.TestDataColumnMetaData.TestMetaDataCreator;
-import org.knime.core.data.meta.TestDataColumnMetaData.TestMetaDataSerializer;
 import org.knime.core.data.probability.nominal.NominalDistributionCellFactory;
+import org.knime.core.data.probability.nominal.NominalDistributionValueMetaData;
+import org.knime.core.data.probability.nominal.NominalDistributionValueMetaData.NominalDistributionValueMetaDataSerializer;
 import org.knime.core.data.probability.nominal.NominalDistributionValueMetaDataCreator;
 
 /**
@@ -79,10 +78,11 @@ public class DataColumnMetaDataRegistryTest {
      */
     @Test
     public void testHasMetaData() {
-        assertTrue(
-            "The registered TestMetaData applies to StringValue therefore "
-                + "hasMetaData must return true for StringCell.TYPE.",
-            DataColumnMetaDataRegistry.INSTANCE.hasMetaData(StringCell.TYPE));
+//        assertTrue(
+//            "The registered TestMetaData applies to StringValue therefore "
+//                + "hasMetaData must return true for StringCell.TYPE.",
+//            DataColumnMetaDataRegistry.INSTANCE.hasMetaData(StringCell.TYPE));
+        assertTrue(DataColumnMetaDataRegistry.INSTANCE.hasMetaData(NominalDistributionCellFactory.TYPE));
         assertFalse("As of now there is no meta data registered for DataCell",
             DataColumnMetaDataRegistry.INSTANCE.hasMetaData(DataType.getType(DataCell.class)));
         assertFalse("As of now there is no meta data registered for the super types of IntCell",
@@ -94,10 +94,10 @@ public class DataColumnMetaDataRegistryTest {
      */
     @Test
     public void testGetCreators() {
-        final Collection<DataColumnMetaDataCreator<?>> creators =
-            DataColumnMetaDataRegistry.INSTANCE.getCreators(StringCell.TYPE);
-        assertEquals("There should be exactly one instance of TestMetaDataCreator", 1L,
-            creators.stream().filter(c -> c instanceof TestMetaDataCreator).count());
+//        final Collection<DataColumnMetaDataCreator<?>> creators =
+//            DataColumnMetaDataRegistry.INSTANCE.getCreators(StringCell.TYPE);
+//        assertEquals("There should be exactly one instance of TestMetaDataCreator", 1L,
+//            creators.stream().filter(c -> c instanceof TestMetaDataCreator).count());
         final Collection<DataColumnMetaDataCreator<?>> nomDistrCreators =
             DataColumnMetaDataRegistry.INSTANCE.getCreators(NominalDistributionCellFactory.TYPE);
         assertEquals("There should be exactly on instance of NominalDistributionValueMetaDataCreator", 1L,
@@ -109,10 +109,14 @@ public class DataColumnMetaDataRegistryTest {
      */
     @Test
     public void testGetSerializerWithClass() {
-        final Optional<DataColumnMetaDataSerializer<TestDataColumnMetaData>> serializer =
-            DataColumnMetaDataRegistry.INSTANCE.getSerializer(TestDataColumnMetaData.class);
-        assertTrue(serializer.isPresent());
-        assertThat(serializer.get(), Matchers.instanceOf(TestMetaDataSerializer.class));
+//        final Optional<DataColumnMetaDataSerializer<TestDataColumnMetaData>> serializer =
+//            DataColumnMetaDataRegistry.INSTANCE.getSerializer(TestDataColumnMetaData.class);
+//        assertTrue(serializer.isPresent());
+//        assertThat(serializer.get(), Matchers.instanceOf(TestMetaDataSerializer.class));
+        final Optional<DataColumnMetaDataSerializer<NominalDistributionValueMetaData>> serializer =
+                DataColumnMetaDataRegistry.INSTANCE.getSerializer(NominalDistributionValueMetaData.class);
+            assertTrue(serializer.isPresent());
+            assertThat(serializer.get(), Matchers.instanceOf(NominalDistributionValueMetaDataSerializer.class));
     }
 
     /**
@@ -120,9 +124,13 @@ public class DataColumnMetaDataRegistryTest {
      */
     @Test
     public void testGetSerializerWithClassName() {
+//        final Optional<DataColumnMetaDataSerializer<?>> serializer =
+//            DataColumnMetaDataRegistry.INSTANCE.getSerializer(TestDataColumnMetaData.class.getName());
+//        assertTrue(serializer.isPresent());
+//        assertThat(serializer.get(), Matchers.instanceOf(TestMetaDataSerializer.class));
         final Optional<DataColumnMetaDataSerializer<?>> serializer =
-            DataColumnMetaDataRegistry.INSTANCE.getSerializer(TestDataColumnMetaData.class.getName());
-        assertTrue(serializer.isPresent());
-        assertThat(serializer.get(), Matchers.instanceOf(TestMetaDataSerializer.class));
+                DataColumnMetaDataRegistry.INSTANCE.getSerializer(NominalDistributionValueMetaData.class.getName());
+            assertTrue(serializer.isPresent());
+            assertThat(serializer.get(), Matchers.instanceOf(NominalDistributionValueMetaDataSerializer.class));
     }
 }
