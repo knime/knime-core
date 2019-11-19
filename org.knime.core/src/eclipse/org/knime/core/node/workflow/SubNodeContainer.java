@@ -697,7 +697,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 NodeDescription.getDocumentBuilderFactory().newDocumentBuilder().getDOMImplementation()
                       .createDocument("http://knime.org/node2012", "knimeNode", null);
 
-            addPortDescriptionToElement(doc, getMetadata());
+            addPortDescriptionToElement(doc, getMetadata(), getNrInPorts(), getNrOutPorts());
 
             // we avoid validating the document since we don't include certain elements like 'name'
             return (new NodeDescription27Proxy(doc, false)).getXMLDescription();
@@ -708,12 +708,12 @@ public final class SubNodeContainer extends SingleNodeContainer
         return null;
     }
 
-    private static void addPortDescriptionToElement(final Document doc, final ComponentMetadata metadata)
-        throws DOMException, ParserConfigurationException, XmlException {
-        final String[] inPortNames = metadata.getInPortNames().orElse(new String[0]);
-        final String[] inPortDescriptions = metadata.getInPortDescriptions().orElse(new String[0]);
-        final String[] outPortNames = metadata.getOutPortNames().orElse(new String[0]);
-        final String[] outPortDescriptions = metadata.getOutPortDescriptions().orElse(new String[0]);
+    private static void addPortDescriptionToElement(final Document doc, final ComponentMetadata metadata,
+        final int nrInPorts, final int nrOutPorts) throws DOMException, ParserConfigurationException, XmlException {
+        final String[] inPortNames = metadata.getInPortNames().orElse(new String[nrInPorts - 1]);
+        final String[] inPortDescriptions = metadata.getInPortDescriptions().orElse(new String[nrInPorts - 1]);
+        final String[] outPortNames = metadata.getOutPortNames().orElse(new String[nrOutPorts - 1]);
+        final String[] outPortDescriptions = metadata.getOutPortDescriptions().orElse(new String[nrOutPorts - 1]);
 
         final Element knimeNode = doc.getDocumentElement();
         final Element ports = doc.createElement("ports");
@@ -754,7 +754,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public Element getXMLDescription() {
-        final String description = getMetadata().getDescription().orElse(null);
+        final String description = getMetadata().getDescription().orElse("");
         String sDescription;
         if (StringUtils.isEmpty(description)) {
             sDescription = "";
@@ -807,7 +807,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 addText(option, optionDescriptions.get(i), "");
             }
 
-            addPortDescriptionToElement(doc, getMetadata());
+            addPortDescriptionToElement(doc, getMetadata(), getNrInPorts(), getNrOutPorts());
 
             return new NodeDescription27Proxy(doc).getXMLDescription();
         } catch (ParserConfigurationException | DOMException | XmlException e) {
@@ -853,7 +853,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     private static void addText(final Element element, final String text, final String defaultTextIfEmpty) {
         Document doc = element.getOwnerDocument();
-        String[] splitText = (text.isEmpty() ? defaultTextIfEmpty : text).split("\n");
+        String[] splitText = (StringUtils.isEmpty(text) ? defaultTextIfEmpty : text).split("\n");
         for (int i = 0; i < splitText.length; i++) {
             element.appendChild(doc.createTextNode(splitText[i]));
             if (i + 1 < splitText.length) {
