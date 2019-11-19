@@ -210,7 +210,7 @@ public class PatternFilterPanel<T> extends JPanel {
                         public void run() {
                             final int caretPosition = m_pattern.getCaretPosition();
                             fireFilteringChangedEvent();
-                            m_pattern.requestFocus();
+                            m_pattern.requestFocusInWindow();
                             m_pattern.setCaretPosition(caretPosition);
                         }
                     });

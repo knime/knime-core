@@ -1711,17 +1711,44 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * Changes the content of the filter panel to the currently active filter.
      */
     private void updateFilterPanel() {
-        m_filterPanel.removeAll();
+        final Component replacementComponent;
         if (NameFilterConfiguration.TYPE.equals(m_currentType)) {
-            m_filterPanel.add(m_nameFilterPanel);
+            final boolean needsReplacement;
+            if (m_filterPanel.getComponentCount() > 0) {
+                needsReplacement = (m_filterPanel.getComponent(0) != m_nameFilterPanel);
+            } else {
+                needsReplacement = true;
+            }
+
+            replacementComponent = needsReplacement ? m_nameFilterPanel : null;
         } else if (PatternFilterConfiguration.TYPE.equals(m_currentType)) {
-            m_filterPanel.add(m_patternPanel);
+            final boolean needsReplacement;
+            if (m_filterPanel.getComponentCount() > 0) {
+                needsReplacement = (m_filterPanel.getComponent(0) != m_patternPanel);
+            } else {
+                needsReplacement = true;
+            }
+
+            replacementComponent = needsReplacement ? m_patternPanel : null;
         } else {
-            m_filterPanel.add(getFilterPanel(m_currentType));
+            final Component otherFilterPanel = getFilterPanel(m_currentType);
+            final boolean needsReplacement;
+            if (m_filterPanel.getComponentCount() > 0) {
+                needsReplacement = (m_filterPanel.getComponent(0) != otherFilterPanel);
+            } else {
+                needsReplacement = true;
+            }
+
+            replacementComponent = needsReplacement ? otherFilterPanel : null;
         }
-        // Revalidate and repaint are needed to update the view
-        m_filterPanel.revalidate();
-        m_filterPanel.repaint();
+
+        if (replacementComponent != null) {
+            m_filterPanel.removeAll();
+            m_filterPanel.add(replacementComponent);
+            // Revalidate and repaint are needed to update the view
+            m_filterPanel.revalidate();
+            m_filterPanel.repaint();
+        }
     }
 
     /**
