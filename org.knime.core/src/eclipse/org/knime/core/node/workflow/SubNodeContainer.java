@@ -1886,7 +1886,8 @@ public final class SubNodeContainer extends SingleNodeContainer
     @SuppressWarnings("deprecation")
     private void loadLegacyPortNamesAndDescriptionsFromInOutNodes() {
         LoadVersion loadVersion = getWorkflowManager().getLoadVersion();
-        if (loadVersion != null && loadVersion.isOlderThan(LoadVersion.V4010)) {
+        if ((m_metadata == null || m_metadata == ComponentMetadata.NONE) && loadVersion != null
+            && loadVersion.isOlderThan(LoadVersion.V4010)) {
             //take node description from virtual input node
             ComponentMetadataBuilder builder = ComponentMetadata.builder();
             builder.description(getVirtualInNodeModel().getSubNodeDescription());

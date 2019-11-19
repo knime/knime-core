@@ -113,11 +113,7 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
         assertFalse("unexpected metadata", metadata.getNodeType().isPresent());
 
         //set new metadata
-        ComponentMetadata newMetadata =
-            ComponentMetadata.builder().description("new").addInPortNameAndDescription("new name", "new desc")
-                .addOutPortNameAndDescription("new out name", "new out desc").icon("test_icon".getBytes())
-                .type(ComponentNodeType.MANIPULATOR).build();
-        component.setMetadata(newMetadata);
+        component.setMetadata(createComponentMetadata());
         checkInOutNodes(component);
 
         //save and re-load workflow and check metadata
@@ -125,8 +121,19 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
         closeWorkflow();
         initWorkflowFromTemp();
         component = (SubNodeContainer)getManager().getNodeContainer(m_component_4);
-        metadata = component.getMetadata();
         assertThat("unexpected load version", getManager().getLoadVersion(), is(LoadVersion.V4010));
+        metadata = component.getMetadata();
+        checkComponentMetadata(metadata);
+        checkInOutNodes(component);
+    }
+
+    private static ComponentMetadata createComponentMetadata() {
+        return ComponentMetadata.builder().description("new").addInPortNameAndDescription("new name", "new desc")
+            .addOutPortNameAndDescription("new out name", "new out desc").icon("test_icon".getBytes())
+            .type(ComponentNodeType.MANIPULATOR).build();
+    }
+
+    private static void checkComponentMetadata(final ComponentMetadata metadata) {
         assertThat("unexpected metadata", metadata.getDescription().get(), is("new"));
         assertThat("unexpected metadata", metadata.getInPortNames().get()[0], is("new name"));
         assertThat("unexpected metadata", metadata.getOutPortNames().get()[0], is("new out name"));
@@ -134,7 +141,6 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
         assertThat("unexpected metadata", metadata.getOutPortDescriptions().get()[0], is("new out desc"));
         assertThat("unexpected metadata", new String(metadata.getIcon().get()), is("test_icon"));
         assertThat("unexpected metadata", metadata.getNodeType().get(), is(ComponentNodeType.MANIPULATOR));
-        checkInOutNodes(component);
     }
 
     @SuppressWarnings("deprecation")
@@ -213,6 +219,21 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
         assertThat("unexpected number of inport descriptions", metadata.getInPortNames().get().length, is(1));
         assertThat("unexpected number of outport names", metadata.getOutPortNames().get().length, is(1));
         assertThat("unexpected number of outport descriptions", metadata.getOutPortNames().get().length, is(1));
+    }
+
+    /**
+     * Makes sure that all metadata is copied, too, when a component is copied.
+     */
+    @Test
+    public void testCopyPasteComponentWithMetadata() {
+        SubNodeContainer component = (SubNodeContainer)getManager().getNodeContainer(m_component_4);
+        component.setMetadata(createComponentMetadata());
+        WorkflowCopyContent.Builder cntBuilder = WorkflowCopyContent.builder();
+        cntBuilder.setNodeIDs(m_component_4);
+        WorkflowPersistor copy = getManager().copy(cntBuilder.build());
+        WorkflowCopyContent paste = getManager().paste(copy);
+        component = (SubNodeContainer)getManager().getNodeContainer(paste.getNodeIDs()[0]);
+        checkComponentMetadata(component.getMetadata());
     }
 
 }
