@@ -46,30 +46,34 @@
 package org.knime.core.node.defaultnodesettings;
 
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.Collection;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.VariableType;
 
 /**
  * Provides a standard component for a dialog that allows to select a flow variable from a list of flow variables.
  *
- * @author Kilian Thiel, KNIME.com, Berlin, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @since 4.1
  */
@@ -77,25 +81,27 @@ public final class DialogComponentFlowVariableNameSelection2 extends DialogCompo
 
     private final JComboBox<FlowVariable> m_jcombobox;
 
-    private final JLabel m_label;
+    private final ItemListener m_listener;
 
-    private final VariableType<?>[] m_types;
+    private final Border m_originalBorder;
 
-    private final boolean m_hasNone;
+    private boolean m_hasNone;
+
+    private final Supplier<Map<String, FlowVariable>> m_getAvailableFlowVariables;
 
     /**
      * Constructor creates a label and a combobox and adds them to the component panel. The given flow variables, which
      * are of the specified types are added as items to the combobox. If no types are specified all variables will be
      * added.
      *
-     * @param model The string model to store the name of the selected variable.
-     * @param label The title of the label to show.
-     * @param flowVars The flow variables to add to combobox.
-     * @param types The types of flow variables which are added to combobox.
+     * @param model The string model to store the name of the selected variable
+     * @param label The title of the label to show
+     * @param getAvailableFlowVariables reference to the invoking NodeDialogPane's
+     *            {@link NodeDialogPane#getAvailableFlowVariables(VariableType[]) getAvailableFlowVariables} method
      */
     public DialogComponentFlowVariableNameSelection2(final SettingsModelString model, final String label,
-        final Collection<FlowVariable> flowVars, final VariableType<?>... types) {
-        this(model, label, flowVars, false, types);
+        final Supplier<Map<String, FlowVariable>> getAvailableFlowVariables) {
+        this(model, label, getAvailableFlowVariables, false);
     }
 
     /**
@@ -103,39 +109,24 @@ public final class DialogComponentFlowVariableNameSelection2 extends DialogCompo
      * are of the specified types are added as items to the combobox. If no types are specified all variables will be
      * added.
      *
-     * @param model The string model to store the name of the selected variable.
-     * @param label The title of the label to show.
-     * @param flowVars The flow variables to add to combobox.
+     * @param model The string model to store the name of the selected variable
+     * @param label The title of the label to show
+     * @param getAvailableFlowVariables reference to the invoking NodeDialogPane's
+     *            {@link NodeDialogPane#getAvailableFlowVariables(VariableType[]) getAvailableFlowVariables} method
      * @param hasNone if true the field is optional and can be set to "NONE"
-     * @param types The types of flow variables which are added to combobox.
-     *
-     * @throws IllegalArgumentException Collection of FlowVariables cannot be null
      */
     public DialogComponentFlowVariableNameSelection2(final SettingsModelString model, final String label,
-        final Collection<FlowVariable> flowVars, final boolean hasNone, final VariableType<?>... types) {
+        final Supplier<Map<String, FlowVariable>> getAvailableFlowVariables, final boolean hasNone) {
         super(model);
+
+        m_getAvailableFlowVariables = CheckUtils.checkArgumentNotNull(getAvailableFlowVariables);
         m_hasNone = hasNone;
-        if (flowVars == null) {
-            throw new IllegalArgumentException("Flow Variables may not be null!");
-        }
 
         if (label != null) {
-            m_label = new JLabel(label);
-            getComponentPanel().add(m_label);
-        } else {
-            m_label = null;
+            getComponentPanel().add(new JLabel(label));
         }
 
-        // save types, the will be needed again when items are replaced
-        m_types = types;
-
-        m_jcombobox = new JComboBox<>(getFilteredFlowVariables(flowVars));
-        m_jcombobox.setRenderer(new FlowVariableListCellRenderer());
-        m_jcombobox.setEditable(false);
-
-        getComponentPanel().add(m_jcombobox);
-
-        m_jcombobox.addItemListener(new ItemListener() {
+        m_listener = new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
@@ -143,11 +134,18 @@ public final class DialogComponentFlowVariableNameSelection2 extends DialogCompo
                     try {
                         updateModel();
                     } catch (final InvalidSettingsException ise) {
-                        // ignore it here
                     }
                 }
             }
-        });
+        };
+
+        m_jcombobox = new JComboBox<>();
+        m_jcombobox.setRenderer(new FlowVariableListCellRenderer());
+        m_jcombobox.setEditable(false);
+        m_jcombobox.addItemListener(m_listener);
+        getComponentPanel().add(m_jcombobox);
+
+        m_originalBorder = m_jcombobox.getBorder();
 
         getModel().prependChangeListener(new ChangeListener() {
             @Override
@@ -160,56 +158,54 @@ public final class DialogComponentFlowVariableNameSelection2 extends DialogCompo
     }
 
     private void updateModel() throws InvalidSettingsException {
+        System.out.println(getModel().isEnabled());
         if (m_jcombobox.getSelectedItem() == null) {
             ((SettingsModelString)getModel()).setStringValue(null);
-            m_jcombobox.setBackground(Color.RED);
-            // put the color back to normal with the next selection.
-            m_jcombobox.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    m_jcombobox.setBackground(DialogComponent.DEFAULT_BG);
-                }
-            });
-            throw new InvalidSettingsException("Please select an item from the list.");
+        } else {
+            // save the value of the flow variable into the model
+            ((SettingsModelString)getModel()).setStringValue(((FlowVariable)m_jcombobox.getSelectedItem()).getName());
         }
-        // save the value of the flow variable into the model
-        ((SettingsModelString)getModel()).setStringValue(((FlowVariable)m_jcombobox.getSelectedItem()).getName());
+        System.out.println(getModel().isEnabled());
     }
 
     @Override
     protected void updateComponent() {
-        final String strVal = ((SettingsModelString)getModel()).getStringValue();
-        FlowVariable val = null;
-        if (strVal != null) {
-            for (int i = 0, length = m_jcombobox.getItemCount(); i < length; i++) {
-                final FlowVariable curVal = m_jcombobox.getItemAt(i);
-                if (curVal.getName().equals(strVal)) {
-                    val = curVal;
-                    break;
-                }
-            }
-            if (val == null) {
-                val = new FlowVariable("NONE", "");
+        final String selection = ((SettingsModelString)getModel()).getStringValue();
+        final List<FlowVariable> newVars = m_getAvailableFlowVariables.get().values().stream()
+            .filter(v -> (v.getScope() == Scope.Flow)).collect(Collectors.toCollection(ArrayList::new));
+        if (m_hasNone) {
+            newVars.add(new FlowVariable("NONE", ""));
+        }
+
+        m_jcombobox.removeItemListener(m_listener);
+        m_jcombobox.removeAllItems();
+        boolean match = false;
+        for (FlowVariable var : newVars) {
+            m_jcombobox.addItem(var);
+            if (var.getName().equals(selection)) {
+                m_jcombobox.setBorder(m_originalBorder);
+                m_jcombobox.setSelectedItem(var);
+                match = true;
             }
         }
-        final boolean update =
-            val == null ? m_jcombobox.getSelectedItem() != null : !val.equals(m_jcombobox.getSelectedItem());
-        if (update) {
-            m_jcombobox.setSelectedItem(val);
-        }
-        // also update the enable status
-        setEnabledComponents(getModel().isEnabled());
 
-        // make sure the model is in sync (in case model value isn't selected)
-        final FlowVariable selItem = (FlowVariable)m_jcombobox.getSelectedItem();
-
-        try {
-            if ((selItem == null && strVal != null) || (selItem != null && !selItem.getName().equals(strVal))) {
-                // if the (initial) value in the model is not in the list
-                updateModel();
+        if (!match) {
+            m_jcombobox.setBorder(BorderFactory.createLineBorder(Color.RED));
+            if (selection != null && selection.length() > 0) {
+                final FlowVariable selectedVar = new FlowVariable(selection, "");
+                m_jcombobox.addItem(selectedVar);
+                m_jcombobox.setSelectedItem(selectedVar);
+            } else {
+                m_jcombobox.setSelectedIndex(-1);
             }
-        } catch (InvalidSettingsException e) {
-            // ignore invalid values here
+        }
+        m_jcombobox.addItemListener(m_listener);
+
+        if (getModel().isEnabled()) {
+            setEnabledComponents(true);
+        } else {
+            m_jcombobox.setBorder(m_originalBorder);
+            setEnabledComponents(false);
         }
     }
 
@@ -220,7 +216,6 @@ public final class DialogComponentFlowVariableNameSelection2 extends DialogCompo
 
     @Override
     protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs) throws NotConfigurableException {
-        // Nothing to do ...
     }
 
     @Override
@@ -233,106 +228,4 @@ public final class DialogComponentFlowVariableNameSelection2 extends DialogCompo
         m_jcombobox.setToolTipText(text);
     }
 
-    /**
-     * Sets the preferred size of the internal component.
-     *
-     * @param width The width.
-     * @param height The height.
-     */
-    public void setSizeComponents(final int width, final int height) {
-        m_jcombobox.setPreferredSize(new Dimension(width, height));
-    }
-
-    /**
-     * Replaces the list of selectable flow variables in the component. If <code>select</code> is specified (not null)
-     * and it exists in the collection it will be selected. If <code>select</code> is null, the previous value will stay
-     * selected (if it exists in the new list).
-     *
-     * @param newItems new flow variables for the combo box
-     * @param select the item to select after the replace. Can be null, in which case the previous selection remains -
-     *            if it exists in the new list.
-     * @throws IllegalArgumentException if set of flow variables is null or empty
-     */
-    public void replaceListItems(final Collection<FlowVariable> newItems, final String select) {
-
-        final String sel;
-        if (select == null) {
-            sel = ((SettingsModelString)getModel()).getStringValue();
-        } else {
-            sel = select;
-        }
-
-        m_jcombobox.removeAllItems();
-        if (m_hasNone) {
-            m_jcombobox.addItem(new FlowVariable("NONE", " "));
-        }
-
-        if (newItems == null || newItems.size() < 1) {
-            if (!m_hasNone) {
-                throw new IllegalArgumentException("The container with the new items can't be null or empty.");
-            }
-        } else {
-            Vector<FlowVariable> filteredItems = getFilteredFlowVariables(newItems);
-
-            FlowVariable selOption = null;
-            for (final FlowVariable option : filteredItems) {
-                if (option == null) {
-                    throw new NullPointerException("Options in the selection list can't be null");
-                }
-                m_jcombobox.addItem(option);
-                if (option.getName().equals(sel)) {
-                    selOption = option;
-                }
-            }
-
-            if (selOption == null) {
-                m_jcombobox.setSelectedIndex(0);
-            } else {
-                m_jcombobox.setSelectedItem(selOption);
-            }
-        }
-        //update the size of the comboBox and force the repainting
-        //of the whole panel
-        m_jcombobox.setSize(m_jcombobox.getPreferredSize());
-        getComponentPanel().validate();
-    }
-
-    /**
-     * Checks if the given flow variable is of the same type of any of the specified types are returns <code>true</code>
-     * if so, otherwise <code>false</code>.
-     *
-     * @param var The flow variable to check
-     * @param types the valid types.
-     * @return <code>true</code> if flow variable is of any of the specified types, otherwise <code>false</code>.
-     */
-    private boolean isFlowVariableCompatible(final FlowVariable var) {
-        if (m_types != null) {
-            for (VariableType<?> type : m_types) {
-                if (var.getVariableType().equals(type)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Returns a vector of the given flow variables that match any of the specified types.
-     *
-     * @param flowVars The flow variables to filter.
-     * @return The vector of filtered flow variables.
-     */
-    private Vector<FlowVariable> getFilteredFlowVariables(final Collection<FlowVariable> flowVars) {
-        final Vector<FlowVariable> flowVarsAsVector = new Vector<>(flowVars.size());
-        if (m_types == null || m_types.length <= 0) {
-            flowVarsAsVector.addAll(flowVars);
-        } else {
-            for (FlowVariable var : flowVars) {
-                if (isFlowVariableCompatible(var)) {
-                    flowVarsAsVector.add(var);
-                }
-            }
-        }
-        return flowVarsAsVector;
-    }
 }
