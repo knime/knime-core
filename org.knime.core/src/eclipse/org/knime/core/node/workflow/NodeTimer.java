@@ -764,7 +764,11 @@ public final class NodeTimer {
      *         {@link System#currentTimeMillis()}), -1 if node hasn't been started, yet
      */
     public long getStartTime() {
-        return m_lastStartTime;
+        if (m_lastStartTime < 0) {
+            return m_startTime;
+        } else {
+            return m_lastStartTime;
+        }
     }
 
     private void initialize() {
