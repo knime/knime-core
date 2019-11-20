@@ -6399,8 +6399,12 @@ public final class WorkflowManager extends NodeContainer
                     if (!warnedNodes.values().contains(msg)) { // no duplicates of the same message
                         warnedNodes.put(nc, msg);
                     }
-                    Set<NodeID> successors = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id, false).keySet();
-                    downstreamNodesOfWarnedNodes.addAll(successors);
+                    // don't skip downstream nodes if node is executed -- the true problem might be downstream...
+                    // say an executed "Row Filter" ("no rows filtered") followed by an unconfigured red node...
+                    if (!nc.getInternalState().isExecuted()) {
+                        Set<NodeID> successors = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id, false).keySet();
+                        downstreamNodesOfWarnedNodes.addAll(successors);
+                    }
                 }
             }
             if (!warnedNodes.isEmpty()) {
