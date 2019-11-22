@@ -1126,7 +1126,8 @@ public final class SubNodeContainer extends SingleNodeContainer
                     nch.preConfigure();
                 } catch (InvalidSettingsException ise) {
                     LOGGER.warn(ise.getMessage(), ise);
-                    setNodeMessage(NodeMessage.merge(oldMessage, NodeMessage.newWarning(ise.getMessage())));
+                    NodeMessage nodeMsg = NodeMessage.newWarning(ise.getMessage());
+                    setNodeMessage(keepNodeMessage ? NodeMessage.merge(oldMessage, nodeMsg) : nodeMsg);
                     return false;
                 }
             }
@@ -1149,7 +1150,8 @@ public final class SubNodeContainer extends SingleNodeContainer
             }
             String msg = m_wfm.getNodeErrorSummary().orElseGet(() -> m_wfm.getNodeWarningSummary().orElse(null));
             if (msg != null) {
-                setNodeMessage(NodeMessage.merge(oldMessage, NodeMessage.newWarning(msg)));
+                NodeMessage nodeMsg = NodeMessage.newWarning(msg);
+                setNodeMessage(keepNodeMessage ? NodeMessage.merge(oldMessage, nodeMsg) : nodeMsg);
             }
             setVirtualOutputIntoOutport(newState);
             setInternalState(newState);
@@ -1158,7 +1160,8 @@ public final class SubNodeContainer extends SingleNodeContainer
                     nch.postConfigure(rawInSpecs, null);
                 } catch (InvalidSettingsException ise) {
                     LOGGER.warn(ise.getMessage(), ise);
-                    setNodeMessage(NodeMessage.merge(oldMessage, NodeMessage.newWarning(ise.getMessage())));
+                    NodeMessage nodeMsg = NodeMessage.newWarning(ise.getMessage());
+                    setNodeMessage(keepNodeMessage ? NodeMessage.merge(oldMessage, nodeMsg) : nodeMsg);
                     return false;
                 }
             }
