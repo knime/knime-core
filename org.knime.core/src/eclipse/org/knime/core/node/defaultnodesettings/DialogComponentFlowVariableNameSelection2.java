@@ -45,7 +45,6 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import java.awt.Color;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
@@ -54,10 +53,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -67,6 +64,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.util.FlowVariableListCellRenderer.FlowVariableCell;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.VariableType;
@@ -79,15 +77,15 @@ import org.knime.core.node.workflow.VariableType;
  */
 public final class DialogComponentFlowVariableNameSelection2 extends DialogComponent {
 
-    private final JComboBox<FlowVariable> m_jcombobox;
+    private final JComboBox<FlowVariableCell> m_jcombobox;
 
     private final ItemListener m_listener;
 
-    private final Border m_originalBorder;
-
-    private boolean m_hasNone;
+    private final boolean m_hasNone;
 
     private final Supplier<Map<String, FlowVariable>> m_getAvailableFlowVariables;
+
+    private boolean m_selectionIsValid = false;
 
     /**
      * Constructor creates a label and a combobox and adds them to the component panel. The given flow variables, which
@@ -145,8 +143,6 @@ public final class DialogComponentFlowVariableNameSelection2 extends DialogCompo
         m_jcombobox.addItemListener(m_listener);
         getComponentPanel().add(m_jcombobox);
 
-        m_originalBorder = m_jcombobox.getBorder();
-
         getModel().prependChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -158,41 +154,38 @@ public final class DialogComponentFlowVariableNameSelection2 extends DialogCompo
     }
 
     private void updateModel() throws InvalidSettingsException {
-        System.out.println(getModel().isEnabled());
         if (m_jcombobox.getSelectedItem() == null) {
             ((SettingsModelString)getModel()).setStringValue(null);
         } else {
             // save the value of the flow variable into the model
-            ((SettingsModelString)getModel()).setStringValue(((FlowVariable)m_jcombobox.getSelectedItem()).getName());
+            ((SettingsModelString)getModel()).setStringValue(((FlowVariableCell)m_jcombobox.getSelectedItem()).getName());
         }
-        System.out.println(getModel().isEnabled());
     }
 
     @Override
     protected void updateComponent() {
         final String selection = ((SettingsModelString)getModel()).getStringValue();
-        final List<FlowVariable> newVars = m_getAvailableFlowVariables.get().values().stream()
-            .filter(v -> (v.getScope() == Scope.Flow)).collect(Collectors.toCollection(ArrayList::new));
+        final List<FlowVariableCell> newVars =
+            m_getAvailableFlowVariables.get().values().stream().filter(v -> (v.getScope() == Scope.Flow))
+                .map(FlowVariableCell::new).collect(Collectors.toCollection(ArrayList::new));
         if (m_hasNone) {
-            newVars.add(new FlowVariable("NONE", ""));
+            newVars.add(new FlowVariableCell(new FlowVariable("NONE", "")));
         }
 
         m_jcombobox.removeItemListener(m_listener);
         m_jcombobox.removeAllItems();
-        boolean match = false;
-        for (FlowVariable var : newVars) {
+        m_selectionIsValid = false;
+        for (FlowVariableCell var : newVars) {
             m_jcombobox.addItem(var);
             if (var.getName().equals(selection)) {
-                m_jcombobox.setBorder(m_originalBorder);
                 m_jcombobox.setSelectedItem(var);
-                match = true;
+                m_selectionIsValid = true;
             }
         }
 
-        if (!match) {
-            m_jcombobox.setBorder(BorderFactory.createLineBorder(Color.RED));
+        if (!m_selectionIsValid) {
             if (selection != null && selection.length() > 0) {
-                final FlowVariable selectedVar = new FlowVariable(selection, "");
+                final FlowVariableCell selectedVar = new FlowVariableCell(selection);
                 m_jcombobox.addItem(selectedVar);
                 m_jcombobox.setSelectedItem(selectedVar);
             } else {
@@ -201,16 +194,14 @@ public final class DialogComponentFlowVariableNameSelection2 extends DialogCompo
         }
         m_jcombobox.addItemListener(m_listener);
 
-        if (getModel().isEnabled()) {
-            setEnabledComponents(true);
-        } else {
-            m_jcombobox.setBorder(m_originalBorder);
-            setEnabledComponents(false);
-        }
+        setEnabledComponents(getModel().isEnabled());
     }
 
     @Override
     protected void validateSettingsBeforeSave() throws InvalidSettingsException {
+        if (!m_selectionIsValid) {
+            throw new InvalidSettingsException("No valid flow variable selected.");
+        }
         updateModel();
     }
 
