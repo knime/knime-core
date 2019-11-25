@@ -69,6 +69,12 @@ public enum SharedIcons {
      */
     /** Funnel **/
     FILTER("icons/filter.png"),
+    /** Logical and operation sign
+     * @since 4.1*/
+    LOGICAL_AND("icons/and_logical_operator.png"),
+    /** Logical or operation sign
+     * @since 4.1*/
+    LOGICAL_OR("icons/or_logical_operator.png"),
     /** Help question mark filled **/
     HELP("icons/help.png"),
     /** Warning sign filled **/
