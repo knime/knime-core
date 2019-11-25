@@ -2853,6 +2853,8 @@ public class Buffer implements KNIMEStreamConstants {
                             LOGGER.error(error.toString(), t);
                             LOGGER.error("Table will be held in memory until node is cleared.");
                             LOGGER.error("Workflow can't be saved in this state.");
+                            LOGGER.debugWithFormat("Buffer stack trace at construction time:\n%s",
+                                buffer.m_fullStackTraceAtConstructionTime);
 
                             error.append(". Workflow can't be saved until node is cleared.");
                             throw new IOException(error.toString(), t);
