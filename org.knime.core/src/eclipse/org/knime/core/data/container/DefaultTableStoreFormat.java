@@ -56,6 +56,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -171,8 +172,11 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
             /* To ensure that GZIP-compressed and uncompressed workflows written with >= 3.8 can be loaded in earlier
              * versions, we have to camel-case the names of these compresssion formats (None, Gzip), since KNIME AP
              * <= 3.7 only accepts compression format Strings "Gzip" and "None".
+             *
+             * Setting Locale.US prevents conversion problems, see AP-13152.
              */
-            settings.addString(DefaultTableStoreFormat.CFG_COMPRESSION, WordUtils.capitalize(name().toLowerCase()));
+            settings.addString(DefaultTableStoreFormat.CFG_COMPRESSION,
+                WordUtils.capitalize(name().toLowerCase(Locale.US)));
         }
 
         /**
@@ -243,7 +247,8 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
          * @return the associated enum constant
          */
         static CompressionFormat getCompressionFormat(final String arg0) {
-            final String upperCase = arg0.toUpperCase();
+            // Setting Locale.US prevents conversion problems, see AP-13152.
+            final String upperCase = arg0.toUpperCase(Locale.US);
             // backwards compatibility
             if (upperCase.equals("TRUE")) {
                 return CompressionFormat.GZIP;
