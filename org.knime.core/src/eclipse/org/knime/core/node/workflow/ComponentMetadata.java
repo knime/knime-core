@@ -254,7 +254,7 @@ public final class ComponentMetadata {
             String[] descs = new String[keySet.size()];
             for (String key : keySet) {
                 NodeSettingsRO port = inports.getNodeSettings(key);
-                int index = port.getInt("index", -1) - 1;
+                int index = port.getInt("index", -1);
                 names[index] = port.getString("name");
                 descs[index] = port.getString("description");
             }
@@ -270,7 +270,7 @@ public final class ComponentMetadata {
             String[] descs = new String[keySet.size()];
             for (String key : keySet) {
                 NodeSettingsRO port = outports.getNodeSettings(key);
-                int index = port.getInt("index", -1) - 1;
+                int index = port.getInt("index", -1);
                 names[index] = port.getString("name");
                 descs[index] = port.getString("description");
             }
@@ -303,19 +303,19 @@ public final class ComponentMetadata {
         if (m_inPortNames != null) {
             NodeSettingsWO ports = nestedSettings.addNodeSettings("inports");
             for (int i = 0; i < m_inPortNames.length; i++) {
-                NodeSettingsWO port = ports.addNodeSettings("inport_" + (i + 1));
+                NodeSettingsWO port = ports.addNodeSettings("inport_" + i);
                 port.addString("name", m_inPortNames[i]);
                 port.addString("description", m_inPortDescriptions[i]);
-                port.addInt("index", i + 1);
+                port.addInt("index", i);
             }
         }
         if (m_outPortNames != null) {
             NodeSettingsWO ports = nestedSettings.addNodeSettings("outports");
             for (int i = 0; i < m_outPortNames.length; i++) {
-                NodeSettingsWO port = ports.addNodeSettings("outport_" + (i + 1));
+                NodeSettingsWO port = ports.addNodeSettings("outport_" + i);
                 port.addString("name", m_outPortNames[i]);
                 port.addString("description", m_outPortDescriptions[i]);
-                port.addInt("index", i + 1);
+                port.addInt("index", i);
             }
         }
     }
