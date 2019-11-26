@@ -1,133 +1,104 @@
 
 {
-    "value-filter-14":{
-        "type":"object",
-        "column":{
-            "type":"string",
-            "default":"Cluster Membership Changed"
+    "multiple-selection-13": {
+        "type": "array",
+        "items": {
+            "type": "string"
         },
-        "values":{
-            "type":"array",
-            "default":[
-                "Cluster_1",
-                "Cluster_3"
-            ]
-        }
-    },
-    "single-selection-15":{
-        "type":"string",
-        "default":"newVal"
-    },
-    "file-input-7":{
-        "type":"string",
-        "default":"/tmp3"
-    },
-    "multiple-selection-13":{
-        "type":"array",
-        "default":[
+        "default": [
             "test3",
             "test4"
         ]
     },
-    "list-box-input-8":{
-        "type":"string",
-        "default":"test1\ntest3"
+    "list-box-input-8": {
+        "type": "string",
+        "format": "multiline",
+        "default": "test1\ntest3"
     },
-    "double-input-4":{
-        "type":"number",
-        "default":4.5
+    "double-input-4": {
+        "type": "number",
+        "default": 4.5
     },
-    "string-input-10":{
-        "type":"string",
-        "default":"test string new"
+    "string-input-10": {
+        "type": "string",
+        "default": "test string new"
     },
-    "integer-input-5":{
-        "type":"integer",
-        "default":5
+    "integer-input-5": {
+        "type": "integer",
+        "default": 5
     },
-    "boolean-input-1":{
-        "type":"boolean",
-        "default":true
+    "boolean-input-1": {
+        "type": "boolean",
+        "default": true
     },
-    "file-chooser-input-9":{
-        "type":"array",
-        "default":[
+    "single-selection-15": {
+        "type": "string",
+        "default": "newVal"
+    },
+    "file-chooser-input-9": {
+        "type": "array",
+        "items": {
+            "type": "object"
+        },
+        "default": [
             {
-                "type":"object",
-                "path":{
-                    "type":"string",
+                "type": "object",
+                "path": {
+                    "type": "string",
                     "default":"knime://Nightly-Tests/out/out.kntable"
                 },
-                "fileType":{
-                    "type":"string",
-                    "default":"DATA"
+                "fileType": {
+                    "type": "string",
+                    "default": "DATA"
                 }
             }
         ]
     },
-    "column-filter-11":{
-        "type":"array",
-        "default":[
-            "Universe_0_0",
-            "Universe_1_1"
-        ]
+    "file-input-7": {
+        "type": "string",
+        "default": "/tmp3"
     },
-    "value-selection-16":{
-        "type":"object",
-        "column":{
-            "type":"string",
-            "default":"Cluster Membership new"
+    "integer-slider-6": {
+        "type": "integer",
+        "default": 51.0
+    },
+    "date-input-3": {
+        "type": "string",
+        "format": "ZonedDateTime",
+        "default": "2022-10-27T18:42:33+02:00[Europe/Berlin]"
+    },
+    "credentials-2": {
+        "type": "object",
+        "username": {
+            "type": "string",
+            "default": "test new"
         },
-        "value":{
-            "type":"string",
-            "default":"Cluster_2"
+        "password": {
+            "type": "string",
+            "default": null
         }
     },
-    "column-selection-12":{
-        "type":"string",
-        "default":"Universe_1_0"
+    "knime.var.double": {
+        "type": "number",
+        "default": 1.1
     },
-    "integer-slider-6":{
-        "type":"integer",
-        "default":51.0
+    "knime.var.integer": {
+        "type": "integer",
+        "default": 6
     },
-    "date-input-3":{
-        "type":"string",
-        "format":"ZonedDateTime",
-        "default":"2022-10-27T18:42:33+02:00[Europe/Berlin]"
+    "knime.var.string": {
+        "type": "string",
+        "default": "test new"
     },
-    "credentials-2":{
-        "type":"object",
-        "username":{
-            "type":"string",
-            "default":"test new"
+    "knime.cred.wf_credentials": {
+        "type": "object",
+        "login": {
+            "type": "string",
+            "default": "miau"
         },
-        "password":{
-            "type":"string",
-            "default":null
-        }
-    },
-    "knime.var.double":{
-        "type":"number",
-        "default":1.1
-    },
-    "knime.var.integer":{
-        "type":"integer",
-        "default":6
-    },
-    "knime.var.string":{
-        "type":"string",
-        "default":"test new"
-    },
-    "knime.cred.wf_credentials":{
-        "type":"object",
-        "login":{
-            "type":"string",
-            "default":"miau user"
-        },
-        "password":{
-            "type":"string",
-            "default":null
+        "password": {
+            "type": "string",
+            "default": null
         }
     }
 }

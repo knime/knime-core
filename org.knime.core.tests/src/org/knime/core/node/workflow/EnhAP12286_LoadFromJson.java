@@ -174,7 +174,7 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
 
         getManager().setConfigurationNodes(inputMap);
 
-        for (Entry<String, DialogNode> entry : getManager().getConfigurationNodes(false).entrySet()) {
+        for (Entry<String, DialogNode> entry : getManager().getConfigurationNodes(true).entrySet()) {
             final JsonValue expectedValue = workflowConfigContentExp.get(entry.getKey());
             final JsonValue actualValue = entry.getValue().getDialogValue().toJson();
 
