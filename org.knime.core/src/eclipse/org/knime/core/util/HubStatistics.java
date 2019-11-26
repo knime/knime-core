@@ -180,7 +180,7 @@ public class HubStatistics {
         try {
             final JsonObject stats = readHubStats(getStatisticsLocation());
 
-            final JsonValue val = stats.get(LAST_KNIME_HUB_UPLOAD);
+            final JsonValue val = stats.get(key);
             if (val instanceof JsonString) {
                 return ((JsonString)val).getString();
             }
