@@ -12,7 +12,10 @@
    version="1.1"
    id="svg25"
    sodipodi:docname="flowvar_boolean_array-icon.svg"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:export-filename="flowvar_boolean_array.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
   <metadata
      id="metadata29">
     <rdf:RDF>
@@ -33,15 +36,15 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1718"
-     inkscape:window-height="656"
+     inkscape:window-width="1918"
+     inkscape:window-height="1004"
      id="namedview27"
      showgrid="false"
      inkscape:zoom="14.75"
-     inkscape:cx="8"
+     inkscape:cx="-18.372881"
      inkscape:cy="8"
-     inkscape:window-x="1712"
-     inkscape:window-y="0"
+     inkscape:window-x="-10"
+     inkscape:window-y="1050"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg25" />
   <defs
@@ -94,29 +97,24 @@
      style="fill:#4d4d4d"
      inkscape:connector-curvature="0"
      id="path20"
-     d="M 3.51,13.31 V 4 h 1.78 v 3.35 a 2.57,2.57 0 0 1 2,-0.94 2.63,2.63 0 0 1 2,0.9 3.66,3.66 0 0 1 0.8,2.56 3.89,3.89 0 0 1 -0.82,2.66 2.56,2.56 0 0 1 -2,0.93 2.47,2.47 0 0 1 -1.14,-0.29 2.71,2.71 0 0 1 -1,-0.85 v 1 z M 5.28,9.79 a 2.86,2.86 0 0 0 0.33,1.55 1.42,1.42 0 0 0 1.23,0.71 1.28,1.28 0 0 0 1,-0.5 A 2.48,2.48 0 0 0 8.27,10 2.64,2.64 0 0 0 7.85,8.33 1.39,1.39 0 0 0 5.71,8.33 2.23,2.23 0 0 0 5.28,9.79 Z"
+     d="M 1.6033964,13.31 V 4 h 1.78 v 3.35 a 2.57,2.57 0 0 1 2,-0.94 2.63,2.63 0 0 1 2,0.9 3.66,3.66 0 0 1 0.8,2.56 3.89,3.89 0 0 1 -0.82,2.66 2.56,2.56 0 0 1 -2,0.93 2.47,2.47 0 0 1 -1.14,-0.29 2.71,2.71 0 0 1 -1,-0.85 v 1 z m 1.77,-3.52 a 2.86,2.86 0 0 0 0.33,1.55 1.42,1.42 0 0 0 1.23,0.71 1.28,1.28 0 0 0 1,-0.5 2.48,2.48 0 0 0 0.43,-1.55 2.64,2.64 0 0 0 -0.42,-1.67 1.39,1.39 0 0 0 -2.14,0 2.23,2.23 0 0 0 -0.43,1.46 z"
      class="cls-4" />
   <g
-     id="g881"
-     transform="matrix(0.64725816,0,0,0.64725816,4.7347582,4.6939821)"
-     style="stroke-width:1.54497874">
-    <circle
-       r="0.89449763"
-       cy="12.417066"
-       cx="9.0214586"
-       id="path872"
-       style="opacity:1;fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-width:2.91964531;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
-    <circle
-       style="opacity:1;fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-width:2.91964531;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       id="circle874"
-       cx="11.224584"
-       cy="12.417066"
-       r="0.89449763" />
-    <circle
-       r="0.89449763"
-       cy="12.417066"
-       cx="13.427709"
-       id="circle876"
-       style="opacity:1;fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-width:2.91964531;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+     aria-label="["
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.38635111px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';letter-spacing:0px;word-spacing:0px;fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-width:1"
+     id="text830">
+    <path
+       d="M 11.198851,13.428 H 8.7896307 V 6.4023103 h 2.4092203 v 0.865588 H 9.9185018 v 5.2945137 h 1.2803492 z"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';fill:#4d4d4d;fill-opacity:1;stroke-width:1"
+       id="path830" />
+  </g>
+  <g
+     aria-label="]"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.38635111px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';letter-spacing:0px;word-spacing:0px;fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-width:1"
+     id="text838">
+    <path
+       d="m 14.40835,13.428 h -2.40922 v -0.865588 h 1.280349 V 7.2678983 H 11.99913 v -0.865588 h 2.40922 z"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';fill:#4d4d4d;fill-opacity:1;stroke-width:1"
+       id="path833" />
   </g>
 </svg>
