@@ -88,6 +88,10 @@ import org.w3c.dom.Element;
  * @since 4.1
  */
 public final class NodeDescription41Proxy extends NodeDescription {
+
+    /** The dynamic port suffix. */
+    private static final String DYNAMIC_PORT_SUFFIX = " (dynamic)";
+
     private static final XmlOptions OPTIONS = new XmlOptions();
 
     private static final NodeLogger logger = NodeLogger.getLogger(NodeDescription41Proxy.class);
@@ -422,6 +426,7 @@ public final class NodeDescription41Proxy extends NodeDescription {
             for (int i = 0; i < size; i++) {
                 final Port port = createPort.apply(ports);
                 port.newCursor().setTextValue(dynPort.newCursor().getTextValue());
+                port.addI(DYNAMIC_PORT_SUFFIX);
                 port.setIndex(BigInteger.valueOf(offset++));
                 port.setName(dynPort.getName());
             }
