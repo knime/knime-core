@@ -122,6 +122,7 @@ import org.knime.core.node.wizard.CSSModifiable;
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
+import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -377,12 +378,20 @@ public final class SubNodeContainer extends SingleNodeContainer
         Pair<int[], int[]> minMaxCoordinates = getMinMaxCoordinates();
         // add virtual in/out nodes and connect them
         NodeID inNodeID = addVirtualInNode(inTypes, minMaxCoordinates);
+        NodeID outNodeID = addVirtualOutNode(outTypes, getMinMaxCoordinates());
         for (ConnectionContainer cc : content.getWorkflow().getConnectionsBySource(content.getID())) {
-            m_wfm.addConnection(inNodeID, cc.getSourcePort() + 1, oldIDsHash.get(cc.getDest()), cc.getDestPort());
+            if (cc.getType() == ConnectionType.WFMTHROUGH) {
+                m_wfm.addConnection(inNodeID, cc.getSourcePort() + 1, outNodeID, cc.getDestPort() + 1);
+            } else {
+                m_wfm.addConnection(inNodeID, cc.getSourcePort() + 1, oldIDsHash.get(cc.getDest()), cc.getDestPort());
+            }
         }
         m_virtualInNodeIDSuffix = inNodeID.getIndex();
-        NodeID outNodeID = addVirtualOutNode(outTypes, getMinMaxCoordinates());
         for (ConnectionContainer cc : content.getWorkflow().getConnectionsByDest(content.getID())) {
+            if (cc.getType() == ConnectionType.WFMTHROUGH) {
+                // wfm-through-connections have already been added above
+                continue;
+            }
             m_wfm.addConnection(oldIDsHash.get(cc.getSource()), cc.getSourcePort(), outNodeID, cc.getDestPort() + 1);
         }
         m_virtualOutNodeIDSuffix = outNodeID.getIndex();
