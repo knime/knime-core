@@ -764,10 +764,13 @@ public final class NodeTimer {
      *         {@link System#currentTimeMillis()}), -1 if node hasn't been started, yet
      */
     public long getStartTime() {
-        if (m_lastStartTime < 0) {
-            return m_startTime;
-        } else {
+        if (m_startTime < 0) {
+            //if node execution has been finished
+            //(or never been started)
             return m_lastStartTime;
+        } else {
+            //if node is executing atm
+            return m_startTime;
         }
     }
 
