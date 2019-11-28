@@ -661,7 +661,7 @@ public final class FilesHistoryPanel extends JPanel {
     private String getOutputFileName() {
         // file chooser triggered by choose button
         FileSystemBrowser browser;
-        if (NodeContext.getContext().getNodeContainer() != null) {
+        if (NodeContext.getContext() != null && NodeContext.getContext().getNodeContainer() != null) {
             //if an ordinary node context is available, use default file system browser
             browser = new LocalFileSystemBrowser();
         } else {
