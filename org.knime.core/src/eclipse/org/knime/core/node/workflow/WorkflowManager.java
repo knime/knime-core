@@ -8926,12 +8926,9 @@ public final class WorkflowManager extends NodeContainer
                 KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
                     @Override
                     public void run() {
-                        StringBuilder strBuilder = new StringBuilder(String.format(
-                            " temporary directory for workflow \"%s\" at \"%s\"", getName(), m_tmpDir));
                         if (m_tmpDir.isDirectory() && !FileUtil.deleteRecursively(m_tmpDir)) {
-                            LOGGER.info(strBuilder.insert(0, "Failed to delete").toString());
-                        } else {
-                            LOGGER.debug(strBuilder.insert(0, "Successfully deleted").toString());
+                            LOGGER.info(
+                                "Could not delete temporary directory for workflow " + getName() + " at " + m_tmpDir);
                         }
                     }
                 });

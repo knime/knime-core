@@ -1170,11 +1170,28 @@ public class Buffer implements KNIMEStreamConstants {
     /** Creates temp file (m_binFile) and adds this buffer to shutdown hook. */
     private void ensureTempFileExists() throws IOException {
         if (m_binFile == null) {
-            /**Not-in-workflow-buffers are not automatically cleared in WorkflowManager#cleanup and Node#cleanOutPorts.
-             * Thus, if they are not cleared manually and the workflow that created them is closed, their temp file will
-             * be deleted without them being notified. We should therefore use the root temp folder for these buffers.*/
-            final File dir = getBufferID() == DataContainer.NOT_IN_WORKFLOW_BUFFER
-                ? KNIMEConstants.getKNIMETempPath().toFile() : FileUtil.getWorkflowTempDir();
+            File dir = null;
+            /** Not-in-workflow-buffers are not automatically cleared in WorkflowManager#cleanup and Node#cleanOutPorts.
+             * We should therefore use the root temp folder for these buffers if the workflow temp folder has already
+             * been deleted. */
+            if (getBufferID() == DataContainer.NOT_IN_WORKFLOW_BUFFER) {
+                final NodeContext context = NodeContext.getContext();
+                if (context != null) {
+                    final WorkflowManager wfm = context.getWorkflowManager();
+                    if (wfm != null) {
+                        final WorkflowContext workflowContext = wfm.getContext();
+                        if (workflowContext != null) {
+                            if (!workflowContext.getTempLocation().isDirectory()) {
+                                dir = KNIMEConstants.getKNIMETempPath().toFile();
+                            }
+                        }
+                    }
+                }
+            }
+            if (dir == null) {
+                dir = FileUtil.getWorkflowTempDir();
+            }
+
             m_binFile = DataContainer.createTempFile(dir, m_outputFormat.getFilenameSuffix());
             OPENBUFFERS.add(new WeakReference<Buffer>(this));
         }
@@ -2794,25 +2811,7 @@ public class Buffer implements KNIMEStreamConstants {
                     LOGGER.debug("Attempting to swap a Buffer that was already garbage collected ... will ignore.");
                     /** Buffer was already discarded (no rows added) */
                     return null;
-                } else if (buffer.m_isClearedLock.booleanValue()) {
-                    LOGGER.debugWithFormat("Attempting to swap a Buffer that was already clear()'ed... "
-                        + "will ignore (%s)", buffer.m_lifecycle.getClass().getSimpleName());
-                    return null;
                 }
-                // START -- DEBUG output to chase memory leak that _only_ occurs when running automated tests
-                if (m_nodeContext != null) {
-                    final WorkflowManager wfm = m_nodeContext.getWorkflowManager();
-                    if (wfm != null) {
-                        final WorkflowContext workflowContext = wfm.getContext();
-                        if (workflowContext != null) {
-                            if (!workflowContext.getTempLocation().isDirectory()) {
-                                LOGGER.debugWithFormat("Buffer stack trace at construction time:\n%s",
-                                    buffer.m_fullStackTraceAtConstructionTime);
-                            }
-                        }
-                    }
-                }
-                // END -- DEBUG output to chase memory leak that _only_ occurs when running automated tests
                 buffer.ensureWriterIsOpen();
                 final List<BlobSupportDataRow> list = CACHE.getSilent(buffer).get();
                 final AbstractTableStoreWriter outputWriter = buffer.m_outputWriter;
@@ -2853,10 +2852,7 @@ public class Buffer implements KNIMEStreamConstants {
                             LOGGER.error(error.toString(), t);
                             LOGGER.error("Table will be held in memory until node is cleared.");
                             LOGGER.error("Workflow can't be saved in this state.");
-                            LOGGER.debugWithFormat("Buffer stack trace at construction time:\n%s",
-                                buffer.m_fullStackTraceAtConstructionTime);
 
-                            error.append(". Workflow can't be saved until node is cleared.");
                             throw new IOException(error.toString(), t);
                         }
                     }
