@@ -963,6 +963,8 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             final VariableType<?> type = v.getVariableType();
             if (type.equals(BooleanArrayType.INSTANCE)) {
                 return ArrayUtils.toPrimitive(v.getValue(BooleanArrayType.INSTANCE));
+            } else if (type.equals(BooleanType.INSTANCE)) {
+                return new boolean[]{v.getValue(BooleanType.INSTANCE)};
             } else {
                 throw new InvalidSettingsException("Can't evaluate variable \"" + varString
                     + "\" as boolean array expression, it is a " + type + " (\"" + v + "\")");
@@ -998,6 +1000,12 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             } else if (type.equals(IntArrayType.INSTANCE)) {
                 return Arrays.stream(v.getValue(IntArrayType.INSTANCE)).mapToDouble(Integer::doubleValue)
                     .toArray();
+            } else if (type.equals(DoubleType.INSTANCE)) {
+                return new double[]{v.getDoubleValue()};
+            } else if (type.equals(LongType.INSTANCE)) {
+                return new double[]{v.getValue(LongType.INSTANCE)};
+            } else if (type.equals(IntType.INSTANCE)) {
+                return new double[]{v.getIntValue()};
             } else {
                 throw new InvalidSettingsException("Can't evaluate variable \"" + varString
                     + "\" as double array expression, it is a " + type + " (\"" + v + "\")");
@@ -1028,6 +1036,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             } else if (type.equals(IntArrayType.INSTANCE)) {
                 return Arrays.stream(v.getValue(IntArrayType.INSTANCE)).mapToLong(Integer::longValue)
                     .toArray();
+            } else if (type.equals(LongType.INSTANCE)) {
+                return new long[]{v.getValue(LongType.INSTANCE)};
+            } else if (type.equals(IntType.INSTANCE)) {
+                return new long[]{v.getIntValue()};
             } else {
                 throw new InvalidSettingsException("Can't evaluate variable \"" + varString
                     + "\" as long array expression, it is a " + type + " (\"" + v + "\")");
@@ -1053,6 +1065,8 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             final VariableType<?> type = v.getVariableType();
             if (type.equals(IntArrayType.INSTANCE)) {
                 return ArrayUtils.toPrimitive(v.getValue(IntArrayType.INSTANCE));
+            } else if (type.equals(IntType.INSTANCE)) {
+                return new int[]{v.getIntValue()};
             } else {
                 throw new InvalidSettingsException("Can't evaluate variable \"" + varString
                     + "\" as integer array expression, it is a " + type + " (\"" + v + "\")");
@@ -1091,6 +1105,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             } else if (type.equals(IntArrayType.INSTANCE)) {
                 return Arrays.stream(v.getValue(IntArrayType.INSTANCE)).map(l -> Integer.toString(l))
                     .toArray(String[]::new);
+            } else if (type.equals(StringType.INSTANCE) || type.equals(BooleanType.INSTANCE)
+                || type.equals(IntType.INSTANCE) || type.equals(LongType.INSTANCE)
+                || type.equals(DoubleType.INSTANCE)) {
+                return new String[]{v.getValueAsString()};
             } else {
                 throw new InvalidSettingsException("Can't evaluate variable \"" + varString
                     + "\" as string array expression, it is a " + type + " (\"" + v + "\")");

@@ -179,25 +179,30 @@ public class ConfigEditTreeNodePanel extends JPanel {
                             case xshort:
                             case xint:
                                 selType = IntArrayType.INSTANCE;
+                                suitableVariables.addAll(getAllVariablesOfTypes(IntType.INSTANCE));
                                 break;
                             case xlong:
                                 selType = LongArrayType.INSTANCE;
-                                suitableVariables.addAll(getAllVariablesOfTypes(IntArrayType.INSTANCE));
+                                suitableVariables.addAll(
+                                    getAllVariablesOfTypes(IntArrayType.INSTANCE, IntType.INSTANCE, LongType.INSTANCE));
                                 break;
                             case xfloat:
                             case xdouble:
                                 selType = DoubleArrayType.INSTANCE;
-                                suitableVariables
-                                    .addAll(getAllVariablesOfTypes(IntArrayType.INSTANCE, LongArrayType.INSTANCE));
+                                suitableVariables.addAll(getAllVariablesOfTypes(IntArrayType.INSTANCE,
+                                    LongArrayType.INSTANCE, IntType.INSTANCE, LongType.INSTANCE, DoubleType.INSTANCE));
                                 break;
                             case xboolean:
                                 selType = BooleanArrayType.INSTANCE;
+                                suitableVariables.addAll(getAllVariablesOfTypes(BooleanType.INSTANCE));
                                 break;
                             case xchar:
                             case xstring:
                                 selType = StringArrayType.INSTANCE;
-                                suitableVariables.addAll(getAllVariablesOfTypes(BooleanArrayType.INSTANCE,
-                                    IntArrayType.INSTANCE, LongArrayType.INSTANCE, DoubleArrayType.INSTANCE));
+                                suitableVariables
+                                    .addAll(getAllVariablesOfTypes(BooleanArrayType.INSTANCE, IntArrayType.INSTANCE,
+                                        LongArrayType.INSTANCE, DoubleArrayType.INSTANCE, BooleanType.INSTANCE,
+                                        IntType.INSTANCE, LongType.INSTANCE, DoubleType.INSTANCE, StringType.INSTANCE));
                                 break;
                             default:
                         }
