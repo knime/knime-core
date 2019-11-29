@@ -5058,12 +5058,16 @@ public final class WorkflowManager extends NodeContainer
      */
     private boolean hasExecutableNode() {
         for (NodeContainer nc : m_workflow.getNodeValues()) {
-            if (nc instanceof SingleNodeContainer) {
-                if (nc.getInternalState().equals(CONFIGURED)) {
+            if (nc instanceof SubNodeContainer) {
+                if (((SubNodeContainer)nc).getWorkflowManager().hasExecutableNode()) {
                     return true;
                 }
-            } else {
+            } else if (nc instanceof WorkflowManager) {
                 if (((WorkflowManager)nc).hasExecutableNode()) {
+                    return true;
+                }
+            } else { // NativeNodeContainer
+                if (nc.getInternalState().equals(CONFIGURED)) {
                     return true;
                 }
             }
