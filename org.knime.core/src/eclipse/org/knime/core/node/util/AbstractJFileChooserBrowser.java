@@ -134,7 +134,7 @@ public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
                 final String fileName = file.getName();
                 if (!(StringUtils.endsWithAny(fileName, suffixes)
                     || StringUtils.endsWithIgnoreCase(fileName, forcedFileExtensionOnSave))) {
-                    file = new File(file.getParentFile(), fileName.concat(forceFileExtension));
+                    file = addFileExtension(file, forceFileExtension);
                 }
             }
             if (file.exists() && (fileSelectionMode == FileSelectionMode.FILES_ONLY) && file.isDirectory()) {
@@ -144,6 +144,23 @@ public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
             return postprocessSelectedFilePath(file.getAbsolutePath());
         }
         return null;
+    }
+
+    /**
+     * Creates a new file with the given fileExtension concatenated to the files file name.
+     *
+     * Protected method offered as a hook for concrete implementations to add the extension in their own implementation
+     * specific way.
+     *
+     * This method should not be called on files that already contain a file extension in their name!
+     *
+     * @param file file to which the extension should be added
+     * @param fileExtension the file extension
+     * @return a new file with the extension added to the file name
+     * @since 4.1
+     */
+    protected File addFileExtension(final File file, final String fileExtension) {
+        return new File(file.getParentFile(), file.getName().concat(fileExtension));
     }
 
     private static List<SimpleFileFilter> createFiltersFromSuffixes(final String... extensions) {
