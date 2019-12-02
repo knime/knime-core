@@ -137,7 +137,9 @@ public abstract class NodeFactoryClassMapper {
                     LOGGER.error("Extension " + decl + " ignored.");
                 }
             }
-            resultList.add(instance);
+            if (instance != null) { // We do not want to add invalid NodeFactoryClassMappers to this list.
+                resultList.add(instance);
+            }
         }
         return Collections.unmodifiableList(resultList);
 
