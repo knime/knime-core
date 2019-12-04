@@ -1170,29 +1170,7 @@ public class Buffer implements KNIMEStreamConstants {
     /** Creates temp file (m_binFile) and adds this buffer to shutdown hook. */
     private void ensureTempFileExists() throws IOException {
         if (m_binFile == null) {
-            File dir = null;
-            /** Not-in-workflow-buffers are not automatically cleared in WorkflowManager#cleanup and Node#cleanOutPorts.
-             * We should therefore use the root temp folder for these buffers if the workflow temp folder has already
-             * been deleted. */
-            if (getBufferID() == DataContainer.NOT_IN_WORKFLOW_BUFFER) {
-                final NodeContext context = NodeContext.getContext();
-                if (context != null) {
-                    final WorkflowManager wfm = context.getWorkflowManager();
-                    if (wfm != null) {
-                        final WorkflowContext workflowContext = wfm.getContext();
-                        if (workflowContext != null) {
-                            if (!workflowContext.getTempLocation().isDirectory()) {
-                                dir = KNIMEConstants.getKNIMETempPath().toFile();
-                            }
-                        }
-                    }
-                }
-            }
-            if (dir == null) {
-                dir = FileUtil.getWorkflowTempDir();
-            }
-
-            m_binFile = DataContainer.createTempFile(dir, m_outputFormat.getFilenameSuffix());
+            m_binFile = DataContainer.createTempFile(m_outputFormat.getFilenameSuffix());
             OPENBUFFERS.add(new WeakReference<Buffer>(this));
         }
     }
