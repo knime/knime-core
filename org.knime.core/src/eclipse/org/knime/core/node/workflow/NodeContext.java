@@ -227,7 +227,7 @@ public final class NodeContext {
         if (KNIMEConstants.ASSERTIONS_ENABLED && obj == null) {
             final NodeLogger logger = NodeLogger.getLogger(NodeContext.class);
             logger.debugWithoutContext("The context object has been garbage collected, you should not have such a context available");
-            logger.debugWithoutContext("Current stacktrace: " + getStackTrace());
+//          logger.debugWithoutContext("Current stacktrace: " + getStackTrace());
 //          logger
 //              .debugWithoutContext("Stacktrace at context construction time: " + m_fullStackTraceAtConstructionTime);
         }
