@@ -94,6 +94,15 @@ public class DerivedFieldMapper {
     }
 
     /**
+     * @param pmml the PMML used for initialization
+     * @since 4.1
+     */
+    public DerivedFieldMapper(final PMML pmml) {
+        this();
+        init(pmml);
+    }
+
+    /**
      * @param pmmlPort the {@link PMMLPortObject} used for initialization
      */
     public DerivedFieldMapper(final PMMLPortObject pmmlPort) {
