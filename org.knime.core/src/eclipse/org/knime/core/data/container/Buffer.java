@@ -2812,6 +2812,20 @@ public class Buffer implements KNIMEStreamConstants {
                     /** Buffer was already discarded (no rows added) */
                     return null;
                 }
+                // START debug AP-13181 buffers not being cleared when workflow is closed and cleaned up
+                if (m_nodeContext != null) {
+                    final WorkflowManager wfm = m_nodeContext.getWorkflowManager();
+                    if (wfm != null) {
+                        final WorkflowContext workflowContext = wfm.getContext();
+                        if (workflowContext != null) {
+                            if (!workflowContext.getTempLocation().isDirectory()) {
+                                throw new IOException("Workflow temp directory has been deleted.");
+                            }
+                        }
+                    }
+                }
+                // END debug AP-13181 buffers not being cleared when workflow is closed and cleaned up
+
                 buffer.ensureWriterIsOpen();
                 final List<BlobSupportDataRow> list = CACHE.getSilent(buffer).get();
                 final AbstractTableStoreWriter outputWriter = buffer.m_outputWriter;
@@ -2853,6 +2867,11 @@ public class Buffer implements KNIMEStreamConstants {
                             LOGGER.error("Table will be held in memory until node is cleared.");
                             LOGGER.error("Workflow can't be saved in this state.");
 
+                            // START debug AP-13181 buffers not being cleared when workflow is closed and cleaned up
+                            LOGGER.debugWithFormat("Buffer stack trace at construction time:\n%s",
+                                buffer.m_fullStackTraceAtConstructionTime);
+                            // END debug AP-13181 buffers not being cleared when workflow is closed and cleaned up
+
                             throw new IOException(error.toString(), t);
                         }
                     }
@@ -2888,6 +2907,9 @@ public class Buffer implements KNIMEStreamConstants {
             Optional.ofNullable(m_nodeContext)//
                 .map(NodeContext::getNodeContainer)//
                 .ifPresent(c -> error.append(" at node ").append(c.getNameWithID()));
+            Optional.ofNullable(m_nodeContext)//
+                .map(NodeContext::getWorkflowManager)//
+                .ifPresent(w -> error.append(" at workflow ").append(w.getNameWithID()));
             error.append(" encountered error: ");
             error.append(t.getClass().getSimpleName());
             if (t.getMessage() != null) {
