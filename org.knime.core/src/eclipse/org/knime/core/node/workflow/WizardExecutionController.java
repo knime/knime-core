@@ -192,7 +192,16 @@ public final class WizardExecutionController extends WebResourceController imple
 
     private boolean hasCurrentWizardPageInternal() {
         assert m_manager.isLockedByCurrentThread();
-        return !m_waitingSubnodes.isEmpty();
+        if (m_waitingSubnodes.isEmpty()) {
+            return false;
+        } else if (!m_promptedSubnodeIDSuffixes.isEmpty()) {
+            //check whether the 'waiting subnode' is the one currently re-executing
+            //i.e., the one already prompted
+            //if so -> no current page
+            return !toNodeID(m_promptedSubnodeIDSuffixes.peek()).equals(m_waitingSubnodes.get(0));
+        } else {
+            return true;
+        }
 //        if (m_promptedSubnodeIDSuffixes.isEmpty()) {
 //            // stepNext not called
 //            return false;
