@@ -467,6 +467,12 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
                 FlowLoopContext flc = new FlowLoopContext();
                 flc.inactiveScope(true);
                 result.add(flc);
+            } else if ("flowcapturecontext".equals(type)) {
+                result.add(new FlowCaptureContext());
+            } else if ("flowcapturecontext_inactive".equals(type)) {
+                FlowScopeContext slc = new FlowCaptureContext();
+                slc.inactiveScope(true);
+                result.add(slc);
             } else if ("scopecontext".equals(type)) {
                 result.add(new FlowScopeContext());
             } else if ("scopecontext_inactive".equals(type)) {
@@ -658,6 +664,14 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
             } else if (s instanceof InnerFlowLoopContext) {
                 NodeSettingsWO sub = stackSet.addNodeSettings("Loop_Execute_" + c);
                 sub.addString("type", "loopcontext_execute");
+            } else if (s instanceof FlowCaptureContext) {
+                if (!((FlowScopeContext)s).isInactiveScope()) {
+                    NodeSettingsWO sub = stackSet.addNodeSettings("FlowCapture_" + c);
+                    sub.addString("type", "flowcapturecontext");
+                } else {
+                    NodeSettingsWO sub = stackSet.addNodeSettings("Inactive_FlowCapture_" + c);
+                    sub.addString("type", "flowcapturecontext_inactive");
+                }
             } else if (s instanceof FlowScopeContext) {
                 if (!((FlowScopeContext)s).isInactiveScope()) {
                     NodeSettingsWO sub = stackSet.addNodeSettings("Scope_" + c);

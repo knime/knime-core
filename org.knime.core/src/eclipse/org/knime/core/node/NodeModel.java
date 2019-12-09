@@ -90,8 +90,10 @@ import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.CaptureWorkflowStartNode;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.ExecutionEnvironment;
+import org.knime.core.node.workflow.FlowCaptureContext;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowScopeContext;
@@ -1636,6 +1638,9 @@ public abstract class NodeModel implements ViewableModel {
     final FlowScopeContext getInitialScopeContext() {
         if (this instanceof LoopStartNode) {
             return new FlowLoopContext();
+        }
+        if (this instanceof CaptureWorkflowStartNode) {
+            return new FlowCaptureContext();
         }
         if (this instanceof ScopeStartNode) {
             return new FlowTryCatchContext();
