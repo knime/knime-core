@@ -339,6 +339,15 @@ public final class WorkflowManager extends NodeContainer
         new PortType[0], true, null, "ROOT", Optional.empty(), Optional.empty());
 
     /**
+     * The root of all extracted workflows fragements.
+     *
+     * @since 4.1
+     */
+    // TODO: since tag needs to be changed once the baseline has been updated
+    public static final WorkflowManager EXTRACTED_WORKFLOW_ROOT =
+        ROOT.createAndAddProject("KNIME extraced workflow repository", new WorkflowCreationHelper());
+
+    /**
      * The root of all metanodes that are part of the node repository, for instance x-val metanode.
      *
      * @noreference This field is not intended to be referenced by clients.
