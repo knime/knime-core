@@ -48,6 +48,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.MetaPortInfo;
@@ -1362,6 +1364,52 @@ class Workflow {
         }
     }
 
+    /**
+     * Return matching {@link ScopeEndNode} node for the given {@link ScopeStartNode}.
+     *
+     * @param id The requested scope start node
+     * @throws IllegalLoopException if scope setup is wrong
+     * @throws IllegalArgumentException if argument is not a scope start node
+     * @return id of scope end node or null if no such node was found.
+     */
+    NodeID getMatchingScopeEnd(final NodeID id, final Class<?> startNodeType, final Class<?> endNodeType)
+        throws IllegalScopeException {
+        assertNodeType(id, endNodeType);
+        if (m_nodeAnnotationCache == null) {
+            this.updateGraphAnnotationCache();
+        }
+        for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+            if (nga.getID().equals(id)) {
+                assert nga.getOutportIndex() == -1; // must be SingleNodeContainer, ports don't matter.
+                NodeID end = nga.peekEndNodeStack();
+                if (end != null) {
+                    return end;
+                } else {
+                    throw new IllegalScopeException(
+                        "Could not find matching " + splitCamelCase(startNodeType.getSimpleName()) + "!");
+                }
+            }
+        }
+        assert false : "Failed to find NodeGraphAnnotation for node from this very workflow.";
+        throw new IllegalScopeException(
+            "Could not find matching " + splitCamelCase(startNodeType.getSimpleName()) + " (missing node annotation)!");
+    }
+
+    private static String splitCamelCase(final String s) {
+        return Arrays.stream(s.split("(?<!^)(?=[A-Z])")).map(s2 -> s2.toLowerCase()).collect(Collectors.joining(" "));
+    }
+
+    private void assertNodeType(final NodeID id, final Class<?> nodeType) {
+        NodeContainer nc = getNode(id);
+        if (!(nc instanceof SingleNodeContainer)) {
+            throw new IllegalArgumentException("Not a SingleNodeContainer / " + nodeType.getSimpleName() + id);
+        }
+        SingleNodeContainer snc = (SingleNodeContainer)nc;
+        if (!snc.isModelCompatibleTo(nodeType)) {
+            throw new IllegalArgumentException("Not a " + nodeType.getSimpleName() + id);
+        }
+    }
+
     /** Return matching LoopEnd node for the given LoopStart.
     *
     * @param id The requested start node (instanceof LoopStart)
@@ -1370,30 +1418,53 @@ class Workflow {
     * @return id of end node or null if no such node was found.
     */
     NodeID getMatchingLoopEnd(final NodeID id) throws IllegalLoopException {
-       NodeContainer nc = getNode(id);
-       if (!(nc instanceof SingleNodeContainer)) {
-           throw new IllegalArgumentException("Not a SingleNodeContainer / LoopStartNode " + id);
-       }
-       SingleNodeContainer snc = (SingleNodeContainer)nc;
-       if (!snc.isModelCompatibleTo(LoopStartNode.class)) {
-           throw new IllegalArgumentException("Not a LoopStartNode " + id);
-       }
-       if (m_nodeAnnotationCache == null) {
-           this.updateGraphAnnotationCache();
-       }
-       for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
-           if (nga.getID().equals(id)) {
-               assert nga.getOutportIndex() == -1;  // must be SingleNodeContainer, ports don't matter.
-               NodeID end = nga.peekEndNodeStack();
-               if (end != null) {
-                   return end;
-               } else {
-                   throw new IllegalLoopException("Could not find matching loop end node!");
-               }
-           }
-       }
-       assert false : "Failed to find NodeGraphAnnotation for node from this very workflow.";
-       throw new IllegalLoopException("Could not find matching loop end node (missing node annotation)!");
+        try {
+            return getMatchingScopeEnd(id, LoopStartNode.class, LoopEndNode.class);
+        } catch (IllegalScopeException ex) {
+            throw new IllegalLoopException(ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Return matching {@link ScopeStartNode} for the given {@link ScopeEndNode}.
+     *
+     * @param id The requested end node
+     * @throws IllegalScopeException if scope setup is wrong
+     * @throws IllegalArgumentException if argument is not a scope start node
+     * @return id of scope start node or null if no such node was found.
+     */
+    NodeID getMatchingScopeStart(final NodeID id, final Class<?> startNodeType, final Class<?> endNodeType)
+        throws IllegalScopeException {
+        assertNodeType(id, endNodeType);
+        if (m_nodeAnnotationCache == null) {
+            this.updateGraphAnnotationCache();
+        }
+
+        for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+            if (nga.getID().equals(id)) {
+                assert nga.getOutportIndex() == -1; // must be SingleNodeContainer, ports don't matter.
+                NodeID start = nga.peekStartNodeStack();
+                if (start != null) {
+                    NodeContainer ncls = getNode(start);
+                    if (!(ncls instanceof SingleNodeContainer)) {
+                        throw new IllegalScopeException(
+                            id + " is not connected to a SNC / " + startNodeType.getSimpleName() + " but " + start);
+                    }
+                    SingleNodeContainer sncls = (SingleNodeContainer)ncls;
+                    if (!sncls.isModelCompatibleTo(LoopStartNode.class)) {
+                        throw new IllegalScopeException(
+                            id + " is not connected to a " + startNodeType.getSimpleName() + " but " + start);
+                    }
+                    return start;
+                } else {
+                    throw new IllegalScopeException(
+                        "Could not find matching " + splitCamelCase(startNodeType.getSimpleName()) + "!");
+                }
+            }
+        }
+        assert false : "Failed to find NodeGraphAnnotation for node from this very workflow.";
+        throw new IllegalScopeException(
+            "Could not find matching " + splitCamelCase(startNodeType.getSimpleName()) + " (missing node annotation)!");
     }
 
     /** Return matching LoopStart node for the given LoopEnd.
@@ -1404,38 +1475,11 @@ class Workflow {
     * @return id of start node or null if no such node was found.
     */
     NodeID getMatchingLoopStart(final NodeID id) throws IllegalLoopException {
-       NodeContainer nc = getNode(id);
-       if (!(nc instanceof SingleNodeContainer)) {
-           throw new IllegalArgumentException("Not a SingleNodeContainer / LoopEndNode " + id);
-       }
-       SingleNodeContainer snc = (SingleNodeContainer)nc;
-       if (!snc.isModelCompatibleTo(LoopEndNode.class)) {
-           throw new IllegalArgumentException("Not a LoopEndNode " + id);
-       }
-       if (m_nodeAnnotationCache == null) {
-           this.updateGraphAnnotationCache();
-       }
-       for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
-           if (nga.getID().equals(id)) {
-               assert nga.getOutportIndex() == -1;  // must be SingleNodeContainer, ports don't matter.
-               NodeID start = nga.peekStartNodeStack();
-               if (start != null) {
-                   NodeContainer ncls = getNode(start);
-                   if (!(ncls instanceof SingleNodeContainer)) {
-                       throw new IllegalLoopException(id + " is not connected to a SNC / LoopStartNode but " + start);
-                   }
-                   SingleNodeContainer sncls = (SingleNodeContainer)ncls;
-                   if (!sncls.isModelCompatibleTo(LoopStartNode.class)) {
-                       throw new IllegalLoopException(id + " is not connected to a LoopStartNode but " + start);
-                   }
-                   return start;
-               } else {
-                   throw new IllegalLoopException("Could not find matching loop start node!");
-               }
-           }
-       }
-       assert false : "Failed to find NodeGraphAnnotation for node from this very workflow.";
-       throw new IllegalLoopException("Could not find matching loop start node (missing node annotation)!");
+        try {
+            return getMatchingScopeStart(id, LoopStartNode.class, LoopEndNode.class);
+        } catch (IllegalScopeException ex) {
+            throw new IllegalLoopException(ex.getMessage(), ex);
+        }
     }
 
     /** Create list of nodes (id)s that are part of a loop body. Note that

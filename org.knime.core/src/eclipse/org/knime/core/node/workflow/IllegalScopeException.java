@@ -45,14 +45,14 @@
 package org.knime.core.node.workflow;
 
 /**
- * Exception that is thrown when a loop is constructed illegally.
+ * Exception that is thrown when a scope is constructed illegally.
  *
- * @author Bernd Wiswedel, University of Konstanz
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-class IllegalLoopException extends IllegalScopeException {
+class IllegalScopeException extends Exception {
 
     /** @see RuntimeException#RuntimeException(String) */
-    public IllegalLoopException(final String message) {
+    public IllegalScopeException(final String message) {
         super(message);
     }
 
@@ -60,7 +60,7 @@ class IllegalLoopException extends IllegalScopeException {
 	 * @param message
 	 * @param cause
 	 */
-	public IllegalLoopException(final String message, final Throwable cause) {
+	public IllegalScopeException(final String message, final Throwable cause) {
 		super(message, cause);
 	}
 
