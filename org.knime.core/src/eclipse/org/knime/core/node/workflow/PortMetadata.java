@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,20 +43,19 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Dec 9, 2019 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.core.node.workflow;
 
 /**
- * Interface implemented by {@link org.knime.core.node.NodeModel} classes to define the start of a workflow capturing
- * scope.
  *
- * <p>
- * Clients usually don't implemnt this interface as the corresponding nodes are part of the core KNIME framework.
  *
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 4.1
  */
-public interface CaptureWorkflowStartNode extends ScopeStartNode<FlowCaptureContext> {
+public interface PortMetadata {
+    String[] getNames();
 
-    PortMetadata getInputMetadata();
+    String[] getDescriptions();
 }
