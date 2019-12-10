@@ -76,6 +76,7 @@ import org.knime.core.util.Pair;
  * Container for the stack that keeps for an individual node the
  * flow variables and flow loop information.
  * @author Bernd Wiswedel, University of Konstanz
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class FlowObjectStack implements Iterable<FlowObject> {
 
@@ -420,6 +421,17 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                 .filter(v -> v.getName().equals(name) && v.getVariableType().equals(type))//
                 .findFirst();
         }
+    }
+
+    /**
+     * Get a map of all {@link FlowVariable FlowVariables}.
+     *
+     * @return The non-null read-only map of flow variable name -&gt; {@link FlowVariable}
+     * TODO: change since tag to 4.2
+     * @since 4.1
+     */
+    public Map<String, FlowVariable> getAllAvailableFlowVariables() {
+        return getAvailableFlowVariables(VariableType.getAllTypes());
     }
 
     /**
