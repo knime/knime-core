@@ -50,8 +50,12 @@ package org.knime.core.node.exec.dataexchange.in;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Optional;
 
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -63,11 +67,16 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.exec.dataexchange.PortObjectIDSettings;
+import org.knime.core.node.exec.dataexchange.PortObjectIDSettings.ReferenceType;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.FileUtil;
 
 /**
  * Model for the pass-on node.
@@ -114,16 +123,69 @@ public final class PortObjectInNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws Exception {
-        int id = m_portObjectIDSettings.getId();
-        PortObject obj = PortObjectRepository.get(id);
-        if (obj == null) {
-            throw new RuntimeException("No port object for id " + id);
-        }
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         pushFlowVariables();
-        PortObject cloneOrSelf = m_portObjectIDSettings.isCopyData() ? PortObjectRepository.copy(obj, exec, exec) : obj;
-        return new PortObject[]{cloneOrSelf};
+        return new PortObject[]{getPortObject(exec)};
+    }
+
+    private PortObject getPortObject(final ExecutionContext exec)
+        throws IOException, CanceledExecutionException, URISyntaxException {
+        switch (m_portObjectIDSettings.getReferenceType()) {
+            case Node:
+                WorkflowManager wfm = NodeContext.getContext().getWorkflowManager();
+                if (wfm != null) {
+                    return wfm.findNodeContainer(m_portObjectIDSettings.getNodeID())
+                        .getOutPort(m_portObjectIDSettings.getPortIdx()).getPortObject();
+                } else {
+                    throw new IllegalStateException("Not a local workflow");
+                }
+            case File:
+                return readPOFromURI(exec);
+            case Repository:
+            default:
+                int id = m_portObjectIDSettings.getId();
+                PortObject obj = PortObjectRepository.get(id);
+                if (obj == null) {
+                    throw new RuntimeException("No port object for id " + id);
+                }
+                PortObject cloneOrSelf =
+                    m_portObjectIDSettings.isCopyData() ? PortObjectRepository.copy(obj, exec, exec) : obj;
+                return cloneOrSelf;
+        }
+    }
+
+    /**
+     * TODO: note - only returns something if node references a port object of another node within the same workflow, otherwise null
+     *
+     * @return
+     */
+    public Optional<PortObject> getPortObject() {
+        if (m_portObjectIDSettings.getReferenceType() == ReferenceType.Node) {
+            try {
+                return Optional.of(getPortObject(null));
+            } catch (IOException | CanceledExecutionException | URISyntaxException ex) {
+                //should never happen
+                throw new RuntimeException(ex);
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private PortObject readPOFromURI(final ExecutionContext exec)
+        throws IOException, URISyntaxException, CanceledExecutionException {
+        assert m_portObjectIDSettings.getReferenceType() == ReferenceType.File;
+        File portFile = FileUtil.resolveToPath(m_portObjectIDSettings.getUri().toURL()).toFile();
+        PortObject po;
+        if (m_portObjectIDSettings.isTable()) {
+            ContainerTable t = DataContainer.readFromZip(portFile);
+            po = exec.createBufferedDataTable(t, exec);
+            t.clear();
+
+        } else {
+            po = PortUtil.readObjectFromFile(portFile, exec);
+        }
+        return po;
     }
 
     /** {@inheritDoc} */

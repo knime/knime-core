@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.exec.dataexchange;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -61,6 +63,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.ICredentials;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.VariableType.CredentialsType;
 import org.knime.core.node.workflow.VariableType.FSConnectionType;
 
@@ -73,11 +76,27 @@ import org.knime.core.node.workflow.VariableType.FSConnectionType;
  */
 public final class PortObjectIDSettings {
 
+    private ReferenceType m_refType;
+
+    // repo ref type details
     private Integer m_id;
+
+    // node ref type details
+    private NodeID m_nodeID;
+    private int m_portIdx;
+
+    // file ref type details
+    private URI m_uri;
+    private boolean m_isTable;
+
     private List<FlowVariable> m_flowVariables;
     private boolean m_copyData;
     private CredentialsProvider m_credentialsProvider;
     private FSConnectionFlowVariableProvider m_fsConnectionsProvider;
+
+    public static enum ReferenceType {
+            Repository, Node, File;
+    }
 
     /** Constructor, which sets a null ID (no id). */
     public PortObjectIDSettings() {
@@ -90,7 +109,24 @@ public final class PortObjectIDSettings {
      */
     public void loadSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        m_id = settings.getInt("portobject_ID");
+        m_refType = ReferenceType.valueOf(settings.getString("referenceType", ReferenceType.Repository.toString()));
+        switch (m_refType) {
+            case Repository:
+                m_id = settings.getInt("portobject_ID");
+                break;
+            case Node:
+                m_nodeID = NodeID.fromString(settings.getString("node_ID"));
+                m_portIdx = settings.getInt("port_idx");
+                break;
+            case File:
+                try {
+                    m_uri = new URI(settings.getString("uri"));
+                } catch (URISyntaxException ex) {
+                    throw new RuntimeException(ex);
+                }
+                m_isTable = settings.getBoolean("is_table");
+                break;
+        }
         m_copyData = settings.getBoolean("copyData");
         m_flowVariables = new ArrayList<FlowVariable>();
         // added for cluster version 1.0.2
@@ -127,8 +163,21 @@ public final class PortObjectIDSettings {
     /** Saves the current settings to a NodeSettings object.
      * @param settings To write to. */
     public void saveSettings(final NodeSettingsWO settings) {
-        if (m_id != null) {
-            settings.addInt("portobject_ID", m_id);
+        settings.addString("referenceType", m_refType.toString());
+        switch (m_refType) {
+            case Repository:
+                if (m_id != null) {
+                    settings.addInt("portobject_ID", m_id);
+                }
+                break;
+            case Node:
+                settings.addString("node_ID", m_nodeID.toString());
+                settings.addInt("port_idx", m_portIdx);
+                break;
+            case File:
+                settings.addString("uri", m_uri.toString());
+                settings.addBoolean("is_table", m_isTable);
+                break;
         }
         settings.addBoolean("copyData", m_copyData);
         NodeSettingsWO sub = settings.addNodeSettings("flowVariables");
@@ -137,6 +186,38 @@ public final class PortObjectIDSettings {
             NodeSettingsWO child = sub.addNodeSettings("flowVar_" + (index++));
             fv.save(child);
         }
+    }
+
+    public void setNodeReference(final NodeID nodeID, final int portIdx) {
+        m_refType = ReferenceType.Node;
+        m_nodeID = nodeID;
+        m_portIdx = portIdx;
+    }
+
+    public void setFileReference(final URI uri, final boolean isTable) {
+        m_refType = ReferenceType.File;
+        m_uri = uri;
+        m_isTable = isTable;
+    }
+
+    public ReferenceType getReferenceType() {
+        return m_refType;
+    }
+
+    public NodeID getNodeID() {
+        return m_nodeID;
+    }
+
+    public int getPortIdx() {
+        return m_portIdx;
+    }
+
+    public URI getUri() {
+        return m_uri;
+    }
+
+    public boolean isTable() {
+        return m_isTable;
     }
 
     /**
@@ -152,6 +233,7 @@ public final class PortObjectIDSettings {
      * @param id the id to set
      */
     public void setId(final Integer id) {
+        m_refType = ReferenceType.Repository;
         m_id = id;
     }
 
