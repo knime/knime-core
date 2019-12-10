@@ -184,6 +184,7 @@ import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
+import org.knime.core.node.workflow.virtual.capture.WorkflowFragment;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContent;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContentMaster;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkNodeInput;
@@ -3464,7 +3465,7 @@ public final class WorkflowManager extends NodeContainer
     /**
      * @since 4.1
      */
-    public SubNodeContainer capturePartOf(final NodeID endNodeID) throws IllegalScopeException, InvalidSettingsException, InterruptedException {
+    public WorkflowFragment capturePartOf(final NodeID endNodeID) throws IllegalScopeException, InvalidSettingsException, InterruptedException {
         WorkflowManager tempParent = EXTRACTED_WORKFLOW_ROOT.createAndAddProject(
             "Workflow-Capture-from-" + endNodeID, new WorkflowCreationHelper());
         Set<NodeIDAndPortObjectID> addedPortObjectReaderNodes = new HashSet<>();
@@ -3547,7 +3548,7 @@ public final class WorkflowManager extends NodeContainer
                     .toArray(NodeID[]::new);
             resultSNCWFM.executeUpToHere(portObjectReaderIDs);
             resultSNCWFM.waitWhileInExecution(-1, TimeUnit.MILLISECONDS);
-            return resultSNC;
+            return new WorkflowFragment(resultSNC, addedPortObjectReaderNodes.stream().map(p -> p.getNodeID()).collect(Collectors.toSet()));
         } finally {
             addedPortObjectReaderNodes.stream().map(NodeIDAndPortObjectID::getPortObjectRepositoryID).forEach(PortObjectRepository::remove);
             EXTRACTED_WORKFLOW_ROOT.removeNode(tempParent.getID());
