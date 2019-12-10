@@ -46,7 +46,7 @@
  * History
  *   10 Dec 2019 (Marc Bux, KNIME GmbH, Berlin, Germany): created
  */
-package org.knime.core.node.workflow.virtual.capture;
+package org.knime.core.node.workflow.capture;
 
 import java.util.Set;
 
@@ -55,6 +55,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
+ * @since 4.1 // TODO replace with 4.2 since tag
  */
 public class WorkflowFragment {
 
