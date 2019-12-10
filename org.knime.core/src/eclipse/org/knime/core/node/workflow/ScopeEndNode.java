@@ -60,6 +60,15 @@ import org.knime.core.node.NodeModel;
 public interface ScopeEndNode<T extends FlowScopeContext> {
 
     /**
+     * @return class of the {@link FlowScopeContext} this scope end node is compatible with
+     * @since 4.1
+     */
+    @SuppressWarnings("unchecked")
+    default Class<T> getFlowScopeContextClass() {
+        return (Class<T>)FlowScopeContext.class;
+    }
+
+    /**
      * @return T the scope context put onto the stack by the matching ScopeStartNode
      *   or null if something was wrong (illegally wired loops should have been
      *   reported elsewhere - IllegalLoopExecption is only thrown/caught inside core)
@@ -78,4 +87,5 @@ public interface ScopeEndNode<T extends FlowScopeContext> {
             throw new IllegalStateException("Not a " + NodeModel.class.getSimpleName());
         }
     }
+
 }

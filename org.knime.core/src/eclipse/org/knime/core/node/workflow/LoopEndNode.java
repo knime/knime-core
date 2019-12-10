@@ -52,6 +52,14 @@ package org.knime.core.node.workflow;
  *
  * @author M. Berthold, University of Konstanz
  */
-public interface LoopEndNode extends ScopeEndNode {
-    // marker interface only
+public interface LoopEndNode extends ScopeEndNode<FlowLoopContext> {
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default Class<FlowLoopContext> getFlowScopeContextClass() {
+        return FlowLoopContext.class;
+    }
+
 }

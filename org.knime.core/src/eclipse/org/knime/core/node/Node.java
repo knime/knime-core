@@ -2637,12 +2637,39 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
+     * Make model aware of corresponding scope start node of given type.
+     *
+     * @param head the node, can be <code>null</code> to 'un-set' the start node
+     * @since 4.1
+     */
+    @SuppressWarnings({"rawtypes"})
+    public void setScopeStartNode(final Node head) {
+        if (head == null) {
+            m_model.setScopeStartNode(null);
+        } else {
+            m_model.setScopeStartNode((ScopeStartNode)head.m_model);
+        }
+    }
+
+    /**
      * @see NodeModel#getLoopStartNode()
      * @return corresponding loop start node.
      * @since 2.6
      */
     public LoopStartNode getLoopStartNode() {
         return m_model.getLoopStartNode();
+    }
+
+    /**
+     * @see NodeModel#getScopeStartNode(Class)
+     * @param startNodeType the type of the scope start node
+     * @return corresponding scope start node or an empty optional if the type doesn't match, this node is not a scope
+     *         end or the user didn't close the scope correctly
+     * @since 4.1
+     */
+    @SuppressWarnings("rawtypes")
+    public <SSN extends ScopeStartNode> Optional<SSN> getScopeStartNode(final Class<SSN> startNodeType) {
+        return m_model.getScopeStartNode(startNodeType);
     }
 
     /**

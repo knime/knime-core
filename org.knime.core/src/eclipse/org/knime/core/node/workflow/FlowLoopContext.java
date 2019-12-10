@@ -60,10 +60,6 @@ public class FlowLoopContext extends FlowScopeContext {
     private ILoopStartWriteFileStoreHandler m_fileStoreHandler;
     private NodeID m_tailNode;
 
-    public NodeID getHeadNode() {
-        return super.getOwner();
-    }
-
     public void setTailNode(final NodeID tail) throws IllegalLoopException {
         if (m_tailNode != null && tail != null) {
             if (!m_tailNode.equals(tail)) {

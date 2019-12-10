@@ -2983,13 +2983,13 @@ public final class WorkflowManager extends NodeContainer
             nc.getNodeTimer().startExec();
             if (nc instanceof SingleNodeContainer) {
                 FlowObjectStack flowObjectStack = nc.getFlowObjectStack();
-                FlowLoopContext slc = flowObjectStack.peek(FlowLoopContext.class);
+                FlowScopeContext fsc = flowObjectStack.peek(FlowScopeContext.class);
 
                 // if the node is in a subnode the subnode may be part of restored loop, see AP-7585
                 FlowLoopContext subnodeOuterFlowLoopContext = flowObjectStack
                     .peekOptional(FlowSubnodeScopeContext.class).map(s -> s.getOuterFlowLoopContext()).orElse(null);
 
-                if (slc instanceof RestoredFlowLoopContext
+                if (fsc instanceof RestoredFlowLoopContext
                     || subnodeOuterFlowLoopContext instanceof RestoredFlowLoopContext) {
                     throw new IllegalFlowObjectStackException(
                         "Can't continue loop as the workflow was restored with the loop being partially "
@@ -2997,27 +2997,53 @@ public final class WorkflowManager extends NodeContainer
                 }
                 if (nc instanceof NativeNodeContainer) {
                     NativeNodeContainer nnc = (NativeNodeContainer)nc;
-                    if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
-                        // if this is an END to a loop, make sure it knows its head
-                        if (slc == null) {
+                    if (nnc.isModelCompatibleTo(ScopeEndNode.class)) {
+                        // if this is an END to a loop/scope, make sure it knows its head
+                        if (fsc == null) {
                             LOGGER.debug("Incoming flow object stack for " + nnc.getNameWithID() + ":\n"
                                 + flowObjectStack.toDeepString());
-                            throw new IllegalFlowObjectStackException(
-                                "Encountered loop-end without corresponding head!");
+                            if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
+                                throw new IllegalFlowObjectStackException(
+                                    "Encountered loop-end without corresponding head!");
+                            } else {
+                                throw new IllegalFlowObjectStackException(
+                                    "Encountered scope-end without corresponding head!");
+                            }
                         }
-                        NodeContainer headNode = m_workflow.getNode(slc.getOwner());
+                        NodeContainer headNode = m_workflow.getNode(fsc.getOwner());
                         if (headNode == null) {
-                            throw new IllegalFlowObjectStackException(
-                                "Loop start and end nodes are not in the" + " same workflow");
+                            if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
+                                throw new IllegalFlowObjectStackException(
+                                    "Loop start and end nodes are not in the" + " same workflow");
+                            } else {
+                                throw new IllegalFlowObjectStackException(
+                                    "Scope start and end nodes are not in the" + " same workflow");
+                            }
+                        } else if (headNode instanceof NativeNodeContainer
+                            && ((NativeNodeContainer)headNode)
+                                .isModelCompatibleTo(ScopeStartNode.class)) {
+                            //check that the start and end nodes have compatible flow scope contexts
+                            @SuppressWarnings({"rawtypes", "unchecked"})
+                            Class<? extends FlowScopeContext> endNodeFlowScopeContext =
+                                ((ScopeEndNode)nnc.getNodeModel()).getFlowScopeContextClass();
+                            if (!endNodeFlowScopeContext.isAssignableFrom(fsc.getClass())) {
+                                if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
+                                    throw new IllegalFlowObjectStackException(
+                                        "Encountered loop-end without compatible head!");
+                                } else {
+                                    throw new IllegalFlowObjectStackException(
+                                        "Encountered scope-end without compatible head!");
+                                }
+                            }
                         }
                         assert ((NativeNodeContainer)headNode).getNode().getNodeModel()
-                            .equals(nnc.getNode().getLoopStartNode());
+                            .equals(nnc.getNode().getScopeStartNode(ScopeStartNode.class).orElse(null));
                     } else if (nnc.isModelCompatibleTo(LoopStartNode.class)) {
                         nnc.getNode().getOutgoingFlowObjectStack().push(new InnerFlowLoopContext());
                         //                    nnc.getNode().getFlowObjectStack().push(new InnerFlowLoopContext());
                     } else {
                         // or not if it's any other type of node
-                        nnc.getNode().setLoopStartNode(null);
+                        nnc.getNode().setScopeStartNode(null);
                     }
                 }
 
@@ -4673,8 +4699,8 @@ public final class WorkflowManager extends NodeContainer
         if (snc.isModelCompatibleTo(LoopStartNode.class)) {
             ((NativeNodeContainer)snc).getNode().setLoopEndNode(null);
         }
-        if (snc.isModelCompatibleTo(LoopEndNode.class)) {
-            ((NativeNodeContainer)snc).getNode().setLoopStartNode(null);
+        if (snc.isModelCompatibleTo(ScopeEndNode.class)) {
+            ((NativeNodeContainer)snc).getNode().setScopeStartNode(null);
         }
     }
 
@@ -6041,25 +6067,31 @@ public final class WorkflowManager extends NodeContainer
                     flowStackConflict = true;
                 }
                 snc.setCredentialsStore(m_credentialsStore);
-                // update backwards reference for loops
-                if (snc.isModelCompatibleTo(LoopEndNode.class)) {
-                    // if this is an END to a loop, make sure it knows its head
-                    // (for both: active and inactive loops)
+                // update backwards reference for scopes (e.g. loops)
+                if (snc.isModelCompatibleTo(ScopeEndNode.class)) {
+                    // if this is an END to a scope (e.g. loop), make sure it knows its head
+                    // (for both: active and inactive loops/scopes)
                     Node sncNode = ((NativeNodeContainer)snc).getNode();
-                    FlowLoopContext slc = scsc.peek(FlowLoopContext.class);
-                    if (slc == null) {
+                    FlowScopeContext fsc = scsc.peek(FlowScopeContext.class);
+                    if (fsc == null) {
                         // no head found - ignore during configure!
-                        sncNode.setLoopStartNode(null);
+                        sncNode.setScopeStartNode(null);
                     } else {
-                        // loop seems to be correctly wired - set head
-                        NodeContainer headNode = m_workflow.getNode(slc.getOwner());
+                        // scope/loop seems to be correctly wired - set head
+                        NodeContainer headNode = m_workflow.getNode(fsc.getOwner());
                         if (headNode == null) {
                             // odd: head is not in the same workflow,
                             // ignore as well during configure
-                            sncNode.setLoopStartNode(null);
+                            sncNode.setScopeStartNode(null);
                         } else {
-                            // head found, let the end node know about it:
-                            sncNode.setLoopStartNode(((NativeNodeContainer)headNode).getNode());
+                            // head found, let the end node know about it
+                            // but only if the start and end nodes have a compatible flow scope context
+                            @SuppressWarnings({"rawtypes", "unchecked"})
+                            Class<? extends FlowScopeContext> flowScopeContextClass =
+                                ((ScopeEndNode)sncNode.getNodeModel()).getFlowScopeContextClass();
+                            if (flowScopeContextClass.isAssignableFrom(fsc.getClass())) {
+                                sncNode.setScopeStartNode(((NativeNodeContainer)headNode).getNode());
+                            }
                         }
                     }
                 }

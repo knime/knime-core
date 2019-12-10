@@ -64,6 +64,13 @@ public class FlowScopeContext extends FlowObject {
     // set if the entire scope is (or should be) part of an inactive branch.
     private boolean m_inactiveScope;
 
+    /**
+     * @return the scope's head node
+     */
+    public NodeID getHeadNode() {
+        return super.getOwner();
+    }
+
     /** Indicates that the start node of the scope represented by this object
      * was inactive - the end should then be inactive as well.
      *

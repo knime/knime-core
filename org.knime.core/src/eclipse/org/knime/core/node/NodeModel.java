@@ -1681,7 +1681,34 @@ public abstract class NodeModel implements ViewableModel {
         m_loopEndNode = end;
     }
 
-    private LoopStartNode m_loopStartNode = null;
+    private ScopeStartNode<? extends FlowScopeContext> m_scopeStartNode = null;
+
+    /**
+     * Access method for scope end nodes to access their respective scope start.
+     *
+     * @param startNodeType the expected type of the scope start node
+     * @return the scope start of the given type or an empty optional if either the type doesn't match, the node is not
+     *         a scope end or the scope is not correctly closed by the user
+     * @since 4.1
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected final <SSN extends ScopeStartNode> Optional<SSN> getScopeStartNode(final Class<SSN> startNodeType) {
+        if (m_scopeStartNode != null && startNodeType.isAssignableFrom(m_scopeStartNode.getClass())) {
+            return Optional.of((SSN)m_scopeStartNode);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Setter used by framework to update the scope start node.
+     *
+     * @param start the start node of the scope (if this is a scope end node).
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void setScopeStartNode(final ScopeStartNode start) {
+        m_scopeStartNode = start;
+    }
 
     /** Access method for loop end nodes to access their respective loop start.
      * This method returns null if this node is not a loop end or the loop is
@@ -1691,13 +1718,13 @@ public abstract class NodeModel implements ViewableModel {
      * @see #getLoopEndNode()
      */
     protected final LoopStartNode getLoopStartNode() {
-        return m_loopStartNode;
+        return getScopeStartNode(LoopStartNode.class).orElse(null);
     }
 
     /** Setter used by framework to update loop start node.
      * @param start The start node of the loop (if this is a end node). */
     void setLoopStartNode(final LoopStartNode start) {
-        m_loopStartNode = start;
+        setScopeStartNode(start);
     }
 
     //////////////////////////////////////////
