@@ -50,7 +50,7 @@ package org.knime.core.node.workflow.capture;
 
 import java.util.Set;
 
-import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
@@ -61,9 +61,9 @@ public class WorkflowFragment {
 
     private final SubNodeContainer m_component;
 
-    private final Set<NodeID> m_portObjectReferenceReaderNodes;
+    private final Set<NodeIDSuffix> m_portObjectReferenceReaderNodes;
 
-    public WorkflowFragment(final SubNodeContainer component, final Set<NodeID> portObjectReferenceReaderNodes) {
+    public WorkflowFragment(final SubNodeContainer component, final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
         m_component = component;
         m_portObjectReferenceReaderNodes = portObjectReferenceReaderNodes;
     }
@@ -72,7 +72,7 @@ public class WorkflowFragment {
         return m_component;
     }
 
-    public Set<NodeID> getPortObjectReferenceReaderNodes() {
+    public Set<NodeIDSuffix> getPortObjectReferenceReaderNodes() {
         return m_portObjectReferenceReaderNodes;
     }
 
