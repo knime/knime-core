@@ -56,8 +56,10 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -73,10 +75,19 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.exec.dataexchange.in.BDTInNodeFactory;
+import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory;
+import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Static repository of {@link PortObject PortObjects}. It is used to virtually set output objects of port object
@@ -90,8 +101,13 @@ public final class PortObjectRepository {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(PortObjectRepository.class);
 
-    private static int nextID;
+    private static final NodeFactory<?> OBJECT_READ_NODE_FACTORY = new PortObjectInNodeFactory();
+
+    private static final NodeFactory<?> TABLE_READ_NODE_FACTORY = new BDTInNodeFactory();
+
     private static final Map<Integer, PortObject> MAP = new HashMap<Integer, PortObject>();
+
+    private static int nextID;
 
     private PortObjectRepository() {
         // empty
@@ -188,6 +204,48 @@ public final class PortObjectRepository {
 
         }
         return Node.copyPortObject(object, exec);
+    }
+
+    /** Adds a "Port Object Reference Reader" node to the workflow, which will read the object passed in as argument.
+     * @param portObject
+     * @param tempWFM
+     * @param flowVars
+     * @param copyDataIntoNewContext
+     * @return
+     * @throws InvalidSettingsException
+     */
+    public static NodeIDAndPortObjectID addPortObjectReferenceReaderToWorkflow(final PortObject portObject,
+        final WorkflowManager tempWFM, final List<FlowVariable> flowVars, final boolean copyDataIntoNewContext)
+        throws InvalidSettingsException {
+        int portObjectRepositoryID = PortObjectRepository.add(portObject);
+        boolean isTable = portObject instanceof BufferedDataTable;
+        NodeID inID = tempWFM.createAndAddNode(isTable ? TABLE_READ_NODE_FACTORY : OBJECT_READ_NODE_FACTORY);
+        NodeSettings s = new NodeSettings("temp_data_in");
+        tempWFM.saveNodeSettings(inID, s);
+        PortObjectInNodeModel.setInputNodeSettings(s, portObjectRepositoryID, flowVars, copyDataIntoNewContext);
+
+        tempWFM.loadNodeSettings(inID, s);
+        return new NodeIDAndPortObjectID(inID, portObjectRepositoryID);
+    }
+
+    /** Return type of
+     * {@link #addPortObjectReferenceReaderToWorkflow(List, PortObject, WorkflowManager, Supplier, boolean)} */
+    public static final class NodeIDAndPortObjectID {
+        private final NodeID m_id;
+        private final int m_portObjectRepositoryID;
+
+        NodeIDAndPortObjectID(final NodeID id, final int portObjectRepositoryID) {
+            m_id = id;
+            m_portObjectRepositoryID = portObjectRepositoryID;
+        }
+
+        public NodeID getNodeID() {
+            return m_id;
+        }
+
+        public int getPortObjectRepositoryID() {
+            return m_portObjectRepositoryID;
+        }
     }
 
     /** Deep-clones a data cell. Most important for blob cell to get rid
