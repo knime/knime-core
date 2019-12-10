@@ -1451,7 +1451,7 @@ class Workflow {
                             id + " is not connected to a SNC / " + startNodeType.getSimpleName() + " but " + start);
                     }
                     SingleNodeContainer sncls = (SingleNodeContainer)ncls;
-                    if (!sncls.isModelCompatibleTo(LoopStartNode.class)) {
+                    if (!sncls.isModelCompatibleTo(startNodeType)) {
                         throw new IllegalScopeException(
                             id + " is not connected to a " + startNodeType.getSimpleName() + " but " + start);
                     }

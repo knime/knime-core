@@ -210,16 +210,18 @@ public final class PortObjectRepository {
      * @param portObject
      * @param tempWFM
      * @param flowVars
+     * @param nodeIDSuffix TODO
      * @param copyDataIntoNewContext
      * @return
      * @throws InvalidSettingsException
      */
     public static NodeIDSuffixAndPortObjectID addPortObjectReferenceReaderToWorkflow(final PortObject portObject,
-        final WorkflowManager tempWFM, final List<FlowVariable> flowVars, final boolean copyDataIntoNewContext)
-        throws InvalidSettingsException {
+        final WorkflowManager tempWFM, final List<FlowVariable> flowVars, final int nodeIDSuffix,
+        final boolean copyDataIntoNewContext) throws InvalidSettingsException {
         int portObjectRepositoryID = PortObjectRepository.add(portObject);
         boolean isTable = portObject instanceof BufferedDataTable;
-        NodeID inID = tempWFM.createAndAddNode(isTable ? TABLE_READ_NODE_FACTORY : OBJECT_READ_NODE_FACTORY);
+        NodeFactory<?> factory = isTable ? TABLE_READ_NODE_FACTORY : OBJECT_READ_NODE_FACTORY;
+        NodeID inID = tempWFM.addNodeAndApplyContext(factory, null, nodeIDSuffix);
         NodeSettings s = new NodeSettings("temp_data_in");
         tempWFM.saveNodeSettings(inID, s);
         PortObjectInNodeModel.setInputNodeSettings(s, portObjectRepositoryID, flowVars, copyDataIntoNewContext);

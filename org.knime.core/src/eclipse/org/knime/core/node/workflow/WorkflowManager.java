@@ -110,6 +110,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -749,7 +750,7 @@ public final class WorkflowManager extends NodeContainer
      * @return newly created (unique) NodeID
      */
     public NodeID createAndAddNode(final NodeFactory<?> factory) {
-        return addNodeAndApplyContext(factory, null, null);
+        return addNodeAndApplyContext(factory, null, -1);
     }
 
     /**
@@ -758,23 +759,22 @@ public final class WorkflowManager extends NodeContainer
      * @param factory NodeFactory used to create the new node
      * @param creationConfig the creation configuration provided by the framework (e.g. the URL of the file that was
      *            dragged on the canvas) or null
-     * @param nodeId unique NodeID of the to-be-created node or null if a new NodeID should be generated
-     * @return the node id of the created node. TODO: replace with 4.2 since tag
+     * @param nodeIDSuffix unique NodeID of the to-be-created node or -1 if a new NodeID should be generated
+     * @return the node id of the created node.
+     *  TODO: replace with 4.2 since tag
      * @since 4.1
      */
     public NodeID addNodeAndApplyContext(final NodeFactory<?> factory,
-        final ModifiableNodeCreationConfiguration creationConfig, final NodeID nodeId) {
+        final ModifiableNodeCreationConfiguration creationConfig, final int nodeIDSuffix) {
+        CheckUtils.checkArgument(nodeIDSuffix >= -1, "Suffix must be -1 or larger or equal to 0: %d", nodeIDSuffix);
         try (WorkflowLock lock = lock()) {
             final NodeID id;
-            if (nodeId != null) {
-                assert !m_workflow.containsNodeKey(nodeId);
-                id = nodeId;
+            if (nodeIDSuffix >= 0) {
+                id = getID().createChild(nodeIDSuffix);
+                CheckUtils.checkArgument(!m_workflow.containsNodeKey(id), "ID already in use: %d", id);
             } else {
                 id = m_workflow.createUniqueID();
             }
-            // TODO synchronize to avoid messing with running workflows!
-            assert factory != null;
-            // insert node
             @SuppressWarnings("unchecked")
             NativeNodeContainer container =
                 new NativeNodeContainer(this, new Node((NodeFactory<NodeModel>)factory, creationConfig), id);
@@ -3512,8 +3512,18 @@ public final class WorkflowManager extends NodeContainer
             CheckUtils.checkArgument(endNode.getNodeModel() instanceof CaptureWorkflowEndNode,
                 "Argument must be instance of %s", CaptureWorkflowEndNode.class.getSimpleName());
             List<NodeContainer> nodesInScope = m_workflow.getNodesInScope(endNode);
+
+            int minX = 0, minY = 0;
+            for (NodeContainer nc : nodesInScope) {
+                int[] bounds = ObjectUtils.defaultIfNull(nc.getUIInformation().getBounds(), new int[] {0, 0});
+                minX = Math.min(minX, bounds[0]);
+                minY = Math.min(minY, bounds[1]);
+            }
+            final int[] moveDist = new int[] {-minX -20, -minY - 20};
+
             NativeNodeContainer startNode = getNodeContainer(m_workflow.getMatchingScopeStart(endNodeID,
                 CaptureWorkflowStartNode.class, CaptureWorkflowEndNode.class), NativeNodeContainer.class, true);
+
 
             // copy nodes in loop body
             WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
@@ -3537,6 +3547,7 @@ public final class WorkflowManager extends NodeContainer
                         // ignore: portObjectReader inserted in previous loop iteration
                     } else {
                         NodeID sourceID = c.getSource();
+                        NodeUIInformation sourceUIInformation = getNodeContainer(sourceID).getUIInformation();
                         int sourcePort = c.getDestPort();
                         NodeContainer sourceNode = getNodeContainer(sourceID);
                         NodeOutPort upstreamPort;
@@ -3550,15 +3561,27 @@ public final class WorkflowManager extends NodeContainer
                         List<FlowVariable> variables =
                             new ArrayList<>(upstreamPort.getFlowObjectStack().getAllAvailableFlowVariables().values());
                         NodeIDSuffixAndPortObjectID addedObject = PortObjectRepository
-                            .addPortObjectReferenceReaderToWorkflow(sourcePortObject, tempParent, variables, true);
+                            .addPortObjectReferenceReaderToWorkflow(sourcePortObject, tempParent, variables,
+                                sourceID.getIndex(), true);
+                        NodeID pastedID = addedObject.getNodeIDSuffix().prependParent(tempParent.getID());
+                        tempParent.getNodeContainer(pastedID).setUIInformation(sourceUIInformation);
                         addedPortObjectReaderNodes.add(addedObject);
                     }
                 }
             }
 
-            tempParent.copyFromAndPasteHere(this, copyContent.build());
+            WorkflowCopyContent pastedContent = tempParent.copyFromAndPasteHere(this, copyContent.build());
+            for (NodeID id : pastedContent.getNodeIDs()) {
+                NodeContainer nc = tempParent.getNodeContainer(id);
+                nc.setUIInformation(NodeUIInformation.builder(nc.getUIInformation()).translate(moveDist).build());
+            }
+            NodeID[] allButScopeIDsRelativized = Arrays.stream(allButScopeIDs)//
+                    .map(id -> NodeIDSuffix.create(getID(), id))//
+                    .map(nodeIDSuffix -> nodeIDSuffix.prependParent(tempParent.getID()))//
+                    .toArray(NodeID[]::new);
             CollapseIntoMetaNodeResult asMetaNode = tempParent.collapseIntoMetaNode(
-                allButScopeIDs, new WorkflowAnnotation[0], tempParent.getName());
+                allButScopeIDsRelativized, new WorkflowAnnotation[0], tempParent.getName());
+
             tempParent.convertMetaNodeToSubNode(asMetaNode.getCollapsedMetanodeID());
 
             WorkflowCopyContent pastedResult = EXTRACTED_WORKFLOW_ROOT.copyFromAndPasteHere(tempParent,

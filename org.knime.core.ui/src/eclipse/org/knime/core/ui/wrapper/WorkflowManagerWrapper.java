@@ -125,7 +125,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     @Override
     public NodeID createAndAddNode(final NodeFactory<?> factory, final NodeUIInformation uiInfo,
         final ModifiableNodeCreationConfiguration creationConfig) {
-        NodeID nodeID = unwrap().addNodeAndApplyContext(factory, creationConfig, null);
+        NodeID nodeID = unwrap().addNodeAndApplyContext(factory, creationConfig, -1);
         unwrap().getNodeContainer(nodeID).setUIInformation(uiInfo);
         return nodeID;
     }

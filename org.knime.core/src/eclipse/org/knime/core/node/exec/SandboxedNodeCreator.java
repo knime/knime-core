@@ -257,7 +257,7 @@ public final class SandboxedNodeCreator {
                     .forEach(cs::addFromFlowVariable);
 
                 NodeIDSuffixAndPortObjectID added = PortObjectRepository.addPortObjectReferenceReaderToWorkflow(in,
-                    tempWFM, flowVars, m_copyDataIntoNewContext);
+                    tempWFM, flowVars, -1, m_copyDataIntoNewContext);
                 portObjectRepositoryIDs.add(added.getPortObjectRepositoryID());
                 ins[i] = added.getNodeIDSuffix().prependParent(tempWFM.getID());
             }
