@@ -88,9 +88,9 @@ public class Enh1536_CancelDuringLoad extends WorkflowTestCase {
         creationHelper.setWorkflowContext(new WorkflowContext.Factory(m_workflowDirectory).createContext());
         WorkflowManager wm = WorkflowManager.ROOT.createAndAddProject(
             getClass().getSimpleName(), creationHelper);
-        NodeID sourceNode = wm.addNode(new AdapterNodeFactory(true));
-        NodeID cancelOnLoadNode = wm.addNode(new CancelDuringLoadInternalsNodeFactory());
-        NodeID checkLoadInternalNotCalledNode = wm.addNode(new CheckLoadInternalsNotCalledNodeFactory());
+        NodeID sourceNode = wm.createAndAddNode(new AdapterNodeFactory(true));
+        NodeID cancelOnLoadNode = wm.createAndAddNode(new CancelDuringLoadInternalsNodeFactory());
+        NodeID checkLoadInternalNotCalledNode = wm.createAndAddNode(new CheckLoadInternalsNotCalledNodeFactory());
         wm.addConnection(sourceNode, 1, cancelOnLoadNode, 1);
         wm.addConnection(cancelOnLoadNode, 1, checkLoadInternalNotCalledNode, 1);
         wm.executeAllAndWaitUntilDone();

@@ -744,51 +744,44 @@ public final class WorkflowManager extends NodeContainer
      * @return newly created (unique) NodeID
      */
     public NodeID createAndAddNode(final NodeFactory<?> factory) {
-        return internalAddNewNode(factory, null);
+        return addNodeAndApplyContext(factory, null, null);
     }
 
     /**
-     * Create new Node based on given factory and add to workflow.
+     * Uses given Factory to create a new node and then adds new node to the workflow manager.
      *
-     * @param factory ...
-     * @return unique ID of the newly created and inserted node.
-     * @since 2.9
-     */
-    public NodeID addNode(final NodeFactory<?> factory) {
-        return addNodeAndApplyContext(factory, null);
-    }
-
-    /**
-     * @param factory ...
+     * @param factory NodeFactory used to create the new node
      * @param creationConfig the creation configuration provided by the framework (e.g. the URL of the file that was
-     *            dragged on the canvas)
-     * @return the node id of the created node.
+     *            dragged on the canvas) or null
+     * @param nodeId unique NodeID of the to-be-created node or null if a new NodeID should be generated
+     * @return the node id of the created node. TODO: replace with 4.2 since tag
      * @since 4.1
      */
     public NodeID addNodeAndApplyContext(final NodeFactory<?> factory,
-        final ModifiableNodeCreationConfiguration creationConfig) {
-        return internalAddNewNode(factory, creationConfig);
-    }
-
-    @SuppressWarnings("unchecked")
-    private NodeID internalAddNewNode(final NodeFactory<?> factory,
-        final ModifiableNodeCreationConfiguration creationConfig) {
+        final ModifiableNodeCreationConfiguration creationConfig, final NodeID nodeId) {
         try (WorkflowLock lock = lock()) {
+            final NodeID id;
+            if (nodeId != null) {
+                assert !m_workflow.containsNodeKey(nodeId);
+                id = nodeId;
+            } else {
+                id = m_workflow.createUniqueID();
+            }
             // TODO synchronize to avoid messing with running workflows!
             assert factory != null;
             // insert node
-            NodeID newID = m_workflow.createUniqueID();
+            @SuppressWarnings("unchecked")
             NativeNodeContainer container =
-                new NativeNodeContainer(this, new Node((NodeFactory<NodeModel>)factory, creationConfig), newID);
+                new NativeNodeContainer(this, new Node((NodeFactory<NodeModel>)factory, creationConfig), id);
             addNodeContainer(container, true);
-            configureNodeAndSuccessors(newID, true);
+            configureNodeAndSuccessors(id, true);
             // save node settings if source URL/context was provided (bug 5772)
             if (creationConfig != null && creationConfig.getURLConfig().isPresent()) {
                 container.saveNodeSettingsToDefault();
             }
-            LOGGER.debug("Added new node " + newID);
+            LOGGER.debug("Added new node " + id);
             setDirty();
-            return newID;
+            return id;
         }
     }
 

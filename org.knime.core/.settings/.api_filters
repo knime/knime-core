@@ -167,6 +167,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="addNode(NodeFactory&lt;?&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="addNodeAndApplyContext(NodeFactory&lt;?&gt;, NodeCreationContext)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/artifacts/WorkflowConfigArtifactsGenerator.java" type="org.knime.core.node.workflow.artifacts.WorkflowConfigArtifactsGenerator">
         <filter id="623939596">
             <message_arguments>
@@ -195,14 +209,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.util.GUIDeadlockDetector"/>
                 <message_argument value="createStacktrace()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
-                <message_argument value="addNodeAndApplyContext(NodeFactory&lt;?&gt;, NodeCreationContext)"/>
             </message_arguments>
         </filter>
     </resource>

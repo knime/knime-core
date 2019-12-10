@@ -407,7 +407,7 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     /** Adds new/empty instance of a virtual input node and returns its ID. */
     private NodeID addVirtualInNode(final PortType[] inTypes, final Pair<int[], int[]> minMaxCoordinates) {
-        NodeID inNodeID = m_wfm.addNode(new VirtualSubNodeInputNodeFactory(this, inTypes));
+        NodeID inNodeID = m_wfm.createAndAddNode(new VirtualSubNodeInputNodeFactory(this, inTypes));
         final NodeContainer inNodeNC = m_wfm.getNodeContainer(inNodeID);
         inNodeNC.setDeletable(false);
 
@@ -421,7 +421,7 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     /** Adds new/empty instance of a virtual output node and returns its ID. */
     private NodeID addVirtualOutNode(final PortType[] outTypes, final Pair<int[], int[]> minMaxCoordinates) {
-        NodeID outNodeID = m_wfm.addNode(new VirtualSubNodeOutputNodeFactory(outTypes));
+        NodeID outNodeID = m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(outTypes));
         final NodeContainer outNodeNC = m_wfm.getNodeContainer(outNodeID);
         outNodeNC.setDeletable(false);
 
@@ -1541,7 +1541,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         } catch (InvalidSettingsException e) {
             // no valid settings available, skip
         }
-        m_virtualInNodeIDSuffix = m_wfm.addNode(new VirtualSubNodeInputNodeFactory(this, portTypes)).getIndex();
+        m_virtualInNodeIDSuffix = m_wfm.createAndAddNode(new VirtualSubNodeInputNodeFactory(this, portTypes)).getIndex();
         NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
         newVNode.setUIInformation(oldVNode.getUIInformation());
         newVNode.setDeletable(false);
@@ -1597,7 +1597,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         } catch (InvalidSettingsException e) {
             // no valid settings available, skip
         }
-        m_virtualOutNodeIDSuffix = m_wfm.addNode(new VirtualSubNodeOutputNodeFactory(portTypes)).getIndex();
+        m_virtualOutNodeIDSuffix = m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(portTypes)).getIndex();
         NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
         newVNode.setUIInformation(oldVNode.getUIInformation());
         newVNode.setDeletable(false);
