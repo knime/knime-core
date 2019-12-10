@@ -264,4 +264,16 @@ public final class PortObjectInNodeModel extends NodeModel {
         poSettings.saveSettings(modelSettings);
     }
 
+    public PortObjectIDSettings getInputNodeSettingsCopy() {
+        final NodeSettings settings = new NodeSettings("copy");
+        m_portObjectIDSettings.saveSettings(settings);
+        final PortObjectIDSettings copy = new PortObjectIDSettings();
+        try {
+            copy.loadSettings(settings);
+        } catch (InvalidSettingsException ex) {
+            throw new RuntimeException(ex);
+        }
+        return copy;
+    }
+
 }
