@@ -48,14 +48,28 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.port.PortType;
+
 /**
- *
+ * Meta data for the in and outputs of a workflow fragment.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 4.1
  */
 public interface PortMetadata {
+
+    /**
+     * @return the names of the individual ports
+     */
     String[] getNames();
 
+    /**
+     * @return the descriptions of the individual ports
+     */
     String[] getDescriptions();
+
+    /**
+     * @return the {@link PortType PortTypes} of the individual ports
+     */
+    PortType[] getTypes();
 }
