@@ -59,7 +59,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -87,6 +86,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -214,7 +214,7 @@ public final class PortObjectRepository {
      * @return
      * @throws InvalidSettingsException
      */
-    public static NodeIDAndPortObjectID addPortObjectReferenceReaderToWorkflow(final PortObject portObject,
+    public static NodeIDSuffixAndPortObjectID addPortObjectReferenceReaderToWorkflow(final PortObject portObject,
         final WorkflowManager tempWFM, final List<FlowVariable> flowVars, final boolean copyDataIntoNewContext)
         throws InvalidSettingsException {
         int portObjectRepositoryID = PortObjectRepository.add(portObject);
@@ -225,22 +225,22 @@ public final class PortObjectRepository {
         PortObjectInNodeModel.setInputNodeSettings(s, portObjectRepositoryID, flowVars, copyDataIntoNewContext);
 
         tempWFM.loadNodeSettings(inID, s);
-        return new NodeIDAndPortObjectID(inID, portObjectRepositoryID);
+        NodeIDSuffix.create(tempWFM.getID(), inID);
+        return new NodeIDSuffixAndPortObjectID(NodeIDSuffix.create(tempWFM.getID(), inID), portObjectRepositoryID);
     }
 
-    /** Return type of
-     * {@link #addPortObjectReferenceReaderToWorkflow(List, PortObject, WorkflowManager, Supplier, boolean)} */
-    public static final class NodeIDAndPortObjectID {
-        private final NodeID m_id;
+    /** Return type of {@link #addPortObjectReferenceReaderToWorkflow} */
+    public static final class NodeIDSuffixAndPortObjectID {
+        private final NodeIDSuffix m_idSuffix;
         private final int m_portObjectRepositoryID;
 
-        NodeIDAndPortObjectID(final NodeID id, final int portObjectRepositoryID) {
-            m_id = id;
+        NodeIDSuffixAndPortObjectID(final NodeIDSuffix id, final int portObjectRepositoryID) {
+            m_idSuffix = id;
             m_portObjectRepositoryID = portObjectRepositoryID;
         }
 
-        public NodeID getNodeID() {
-            return m_id;
+        public NodeIDSuffix getNodeIDSuffix() {
+            return m_idSuffix;
         }
 
         public int getPortObjectRepositoryID() {

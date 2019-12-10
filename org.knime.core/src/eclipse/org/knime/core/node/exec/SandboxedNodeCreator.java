@@ -69,7 +69,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
-import org.knime.core.node.exec.dataexchange.PortObjectRepository.NodeIDAndPortObjectID;
+import org.knime.core.node.exec.dataexchange.PortObjectRepository.NodeIDSuffixAndPortObjectID;
 import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
@@ -256,10 +256,10 @@ public final class SandboxedNodeCreator {
                     .filter(f -> !cs.contains(f.getName()))//
                     .forEach(cs::addFromFlowVariable);
 
-                NodeIDAndPortObjectID added = PortObjectRepository.addPortObjectReferenceReaderToWorkflow(in, tempWFM,
-                    flowVars, m_copyDataIntoNewContext);
+                NodeIDSuffixAndPortObjectID added = PortObjectRepository.addPortObjectReferenceReaderToWorkflow(in,
+                    tempWFM, flowVars, m_copyDataIntoNewContext);
                 portObjectRepositoryIDs.add(added.getPortObjectRepositoryID());
-                ins[i] = added.getNodeID();
+                ins[i] = added.getNodeIDSuffix().prependParent(tempWFM.getID());
             }
             // execute inPort object nodes to store the input data in them
             if (ins.length > 0 && !tempWFM.executeAllAndWaitUntilDoneInterruptibly()) {

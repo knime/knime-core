@@ -143,7 +143,7 @@ import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
-import org.knime.core.node.exec.dataexchange.PortObjectRepository.NodeIDAndPortObjectID;
+import org.knime.core.node.exec.dataexchange.PortObjectRepository.NodeIDSuffixAndPortObjectID;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReexecutionCallback;
@@ -165,6 +165,7 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
 import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
@@ -3494,7 +3495,7 @@ public final class WorkflowManager extends NodeContainer
     public WorkflowFragment capturePartOf(final NodeID endNodeID) throws IllegalScopeException, InvalidSettingsException, InterruptedException {
         WorkflowManager tempParent = EXTRACTED_WORKFLOW_ROOT.createAndAddProject(
             "Workflow-Capture-from-" + endNodeID, new WorkflowCreationHelper());
-        Set<NodeIDAndPortObjectID> addedPortObjectReaderNodes = new HashSet<>();
+        Set<NodeIDSuffixAndPortObjectID> addedPortObjectReaderNodes = new HashSet<>();
         try (WorkflowLock lock = lock()) {
             // compute offset for new nodes (shifted in case of same
             // workflow, otherwise just underneath each other)
@@ -3508,7 +3509,7 @@ public final class WorkflowManager extends NodeContainer
 
             // create virtual start node
             NativeNodeContainer endNode = getNodeContainer(endNodeID, NativeNodeContainer.class, true);
-            CheckUtils.checkArgument(endNode instanceof CaptureWorkflowEndNode,
+            CheckUtils.checkArgument(endNode.getNodeModel() instanceof CaptureWorkflowEndNode,
                 "Argument must be instance of %s", CaptureWorkflowEndNode.class.getSimpleName());
             List<NodeContainer> nodesInScope = m_workflow.getNodesInScope(endNode);
             NativeNodeContainer startNode = getNodeContainer(m_workflow.getMatchingScopeStart(endNodeID,
@@ -3546,37 +3547,40 @@ public final class WorkflowManager extends NodeContainer
                             upstreamPort = sourceNode.getOutPort(sourcePort);
                         }
                         PortObject sourcePortObject = upstreamPort.getPortObject();
-                        List<FlowVariable> variables = new ArrayList<>(upstreamPort.getFlowObjectStack()//
-                                .getAvailableFlowVariables(FlowVariable.Type.values()).values());
-                        NodeIDAndPortObjectID addedObject = PortObjectRepository.addPortObjectReferenceReaderToWorkflow(
-                            sourcePortObject, tempParent, variables, true);
+                        List<FlowVariable> variables =
+                            new ArrayList<>(upstreamPort.getFlowObjectStack().getAllAvailableFlowVariables().values());
+                        NodeIDSuffixAndPortObjectID addedObject = PortObjectRepository
+                            .addPortObjectReferenceReaderToWorkflow(sourcePortObject, tempParent, variables, true);
                         addedPortObjectReaderNodes.add(addedObject);
                     }
                 }
             }
 
-            CheckUtils.checkState(tempParent.executeAllAndWaitUntilDone(),
-                    "Unable to execute port object readers when capturing sub workflow");
-
-            WorkflowCopyContent newBody = tempParent.copyFromAndPasteHere(this, copyContent.build());
+            tempParent.copyFromAndPasteHere(this, copyContent.build());
             CollapseIntoMetaNodeResult asMetaNode = tempParent.collapseIntoMetaNode(
                 allButScopeIDs, new WorkflowAnnotation[0], tempParent.getName());
-            MetaNodeToSubNodeResult asSubNode = tempParent.convertMetaNodeToSubNode(asMetaNode.getCollapsedMetanodeID());
+            tempParent.convertMetaNodeToSubNode(asMetaNode.getCollapsedMetanodeID());
 
             WorkflowCopyContent pastedResult = EXTRACTED_WORKFLOW_ROOT.copyFromAndPasteHere(tempParent,
                 WorkflowCopyContent.builder().setNodeIDs(asMetaNode.getCollapsedMetanodeID()).build());
             SubNodeContainer resultSNC = EXTRACTED_WORKFLOW_ROOT.getNodeContainer(
                 pastedResult.getNodeIDs()[0], SubNodeContainer.class, true);
             WorkflowManager resultSNCWFM = resultSNC.getWorkflowManager();
+            Set<NodeIDSuffix> portObjectReaderIDSuffixes = addedPortObjectReaderNodes.stream()//
+                    .map(NodeIDSuffixAndPortObjectID::getNodeIDSuffix)//
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
             NodeID[] portObjectReaderIDs = addedPortObjectReaderNodes.stream()//
-                    .map(NodeIDAndPortObjectID::getNodeID)//
-                    .map(id -> resultSNCWFM.getID().createChild(id.getIndex()))//
+                    .map(NodeIDSuffixAndPortObjectID::getNodeIDSuffix)//
+                    .map(suffix -> suffix.prependParent(resultSNCWFM.getID()))//
                     .toArray(NodeID[]::new);
+
             resultSNCWFM.executeUpToHere(portObjectReaderIDs);
             resultSNCWFM.waitWhileInExecution(-1, TimeUnit.MILLISECONDS);
-            return new WorkflowFragment(resultSNC, addedPortObjectReaderNodes.stream().map(p -> p.getNodeID()).collect(Collectors.toSet()));
+            return new WorkflowFragment(resultSNC, portObjectReaderIDSuffixes);
         } finally {
-            addedPortObjectReaderNodes.stream().map(NodeIDAndPortObjectID::getPortObjectRepositoryID).forEach(PortObjectRepository::remove);
+            addedPortObjectReaderNodes.stream()//
+                .map(NodeIDSuffixAndPortObjectID::getPortObjectRepositoryID)//
+                .forEach(PortObjectRepository::remove);
             EXTRACTED_WORKFLOW_ROOT.removeNode(tempParent.getID());
         }
     }
