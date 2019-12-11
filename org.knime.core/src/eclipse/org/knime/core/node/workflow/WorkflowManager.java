@@ -3537,7 +3537,7 @@ public final class WorkflowManager extends NodeContainer
             HashSet<NodeID> allIDsHashed = new HashSet<>(Arrays.asList(allIDs));
             Map<Pair<NodeID, Integer>, NodeID> portObjectReaders = new HashMap<>();
             NodeID[] allButScopeIDs = ArrayUtils.removeElements(allIDs, endNodeID, startNode.getID());
-            copyContent.setNodeIDs(allIDs);
+            copyContent.setNodeIDs(allButScopeIDs);
             copyContent.setIncludeInOutConnections(true);
 
             // restore connections to nodes outside the loop body (only incoming)
