@@ -110,7 +110,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -3497,29 +3496,14 @@ public final class WorkflowManager extends NodeContainer
             WorkflowManager tempParent = EXTRACTED_WORKFLOW_ROOT.createAndAddProject(
                 "Workflow-Capture-from-" + endNodeID, new WorkflowCreationHelper());
             Set<NodeIDSuffix> addedPortObjectReaderNodes = new HashSet<>();
-            // compute offset for new nodes (shifted in case of same
-            // workflow, otherwise just underneath each other)
-            final int[] moveUIDist;
-//            if (subWFM == this) {
-//                moveUIDist = new int[]{(chunkIndex + 1) * 10, (chunkIndex + 1) * 80, 0, 0};
-//            } else {
-//                moveUIDist = new int[]{(chunkIndex + 1) * 0, (chunkIndex + 1) * 150, 0, 0};
-//            }
 
-
-            // create virtual start node
             NativeNodeContainer endNode = getNodeContainer(endNodeID, NativeNodeContainer.class, true);
             CheckUtils.checkArgument(endNode.getNodeModel() instanceof CaptureWorkflowEndNode,
                 "Argument must be instance of %s", CaptureWorkflowEndNode.class.getSimpleName());
             List<NodeContainer> nodesInScope = m_workflow.getNodesInScope(endNode);
 
-            int minX = 0, minY = 0;
-            for (NodeContainer nc : nodesInScope) {
-                int[] bounds = ObjectUtils.defaultIfNull(nc.getUIInformation().getBounds(), new int[] {0, 0});
-                minX = Math.min(minX, bounds[0]);
-                minY = Math.min(minY, bounds[1]);
-            }
-            final int[] moveDist = new int[] {-minX -20, -minY - 20};
+            final int[] boundingBox = NodeUIInformation.getBoundBoxOf(nodesInScope);
+            final int[] moveUIDist = new int[] {-boundingBox[0] - 20, -boundingBox[1] - 20};
 
             NativeNodeContainer startNode = getNodeContainer(m_workflow.getMatchingScopeStart(endNodeID,
                 CaptureWorkflowStartNode.class, CaptureWorkflowEndNode.class), NativeNodeContainer.class, true);
@@ -3554,7 +3538,7 @@ public final class WorkflowManager extends NodeContainer
                     } else {
                         NodeID sourceID = c.getSource();
                         NodeUIInformation sourceUIInformation = getNodeContainer(sourceID).getUIInformation();
-                        int sourcePort = c.getDestPort();
+                        int sourcePort = c.getSourcePort();
                         NodeContainer sourceNode = getNodeContainer(sourceID);
                         NodeOutPort upstreamPort;
                         if (sourceID.equals(getID())) {
@@ -3573,12 +3557,11 @@ public final class WorkflowManager extends NodeContainer
             }
 
             WorkflowCopyContent pastedContent = tempParent.copyFromAndPasteHere(this, copyContent.build());
-            for (NodeID id : pastedContent.getNodeIDs()) {
-                NodeContainer nc = tempParent.getNodeContainer(id);
-                nc.setUIInformation(NodeUIInformation.builder(nc.getUIInformation()).translate(moveDist).build());
-            }
+            Arrays.stream(pastedContent.getNodeIDs()).map(id -> tempParent.getNodeContainer(id))
+                .forEach(nc -> NodeUIInformation.moveNodeBy(nc, moveUIDist));
 
-            return new WorkflowFragment(tempParent, workflowFragmentInputs, workflowFragmentOutputs, addedPortObjectReaderNodes);
+            return new WorkflowFragment(tempParent, workflowFragmentInputs, workflowFragmentOutputs,
+                addedPortObjectReaderNodes);
         }
     }
 

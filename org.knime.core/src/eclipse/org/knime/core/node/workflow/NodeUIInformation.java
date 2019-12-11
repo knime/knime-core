@@ -47,6 +47,9 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Collection;
+
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -59,6 +62,8 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Florian Georg, University of Konstanz
  */
 public final class NodeUIInformation {
+
+    private static final int[] EMPTY_FOUR_DIMENSIONS = new int[] {0, 0, 0, 0};
 
     private final int[] m_bounds;
 
@@ -155,6 +160,40 @@ public final class NodeUIInformation {
         } else {
             return null;
         }
+    }
+
+    /**
+     * The bounding box of all nodes in the argument. Or an array with 0s if there are no nodes or the nodes have no UI
+     * info set. Return value contains 4 elements:
+     * <ul>
+     * <li>0: min x (left border)</li>
+     * <li>1: min y (top border)</li>
+     * <li>2: max x (right border)</li>
+     * <li>3: max y (bottom border)</li>
+     * </ul>
+     *
+     * @param containers list of nodes
+     * @return the array described above.
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    static int[] getBoundBoxOf(final Collection<NodeContainer> containers) {
+        int[] result = new int[4];
+        for (NodeContainer nc : containers) {
+            int[] bounds = ObjectUtils.defaultIfNull(nc.getUIInformation().getBounds(), EMPTY_FOUR_DIMENSIONS);
+            result[0] = Math.min(result[0], bounds[0]);
+            result[1] = Math.min(result[1], bounds[1]);
+            result[2] = Math.max(result[2], bounds[0] + bounds[2]);
+            result[3] = Math.max(result[3], bounds[1] + bounds[3]);
+        }
+        return result;
+    }
+
+    /**
+     * Set new UI Info on the argument node, whereby its position is shifted by the argument int[] (2 elements, x and
+     * y).
+     */
+    static void moveNodeBy(final NodeContainer nc, final int[] moveDist) {
+        nc.setUIInformation(builder(nc.getUIInformation()).translate(moveDist).build());
     }
 
     /**

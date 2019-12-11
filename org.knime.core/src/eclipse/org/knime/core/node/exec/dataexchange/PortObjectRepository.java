@@ -55,11 +55,11 @@ import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -85,6 +85,7 @@ import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodeOutPort;
@@ -214,8 +215,9 @@ public final class PortObjectRepository {
         final WorkflowManager tempWFM, final int nodeIDSuffix) throws InvalidSettingsException {
         NodeID sourceNodeID = outport.getConnectedNodeContainer().getID();
         int portIndex = outport.getPortIndex();
-        List<FlowVariable> variables =
-                new ArrayList<>(outport.getFlowObjectStack().getAllAvailableFlowVariables().values());
+
+        List<FlowVariable> variables = outport.getFlowObjectStack().getAllAvailableFlowVariables().values().stream()
+            .filter(f -> f.getScope() == Scope.Flow).collect(Collectors.toList());
         PortObjectIDSettings portObjectIDSettings = new PortObjectIDSettings();
         portObjectIDSettings.setNodeReference(sourceNodeID, portIndex);
         portObjectIDSettings.setFlowVariables(variables);
