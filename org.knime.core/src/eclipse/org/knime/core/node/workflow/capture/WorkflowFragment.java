@@ -48,10 +48,12 @@
  */
 package org.knime.core.node.workflow.capture;
 
+import java.util.List;
 import java.util.Set;
 
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
@@ -59,21 +61,54 @@ import org.knime.core.node.workflow.SubNodeContainer;
  */
 public class WorkflowFragment {
 
-    private final SubNodeContainer m_component;
+    private final WorkflowManager m_wfm;
 
     private final Set<NodeIDSuffix> m_portObjectReferenceReaderNodes;
 
-    public WorkflowFragment(final SubNodeContainer component, final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
-        m_component = component;
+    private List<Port> m_inputPorts;
+
+    private List<Port> m_outputPorts;
+
+    public WorkflowFragment(final WorkflowManager wfm, final List<Port> inputPorts, final List<Port> outputPorts,
+        final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
+        m_wfm = wfm;
+        m_inputPorts = inputPorts;
+        m_outputPorts = outputPorts;
         m_portObjectReferenceReaderNodes = portObjectReferenceReaderNodes;
     }
 
-    public SubNodeContainer getComponent() {
-        return m_component;
+    public WorkflowManager getWorkflow() {
+        return m_wfm;
     }
 
     public Set<NodeIDSuffix> getPortObjectReferenceReaderNodes() {
         return m_portObjectReferenceReaderNodes;
     }
 
+    public List<Port> getInputPorts() {
+        return m_inputPorts;
+    }
+
+    public List<Port> getOutputPorts() {
+        return m_outputPorts;
+    }
+
+    public static class Port {
+        private NodeID m_nodeId;
+
+        private int m_idx;
+
+        public Port(final NodeID nodeId, final int idx) {
+            m_nodeId = nodeId;
+            m_idx = idx;
+        }
+
+        public NodeID getNodeID() {
+            return m_nodeId;
+        }
+
+        public int getIndex() {
+            return m_idx;
+        }
+    }
 }
