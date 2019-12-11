@@ -144,7 +144,6 @@ import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
-import org.knime.core.node.exec.dataexchange.PortObjectRepository.NodeIDSuffixAndPortObjectID;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReexecutionCallback;
@@ -3495,7 +3494,7 @@ public final class WorkflowManager extends NodeContainer
     public WorkflowFragment capturePartOf(final NodeID endNodeID) throws IllegalScopeException, InvalidSettingsException, InterruptedException {
         WorkflowManager tempParent = EXTRACTED_WORKFLOW_ROOT.createAndAddProject(
             "Workflow-Capture-from-" + endNodeID, new WorkflowCreationHelper());
-        Set<NodeIDSuffixAndPortObjectID> addedPortObjectReaderNodes = new HashSet<>();
+        Set<NodeIDSuffix> addedPortObjectReaderNodes = new HashSet<>();
         try (WorkflowLock lock = lock()) {
             // compute offset for new nodes (shifted in case of same
             // workflow, otherwise just underneath each other)
@@ -3557,15 +3556,11 @@ public final class WorkflowManager extends NodeContainer
                         } else {
                             upstreamPort = sourceNode.getOutPort(sourcePort);
                         }
-                        PortObject sourcePortObject = upstreamPort.getPortObject();
-                        List<FlowVariable> variables =
-                            new ArrayList<>(upstreamPort.getFlowObjectStack().getAllAvailableFlowVariables().values());
-                        NodeIDSuffixAndPortObjectID addedObject = PortObjectRepository
-                            .addPortObjectReferenceReaderToWorkflow(sourcePortObject, tempParent, variables,
-                                sourceID.getIndex(), true);
-                        NodeID pastedID = addedObject.getNodeIDSuffix().prependParent(tempParent.getID());
+                        NodeIDSuffix pastedIDSuffix = PortObjectRepository
+                            .addPortObjectReferenceReaderToWorkflow(upstreamPort, tempParent, sourceID.getIndex());
+                        NodeID pastedID = pastedIDSuffix.prependParent(tempParent.getID());
                         tempParent.getNodeContainer(pastedID).setUIInformation(sourceUIInformation);
-                        addedPortObjectReaderNodes.add(addedObject);
+                        addedPortObjectReaderNodes.add(pastedIDSuffix);
                     }
                 }
             }
@@ -3589,21 +3584,14 @@ public final class WorkflowManager extends NodeContainer
             SubNodeContainer resultSNC = EXTRACTED_WORKFLOW_ROOT.getNodeContainer(
                 pastedResult.getNodeIDs()[0], SubNodeContainer.class, true);
             WorkflowManager resultSNCWFM = resultSNC.getWorkflowManager();
-            Set<NodeIDSuffix> portObjectReaderIDSuffixes = addedPortObjectReaderNodes.stream()//
-                    .map(NodeIDSuffixAndPortObjectID::getNodeIDSuffix)//
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
             NodeID[] portObjectReaderIDs = addedPortObjectReaderNodes.stream()//
-                    .map(NodeIDSuffixAndPortObjectID::getNodeIDSuffix)//
                     .map(suffix -> suffix.prependParent(resultSNCWFM.getID()))//
                     .toArray(NodeID[]::new);
 
             resultSNCWFM.executeUpToHere(portObjectReaderIDs);
             resultSNCWFM.waitWhileInExecution(-1, TimeUnit.MILLISECONDS);
-            return new WorkflowFragment(resultSNC, portObjectReaderIDSuffixes);
+            return new WorkflowFragment(resultSNC, addedPortObjectReaderNodes);
         } finally {
-            addedPortObjectReaderNodes.stream()//
-                .map(NodeIDSuffixAndPortObjectID::getPortObjectRepositoryID)//
-                .forEach(PortObjectRepository::remove);
             EXTRACTED_WORKFLOW_ROOT.removeNode(tempParent.getID());
         }
     }

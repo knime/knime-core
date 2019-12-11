@@ -63,14 +63,19 @@ import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.exec.dataexchange.PortObjectIDSettings;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
-import org.knime.core.node.exec.dataexchange.PortObjectRepository.NodeIDSuffixAndPortObjectID;
+import org.knime.core.node.exec.dataexchange.in.BDTInNodeFactory;
 import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory;
+import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
@@ -87,7 +92,6 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.node.workflow.VariableType;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
@@ -112,6 +116,12 @@ import org.knime.core.util.LockFailedException;
 public final class SandboxedNodeCreator {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SandboxedNodeCreator.class);
+
+    /** {@link PortObjectInNodeFactory} instance. */
+    public static final NodeFactory<?> OBJECT_READ_NODE_FACTORY = new PortObjectInNodeFactory();
+
+    /** {@link BDTInNodeFactory} instance. */
+    public static final NodeFactory<?> TABLE_READ_NODE_FACTORY = new BDTInNodeFactory();
 
     private final WorkflowManager m_rootWFM;
     private final NodeContainer m_nc;
@@ -248,18 +258,27 @@ public final class SandboxedNodeCreator {
                         "No data at port %d, although port is mandatory (port type %s)", i, portType.getName());
                     continue;
                 }
-                List<FlowVariable> flowVars = getFlowVariablesOnInPort(i);
+                List<FlowVariable> flowVars = getFlowVariablesOnPort(i);
+                int portObjectRepositoryID = PortObjectRepository.add(in);
+                PortObjectIDSettings settings = new PortObjectIDSettings();
+                settings.setId(portObjectRepositoryID);
+                settings.setCopyData(m_copyDataIntoNewContext);
+                settings.setFlowVariables(flowVars);
+                portObjectRepositoryIDs.add(portObjectRepositoryID);
+                boolean isTable = BufferedDataTable.TYPE.equals(portType);
+                NodeID inID = tempWFM.createAndAddNode(isTable ? TABLE_READ_NODE_FACTORY : OBJECT_READ_NODE_FACTORY);
+                NodeSettings s = new NodeSettings("temp_data_in");
+                tempWFM.saveNodeSettings(inID, s);
+                PortObjectInNodeModel.setInputNodeSettings(s, settings);
 
                 //update credentials store of the workflow
-                flowVars.stream()//
-                    .filter(f -> f.getVariableType().equals(VariableType.CredentialsType.INSTANCE))//
-                    .filter(f -> !cs.contains(f.getName()))//
+                flowVars.stream()
+                    .filter(f -> f.getType().equals(FlowVariable.Type.CREDENTIALS))
+                    .filter(f -> !cs.contains(f.getName()))
                     .forEach(cs::addFromFlowVariable);
 
-                NodeIDSuffixAndPortObjectID added = PortObjectRepository.addPortObjectReferenceReaderToWorkflow(in,
-                    tempWFM, flowVars, -1, m_copyDataIntoNewContext);
-                portObjectRepositoryIDs.add(added.getPortObjectRepositoryID());
-                ins[i] = added.getNodeIDSuffix().prependParent(tempWFM.getID());
+                tempWFM.loadNodeSettings(inID, s);
+                ins[i] = inID;
             }
             // execute inPort object nodes to store the input data in them
             if (ins.length > 0 && !tempWFM.executeAllAndWaitUntilDoneInterruptibly()) {
@@ -275,7 +294,7 @@ public final class SandboxedNodeCreator {
             NodeContainer targetNode = tempWFM.getNodeContainer(targetNodeID);
             // connect target node to inPort object nodes, skipping unconnected (optional) inputs
             IntStream.range(0, inCnt).filter(i -> ins[i] != null)
-                .forEach(i -> tempWFM.addConnection(ins[i], 1, targetNodeID, i));
+            .forEach(i -> tempWFM.addConnection(ins[i], 1, targetNodeID, i));
             if (m_forwardConnectionProgressEvents) {
                 setupConnectionProgressEventListeners(m_nc, targetNode);
             }
@@ -425,7 +444,7 @@ public final class SandboxedNodeCreator {
      * @param portIdx input port of the {@link NodeContainer} {@link #m_nc}
      * @return the flow variables available at this port
      */
-    private List<FlowVariable> getFlowVariablesOnInPort(final int portIdx) {
+    private List<FlowVariable> getFlowVariablesOnPort(final int portIdx) {
         WorkflowManager wfm = m_nc.getParent();
         Optional<Stream<FlowVariable>> nodeInputFlowVariables = wfm.getNodeInputFlowVariables(m_nc.getID(), portIdx);
         if (nodeInputFlowVariables.isPresent()) {

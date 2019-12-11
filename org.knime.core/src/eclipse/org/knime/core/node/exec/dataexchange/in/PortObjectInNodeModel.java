@@ -51,7 +51,6 @@ package org.knime.core.node.exec.dataexchange.in;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.Optional;
 
 import org.knime.core.data.container.ContainerTable;
@@ -245,23 +244,16 @@ public final class PortObjectInNodeModel extends NodeModel {
      * object with the specified ID and variables (during execute)
      *
      * @param s settings object with settings of this node.
-     * @param portObjectID the ID of the port object to inject
-     * @param flowVariables The flow variables the node should expose
-     * @param copyData Wether to deep-clone data (context switch)
+     * @param portObjectIDSettings TODO
      * @throws InvalidSettingsException if the settings are invalid.
      */
-    public static void setInputNodeSettings(final NodeSettings s,
-            final int portObjectID, final List<FlowVariable> flowVariables, final boolean copyData)
+    public static void setInputNodeSettings(final NodeSettings s, final PortObjectIDSettings portObjectIDSettings)
         throws InvalidSettingsException {
-        PortObjectIDSettings poSettings = new PortObjectIDSettings();
-        poSettings.setId(portObjectID);
-        poSettings.setCopyData(copyData);
-        poSettings.setFlowVariables(flowVariables);
         if (!s.containsKey("model")) {
             s.addNodeSettings("model");
         }
         NodeSettings modelSettings = s.getNodeSettings("model");
-        poSettings.saveSettings(modelSettings);
+        portObjectIDSettings.saveSettings(modelSettings);
     }
 
     public PortObjectIDSettings getInputNodeSettingsCopy() {

@@ -115,14 +115,19 @@ public final class PortObjectIDSettings {
                 m_id = settings.getInt("portobject_ID");
                 break;
             case Node:
-                m_nodeID = NodeID.fromString(settings.getString("node_ID"));
+                try {
+                    m_nodeID = NodeID.fromString(settings.getString("node_ID"));
+                } catch (IllegalArgumentException ex1) {
+                    throw new InvalidSettingsException(ex1);
+                }
                 m_portIdx = settings.getInt("port_idx");
+                CheckUtils.checkSetting(m_portIdx >= 0, "Port index must be >= 0: %d", m_portIdx);
                 break;
             case File:
                 try {
                     m_uri = new URI(settings.getString("uri"));
                 } catch (URISyntaxException ex) {
-                    throw new RuntimeException(ex);
+                    throw new InvalidSettingsException(ex);
                 }
                 m_isTable = settings.getBoolean("is_table");
                 break;

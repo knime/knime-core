@@ -135,6 +135,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/exec/dataexchange/in/PortObjectInNodeModel.java" type="org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel"/>
+                <message_argument value="setInputNodeSettings(NodeSettings, int, List&lt;FlowVariable&gt;, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/util/AbstractJFileChooserBrowser.java" type="org.knime.core.node.util.AbstractJFileChooserBrowser">
         <filter id="576725006">
             <message_arguments>
