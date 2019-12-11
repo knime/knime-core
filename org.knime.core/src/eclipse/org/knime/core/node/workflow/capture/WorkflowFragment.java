@@ -60,7 +60,7 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @since 4.1 // TODO replace with 4.2 since tag
  */
-public class WorkflowFragment {
+public final class WorkflowFragment {
 
     private final WorkflowManager m_wfm;
 
@@ -121,7 +121,8 @@ public class WorkflowFragment {
      * @return type of the given port
      */
     public PortType getInPortType(final Port p) {
-        return m_wfm.getNodeContainer(p.getNodeID()).getInPort(p.getIndex()).getPortType();
+        NodeID nodeID = p.getNodeIDSuffix().prependParent(m_wfm.getID());
+        return m_wfm.getNodeContainer(nodeID).getInPort(p.getIndex()).getPortType();
     }
 
     /**
@@ -131,33 +132,34 @@ public class WorkflowFragment {
      * @return type of the given port
      */
     public PortType getOutPortType(final Port p) {
-        return m_wfm.getNodeContainer(p.getNodeID()).getOutPort(p.getIndex()).getPortType();
+        NodeID nodeID = p.getNodeIDSuffix().prependParent(m_wfm.getID());
+        return m_wfm.getNodeContainer(nodeID).getOutPort(p.getIndex()).getPortType();
     }
 
     /**
      * References/marks ports in the workflow fragment by node id and index.
      */
-    public static class Port {
-        private NodeID m_nodeId;
+    public static final class Port {
+        private NodeIDSuffix m_nodeIDSuffix;
 
         private int m_idx;
 
         /**
          * Creates an new port marker.
          *
-         * @param nodeId the node's id
+         * @param nodeIDSuffix the node's id
          * @param idx port index
          */
-        public Port(final NodeID nodeId, final int idx) {
-            m_nodeId = nodeId;
+        public Port(final NodeIDSuffix nodeIDSuffix, final int idx) {
+            m_nodeIDSuffix = nodeIDSuffix;
             m_idx = idx;
         }
 
         /**
-         * @return node id
+         * @return node id suffix relative to workflow
          */
-        public NodeID getNodeID() {
-            return m_nodeId;
+        public NodeIDSuffix getNodeIDSuffix() {
+            return m_nodeIDSuffix;
         }
 
         /**

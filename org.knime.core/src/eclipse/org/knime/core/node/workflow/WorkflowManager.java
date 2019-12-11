@@ -183,6 +183,7 @@ import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 import org.knime.core.node.workflow.capture.WorkflowFragment;
+import org.knime.core.node.workflow.capture.WorkflowFragment.Port;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -3492,10 +3493,10 @@ public final class WorkflowManager extends NodeContainer
      * @since 4.1
      */
     public WorkflowFragment capturePartOf(final NodeID endNodeID) throws IllegalScopeException, InvalidSettingsException, InterruptedException {
-        WorkflowManager tempParent = EXTRACTED_WORKFLOW_ROOT.createAndAddProject(
-            "Workflow-Capture-from-" + endNodeID, new WorkflowCreationHelper());
-        Set<NodeIDSuffix> addedPortObjectReaderNodes = new HashSet<>();
         try (WorkflowLock lock = lock()) {
+            WorkflowManager tempParent = EXTRACTED_WORKFLOW_ROOT.createAndAddProject(
+                "Workflow-Capture-from-" + endNodeID, new WorkflowCreationHelper());
+            Set<NodeIDSuffix> addedPortObjectReaderNodes = new HashSet<>();
             // compute offset for new nodes (shifted in case of same
             // workflow, otherwise just underneath each other)
             final int[] moveUIDist;
@@ -3522,6 +3523,12 @@ public final class WorkflowManager extends NodeContainer
 
             NativeNodeContainer startNode = getNodeContainer(m_workflow.getMatchingScopeStart(endNodeID,
                 CaptureWorkflowStartNode.class, CaptureWorkflowEndNode.class), NativeNodeContainer.class, true);
+            List<Port> workflowFragmentInputs = getOutgoingConnectionsFor(startNode.getID()).stream()//
+                .map(cc -> new Port(NodeIDSuffix.create(getID(), cc.getDest()), cc.getDestPort()))//
+                .collect(Collectors.toList());
+            List<Port> workflowFragmentOutputs = getIncomingConnectionsFor(endNodeID).stream()//
+                .map(cc -> new Port(NodeIDSuffix.create(getID(), cc.getSource()), cc.getSourcePort()))//
+                .collect(Collectors.toList());
 
 
             // copy nodes in loop body
@@ -3570,29 +3577,8 @@ public final class WorkflowManager extends NodeContainer
                 NodeContainer nc = tempParent.getNodeContainer(id);
                 nc.setUIInformation(NodeUIInformation.builder(nc.getUIInformation()).translate(moveDist).build());
             }
-            NodeID[] allButScopeIDsRelativized = Arrays.stream(allButScopeIDs)//
-                    .map(id -> NodeIDSuffix.create(getID(), id))//
-                    .map(nodeIDSuffix -> nodeIDSuffix.prependParent(tempParent.getID()))//
-                    .toArray(NodeID[]::new);
-            CollapseIntoMetaNodeResult asMetaNode = tempParent.collapseIntoMetaNode(
-                allButScopeIDsRelativized, new WorkflowAnnotation[0], tempParent.getName());
 
-            tempParent.convertMetaNodeToSubNode(asMetaNode.getCollapsedMetanodeID());
-
-            WorkflowCopyContent pastedResult = EXTRACTED_WORKFLOW_ROOT.copyFromAndPasteHere(tempParent,
-                WorkflowCopyContent.builder().setNodeIDs(asMetaNode.getCollapsedMetanodeID()).build());
-            SubNodeContainer resultSNC = EXTRACTED_WORKFLOW_ROOT.getNodeContainer(
-                pastedResult.getNodeIDs()[0], SubNodeContainer.class, true);
-            WorkflowManager resultSNCWFM = resultSNC.getWorkflowManager();
-            NodeID[] portObjectReaderIDs = addedPortObjectReaderNodes.stream()//
-                    .map(suffix -> suffix.prependParent(resultSNCWFM.getID()))//
-                    .toArray(NodeID[]::new);
-
-            resultSNCWFM.executeUpToHere(portObjectReaderIDs);
-            resultSNCWFM.waitWhileInExecution(-1, TimeUnit.MILLISECONDS);
-            return new WorkflowFragment(resultSNC, addedPortObjectReaderNodes);
-        } finally {
-            EXTRACTED_WORKFLOW_ROOT.removeNode(tempParent.getID());
+            return new WorkflowFragment(tempParent, workflowFragmentInputs, workflowFragmentOutputs, addedPortObjectReaderNodes);
         }
     }
 
