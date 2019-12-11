@@ -51,6 +51,7 @@ package org.knime.core.node.workflow.capture;
 import java.util.List;
 import java.util.Set;
 
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -77,6 +78,9 @@ public class WorkflowFragment {
         m_portObjectReferenceReaderNodes = portObjectReferenceReaderNodes;
     }
 
+    /**
+     * @return the workflow manager representing the fragment
+     */
     public WorkflowManager getWorkflow() {
         return m_wfm;
     }
@@ -98,9 +102,12 @@ public class WorkflowFragment {
 
         private int m_idx;
 
-        public Port(final NodeID nodeId, final int idx) {
+        private PortType m_type;
+
+        public Port(final NodeID nodeId, final int idx, final PortType type) {
             m_nodeId = nodeId;
             m_idx = idx;
+            m_type = type;
         }
 
         public NodeID getNodeID() {
@@ -109,6 +116,10 @@ public class WorkflowFragment {
 
         public int getIndex() {
             return m_idx;
+        }
+
+        public PortType getType() {
+            return m_type;
         }
     }
 }
