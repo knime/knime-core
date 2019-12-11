@@ -70,6 +70,14 @@ public class WorkflowFragment {
 
     private List<Port> m_outputPorts;
 
+    /**
+     * Creates a new instance.
+     *
+     * @param wfm the workflow manager representing the workflow fragment
+     * @param inputPorts workflow fragment's input ports
+     * @param outputPorts workflow fragment's output ports
+     * @param portObjectReferenceReaderNodes relative node ids of nodes that reference port objects in another workflow
+     */
     public WorkflowFragment(final WorkflowManager wfm, final List<Port> inputPorts, final List<Port> outputPorts,
         final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
         m_wfm = wfm;
@@ -85,41 +93,78 @@ public class WorkflowFragment {
         return m_wfm;
     }
 
+    /**
+     * @return relative node ids of nodes that reference port objects in another workflow (TODO revisit)
+     */
     public Set<NodeIDSuffix> getPortObjectReferenceReaderNodes() {
         return m_portObjectReferenceReaderNodes;
     }
 
+    /**
+     * @return workflow fragment's input ports
+     */
     public List<Port> getInputPorts() {
         return m_inputPorts;
     }
 
+    /**
+     * @return workflow fragment's output ports
+     */
     public List<Port> getOutputPorts() {
         return m_outputPorts;
     }
 
+    /**
+     * Determines type of a given port.
+     *
+     * @param p
+     * @return type of the given port
+     */
+    public PortType getInPortType(final Port p) {
+        return m_wfm.getNodeContainer(p.getNodeID()).getInPort(p.getIndex()).getPortType();
+    }
+
+    /**
+     * Determines type of a given port.
+     *
+     * @param p
+     * @return type of the given port
+     */
+    public PortType getOutPortType(final Port p) {
+        return m_wfm.getNodeContainer(p.getNodeID()).getOutPort(p.getIndex()).getPortType();
+    }
+
+    /**
+     * References/marks ports in the workflow fragment by node id and index.
+     */
     public static class Port {
         private NodeID m_nodeId;
 
         private int m_idx;
 
-        private PortType m_type;
-
-        public Port(final NodeID nodeId, final int idx, final PortType type) {
+        /**
+         * Creates an new port marker.
+         *
+         * @param nodeId the node's id
+         * @param idx port index
+         */
+        public Port(final NodeID nodeId, final int idx) {
             m_nodeId = nodeId;
             m_idx = idx;
-            m_type = type;
         }
 
+        /**
+         * @return node id
+         */
         public NodeID getNodeID() {
             return m_nodeId;
         }
 
+        /**
+         * @return port index
+         */
         public int getIndex() {
             return m_idx;
-        }
-
-        public PortType getType() {
-            return m_type;
         }
     }
 }
