@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -107,7 +108,7 @@ public abstract class VariableType<T> {
                 return false;
             }
             final VariableValue<?> other = (VariableValue<?>)obj;
-            return getType().equals(other.getType()) && m_value.equals(other.m_value);
+            return getType().equals(other.getType()) && Objects.equals(m_value, other.m_value);
         }
 
         T get() {
@@ -120,7 +121,7 @@ public abstract class VariableType<T> {
 
         @Override
         public int hashCode() {
-            return m_value.hashCode();
+            return 31 * m_type.hashCode() + Objects.hashCode(m_value);
         }
 
         void save(final NodeSettingsWO settings) {
@@ -535,6 +536,11 @@ public abstract class VariableType<T> {
             private StringValue(final String string) {
                 super(INSTANCE, string);
             }
+
+            @Override
+            String asString() {
+                return get();
+            }
         }
 
         /**
@@ -647,7 +653,7 @@ public abstract class VariableType<T> {
         public static final CredentialsType INSTANCE = new CredentialsType();
 
         private CredentialsType() {
-           // singleton
+            // singleton
         }
 
         @SuppressWarnings("deprecation")

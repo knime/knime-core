@@ -319,7 +319,7 @@ public final class FlowVariable extends FlowObject {
      * @param expectedType the expected {@link VariableType} of the to-be-returned value (use {@link #getVariableType()
      *            to obtain the actual type and compare it against the expected type}
      * @param <T> the simple type of the to-be-returned value
-     * @return non-null simple value object represented by this variable
+     * @return simple value object represented by this variable
      * @throws IllegalArgumentException if the argument is null or not of the correct class.
      * @since 4.1
      */
