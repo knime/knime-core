@@ -3491,7 +3491,8 @@ public final class WorkflowManager extends NodeContainer
     /**
      * @since 4.1
      */
-    public WorkflowFragment capturePartOf(final NodeID endNodeID) throws IllegalScopeException, InvalidSettingsException, InterruptedException {
+    public WorkflowFragment capturePartOf(final NodeID endNodeID)
+        throws IllegalScopeException, InvalidSettingsException, InterruptedException {
         try (WorkflowLock lock = lock()) {
             WorkflowManager tempParent = EXTRACTED_WORKFLOW_ROOT.createAndAddProject(
                 "Workflow-Capture-from-" + endNodeID, new WorkflowCreationHelper());
@@ -3500,10 +3501,11 @@ public final class WorkflowManager extends NodeContainer
             NativeNodeContainer endNode = getNodeContainer(endNodeID, NativeNodeContainer.class, true);
             CheckUtils.checkArgument(endNode.getNodeModel() instanceof CaptureWorkflowEndNode,
                 "Argument must be instance of %s", CaptureWorkflowEndNode.class.getSimpleName());
+            // "scope body" -- will copy those nodes later
             List<NodeContainer> nodesInScope = m_workflow.getNodesInScope(endNode);
 
-            final int[] boundingBox = NodeUIInformation.getBoundBoxOf(nodesInScope);
-            final int[] moveUIDist = new int[] {-boundingBox[0] - 20, -boundingBox[1] - 20};
+            // "scope body" and port object ref readers -- will determine bounding box and move them to the top left
+            List<NodeContainer> nodesToDetermineBoundingBox = new ArrayList<>(nodesInScope);
 
             NativeNodeContainer startNode = getNodeContainer(m_workflow.getMatchingScopeStart(endNodeID,
                 CaptureWorkflowStartNode.class, CaptureWorkflowEndNode.class), NativeNodeContainer.class, true);
@@ -3540,6 +3542,7 @@ public final class WorkflowManager extends NodeContainer
                         NodeUIInformation sourceUIInformation = getNodeContainer(sourceID).getUIInformation();
                         int sourcePort = c.getSourcePort();
                         NodeContainer sourceNode = getNodeContainer(sourceID);
+                        nodesToDetermineBoundingBox.add(sourceNode);
                         NodeOutPort upstreamPort;
                         if (sourceID.equals(getID())) {
                             assert c.getType() == ConnectionType.WFMIN;
@@ -3556,8 +3559,16 @@ public final class WorkflowManager extends NodeContainer
                 }
             }
 
+            final int[] boundingBox = NodeUIInformation.getBoundBoxOf(nodesToDetermineBoundingBox);
+            final int[] moveUIDist = new int[] {-boundingBox[0] + 50, -boundingBox[1] + 50};
+
             WorkflowCopyContent pastedContent = tempParent.copyFromAndPasteHere(this, copyContent.build());
-            Arrays.stream(pastedContent.getNodeIDs()).map(id -> tempParent.getNodeContainer(id))
+            Arrays.stream(pastedContent.getNodeIDs())//
+                .map(id -> tempParent.getNodeContainer(id))//
+                .forEach(nc -> NodeUIInformation.moveNodeBy(nc, moveUIDist));
+            addedPortObjectReaderNodes.stream()//
+                .map(suffix -> suffix.prependParent(tempParent.getID()))//
+                .map(id -> tempParent.getNodeContainer(id))//
                 .forEach(nc -> NodeUIInformation.moveNodeBy(nc, moveUIDist));
 
             return new WorkflowFragment(tempParent, workflowFragmentInputs, workflowFragmentOutputs,

@@ -177,7 +177,7 @@ public final class NodeUIInformation {
      * @noreference This method is not intended to be referenced by clients.
      */
     static int[] getBoundBoxOf(final Collection<NodeContainer> containers) {
-        int[] result = new int[4];
+        int[] result = new int[] {Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};
         for (NodeContainer nc : containers) {
             int[] bounds = ObjectUtils.defaultIfNull(nc.getUIInformation().getBounds(), EMPTY_FOUR_DIMENSIONS);
             result[0] = Math.min(result[0], bounds[0]);
@@ -185,7 +185,7 @@ public final class NodeUIInformation {
             result[2] = Math.max(result[2], bounds[0] + bounds[2]);
             result[3] = Math.max(result[3], bounds[1] + bounds[3]);
         }
-        return result;
+        return result[0] == Integer.MAX_VALUE ? EMPTY_FOUR_DIMENSIONS : result;
     }
 
     /**
