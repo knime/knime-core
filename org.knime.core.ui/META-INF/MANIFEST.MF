@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Core UI
 Bundle-SymbolicName: org.knime.core.ui;singleton:=true
-Bundle-Version: 4.1.0.qualifier
+Bundle-Version: 4.2.0.qualifier
 Bundle-ClassPath: .
 Bundle-Activator: org.knime.core.ui.CoreUIPlugin
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
