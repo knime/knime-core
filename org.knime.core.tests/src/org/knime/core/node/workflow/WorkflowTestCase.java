@@ -71,7 +71,9 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.util.ThreadUtils;
+import org.knime.core.util.Version;
 
 /**
  *
@@ -107,7 +109,17 @@ public abstract class WorkflowTestCase {
 
     protected WorkflowLoadResult loadWorkflow(final File workflowDir, final ExecutionMonitor exec,
         final DataContainerSettings settings) throws Exception {
-        return loadWorkflow(workflowDir, exec, new ConfigurableWorkflowLoadHelper(workflowDir, settings));
+        return loadWorkflow(workflowDir, exec, new ConfigurableWorkflowLoadHelper(workflowDir, settings) {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
+                final boolean isNightlyBuild) {
+                return UnknownKNIMEVersionLoadPolicy.Try;
+            }
+        });
     }
 
 
