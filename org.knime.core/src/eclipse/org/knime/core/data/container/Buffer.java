@@ -2818,8 +2818,10 @@ public class Buffer implements KNIMEStreamConstants {
                     if (wfm != null) {
                         final WorkflowContext workflowContext = wfm.getContext();
                         if (workflowContext != null) {
-                            if (!workflowContext.getTempLocation().isDirectory()) {
-                                throw new IOException("Workflow temp directory has been deleted.");
+                            final File tempLocation = workflowContext.getTempLocation();
+                            if (!tempLocation.isDirectory()) {
+                                throw new IOException(
+                                    "Workflow temp directory " + tempLocation.toString() + " has been deleted.");
                             }
                         }
                     }
