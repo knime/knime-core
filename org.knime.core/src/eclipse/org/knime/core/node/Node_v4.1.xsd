@@ -43,7 +43,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
   ===============================================================================
   
-  This XSD describes node description introduced with KNIME 3.1.
+  This XSD describes node description introduced with KNIME 4.1.
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
         xmlns="http://knime.org/node/v4.1" targetNamespace="http://knime.org/node/v4.1"
