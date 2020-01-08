@@ -3164,9 +3164,8 @@ public final class WorkflowManager extends NodeContainer
             }
             // note this is NOT the else of the if above - success can be modified...
             if (!success && nc instanceof SingleNodeContainer) {
-                // clean up node interna and status (but keep org. message!)
                 // switch from IDLE to CONFIGURED if possible!
-                configureSingleNodeContainer((SingleNodeContainer)nc, /*keepNodeMessage=*/true);
+                configureSingleNodeContainer((SingleNodeContainer)nc, /*keepNodeMessage=*/false);
                 nc.setNodeMessage(latestNodeMessage);
             }
             // now handle non success for all types of nodes:
