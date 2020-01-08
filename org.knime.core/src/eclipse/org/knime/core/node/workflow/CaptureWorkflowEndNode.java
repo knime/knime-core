@@ -51,7 +51,7 @@ package org.knime.core.node.workflow;
 /**
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @since 4.1
+ * @since 4.2
  */
 public interface CaptureWorkflowEndNode extends ScopeEndNode<FlowCaptureContext> {
 

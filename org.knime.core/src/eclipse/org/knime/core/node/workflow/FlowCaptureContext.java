@@ -49,7 +49,7 @@ package org.knime.core.node.workflow;
  *
  * @see CaptureWorkflowStartNode
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @since 4.1
+ * @since 4.2
  */
 public final class FlowCaptureContext extends FlowScopeContext {
 

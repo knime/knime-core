@@ -53,7 +53,7 @@ package org.knime.core.node.workflow;
  * Clients usually don't implemnt this interface as the corresponding nodes are part of the core KNIME framework.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @since 4.1
+ * @since 4.2
  */
 public interface CaptureWorkflowStartNode extends ScopeStartNode<FlowCaptureContext> {
 

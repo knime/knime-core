@@ -1689,7 +1689,7 @@ public abstract class NodeModel implements ViewableModel {
      * @param startNodeType the expected type of the scope start node
      * @return the scope start of the given type or an empty optional if either the type doesn't match, the node is not
      *         a scope end or the scope is not correctly closed by the user
-     * @since 4.1
+     * @since 4.2
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected final <SSN extends ScopeStartNode> Optional<SSN> getScopeStartNode(final Class<SSN> startNodeType) {

@@ -185,6 +185,12 @@
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="addNodeAndApplyContext(NodeFactory&lt;?&gt;, ModifiableNodeCreationConfiguration)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="addNodeAndApplyContext(NodeFactory&lt;?&gt;, NodeCreationContext)"/>
             </message_arguments>
         </filter>

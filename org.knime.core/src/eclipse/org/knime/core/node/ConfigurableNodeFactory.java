@@ -239,6 +239,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          *
          * @param pGrpId the port group identifier
          * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.2
          */
         public void addExtendableInputPortGroup(final String pGrpId,
             final Predicate<PortType> supportedTypesPredicate) {
@@ -263,6 +264,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param pGrpId the port group identifier
          * @param fixedPortTypes the fixed port types
          * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.2
          */
         public void addExtendableInputPortGroup(final String pGrpId, final PortType[] fixedPortTypes,
             final Predicate<PortType> supportedTypesPredicate) {
@@ -285,6 +287,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          *
          * @param pGrpId the port group identifier
          * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.2
          */
         public void addExtendableOutputPortGroup(final String pGrpId,
             final Predicate<PortType> supportedTypesPredicate) {
@@ -309,6 +312,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param pGrpId the port group identifier
          * @param fixedPortTypes the fixed port types
          * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.2
          */
         public void addExtendableOutputPortGroup(final String pGrpId, final PortType[] fixedPortTypes,
             final Predicate<PortType> supportedTypesPredicate) {
@@ -331,6 +335,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          *
          * @param pGrpId the port group identifier
          * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.2
          */
         public void addExtendablePortGroup(final String pGrpId,
             final Predicate<PortType> supportedTypesPredicate) {
@@ -355,6 +360,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param pGrpId the port group identifier
          * @param fixedPortTypes the fixed port types
          * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.2
          */
         public void addExtendablePortGroup(final String pGrpId, final PortType[] fixedPortTypes,
             final Predicate<PortType> supportedTypesPredicate) {
@@ -388,6 +394,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          *
          * @param pGrpId the port group identifier
          * @param optionalPortsPredicate the predicate identifying the optional port types
+         * @since 4.2
          */
         public void addOptionalInputPortGroup(final String pGrpId, final Predicate<PortType> optionalPortsPredicate) {
             addOptionalPortGroup(pGrpId, getSupportedTypes(optionalPortsPredicate), true, false);
@@ -408,6 +415,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          *
          * @param pGrpId the port group identifier
          * @param optionalPortsPredicate the predicate identifying the optional port types
+         * @since 4.2
          */
         public void addOptionalOutputPortGroup(final String pGrpId, final Predicate<PortType> optionalPortsPredicate) {
             addOptionalPortGroup(pGrpId, getSupportedTypes(optionalPortsPredicate), false, true);
@@ -428,6 +436,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          *
          * @param pGrpId the port group identifier
          * @param optionalPortsPredicate the predicate identifying optional port types
+         * @since 4.2
          */
         public void addOptionalPortGroup(final String pGrpId,
             final Predicate<PortType> optionalPortsPredicate) {

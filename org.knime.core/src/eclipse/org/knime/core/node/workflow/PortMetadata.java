@@ -54,7 +54,7 @@ import org.knime.core.node.port.PortType;
  * Meta data for the in and outputs of a workflow fragment.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @since 4.1
+ * @since 4.2
  */
 public interface PortMetadata {
 

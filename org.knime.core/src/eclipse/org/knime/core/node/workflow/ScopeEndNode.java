@@ -61,7 +61,7 @@ public interface ScopeEndNode<T extends FlowScopeContext> {
 
     /**
      * @return class of the {@link FlowScopeContext} this scope end node is compatible with
-     * @since 4.1
+     * @since 4.2
      */
     @SuppressWarnings("unchecked")
     default Class<T> getFlowScopeContextClass() {

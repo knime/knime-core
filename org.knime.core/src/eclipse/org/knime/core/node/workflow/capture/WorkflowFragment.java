@@ -58,7 +58,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
- * @since 4.1 // TODO replace with 4.2 since tag
+ * @since 4.2
  */
 public final class WorkflowFragment {
 

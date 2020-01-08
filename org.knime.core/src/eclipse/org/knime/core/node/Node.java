@@ -2640,7 +2640,7 @@ public final class Node implements NodeModelWarningListener {
      * Make model aware of corresponding scope start node of given type.
      *
      * @param head the node, can be <code>null</code> to 'un-set' the start node
-     * @since 4.1
+     * @since 4.2
      */
     @SuppressWarnings({"rawtypes"})
     public void setScopeStartNode(final Node head) {
@@ -2665,7 +2665,7 @@ public final class Node implements NodeModelWarningListener {
      * @param startNodeType the type of the scope start node
      * @return corresponding scope start node or an empty optional if the type doesn't match, this node is not a scope
      *         end or the user didn't close the scope correctly
-     * @since 4.1
+     * @since 4.2
      */
     @SuppressWarnings("rawtypes")
     public <SSN extends ScopeStartNode> Optional<SSN> getScopeStartNode(final Class<SSN> startNodeType) {

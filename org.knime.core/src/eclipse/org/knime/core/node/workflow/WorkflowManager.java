@@ -346,9 +346,8 @@ public final class WorkflowManager extends NodeContainer
     /**
      * The root of all extracted workflows fragements.
      *
-     * @since 4.1
+     * @since 4.2
      */
-    // TODO: since tag needs to be changed once the baseline has been updated
     public static final WorkflowManager EXTRACTED_WORKFLOW_ROOT =
         ROOT.createAndAddProject("KNIME extracted workflow repository", new WorkflowCreationHelper());
 
@@ -758,10 +757,9 @@ public final class WorkflowManager extends NodeContainer
      * @param factory NodeFactory used to create the new node
      * @param creationConfig the creation configuration provided by the framework (e.g. the URL of the file that was
      *            dragged on the canvas) or null
-     * @param nodeIDSuffix unique NodeID of the to-be-created node or -1 if a new NodeID should be generated
+     * @param nodeIDSuffix unique node ID suffix of the to-be-created node or -1 if a new NodeID should be generated
      * @return the node id of the created node.
-     *  TODO: replace with 4.2 since tag
-     * @since 4.1
+     * @since 4.2
      */
     public NodeID addNodeAndApplyContext(final NodeFactory<?> factory,
         final ModifiableNodeCreationConfiguration creationConfig, final int nodeIDSuffix) {
@@ -3489,7 +3487,7 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * @since 4.1
+     * @since 4.2
      */
     public WorkflowFragment capturePartOf(final NodeID endNodeID)
         throws IllegalScopeException, InvalidSettingsException, InterruptedException {
