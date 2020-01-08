@@ -159,7 +159,8 @@ public class DefaultNodeProgressMonitorTest {
             assertThat(progressPointer.get().getMessage(), is(equalTo(lastExpectedMsg)));
             // the lazy string creation should only be called 4 times a second at most,
             // it must be at least two - one for the reference string creation and one during an event
-            Assert.assertThat(stringComposeCounter.getValue(), is(allOf(greaterThanOrEqualTo(2L), lessThanOrEqualTo(5L))));
+            // 2020-01-08, BW: increment from max=5 to max=8 -- encountered a longer running test case on Win Server
+            Assert.assertThat(stringComposeCounter.getValue(), is(allOf(greaterThanOrEqualTo(2L), lessThanOrEqualTo(8L))));
         } finally {
             toMonitor.removeProgressListener(l);
         }
