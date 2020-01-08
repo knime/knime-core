@@ -52,8 +52,6 @@ import java.util.Random;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
-import junit.framework.TestCase;
-
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -70,6 +68,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
 import org.knime.core.node.util.ViewUtils;
+
+import junit.framework.TestCase;
 
 /**
  * Test class for public methods in a
@@ -746,7 +746,9 @@ public class TableContentModelTest extends TestCase {
         assertTrue(model.isRowCountFinal());
         final HiLiteHandler hiliter = new HiLiteHandler();
         model.setHiLiteHandler(hiliter);
-        final Random rand = new Random();
+        long seed = System.currentTimeMillis();
+        final Random rand = new Random(seed);
+        NodeLogger.getLogger(TableContentModelTest.class).infoWithFormat("Running test with seed %d", seed);
         int nrHiLitKeys = 0;
         // ok, let's fire arbitrary events and then check if it is properly
         // reflected in the model
