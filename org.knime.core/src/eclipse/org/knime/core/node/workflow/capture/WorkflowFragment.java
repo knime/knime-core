@@ -76,8 +76,10 @@ import org.knime.core.node.config.Config;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
@@ -88,6 +90,21 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
 
 /**
+ * Represents a sub-workflow by it's own {@link WorkflowManager}-instance - similar to {@link SubNodeContainer}. Unlike
+ * the {@link SubNodeContainer}, a workflow fragment
+ * <ul>
+ * <li>is not part of the {@link NodeContainer} hierarchy</li>
+ * <li>the input- and output ports a represented by {@link Port}-objects (instead of extra nodes within the same
+ * workflow)</li>
+ * <li>it has metadata that is accessible without loading the contained {@link WorkflowManager}, such as name, input-
+ * and output ports (id, index, type), ids of so called 'object reference reader nodes'</li>
+ * <li>it maintains a list of node id suffixes of 'object reference reader nodes' (as metadata) that represents
+ * additional static input data (e.g. a decision tree model)</li>
+ * </ul>
+ *
+ * Workflow fragment instances are returned by {@link WorkflowManager#capturePartOf(NodeID)}.
+ *
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @since 4.2
  */

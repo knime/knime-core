@@ -3487,6 +3487,17 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * Captures the part of a workflow that is encapsulated by {@link CaptureWorkflowStartNode} and
+     * {@link CaptureWorkflowEndNode}s.
+     *
+     * @param endNodeID the node id that must represent a {@link CaptureWorkflowEndNode}
+     *
+     * @return a {@link WorkflowFragment} that represents the captured part
+     * @throws IllegalScopeException
+     * @throws InvalidSettingsException
+     * @throws InterruptedException
+     * @throws IllegalArgumentException if the given node id doesn't represent a 'capture workflow end node' or the
+     *             respective 'capture workflow start node' is missing
      * @since 4.2
      */
     public WorkflowFragment capturePartOf(final NodeID endNodeID)
@@ -3505,8 +3516,13 @@ public final class WorkflowManager extends NodeContainer
             // "scope body" and port object ref readers -- will determine bounding box and move them to the top left
             List<NodeContainer> nodesToDetermineBoundingBox = new ArrayList<>(nodesInScope);
 
-            NativeNodeContainer startNode = getNodeContainer(m_workflow.getMatchingScopeStart(endNodeID,
-                CaptureWorkflowStartNode.class, CaptureWorkflowEndNode.class), NativeNodeContainer.class, true);
+            NodeID startNodeID = m_workflow.getMatchingScopeStart(endNodeID, CaptureWorkflowStartNode.class,
+                CaptureWorkflowEndNode.class);
+            if (startNodeID == null) {
+                throw new IllegalArgumentException(
+                    "The passed node id doesn't represent a 'capture workflow end node' or it's respective start node is missing.");
+            }
+            NativeNodeContainer startNode = getNodeContainer(startNodeID, NativeNodeContainer.class, true);
             List<Port> workflowFragmentInputs = getOutgoingConnectionsFor(startNode.getID()).stream()//
                 .map(cc -> new Port(NodeIDSuffix.create(getID(), cc.getDest()), cc.getDestPort(),
                     getNodeContainer(cc.getDest()).getInPort(cc.getDestPort()).getPortType()))//
