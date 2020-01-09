@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -72,7 +73,9 @@ import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.config.Config;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
@@ -205,28 +208,6 @@ public final class WorkflowFragment {
     }
 
     /**
-     * Determines type of a given port.
-     *
-     * @param p
-     * @return type of the given port
-     */
-    public PortType getInPortType(final Port p) {
-        NodeID nodeID = p.getNodeIDSuffix().prependParent(m_wfm.getID());
-        return m_wfm.getNodeContainer(nodeID).getInPort(p.getIndex()).getPortType();
-    }
-
-    /**
-     * Determines type of a given port.
-     *
-     * @param p
-     * @return type of the given port
-     */
-    public PortType getOutPortType(final Port p) {
-        NodeID nodeID = p.getNodeIDSuffix().prependParent(m_wfm.getID());
-        return m_wfm.getNodeContainer(nodeID).getOutPort(p.getIndex()).getPortType();
-    }
-
-    /**
      * Saves the workflow fragment to a zip output stream.
      *
      * @param out the stream to write to
@@ -328,7 +309,14 @@ public final class WorkflowFragment {
             Config portConf = model.addConfig("port_" + i);
             portConf.addString("node_id", ports.get(i).getNodeIDSuffix().toString());
             portConf.addInt("index", ports.get(i).getIndex());
+            Config type = portConf.addConfig("type");
+            savePortType(type, ports.get(i).getType().get());
         }
+    }
+
+    private static void savePortType(final Config typeConf, final PortType type) {
+        typeConf.addString("portObjectClass", type.getPortObjectClass().getCanonicalName());
+        typeConf.addBoolean("isOptional", type.isOptional());
     }
 
     private static List<Port> loadPorts(final ModelContentRO model) throws InvalidSettingsException {
@@ -336,28 +324,44 @@ public final class WorkflowFragment {
         List<Port> ports = new ArrayList<WorkflowFragment.Port>(size);
         for (int i = 0; i < size; i++) {
             Config portConf = model.getConfig("port_" + i);
-            ports.add(new Port(NodeIDSuffix.fromString(portConf.getString("node_id")), portConf.getInt("index")));
+            ports.add(new Port(NodeIDSuffix.fromString(portConf.getString("node_id")), portConf.getInt("index"),
+                loadPortType(portConf.getConfig("type"))));
         }
         return ports;
+    }
+
+    private static PortType loadPortType(final Config type) throws InvalidSettingsException {
+        PortTypeRegistry pte = PortTypeRegistry.getInstance();
+        Optional<Class<? extends PortObject>> objectClass = pte.getObjectClass(type.getString("portObjectClass"));
+        if (objectClass.isPresent()) {
+            return pte.getPortType(objectClass.get(), type.getBoolean("isOptional"));
+        } else {
+            return null;
+        }
     }
 
     /**
      * References/marks ports in the workflow fragment by node id and index.
      */
     public static final class Port {
-        private NodeIDSuffix m_nodeIDSuffix;
+        private final NodeIDSuffix m_nodeIDSuffix;
 
-        private int m_idx;
+        private final int m_idx;
+
+        private final PortType m_type;
 
         /**
          * Creates an new port marker.
          *
          * @param nodeIDSuffix the node's id
          * @param idx port index
+         * @param type - can be <code>null</code> if type couldn't be determined (because the respective plugin is not
+         *            installed)
          */
-        public Port(final NodeIDSuffix nodeIDSuffix, final int idx) {
+        public Port(final NodeIDSuffix nodeIDSuffix, final int idx, final PortType type) {
             m_nodeIDSuffix = nodeIDSuffix;
             m_idx = idx;
+            m_type = type;
         }
 
         /**
@@ -372,6 +376,14 @@ public final class WorkflowFragment {
          */
         public int getIndex() {
             return m_idx;
+        }
+
+        /**
+         * @return port type or an empty optional if port type couldn't be determined (e.g. because the respective
+         *         plugin is not installed)
+         */
+        public Optional<PortType> getType() {
+            return Optional.ofNullable(m_type);
         }
     }
 }

@@ -3508,12 +3508,13 @@ public final class WorkflowManager extends NodeContainer
             NativeNodeContainer startNode = getNodeContainer(m_workflow.getMatchingScopeStart(endNodeID,
                 CaptureWorkflowStartNode.class, CaptureWorkflowEndNode.class), NativeNodeContainer.class, true);
             List<Port> workflowFragmentInputs = getOutgoingConnectionsFor(startNode.getID()).stream()//
-                .map(cc -> new Port(NodeIDSuffix.create(getID(), cc.getDest()), cc.getDestPort()))//
+                .map(cc -> new Port(NodeIDSuffix.create(getID(), cc.getDest()), cc.getDestPort(),
+                    getNodeContainer(cc.getDest()).getInPort(cc.getDestPort()).getPortType()))//
                 .collect(Collectors.toList());
             List<Port> workflowFragmentOutputs = getIncomingConnectionsFor(endNodeID).stream()//
-                .map(cc -> new Port(NodeIDSuffix.create(getID(), cc.getSource()), cc.getSourcePort()))//
+                .map(cc -> new Port(NodeIDSuffix.create(getID(), cc.getSource()), cc.getSourcePort(),
+                    getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort()).getPortType()))//
                 .collect(Collectors.toList());
-
 
             // copy nodes in loop body
             WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
