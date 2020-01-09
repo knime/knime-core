@@ -57,5 +57,4 @@ package org.knime.core.node.workflow;
  */
 public interface CaptureWorkflowStartNode extends ScopeStartNode<FlowCaptureContext> {
 
-    PortMetadata getInputMetadata();
 }

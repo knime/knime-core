@@ -49,11 +49,14 @@
 package org.knime.core.node.workflow;
 
 /**
+ * Interface implemented by {@link org.knime.core.node.NodeModel} classes to define the end of a workflow capturing
+ * scope.
+ *
+ * <p>
+ * Clients usually don't implemnt this interface as the corresponding nodes are part of the core KNIME framework.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 4.2
  */
 public interface CaptureWorkflowEndNode extends ScopeEndNode<FlowCaptureContext> {
-
-    PortMetadata getOutputMetadata();
 }
