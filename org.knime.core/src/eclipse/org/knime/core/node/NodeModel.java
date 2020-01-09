@@ -399,9 +399,6 @@ public abstract class NodeModel implements ViewableModel {
      * Unregisters all views from the model.
      */
     final void unregisterAllViews() {
-        m_logger.assertLog(NodeContext.getContext() != null,
-                "No node context available, please check call hierarchy and fix it");
-
         m_logger.debug("Removing all (" + m_views.size() + ") views from model.");
         for (AbstractNodeView<?> view : m_views) {
             view.closeView();

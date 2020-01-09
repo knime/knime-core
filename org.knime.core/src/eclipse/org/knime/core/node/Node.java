@@ -1733,9 +1733,6 @@ public final class Node implements NodeModelWarningListener {
      * Deletes any temporary resources associated with this node.
      */
     public void cleanup() {
-        LOGGER.assertLog(NodeContext.getContext() != null,
-            "No node context available, please check call hierarchy and fix it");
-
         m_model.unregisterAllViews();
         try {
             m_model.onDispose();
