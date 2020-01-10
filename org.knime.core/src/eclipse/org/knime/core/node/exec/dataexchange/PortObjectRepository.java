@@ -87,7 +87,6 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -204,14 +203,17 @@ public final class PortObjectRepository {
         return Node.copyPortObject(object, exec);
     }
 
-    /** Adds a "Port Object Reference Reader" node to the workflow, which will read the object passed in as argument.
-     * @param outport TODO
-     * @param tempWFM
-     * @param nodeIDSuffix TODO
-     * @return
+    /**
+     * Adds a "Port Object Reference Reader" node to the workflow, which will read the object passed in as argument.
+     *
+     * @param outport the outport to get the port object and flow variables from that the to be added node will provide,
+     *            too (the port object is just referenced by the original node id and port index)
+     * @param wfm the workflow manager the new node should be added to
+     * @param nodeIDSuffix
+     * @return the id of the newly added node
      */
-    public static NodeIDSuffix addPortObjectReferenceReaderToWorkflow(final NodeOutPort outport,
-        final WorkflowManager tempWFM, final int nodeIDSuffix) {
+    public static NodeID addPortObjectReferenceReaderToWorkflow(final NodeOutPort outport,
+        final WorkflowManager wfm, final int nodeIDSuffix) {
         NodeID sourceNodeID = outport.getConnectedNodeContainer().getID();
         int portIndex = outport.getPortIndex();
 
@@ -223,19 +225,18 @@ public final class PortObjectRepository {
         boolean isTable = outport.getPortType().equals(BufferedDataTable.TYPE);
         NodeFactory<?> factory =
             isTable ? SandboxedNodeCreator.TABLE_READ_NODE_FACTORY : SandboxedNodeCreator.OBJECT_READ_NODE_FACTORY;
-        NodeID inID = tempWFM.addNodeAndApplyContext(factory, null, nodeIDSuffix);
+        NodeID inID = wfm.addNodeAndApplyContext(factory, null, nodeIDSuffix);
         NodeSettings s = new NodeSettings("temp_data_in");
         try {
-            tempWFM.saveNodeSettings(inID, s);
+            wfm.saveNodeSettings(inID, s);
             PortObjectInNodeModel.setInputNodeSettings(s, portObjectIDSettings);
-            tempWFM.loadNodeSettings(inID, s);
+            wfm.loadNodeSettings(inID, s);
         } catch (InvalidSettingsException ex) {
             //should never happen
             throw new IllegalStateException("Most likely an implementation error", ex);
         }
 
-        NodeIDSuffix.create(tempWFM.getID(), inID);
-        return NodeIDSuffix.create(tempWFM.getID(), inID);
+        return inID;
     }
 
     /** Deep-clones a data cell. Most important for blob cell to get rid

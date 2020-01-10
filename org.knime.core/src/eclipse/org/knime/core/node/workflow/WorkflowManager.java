@@ -3564,12 +3564,12 @@ public final class WorkflowManager extends NodeContainer
                             } else {
                                 upstreamPort = sourceNode.getOutPort(sourcePort);
                             }
-                            NodeIDSuffix pastedIDSuffix = PortObjectRepository
-                                .addPortObjectReferenceReaderToWorkflow(upstreamPort, tempParent, sourceID.getIndex());
+                            NodeIDSuffix pastedIDSuffix = NodeIDSuffix.create(tempParent.getID(), PortObjectRepository
+                                .addPortObjectReferenceReaderToWorkflow(upstreamPort, tempParent, sourceID.getIndex()));
+
                             NodeID pastedID = pastedIDSuffix.prependParent(tempParent.getID());
                             tempParent.getNodeContainer(pastedID).setUIInformation(sourceUIInformation);
                             addedPortObjectReaderNodes.add(pastedIDSuffix);
-
                         }
                         //TODO deal with WFMIN-connections
                         portObjectReaderConnections.put(Pair.create(c.getDest(), c.getDestPort()), c.getSource());
