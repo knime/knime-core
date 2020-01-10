@@ -209,10 +209,9 @@ public final class PortObjectRepository {
      * @param tempWFM
      * @param nodeIDSuffix TODO
      * @return
-     * @throws InvalidSettingsException
      */
     public static NodeIDSuffix addPortObjectReferenceReaderToWorkflow(final NodeOutPort outport,
-        final WorkflowManager tempWFM, final int nodeIDSuffix) throws InvalidSettingsException {
+        final WorkflowManager tempWFM, final int nodeIDSuffix) {
         NodeID sourceNodeID = outport.getConnectedNodeContainer().getID();
         int portIndex = outport.getPortIndex();
 
@@ -226,10 +225,15 @@ public final class PortObjectRepository {
             isTable ? SandboxedNodeCreator.TABLE_READ_NODE_FACTORY : SandboxedNodeCreator.OBJECT_READ_NODE_FACTORY;
         NodeID inID = tempWFM.addNodeAndApplyContext(factory, null, nodeIDSuffix);
         NodeSettings s = new NodeSettings("temp_data_in");
-        tempWFM.saveNodeSettings(inID, s);
-        PortObjectInNodeModel.setInputNodeSettings(s, portObjectIDSettings);
+        try {
+            tempWFM.saveNodeSettings(inID, s);
+            PortObjectInNodeModel.setInputNodeSettings(s, portObjectIDSettings);
+            tempWFM.loadNodeSettings(inID, s);
+        } catch (InvalidSettingsException ex) {
+            //should never happen
+            throw new IllegalStateException("Most likely an implementation error", ex);
+        }
 
-        tempWFM.loadNodeSettings(inID, s);
         NodeIDSuffix.create(tempWFM.getID(), inID);
         return NodeIDSuffix.create(tempWFM.getID(), inID);
     }
