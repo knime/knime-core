@@ -627,7 +627,12 @@ public class DataContainer implements RowAppender {
      * Disposes this container and all underlying resources.
      *
      * @since 3.1
+     * @deprecated After the container is {@link #close() closed} and its table has been {@link #getTable() obtained},
+     *             it has done its job and you should not dispose its resources directly. Instead, cast the table to a
+     *             {@link ContainerTable} and {@link ContainerTable#clear() clear} it to dispose underlying resources
+     *             once the table is no longer needed.
      */
+    @Deprecated
     public void dispose() {
         m_table.clear();
     }
