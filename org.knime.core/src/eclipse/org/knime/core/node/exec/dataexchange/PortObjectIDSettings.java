@@ -94,8 +94,23 @@ public final class PortObjectIDSettings {
     private CredentialsProvider m_credentialsProvider;
     private FSConnectionFlowVariableProvider m_fsConnectionsProvider;
 
+    /**
+     * Type that determines how the port object is referenced.
+     */
     public static enum ReferenceType {
-            Repository, Node, File;
+
+            /**
+             * Reference via the {@link PortObjectRepository} and an ID.
+             */
+            Repository,
+            /**
+             * Reference to a node (node ID and port idx) in the same workflow.
+             */
+            Node,
+            /**
+             * Reference to a file given by a URI.
+             */
+            File;
     }
 
     /** Constructor, which sets a null ID (no id). */
@@ -193,40 +208,70 @@ public final class PortObjectIDSettings {
         }
     }
 
+    /**
+     * Sets the infos required if a port object of another node (in the same workflow) is referenced.
+     *
+     * @param nodeID the node id to reference
+     * @param portIdx the port index
+     */
     public void setNodeReference(final NodeID nodeID, final int portIdx) {
         m_refType = ReferenceType.Node;
         m_nodeID = nodeID;
         m_portIdx = portIdx;
     }
 
+    /**
+     * Sets the info required if a port object file is referenced.
+     *
+     * @param uri the file URI, possibly a knime-url
+     * @param isTable whether the reference port object is a data table or not
+     */
     public void setFileReference(final URI uri, final boolean isTable) {
         m_refType = ReferenceType.File;
         m_uri = uri;
         m_isTable = isTable;
     }
 
+    /**
+     * @return the type of reference
+     */
     public ReferenceType getReferenceType() {
         return m_refType;
     }
 
+    /**
+     * @return the node ID if reference type {@link ReferenceType#Node}, otherwise possibly <code>null</code>
+     */
     public NodeID getNodeID() {
         return m_nodeID;
     }
 
+    /**
+     * @return the port index if reference type is {@link ReferenceType#Node}, otherwise possibly <code>null</code>
+     */
     public int getPortIdx() {
         return m_portIdx;
     }
 
+    /**
+     * @return the file uri if reference type is {@link ReferenceType#File}, otherwise possibly <code>null</code>
+     */
     public URI getUri() {
         return m_uri;
     }
 
+    /**
+     * @return whether the referenced file represents a table. NOTE: Only of meaningful, if reference type is
+     *         {@link ReferenceType#File}!
+     */
     public boolean isTable() {
         return m_isTable;
     }
 
     /**
-     * Get the currently set ID or null if none have been set.
+     * Get the currently set ID or null if none have been set. Only meaningful if reference type is
+     * {@link ReferenceType#Repository}.
+     *
      * @return the id
      */
     public Integer getId() {

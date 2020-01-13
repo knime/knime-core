@@ -154,9 +154,9 @@ public final class PortObjectInNodeModel extends NodeModel {
     }
 
     /**
-     * TODO: note - only returns something if node references a port object of another node within the same workflow, otherwise null
+     * The port object if the reference type is {@link ReferenceType#Node}, otherwise an empty optional.
      *
-     * @return
+     * @return the port object of an other referenced node
      */
     public Optional<PortObject> getPortObject() {
         if (m_portObjectIDSettings.getReferenceType() == ReferenceType.Node) {
@@ -244,7 +244,7 @@ public final class PortObjectInNodeModel extends NodeModel {
      * object with the specified ID and variables (during execute)
      *
      * @param s settings object with settings of this node.
-     * @param portObjectIDSettings TODO
+     * @param portObjectIDSettings the settings to be set
      * @throws InvalidSettingsException if the settings are invalid.
      */
     public static void setInputNodeSettings(final NodeSettings s, final PortObjectIDSettings portObjectIDSettings)
@@ -256,6 +256,9 @@ public final class PortObjectInNodeModel extends NodeModel {
         portObjectIDSettings.saveSettings(modelSettings);
     }
 
+    /**
+     * @return a copy of the settings representing how the provided port object is referenced
+     */
     public PortObjectIDSettings getInputNodeSettingsCopy() {
         final NodeSettings settings = new NodeSettings("copy");
         m_portObjectIDSettings.saveSettings(settings);
