@@ -203,11 +203,17 @@ public class DataTableSorter extends AbstractTableSorter {
         super(rowCount, dataTableSpec, rowComparator);
     }
 
-    /** Sorts the table passed in the constructor according to the settings
-     * and returns the sorted output table.
+    /**
+     * This method is susceptible to resource leaks, since it may return a table that blocks system resources. Make sure
+     * to check if the returned table is a {@link ContainerTable} and, if it is, {@link ContainerTable#clear() clear} it
+     * to dispose underlying resources once the table is no longer needed.
+     * <p>
+     * Sorts the table passed in the constructor according to the settings and returns the sorted output table.
+     *
      * @param exec To report progress.
      * @return The sorted output.
-     * @throws CanceledExecutionException If canceled. */
+     * @throws CanceledExecutionException If canceled.
+     */
     public DataTable sort(final ExecutionMonitor exec)
         throws CanceledExecutionException {
         return super.sortInternal(exec);
