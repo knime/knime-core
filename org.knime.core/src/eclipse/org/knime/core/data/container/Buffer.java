@@ -2237,6 +2237,29 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
+     * Memory alert listener that will - on memory alert - prevent a FromListIterator to read some table further back
+     * into memory.
+     */
+    private static final class BackIntoMemoryIteratorDropper extends MemoryAlertListener {
+
+        private final WeakReference<FromListIterator> m_iteratorRef;
+
+        BackIntoMemoryIteratorDropper(final FromListIterator iterator) {
+            m_iteratorRef = new WeakReference<>(iterator);
+        }
+
+        @SuppressWarnings("resource")
+        @Override
+        protected boolean memoryAlert(final MemoryAlert alert) {
+            final FromListIterator iterator = m_iteratorRef.get();
+            if (iterator != null) {
+                iterator.dropBackIntoMemoryIterator();
+            }
+            return true;
+        }
+    }
+
+    /**
      * Iterator to be used when data is kept in a list in memory or read back into memory using a
      * {@link BackIntoMemoryIterator}. It uses access by index rather than wrapping an java.util.Iterator as the list
      * may be simultaneously modified while reading (in case the content is fetched from disk and restored in memory).
@@ -2244,19 +2267,17 @@ public class Buffer implements KNIMEStreamConstants {
      */
     private final class FromListIterator extends FromListFallBackFromFileIterator {
 
-    	private BackIntoMemoryIterator m_backIntoMemoryIterator;
+        private BackIntoMemoryIterator m_backIntoMemoryIterator;
 
         private FromListIterator(final List<BlobSupportDataRow> list,
             final BackIntoMemoryIterator backIntoMemoryIterator, final ExecutionMonitor exec) {
             super(list, 0, (int) size() - 1, exec);
             m_backIntoMemoryIterator = backIntoMemoryIterator;
-            MemoryAlertSystem.getInstanceUncollected().addListener(new MemoryAlertListener() {
-                @Override
-                protected boolean memoryAlert(final MemoryAlert alert) {
-                	m_backIntoMemoryIterator = null;
-                    return true;
-                }
-            });
+            MemoryAlertSystem.getInstanceUncollected().addListener(new BackIntoMemoryIteratorDropper(FromListIterator.this));
+        }
+
+        private void dropBackIntoMemoryIterator() {
+            m_backIntoMemoryIterator = null;
         }
 
         @Override
