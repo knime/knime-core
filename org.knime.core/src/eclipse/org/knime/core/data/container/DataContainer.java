@@ -88,6 +88,7 @@ import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettings;
@@ -107,6 +108,11 @@ import org.knime.core.util.FileUtil;
  * Usage: Create a container with a given spec (matching the rows being added later on, add the data using the
  * <code>addRowToTable(DataRow)</code> method and finally close it with <code>close()</code>. You can access the table
  * by <code>getTable()</code>.
+ *
+ * <p>
+ * This class is susceptible to resource leaks. When instantiated outside an {@link ExecutionContext}, make sure to cast
+ * the table obtained via <code>getTable()</code> to a {@link ContainerTable} and {@link ContainerTable#clear() clear}
+ * it to dispose underlying resources once it is no longer needed.
  *
  * <p>
  * Note regarding the column domain: This implementation updates the column domain while new rows are added to the
@@ -290,6 +296,11 @@ public class DataContainer implements RowAppender {
     private boolean m_forceCopyOfBlobs;
 
     /**
+     * This class is susceptible to resource leaks. Consider using
+     * {@link ExecutionContext#createDataContainer(DataTableSpec)} instead of invoking this constructor directly.
+     * Alternatively, make sure to cast the table obtained via <code>getTable()</code> to a {@link ContainerTable} and
+     * {@link ContainerTable#clear() clear} it to dispose underlying resources once it is no longer needed.
+     * <p>
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>. The table spec of the
      * resulting table (the one being returned by <code>getTable()</code>) will have a valid column domain. That means,
      * while rows are added to the container, the domain of each column is adjusted.
@@ -306,6 +317,12 @@ public class DataContainer implements RowAppender {
     }
 
     /**
+     * This class is susceptible to resource leaks. Consider using
+     * {@link ExecutionContext#createDataContainer(DataTableSpec, boolean)} instead of invoking this constructor
+     * directly. Alternatively, make sure to cast the table obtained via <code>getTable()</code> to a
+     * {@link ContainerTable} and {@link ContainerTable#clear() clear} it to dispose underlying resources once it is no
+     * longer needed.
+     * <p>
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
      *
      * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
@@ -317,6 +334,12 @@ public class DataContainer implements RowAppender {
     }
 
     /**
+     * This class is susceptible to resource leaks. Consider using
+     * {@link ExecutionContext#createDataContainer(DataTableSpec, boolean, int)} instead of invoking this constructor
+     * directly. Alternatively, make sure to cast the table obtained via <code>getTable()</code> to a
+     * {@link ContainerTable} and {@link ContainerTable#clear() clear} it to dispose underlying resources once it is no
+     * longer needed.
+     * <p>
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
      *
      * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
