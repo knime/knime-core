@@ -256,7 +256,7 @@ public final class ContainerTable implements KnowsRowCountTable {
     }
 
     /**
-     * Do not call this method! It's used internally to delete temp files.
+     * Be mindful when to call this method. Any underlying resources will be released.
      * Any subsequent iteration on the table will fail!
      * @see KnowsRowCountTable#clear()
      */
