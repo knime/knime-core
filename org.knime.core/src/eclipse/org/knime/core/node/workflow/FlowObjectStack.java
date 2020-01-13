@@ -427,8 +427,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * Get a map of all {@link FlowVariable FlowVariables}.
      *
      * @return The non-null read-only map of flow variable name -&gt; {@link FlowVariable}
-     * TODO: change since tag to 4.2
-     * @since 4.1
+     * @since 4.2
      */
     public Map<String, FlowVariable> getAllAvailableFlowVariables() {
         return getAvailableFlowVariables(VariableType.getAllTypes());

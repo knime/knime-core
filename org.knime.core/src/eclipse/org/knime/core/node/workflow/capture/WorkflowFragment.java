@@ -90,7 +90,7 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
 
 /**
- * Represents a sub-workflow by it's own {@link WorkflowManager}-instance - similar to {@link SubNodeContainer}. Unlike
+ * Represents a sub-workflow by keeping it's own {@link WorkflowManager}-instance - similar to {@link SubNodeContainer}. Unlike
  * the {@link SubNodeContainer}, a workflow fragment
  * <ul>
  * <li>is not part of the {@link NodeContainer} hierarchy</li>
@@ -152,7 +152,7 @@ public final class WorkflowFragment {
     /**
      * Loads the workflow representing the fragment.
      *
-     * Already call {@link #disposeWorkflow()} if the returned workflow manager is not needed anymore!
+     * Always call {@link #disposeWorkflow()} if the returned workflow manager is not needed anymore!
      *
      * This method (i.e. lazily loading the workflow) might become unnecessary in the future once the workflow manager
      * can be de-/serialized directly to/from a stream.
