@@ -202,9 +202,12 @@ public class BufferedDataContainer extends DataContainer {
     }
 
     /**
-     * Returns the content of this container in a BufferedDataTable. The result
-     * can be returned, e.g. in a NodeModel's execute method.
-     * {@inheritDoc}
+     * Obtain the content of this container in a {@link BufferedDataTable}. This method throws an exception unless the
+     * container is closed and therefore has a table available. The result can be returned, e.g., in a NodeModel's
+     * execute method.
+     *
+     * @return reference to the table that has been built up
+     * @throws IllegalStateException if the container has not been closed yet or has already been disposed
      */
     @Override
     public BufferedDataTable getTable() {

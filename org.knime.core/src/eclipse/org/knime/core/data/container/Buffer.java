@@ -1638,6 +1638,10 @@ public class Buffer implements KNIMEStreamConstants {
     @SuppressWarnings("resource")
     final synchronized CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
 
+        if (m_isClearedLock.booleanValue()) {
+            throw new IllegalStateException("Cannot iterate over table: buffer has been cleared.");
+        }
+
         final List<BlobSupportDataRow> list = obtainListFromCacheOrBackIntoMemoryIterator();
         if (list == null) {
 
@@ -2273,7 +2277,8 @@ public class Buffer implements KNIMEStreamConstants {
             final BackIntoMemoryIterator backIntoMemoryIterator, final ExecutionMonitor exec) {
             super(list, 0, (int) size() - 1, exec);
             m_backIntoMemoryIterator = backIntoMemoryIterator;
-            MemoryAlertSystem.getInstanceUncollected().addListener(new BackIntoMemoryIteratorDropper(FromListIterator.this));
+            MemoryAlertSystem.getInstanceUncollected()
+                .addListener(new BackIntoMemoryIteratorDropper(FromListIterator.this));
         }
 
         private void dropBackIntoMemoryIterator() {

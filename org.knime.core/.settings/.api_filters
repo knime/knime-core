@@ -94,6 +94,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/sort/DataTableSorter.java" type="org.knime.core.data.sort.DataTableSorter">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.sort.DataTableSorter"/>
+                <message_argument value="sort(ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/util/DataTableSpecExtractor.java" type="org.knime.core.data.util.DataTableSpecExtractor">
         <filter id="338792546">
             <message_arguments>

@@ -379,6 +379,10 @@ abstract class AbstractTableSorter {
         m_memService = memService;
     }
 
+    DataTable getInputTable() {
+        return m_inputTable;
+    }
+
     /**
      * @return the sortInMemory field, see {@link #setSortInMemory(boolean)} for details.
      */

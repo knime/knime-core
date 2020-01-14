@@ -62,6 +62,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.SetCell;
+import org.knime.core.data.container.CloseableTable;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.BooleanCell;
@@ -143,10 +144,6 @@ public class DataTableSpecExtractor {
     private static final DataType GENERIC_DATA_TYPE = DataType.getType(DataCell.class);
 
     /**
-     * This method is susceptible to resource leaks, since it returns a table that blocks system resources. Make sure to
-     * {@link ContainerTable#clear() clear} the returned table after use to dispose underlying resources once the table
-     * is no longer needed.
-     * <p>
      * Creates and returns a data table containing the meta information of the given spec. The meta information is
      * referred to as the table data specification and contains information such as column names, types, domain values
      * (list of possible values for categorical columns) and lower and upper bounds. It also contains the information
@@ -157,7 +154,7 @@ public class DataTableSpecExtractor {
      * @return The data table containing the meta information of the given spec.
      * @since 4.2
      */
-    public ContainerTable extract(final DataTableSpec spec) {
+    public CloseableTable extract(final DataTableSpec spec) {
         List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
 
         if (m_extractColumnNameAsColumn) {
@@ -297,7 +294,7 @@ public class DataTableSpecExtractor {
             dc.addRowToTable(new DefaultRow(new RowKey(colSpec.getName()), cells));
         }
         dc.close();
-        return (ContainerTable)dc.getTable();
+        return dc.getCloseableTable();
     }
 
 

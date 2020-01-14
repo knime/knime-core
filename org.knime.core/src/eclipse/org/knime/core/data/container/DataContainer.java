@@ -107,12 +107,7 @@ import org.knime.core.util.FileUtil;
  * <p>
  * Usage: Create a container with a given spec (matching the rows being added later on, add the data using the
  * <code>addRowToTable(DataRow)</code> method and finally close it with <code>close()</code>. You can access the table
- * by <code>getTable()</code>.
- *
- * <p>
- * This class is susceptible to resource leaks. When instantiated outside an {@link ExecutionContext}, make sure to cast
- * the table obtained via <code>getTable()</code> to a {@link ContainerTable} and {@link ContainerTable#clear() clear}
- * it to dispose underlying resources once it is no longer needed.
+ * via <code>getCloseableTable()</code>.
  *
  * <p>
  * Note regarding the column domain: This implementation updates the column domain while new rows are added to the
@@ -296,14 +291,12 @@ public class DataContainer implements RowAppender {
     private boolean m_forceCopyOfBlobs;
 
     /**
-     * This class is susceptible to resource leaks. Consider using
-     * {@link ExecutionContext#createDataContainer(DataTableSpec)} instead of invoking this constructor directly.
-     * Alternatively, make sure to cast the table obtained via <code>getTable()</code> to a {@link ContainerTable} and
-     * {@link ContainerTable#clear() clear} it to dispose underlying resources once it is no longer needed.
+     * Consider using {@link ExecutionContext#createDataContainer(DataTableSpec)} instead of invoking this constructor
+     * directly.
      * <p>
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>. The table spec of the
-     * resulting table (the one being returned by <code>getTable()</code>) will have a valid column domain. That means,
-     * while rows are added to the container, the domain of each column is adjusted.
+     * resulting table (the one being returned by <code>getCloseableTable()</code>) will have a valid column domain.
+     * That means, while rows are added to the container, the domain of each column is adjusted.
      * <p>
      * If you prefer to stick with the domain as passed in the argument, use the constructor
      * <code>DataContainer(DataTableSpec, true,
@@ -317,11 +310,8 @@ public class DataContainer implements RowAppender {
     }
 
     /**
-     * This class is susceptible to resource leaks. Consider using
-     * {@link ExecutionContext#createDataContainer(DataTableSpec, boolean)} instead of invoking this constructor
-     * directly. Alternatively, make sure to cast the table obtained via <code>getTable()</code> to a
-     * {@link ContainerTable} and {@link ContainerTable#clear() clear} it to dispose underlying resources once it is no
-     * longer needed.
+     * Consider using {@link ExecutionContext#createDataContainer(DataTableSpec, boolean)} instead of invoking this
+     * constructor directly.
      * <p>
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
      *
@@ -334,11 +324,8 @@ public class DataContainer implements RowAppender {
     }
 
     /**
-     * This class is susceptible to resource leaks. Consider using
-     * {@link ExecutionContext#createDataContainer(DataTableSpec, boolean, int)} instead of invoking this constructor
-     * directly. Alternatively, make sure to cast the table obtained via <code>getTable()</code> to a
-     * {@link ContainerTable} and {@link ContainerTable#clear() clear} it to dispose underlying resources once it is no
-     * longer needed.
+     * Consider using {@link ExecutionContext#createDataContainer(DataTableSpec, boolean, int)} instead of invoking this
+     * constructor directly.
      * <p>
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
      *
@@ -636,14 +623,48 @@ public class DataContainer implements RowAppender {
     }
 
     /**
-     * Get reference to table. This method throws an exception unless the container is closed and has therefore a table
-     * available.
+     * Obtain a reference to the table that has been built up. This method throws an exception unless the container is
+     * closed and therefore has a table available. This method is susceptible to resource leaks. Consider invoking
+     * {@link DataContainer#getCloseableTable() getCloseableTable} instead. Alternatively, make sure to cast the table
+     * to a {@link ContainerTable} and {@link ContainerTable#clear() clear} it to dispose underlying resources once it
+     * is no longer needed.
      *
-     * @return Reference to the table that has been built up.
-     * @throws IllegalStateException If <code>isClosed()</code> returns <code>false</code>
+     * @return reference to the table that has been built up
+     * @throws IllegalStateException if the container has not been closed yet or has already been disposed
      */
     public DataTable getTable() {
         return getBufferedTable();
+    }
+
+    /**
+     * Obtain a one-time-use table that should be used in a <code>try</code>-with-resources block. The resources
+     * underlying the table and the data container are disposed when exiting the <code>try</code>-with-resources block.
+     * This method throws an exception unless the container is closed and therefore has a table available. It also
+     * throws an exception if the container or its underlying resources have already been disposed. If you wish to
+     * obtain the table multiple times, invoke {@link DataContainer#getTable() getTable} instead.
+     *
+     * @return reference to a one-time-use table that, after use, disposes the resources underlying this container
+     * @throws IllegalStateException if the container has not been closed yet or has already been disposed
+     * @since 4.2
+     */
+    public CloseableTable getCloseableTable() {
+        final ContainerTable delegate = getBufferedTable();
+        return new CloseableTable() {
+            @Override
+            public void close() {
+                delegate.clear();
+            }
+
+            @Override
+            public RowIterator iterator() {
+                return delegate.iterator();
+            }
+
+            @Override
+            public DataTableSpec getDataTableSpec() {
+                return delegate.getDataTableSpec();
+            }
+        };
     }
 
     /**
