@@ -117,6 +117,7 @@ public final class SandboxedNodeCreator {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SandboxedNodeCreator.class);
 
+    // TODO we might decide to make this private again when implementing AP-13335
     /** {@link PortObjectInNodeFactory} instance. */
     public static final NodeFactory<?> OBJECT_READ_NODE_FACTORY = new PortObjectInNodeFactory();
 

@@ -102,7 +102,7 @@ public final class PortObjectRepository {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(PortObjectRepository.class);
 
-    private static final Map<Integer, PortObject> MAP = new HashMap<Integer, PortObject>();
+    private static final Map<Integer, PortObject> MAP = new HashMap<>();
 
     private static int nextID;
 
@@ -212,6 +212,7 @@ public final class PortObjectRepository {
      * @param nodeIDSuffix
      * @return the id of the newly added node
      */
+    // TODO we might have to revisit this when implementing AP-13335
     public static NodeID addPortObjectReferenceReaderToWorkflow(final NodeOutPort outport,
         final WorkflowManager wfm, final int nodeIDSuffix) {
         NodeID sourceNodeID = outport.getConnectedNodeContainer().getID();

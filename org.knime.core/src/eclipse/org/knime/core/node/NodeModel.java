@@ -1681,7 +1681,7 @@ public abstract class NodeModel implements ViewableModel {
         m_loopEndNode = end;
     }
 
-    private ScopeStartNode<? extends FlowScopeContext> m_scopeStartNode = null;
+    private ScopeStartNode<?> m_scopeStartNode = null;
 
     /**
      * Access method for scope end nodes to access their respective scope start.
@@ -1691,10 +1691,9 @@ public abstract class NodeModel implements ViewableModel {
      *         a scope end or the scope is not correctly closed by the user
      * @since 4.2
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected final <SSN extends ScopeStartNode> Optional<SSN> getScopeStartNode(final Class<SSN> startNodeType) {
+    protected final <T extends ScopeStartNode<?>> Optional<T> getScopeStartNode(final Class<T> startNodeType) {
         if (m_scopeStartNode != null && startNodeType.isAssignableFrom(m_scopeStartNode.getClass())) {
-            return Optional.of((SSN)m_scopeStartNode);
+            return Optional.of(startNodeType.cast(m_scopeStartNode));
         } else {
             return Optional.empty();
         }
@@ -1705,8 +1704,7 @@ public abstract class NodeModel implements ViewableModel {
      *
      * @param start the start node of the scope (if this is a scope end node).
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    void setScopeStartNode(final ScopeStartNode start) {
+    void setScopeStartNode(final ScopeStartNode<?> start) {
         m_scopeStartNode = start;
     }
 

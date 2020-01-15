@@ -60,12 +60,18 @@ import org.knime.core.node.NodeModel;
 public interface ScopeEndNode<T extends FlowScopeContext> {
 
     /**
-     * @return class of the {@link FlowScopeContext} this scope end node is compatible with
+     * @return class of the {@link FlowScopeContext} this scope end node is compatible with or null if something was
+     *         wrong
      * @since 4.2
      */
-    @SuppressWarnings("unchecked")
     default Class<T> getFlowScopeContextClass() {
-        return (Class<T>)FlowScopeContext.class;
+        final T fsc = getFlowContext();
+        if (fsc == null) {
+        	return null;
+        }
+        @SuppressWarnings("unchecked")
+        final Class<T> clazz = (Class<T>)fsc.getClass();
+        return clazz;
     }
 
     /**
@@ -74,12 +80,14 @@ public interface ScopeEndNode<T extends FlowScopeContext> {
      *   reported elsewhere - IllegalLoopExecption is only thrown/caught inside core)
      * @since 3.1
      */
-    default public T getFlowContext() {
+    default T getFlowContext() {
         if (this instanceof NodeModel) {
             NodeModel m = (NodeModel)this;
             FlowScopeContext fsc = Node.invokePeekFlowScopeContext(m);
             try {
-                return (T)fsc;
+                @SuppressWarnings("unchecked")
+            	T t = (T)fsc;
+                return t;
             } catch (ClassCastException cce) {
                 return null;
             }

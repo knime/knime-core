@@ -127,10 +127,11 @@ public final class PortObjectInNodeModel extends NodeModel {
         return new PortObject[]{getPortObject(exec)};
     }
 
+    // TODO we might have to revisit this when implementing AP-13335
     private PortObject getPortObject(final ExecutionContext exec)
         throws IOException, CanceledExecutionException, URISyntaxException {
         switch (m_portObjectIDSettings.getReferenceType()) {
-            case Node:
+            case NODE:
                 WorkflowManager wfm = NodeContext.getContext().getWorkflowManager();
                 if (wfm != null) {
                     return wfm.findNodeContainer(m_portObjectIDSettings.getNodeID())
@@ -138,9 +139,9 @@ public final class PortObjectInNodeModel extends NodeModel {
                 } else {
                     throw new IllegalStateException("Not a local workflow");
                 }
-            case File:
+            case FILE:
                 return readPOFromURI(exec);
-            case Repository:
+            case REPOSITORY:
             default:
                 int id = m_portObjectIDSettings.getId();
                 PortObject obj = PortObjectRepository.get(id);
@@ -154,12 +155,12 @@ public final class PortObjectInNodeModel extends NodeModel {
     }
 
     /**
-     * The port object if the reference type is {@link ReferenceType#Node}, otherwise an empty optional.
+     * The port object if the reference type is {@link ReferenceType#NODE}, otherwise an empty optional.
      *
      * @return the port object of an other referenced node
      */
     public Optional<PortObject> getPortObject() {
-        if (m_portObjectIDSettings.getReferenceType() == ReferenceType.Node) {
+        if (m_portObjectIDSettings.getReferenceType() == ReferenceType.NODE) {
             try {
                 return Optional.of(getPortObject(null));
             } catch (IOException | CanceledExecutionException | URISyntaxException ex) {
@@ -173,7 +174,7 @@ public final class PortObjectInNodeModel extends NodeModel {
 
     private PortObject readPOFromURI(final ExecutionContext exec)
         throws IOException, URISyntaxException, CanceledExecutionException {
-        assert m_portObjectIDSettings.getReferenceType() == ReferenceType.File;
+        assert m_portObjectIDSettings.getReferenceType() == ReferenceType.FILE;
         File portFile = FileUtil.resolveToPath(m_portObjectIDSettings.getUri().toURL()).toFile();
         PortObject po;
         if (m_portObjectIDSettings.isTable()) {

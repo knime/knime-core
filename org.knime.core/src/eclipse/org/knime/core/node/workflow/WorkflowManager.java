@@ -344,12 +344,12 @@ public final class WorkflowManager extends NodeContainer
         new PortType[0], true, null, "ROOT", Optional.empty(), Optional.empty());
 
     /**
-     * The root of all extracted workflows fragements.
+     * The root of all extracted workflow fragments.
      *
      * @since 4.2
      */
     public static final WorkflowManager EXTRACTED_WORKFLOW_ROOT =
-        ROOT.createAndAddProject("KNIME extracted workflow repository", new WorkflowCreationHelper());
+        ROOT.createAndAddProject("KNIME captured workflow fragment repository", new WorkflowCreationHelper());
 
     /**
      * The root of all metanodes that are part of the node repository, for instance x-val metanode.
@@ -3021,9 +3021,8 @@ public final class WorkflowManager extends NodeContainer
                             && ((NativeNodeContainer)headNode)
                                 .isModelCompatibleTo(ScopeStartNode.class)) {
                             //check that the start and end nodes have compatible flow scope contexts
-                            @SuppressWarnings({"rawtypes", "unchecked"})
                             Class<? extends FlowScopeContext> endNodeFlowScopeContext =
-                                ((ScopeEndNode)nnc.getNodeModel()).getFlowScopeContextClass();
+                                ((ScopeEndNode<?>)nnc.getNodeModel()).getFlowScopeContextClass();
                             if (!endNodeFlowScopeContext.isAssignableFrom(fsc.getClass())) {
                                 if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
                                     throw new IllegalFlowObjectStackException(
@@ -3503,6 +3502,7 @@ public final class WorkflowManager extends NodeContainer
         try (WorkflowLock lock = lock()) {
             WorkflowManager tempParent = EXTRACTED_WORKFLOW_ROOT.createAndAddProject(
                 "Workflow-Capture-from-" + endNodeID, new WorkflowCreationHelper());
+            // TODO we might have to revisit this when implementing AP-13335
             Set<NodeIDSuffix> addedPortObjectReaderNodes = new HashSet<>();
 
             NativeNodeContainer endNode = getNodeContainer(endNodeID, NativeNodeContainer.class, true);
@@ -6110,9 +6110,8 @@ public final class WorkflowManager extends NodeContainer
                         } else {
                             // head found, let the end node know about it
                             // but only if the start and end nodes have a compatible flow scope context
-                            @SuppressWarnings({"rawtypes", "unchecked"})
                             Class<? extends FlowScopeContext> flowScopeContextClass =
-                                ((ScopeEndNode)sncNode.getNodeModel()).getFlowScopeContextClass();
+                                ((ScopeEndNode<?>)sncNode.getNodeModel()).getFlowScopeContextClass();
                             if (flowScopeContextClass.isAssignableFrom(fsc.getClass())) {
                                 sncNode.setScopeStartNode(((NativeNodeContainer)headNode).getNode());
                             }

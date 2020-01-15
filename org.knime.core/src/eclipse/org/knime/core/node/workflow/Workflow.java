@@ -1374,7 +1374,7 @@ class Workflow {
      */
     NodeID getMatchingScopeEnd(final NodeID id, final Class<?> startNodeType, final Class<?> endNodeType)
         throws IllegalScopeException {
-        assertNodeType(id, endNodeType);
+        assertNodeType(id, startNodeType);
         if (m_nodeAnnotationCache == null) {
             this.updateGraphAnnotationCache();
         }
@@ -1386,13 +1386,13 @@ class Workflow {
                     return end;
                 } else {
                     throw new IllegalScopeException(
-                        "Could not find matching " + splitCamelCase(startNodeType.getSimpleName()) + "!");
+                        "Could not find matching " + splitCamelCase(endNodeType.getSimpleName()) + "!");
                 }
             }
         }
         assert false : "Failed to find NodeGraphAnnotation for node from this very workflow.";
         throw new IllegalScopeException(
-            "Could not find matching " + splitCamelCase(startNodeType.getSimpleName()) + " (missing node annotation)!");
+            "Could not find matching " + splitCamelCase(endNodeType.getSimpleName()) + " (missing node annotation)!");
     }
 
     private static String splitCamelCase(final String s) {

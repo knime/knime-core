@@ -2642,12 +2642,11 @@ public final class Node implements NodeModelWarningListener {
      * @param head the node, can be <code>null</code> to 'un-set' the start node
      * @since 4.2
      */
-    @SuppressWarnings({"rawtypes"})
     public void setScopeStartNode(final Node head) {
         if (head == null) {
             m_model.setScopeStartNode(null);
         } else {
-            m_model.setScopeStartNode((ScopeStartNode)head.m_model);
+            m_model.setScopeStartNode((ScopeStartNode<?>)head.m_model);
         }
     }
 
@@ -2667,8 +2666,7 @@ public final class Node implements NodeModelWarningListener {
      *         end or the user didn't close the scope correctly
      * @since 4.2
      */
-    @SuppressWarnings("rawtypes")
-    public <SSN extends ScopeStartNode> Optional<SSN> getScopeStartNode(final Class<SSN> startNodeType) {
+    public <T extends ScopeStartNode<?>> Optional<T> getScopeStartNode(final Class<T> startNodeType) {
         return m_model.getScopeStartNode(startNodeType);
     }
 

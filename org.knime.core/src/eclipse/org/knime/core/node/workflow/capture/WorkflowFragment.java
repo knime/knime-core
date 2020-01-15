@@ -76,6 +76,7 @@ import org.knime.core.node.config.Config;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -87,7 +88,9 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.FileUtil.ZipFileFilter;
 import org.knime.core.util.LockFailedException;
+import org.knime.core.util.VMFileLocker;
 
 /**
  * Represents a sub-workflow by keeping it's own {@link WorkflowManager}-instance - similar to {@link SubNodeContainer}. Unlike
@@ -119,9 +122,9 @@ public final class WorkflowFragment {
 
     private final Set<NodeIDSuffix> m_portObjectReferenceReaderNodes;
 
-    private List<Port> m_inputPorts;
+    private final List<Port> m_inputPorts;
 
-    private List<Port> m_outputPorts;
+    private final List<Port> m_outputPorts;
 
     /**
      * Creates a new instance.
@@ -135,18 +138,18 @@ public final class WorkflowFragment {
         final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
         m_wfm = wfm;
         m_name = wfm.getName();
-        m_inputPorts = inputPorts;
-        m_outputPorts = outputPorts;
-        m_portObjectReferenceReaderNodes = portObjectReferenceReaderNodes;
+        m_inputPorts = CheckUtils.checkArgumentNotNull(inputPorts);
+        m_outputPorts = CheckUtils.checkArgumentNotNull(outputPorts);
+        m_portObjectReferenceReaderNodes = CheckUtils.checkArgumentNotNull(portObjectReferenceReaderNodes);
     }
 
     private WorkflowFragment(final byte[] wfmStream, final String name, final List<Port> inputPorts,
         final List<Port> outputPorts, final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
         m_wfmStream = wfmStream;
-        m_name = name;
-        m_inputPorts = inputPorts;
-        m_outputPorts = outputPorts;
-        m_portObjectReferenceReaderNodes = portObjectReferenceReaderNodes;
+        m_name = CheckUtils.checkArgumentNotNull(name);
+        m_inputPorts = CheckUtils.checkArgumentNotNull(inputPorts);
+        m_outputPorts = CheckUtils.checkArgumentNotNull(outputPorts);
+        m_portObjectReferenceReaderNodes = CheckUtils.checkArgumentNotNull(portObjectReferenceReaderNodes);
     }
 
     /**
@@ -162,9 +165,8 @@ public final class WorkflowFragment {
     public WorkflowManager loadWorkflow() {
         if (m_wfm == null) {
             File tmpDir = null;
-            try {
+            try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
                 tmpDir = FileUtil.createTempDir("workflow_fragment");
-                ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream));
                 FileUtil.unzip(in, tmpDir, 1);
                 WorkflowLoadHelper loadHelper =
                     new WorkflowLoadHelper(new WorkflowContext.Factory(tmpDir).createContext());
@@ -249,7 +251,9 @@ public final class WorkflowFragment {
         ModelContentWO outputPorts = metadata.addModelContent("output_ports");
         savePorts(outputPorts, m_outputPorts);
 
-        metadata.saveToXML(new NonClosableOutputStream.Zip(out));
+        try (final NonClosableOutputStream.Zip zout = new NonClosableOutputStream.Zip(out)) {
+            metadata.saveToXML(zout);
+        }
 
         if (m_wfmStream == null) {
             if (m_wfm == null) {
@@ -269,7 +273,12 @@ public final class WorkflowFragment {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
             WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(false, false);
             wfm.save(tmpDir, saveHelper, new ExecutionMonitor());
-            FileUtil.zipDir(out, Collections.singleton(tmpDir), FileUtil.ZIP_INCLUDEALL_FILTER, null);
+            FileUtil.zipDir(out, Collections.singleton(tmpDir), new ZipFileFilter() {
+                @Override
+                public boolean include(final File f) {
+                    return !f.getName().equals(VMFileLocker.LOCK_FILE);
+                }
+            }, null);
             bos.flush();
             return bos.toByteArray();
         } catch (LockFailedException | CanceledExecutionException | IOException e) {
@@ -291,10 +300,9 @@ public final class WorkflowFragment {
         if (!entry.getName().equals("metadata.xml")) {
             throw new IOException("Expected metadata.xml file in stream, got " + entry.getName());
         }
-        InputStream noneCloseIn = new NonClosableInputStream.Zip(in);
-        ModelContentRO metadata = ModelContent.loadFromXML(noneCloseIn);
 
-        try {
+        try (InputStream noneCloseIn = new NonClosableInputStream.Zip(in)) {
+            ModelContentRO metadata = ModelContent.loadFromXML(noneCloseIn);
             ModelContentRO refNodeIds = metadata.getModelContent("ref_node_ids");
             Set<NodeIDSuffix> ids = new HashSet<NodeID.NodeIDSuffix>();
             int numIds = refNodeIds.getInt("num_ids");
@@ -376,7 +384,10 @@ public final class WorkflowFragment {
          *            installed)
          */
         public Port(final NodeIDSuffix nodeIDSuffix, final int idx, final PortType type) {
-            m_nodeIDSuffix = nodeIDSuffix;
+            m_nodeIDSuffix = CheckUtils.checkArgumentNotNull(nodeIDSuffix);
+            if (idx < 0) {
+                throw new IllegalArgumentException(String.format("Port index %d out of bounds.", idx));
+            }
             m_idx = idx;
             m_type = type;
         }

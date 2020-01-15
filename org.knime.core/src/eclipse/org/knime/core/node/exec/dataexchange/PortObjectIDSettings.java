@@ -97,20 +97,20 @@ public final class PortObjectIDSettings {
     /**
      * Type that determines how the port object is referenced.
      */
+    // TODO we might decide to delete this when implementing AP-13335
     public static enum ReferenceType {
-
             /**
              * Reference via the {@link PortObjectRepository} and an ID.
              */
-            Repository,
+            REPOSITORY,
             /**
              * Reference to a node (node ID and port idx) in the same workflow.
              */
-            Node,
+            NODE,
             /**
              * Reference to a file given by a URI.
              */
-            File;
+            FILE;
     }
 
     /** Constructor, which sets a null ID (no id). */
@@ -124,12 +124,12 @@ public final class PortObjectIDSettings {
      */
     public void loadSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        m_refType = ReferenceType.valueOf(settings.getString("referenceType", ReferenceType.Repository.toString()));
+        m_refType = ReferenceType.valueOf(settings.getString("referenceType", ReferenceType.REPOSITORY.toString()));
         switch (m_refType) {
-            case Repository:
+            case REPOSITORY:
                 m_id = settings.getInt("portobject_ID");
                 break;
-            case Node:
+            case NODE:
                 try {
                     m_nodeID = NodeID.fromString(settings.getString("node_ID"));
                 } catch (IllegalArgumentException ex1) {
@@ -138,7 +138,7 @@ public final class PortObjectIDSettings {
                 m_portIdx = settings.getInt("port_idx");
                 CheckUtils.checkSetting(m_portIdx >= 0, "Port index must be >= 0: %d", m_portIdx);
                 break;
-            case File:
+            case FILE:
                 try {
                     m_uri = new URI(settings.getString("uri"));
                 } catch (URISyntaxException ex) {
@@ -185,16 +185,16 @@ public final class PortObjectIDSettings {
     public void saveSettings(final NodeSettingsWO settings) {
         settings.addString("referenceType", m_refType.toString());
         switch (m_refType) {
-            case Repository:
+            case REPOSITORY:
                 if (m_id != null) {
                     settings.addInt("portobject_ID", m_id);
                 }
                 break;
-            case Node:
+            case NODE:
                 settings.addString("node_ID", m_nodeID.toString());
                 settings.addInt("port_idx", m_portIdx);
                 break;
-            case File:
+            case FILE:
                 settings.addString("uri", m_uri.toString());
                 settings.addBoolean("is_table", m_isTable);
                 break;
@@ -215,7 +215,7 @@ public final class PortObjectIDSettings {
      * @param portIdx the port index
      */
     public void setNodeReference(final NodeID nodeID, final int portIdx) {
-        m_refType = ReferenceType.Node;
+        m_refType = ReferenceType.NODE;
         m_nodeID = nodeID;
         m_portIdx = portIdx;
     }
@@ -227,7 +227,7 @@ public final class PortObjectIDSettings {
      * @param isTable whether the reference port object is a data table or not
      */
     public void setFileReference(final URI uri, final boolean isTable) {
-        m_refType = ReferenceType.File;
+        m_refType = ReferenceType.FILE;
         m_uri = uri;
         m_isTable = isTable;
     }
@@ -240,21 +240,21 @@ public final class PortObjectIDSettings {
     }
 
     /**
-     * @return the node ID if reference type {@link ReferenceType#Node}, otherwise possibly <code>null</code>
+     * @return the node ID if reference type {@link ReferenceType#NODE}, otherwise possibly <code>null</code>
      */
     public NodeID getNodeID() {
         return m_nodeID;
     }
 
     /**
-     * @return the port index if reference type is {@link ReferenceType#Node}, otherwise possibly <code>null</code>
+     * @return the port index if reference type is {@link ReferenceType#NODE}, otherwise possibly <code>null</code>
      */
     public int getPortIdx() {
         return m_portIdx;
     }
 
     /**
-     * @return the file uri if reference type is {@link ReferenceType#File}, otherwise possibly <code>null</code>
+     * @return the file uri if reference type is {@link ReferenceType#FILE}, otherwise possibly <code>null</code>
      */
     public URI getUri() {
         return m_uri;
@@ -262,7 +262,7 @@ public final class PortObjectIDSettings {
 
     /**
      * @return whether the referenced file represents a table. NOTE: Only of meaningful, if reference type is
-     *         {@link ReferenceType#File}!
+     *         {@link ReferenceType#FILE}!
      */
     public boolean isTable() {
         return m_isTable;
@@ -270,7 +270,7 @@ public final class PortObjectIDSettings {
 
     /**
      * Get the currently set ID or null if none have been set. Only meaningful if reference type is
-     * {@link ReferenceType#Repository}.
+     * {@link ReferenceType#REPOSITORY}.
      *
      * @return the id
      */
@@ -283,7 +283,7 @@ public final class PortObjectIDSettings {
      * @param id the id to set
      */
     public void setId(final Integer id) {
-        m_refType = ReferenceType.Repository;
+        m_refType = ReferenceType.REPOSITORY;
         m_id = id;
     }
 

@@ -51,16 +51,13 @@ package org.knime.core.node.workflow;
  */
 class IllegalScopeException extends Exception {
 
-    /** @see RuntimeException#RuntimeException(String) */
-    public IllegalScopeException(final String message) {
+    private static final long serialVersionUID = 1L;
+
+    IllegalScopeException(final String message) {
         super(message);
     }
 
-	/**
-	 * @param message
-	 * @param cause
-	 */
-	public IllegalScopeException(final String message, final Throwable cause) {
+	IllegalScopeException(final String message, final Throwable cause) {
 		super(message, cause);
 	}
 
