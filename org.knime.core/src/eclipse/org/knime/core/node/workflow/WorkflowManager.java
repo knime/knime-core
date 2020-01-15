@@ -3600,6 +3600,9 @@ public final class WorkflowManager extends NodeContainer
                 NodeUIInformation.moveNodeBy(tempParent.getNodeContainer(srcID), moveUIDist);
             }
 
+            //transfer editor settings, too
+            tempParent.setEditorUIInformation(this.getEditorUIInformation());
+
             return new WorkflowFragment(tempParent, workflowFragmentInputs, workflowFragmentOutputs,
                 addedPortObjectReaderNodes);
         }
