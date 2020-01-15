@@ -235,22 +235,7 @@ public final class WorkflowFragment {
     public void save(final ZipOutputStream out) throws IOException {
         out.putNextEntry(new ZipEntry("metadata.xml"));
         ModelContent metadata = new ModelContent("metadata.xml");
-        metadata.addString("name", m_name);
-
-        ModelContentWO refNodeIds = metadata.addModelContent("ref_node_ids");
-        refNodeIds.addInt("num_ids", m_portObjectReferenceReaderNodes.size());
-        int i = 0;
-        for (NodeIDSuffix id : m_portObjectReferenceReaderNodes) {
-            refNodeIds.addIntArray("ref_node_id_" + i, id.getSuffixArray());
-            i++;
-        }
-
-        ModelContentWO inputPorts = metadata.addModelContent("input_ports");
-        savePorts(inputPorts, m_inputPorts);
-
-        ModelContentWO outputPorts = metadata.addModelContent("output_ports");
-        savePorts(outputPorts, m_outputPorts);
-
+        saveMetadata(metadata);
         try (final NonClosableOutputStream.Zip zout = new NonClosableOutputStream.Zip(out)) {
             metadata.saveToXML(zout);
         }
@@ -326,6 +311,29 @@ public final class WorkflowFragment {
         } catch (InvalidSettingsException e) {
             throw new IOException("Failed loading workflow port object", e);
         }
+    }
+
+    /**
+     * Saves the workflow fragment metadata to the supplied model object.
+     *
+     * @param model the model to save the metadata to
+     */
+    public void saveMetadata(final ModelContentWO model) {
+        model.addString("name", m_name);
+
+        ModelContentWO refNodeIds = model.addModelContent("ref_node_ids");
+        refNodeIds.addInt("num_ids", m_portObjectReferenceReaderNodes.size());
+        int i = 0;
+        for (NodeIDSuffix id : m_portObjectReferenceReaderNodes) {
+            refNodeIds.addIntArray("ref_node_id_" + i, id.getSuffixArray());
+            i++;
+        }
+
+        ModelContentWO inputPorts = model.addModelContent("input_ports");
+        savePorts(inputPorts, m_inputPorts);
+
+        ModelContentWO outputPorts = model.addModelContent("output_ports");
+        savePorts(outputPorts, m_outputPorts);
     }
 
     private static void savePorts(final ModelContentWO model, final List<Port> ports) {
