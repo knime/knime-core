@@ -134,6 +134,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkU
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
+import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult;
@@ -1128,6 +1129,12 @@ public final class SubNodeContainer extends SingleNodeContainer
             setNodeMessage(null);
             oldMessage = NodeMessage.NONE;
         }
+
+        if (m_subnodeScopeContext.isInactiveScope()) {
+            setInactiveDeepConfigure();
+            return true;
+        }
+
         m_isPerformingActionCalledFromParent = true;
         try {
             if (nch != null) {
@@ -1178,6 +1185,92 @@ public final class SubNodeContainer extends SingleNodeContainer
         } finally {
             m_isPerformingActionCalledFromParent = false;
         }
+    }
+
+    /**
+     * Recursively sets this and all (contained) nodes (and therewith their out ports specs) to inactive. To be called
+     * during configure only.
+     */
+    private void setInactiveDeepConfigure() {
+        setInactiveDeep(this, null, null, null, false);
+    }
+
+    /**
+     * Recursively sets this and all (contained) nodes (and therewith their out ports) to inactive. To be called during
+     * execute only.
+     *
+     * @param exec execution monitor for loading execution results
+     * @param loadRes load result to log error messages
+     * @return the execution result
+     */
+    NodeContainerExecutionStatus setInactiveDeepExecute(final ExecutionMonitor exec, final LoadResult loadRes) {
+        return setInactiveDeep(this, null, exec, loadRes, true);
+    }
+
+    private static NodeContainerExecutionStatus setInactiveDeep(final NodeContainer nc,
+        final WorkflowExecutionResult wfmRes, final ExecutionMonitor exec, final LoadResult loadRes, final boolean doExecute) {
+        NodeContainerExecutionResult res = null;
+        if (nc instanceof NativeNodeContainer) {
+            NativeNodeContainer nnc = (NativeNodeContainer)nc;
+            // doesn't actually execute/configure the node, i.e. won't touch the NodeModel's execute-method because the inports are all inactive
+            // it's the only way to set the node's outputs to inactive port objects
+            if (!doExecute) {
+                nnc.performConfigure(createInactivePortObjectSpecs(nnc.getNrInPorts()), null,
+                    false /*has node effect*/);
+            } else {
+                nnc.performExecuteNode(createInactivePortObjects(nnc.getNrInPorts()));
+                NativeNodeContainerExecutionResult nativeRes = new NativeNodeContainerExecutionResult();
+                nativeRes.setNodeExecutionResult(nnc.getNode().createInactiveNodeExecutionResult());
+                res = nativeRes;
+            }
+        } else if (nc instanceof WorkflowManager) {
+            WorkflowExecutionResult wfmRes2 = doExecute ? new WorkflowExecutionResult(nc.getID()) : null;
+            for (NodeContainer n : ((WorkflowManager)nc).getNodeContainers()) {
+                setInactiveDeep(n, wfmRes2, exec, loadRes, doExecute);
+            }
+            if (doExecute) {
+                nc.loadExecutionResult(wfmRes2, exec, loadRes);
+                res = wfmRes2;
+            }
+        } else {
+            SubNodeContainer snc = (SubNodeContainer)nc;
+            SubnodeContainerExecutionResult subNodeRes = null;
+            WorkflowExecutionResult wfmRes2 = null;
+            if (doExecute) {
+                subNodeRes = new SubnodeContainerExecutionResult(nc.getID());
+                wfmRes2 = new WorkflowExecutionResult(new NodeID(nc.getID(), 0));
+                VirtualSubNodeOutputNodeModel outputNodeModel = snc.getVirtualOutNodeModel();
+                //in order to set the VirtualSubNodeExchange
+                outputNodeModel.setInternalPortObjects(createInactivePortObjects(nc.getNrOutPorts()));
+                subNodeRes.setWorkflowExecutionResult(wfmRes2);
+            }
+            for (NodeContainer n : snc.getWorkflowManager().getNodeContainers()) {
+                setInactiveDeep(n, wfmRes2, exec, loadRes, doExecute);
+            }
+            res = subNodeRes;
+        }
+        if (res != null) {
+            res.setSuccess(true);
+            nc.loadExecutionResult(res, exec, loadRes);
+            if (wfmRes != null) {
+                wfmRes.addNodeExecutionResult(nc.getID(), res);
+            }
+            return res;
+        } else {
+            return null;
+        }
+    }
+
+    private static PortObject[] createInactivePortObjects(final int count) {
+        PortObject[] res = new PortObject[count];
+        Arrays.fill(res, InactiveBranchPortObject.INSTANCE);
+        return res;
+    }
+
+    private static PortObjectSpec[] createInactivePortObjectSpecs(final int count) {
+        PortObjectSpec[] res = new PortObjectSpec[count];
+        Arrays.fill(res, InactiveBranchPortObjectSpec.INSTANCE);
+        return res;
     }
 
     /** {@inheritDoc} */
@@ -1290,6 +1383,11 @@ public final class SubNodeContainer extends SingleNodeContainer
     public NodeContainerExecutionStatus performExecuteNode(final PortObject[] rawInObjects) {
         setNodeMessage(NodeMessage.NONE);
         assert rawInObjects.length == m_inports.length;
+        if (m_subnodeScopeContext.isInactiveScope()) {
+            ExecutionMonitor exec = new ExecutionMonitor();
+            LoadResult loadRes = new LoadResult("Inactive");
+            return setInactiveDeepExecute(exec, loadRes);
+        }
         m_isPerformingActionCalledFromParent = true;
         try {
             // launch execute on entire sub workflow and then wait for inner workflow to finish -
@@ -2813,10 +2911,11 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** {@inheritDoc} */
     @Override
     public boolean isResetable() {
-        if (getNodeLocks().hasResetLock()) {
-            return false;
-        } else {
+        boolean resetable = super.isResetable();
+        if (!resetable) {
             return getWorkflowManager().isResetable();
+        } else {
+            return true;
         }
     }
 
