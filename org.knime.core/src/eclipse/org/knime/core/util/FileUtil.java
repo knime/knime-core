@@ -130,6 +130,7 @@ public final class FileUtil {
     static {
         ShutdownHelper.getInstance().appendShutdownHook(() -> {
             synchronized (TEMP_FILES) {
+                LOGGER.info(String.format("Deleting %d temporary files.", TEMP_FILES.size()));
                 for (File f : TEMP_FILES) {
                     if (!f.exists()) {
                         continue;
