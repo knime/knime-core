@@ -1157,10 +1157,10 @@ public final class SubNodeContainer extends SingleNodeContainer
                 default:
                     newState = internalState;
             }
-            String msg = m_wfm.getNodeErrorSummary().orElseGet(() -> m_wfm.getNodeWarningSummary().orElse(null));
+            NodeMessage msg = m_wfm.getNodeErrorSummary().map(m -> NodeMessage.newError(m))
+                .orElseGet(() -> m_wfm.getNodeWarningSummary().map(m -> NodeMessage.newWarning(m)).orElse(null));
             if (msg != null) {
-                NodeMessage nodeMsg = NodeMessage.newWarning(msg);
-                setNodeMessage(keepNodeMessage ? NodeMessage.merge(oldMessage, nodeMsg) : nodeMsg);
+                setNodeMessage(keepNodeMessage ? mergeNodeMessagesAndRespectExecuteFailedPrefix(oldMessage, msg) : msg);
             }
             setVirtualOutputIntoOutport(newState);
             setInternalState(newState);
@@ -1177,6 +1177,34 @@ public final class SubNodeContainer extends SingleNodeContainer
             return internalState.isConfigured();
         } finally {
             m_isPerformingActionCalledFromParent = false;
+        }
+    }
+
+
+    /**
+     * Merges two nodes messages but ignores the {@link Node#EXECUTE_FAILED_PREFIX} (+ '\n') in m1 for message
+     * comparison and adds the prefix back again (if it was present) to the start of the merged message.
+     *
+     * The prefix for SNC-node messages is set in {@link #performExecuteNode(PortObject[])}.
+     *
+     * TODO: a message prefix could eventually be added to {@link NodeMessage} itself - but a bit of an overkill for the
+     * time being with possible unknown side-effects
+     */
+    private static NodeMessage mergeNodeMessagesAndRespectExecuteFailedPrefix(final NodeMessage m1, final NodeMessage m2) {
+        NodeMessage m1WithoutPrefix;
+        if (m1.getMessage().startsWith(Node.EXECUTE_FAILED_PREFIX + "\n")) {
+            m1WithoutPrefix = new NodeMessage(m1.getMessageType(),
+                StringUtils.removeStart(m1.getMessage(), Node.EXECUTE_FAILED_PREFIX + "\n"));
+        } else {
+            m1WithoutPrefix = m1;
+        }
+
+        NodeMessage res = NodeMessage.merge(m1WithoutPrefix, m2);
+        //add prefix back again
+        if (m1WithoutPrefix != m1) {
+            return new NodeMessage(res.getMessageType(), Node.EXECUTE_FAILED_PREFIX + "\n" + res.getMessage());
+        } else {
+            return res;
         }
     }
 
