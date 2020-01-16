@@ -480,6 +480,8 @@ public abstract class WorkflowTestCase {
         }
     }
 
+
+
     @After
     public void tearDown() throws Exception {
         closeWorkflow();
@@ -495,6 +497,9 @@ public abstract class WorkflowTestCase {
                 return true;
             }
             if (name.contains("Streamer-Subnode-Parent")) {
+                return true;
+            }
+            if (name.contains(WorkflowManager.EXTRACTED_WORKFLOW_ROOT.getName())) {
                 return true;
             }
             return false;
