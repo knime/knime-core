@@ -828,6 +828,20 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return m_node.isInactive();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setInactive() {
+        //TODO so far only called when a single node container
+        //is set inactive after a failure in a try-catch-scope.
+        //For native nodes these caught failures are currently handled
+        //in the the Node.execute(...)-method -> should eventually be
+        //moved into NodeExecutionJob.internalRun(...) where
+        //caught failures (i.e. try-catch-scope) are handled for components, too
+        throw new UnsupportedOperationException();
+    }
+
     /** {@inheritDoc} */
     @Override
     public boolean isInactiveBranchConsumer() {

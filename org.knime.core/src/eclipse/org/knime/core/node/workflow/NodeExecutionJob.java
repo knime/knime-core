@@ -50,13 +50,12 @@ import java.util.Arrays;
 import java.util.Deque;
 
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.StringFormat;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
 /** Runnable that represents the execution of a node. This abstract class
@@ -197,23 +196,20 @@ public abstract class NodeExecutionJob implements Runnable {
                 m_logger.debug(m_nc.getNameWithID() + " Start execute");
                 if (executeInactive) {
                     SingleNodeContainer snc = (SingleNodeContainer)m_nc;
-                    if (snc instanceof NativeNodeContainer || (snc instanceof SubNodeContainer
-                        && ((SubNodeContainer)snc).getWorkflowManager().isLocalWFM())) {
-                        //in case of a native node or a component with the default executor
-                        status = snc.performExecuteNode(getPortObjects());
-                    } else {
-                        // in case of a component with a custom executor:
-                        // just set all contained nodes to inactive and bypass the executor
-                        ExecutionMonitor exec = new ExecutionMonitor();
-                        LoadResult loadRes = new LoadResult("Inactive");
-                        status = ((SubNodeContainer)snc).setInactiveDeepExecute(exec, loadRes);
-                    }
+                    status = snc.performExecuteNode(getPortObjects());
                 } else {
                     status = mainExecute();
                 }
-                if (status != null && status.isSuccess()) {
-                    String elapsed = StringFormat.formatElapsedTime(System.currentTimeMillis() - time);
-                    m_logger.info(m_nc.getNameWithID() + " End execute (" + elapsed + ")");
+                if (status != null) {
+                    if (status.isSuccess()) {
+                        String elapsed = StringFormat.formatElapsedTime(System.currentTimeMillis() - time);
+                        m_logger.info(m_nc.getNameWithID() + " End execute (" + elapsed + ")");
+                    } else if (m_nc instanceof SubNodeContainer) { //TODO handle try-catch for
+                                                                   //NativeNodeContainers here too!
+                        if (checkForTryCatchScope((SingleNodeContainer)m_nc, status)) {
+                            status = NodeContainerExecutionStatus.SUCCESS;
+                        }
+                    }
                 }
             }
         } catch (Throwable throwable) {
@@ -243,6 +239,37 @@ public abstract class NodeExecutionJob implements Runnable {
             } catch (Exception e) {
                 logError(e);
             }
+        }
+    }
+
+    /**
+     * Checks whether a node is part of try-catch-scope.
+     *
+     * @param snc the node to check
+     * @param the failure status with the error message to be set on the node after reset
+     * @return <code>true</code> if the error has been caught (try-catch-scope), otherwise <code>false</code>
+     */
+    private static boolean checkForTryCatchScope(final SingleNodeContainer snc,
+        final NodeContainerExecutionStatus status) {
+        assert !status.isSuccess();
+        //TODO: only be called for SubNodeContainers so far - see NativeNodeContainer.setInactive() -> refactor
+        FlowTryCatchContext tcslc = snc.getFlowObjectStack().peek(FlowTryCatchContext.class);
+        if ((tcslc != null) && (!tcslc.isInactiveScope())) {
+            // failure inside an active try-catch:
+            // make node inactive and preserve error message(s)
+            snc.setInactive();
+            String errorMessage = (status instanceof NodeContainerExecutionResult)
+                ? ((NodeContainerExecutionResult)status).getNodeMessage().getMessage() : status.toString();
+            snc.setNodeMessage(NodeMessage.newError("Execution failed in Try-Catch block: " + errorMessage));
+            // and store information such that the catch-node can report it
+            FlowObjectStack fos = snc.getOutgoingFlowObjectStack();
+            fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
+            fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, snc.getName()));
+            fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, errorMessage));
+            tcslc.setError(snc.getName(), errorMessage, null);
+            return true;
+        } else {
+            return false;
         }
     }
 

@@ -135,7 +135,6 @@ import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkU
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
-import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult;
@@ -1131,14 +1130,9 @@ public final class SubNodeContainer extends SingleNodeContainer
             oldMessage = NodeMessage.NONE;
         }
 
-        if (m_subnodeScopeContext.isInactiveScope()) {
-            setInactiveDeepConfigure();
-            return true;
-        }
-
         m_isPerformingActionCalledFromParent = true;
         try {
-            if (nch != null) {
+            if (nch != null && !m_subnodeScopeContext.isInactiveScope()) {
                 try {
                     nch.preConfigure();
                 } catch (InvalidSettingsException ise) {
@@ -1172,7 +1166,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             }
             setVirtualOutputIntoOutport(newState);
             setInternalState(newState);
-            if (nch != null) {
+            if (nch != null && !m_subnodeScopeContext.isInactiveScope()) {
                 try {
                     nch.postConfigure(rawInSpecs, null);
                 } catch (InvalidSettingsException ise) {
@@ -1225,92 +1219,6 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
     }
 
-    /**
-     * Recursively sets this and all (contained) nodes (and therewith their out ports specs) to inactive. To be called
-     * during configure only.
-     */
-    private void setInactiveDeepConfigure() {
-        setInactiveDeep(this, null, null, null, false);
-    }
-
-    /**
-     * Recursively sets this and all (contained) nodes (and therewith their out ports) to inactive. To be called during
-     * execute only.
-     *
-     * @param exec execution monitor for loading execution results
-     * @param loadRes load result to log error messages
-     * @return the execution result
-     */
-    NodeContainerExecutionStatus setInactiveDeepExecute(final ExecutionMonitor exec, final LoadResult loadRes) {
-        return setInactiveDeep(this, null, exec, loadRes, true);
-    }
-
-    private static NodeContainerExecutionStatus setInactiveDeep(final NodeContainer nc,
-        final WorkflowExecutionResult wfmRes, final ExecutionMonitor exec, final LoadResult loadRes, final boolean doExecute) {
-        NodeContainerExecutionResult res = null;
-        if (nc instanceof NativeNodeContainer) {
-            NativeNodeContainer nnc = (NativeNodeContainer)nc;
-            // doesn't actually execute/configure the node, i.e. won't touch the NodeModel's execute-method because the inports are all inactive
-            // it's the only way to set the node's outputs to inactive port objects
-            if (!doExecute) {
-                nnc.performConfigure(createInactivePortObjectSpecs(nnc.getNrInPorts()), null,
-                    false /*has node effect*/);
-            } else {
-                nnc.performExecuteNode(createInactivePortObjects(nnc.getNrInPorts()));
-                NativeNodeContainerExecutionResult nativeRes = new NativeNodeContainerExecutionResult();
-                nativeRes.setNodeExecutionResult(nnc.getNode().createInactiveNodeExecutionResult());
-                res = nativeRes;
-            }
-        } else if (nc instanceof WorkflowManager) {
-            WorkflowExecutionResult wfmRes2 = doExecute ? new WorkflowExecutionResult(nc.getID()) : null;
-            for (NodeContainer n : ((WorkflowManager)nc).getNodeContainers()) {
-                setInactiveDeep(n, wfmRes2, exec, loadRes, doExecute);
-            }
-            if (doExecute) {
-                nc.loadExecutionResult(wfmRes2, exec, loadRes);
-                res = wfmRes2;
-            }
-        } else {
-            SubNodeContainer snc = (SubNodeContainer)nc;
-            SubnodeContainerExecutionResult subNodeRes = null;
-            WorkflowExecutionResult wfmRes2 = null;
-            if (doExecute) {
-                subNodeRes = new SubnodeContainerExecutionResult(nc.getID());
-                wfmRes2 = new WorkflowExecutionResult(new NodeID(nc.getID(), 0));
-                VirtualSubNodeOutputNodeModel outputNodeModel = snc.getVirtualOutNodeModel();
-                //in order to set the VirtualSubNodeExchange
-                outputNodeModel.setInternalPortObjects(createInactivePortObjects(nc.getNrOutPorts()));
-                subNodeRes.setWorkflowExecutionResult(wfmRes2);
-            }
-            for (NodeContainer n : snc.getWorkflowManager().getNodeContainers()) {
-                setInactiveDeep(n, wfmRes2, exec, loadRes, doExecute);
-            }
-            res = subNodeRes;
-        }
-        if (res != null) {
-            res.setSuccess(true);
-            nc.loadExecutionResult(res, exec, loadRes);
-            if (wfmRes != null) {
-                wfmRes.addNodeExecutionResult(nc.getID(), res);
-            }
-            return res;
-        } else {
-            return null;
-        }
-    }
-
-    private static PortObject[] createInactivePortObjects(final int count) {
-        PortObject[] res = new PortObject[count];
-        Arrays.fill(res, InactiveBranchPortObject.INSTANCE);
-        return res;
-    }
-
-    private static PortObjectSpec[] createInactivePortObjectSpecs(final int count) {
-        PortObjectSpec[] res = new PortObjectSpec[count];
-        Arrays.fill(res, InactiveBranchPortObjectSpec.INSTANCE);
-        return res;
-    }
-
     /** {@inheritDoc} */
     @Override
     boolean performStateTransitionQUEUED() {
@@ -1322,7 +1230,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     private void runIfInExternalExecutor(final Runnable r) {
-        if (!m_wfm.isLocalWFM()) {
+        if (!m_wfm.isLocalWFM() && !m_subnodeScopeContext.isInactiveScope()) {
             runParentAction(r);
         }
     }
@@ -1422,9 +1330,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         setNodeMessage(NodeMessage.NONE);
         assert rawInObjects.length == m_inports.length;
         if (m_subnodeScopeContext.isInactiveScope()) {
-            ExecutionMonitor exec = new ExecutionMonitor();
-            LoadResult loadRes = new LoadResult("Inactive");
-            return setInactiveDeepExecute(exec, loadRes);
+            setInactive();
+            return NodeContainerExecutionStatus.SUCCESS;
         }
         m_isPerformingActionCalledFromParent = true;
         try {
@@ -1463,27 +1370,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 String msg = m_wfm.getNodeErrorSummary()//
                         .orElseGet(() -> m_wfm.getNodeWarningSummary().orElse("<reason unknown>"));
                 setNodeMessage(NodeMessage.newError(Node.EXECUTE_FAILED_PREFIX + "\n" + msg));
-
-                FlowTryCatchContext tcslc = getFlowObjectStack().peek(FlowTryCatchContext.class);
-                if ((tcslc != null) && (!tcslc.isInactiveScope())) {
-                    // failure inside an active try-catch:
-                    // make component inactive but preserve error message.
-                    // (the actually failed node(s) in the component loose their error message but it
-                    // is retained as part of the component's error message)
-                    performReset();
-                    ExecutionMonitor exec = new ExecutionMonitor();
-                    LoadResult loadRes = new LoadResult("Inactive");
-                    setInactiveDeepExecute(exec, loadRes);
-                    setNodeMessage(NodeMessage.newError("Execution failed in Try-Catch block: " + msg));
-                    // and store information catch-node can report it
-                    FlowObjectStack fos = getOutgoingFlowObjectStack();
-                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
-                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, getName()));
-                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, msg));
-                    tcslc.setError(getName(), msg, null);
-                    return NodeContainerExecutionStatus.SUCCESS;
-                }
-
+                return NodeContainerExecutionStatus.newFailure(msg);
             }
             return allExecuted ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
         } finally {
@@ -1493,10 +1380,8 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     @Override
     void markForExecution(final boolean flag) {
-            super.markForExecution(flag);
-        if (!m_wfm.isLocalWFM()) {
-            runParentAction(() -> m_wfm.markForExecution(flag));
-        }
+        super.markForExecution(flag);
+        runIfInExternalExecutor(() -> m_wfm.markForExecution(flag));
     }
 
     @Override
@@ -2441,6 +2326,39 @@ public final class SubNodeContainer extends SingleNodeContainer
         return getVirtualInNode().isInactive();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setInactive() {
+        //collect all inner error node messages to set them again later after reset
+        Map<NodeID, NodeMessage> innerNodeMessages = m_wfm.getNodeContainers().stream()
+            .filter(nc -> nc.getNodeMessage().getMessageType() == NodeMessage.Type.ERROR)
+            .collect(Collectors.toMap(nc -> nc.getID(), nc -> nc.getNodeMessage()));
+        m_isPerformingActionCalledFromParent = true;
+        try {
+            m_subnodeScopeContext.inactiveScope(true);
+            if (m_wfm.isLocalWFM()) {
+                m_wfm.resetAndConfigureAll();
+                m_wfm.executeAllAndWaitUntilDone();
+            } else {
+                //'execute' inner workflow manager locally
+                //(only to propagate inactive port states)
+                m_wfm.cancelExecution();
+                m_wfm.setJobManager(ThreadNodeExecutionJobManager.INSTANCE);
+                m_wfm.resetAndConfigureAll();
+                m_wfm.executeAllAndWaitUntilDone();
+                m_wfm.setJobManager(null);
+            }
+            setVirtualOutputIntoOutport(EXECUTED);
+            //set inner node error messages
+            innerNodeMessages.entrySet().stream()
+                .forEach(e -> m_wfm.getNodeContainer(e.getKey()).setNodeMessage(e.getValue()));
+        } finally {
+            m_isPerformingActionCalledFromParent = false;
+       }
+    }
+
     /** {@inheritDoc} */
     @Override
     public boolean isInactiveBranchConsumer() {
@@ -2579,6 +2497,9 @@ public final class SubNodeContainer extends SingleNodeContainer
         final NodeContainerParent directNCParent = getDirectNCParent();
         try (WorkflowLock lock = directNCParent.lock()) {
             final WorkflowManager parent = getParent();
+            if(m_subnodeScopeContext.isInactiveScope()) {
+                return true;
+            }
             if (!parent.containsNodeContainer(getID())) { // called during set-up (loading via constructor)
                 return false;
             }
@@ -2970,12 +2891,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** {@inheritDoc} */
     @Override
     public boolean isResetable() {
-        boolean resetable = super.isResetable();
-        if (!resetable) {
-            return getWorkflowManager().isResetable();
-        } else {
-            return true;
-        }
+        return super.isResetable() || getWorkflowManager().isResetable();
     }
 
     /**
