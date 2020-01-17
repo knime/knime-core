@@ -1425,6 +1425,27 @@ public final class SubNodeContainer extends SingleNodeContainer
                 String msg = m_wfm.getNodeErrorSummary()//
                         .orElseGet(() -> m_wfm.getNodeWarningSummary().orElse("<reason unknown>"));
                 setNodeMessage(NodeMessage.newError(Node.EXECUTE_FAILED_PREFIX + "\n" + msg));
+
+                FlowTryCatchContext tcslc = getFlowObjectStack().peek(FlowTryCatchContext.class);
+                if ((tcslc != null) && (!tcslc.isInactiveScope())) {
+                    // failure inside an active try-catch:
+                    // make component inactive but preserve error message.
+                    // (the actually failed node(s) in the component loose their error message but it
+                    // is retained as part of the component's error message)
+                    performReset();
+                    ExecutionMonitor exec = new ExecutionMonitor();
+                    LoadResult loadRes = new LoadResult("Inactive");
+                    setInactiveDeepExecute(exec, loadRes);
+                    setNodeMessage(NodeMessage.newError("Execution failed in Try-Catch block: " + msg));
+                    // and store information catch-node can report it
+                    FlowObjectStack fos = getOutgoingFlowObjectStack();
+                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
+                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, getName()));
+                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, msg));
+                    tcslc.setError(getName(), msg, null);
+                    return NodeContainerExecutionStatus.SUCCESS;
+                }
+
             }
             return allExecuted ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
         } finally {
