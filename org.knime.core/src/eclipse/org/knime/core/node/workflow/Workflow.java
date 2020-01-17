@@ -985,7 +985,7 @@ class Workflow {
      *
      * @param nodes set of nodes to be completed
      * @param id of node to start search from
-     * @param index of port the outgoing connection connected to
+     * @param outgoingPortIndex port the outgoing connection connected to
      */
     private void completePredecessorSet(final HashSet<NodeID> nodes, final NodeID id, final int outgoingPortIndex) {
         if (nodes.add(id)) {  // only if the node is not already contained:
@@ -1013,7 +1013,7 @@ class Workflow {
                         } else {
                             // find out which inports are connected through this
                             // WFM to the given outport
-                            Set<Integer> inports = wfm.getWorkflow().connectedInPorts(cc.getSourcePort());
+                            Set<Integer> inports = wfm.getWorkflow().connectedInPorts(outgoingPortIndex);
                             // and only add the predeccessor if he is connected
                             // to one of those
                             if (inports.contains(cc.getDestPort())) {
