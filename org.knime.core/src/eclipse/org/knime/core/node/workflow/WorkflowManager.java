@@ -3579,13 +3579,11 @@ public final class WorkflowManager extends NodeContainer
                 }
             }
 
-            final int[] boundingBox = NodeUIInformation.getBoundBoxOf(nodesToDetermineBoundingBox);
+            final int[] boundingBox = NodeUIInformation.getBoundingBoxOf(nodesToDetermineBoundingBox);
             final int[] moveUIDist = new int[] {-boundingBox[0] + 50, -boundingBox[1] + 50};
+            copyContent.setPositionOffset(moveUIDist);
 
-            WorkflowCopyContent pastedContent = tempParent.copyFromAndPasteHere(this, copyContent.build());
-            Arrays.stream(pastedContent.getNodeIDs())//
-                .map(id -> tempParent.getNodeContainer(id))//
-                .forEach(nc -> NodeUIInformation.moveNodeBy(nc, moveUIDist));
+            tempParent.copyFromAndPasteHere(this, copyContent.build());
 
             // connect all new port object readers to the in-scope-nodes
             for (Entry<Pair<NodeID, Integer>, NodeID> connection : portObjectReaderConnections.entrySet()) {
@@ -7684,18 +7682,28 @@ public final class WorkflowManager extends NodeContainer
                     nodeIDSuffix = cont.getID().getIndex();
                 }
                 loaderMap.put(nodeIDSuffix, copyPersistor);
+
+                NodeUIInformation uiInfo = copyMetaPersistor.getUIInfo();
+                if (uiInfo != null) {
+                    content.getPositionOffset()//
+                        .map(off -> NodeUIInformation.builder(uiInfo).translate(off).build())//
+                        .ifPresent(ui -> copyMetaPersistor.setUIInfo(ui));
+                }
                 for (ConnectionContainer out : m_workflow.getConnectionsBySource(nodeIDs[i])) {
                     if (idsHashed.contains(out.getDest())) {
                         ConnectionContainerTemplate t = new ConnectionContainerTemplate(out, false);
+                        t.fixPostionOffsetIfPresent(content.getPositionOffset());
                         connTemplates.add(t);
                     } else if (isIncludeInOut) {
                         ConnectionContainerTemplate t = new ConnectionContainerTemplate(out, false);
+                        t.fixPostionOffsetIfPresent(content.getPositionOffset());
                         additionalConnTemplates.add(t);
                     }
                 }
                 if (isIncludeInOut) {
                     for (ConnectionContainer in : m_workflow.getConnectionsByDest(nodeIDs[i])) {
                         ConnectionContainerTemplate t = new ConnectionContainerTemplate(in, false);
+                        t.fixPostionOffsetIfPresent(content.getPositionOffset());
                         additionalConnTemplates.add(t);
                     }
                 }

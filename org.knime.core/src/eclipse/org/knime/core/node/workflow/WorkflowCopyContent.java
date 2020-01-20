@@ -50,6 +50,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import org.knime.core.node.util.CheckUtils;
 
 
 
@@ -69,6 +72,8 @@ public final class WorkflowCopyContent {
     private final Map<NodeID, Integer> m_suggestedNodeIDSuffixMap;
     /** A map which maps old NodeID to UI infos in the target wfm. Used for template loading. */
     private final Map<NodeID, NodeUIInformation> m_uiInfoMap;
+    /** Offset by which nodes and connection bend points are moved in the target workflow. Often null. */
+    private final Optional<int[]> m_positionOffset;
 
     /**
      * Creates a new object from the given builder. All mutable fields from the builder are copied!
@@ -95,6 +100,7 @@ public final class WorkflowCopyContent {
         } else {
             m_uiInfoMap = new HashMap<NodeID, NodeUIInformation>(0);
         }
+        m_positionOffset = Optional.ofNullable(builder.m_positionOffset);
     }
 
     /** @return the ids as a newly created array */
@@ -132,6 +138,16 @@ public final class WorkflowCopyContent {
     }
 
     /**
+     * An offset by which nodes and connection bend points are shifted when inserted into the final workflow. Value
+     * is either <code>null</code> or a two-dimensional array.
+     * @return the positionOffset that array
+     * @since 4.2
+     */
+    public Optional<int[]> getPositionOffset() {
+        return m_positionOffset;
+    }
+
+    /**
      * @return a new {@link Builder} with default values.
      * @since 3.5
      */
@@ -153,6 +169,10 @@ public final class WorkflowCopyContent {
         private Map<NodeID, Integer> m_suggestedNodeIDSuffixMap;
         /** A map which maps old NodeID to UI infos in the target wfm. Used for template loading. */
         private Map<NodeID, NodeUIInformation> m_uiInfoMap;
+        /** A offset by which nodes and connection bend points are shifted when inserted into the final workflow. Value
+         * is either <code>null</code> or a two-dimensional array.
+         */
+        private int[] m_positionOffset;
 
         private Builder() {
             //
@@ -162,6 +182,19 @@ public final class WorkflowCopyContent {
          * @return this*/
         public Builder setNodeIDs(final NodeID... ids) {
             m_nodeIDs = ids;
+            return this;
+        }
+
+        /** Set the offset as described in {@link WorkflowCopyContent#getPositionOffset()}.
+         * @param offset null or an array of length 2 with {x, y} shifts
+         * @return this
+         * @since 4.2
+         */
+        @SuppressWarnings("null")
+        public Builder setPositionOffset(final int[] offset) {
+            CheckUtils.checkArgument(offset == null || offset.length == 2,
+                "Offset argument must be null or have length 2: %d", offset.length);
+            m_positionOffset = offset;
             return this;
         }
 

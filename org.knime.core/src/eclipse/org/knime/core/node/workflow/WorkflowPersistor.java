@@ -227,7 +227,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         private int m_destSuffix;
         private int m_destPort;
         private boolean m_isDeletable;
-        private final ConnectionUIInformation m_uiInfo;
+        private ConnectionUIInformation m_uiInfo;
 
         /**
          * Creates new template connection.
@@ -340,6 +340,22 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /** @return the uiInfo */
         ConnectionUIInformation getUiInfo() {
             return m_uiInfo;
+        }
+
+
+        /**
+         * @param positionOffset
+         */
+        void fixPostionOffsetIfPresent(final Optional<int[]> positionOffset) {
+            if (m_uiInfo != null) {
+                m_uiInfo = positionOffset.map(o -> ConnectionUIInformation.builder(m_uiInfo).translate(o).build())
+                    .orElse(m_uiInfo);
+            }
+        }
+
+        /** set a new UI info. */
+        void setUiInfo(final ConnectionUIInformation uiInfo) {
+            m_uiInfo = uiInfo;
         }
 
         /** {@inheritDoc} */

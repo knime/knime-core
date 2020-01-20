@@ -176,7 +176,7 @@ public final class NodeUIInformation {
      * @return the array described above.
      * @noreference This method is not intended to be referenced by clients.
      */
-    static int[] getBoundBoxOf(final Collection<NodeContainer> containers) {
+    public static int[] getBoundingBoxOf(final Collection<NodeContainer> containers) {
         int[] result = new int[] {Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};
         for (NodeContainer nc : containers) {
             int[] bounds = ObjectUtils.defaultIfNull(nc.getUIInformation().getBounds(), EMPTY_FOUR_DIMENSIONS);
@@ -191,8 +191,9 @@ public final class NodeUIInformation {
     /**
      * Set new UI Info on the argument node, whereby its position is shifted by the argument int[] (2 elements, x and
      * y).
+     * @noreference This method is not intended to be referenced by clients.
      */
-    static void moveNodeBy(final NodeContainer nc, final int[] moveDist) {
+    public static void moveNodeBy(final NodeContainer nc, final int[] moveDist) {
         nc.setUIInformation(builder(nc.getUIInformation()).translate(moveDist).build());
     }
 
