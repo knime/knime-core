@@ -63,8 +63,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
@@ -114,18 +116,10 @@ public class BatchExecutorTestcase {
      */
     @After
     public void checkDanglingWorkflows() {
-        Collection<NodeContainer> openWorkflows = WorkflowManager.ROOT.getNodeContainers();
-        if (openWorkflows.size() > 2) {
-            throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
-        } else if (openWorkflows.size() > 0) { // 1 or 2
-            for (NodeContainer m : openWorkflows) {
-                if (m.getName().contains("MetaNode Repository") || m.getName().contains("Workflow Template Root")) {
-                    continue;
-                } else {
-                    throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
-                }
-            }
-        }
+        Collection<NodeContainer> openWorkflows = WorkflowManager.ROOT.getNodeContainers().stream()
+            .filter(nc -> !StringUtils.containsAny(nc.getName(), WorkflowTestCase.KNOWN_CHILD_WFM_NAME_SUBSTRINGS))
+            .collect(Collectors.toList());
+        assertTrue(openWorkflows.size() + " dangling workflow(s) detected: " + openWorkflows, openWorkflows.isEmpty());
     }
 
     /**

@@ -59,6 +59,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.junit.After;
 import org.junit.Assert;
@@ -80,6 +81,12 @@ import org.knime.core.util.Version;
  * @author wiswedel, University of Konstanz
  */
 public abstract class WorkflowTestCase {
+
+    /** Names of workflow manager 'roots' that are used by some framework code, e.g. the parent object of all
+     * metanodes in the metanode repository. Used to filter for 'dangling' workflows after test case completion.
+     */
+    public static final String[] KNOWN_CHILD_WFM_NAME_SUBSTRINGS = new String[]{"MetaNode Repository",
+        "Workflow Template Root", "Streamer-Subnode-Parent", WorkflowManager.EXTRACTED_WORKFLOW_ROOT.getName()};
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
@@ -488,22 +495,7 @@ public abstract class WorkflowTestCase {
 
         // Executed after each test, checks that there are no open workflows dangling around.
         Collection<NodeContainer> openWorkflows = new ArrayList<>(WorkflowManager.ROOT.getNodeContainers());
-        openWorkflows.removeIf(nc -> {
-            String name = nc.getName();
-            if (name.contains("MetaNode Repository")) {
-                return true;
-            }
-            if (name.contains("Workflow Template Root")) {
-                return true;
-            }
-            if (name.contains("Streamer-Subnode-Parent")) {
-                return true;
-            }
-            if (name.contains(WorkflowManager.EXTRACTED_WORKFLOW_ROOT.getName())) {
-                return true;
-            }
-            return false;
-        });
+        openWorkflows.removeIf(nc -> StringUtils.containsAny(nc.getName(), KNOWN_CHILD_WFM_NAME_SUBSTRINGS));
         if (!openWorkflows.isEmpty()) {
             throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
         }
