@@ -2860,7 +2860,7 @@ public class Buffer implements KNIMEStreamConstants {
             } catch (Throwable t) {
                 /** only log error if buffer has neither been garbage-collected nor cleared */
                 final Buffer buffer = m_bufferRef.get();
-                if (buffer != null) {
+                if (!Thread.currentThread().isInterrupted() && buffer != null) {
                     /** wait for potential asynchronous clear processes before checking value of m_isClearedLock */
                     synchronized (buffer.m_isClearedLock) {
                         if (!buffer.m_isClearedLock.booleanValue()) {
