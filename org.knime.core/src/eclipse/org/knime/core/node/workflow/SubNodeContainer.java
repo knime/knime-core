@@ -1158,7 +1158,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 default:
                     newState = internalState;
             }
-            NodeMessage msg = m_wfm.getNodeErrorSummary().map(m -> NodeMessage.newError(m))
+            NodeMessage msg = m_wfm.getNodeErrorSummary().map(m -> NodeMessage.newWarning(m))
                 .orElseGet(() -> m_wfm.getNodeWarningSummary().map(m -> NodeMessage.newWarning(m)).orElse(null));
             if (msg != null) {
                 setNodeMessage(keepNodeMessage ? mergeNodeMessagesAndRespectExecuteFailedPrefix(oldMessage, msg) : msg);
