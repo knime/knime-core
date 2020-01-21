@@ -21,10 +21,10 @@
 <config key="styles"/>
 </config>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
-<entry key="state" type="xstring" value="CONFIGURED"/>
+<entry key="state" type="xstring" value="IDLE"/>
 <config key="nodecontainer_message">
-<entry key="type" type="xstring" value="ERROR"/>
-<entry key="message" type="xstring" value="Execute failed: %%00010Write to file path 0:20:0:19: Fail in execution 0:20:0:19:0:9: This node fails on each execution."/>
+<entry key="type" type="xstring" value="WARNING"/>
+<entry key="message" type="xstring" value="Component Input 3:20:0:20: Component does not have input data, execute upstream nodes first"/>
 </config>
 <entry key="virtual-in-ID" type="xint" value="20"/>
 <config key="inports">

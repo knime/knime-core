@@ -9,11 +9,7 @@
 <entry key="failAtIndex" type="xint" value="-1"/>
 </config>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
-<entry key="state" type="xstring" value="CONFIGURED"/>
-<config key="nodecontainer_message">
-<entry key="type" type="xstring" value="ERROR"/>
-<entry key="message" type="xstring" value="Execute failed: This node fails on each execution."/>
-</config>
+<entry key="state" type="xstring" value="IDLE"/>
 <entry key="factory" type="xstring" value="org.knime.testing.node.failing.FailingNodeFactory"/>
 <entry key="node-name" type="xstring" value="Fail in execution"/>
 <entry key="node-bundle-name" type="xstring" value="Test-Node extension for KNIME Workbench"/>

@@ -126,6 +126,7 @@ import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
@@ -1185,12 +1186,21 @@ public final class SubNodeContainer extends SingleNodeContainer
      * Merges two nodes messages but ignores the {@link Node#EXECUTE_FAILED_PREFIX} (+ '\n') in m1 for message
      * comparison and adds the prefix back again (if it was present) to the start of the merged message.
      *
+     * If the message types differ, the more severe message (error) is returned only.
+     *
      * The prefix for SNC-node messages is set in {@link #performExecuteNode(PortObject[])}.
      *
      * TODO: a message prefix could eventually be added to {@link NodeMessage} itself - but a bit of an overkill for the
      * time being with possible unknown side-effects
      */
     private static NodeMessage mergeNodeMessagesAndRespectExecuteFailedPrefix(final NodeMessage m1, final NodeMessage m2) {
+        if (m1.getMessageType() != m2.getMessageType()) {
+            if (m1.getMessageType() == Type.ERROR) {
+                return m1;
+            } else {
+                return m2;
+            }
+        }
         NodeMessage m1WithoutPrefix;
         if (m1.getMessage().startsWith(Node.EXECUTE_FAILED_PREFIX + "\n")) {
             m1WithoutPrefix = new NodeMessage(m1.getMessageType(),

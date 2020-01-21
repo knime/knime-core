@@ -76,6 +76,12 @@ public class TestNestedComponentErrorMessages extends WorkflowTestCase {
 
     private NodeID m_baseID;
 
+    private NodeID m_component_22;
+
+    private NodeID m_component_22_0_19;
+
+    private NodeID m_node_22_0_19_0_9;
+
     /**
      * Creates and copies the workflow into a temporary directory.
      *
@@ -92,11 +98,18 @@ public class TestNestedComponentErrorMessages extends WorkflowTestCase {
         WorkflowLoadResult loadResult = loadWorkflow(m_workflowDir, new ExecutionMonitor());
         setManager(loadResult.getWorkflowManager());
         m_baseID = getManager().getID();
+
         m_component_20 = new NodeID(m_baseID, 20);
-        m_component_19 = new NodeID(m_baseID, 19);
         m_component_20_0_19 = NodeID.fromString(m_baseID.toString() + ":20:0:19");
         m_node_20_0_19_0_9 = NodeID.fromString(m_baseID.toString() + ":20:0:19:0:9");
+
+        m_component_19 = new NodeID(m_baseID, 19);
         m_node_19_0_9 = NodeID.fromString(m_baseID.toString() + ":19:0:9");
+
+        m_component_22 = new NodeID(m_baseID, 22);
+        m_component_22_0_19 = NodeID.fromString(m_baseID.toString() + ":22:0:19");
+        m_node_22_0_19_0_9 = NodeID.fromString(m_baseID.toString() + ":22:0:19:0:9");
+
         return loadResult;
     }
 
@@ -110,6 +123,7 @@ public class TestNestedComponentErrorMessages extends WorkflowTestCase {
         WorkflowManager wfm = getManager();
         wfm.executeAllAndWaitUntilDone();
 
+        //check error messages after execute
         assertThat("unexpected node message", wfm.getNodeContainer(m_component_19).getNodeMessage().getMessage(),
             is("Execute failed: \nFail in execution " + m_baseID + ":19:0:9: This node fails on each execution."));
         assertThat("unexpected node message", wfm.getNodeContainer(m_component_20).getNodeMessage().getMessage(),
@@ -121,6 +135,15 @@ public class TestNestedComponentErrorMessages extends WorkflowTestCase {
             is("Execute failed: This node fails on each execution."));
         assertThat("unexpected node message", wfm.findNodeContainer(m_node_19_0_9).getNodeMessage().getMessage(),
             is("Execute failed: This node fails on each execution."));
+        assertThat("unexpected node message", wfm.getNodeContainer(m_component_22).getNodeMessage().getMessage(),
+            is("Execute failed: \nInner Component " + m_baseID + ":22:0:19: Duplicate Row Filter " + m_baseID
+                + ":22:0:19:0:9: At least one column has to be selected for duplicate detection."));
+        assertThat("unexpected node message", wfm.findNodeContainer(m_component_22_0_19).getNodeMessage().getMessage(),
+            is("Execute failed: \nDuplicate Row Filter " + m_baseID
+                + ":22:0:19:0:9: At least one column has to be selected for duplicate detection."));
+        assertThat("unexpected node message", wfm.findNodeContainer(m_node_22_0_19_0_9).getNodeMessage().getMessage(),
+            is("At least one column has to be selected for duplicate detection."));
+
     }
 
 }
