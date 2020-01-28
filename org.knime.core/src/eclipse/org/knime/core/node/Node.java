@@ -1119,7 +1119,9 @@ public final class Node implements NodeModelWarningListener {
             return false;
         }
 
-        assignInternalHeldObjects(rawInData, exEnv, exec, newOutData);
+        if (!isInactive) {
+            assignInternalHeldObjects(rawInData, exEnv, exec, newOutData);
+        }
         return true;
     } // execute
 
