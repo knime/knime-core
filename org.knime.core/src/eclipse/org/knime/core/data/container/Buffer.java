@@ -2705,6 +2705,8 @@ public class Buffer implements KNIMEStreamConstants {
         public void onClear() {
             assert Thread.holdsLock(Buffer.this);
 
+            performClear();
+
             if (m_memoryAlertListener != null) {
                 MemoryAlertSystem.getInstanceUncollected().removeListener(m_memoryAlertListener);
                 m_memoryAlertListener = null;
@@ -2717,8 +2719,6 @@ public class Buffer implements KNIMEStreamConstants {
                  * time to check whether the thread has thrown any exceptions, since we're clearing the buffer anyways.
                  */
                 m_asyncAddFuture.cancel(true);
-            } else {
-                performClear();
             }
 
             m_asyncAddFuture = null;
@@ -2860,7 +2860,7 @@ public class Buffer implements KNIMEStreamConstants {
             } catch (Throwable t) {
                 /** only log error if buffer has neither been garbage-collected nor cleared */
                 final Buffer buffer = m_bufferRef.get();
-                if (!Thread.currentThread().isInterrupted() && buffer != null) {
+                if (buffer != null) {
                     /** wait for potential asynchronous clear processes before checking value of m_isClearedLock */
                     synchronized (buffer.m_isClearedLock) {
                         if (!buffer.m_isClearedLock.booleanValue()) {
@@ -2884,25 +2884,6 @@ public class Buffer implements KNIMEStreamConstants {
                 }
 
             } finally {
-                if (Thread.currentThread().isInterrupted()) {
-                    /**
-                     * Thread was interrupted due to invocation of clear() on the buffer. The buffer reference should
-                     * therefore not have been cleared and we may get that reference to run performClear and terminate
-                     * gracefully.
-                     */
-                    final Buffer buffer = m_bufferRef.get();
-                    if (buffer != null) {
-                        try {
-                            buffer.performClear();
-                        } catch (Throwable t) {
-                            final StringBuilder error = new StringBuilder();
-                            error.append("Clearing of table");
-                            appendNodeNameAndError(t, error);
-
-                            LOGGER.debug(error.toString(), t);
-                        }
-                    }
-                }
                 NodeContext.removeLastContext();
             }
 
