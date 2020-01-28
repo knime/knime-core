@@ -77,7 +77,7 @@ public class OSGIHelperTest {
         Optional<IInstallableUnit> iUnit = OSGIHelper.getFeature(bundle);
         assertThat("Feature for NodeModel not found", iUnit.isPresent(), is(true));
         assertThat("Unexpected feature for NodeModel returned", iUnit.get().getId(),
-            is("org.knime.features.base.feature.group"));
+            is("org.knime.features.core.feature.group"));
 
 
         bundle = OSGIHelper.getBundle("org.knime.ext.jfreechart");
