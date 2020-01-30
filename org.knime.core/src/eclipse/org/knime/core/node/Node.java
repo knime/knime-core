@@ -1119,6 +1119,11 @@ public final class Node implements NodeModelWarningListener {
             return false;
         }
 
+        /* #assignInternalHeldObjects does some clean-up for previous internal tables in a loop. if the branch
+         * containing the loop is set to inactive, #cleanOutPorts is invoked via WorkflowManager#resetNodeAndSuccessors.
+         * This entails that the internal tables are cleared. Consequently, there is no need to do further clean-up in
+         * #assignInternalHeldObjects if the node has been set to inactive before. We are therefore OK with not calling
+         * #assignInternalHeldObjects when this node is inactive. */
         if (!isInactive) {
             assignInternalHeldObjects(rawInData, exEnv, exec, newOutData);
         }
