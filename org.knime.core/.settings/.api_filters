@@ -4,7 +4,7 @@
         <filter comment="org.knime.core.KnimeURIUtil transformed to URIUtil" id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.util.KnimeURIUtil"/>
-                <message_argument value="org.knime.core_4.1.0"/>
+                <message_argument value="org.knime.core_4.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -12,7 +12,7 @@
         <filter comment="moved to org.knime.core.ui.util" id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.util.SWTUtilities"/>
-                <message_argument value="org.knime.core_4.1.0"/>
+                <message_argument value="org.knime.core_4.1.1"/>
             </message_arguments>
         </filter>
     </resource>
