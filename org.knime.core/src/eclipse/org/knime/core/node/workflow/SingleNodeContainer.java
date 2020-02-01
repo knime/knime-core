@@ -1039,8 +1039,9 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
     /**
      * Sets the node inactive.
+     * @return <code>true</code> if the inactivation was successful
      */
-    abstract void setInactive();
+    abstract boolean setInactive();
 
     /** @return <code>true</code> if the underlying node is able to consume
      * inactive objects (implements
