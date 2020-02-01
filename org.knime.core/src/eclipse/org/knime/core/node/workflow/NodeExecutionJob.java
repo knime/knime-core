@@ -257,20 +257,20 @@ public abstract class NodeExecutionJob implements Runnable {
         if ((tcslc != null) && (!tcslc.isInactiveScope())) {
             // failure inside an active try-catch:
             // make node inactive and preserve error message(s)
-            snc.setInactive();
-            String errorMessage = (status instanceof NodeContainerExecutionResult)
-                ? ((NodeContainerExecutionResult)status).getNodeMessage().getMessage() : status.toString();
-            snc.setNodeMessage(NodeMessage.newError("Execution failed in Try-Catch block: " + errorMessage));
-            // and store information such that the catch-node can report it
-            FlowObjectStack fos = snc.getOutgoingFlowObjectStack();
-            fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
-            fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, snc.getName()));
-            fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, errorMessage));
-            tcslc.setError(snc.getName(), errorMessage, null);
-            return true;
-        } else {
-            return false;
+            if (snc.setInactive()) {
+                String errorMessage = (status instanceof NodeContainerExecutionResult)
+                    ? ((NodeContainerExecutionResult)status).getNodeMessage().getMessage() : status.toString();
+                snc.setNodeMessage(NodeMessage.newError("Execution failed in Try-Catch block: " + errorMessage));
+                // and store information such that the catch-node can report it
+                FlowObjectStack fos = snc.getOutgoingFlowObjectStack();
+                fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
+                fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, snc.getName()));
+                fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, errorMessage));
+                tcslc.setError(snc.getName(), errorMessage, null);
+                return true;
+            }
         }
+        return false;
     }
 
     private void logError(final Throwable e) {

@@ -2292,30 +2292,32 @@ public final class SubNodeContainer extends SingleNodeContainer
      * {@inheritDoc}
      */
     @Override
-    public void setInactive() {
+    boolean setInactive() {
         //collect all inner error node messages to set them again later after reset
         Map<NodeID, NodeMessage> innerNodeMessages = m_wfm.getNodeContainers().stream()
             .filter(nc -> nc.getNodeMessage().getMessageType() == NodeMessage.Type.ERROR)
             .collect(Collectors.toMap(nc -> nc.getID(), nc -> nc.getNodeMessage()));
         m_isPerformingActionCalledFromParent = true;
-        try {
+        try (WorkflowLock lock = m_wfm.lock()) {
             m_subnodeScopeContext.inactiveScope(true);
-            if (m_wfm.isLocalWFM()) {
+            //'execute' inner workflow manager locally
+            //(only to propagate inactive port states)
+            m_wfm.cancelExecution();
+            NodeExecutionJobManager jobManager = m_wfm.getJobManager();
+            m_wfm.setJobManager(ThreadNodeExecutionJobManager.INSTANCE);
+            m_wfm.resetAndConfigureAll();
+            m_wfm.executeAllAndWaitUntilDone();
+            if (!m_wfm.getInternalState().isExecuted()) {
+                cancelExecution();
                 m_wfm.resetAndConfigureAll();
-                m_wfm.executeAllAndWaitUntilDone();
-            } else {
-                //'execute' inner workflow manager locally
-                //(only to propagate inactive port states)
-                m_wfm.cancelExecution();
-                m_wfm.setJobManager(ThreadNodeExecutionJobManager.INSTANCE);
-                m_wfm.resetAndConfigureAll();
-                m_wfm.executeAllAndWaitUntilDone();
-                m_wfm.setJobManager(null);
             }
-            setVirtualOutputIntoOutport(EXECUTED);
+            setVirtualOutputIntoOutport(m_wfm.getInternalState());
+            m_wfm.setJobManager(jobManager);
             //set inner node error messages
             innerNodeMessages.entrySet().stream()
                 .forEach(e -> m_wfm.getNodeContainer(e.getKey()).setNodeMessage(e.getValue()));
+            // might not be executed (even when inactive) if there are unconnected nodes
+            return m_wfm.getInternalState().isExecuted();
         } finally {
             m_isPerformingActionCalledFromParent = false;
        }
@@ -2459,7 +2461,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         final NodeContainerParent directNCParent = getDirectNCParent();
         try (WorkflowLock lock = directNCParent.lock()) {
             final WorkflowManager parent = getParent();
-            if(m_subnodeScopeContext.isInactiveScope()) {
+            if (m_subnodeScopeContext.isInactiveScope()) {
                 return true;
             }
             if (!parent.containsNodeContainer(getID())) { // called during set-up (loading via constructor)
