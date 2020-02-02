@@ -55,8 +55,11 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
@@ -64,6 +67,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -91,15 +96,22 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.TransferHandler;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputAdapter;
+import javax.swing.plaf.basic.BasicTableUI;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.knime.core.data.DataTable;
+import org.knime.core.data.RowKey;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.FindPosition.SearchOptions;
 import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
@@ -122,6 +134,54 @@ public class TableView extends JScrollPane {
 
     /** Cursor that is shown when the column header is resized (north-south). */
     private static final Cursor RESIZE_CURSOR = Cursor.getPredefinedCursor(Cursor.S_RESIZE_CURSOR);
+
+    /** Constructor for package scope class <code>javax.swing.plaf.basic.BasicTransferable</code>. Used in advanced
+     * "copy-to-clipboard" actions in replacement for {@link java.awt.datatransfer.StringSelection StringSelection},
+     * which is used elsewhere in KNIME. For a table it needs to support both flavors tab-separated text and html.
+     * The latter is used when pasting into spreadsheet tools (Excel) which can nicely work with table headers etc. */
+    private static final Constructor<? extends Transferable> BASICTRANSFERABLE_CONSTRUCTOR;
+
+    static {
+        // didn't find an easier way to get to instantiate a javax.swing.plaf.basic.BasicTransferable (package scope
+        // class)
+        Constructor<? extends Transferable> basicTransferableConstructor;
+        try {
+            String defaultTransferHandlerFieldName = "defaultTransferHandler";
+            Field defaultTransferHandlerField =
+                    FieldUtils.getField(BasicTableUI.class, defaultTransferHandlerFieldName, true);
+            CheckUtils.checkState(defaultTransferHandlerField != null,
+                    "Can't find private field \"%s\" on class \"%s\"",
+                    defaultTransferHandlerFieldName, BasicTableUI.class.getName());
+
+            Object defaultTransferHandler = FieldUtils.readStaticField(defaultTransferHandlerField);
+            CheckUtils.checkState(defaultTransferHandler instanceof TransferHandler,
+                "Can't read static field \"%s\" on class \"%s\"",
+                    defaultTransferHandlerFieldName, BasicTableUI.class.getName());
+
+            // an empty table with all of its rows (= 1) selected. The table is ignored -- just to retrieve the
+            // javax.swing.plaf.basic.BasicTransferable object that represents the copy content
+            JTable dummyTable = new JTable(1, 1);
+            dummyTable.getSelectionModel().setSelectionInterval(0, 0);
+            String createTransferableMethodName = "createTransferable";
+            Object transferable = MethodUtils.invokeMethod(
+                defaultTransferHandler, true, createTransferableMethodName, dummyTable);
+            CheckUtils.checkState(transferable instanceof Transferable,
+                "Can't invoke method \"%s\" on class \"%s\"",
+                createTransferableMethodName, defaultTransferHandler.getClass().getName());
+
+
+            basicTransferableConstructor =
+                (Constructor<? extends Transferable>)transferable.getClass().getConstructor(String.class, String.class);
+            basicTransferableConstructor.setAccessible(true);
+            CheckUtils.checkSetting(basicTransferableConstructor != null,
+                    "Unable to locate constructor for class \"%s\"", transferable.getClass().getName());
+        } catch (Exception e) {
+            NodeLogger.getLogger(TableView.class).coding(
+                "Unable to find constructor for object allowing advanced 'copy-to-clipboad'; will disable it", e);
+            basicTransferableConstructor = null;
+        }
+        BASICTRANSFERABLE_CONSTRUCTOR = basicTransferableConstructor;
+    }
 
     /** The popup menu which allows to trigger hilite events. */
     private JPopupMenu m_popup;
@@ -154,6 +214,14 @@ public class TableView extends JScrollPane {
     private TableAction m_increaseFontSizeAction;
 
     private TableAction m_decreaseFontSizeAction;
+
+    private TableAction m_copyWithNoHeaderAction;
+
+    private TableAction m_copyWithColHeaderAction;
+
+    private TableAction m_copyWithRowHeaderAction;
+
+    private TableAction m_copyWithColAndRowHeaderAction;
 
     /**
      * Creates new empty <code>TableView</code>. Content and handlers are set using the appropriate methods, that is,
@@ -927,6 +995,48 @@ public class TableView extends JScrollPane {
     } // createNavigationMenu()
 
     /**
+     * Create the export menu for this table view.
+     *
+     * @return a new <code>JMenu</code> with export actions.
+     * @since 4.2
+     */
+    public JMenu createEditMenu() {
+        final JMenu result = new JMenu("Edit");
+        result.setMnemonic('E');
+
+        // this uses the table's native copy action -- it doesn't use the BASICTRANSFERABLE_CONSTRUCTOR
+        TableAction copyWithNoHeaderAction = registerCopyWithNoHeaderAction();
+        JMenuItem copyWithNoHeaderItem = new JMenuItem(copyWithNoHeaderAction);
+        copyWithNoHeaderItem.setAccelerator(copyWithNoHeaderAction.getKeyStroke());
+        copyWithNoHeaderItem.addPropertyChangeListener(new EnableListener(this, true, false));
+        copyWithNoHeaderItem.setEnabled(hasData());
+        result.add(copyWithNoHeaderItem);
+
+        if (BASICTRANSFERABLE_CONSTRUCTOR != null) { // reflection error -- error was logged in static "constructor"
+            TableAction copyWithColHeaderAction = registerCopyWithColHeaderAction();
+            JMenuItem copyWithColHeaderItem = new JMenuItem(copyWithColHeaderAction);
+            copyWithColHeaderItem.setAccelerator(copyWithColHeaderAction.getKeyStroke());
+            copyWithColHeaderItem.addPropertyChangeListener(new EnableListener(this, true, false));
+            copyWithColHeaderItem.setEnabled(hasData());
+            result.add(copyWithColHeaderItem);
+
+            TableAction copyWithRowHeaderAction = registerCopyWithRowHeaderAction();
+            JMenuItem copyWithRowHeaderItem = new JMenuItem(copyWithRowHeaderAction);
+            copyWithRowHeaderItem.addPropertyChangeListener(new EnableListener(this, true, false));
+            copyWithRowHeaderItem.setEnabled(hasData());
+            result.add(copyWithRowHeaderItem);
+
+            TableAction copyWithColAndRowHeaderAction = registerCopyWithColAndRowHeaderAction();
+            JMenuItem copyWithColAndRowHeaderItem = new JMenuItem(copyWithColAndRowHeaderAction);
+            copyWithColAndRowHeaderItem.addPropertyChangeListener(new EnableListener(this, true, false));
+            copyWithColAndRowHeaderItem.setEnabled(hasData());
+            result.add(copyWithColAndRowHeaderItem);
+        }
+
+        return result;
+    } // createEditMenu()
+
+    /**
      * Get a new menu to control hiliting for this view.
      *
      * @return a new JMenu with hiliting buttons
@@ -1191,6 +1301,158 @@ public class TableView extends JScrollPane {
         result.add(item);
         return result;
     } // createViewMenu()
+
+    /**
+     * Creates and registers the "Copy With Column Header" action on this component.
+     *
+     * @return The non-null action representing the copy task.
+     * @since 4.2
+     */
+    public TableAction registerCopyWithColHeaderAction() {
+        if (m_copyWithColHeaderAction == null) {
+            String name = "Copy with Column Header";
+            KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_C,
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | InputEvent.SHIFT_DOWN_MASK);
+            TableAction action = new TableAction(stroke, name) {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    copySelectionToClipboard(false, true);
+                }
+            };
+            registerAction(action);
+            m_copyWithColHeaderAction = action;
+        }
+        return m_copyWithColHeaderAction;
+    }
+
+    /**
+     * Creates and registers the "Copy With Column Header" action on this component.
+     *
+     * @return The non-null action representing the copy task.
+     * @since 4.2
+     */
+    public TableAction registerCopyWithRowHeaderAction() {
+        if (m_copyWithRowHeaderAction == null) {
+            String name = "Copy with Row ID";
+            TableAction action = new TableAction(null, name) {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    copySelectionToClipboard(true, false);
+                }
+            };
+            registerAction(action);
+            m_copyWithRowHeaderAction = action;
+        }
+        return m_copyWithRowHeaderAction;
+    }
+
+    /**
+     * Creates and registers the "Copy With Column and Row Header" action on this component.
+     *
+     * @return The non-null action representing the copy task.
+     * @since 4.2
+     */
+    public TableAction registerCopyWithColAndRowHeaderAction() {
+        if (m_copyWithColAndRowHeaderAction == null) {
+            String name = "Copy with Column Header and Row ID";
+            TableAction action = new TableAction(null, name) {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    copySelectionToClipboard(true, true);
+                }
+            };
+            registerAction(action);
+            m_copyWithColAndRowHeaderAction = action;
+        }
+        return m_copyWithColAndRowHeaderAction;
+    }
+
+    /**
+     * Creates and registers the "Copy" action on this component.
+     *
+     * @return The non-null action representing the copy task.
+     * @since 4.2
+     */
+    public TableAction registerCopyWithNoHeaderAction() {
+        if (m_copyWithNoHeaderAction == null) {
+            String name = "Copy";
+            KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_C,
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+            TableAction action = new TableAction(stroke, name) {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    TransferHandler.getCopyAction().actionPerformed(e);
+                }
+            };
+            registerAction(action);
+            m_copyWithNoHeaderAction = action;
+        }
+        return m_copyWithNoHeaderAction;
+    }
+
+    private final void copySelectionToClipboard(final boolean includeRowHeader, final boolean includeColHeader) {
+        TableContentView table = getContentTable();
+        TableContentModel contentModel = getContentModel();
+        int[] rows = table.getSelectedRows();
+        int[] cols = table.getSelectedColumns();
+        if (ArrayUtils.isEmpty(rows) || ArrayUtils.isEmpty(cols)) {
+            return;
+        }
+
+        StringBuffer plainBuf = new StringBuffer();
+        StringBuffer htmlBuf = new StringBuffer();
+
+        htmlBuf.append("<html>\n<body>\n<table>\n");
+
+        if (includeColHeader) {
+            htmlBuf.append("<tr>\n");
+            if (includeRowHeader) {
+                plainBuf.append("RowID").append("\t");
+                htmlBuf.append("  <th>RowID</th>\n");
+            }
+            for (int c = 0; c < cols.length; c++) {
+                int col = table.convertColumnIndexToModel(cols[c]);
+                String val = contentModel.getColumnName(col);
+                plainBuf.append(val).append("\t");
+                htmlBuf.append("  <th>").append(val).append("</th>\n");
+            }
+            // we want a newline at the end of each line and not a tab
+            plainBuf.deleteCharAt(plainBuf.length() - 1).append("\n");
+            htmlBuf.append("</tr>\n");
+        }
+        for (int r = 0; r < rows.length; r++) {
+            htmlBuf.append("<tr>\n");
+            int row = table.convertRowIndexToModel(rows[r]);
+            if (includeRowHeader) {
+                RowKey rowKey = getContentModel().getRowKey(row);
+                plainBuf.append(rowKey).append("\t");
+                htmlBuf.append("  <td>").append(rowKey).append("</td>\n");
+            }
+            for (int c = 0; c < cols.length; c++) {
+                int col = table.convertColumnIndexToModel(cols[c]);
+                Object obj = contentModel.getValueAt(row, col);
+                String val = ((obj == null) ? "" : obj.toString());
+                plainBuf.append(val).append("\t");
+                htmlBuf.append("  <td>").append(val).append("</td>\n");
+            }
+            // we want a newline at the end of each line and not a tab
+            plainBuf.deleteCharAt(plainBuf.length() - 1).append("\n");
+            htmlBuf.append("</tr>\n");
+        }
+
+        // remove the last newline
+        plainBuf.deleteCharAt(plainBuf.length() - 1);
+        htmlBuf.append("</table>\n</body>\n</html>");
+
+        Transferable transferable;
+        try {
+            transferable = BASICTRANSFERABLE_CONSTRUCTOR.newInstance(plainBuf.toString(), htmlBuf.toString());
+            Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            systemClipboard.setContents(transferable, null);
+        } catch (Exception ex) {
+            NodeLogger.getLogger(TableView.class).error("Can't create transferable, copy to clipboard failed", ex);
+        }
+    }
 
     /**
      * Registers all actions for navigation on the table, namely "Find...", "Find Next" and "Go to Row...".
@@ -1572,4 +1834,7 @@ public class TableView extends JScrollPane {
         }
 
     }
+
+
+
 } // TableView

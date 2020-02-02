@@ -94,6 +94,7 @@ public class BufferedDataTableView extends JComponent implements PortObjectView 
 
     JMenu[] getMenus() {
         return new JMenu[] {
+            m_dataView.createEditMenu(),
             m_dataView.createHiLiteMenu(),
             m_dataView.createNavigationMenu(),
             m_dataView.createViewMenu()

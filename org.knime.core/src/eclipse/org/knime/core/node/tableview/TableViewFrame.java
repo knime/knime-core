@@ -134,6 +134,7 @@ public class TableViewFrame extends JFrame {
             }
         });
 
+        getJMenuBar().add(m_scroller.createEditMenu());
         getJMenuBar().add(m_scroller.createHiLiteMenu());
         getJMenuBar().add(m_scroller.createNavigationMenu());
         getJMenuBar().add(m_scroller.createViewMenu());
