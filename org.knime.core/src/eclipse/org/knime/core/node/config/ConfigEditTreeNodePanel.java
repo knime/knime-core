@@ -106,7 +106,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
     private static final Dimension LABEL_DIMENSION = new Dimension(100, 20);
     private final JLabel m_keyLabel;
     private Icon m_keyIcon;
-    private final JComboBox m_valueField;
+    private final JComboBox<Object> m_valueField;
     private FlowObjectStack m_flowObjectStack;
     private final JTextField m_exposeAsVariableField;
     private ConfigEditTreeNode m_treeNode;
@@ -122,7 +122,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_keyLabel.setMaximumSize(LABEL_DIMENSION);
         m_keyLabel.setPreferredSize(LABEL_DIMENSION);
         m_keyLabel.setSize(LABEL_DIMENSION);
-        m_valueField = new JComboBox(new DefaultComboBoxModel());
+        m_valueField = new JComboBox<Object>(new DefaultComboBoxModel<Object>());
         m_valueField.setToolTipText(" "); // enable tooltip;
         m_valueField.setRenderer(ComboBoxRenderer.INSTANCE);
         m_valueField.setPrototypeDisplayValue("xxxxxxxxxxxxxxxxxxxxxxxx");
@@ -261,8 +261,12 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_keyLabel.setMaximumSize(LABEL_DIMENSION);
         m_keyLabel.setPreferredSize(LABEL_DIMENSION);
         m_keyLabel.setSize(LABEL_DIMENSION);
-        DefaultComboBoxModel model = (DefaultComboBoxModel)m_valueField.getModel();
-        model.removeAllElements();
+
+        /*
+         * Create a new ComboBoxModel holding the available variables and update the used model.
+         * The change listener will only be called if the selected value really changes.
+         */
+        final DefaultComboBoxModel<Object> model = new DefaultComboBoxModel<>();
         model.addElement(" ");
         @SuppressWarnings("unchecked")
         ComboBoxElement match = null;
@@ -273,6 +277,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 match = cbe;
             }
         }
+        m_valueField.setModel(model);
 
         if (match == null && m_flowObjectStack != null) {
             @SuppressWarnings("deprecation")
