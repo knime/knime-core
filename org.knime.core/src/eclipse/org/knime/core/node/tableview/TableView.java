@@ -1381,7 +1381,8 @@ public class TableView extends JScrollPane {
             TableAction action = new TableAction(stroke, name) {
                 @Override
                 public void actionPerformed(final ActionEvent e) {
-                    TransferHandler.getCopyAction().actionPerformed(e);
+                    TransferHandler.getCopyAction()
+                        .actionPerformed(new ActionEvent(getContentTable(), e.getID(), e.getActionCommand()));
                 }
             };
             registerAction(action);
