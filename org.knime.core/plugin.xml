@@ -616,6 +616,15 @@
             specClass="org.knime.core.node.port.pmml.PMMLPortObjectSpec"
             specSerializer="org.knime.core.node.port.pmml.PMMLPortObjectSpecSerializer">
       </portType>
+      <portType
+            color="#000000"
+            hidden="false"
+            name="Workflow Port Object"
+            objectClass="org.knime.core.node.workflow.capture.WorkflowPortObject"
+            objectSerializer="org.knime.core.node.workflow.capture.WorkflowPortObject$Serializer"
+            specClass="org.knime.core.node.workflow.capture.WorkflowPortObjectSpec"
+            specSerializer="org.knime.core.node.workflow.capture.WorkflowPortObjectSpec$Serializer">
+      </portType>
    </extension>
    <extension
          point="org.knime.core.TableFormat">
