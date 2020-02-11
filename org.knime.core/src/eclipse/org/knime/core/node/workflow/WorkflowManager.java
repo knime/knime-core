@@ -116,6 +116,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -3524,13 +3525,17 @@ public final class WorkflowManager extends NodeContainer
             }
             NativeNodeContainer startNode = getNodeContainer(startNodeID, NativeNodeContainer.class, true);
             List<Port> workflowFragmentInputs = getOutgoingConnectionsFor(startNode.getID()).stream()//
-                .map(cc -> new Port(NodeIDSuffix.create(getID(), cc.getDest()), cc.getDestPort(),
-                    getNodeContainer(cc.getDest()).getInPort(cc.getDestPort()).getPortType()))//
-                .collect(Collectors.toList());
+                .map(cc -> {
+                    return new Port(NodeIDSuffix.create(getID(), cc.getDest()), cc.getDestPort(),
+                        getNodeContainer(cc.getDest()).getInPort(cc.getDestPort()).getPortType(),
+                        castToDTSpecOrNull(startNode.getOutPort(cc.getSourcePort()).getPortObjectSpec()));
+                }).collect(Collectors.toList());
             List<Port> workflowFragmentOutputs = getIncomingConnectionsFor(endNodeID).stream()//
-                .map(cc -> new Port(NodeIDSuffix.create(getID(), cc.getSource()), cc.getSourcePort(),
-                    getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort()).getPortType()))//
-                .collect(Collectors.toList());
+                .map(cc -> {
+                    NodeOutPort outPort = getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort());
+                    return new Port(NodeIDSuffix.create(getID(), cc.getSource()), cc.getSourcePort(),
+                        outPort.getPortType(), castToDTSpecOrNull(outPort.getPortObjectSpec()));
+                }).collect(Collectors.toList());
 
             // copy nodes in scope body
             WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
@@ -3607,6 +3612,10 @@ public final class WorkflowManager extends NodeContainer
             return new WorkflowFragment(tempParent, workflowFragmentInputs, workflowFragmentOutputs,
                 addedPortObjectReaderNodes);
         }
+    }
+
+    private static final DataTableSpec castToDTSpecOrNull(final PortObjectSpec spec) {
+        return spec instanceof DataTableSpec ? (DataTableSpec)spec : null;
     }
 
     /*

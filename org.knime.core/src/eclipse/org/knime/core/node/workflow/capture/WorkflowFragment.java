@@ -66,6 +66,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.CanceledExecutionException;
@@ -364,6 +365,11 @@ public final class WorkflowFragment {
             portConf.addInt("index", ports.get(i).getIndex());
             Config type = portConf.addConfig("type");
             savePortType(type, ports.get(i).getType().get());
+            Optional<DataTableSpec> optionalSpec = ports.get(i).getSpec();
+            if (optionalSpec.isPresent()) {
+                Config spec = portConf.addConfig("spec");
+                saveSpec(spec, ports.get(i).getSpec().get());
+            }
         }
     }
 
@@ -372,13 +378,19 @@ public final class WorkflowFragment {
         typeConf.addBoolean("isOptional", type.isOptional());
     }
 
+    private static void saveSpec(final Config specConf, final DataTableSpec spec) {
+        DataTableSpec dtspec = spec;
+        dtspec.save(specConf);
+    }
+
     private static List<Port> loadPorts(final ModelContentRO model) throws InvalidSettingsException {
         int size = model.getInt("num_ports");
         List<Port> ports = new ArrayList<WorkflowFragment.Port>(size);
         for (int i = 0; i < size; i++) {
             Config portConf = model.getConfig("port_" + i);
             ports.add(new Port(NodeIDSuffix.fromString(portConf.getString("node_id")), portConf.getInt("index"),
-                loadPortType(portConf.getConfig("type"))));
+                loadPortType(portConf.getConfig("type")),
+                portConf.containsKey("spec") ? loadSpec(portConf.getConfig("spec")) : null));
         }
         return ports;
     }
@@ -393,6 +405,10 @@ public final class WorkflowFragment {
         }
     }
 
+    private static DataTableSpec loadSpec(final Config spec) throws InvalidSettingsException {
+        return DataTableSpec.load(spec);
+    }
+
     /**
      * References/marks ports in the workflow fragment by node id and index.
      */
@@ -403,6 +419,8 @@ public final class WorkflowFragment {
 
         private final PortType m_type;
 
+        private final DataTableSpec m_spec;
+
         /**
          * Creates an new port marker.
          *
@@ -412,12 +430,26 @@ public final class WorkflowFragment {
          *            installed)
          */
         public Port(final NodeIDSuffix nodeIDSuffix, final int idx, final PortType type) {
+            this(nodeIDSuffix, idx, type, null);
+        }
+
+        /**
+         * Creates an new port marker.
+         *
+         * @param nodeIDSuffix the node's id
+         * @param idx port index
+         * @param type - can be <code>null</code> if type couldn't be determined (because the respective plugin is not
+         *            installed)
+         * @param spec - can be <code>null</code>
+         */
+        public Port(final NodeIDSuffix nodeIDSuffix, final int idx, final PortType type, final DataTableSpec spec) {
             m_nodeIDSuffix = CheckUtils.checkArgumentNotNull(nodeIDSuffix);
             if (idx < 0) {
                 throw new IllegalArgumentException(String.format("Port index %d out of bounds.", idx));
             }
             m_idx = idx;
             m_type = type;
+            m_spec = spec;
         }
 
         /**
@@ -440,6 +472,13 @@ public final class WorkflowFragment {
          */
         public Optional<PortType> getType() {
             return Optional.ofNullable(m_type);
+        }
+
+        /**
+         * @return the data table spec or an empty optional (if not persisted with the port)
+         */
+        public Optional<DataTableSpec> getSpec() {
+            return Optional.ofNullable(m_spec);
         }
 
         /**
