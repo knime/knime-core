@@ -64,6 +64,8 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.CanceledExecutionException;
@@ -420,6 +422,35 @@ public final class WorkflowFragment {
          */
         public Optional<PortType> getType() {
             return Optional.ofNullable(m_type);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "Node #" + m_nodeIDSuffix + " | Port #" + m_idx;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            HashCodeBuilder hash = new HashCodeBuilder().append(m_nodeIDSuffix).append(m_idx);
+            return hash.build();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (!(obj instanceof Port)) {
+                return false;
+            }
+            Port other = (Port)obj;
+            return new EqualsBuilder().append(m_nodeIDSuffix, other.m_nodeIDSuffix).append(m_idx, other.m_idx).build();
         }
     }
 }
