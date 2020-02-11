@@ -87,6 +87,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -208,12 +209,13 @@ public final class PortObjectRepository {
      *
      * @param outport the outport to get the port object and flow variables from that the to be added node will provide,
      *            too (the port object is just referenced by the original node id and port index)
+     * @param srcParentID the id of the workflow manager the referenced node (port) is part of
      * @param wfm the workflow manager the new node should be added to
      * @param nodeIDSuffix
      * @return the id of the newly added node
      */
     // TODO we might have to revisit this when implementing AP-13335
-    public static NodeID addPortObjectReferenceReaderToWorkflow(final NodeOutPort outport,
+    public static NodeID addPortObjectReferenceReaderToWorkflow(final NodeOutPort outport, final NodeID srcParentID,
         final WorkflowManager wfm, final int nodeIDSuffix) {
         NodeID sourceNodeID = outport.getConnectedNodeContainer().getID();
         int portIndex = outport.getPortIndex();
@@ -221,7 +223,7 @@ public final class PortObjectRepository {
         List<FlowVariable> variables = outport.getFlowObjectStack().getAllAvailableFlowVariables().values().stream()
             .filter(f -> f.getScope() == Scope.Flow).collect(Collectors.toList());
         PortObjectIDSettings portObjectIDSettings = new PortObjectIDSettings();
-        portObjectIDSettings.setNodeReference(sourceNodeID, portIndex);
+        portObjectIDSettings.setNodeReference(NodeIDSuffix.create(srcParentID, sourceNodeID), portIndex);
         portObjectIDSettings.setFlowVariables(variables);
         boolean isTable = outport.getPortType().equals(BufferedDataTable.TYPE);
         NodeFactory<?> factory =

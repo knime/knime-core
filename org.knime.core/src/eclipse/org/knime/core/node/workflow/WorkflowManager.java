@@ -3566,8 +3566,9 @@ public final class WorkflowManager extends NodeContainer
                             } else {
                                 upstreamPort = sourceNode.getOutPort(sourcePort);
                             }
-                            NodeIDSuffix pastedIDSuffix = NodeIDSuffix.create(tempParent.getID(), PortObjectRepository
-                                .addPortObjectReferenceReaderToWorkflow(upstreamPort, tempParent, sourceID.getIndex()));
+                            NodeIDSuffix pastedIDSuffix = NodeIDSuffix.create(tempParent.getID(),
+                                PortObjectRepository.addPortObjectReferenceReaderToWorkflow(upstreamPort,
+                                    getProjectWFM().getID(), tempParent, sourceID.getIndex()));
 
                             NodeID pastedID = pastedIDSuffix.prependParent(tempParent.getID());
                             tempParent.getNodeContainer(pastedID).setUIInformation(sourceUIInformation);

@@ -134,7 +134,7 @@ public final class PortObjectInNodeModel extends NodeModel {
             case NODE:
                 WorkflowManager wfm = NodeContext.getContext().getWorkflowManager();
                 if (wfm != null) {
-                    return wfm.findNodeContainer(m_portObjectIDSettings.getNodeID())
+                    return wfm.findNodeContainer(m_portObjectIDSettings.getNodeIDSuffix().prependParent(wfm.getID()))
                         .getOutPort(m_portObjectIDSettings.getPortIdx()).getPortObject();
                 } else {
                     throw new IllegalStateException("Not a local workflow");

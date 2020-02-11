@@ -63,7 +63,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.ICredentials;
-import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.VariableType.CredentialsType;
 import org.knime.core.node.workflow.VariableType.FSConnectionType;
 
@@ -82,7 +82,7 @@ public final class PortObjectIDSettings {
     private Integer m_id;
 
     // node ref type details
-    private NodeID m_nodeID;
+    private NodeIDSuffix m_nodeIDSuffix;
     private int m_portIdx;
 
     // file ref type details
@@ -104,7 +104,7 @@ public final class PortObjectIDSettings {
              */
             REPOSITORY,
             /**
-             * Reference to a node (node ID and port idx) in the same workflow.
+             * Reference to a node (node ID suffix and port idx) in the same workflow.
              */
             NODE,
             /**
@@ -131,7 +131,7 @@ public final class PortObjectIDSettings {
                 break;
             case NODE:
                 try {
-                    m_nodeID = NodeID.fromString(settings.getString("node_ID"));
+                    m_nodeIDSuffix = NodeIDSuffix.fromString(settings.getString("node_ID_suffix"));
                 } catch (IllegalArgumentException ex1) {
                     throw new InvalidSettingsException(ex1);
                 }
@@ -191,7 +191,7 @@ public final class PortObjectIDSettings {
                 }
                 break;
             case NODE:
-                settings.addString("node_ID", m_nodeID.toString());
+                settings.addString("node_ID_suffix", m_nodeIDSuffix.toString());
                 settings.addInt("port_idx", m_portIdx);
                 break;
             case FILE:
@@ -211,12 +211,12 @@ public final class PortObjectIDSettings {
     /**
      * Sets the infos required if a port object of another node (in the same workflow) is referenced.
      *
-     * @param nodeID the node id to reference
+     * @param nodeIDSuffix the 'relative' node id to reference
      * @param portIdx the port index
      */
-    public void setNodeReference(final NodeID nodeID, final int portIdx) {
+    public void setNodeReference(final NodeIDSuffix nodeIDSuffix, final int portIdx) {
         m_refType = ReferenceType.NODE;
-        m_nodeID = nodeID;
+        m_nodeIDSuffix = nodeIDSuffix;
         m_portIdx = portIdx;
     }
 
@@ -240,10 +240,10 @@ public final class PortObjectIDSettings {
     }
 
     /**
-     * @return the node ID if reference type {@link ReferenceType#NODE}, otherwise possibly <code>null</code>
+     * @return the node ID suffix if reference type {@link ReferenceType#NODE}, otherwise possibly <code>null</code>
      */
-    public NodeID getNodeID() {
-        return m_nodeID;
+    public NodeIDSuffix getNodeIDSuffix() {
+        return m_nodeIDSuffix;
     }
 
     /**
