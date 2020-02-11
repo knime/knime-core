@@ -201,6 +201,24 @@ public final class WorkflowFragment {
     }
 
     /**
+     * Disposes the workflow manager cached by this fragment (either loaded via {@link #loadWorkflow()} or passed to the
+     * constructor). Removes it from the workflow hierarchy and the local reference.
+     *
+     * If not already done, also serializes the workflow to the internally kept byte stream for later retrieval.
+     *
+     * This method only needs to be called if the {@link WorkflowFragment} has been initialized with a new
+     * {@link WorkflowManager}. In all other cases {@link #disposeWorkflow()} is sufficient.
+     *
+     * @throws IOException thrown if persisting the workflow to the internal in-memory byte stream failed
+     */
+    public void serializeAndDisposeWorkflow() throws IOException {
+        if (m_wfm != null && m_wfmStream == null) {
+            m_wfmStream = wfmToStream(m_wfm);
+        }
+        disposeWorkflow();
+    }
+
+    /**
      * @return the workflow name as stored with the fragment's metadata
      */
     public String getName() {
