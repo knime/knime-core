@@ -181,10 +181,6 @@ public final class WorkflowFragment {
                     | LockFailedException | IOException ex) {
                 // should never happen
                 throw new IllegalStateException("Failed loading workflow port object", ex);
-            } finally {
-                if (tmpDir != null) {
-                    FileUtil.deleteRecursively(tmpDir.getAbsoluteFile());
-                }
             }
         }
         return m_wfm;
