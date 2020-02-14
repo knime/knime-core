@@ -109,14 +109,12 @@ import javax.json.JsonValue;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -143,7 +141,6 @@ import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
-import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReexecutionCallback;
@@ -165,7 +162,6 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
 import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
-import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
@@ -183,7 +179,6 @@ import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 import org.knime.core.node.workflow.capture.WorkflowFragment;
-import org.knime.core.node.workflow.capture.WorkflowFragment.Port;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -3489,133 +3484,20 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Captures the part of a workflow that is encapsulated by {@link CaptureWorkflowStartNode} and
-     * {@link CaptureWorkflowEndNode}s.
+     * Creates an operation that allows one to capture parts of a workflow that is encapsulated by
+     * {@link CaptureWorkflowStartNode} and {@link CaptureWorkflowEndNode}s.
      *
      * @param endNodeID the node id that must represent a {@link CaptureWorkflowEndNode}
      *
      * @return a {@link WorkflowFragment} that represents the captured part
      * @throws IllegalScopeException
-     * @throws InterruptedException
      * @throws IllegalArgumentException if the given node id doesn't represent a 'capture workflow end node' or the
      *             respective 'capture workflow start node' is missing
      * @since 4.2
      */
-    public WorkflowFragment capturePartOf(final NodeID endNodeID) throws IllegalScopeException, InterruptedException {
-        try (WorkflowLock lock = lock()) {
-            WorkflowManager tempParent = EXTRACTED_WORKFLOW_ROOT.createAndAddProject(
-                "Workflow-Capture-from-" + endNodeID, new WorkflowCreationHelper());
-            // TODO we might have to revisit this when implementing AP-13335
-            Set<NodeIDSuffix> addedPortObjectReaderNodes = new HashSet<>();
-
-            NativeNodeContainer endNode = getNodeContainer(endNodeID, NativeNodeContainer.class, true);
-            CheckUtils.checkArgument(endNode.getNodeModel() instanceof CaptureWorkflowEndNode,
-                "Argument must be instance of %s", CaptureWorkflowEndNode.class.getSimpleName());
-            // "scope body" -- will copy those nodes later
-            List<NodeContainer> nodesInScope = m_workflow.getNodesInScope(endNode);
-
-            // "scope body" and port object ref readers -- will determine bounding box and move them to the top left
-            List<NodeContainer> nodesToDetermineBoundingBox = new ArrayList<>(nodesInScope);
-
-            NodeID startNodeID = m_workflow.getMatchingScopeStart(endNodeID, CaptureWorkflowStartNode.class,
-                CaptureWorkflowEndNode.class);
-            if (startNodeID == null) {
-                throw new IllegalArgumentException(
-                    "The passed node id doesn't represent a 'capture workflow end node' or it's respective start node is missing.");
-            }
-            NativeNodeContainer startNode = getNodeContainer(startNodeID, NativeNodeContainer.class, true);
-            List<Port> workflowFragmentInputs = getOutgoingConnectionsFor(startNode.getID()).stream()//
-                .map(cc -> {
-                    return new Port(NodeIDSuffix.create(getID(), cc.getDest()), cc.getDestPort(),
-                        getNodeContainer(cc.getDest()).getInPort(cc.getDestPort()).getPortType(),
-                        castToDTSpecOrNull(startNode.getOutPort(cc.getSourcePort()).getPortObjectSpec()));
-                }).collect(Collectors.toList());
-            List<Port> workflowFragmentOutputs = getIncomingConnectionsFor(endNodeID).stream()//
-                .map(cc -> {
-                    NodeOutPort outPort = getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort());
-                    return new Port(NodeIDSuffix.create(getID(), cc.getSource()), cc.getSourcePort(),
-                        outPort.getPortType(), castToDTSpecOrNull(outPort.getPortObjectSpec()));
-                }).collect(Collectors.toList());
-
-            // copy nodes in scope body
-            WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
-            NodeID[] allIDs = nodesInScope.stream().map(NodeContainer::getID).toArray(NodeID[]::new);
-            HashSet<NodeID> allIDsHashed = new HashSet<>(Arrays.asList(allIDs));
-            // map from dest port to src node
-            Map<Pair<NodeID, Integer>, NodeID> portObjectReaderConnections = new HashMap<>();
-            NodeID[] allButScopeIDs = ArrayUtils.removeElements(allIDs, endNodeID, startNode.getID());
-            copyContent.setNodeIDs(allButScopeIDs);
-            copyContent.setIncludeInOutConnections(false);
-
-            // collect nodes outside the scope body but connected to the scope body (only incoming)
-            for (int i = 0; i < allButScopeIDs.length; i++) {
-                NodeContainer oldNode = getNodeContainer(allButScopeIDs[i]);
-                for (int p = 0; p < oldNode.getNrInPorts(); p++) {
-                    ConnectionContainer c = getIncomingConnectionFor(allButScopeIDs[i], p);
-                    if (c == null) {
-                        // ignore: no incoming connection
-                    } else if (allIDsHashed.contains(c.getSource())) {
-                        // ignore: connection already retained by paste persistor
-                    } else {
-                        if (!addedPortObjectReaderNodes.contains(NodeIDSuffix.create(getID(), c.getSource()))) {
-                            // only add portObjectReader if not inserted already in previous loop iteration
-                            NodeID sourceID = c.getSource();
-                            NodeUIInformation sourceUIInformation = getNodeContainer(sourceID).getUIInformation();
-                            int sourcePort = c.getSourcePort();
-                            NodeContainer sourceNode = getNodeContainer(sourceID);
-                            nodesToDetermineBoundingBox.add(sourceNode);
-                            NodeOutPort upstreamPort;
-                            if (sourceID.equals(getID())) {
-                                assert c.getType() == ConnectionType.WFMIN;
-                                upstreamPort = getInPort(sourcePort).getUnderlyingPort();
-                            } else {
-                                upstreamPort = sourceNode.getOutPort(sourcePort);
-                            }
-                            NodeIDSuffix pastedIDSuffix = NodeIDSuffix.create(tempParent.getID(),
-                                PortObjectRepository.addPortObjectReferenceReaderToWorkflow(upstreamPort,
-                                    getProjectWFM().getID(), tempParent, sourceID.getIndex()));
-
-                            NodeID pastedID = pastedIDSuffix.prependParent(tempParent.getID());
-                            tempParent.getNodeContainer(pastedID).setUIInformation(sourceUIInformation);
-                            addedPortObjectReaderNodes.add(pastedIDSuffix);
-                        }
-                        //TODO deal with WFMIN-connections
-                        portObjectReaderConnections.put(Pair.create(c.getDest(), c.getDestPort()), c.getSource());
-                    }
-                }
-            }
-
-            final int[] boundingBox = NodeUIInformation.getBoundingBoxOf(nodesToDetermineBoundingBox);
-            final int[] moveUIDist = new int[] {-boundingBox[0] + 50, -boundingBox[1] + 50};
-            copyContent.setPositionOffset(moveUIDist);
-
-            tempParent.copyFromAndPasteHere(this, copyContent.build());
-
-            // connect all new port object readers to the in-scope-nodes
-            for (Entry<Pair<NodeID, Integer>, NodeID> connection : portObjectReaderConnections.entrySet()) {
-                NodeIDSuffix srcID = NodeIDSuffix.create(getID(), connection.getValue());
-                NodeIDSuffix destID = NodeIDSuffix.create(getID(), connection.getKey().getFirst());
-                int destIdx = connection.getKey().getSecond();
-                tempParent.addConnection(srcID.prependParent(tempParent.getID()), 1,
-                    destID.prependParent(tempParent.getID()), destIdx);
-            }
-
-            // position port object readers
-            for (NodeIDSuffix suffix : addedPortObjectReaderNodes) {
-                NodeID srcID = suffix.prependParent(tempParent.getID());
-                NodeUIInformation.moveNodeBy(tempParent.getNodeContainer(srcID), moveUIDist);
-            }
-
-            //transfer editor settings, too
-            tempParent.setEditorUIInformation(this.getEditorUIInformation());
-
-            return new WorkflowFragment(tempParent, workflowFragmentInputs, workflowFragmentOutputs,
-                addedPortObjectReaderNodes);
-        }
-    }
-
-    private static final DataTableSpec castToDTSpecOrNull(final PortObjectSpec spec) {
-        return spec instanceof DataTableSpec ? (DataTableSpec)spec : null;
+    public WorkflowCaptureOperation capturePartOf(final NodeID endNodeID)
+        throws IllegalScopeException {
+        return new WorkflowCaptureOperation(endNodeID, this);
     }
 
     /*
