@@ -216,11 +216,15 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
         savePorts(outputPorts, m_wf.getOutputPorts());
 
 
-        ModelContentWO inPortNames = model.addModelContent("input_port_names");
-        savePortNames(inPortNames, m_inPortNames);
+        if (!m_inPortNames.isEmpty()) {
+            ModelContentWO inPortNames = model.addModelContent("input_port_names");
+            savePortNames(inPortNames, m_inPortNames);
+        }
 
-        ModelContentWO outPortNames = model.addModelContent("output_port_names");
-        savePortNames(outPortNames, m_outPortNames);
+        if (!m_outPortNames.isEmpty()) {
+            ModelContentWO outPortNames = model.addModelContent("output_port_names");
+            savePortNames(outPortNames, m_outPortNames);
+        }
     }
 
     private static void savePorts(final ModelContentWO model, final List<Port> ports) {
@@ -239,7 +243,7 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
     }
 
     static void savePortID(final Config config, final PortID portID) {
-        config.addString("node_id", portID.toString());
+        config.addString("node_id", portID.getNodeIDSuffix().toString());
         config.addInt("index", portID.getIndex());
     }
 
@@ -282,11 +286,17 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
         model = metadata.getModelContent("output_ports");
         List<Port> outputPorts = loadPorts(model);
 
-        model = metadata.getModelContent("input_port_names");
-        Map<PortID, String> inPortNames = loadPortNames(model);
+        Map<PortID, String> inPortNames = null;
+        if (metadata.containsKey("input_port_names")) {
+            model = metadata.getModelContent("input_port_names");
+            inPortNames = loadPortNames(model);
+        }
 
-        model = metadata.getModelContent("output_port_names");
-        Map<PortID, String> outPortNames = loadPortNames(model);
+        Map<PortID, String> outPortNames = null;
+        if (metadata.containsKey("output_port_names")) {
+            model = metadata.getModelContent("output_port_names");
+            outPortNames = loadPortNames(model);
+        }
 
         WorkflowFragment wf = new WorkflowFragment(metadata.getString("name"), inputPorts, outputPorts, ids);
         return new WorkflowPortObjectSpec(wf, inPortNames, outPortNames);
