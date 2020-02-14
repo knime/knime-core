@@ -2853,8 +2853,11 @@ public class Buffer implements KNIMEStreamConstants {
                     /** Buffer was already discarded */
                     return null;
                 }
-                buffer.closeWriterAndWriteMeta();
-                buffer.m_lifecycle.onWriteSuccessful();
+                /** Prevent asynchronous clearing of buffer during close. */
+                synchronized (buffer.m_isClearedLock) {
+                    buffer.closeWriterAndWriteMeta();
+                    buffer.m_lifecycle.onWriteSuccessful();
+                }
                 buffer = null;
 
             } catch (Throwable t) {
