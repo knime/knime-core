@@ -127,6 +127,22 @@ public final class FileUtil {
 
     private static final boolean IS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
 
+    /**
+     * Characters that are unfortunate to use in most file systems and in URIs. Slashes are disallowed in the name, but
+     * are separators though. It is not guaranteed that these characters are not used but usage should be avoided.
+     *
+     * @since 4.2
+     */
+    public static final String ILLEGAL_FILENAME_CHARS = "*?#:\"<>%~|/\\";
+
+    /**
+     * A {@link Pattern} compiled from all {@link #ILLEGAL_FILENAME_CHARS} as well as control characters.
+     *
+     * @since 4.2
+     */
+    public static final Pattern ILLEGAL_FILENAME_CHARS_PATTERN =
+        Pattern.compile("[\\p{Cntrl}" + ILLEGAL_FILENAME_CHARS.replace("\\", "\\\\") + "]+");
+
     static {
         ShutdownHelper.getInstance().appendShutdownHook(() -> {
             synchronized (TEMP_FILES) {
