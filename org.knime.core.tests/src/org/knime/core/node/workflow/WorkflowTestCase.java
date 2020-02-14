@@ -478,7 +478,7 @@ public abstract class WorkflowTestCase {
                     condition.await(secToWait, TimeUnit.SECONDS);
                     break;
                 } else {
-                    condition.await(5, TimeUnit.SECONDS);
+                    condition.await(10, TimeUnit.SECONDS);
                 }
             }
         } finally {
