@@ -51,10 +51,7 @@ package org.knime.core.node.workflow.capture;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -67,18 +64,10 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.util.NonClosableInputStream;
-import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContent;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.config.Config;
-import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -146,9 +135,17 @@ public final class WorkflowFragment {
         m_portObjectReferenceReaderNodes = CheckUtils.checkArgumentNotNull(portObjectReferenceReaderNodes);
     }
 
-    private WorkflowFragment(final byte[] wfmStream, final String name, final List<Port> inputPorts,
-        final List<Port> outputPorts, final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
-        m_wfmStream = wfmStream;
+    /**
+     * Constructor for de-serialization. Initializes the workflow fragment exclusively with metadata. The actual
+     * workflow data is subsequently loaded via {@link #loadWorkflowData(ZipInputStream)}.
+     *
+     * @param name
+     * @param inputPorts
+     * @param outputPorts
+     * @param portObjectReferenceReaderNodes
+     */
+    WorkflowFragment(final String name, final List<Port> inputPorts, final List<Port> outputPorts,
+        final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
         m_name = CheckUtils.checkArgumentNotNull(name);
         m_inputPorts = CheckUtils.checkArgumentNotNull(inputPorts);
         m_outputPorts = CheckUtils.checkArgumentNotNull(outputPorts);
@@ -215,6 +212,52 @@ public final class WorkflowFragment {
         disposeWorkflow();
     }
 
+    private static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {
+        File tmpDir = FileUtil.createTempDir("workflow_fragment");
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
+            WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(false, false);
+            wfm.save(tmpDir, saveHelper, new ExecutionMonitor());
+            FileUtil.zipDir(out, Collections.singleton(tmpDir), new ZipFileFilter() {
+                @Override
+                public boolean include(final File f) {
+                    return !f.getName().equals(VMFileLocker.LOCK_FILE);
+                }
+            }, null);
+            bos.flush();
+            return bos.toByteArray();
+        } catch (LockFailedException | CanceledExecutionException | IOException e) {
+            throw new IOException("Failed saving workflow port object", e);
+        } finally {
+            FileUtil.deleteRecursively(tmpDir.getAbsoluteFile());
+        }
+    }
+
+    void loadWorkflowData(final ZipInputStream in) throws IOException {
+        ZipEntry entry = in.getNextEntry();
+        if (!entry.getName().equals("workflow.bin")) {
+            throw new IOException("Expected workflow.bin file in stream, got " + entry.getName());
+        }
+        m_wfmStream = IOUtils.toByteArray(in);
+    }
+
+    /**
+     * @throws IOException
+     *
+     */
+    void saveWorkflowData(final ZipOutputStream out) throws IOException {
+        if (m_wfmStream == null) {
+            if (m_wfm == null) {
+                //only happens if WorkflowFragment is instantiated with a WorkflowManager
+                //and #disposeWorkflow() is called before #save(...)
+                throw new IllegalStateException("Can't save workflow fragment. Workflow has been disposed already.");
+            }
+            m_wfmStream = wfmToStream(m_wfm);
+        }
+        out.putNextEntry(new ZipEntry("workflow.bin"));
+        out.write(m_wfmStream);
+        out.closeEntry();
+    }
+
     /**
      * @return the workflow name as stored with the fragment's metadata
      */
@@ -244,174 +287,11 @@ public final class WorkflowFragment {
     }
 
     /**
-     * Saves the workflow fragment to a zip output stream.
-     *
-     * @param out the stream to write to
-     * @throws IOException if serializing of the workflow fails (output stream will not be closed)
-     */
-    public void save(final ZipOutputStream out) throws IOException {
-        out.putNextEntry(new ZipEntry("metadata.xml"));
-        ModelContent metadata = new ModelContent("metadata.xml");
-        saveMetadata(metadata);
-        try (final NonClosableOutputStream.Zip zout = new NonClosableOutputStream.Zip(out)) {
-            metadata.saveToXML(zout);
-        }
-
-        if (m_wfmStream == null) {
-            if (m_wfm == null) {
-                //only happens if WorkflowFragment is instantiated with a WorkflowManager
-                //and #disposeWorkflow() is called before #save(...)
-                throw new IllegalStateException("Can't save workflow fragment. Workflow has been disposed already.");
-            }
-            m_wfmStream = wfmToStream(m_wfm);
-        }
-        out.putNextEntry(new ZipEntry("workflow.bin"));
-        out.write(m_wfmStream);
-        out.closeEntry();
-    }
-
-    private static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {
-        File tmpDir = FileUtil.createTempDir("workflow_fragment");
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
-            WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(false, false);
-            wfm.save(tmpDir, saveHelper, new ExecutionMonitor());
-            FileUtil.zipDir(out, Collections.singleton(tmpDir), new ZipFileFilter() {
-                @Override
-                public boolean include(final File f) {
-                    return !f.getName().equals(VMFileLocker.LOCK_FILE);
-                }
-            }, null);
-            bos.flush();
-            return bos.toByteArray();
-        } catch (LockFailedException | CanceledExecutionException | IOException e) {
-            throw new IOException("Failed saving workflow port object", e);
-        } finally {
-            FileUtil.deleteRecursively(tmpDir.getAbsoluteFile());
-        }
-    }
-
-    /**
-     * Loads a workflow fragment from an zip input stream.
-     *
-     * @param in the stream to read from
-     * @return a new {@link WorkflowFragment} (input stream is not closed)
-     * @throws IOException if a problem occurred while reading (input stream will not be closed)
-     */
-    public static WorkflowFragment load(final ZipInputStream in) throws IOException {
-        ZipEntry entry = in.getNextEntry();
-        if (!entry.getName().equals("metadata.xml")) {
-            throw new IOException("Expected metadata.xml file in stream, got " + entry.getName());
-        }
-
-        try (InputStream noneCloseIn = new NonClosableInputStream.Zip(in)) {
-            ModelContentRO metadata = ModelContent.loadFromXML(noneCloseIn);
-            ModelContentRO refNodeIds = metadata.getModelContent("ref_node_ids");
-            Set<NodeIDSuffix> ids = new HashSet<NodeID.NodeIDSuffix>();
-            int numIds = refNodeIds.getInt("num_ids");
-            for (int i = 0; i < numIds; i++) {
-                ids.add(new NodeIDSuffix(refNodeIds.getIntArray("ref_node_id_" + i)));
-            }
-            ModelContentRO model = metadata.getModelContent("input_ports");
-            List<Port> inputPorts = loadPorts(model);
-
-            model = metadata.getModelContent("output_ports");
-            List<Port> outputPorts = loadPorts(model);
-
-            entry = in.getNextEntry();
-            if (!entry.getName().equals("workflow.bin")) {
-                throw new IOException("Expected workflow.bin file in stream, got " + entry.getName());
-            }
-
-            byte[] wfmStream = IOUtils.toByteArray(in);
-
-            return new WorkflowFragment(wfmStream, metadata.getString("name"), inputPorts, outputPorts, ids);
-        } catch (InvalidSettingsException e) {
-            throw new IOException("Failed loading workflow port object", e);
-        }
-    }
-
-    /**
-     * Saves the workflow fragment metadata to the supplied model object.
-     *
-     * @param model the model to save the metadata to
-     */
-    public void saveMetadata(final ModelContentWO model) {
-        model.addString("name", m_name);
-
-        ModelContentWO refNodeIds = model.addModelContent("ref_node_ids");
-        refNodeIds.addInt("num_ids", m_portObjectReferenceReaderNodes.size());
-        int i = 0;
-        for (NodeIDSuffix id : m_portObjectReferenceReaderNodes) {
-            refNodeIds.addIntArray("ref_node_id_" + i, id.getSuffixArray());
-            i++;
-        }
-
-        ModelContentWO inputPorts = model.addModelContent("input_ports");
-        savePorts(inputPorts, m_inputPorts);
-
-        ModelContentWO outputPorts = model.addModelContent("output_ports");
-        savePorts(outputPorts, m_outputPorts);
-    }
-
-    private static void savePorts(final ModelContentWO model, final List<Port> ports) {
-        model.addInt("num_ports", ports.size());
-        for (int i = 0; i < ports.size(); i++) {
-            Config portConf = model.addConfig("port_" + i);
-            portConf.addString("node_id", ports.get(i).getNodeIDSuffix().toString());
-            portConf.addInt("index", ports.get(i).getIndex());
-            Config type = portConf.addConfig("type");
-            savePortType(type, ports.get(i).getType().get());
-            Optional<DataTableSpec> optionalSpec = ports.get(i).getSpec();
-            if (optionalSpec.isPresent()) {
-                Config spec = portConf.addConfig("spec");
-                saveSpec(spec, ports.get(i).getSpec().get());
-            }
-        }
-    }
-
-    private static void savePortType(final Config typeConf, final PortType type) {
-        typeConf.addString("portObjectClass", type.getPortObjectClass().getCanonicalName());
-        typeConf.addBoolean("isOptional", type.isOptional());
-    }
-
-    private static void saveSpec(final Config specConf, final DataTableSpec spec) {
-        DataTableSpec dtspec = spec;
-        dtspec.save(specConf);
-    }
-
-    private static List<Port> loadPorts(final ModelContentRO model) throws InvalidSettingsException {
-        int size = model.getInt("num_ports");
-        List<Port> ports = new ArrayList<WorkflowFragment.Port>(size);
-        for (int i = 0; i < size; i++) {
-            Config portConf = model.getConfig("port_" + i);
-            ports.add(new Port(NodeIDSuffix.fromString(portConf.getString("node_id")), portConf.getInt("index"),
-                loadPortType(portConf.getConfig("type")),
-                portConf.containsKey("spec") ? loadSpec(portConf.getConfig("spec")) : null));
-        }
-        return ports;
-    }
-
-    private static PortType loadPortType(final Config type) throws InvalidSettingsException {
-        PortTypeRegistry pte = PortTypeRegistry.getInstance();
-        Optional<Class<? extends PortObject>> objectClass = pte.getObjectClass(type.getString("portObjectClass"));
-        if (objectClass.isPresent()) {
-            return pte.getPortType(objectClass.get(), type.getBoolean("isOptional"));
-        } else {
-            return null;
-        }
-    }
-
-    private static DataTableSpec loadSpec(final Config spec) throws InvalidSettingsException {
-        return DataTableSpec.load(spec);
-    }
-
-    /**
-     * References/marks ports in the workflow fragment by node id and index.
+     * Represent a port in a workflow fragment enriched with some additional information.
      */
     public static final class Port {
-        private final NodeIDSuffix m_nodeIDSuffix;
 
-        private final int m_idx;
+        private final PortID m_portID;
 
         private final PortType m_type;
 
@@ -420,46 +300,22 @@ public final class WorkflowFragment {
         /**
          * Creates an new port marker.
          *
-         * @param nodeIDSuffix the node's id
-         * @param idx port index
-         * @param type - can be <code>null</code> if type couldn't be determined (because the respective plugin is not
-         *            installed)
-         */
-        public Port(final NodeIDSuffix nodeIDSuffix, final int idx, final PortType type) {
-            this(nodeIDSuffix, idx, type, null);
-        }
-
-        /**
-         * Creates an new port marker.
-         *
-         * @param nodeIDSuffix the node's id
-         * @param idx port index
-         * @param type - can be <code>null</code> if type couldn't be determined (because the respective plugin is not
+         * @param portID the port id
+         * @param type - can be <code>null</code> if type couldn't be determined (final because the respective plugin is not
          *            installed)
          * @param spec - can be <code>null</code>
          */
-        public Port(final NodeIDSuffix nodeIDSuffix, final int idx, final PortType type, final DataTableSpec spec) {
-            m_nodeIDSuffix = CheckUtils.checkArgumentNotNull(nodeIDSuffix);
-            if (idx < 0) {
-                throw new IllegalArgumentException(String.format("Port index %d out of bounds.", idx));
-            }
-            m_idx = idx;
-            m_type = type;
+        public Port(final PortID portID, final PortType type, final DataTableSpec spec) {
             m_spec = spec;
+            m_portID = CheckUtils.checkArgumentNotNull(portID);
+            m_type = type;
         }
 
         /**
-         * @return node id suffix relative to workflow
+         * @return the port id
          */
-        public NodeIDSuffix getNodeIDSuffix() {
-            return m_nodeIDSuffix;
-        }
-
-        /**
-         * @return port index
-         */
-        public int getIndex() {
-            return m_idx;
+        public PortID getID() {
+            return m_portID;
         }
 
         /**
@@ -482,7 +338,7 @@ public final class WorkflowFragment {
          */
         @Override
         public String toString() {
-            return "Node #" + m_nodeIDSuffix + " | Port #" + m_idx;
+            return m_portID.toString();
         }
 
         /**
@@ -490,8 +346,7 @@ public final class WorkflowFragment {
          */
         @Override
         public int hashCode() {
-            HashCodeBuilder hash = new HashCodeBuilder().append(m_nodeIDSuffix).append(m_idx);
-            return hash.build();
+            return m_portID.hashCode();
         }
 
         /**
@@ -503,7 +358,77 @@ public final class WorkflowFragment {
                 return false;
             }
             Port other = (Port)obj;
-            return new EqualsBuilder().append(m_nodeIDSuffix, other.m_nodeIDSuffix).append(m_idx, other.m_idx).build();
+            return m_portID.equals(other.m_portID);
+        }
+    }
+
+
+    /**
+     * References/marks ports in the workflow fragment by node id suffix and port index.
+     */
+    public static final class PortID {
+
+        private NodeIDSuffix m_nodeIDSuffix;
+
+        private int m_index;
+
+        /**
+         * Creates a new port id represented by node id suffix and port index.
+         *
+         * @param nodeIDSuffix
+         * @param index
+         */
+        public PortID(final NodeIDSuffix nodeIDSuffix, final int index) {
+            m_nodeIDSuffix = CheckUtils.checkArgumentNotNull(nodeIDSuffix);
+            if (index < 0) {
+                throw new IllegalArgumentException(String.format("Port index %d out of bounds.", index));
+            }
+            m_nodeIDSuffix = nodeIDSuffix;
+            m_index = index;
+        }
+
+        /**
+         * @return node id suffix relative to workflow
+         */
+        public NodeIDSuffix getNodeIDSuffix() {
+            return m_nodeIDSuffix;
+        }
+
+        /**
+         * @return port index
+         */
+        public int getIndex() {
+            return m_index;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "Node #" + m_nodeIDSuffix + " | Port #" + m_index;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            HashCodeBuilder hash = new HashCodeBuilder().append(m_nodeIDSuffix).append(m_index);
+            return hash.build();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (!(obj instanceof PortID)) {
+                return false;
+            }
+            PortID other = (PortID)obj;
+            return new EqualsBuilder().append(m_nodeIDSuffix, other.m_nodeIDSuffix).append(m_index, other.m_index)
+                .build();
         }
     }
 }

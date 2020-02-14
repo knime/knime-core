@@ -48,6 +48,9 @@
  */
 package org.knime.core.node.workflow.capture;
 
+import static org.knime.core.node.workflow.capture.WorkflowPortObjectSpec.loadPortID;
+import static org.knime.core.node.workflow.capture.WorkflowPortObjectSpec.savePortID;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -64,7 +67,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -79,8 +81,7 @@ import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.BufferedDataTableView;
-import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.capture.WorkflowFragment.Port;
+import org.knime.core.node.workflow.capture.WorkflowFragment.PortID;
 
 /**
  * The worfklow port object.
@@ -102,7 +103,7 @@ public class WorkflowPortObject extends AbstractPortObject {
 
     private WorkflowPortObjectSpec m_spec;
 
-    private Map<Port, DataTable> m_inputData = null;
+    private Map<PortID, DataTable> m_inputData = null;
 
     /** Empty framework constructor. <b>Do not use!</b> */
     public WorkflowPortObject() {
@@ -124,7 +125,7 @@ public class WorkflowPortObject extends AbstractPortObject {
      * @param wf the workflow fragment
      * @param inputData input data mapped to input ports of the workflow fragment
      */
-    public WorkflowPortObject(final WorkflowFragment wf, final Map<Port, DataTable> inputData) {
+    public WorkflowPortObject(final WorkflowFragment wf, final Map<PortID, DataTable> inputData) {
         m_spec = new WorkflowPortObjectSpec(wf);
         m_inputData = inputData;
     }
@@ -136,7 +137,7 @@ public class WorkflowPortObject extends AbstractPortObject {
      * @return the input data or an empty optional if there is no input data for the port (either none has been stored
      *         or the port is not a data table)
      */
-    public Optional<DataTable> getInputDataFor(final Port p) {
+    public Optional<DataTable> getInputDataFor(final PortID p) {
         if (m_inputData != null) {
             return Optional.ofNullable(m_inputData.get(p));
         }
@@ -150,15 +151,15 @@ public class WorkflowPortObject extends AbstractPortObject {
     protected void save(final PortObjectZipOutputStream out, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         if (m_inputData != null && !m_inputData.isEmpty()) {
-            List<Port> ports = new ArrayList<>(m_inputData.size());
+            List<PortID> ports = new ArrayList<>(m_inputData.size());
             List<DataTable> tables = new ArrayList<>(m_inputData.size());
-            for (Entry<Port, DataTable> entry : m_inputData.entrySet()) {
+            for (Entry<PortID, DataTable> entry : m_inputData.entrySet()) {
                 ports.add(entry.getKey());
                 tables.add(entry.getValue());
             }
             out.putNextEntry(new ZipEntry("input_data_ports.xml"));
             ModelContent model = new ModelContent("input_data_ports.xml");
-            savePorts(model, ports);
+            savePortIDs(model, ports);
             try (final NonClosableOutputStream.Zip zout = new NonClosableOutputStream.Zip(out)) {
                 model.saveToXML(zout);
             }
@@ -170,12 +171,11 @@ public class WorkflowPortObject extends AbstractPortObject {
         }
     }
 
-    private static void savePorts(final ModelContentWO model, final List<Port> ports) {
+    private static void savePortIDs(final ModelContentWO model, final List<PortID> ports) {
         model.addInt("num_ports", ports.size());
         for (int i = 0; i < ports.size(); i++) {
             Config portConf = model.addConfig("port_" + i);
-            portConf.addString("node_id", ports.get(i).getNodeIDSuffix().toString());
-            portConf.addInt("index", ports.get(i).getIndex());
+            savePortID(portConf, ports.get(i));
         }
     }
 
@@ -190,7 +190,7 @@ public class WorkflowPortObject extends AbstractPortObject {
         if (entry != null && "input_data_ports.xml".equals(entry.getName())) {
             try (InputStream nonCloseIn = new NonClosableInputStream.Zip(in)) {
                 ModelContentRO model = ModelContent.loadFromXML(nonCloseIn);
-                List<Port> ports = loadPorts(model);
+                List<PortID> ports = loadPortIDs(model);
                 m_inputData = new HashMap<>(ports.size());
                 for (int i = 0; i < ports.size(); i++) {
                     entry = in.getNextEntry();
@@ -204,13 +204,12 @@ public class WorkflowPortObject extends AbstractPortObject {
         }
     }
 
-    private static List<Port> loadPorts(final ModelContentRO model) throws InvalidSettingsException {
+    private static List<PortID> loadPortIDs(final ModelContentRO model) throws InvalidSettingsException {
         int size = model.getInt("num_ports");
-        List<Port> ports = new ArrayList<>(size);
+        List<PortID> ports = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Config portConf = model.getConfig("port_" + i);
-            ports.add(new Port(NodeIDSuffix.fromString(portConf.getString("node_id")), portConf.getInt("index"),
-                BufferedDataTable.TYPE, null));
+            ports.add(loadPortID(portConf));
         }
         return ports;
     }

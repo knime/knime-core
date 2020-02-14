@@ -49,14 +49,37 @@
 package org.knime.core.node.workflow.capture;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.util.NonClosableInputStream;
+import org.knime.core.data.util.NonClosableOutputStream;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.ModelContentOutPortView;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.capture.WorkflowFragment.Port;
+import org.knime.core.node.workflow.capture.WorkflowFragment.PortID;
 
 /**
  * The workflow port object spec essentially wrapping a {@link WorkflowFragment}.
@@ -69,6 +92,10 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
 
     private WorkflowFragment m_wf;
 
+    private Map<PortID, String> m_inPortNames = new HashMap<>();
+
+    private Map<PortID, String> m_outPortNames = new HashMap<>();
+
     /**
      * Serializer as registered in extension point.
      */
@@ -76,33 +103,67 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
         /** {@inheritDoc} */
         @Override
         public WorkflowPortObjectSpec loadPortObjectSpec(final PortObjectSpecZipInputStream in) throws IOException {
-            return new WorkflowPortObjectSpec(WorkflowFragment.load(in));
+            ZipEntry entry = in.getNextEntry();
+            if (!entry.getName().equals("metadata.xml")) {
+                throw new IOException("Expected metadata.xml file in stream, got " + entry.getName());
+            }
+
+            try (InputStream noneCloseIn = new NonClosableInputStream.Zip(in)) {
+                ModelContentRO metadata = ModelContent.loadFromXML(noneCloseIn);
+                WorkflowPortObjectSpec spec = loadSpecMetadata(metadata);
+                spec.getWorkflowFragment().loadWorkflowData(in);
+                return spec;
+            } catch (InvalidSettingsException e) {
+                throw new IOException("Failed loading workflow port object", e);
+            }
         }
 
         /** {@inheritDoc} */
         @Override
-        public void savePortObjectSpec(final WorkflowPortObjectSpec portObject, final PortObjectSpecZipOutputStream out)
-            throws IOException {
-            portObject.getWorkflowFragment().save(out);
+        public void savePortObjectSpec(final WorkflowPortObjectSpec portObjectSpec,
+            final PortObjectSpecZipOutputStream out) throws IOException {
+            out.putNextEntry(new ZipEntry("metadata.xml"));
+            ModelContent metadata = new ModelContent("metadata.xml");
+            portObjectSpec.saveSpecMetadata(metadata);
+            try (final NonClosableOutputStream.Zip zout = new NonClosableOutputStream.Zip(out)) {
+                metadata.saveToXML(zout);
+            }
+            portObjectSpec.m_wf.saveWorkflowData(out);
         }
     }
 
     /**
      * Don't use, framework constructor.
-     *
      */
     public WorkflowPortObjectSpec() {
-
+        //
     }
 
     /**
      * Constructor.
      *
      * @param wf the workflow fragment to use
-     *
      */
     public WorkflowPortObjectSpec(final WorkflowFragment wf) {
+        this(wf, null, null);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param wf the workflow fragment to use
+     * @param inPortNames optional names for the input ports, can be <code>null</code>
+     * @param outPortNames optional names for the input ports, can be <code>null</code>
+     */
+    public WorkflowPortObjectSpec(final WorkflowFragment wf, final Map<PortID, String> inPortNames,
+        final Map<PortID, String> outPortNames) {
         m_wf = wf;
+        if (inPortNames != null) {
+            m_inPortNames.putAll(inPortNames);
+        }
+        if (outPortNames != null) {
+            m_outPortNames.putAll(outPortNames);
+        }
     }
 
     /**
@@ -113,12 +174,170 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
     }
 
     /**
+     * Returns a custom port name if set.
+     *
+     * @param p the port to get the custom name for
+     * @return the custom name or an empty optional if not set
+     */
+    public Optional<String> getInputPortName(final PortID p) {
+        return Optional.ofNullable(m_inPortNames.get(p));
+    }
+
+    /**
+     * Returns a custom port name if set.
+     *
+     * @param p the port to get the custom name for
+     * @return the custom name or an empty optional if not set
+     */
+    public Optional<String> getOutputPortName(final PortID p) {
+        return Optional.ofNullable(m_outPortNames.get(p));
+    }
+
+    /**
+     * Saves the workflow port object spec data to the supplied model object (without the actual workflow data!)
+     *
+     * @param model the model to save the metadata to
+     */
+    public void saveSpecMetadata(final ModelContentWO model) {
+        model.addString("name", m_wf.getName());
+
+        ModelContentWO refNodeIds = model.addModelContent("ref_node_ids");
+        refNodeIds.addInt("num_ids", m_wf.getPortObjectReferenceReaderNodes().size());
+        int i = 0;
+        for (NodeIDSuffix id : m_wf.getPortObjectReferenceReaderNodes()) {
+            refNodeIds.addIntArray("ref_node_id_" + i, id.getSuffixArray());
+            i++;
+        }
+
+        ModelContentWO inputPorts = model.addModelContent("input_ports");
+        savePorts(inputPorts, m_wf.getInputPorts());
+
+        ModelContentWO outputPorts = model.addModelContent("output_ports");
+        savePorts(outputPorts, m_wf.getOutputPorts());
+
+
+        ModelContentWO inPortNames = model.addModelContent("input_port_names");
+        savePortNames(inPortNames, m_inPortNames);
+
+        ModelContentWO outPortNames = model.addModelContent("output_port_names");
+        savePortNames(outPortNames, m_outPortNames);
+    }
+
+    private static void savePorts(final ModelContentWO model, final List<Port> ports) {
+        model.addInt("num_ports", ports.size());
+        for (int i = 0; i < ports.size(); i++) {
+            Config portConf = model.addConfig("port_" + i);
+            savePortID(portConf, ports.get(i).getID());
+            Config type = portConf.addConfig("type");
+            savePortType(type, ports.get(i).getType().get());
+            Optional<DataTableSpec> optionalSpec = ports.get(i).getSpec();
+            if (optionalSpec.isPresent()) {
+                Config spec = portConf.addConfig("spec");
+                saveSpec(spec, ports.get(i).getSpec().get());
+            }
+        }
+    }
+
+    static void savePortID(final Config config, final PortID portID) {
+        config.addString("node_id", portID.toString());
+        config.addInt("index", portID.getIndex());
+    }
+
+    private static void savePortNames(final ModelContentWO model, final Map<PortID, String> portNames) {
+        model.addInt("num_port_names", portNames.size());
+        int i = 0;
+        for (Entry<PortID, String> port : portNames.entrySet()) {
+            Config portConf = model.addConfig("port_" + i);
+            savePortID(portConf, port.getKey());
+            portConf.addString("name", port.getValue());
+            i++;
+        }
+    }
+
+    private static void savePortType(final Config typeConf, final PortType type) {
+        typeConf.addString("portObjectClass", type.getPortObjectClass().getCanonicalName());
+        typeConf.addBoolean("isOptional", type.isOptional());
+    }
+
+    private static void saveSpec(final Config specConf, final DataTableSpec spec) {
+        DataTableSpec dtspec = spec;
+        dtspec.save(specConf);
+    }
+
+    /*
+     * Helper to load the spec metadata, including the workflow fragment metadata
+     * (returned as workflow fragment with pre-initialized metadata only).
+     * The direct spec's metadata is set directly.
+     */
+    private static WorkflowPortObjectSpec loadSpecMetadata(final ModelContentRO metadata) throws InvalidSettingsException {
+        ModelContentRO refNodeIds = metadata.getModelContent("ref_node_ids");
+        Set<NodeIDSuffix> ids = new HashSet<>();
+        int numIds = refNodeIds.getInt("num_ids");
+        for (int i = 0; i < numIds; i++) {
+            ids.add(new NodeIDSuffix(refNodeIds.getIntArray("ref_node_id_" + i)));
+        }
+        ModelContentRO model = metadata.getModelContent("input_ports");
+        List<Port> inputPorts = loadPorts(model);
+
+        model = metadata.getModelContent("output_ports");
+        List<Port> outputPorts = loadPorts(model);
+
+        model = metadata.getModelContent("input_port_names");
+        Map<PortID, String> inPortNames = loadPortNames(model);
+
+        model = metadata.getModelContent("output_port_names");
+        Map<PortID, String> outPortNames = loadPortNames(model);
+
+        WorkflowFragment wf = new WorkflowFragment(metadata.getString("name"), inputPorts, outputPorts, ids);
+        return new WorkflowPortObjectSpec(wf, inPortNames, outPortNames);
+    }
+
+    private static List<Port> loadPorts(final ModelContentRO model) throws InvalidSettingsException {
+        int size = model.getInt("num_ports");
+        List<Port> ports = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            Config portConf = model.getConfig("port_" + i);
+            ports.add(new Port(loadPortID(portConf), loadPortType(portConf.getConfig("type")),
+                portConf.containsKey("spec") ? loadTableSpec(portConf.getConfig("spec")) : null));
+        }
+        return ports;
+    }
+
+    static PortID loadPortID(final Config portConf) throws InvalidSettingsException {
+        return new PortID(NodeIDSuffix.fromString(portConf.getString("node_id")), portConf.getInt("index"));
+    }
+
+    private static Map<PortID, String> loadPortNames(final ModelContentRO model) throws InvalidSettingsException {
+        int num = model.getInt("num_port_names");
+        Map<PortID, String> res = new HashMap<>(num);
+        for (int i = 0; i < num; i++) {
+            Config portConf = model.getConfig("port_" + i);
+            res.put(loadPortID(portConf), portConf.getString("name"));
+        }
+        return res;
+    }
+
+    private static PortType loadPortType(final Config type) throws InvalidSettingsException {
+        PortTypeRegistry pte = PortTypeRegistry.getInstance();
+        Optional<Class<? extends PortObject>> objectClass = pte.getObjectClass(type.getString("portObjectClass"));
+        if (objectClass.isPresent()) {
+            return pte.getPortType(objectClass.get(), type.getBoolean("isOptional"));
+        } else {
+            return null;
+        }
+    }
+
+    private static DataTableSpec loadTableSpec(final Config spec) throws InvalidSettingsException {
+        return DataTableSpec.load(spec);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public JComponent[] getViews() {
         ModelContent model = new ModelContent("Workflow Fragment Metadata");
-        getWorkflowFragment().saveMetadata(model);
+        saveSpecMetadata(model);
         return new JComponent[]{new ModelContentOutPortView(model)};
     }
 }
