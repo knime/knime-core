@@ -113,20 +113,20 @@ public class WorkflowPortObject extends AbstractPortObject {
     /**
      * Creates a new port object from a {@link WorkflowFragment}.
      *
-     * @param wf
+     * @param spec
      */
-    public WorkflowPortObject(final WorkflowFragment wf) {
-        this(wf, null);
+    public WorkflowPortObject(final WorkflowPortObjectSpec spec) {
+        this(spec, null);
     }
 
     /**
      * Creates a new port object from a {@link WorkflowFragment} plus input data.
      *
-     * @param wf the workflow fragment
+     * @param spec the spec
      * @param inputData input data mapped to input ports of the workflow fragment
      */
-    public WorkflowPortObject(final WorkflowFragment wf, final Map<PortID, DataTable> inputData) {
-        m_spec = new WorkflowPortObjectSpec(wf);
+    public WorkflowPortObject(final WorkflowPortObjectSpec spec, final Map<PortID, DataTable> inputData) {
+        m_spec = spec;
         m_inputData = inputData;
     }
 
