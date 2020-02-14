@@ -44,6 +44,7 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
@@ -54,10 +55,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
@@ -87,6 +90,8 @@ public abstract class WorkflowTestCase {
      */
     public static final String[] KNOWN_CHILD_WFM_NAME_SUBSTRINGS = new String[]{"MetaNode Repository",
         "Workflow Template Root", "Streamer-Subnode-Parent", WorkflowManager.EXTRACTED_WORKFLOW_ROOT.getName()};
+
+    private static List<NodeContainer> DANGLING_WORKFLOWS = new ArrayList<>();
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
@@ -487,18 +492,22 @@ public abstract class WorkflowTestCase {
         }
     }
 
-
-
     @After
     public void tearDown() throws Exception {
         closeWorkflow();
 
         // Executed after each test, checks that there are no open workflows dangling around.
-        Collection<NodeContainer> openWorkflows = new ArrayList<>(WorkflowManager.ROOT.getNodeContainers());
-        openWorkflows.removeIf(nc -> StringUtils.containsAny(nc.getName(), KNOWN_CHILD_WFM_NAME_SUBSTRINGS));
-        if (!openWorkflows.isEmpty()) {
-            throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
-        }
+        final List<NodeContainer> newDanglingWorkflows = getDanglingWorkflows();
+        newDanglingWorkflows.removeAll(DANGLING_WORKFLOWS);
+        DANGLING_WORKFLOWS = getDanglingWorkflows();
+        assertTrue(newDanglingWorkflows.size() + " new dangling workflow(s) detected: " + newDanglingWorkflows,
+            newDanglingWorkflows.isEmpty());
+    }
+
+    private static ArrayList<NodeContainer> getDanglingWorkflows() {
+        return WorkflowManager.ROOT.getNodeContainers().stream()
+            .filter(nc -> !StringUtils.containsAny(nc.getName(), WorkflowTestCase.KNOWN_CHILD_WFM_NAME_SUBSTRINGS))
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
