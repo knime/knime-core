@@ -96,6 +96,8 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
 
     private Map<PortID, String> m_outPortNames = new HashMap<>();
 
+    private String m_customWorkflowName = null;
+
     /**
      * Serializer as registered in extension point.
      */
@@ -145,19 +147,22 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
      * @param wf the workflow fragment to use
      */
     public WorkflowPortObjectSpec(final WorkflowFragment wf) {
-        this(wf, null, null);
+        this(wf, null, null, null);
     }
 
     /**
      * Constructor.
      *
      * @param wf the workflow fragment to use
+     * @param customWorkflowName a custom workflow name or <code>null</code> if the name of the original
+     *            {@link WorkflowFragment} should be used
      * @param inPortNames optional names for the input ports, can be <code>null</code>
      * @param outPortNames optional names for the input ports, can be <code>null</code>
      */
-    public WorkflowPortObjectSpec(final WorkflowFragment wf, final Map<PortID, String> inPortNames,
+    public WorkflowPortObjectSpec(final WorkflowFragment wf, final String customWorkflowName, final Map<PortID, String> inPortNames,
         final Map<PortID, String> outPortNames) {
         m_wf = wf;
+        m_customWorkflowName = customWorkflowName;
         if (inPortNames != null) {
             m_inPortNames.putAll(inPortNames);
         }
@@ -174,6 +179,20 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
     }
 
     /**
+     * @return the workflow name
+     */
+    public String getWorkflowName() {
+        return m_customWorkflowName == null ? m_wf.getName() : m_customWorkflowName;
+    }
+
+    /**
+     * @return a map from port id to port name
+     */
+    public Map<PortID, String> getInputPortNamesMap() {
+        return new HashMap<>(m_inPortNames);
+    }
+
+    /**
      * Returns a custom port name if set.
      *
      * @param p the port to get the custom name for
@@ -181,6 +200,13 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
      */
     public Optional<String> getInputPortName(final PortID p) {
         return Optional.ofNullable(m_inPortNames.get(p));
+    }
+
+    /**
+     * @return a map from port id to port name
+     */
+    public Map<PortID, String> getOutputPortNamesMap() {
+        return new HashMap<>(m_outPortNames);
     }
 
     /**
@@ -224,6 +250,10 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
         if (!m_outPortNames.isEmpty()) {
             ModelContentWO outPortNames = model.addModelContent("output_port_names");
             savePortNames(outPortNames, m_outPortNames);
+        }
+
+        if (m_customWorkflowName != null) {
+            model.addString("custom_workflow_name", m_customWorkflowName);
         }
     }
 
@@ -298,8 +328,13 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
             outPortNames = loadPortNames(model);
         }
 
+        String customWfName = null;
+        if (metadata.containsKey("custom_workflow_name")) {
+            customWfName = metadata.getString("custom_workflow_name");
+        }
+
         WorkflowFragment wf = new WorkflowFragment(metadata.getString("name"), inputPorts, outputPorts, ids);
-        return new WorkflowPortObjectSpec(wf, inPortNames, outPortNames);
+        return new WorkflowPortObjectSpec(wf, customWfName, inPortNames, outPortNames);
     }
 
     private static List<Port> loadPorts(final ModelContentRO model) throws InvalidSettingsException {

@@ -261,7 +261,7 @@ public final class WorkflowFragment {
     /**
      * @return the workflow name as stored with the fragment's metadata
      */
-    public String getName() {
+    String getName() {
         return m_name;
     }
 
