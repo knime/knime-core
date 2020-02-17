@@ -3495,7 +3495,7 @@ public final class WorkflowManager extends NodeContainer
      *             respective 'capture workflow start node' is missing
      * @since 4.2
      */
-    public WorkflowCaptureOperation capturePartOf(final NodeID endNodeID)
+    public WorkflowCaptureOperation createCaptureOperationFor(final NodeID endNodeID)
         throws IllegalScopeException {
         return new WorkflowCaptureOperation(endNodeID, this);
     }

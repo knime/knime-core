@@ -97,7 +97,7 @@ import org.knime.core.util.VMFileLocker;
  * additional static input data (e.g. a decision tree model)</li>
  * </ul>
  *
- * Workflow fragment instances are returned by {@link WorkflowManager#capturePartOf(NodeID)}.
+ * Workflow fragment instances are returned by {@link WorkflowManager#createCaptureOperationFor(NodeID)}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
