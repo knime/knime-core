@@ -218,14 +218,19 @@ public class NodeContextTest {
         NodeContext.pushContext(contextObj);
         assertThat("Empty optional expected due to missing context object supplier",
             NodeContext.getContext().getContextObjectForClass(String.class), is(Optional.empty()));
-        NodeContext.addContextObjectSupplier(new ContextObjectSupplier() {
+        ContextObjectSupplier supplier = new ContextObjectSupplier() {
             @Override
             public <C> Optional<C> getObjOfClass(final Class<C> contextObjClass, final Object srcObj) {
                 return Optional.of((C)srcObj);
             }
-        });
-        assertThat("Unexpected context object", NodeContext.getContext().getContextObjectForClass(String.class).get(),
-            is(contextObj));
+        };
+        NodeContext.addContextObjectSupplier(supplier);
+        try {
+            assertThat("Unexpected context object", NodeContext.getContext().getContextObjectForClass(String.class).get(),
+                is(contextObj));
+        } finally {
+            NodeContext.removeContextObjectSupplier(supplier);
+        }
         NodeContext.removeLastContext();
     }
 
