@@ -193,30 +193,10 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
     }
 
     /**
-     * Returns a custom port name if set.
-     *
-     * @param p the port to get the custom name for
-     * @return the custom name or an empty optional if not set
-     */
-    public Optional<String> getInputPortName(final PortID p) {
-        return Optional.ofNullable(m_inPortNames.get(p));
-    }
-
-    /**
      * @return a map from port id to port name
      */
     public Map<PortID, String> getOutputPortNamesMap() {
         return new HashMap<>(m_outPortNames);
-    }
-
-    /**
-     * Returns a custom port name if set.
-     *
-     * @param p the port to get the custom name for
-     * @return the custom name or an empty optional if not set
-     */
-    public Optional<String> getOutputPortName(final PortID p) {
-        return Optional.ofNullable(m_outPortNames.get(p));
     }
 
     /**
