@@ -54,8 +54,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
@@ -119,7 +119,7 @@ public class WorkflowPortObject extends AbstractPortObject {
     }
 
     /**
-     * Creates an new port object from a {@link WorkflowFragment} plus input data.
+     * Creates a new port object from a {@link WorkflowFragment} plus input data.
      *
      * @param wf the workflow fragment
      * @param inputData input data mapped to input ports of the workflow fragment
@@ -139,9 +139,8 @@ public class WorkflowPortObject extends AbstractPortObject {
     public Optional<DataTable> getInputDataFor(final Port p) {
         if (m_inputData != null) {
             return Optional.ofNullable(m_inputData.get(p));
-        } else {
-            return Optional.empty();
         }
+        return Optional.empty();
     }
 
     /**
@@ -151,7 +150,12 @@ public class WorkflowPortObject extends AbstractPortObject {
     protected void save(final PortObjectZipOutputStream out, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         if (m_inputData != null && !m_inputData.isEmpty()) {
-            List<Port> ports = m_inputData.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
+            List<Port> ports = new ArrayList<>(m_inputData.size());
+            List<DataTable> tables = new ArrayList<>(m_inputData.size());
+            for (Entry<Port, DataTable> entry : m_inputData.entrySet()) {
+                ports.add(entry.getKey());
+                tables.add(entry.getValue());
+            }
             out.putNextEntry(new ZipEntry("input_data_ports.xml"));
             ModelContent model = new ModelContent("input_data_ports.xml");
             savePorts(model, ports);
@@ -159,8 +163,6 @@ public class WorkflowPortObject extends AbstractPortObject {
                 model.saveToXML(zout);
             }
 
-            List<DataTable> tables =
-                m_inputData.entrySet().stream().map(e -> e.getValue()).collect(Collectors.toList());
             for (int i = 0; i < tables.size(); i++) {
                 out.putNextEntry(new ZipEntry("input_table_" + i + ".bin"));
                 DataContainer.writeToStream(tables.get(i), out, exec);
