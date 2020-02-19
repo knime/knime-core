@@ -1,4 +1,4 @@
-# ![Image](https://www.knime.com/files/knime_logo_github_40x40_4layers.png) KNIME® Analytics Platform
+# ![Image](https://www.knime.com/files/knime_logo_github_40x40_4layers.png) KNIMEÂ® Analytics Platform
 
 ### Content
 This repository contains the source code of [KNIME Analytics Platform](http://www.knime.org). The code is organized as follows:
