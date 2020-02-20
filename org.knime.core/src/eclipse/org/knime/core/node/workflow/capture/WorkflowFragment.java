@@ -381,7 +381,7 @@ public final class WorkflowFragment {
         public PortID(final NodeIDSuffix nodeIDSuffix, final int index) {
             m_nodeIDSuffix = CheckUtils.checkArgumentNotNull(nodeIDSuffix);
             if (index < 0) {
-                throw new IllegalArgumentException(String.format("Port index %d out of bounds.", index));
+                throw new IndexOutOfBoundsException(String.format("Port index %d out of bounds.", index));
             }
             m_nodeIDSuffix = nodeIDSuffix;
             m_index = index;

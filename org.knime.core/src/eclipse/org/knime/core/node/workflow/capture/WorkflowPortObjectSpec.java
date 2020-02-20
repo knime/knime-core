@@ -92,9 +92,9 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
 
     private WorkflowFragment m_wf;
 
-    private Map<PortID, String> m_inPortNames = new HashMap<>();
+    private final Map<PortID, String> m_inPortNames = new HashMap<>();
 
-    private Map<PortID, String> m_outPortNames = new HashMap<>();
+    private final Map<PortID, String> m_outPortNames = new HashMap<>();
 
     private String m_customWorkflowName = null;
 
