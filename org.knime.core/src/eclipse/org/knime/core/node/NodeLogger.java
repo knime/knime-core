@@ -135,8 +135,10 @@ public final class NodeLogger {
      * Class that encapsulates all information of a log message in KNIME such as the {@link NodeID} and
      * workflow directory if the message can be assigned to them.
      * @author Tobias Koetter, KNIME.com
+     * @since 4.2
+     * @noreference This class is not intended to be referenced by clients.
      */
-    class KNIMELogMessage {
+    public final class KNIMELogMessage {
 
         private final File m_workflowDir;
         private Object m_msg;
@@ -169,7 +171,7 @@ public final class NodeLogger {
         /**
          * @return the nodeID
          */
-        NodeID getNodeID() {
+        public NodeID getNodeID() {
             return m_nodeID;
         }
 
