@@ -50,18 +50,19 @@ package org.knime.core.node.config;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
@@ -73,10 +74,10 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.config.base.AbstractConfigEntry;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
@@ -99,34 +100,69 @@ import org.knime.core.node.workflow.VariableType.StringType;
  * in case the property should be exposed.
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class ConfigEditTreeNodePanel extends JPanel {
+    // The number of characters we allow in the label text before we start truncating via mid-excision
+    private static final int MAXIMUM_LABEL_CHARACTER_COUNT = 30;
 
+    private static final int MINIMUM_HEIGHT = 24;
+    private static final Dimension LABEL_MINIMUM_SIZE = new Dimension(100, MINIMUM_HEIGHT);
+
+    private static final ComboBoxElement EMPTY_COMBOBOX_ELEMENT = new ComboBoxElement(null);
     private static final Icon ICON_UNKNOWN = DataValue.UTILITY.getIcon();
 
-    private static final Dimension LABEL_DIMENSION = new Dimension(100, 20);
+    /**
+     * Note from loki: Marc Bux wrote to me that there is a method in the AP code base which does this already; i
+     *  spent much more time searching the codebase (to only turn up many implementations, but that all did
+     *  tail-excision truncation) than i would have spent writing this method. If someone knows of the method
+     *  of which Marc writes, please replace this method.
+     *
+     * @param original
+     * @return a truncated via mid-excision string if the original is longer than {@link #MAXIMUM_LABEL_CHARACTER_COUNT}
+     */
+    private static String displayTextForString(final String original) {
+        if (original.length() > MAXIMUM_LABEL_CHARACTER_COUNT) {
+            final int exciseLength = (original.length() - MAXIMUM_LABEL_CHARACTER_COUNT) + 3;
+            final int exciseStart = (original.length() - exciseLength) / 2;
+
+            return (original.substring(0, exciseStart) + "..." + original.substring(original.length() - exciseStart));
+        }
+
+        return original;
+    }
+
+
     private final JLabel m_keyLabel;
     private Icon m_keyIcon;
-    private final JComboBox m_valueField;
+    private final DefaultComboBoxModel<ComboBoxElement> m_valueComboBoxModel;
+    private final JComboBox<ComboBoxElement> m_valueField;
     private FlowObjectStack m_flowObjectStack;
     private final JTextField m_exposeAsVariableField;
     private ConfigEditTreeNode m_treeNode;
 
-    /** Constructs new panel.
-     * @param isForConfig if true, the combo box and the textfield are not
-     * shown (configs can't be overwritten, nor be exported as variable).
+    private final ConfigEditTreeRenderer m_parentRenderer;
+
+    /**
+     * Constructs new panel.
+     *
+     * @param isForConfig if true, the combo box and the textfield are not shown (configs can't be overwritten, nor be
+     *              exported as variable).
+     * @param owningRenderer the renderer for which we are part of the nodes' display; we'd rather have the tree, which
+     *              we get from the renderer later, but the construction time sequence of events in which the cell
+     *              editor which creates two instances of this class prevents us from having access to the tree, but
+     *              indeed having reference to the renderer
+     * @since 4.2
      */
-    public ConfigEditTreeNodePanel(final boolean isForConfig) {
-        super(new FlowLayout());
+    public ConfigEditTreeNodePanel(final boolean isForConfig, final ConfigEditTreeRenderer owningRenderer) {
+        super();
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         m_keyLabel = new JLabel();
-        m_keyLabel.setMinimumSize(LABEL_DIMENSION);
-        m_keyLabel.setMaximumSize(LABEL_DIMENSION);
-        m_keyLabel.setPreferredSize(LABEL_DIMENSION);
-        m_keyLabel.setSize(LABEL_DIMENSION);
-        m_valueField = new JComboBox(new DefaultComboBoxModel());
+        m_keyLabel.setMinimumSize(LABEL_MINIMUM_SIZE);
+        m_valueComboBoxModel = new DefaultComboBoxModel<ComboBoxElement>();
+        m_valueField = new JComboBox<>(m_valueComboBoxModel);
         m_valueField.setToolTipText(" "); // enable tooltip;
         m_valueField.setRenderer(ComboBoxRenderer.INSTANCE);
-        m_valueField.setPrototypeDisplayValue("xxxxxxxxxxxxxxxxxxxxxxxx");
-        FocusListener l = new FocusAdapter() {
+        final FocusListener l = new FocusAdapter() {
             /** {@inheritDoc} */
             @Override
             public void focusLost(final FocusEvent e) {
@@ -134,35 +170,47 @@ public class ConfigEditTreeNodePanel extends JPanel {
             }
         };
         m_valueField.addFocusListener(l);
-        m_valueField.addItemListener(new ItemListener() {
-            /** {@inheritDoc} */
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    onSelectedItemChange(e.getItem());
-                }
+        m_valueField.addItemListener((e) -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                onSelectedItemChange(e.getItem());
             }
         });
         m_exposeAsVariableField = new JTextField(8);
         m_exposeAsVariableField.addFocusListener(l);
+
         add(m_keyLabel);
+        add(Box.createHorizontalGlue());
+        add(Box.createVerticalStrut(MINIMUM_HEIGHT));
         if (isForConfig) {
+            add(Box.createHorizontalGlue());
             add(m_valueField);
+            add(Box.createHorizontalGlue());
             add(m_exposeAsVariableField);
         }
+
+        m_parentRenderer = owningRenderer;
     }
 
     private Collection<FlowVariable> getAllVariablesOfTypes(final VariableType<?>... types) {
-        return m_flowObjectStack != null ? m_flowObjectStack.getAvailableFlowVariables(types).values()
-            : Collections.emptyList();
+        return (m_flowObjectStack != null) ? m_flowObjectStack.getAvailableFlowVariables(types).values()
+                                           : Collections.emptyList();
     }
 
-    /** Set a new tree node to display.
+    @Override
+    public Dimension getPreferredSize() {
+        final int insets = m_parentRenderer.getTotalWidthInsets(m_keyIcon);
+
+        return new Dimension((m_parentRenderer.getParentTree().getSize().width - insets), (MINIMUM_HEIGHT + 4));
+    }
+
+    /**
+     * Set a new tree node to display.
+     *
      * @param treeNode the new node to represent (may be null).
      */
     public void setTreeNode(final ConfigEditTreeNode treeNode) {
         m_treeNode = treeNode;
-        boolean isEditable = m_treeNode != null && m_treeNode.isLeaf();
+        final boolean isEditable = (m_treeNode != null) && m_treeNode.isLeaf();
 
         String usedVariable;
         m_valueField.setEnabled(isEditable);
@@ -243,7 +291,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 m_keyIcon = selType.getIcon();
                 suitableVariables.addAll(getAllVariablesOfTypes(selType));
             }
-            m_keyLabel.setText(entry.getKey());
+            m_keyLabel.setText(displayTextForString(entry.getKey()));
             m_keyLabel.setToolTipText(entry.getKey());
             usedVariable = m_treeNode.getUseVariableName();
             final String exposeVariable = m_treeNode.getExposeVariableName();
@@ -257,33 +305,29 @@ public class ConfigEditTreeNodePanel extends JPanel {
             usedVariable = null;
         }
 
-        m_keyLabel.setMinimumSize(LABEL_DIMENSION);
-        m_keyLabel.setMaximumSize(LABEL_DIMENSION);
-        m_keyLabel.setPreferredSize(LABEL_DIMENSION);
-        m_keyLabel.setSize(LABEL_DIMENSION);
-        DefaultComboBoxModel model = (DefaultComboBoxModel)m_valueField.getModel();
-        model.removeAllElements();
-        model.addElement(" ");
-        @SuppressWarnings("unchecked")
+        m_keyLabel.setMinimumSize(LABEL_MINIMUM_SIZE);
+        m_valueComboBoxModel.removeAllElements();
+        m_valueComboBoxModel.addElement(EMPTY_COMBOBOX_ELEMENT);
         ComboBoxElement match = null;
-        for (FlowVariable v : suitableVariables) {
-            ComboBoxElement cbe = new ComboBoxElement(v);
-            model.addElement(cbe);
+        for (final FlowVariable v : suitableVariables) {
+            final ComboBoxElement cbe = new ComboBoxElement(v);
+            m_valueComboBoxModel.addElement(cbe);
             if (v.getName().equals(usedVariable)) {
                 match = cbe;
             }
         }
 
-        if (match == null && m_flowObjectStack != null) {
+        if ((match == null) && (m_flowObjectStack != null)) {
             @SuppressWarnings("deprecation")
-            final Map<String, FlowVariable> allVars = m_flowObjectStack.getAvailableFlowVariables(Type.INTEGER,
-                Type.DOUBLE, Type.STRING, Type.CREDENTIALS, Type.OTHER);
+            final Map<String, FlowVariable> allVars
+                        = m_flowObjectStack.getAvailableFlowVariables(Type.INTEGER, Type.DOUBLE, Type.STRING,
+                                                                      Type.CREDENTIALS, Type.OTHER);
             if (allVars.containsKey(usedVariable)) {
-                FlowVariable v = allVars.get(usedVariable);
-                String error = "Variable \"" + usedVariable + "\" has wrong type (" + v.getVariableType()
-                    + "), expected " + selType;
-                ComboBoxElement cbe = new ComboBoxElement(v, error);
-                model.addElement(cbe);
+                final FlowVariable v = allVars.get(usedVariable);
+                final String error = "Variable \"" + usedVariable + "\" has wrong type (" + v.getVariableType()
+                                        + "), expected " + selType;
+                final ComboBoxElement cbe = new ComboBoxElement(v, error);
+                m_valueComboBoxModel.addElement(cbe);
                 match = cbe;
             }
         }
@@ -295,8 +339,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
             // not violate the namespace of the variable (could be
             // node-local variable, which can't be created outside
             // the workflow package)
-            String errorName = "<" + usedVariable + ">";
-            String error = "Invalid variable \"" + usedVariable + "\"";
+            final String errorName = "<" + usedVariable + ">";
             final FlowVariable virtualVar;
             if (selType.equals(DoubleArrayType.INSTANCE)) {
                 virtualVar = new FlowVariable(errorName, DoubleArrayType.INSTANCE, new Double[0]);
@@ -319,30 +362,12 @@ public class ConfigEditTreeNodePanel extends JPanel {
             } else {
                 virtualVar = new FlowVariable(errorName, "");
             }
-            ComboBoxElement cbe = new ComboBoxElement(virtualVar, error);
-            model.addElement(cbe);
+            final String error = "Invalid variable \"" + usedVariable + "\"";
+            final ComboBoxElement cbe = new ComboBoxElement(virtualVar, error);
+            m_valueComboBoxModel.addElement(cbe);
             m_valueField.setSelectedItem(cbe);
         }
-        m_valueField.setEnabled(model.getSize() > 1);
-    }
-
-    private void onSelectedItemChange(final Object newItem) {
-        String newToolTip;
-        if (newItem instanceof ComboBoxElement) {
-            ComboBoxElement cbe = (ComboBoxElement)newItem;
-            if (cbe.m_errorString != null) {
-                newToolTip = cbe.m_errorString;
-            } else {
-                newToolTip = m_keyLabel.getText();
-            }
-        } else {
-            newToolTip = m_keyLabel.getText();
-        }
-        String oldToolTip = getToolTipText();
-        if (!ConvenienceMethods.areEqual(oldToolTip, newToolTip)) {
-            setToolTipText(newToolTip);
-        }
-        commit();
+        m_valueField.setEnabled(m_valueComboBoxModel.getSize() > 1);
     }
 
     /** Write the currently edited values to the underlying model. */
@@ -353,18 +378,23 @@ public class ConfigEditTreeNodePanel extends JPanel {
         String v = null;
         Object selVar = m_valueField.getSelectedItem();
         if (selVar instanceof ComboBoxElement) {
-            ComboBoxElement cbe = (ComboBoxElement)selVar;
+            final ComboBoxElement cbe = (ComboBoxElement)selVar;
+            if (EMPTY_COMBOBOX_ELEMENT.equals(cbe)) {
+                return;
+            }
+
             if (cbe.m_errorString == null) {
                 v = cbe.m_variable.getName();
             }
         }
-        m_treeNode.setUseVariableName(v != null && v.length() > 0 ? v : null);
+        m_treeNode.setUseVariableName(StringUtils.isNotEmpty(v) ? v : null);
         v = m_exposeAsVariableField.getText();
-        m_treeNode.setExposeVariableName(
-                v != null && v.length() > 0 ? v : null);
+        m_treeNode.setExposeVariableName(StringUtils.isNotEmpty(v) ? v : null);
     }
 
-    /** Get icon to this property (string, double, int, unknown).
+    /**
+     * Get icon to this property (string, double, int, unknown).
+     *
      * @return representative icon.
      */
     public Icon getIcon() {
@@ -378,15 +408,33 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_flowObjectStack = flowObjectStack;
     }
 
-    /**
-     * @return the variableStack
-     */
-    public FlowObjectStack getFlowObjectStack() {
-        return m_flowObjectStack;
+    JLabel getKeyLabel() {
+        return m_keyLabel;
     }
 
-    /** Elements in the combo box. Used to also indicate errors with the
-     * current selection. */
+    private void onSelectedItemChange(final Object newItem) {
+        final String newToolTip;
+        if (newItem instanceof ComboBoxElement) {
+            final ComboBoxElement cbe = (ComboBoxElement)newItem;
+            if (cbe.m_errorString != null) {
+                newToolTip = cbe.m_errorString;
+            } else {
+                newToolTip = m_keyLabel.getText();
+            }
+        } else {
+            newToolTip = m_keyLabel.getText();
+        }
+        final String oldToolTip = getToolTipText();
+        if (!Objects.equals(oldToolTip, newToolTip)) {
+            setToolTipText(newToolTip);
+        }
+        commit();
+    }
+
+
+    /**
+     * Elements in the combo box. Used to also indicate errors with the current selection.
+     */
     private static final class ComboBoxElement {
         private final FlowVariable m_variable;
         private final String m_errorString;
@@ -401,41 +449,42 @@ public class ConfigEditTreeNodePanel extends JPanel {
             m_variable = v;
             m_errorString = error;
         }
-
     }
 
-    /** Renderer for the combo box. */
-    private static final class ComboBoxRenderer
-        extends DefaultListCellRenderer {
 
+    /** Renderer for the combo box. */
+    private static final class ComboBoxRenderer extends DefaultListCellRenderer {
         /** Instance to be used. */
         static final ComboBoxRenderer INSTANCE = new ComboBoxRenderer();
 
-        private final Border m_errBorder =
-            BorderFactory.createLineBorder(Color.RED);
-        private final Border m_okBorder =
-            BorderFactory.createEmptyBorder(1, 1, 1, 1);
+        private static final Border ERROR_BORDER = BorderFactory.createLineBorder(Color.RED);
+        private static final Border OK_BORDER = BorderFactory.createEmptyBorder(1, 1, 1, 1);
+
 
         /** {@inheritDoc} */
         @Override
-        public Component getListCellRendererComponent(final JList list,
-                final Object value, final int index, final boolean isSelected,
-                final boolean cellHasFocus) {
-            Component c = super.getListCellRendererComponent(
-                    list, value, index, isSelected, cellHasFocus);
-            ((JComponent)c).setBorder(m_okBorder);
+        public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index,
+                                                      final boolean isSelected, final boolean cellHasFocus) {
+            final Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            ((JComponent)c).setBorder(OK_BORDER);
             if (value instanceof ComboBoxElement) {
-                ComboBoxElement cbe = (ComboBoxElement)value;
-                FlowVariable v = cbe.m_variable;
-                Icon icon;
-                setIcon(v.getVariableType().getIcon());
-                setText(v.getName());
-                setToolTipText(v.getName() + " ("
-                        + (v.getName().startsWith("knime.") ? "constant "
-                                : "currently ") + "\"" + v.getValueAsString() + "\")");
-                if (cbe.m_errorString != null) {
-                    ((JComponent)c).setBorder(m_errBorder);
-                    setToolTipText(cbe.m_errorString);
+                final ComboBoxElement cbe = (ComboBoxElement)value;
+                if (EMPTY_COMBOBOX_ELEMENT.equals(cbe)) {
+                    setIcon(null);
+                    setText(" ");
+                } else {
+                    final FlowVariable v = cbe.m_variable;
+                    setIcon(v.getVariableType().getIcon());
+                    setText(v.getName());
+                    setToolTipText(v.getName() + " ("
+                                        + (v.getName().startsWith("knime.")
+                                                ? "constant "
+                                                : "currently ")
+                                        + "\"" + v.getValueAsString() + "\")");
+                    if (cbe.m_errorString != null) {
+                        ((JComponent)c).setBorder(ERROR_BORDER);
+                        setToolTipText(cbe.m_errorString);
+                    }
                 }
             } else {
                 setToolTipText(null);
@@ -443,5 +492,4 @@ public class ConfigEditTreeNodePanel extends JPanel {
             return c;
         }
     }
-
 }

@@ -49,6 +49,9 @@ package org.knime.core.node.config;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -67,27 +70,35 @@ import org.knime.core.node.workflow.FlowObjectStack;
  * <p>This class is not meant for public use.
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class ConfigEditJTree extends JTree {
-
     /** Fallback model. */
-    private static final ConfigEditTreeModel EMPTY_MODEL =
-        ConfigEditTreeModel.create(new NodeSettings("empty"));
+    private static final ConfigEditTreeModel EMPTY_MODEL = ConfigEditTreeModel.create(new NodeSettings("empty"));
+
 
     /** To get the available variables from. */
     private FlowObjectStack m_flowObjectStack;
+
+    /** The maximum width of all rendered key labels */
+    private int m_maxLabelWidthAsOfLastPaintCycle = Integer.MIN_VALUE;
+    /** A holder for the currently running, if any, repaint timer */
+    private final List<Runnable> m_repaintTimer = new ArrayList<>();
 
     /** Constructor for empty tree. */
     public ConfigEditJTree() {
         this(EMPTY_MODEL);
     }
 
-    /** Shows given tree model.
-     * @param model The model to show. */
+    /**
+     * Shows given tree model.
+     *
+     * @param model The model to show.
+     */
     public ConfigEditJTree(final ConfigEditTreeModel model) {
         super(model);
         setRootVisible(false);
         setShowsRootHandles(true);
-        ConfigEditTreeRenderer renderer = new ConfigEditTreeRenderer();
+        final ConfigEditTreeRenderer renderer = new ConfigEditTreeRenderer(this);
         setCellRenderer(renderer);
         setCellEditor(new ConfigEditTreeEditor(this, renderer));
         setRowHeight(renderer.getPreferredSize().height);
@@ -95,25 +106,49 @@ public class ConfigEditJTree extends JTree {
         setToolTipText("config tree"); // enable tooltip
     }
 
-    /** Overwritten to fail on model implementations which are not of class
-     * {@link ConfigEditTreeModel}.
-     * {@inheritDoc} */
+    /**
+     * Overwritten to fail on model implementations which are not of class {@link ConfigEditTreeModel}.
+     *
+     * {@inheritDoc}
+     */
     @Override
     public void setModel(final TreeModel newModel) {
         if (!(newModel instanceof ConfigEditTreeModel)) {
-            throw new IllegalArgumentException("Argument must be of class "
-                    + ConfigEditTreeModel.class.getSimpleName());
+            throw new IllegalArgumentException("Argument must be of class " + ConfigEditTreeModel.class.getSimpleName());
         }
+
         super.setModel(newModel);
-        // not sure whether to better expand all entries, seems ok either way?
-//        expandAll();
     }
 
-    /** Expand the tree. */
-    public void expandAll() {
-        for (int i = 0; i < getRowCount(); i++) {
-            expandRow(i);
+    /**
+     * This method will only ever be called from EDT during pai.
+     *
+     * @param width the width of the {@code JLabel} component that has been rendered in
+     *            {@link ConfigEditTreeRenderer#paintComponent(java.awt.Graphics)}
+     */
+    void renderedKeyLabelWithWidth(final int width) {
+        final boolean needsRepaint = (width > m_maxLabelWidthAsOfLastPaintCycle);
+
+        if (needsRepaint) {
+            m_maxLabelWidthAsOfLastPaintCycle = width;
+
+            synchronized (m_repaintTimer) {
+                if (m_repaintTimer.size() == 0) {
+                    final RepaintTrigger trigger = new RepaintTrigger();
+                    m_repaintTimer.add(trigger);
+                    (new Thread(trigger)).start();
+                } else {
+                    ((RepaintTrigger)m_repaintTimer.get(0)).retriggerTimer();
+                }
+            }
         }
+    }
+
+    /**
+     * @return the width which a key label being rendered should be set to
+     */
+    int labelWidthToEnforce() {
+        return m_maxLabelWidthAsOfLastPaintCycle;
     }
 
     /** {@inheritDoc} */
@@ -132,9 +167,43 @@ public class ConfigEditJTree extends JTree {
         return m_flowObjectStack;
     }
 
-    /** Public testing method that displays a simple tree with no flow
-     * variable stack, though.
-     * @param args command line args, ignored here. */
+
+    private class RepaintTrigger implements Runnable {
+        private final AtomicBoolean m_retrigger;
+
+        private RepaintTrigger() {
+            m_retrigger = new AtomicBoolean(false);
+        }
+
+        private void retriggerTimer() {
+            m_retrigger.set(true);
+        }
+
+        @Override
+        public void run() {
+            boolean sleep = true;
+
+            while (sleep) {
+                try {
+                    Thread.sleep(80);
+                } catch (final Exception e) { } // NOPMD
+
+                sleep = m_retrigger.getAndSet(false);
+            }
+
+            repaint();
+
+            synchronized (m_repaintTimer) {
+                m_repaintTimer.remove(0);
+            }
+        }
+    }
+
+    /**
+     * Public testing method that displays a simple tree with no flow variable stack, though.
+     *
+     * @param args command line args, ignored here.
+     */
     public static void main(final String[] args) {
         NodeSettings settings = new NodeSettings("Demo");
         settings.addString("String_Demo", "This is a demo string");
@@ -154,5 +223,4 @@ public class ConfigEditJTree extends JTree {
         frame.pack();
         frame.setVisible(true);
     }
-
 }

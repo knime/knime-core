@@ -49,53 +49,81 @@ package org.knime.core.node.config;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
 
+import javax.swing.Icon;
+import javax.swing.JLabel;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreeNode;
 
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.workflow.FlowObjectStack;
 
 /**
- * Renderer implementation of a {@link ConfigEditJTree}. It uses
- * a {@link ConfigEditTreeNodePanel} to display the individual entries.
+ * Renderer implementation of a {@link ConfigEditJTree}. It uses a {@link ConfigEditTreeNodePanel} to display the
+ * individual entries.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
-
     private final ConfigEditTreeNodePanel m_panelFull;
     private final ConfigEditTreeNodePanel m_panelPlain;
     private ConfigEditTreeNodePanel m_active;
+    private int m_currentCellPathDepth;
 
-    /** Only creates fields. */
-    public ConfigEditTreeRenderer() {
-        m_panelFull = new ConfigEditTreeNodePanel(true);
-        m_panelPlain = new ConfigEditTreeNodePanel(false);
+    private final Rectangle m_paintBounds;
+
+    private final ConfigEditJTree m_parentTree;
+
+    /**
+     * Only creates fields.
+     *
+     * @param owningTree the parent tree
+     * @since 4.2
+     */
+    public ConfigEditTreeRenderer(final ConfigEditJTree owningTree) {
+        m_panelPlain = new ConfigEditTreeNodePanel(false, this);
+        m_panelFull = new ConfigEditTreeNodePanel(true, this);
         m_active = m_panelPlain;
+
+        m_paintBounds = new Rectangle();
+
+        m_parentTree = owningTree;
+    }
+
+    ConfigEditJTree getParentTree() {
+        return m_parentTree;
     }
 
     /** {@inheritDoc} */
     @Override
-    public Component getTreeCellRendererComponent(
-            final JTree tree, final Object value, final boolean isSelected,
-            final boolean expanded, final boolean leaf, final int row,
-            final boolean isFocused) {
+    public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean isSelected,
+                                                  final boolean expanded, final boolean leaf, final int row,
+                                                  final boolean isFocused) {
+        if (value instanceof TreeNode) {
+            m_currentCellPathDepth = m_parentTree.getModel().getPathToRoot((TreeNode)value).length;
+        } else {
+            m_currentCellPathDepth = 0;
+        }
         setValue(tree, value);
-        return super.getTreeCellRendererComponent(
-                tree, value, isSelected, expanded, leaf, row, isFocused);
+
+        return super.getTreeCellRendererComponent(tree, value, isSelected, expanded, leaf, row, isFocused);
     }
 
-    /** Called whenever a new value is to be renderer, updates underlying
-     * component.
+    /**
+     * Called whenever a new value is to be renderer, updates underlying component.
+     *
      * @param tree The associated tree (get the flow object stack from.)
      * @param value to be renderer, typically a <code>ConfigEditTreeNode</code>
      */
     public void setValue(final JTree tree, final Object value) {
-        ConfigEditTreeNode node;
+        final ConfigEditTreeNode node;
         if (value instanceof ConfigEditTreeNode) {
             node = (ConfigEditTreeNode)value;
             m_active = node.isLeaf() ? m_panelFull : m_panelPlain;
@@ -134,27 +162,53 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         return new Dimension(width, height);
     }
 
-    private final Rectangle m_rectangle = new Rectangle();
+    /**
+     * This method is used by our node panels to calculate their preferred size.
+     *
+     * @param i a potential icon to be rendered
+     * @return the total width insets, including accounting for the indent due to tree path depth
+     */
+    int getTotalWidthInsets(final Icon i) {
+        final Insets insets = getInsets();
+        final int iconWidth = (i != null) ? (i.getIconWidth() + 2 * getIconTextGap()) : 0;
+
+        return insets.left + iconWidth + insets.right + (m_currentCellPathDepth * 20);
+    }
 
     /** {@inheritDoc} */
     @Override
     protected void paintComponent(final Graphics g) {
-        Insets ins = getInsets();
-        int iconWidth = getIcon() != null
-            ? getIcon().getIconWidth() + 2 * getIconTextGap() : 0;
-        int x = ins.left + iconWidth;
-        int y = ins.top;
-        int width = getWidth() - ins.left - iconWidth - ins.right;
-        int height = getHeight() - ins.top - ins.bottom;
-        m_rectangle.setBounds(x, y, width, height);
-        Dimension d = new Dimension(width, height);
-        m_active.setSize(d);
+        int maxLabelWidth = m_parentTree.labelWidthToEnforce();
+        final JLabel keyLabel = m_active.getKeyLabel();
+        final FontMetrics fm = g.getFontMetrics(keyLabel.getFont());
+        final Dimension labelSize = keyLabel.getSize();
+        final int textWidth = fm.stringWidth(keyLabel.getText());
+        if (textWidth > maxLabelWidth) {
+            final Insets insets = keyLabel.getInsets();
+            maxLabelWidth = textWidth + insets.left + insets.right;
+        }
+        if (labelSize.width < maxLabelWidth) {
+            keyLabel.setSize(maxLabelWidth, labelSize.height);
+            keyLabel.setPreferredSize(new Dimension(maxLabelWidth, labelSize.height));
+            keyLabel.invalidate();
+        }
+
+        final Insets insets = getInsets();
+        final int iconWidth = (getIcon() != null) ? (getIcon().getIconWidth() + 2 * getIconTextGap()) : 0;
+        final int x = insets.left + iconWidth;
+        final int y = insets.top;
+        final int width = m_parentTree.getWidth() - insets.left - iconWidth - insets.right;
+        final int height = getHeight() - insets.top - insets.bottom;
+        m_paintBounds.setBounds(x, y, width, height);
+
+        m_active.setSize(m_active.getPreferredSize());
         m_active.validate();
         m_active.setBackground(selected ? getBackgroundSelectionColor()
-                : getBackgroundNonSelectionColor());
-        SwingUtilities.paintComponent(g, m_active, this, m_rectangle);
+                                        : getBackgroundNonSelectionColor());
+        SwingUtilities.paintComponent(g, m_active, this, m_paintBounds);
+
+        m_parentTree.renderedKeyLabelWithWidth(keyLabel.getSize().width);
+
         super.paintComponent(g);
     }
-
-
 }

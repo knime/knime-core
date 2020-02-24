@@ -405,10 +405,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         }
     }
 
-    /** Single Tree node implementation. */
-    public static final class ConfigEditTreeNode
-        extends DefaultMutableTreeNode {
 
+    /** Single Tree node implementation. */
+    @SuppressWarnings("serial")
+    public static final class ConfigEditTreeNode extends DefaultMutableTreeNode {
         private final ConfigEntries m_arraySubType;
 
         private final Version m_version;
