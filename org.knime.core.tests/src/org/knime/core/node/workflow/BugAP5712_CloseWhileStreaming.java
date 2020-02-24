@@ -96,7 +96,7 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
         return loadResult;
     }
 
-    @Test(timeout = 3000L)
+    @Test(timeout = 5000L)
     public void testRunToCompletion() throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, IDLE);
@@ -121,7 +121,7 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
         checkState(manager, EXECUTED);
     }
 
-    @Test(timeout = 3000L)
+    @Test(timeout = 5000L)
     public void testSaveLoadWhileExecuting() throws Exception {
         WorkflowManager manager = getManager();
         ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
