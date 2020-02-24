@@ -52,10 +52,12 @@ import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.context.ports.ModifiablePortsConfiguration;
 import org.knime.core.node.context.ports.PortGroupConfiguration;
+import org.knime.core.node.context.ports.impl.DefaultExchangeablePortGroup;
 import org.knime.core.node.context.ports.impl.DefaultExtendablePortGroup;
 import org.knime.core.node.context.ports.impl.DefaultFixedPortGroup;
 import org.knime.core.node.context.ports.impl.DefaultModifiablePortsConfiguration;
@@ -480,59 +482,61 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
                 "The optional ports have to contain at least one element");
         }
 
-        //    TODO: Uncomment to support exchangeable port groups
-        //    /**
-        //     * Adds an exchangeable input port group configuration.
-        //     *
-        //     * @param pGrpId the port group identifier
-        //     * @param defaultType the default port type
-        //     * @param supportedTypes the supported port types (has to include the default type itself)
-        //     */
-        //    public void addExchangeableInputPortGroup(final String pGrpId, final PortType defaultType,
-        //        final PortType... supportedTypes) {
-        //        addExchangeablePortGroup(pGrpId, defaultType, supportedTypes, true, false);
-        //    }
-        //
-        //    /**
-        //     * Adds an exchangeable output port group configuration.
-        //     *
-        //     * @param pGrpId the port group identifier
-        //     * @param defaultType the default port type
-        //     * @param supportedTypes the supported port types (has to include the default type itself)
-        //     */
-        //    public void addExchangeableOutputPortGroup(final String pGrpId, final PortType defaultType,
-        //        final PortType... supportedTypes) {
-        //        addExchangeablePortGroup(pGrpId, defaultType, supportedTypes, false, true);
-        //    }
-        //
-        //    /**
-        //     * Adds an exchangeable port group configuration.
-        //     *
-        //     * @param pGrpId the port group identifier
-        //     * @param defaultType the default port type
-        //     * @param supportedTypes the supported port types (has to include the default type itself)
-        //     */
-        //    public void addExchangeablePortGroup(final String pGrpId, final PortType defaultType,
-        //        final PortType... supportedTypes) {
-        //        addExchangeablePortGroup(pGrpId, defaultType, supportedTypes, true, true);
-        //    }
-        //
-        //    private void addExchangeablePortGroup(final String pGrpId, final PortType defaultType,
-        //        final PortType[] supportedTypes, final boolean definesInputPort, final boolean definesOutputPort) {
-        //        validateExchangeablePortGroupArguments(pGrpId, defaultType, supportedTypes);
-        //        m_portConfigs.put(pGrpId,
-        //            new ExchangeablePortGroup(defaultType, supportedTypes, definesInputPort, definesOutputPort));
-        //    }
-        //
-        //    private void validateExchangeablePortGroupArguments(final String pGrpId, final PortType defaultType,
-        //        final PortType... supportedTypes) {
-        //        validatePortGrpIdentifier(pGrpId);
-        //        CheckUtils.checkArgumentNotNull(defaultType, "The default port type cannot be null");
-        //        CheckUtils.checkArgumentNotNull(supportedTypes, "The supported port types cannot be null");
-        //        CheckUtils.checkArgument(supportedTypes != null && supportedTypes.length > 1,
-        //            "The supported types have to contain at least two elements");
-        //        CheckUtils.checkArgument(ArrayUtils.contains(supportedTypes, defaultType),
-        //            "The supported port types have to contain the default port type");
-        //    }
+        /**
+         * Adds an exchangeable input port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultType the default port type
+         * @param supportedTypes the supported port types (has to include the default type itself)
+         * @since 4.2
+         */
+        public void addExchangeableInputPortGroup(final String pGrpId, final PortType defaultType,
+            final PortType... supportedTypes) {
+            addExchangeablePortGroup(pGrpId, defaultType, supportedTypes, true, false);
+        }
+
+        /**
+         * Adds an exchangeable output port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultType the default port type
+         * @param supportedTypes the supported port types (has to include the default type itself)
+         * @since 4.2
+         */
+        public void addExchangeableOutputPortGroup(final String pGrpId, final PortType defaultType,
+            final PortType... supportedTypes) {
+            addExchangeablePortGroup(pGrpId, defaultType, supportedTypes, false, true);
+        }
+
+        /**
+         * Adds an exchangeable port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultType the default port type
+         * @param supportedTypes the supported port types (has to include the default type itself)
+         * @since 4.2
+         */
+        public void addExchangeablePortGroup(final String pGrpId, final PortType defaultType,
+            final PortType... supportedTypes) {
+            addExchangeablePortGroup(pGrpId, defaultType, supportedTypes, true, true);
+        }
+
+        private void addExchangeablePortGroup(final String pGrpId, final PortType defaultType,
+            final PortType[] supportedTypes, final boolean definesInputPort, final boolean definesOutputPort) {
+            validateExchangeablePortGroupArguments(pGrpId, defaultType, supportedTypes);
+            m_portConfigs.put(pGrpId,
+                new DefaultExchangeablePortGroup(defaultType, supportedTypes, definesInputPort, definesOutputPort));
+        }
+
+        private void validateExchangeablePortGroupArguments(final String pGrpId, final PortType defaultType,
+            final PortType... supportedTypes) {
+            validatePortGrpIdentifier(pGrpId);
+            CheckUtils.checkArgumentNotNull(defaultType, "The default port type cannot be null");
+            CheckUtils.checkArgumentNotNull(supportedTypes, "The supported port types cannot be null");
+            CheckUtils.checkArgument(supportedTypes != null && supportedTypes.length > 1,
+                "The supported types have to contain at least two elements");
+            CheckUtils.checkArgument(ArrayUtils.contains(supportedTypes, defaultType),
+                "The supported port types have to contain the default port type");
+        }
     }
 }
