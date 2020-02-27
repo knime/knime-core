@@ -62,11 +62,13 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.capture.WorkflowFragment;
-import org.knime.core.node.workflow.capture.WorkflowFragment.Port;
+import org.knime.core.node.workflow.capture.WorkflowFragment.Input;
+import org.knime.core.node.workflow.capture.WorkflowFragment.Output;
 import org.knime.core.node.workflow.capture.WorkflowFragment.PortID;
 import org.knime.core.util.Pair;
 
@@ -109,7 +111,7 @@ public final class WorkflowCaptureOperation {
         try (WorkflowLock lock = m_wfm.lock()) {
             NodeID endNodeID = m_endNode.getID();
             WorkflowManager tempParent = WorkflowManager.EXTRACTED_WORKFLOW_ROOT
-                .createAndAddProject("Workflow-Capture-from-" + endNodeID, new WorkflowCreationHelper());
+                .createAndAddProject("Capture-" + endNodeID, new WorkflowCreationHelper());
             // TODO we might have to revisit this when implementing AP-13335
             Set<NodeIDSuffix> addedPortObjectReaderNodes = new HashSet<>();
 
@@ -191,8 +193,8 @@ public final class WorkflowCaptureOperation {
             //transfer editor settings, too
             tempParent.setEditorUIInformation(m_wfm.getEditorUIInformation());
 
-            List<Port> workflowFragmentInputs = getInputPorts();
-            List<Port> workflowFragmentOutputs = getOutputPorts();
+            List<Input> workflowFragmentInputs = getInputs();
+            List<Output> workflowFragmentOutputs = getOutputs();
 
             return new WorkflowFragment(tempParent, workflowFragmentInputs, workflowFragmentOutputs,
                 addedPortObjectReaderNodes);
@@ -200,33 +202,45 @@ public final class WorkflowCaptureOperation {
     }
 
     /**
-     * Returns the free input ports of the (to be) captured sub-workflow, i.e. the same ports {@link #capture()} with a
-     * subsequent {@link WorkflowFragment#getInputPorts()} would return.
+     * Returns the input of the (to be) captured sub-workflow, i.e. the same ports {@link #capture()} with a
+     * subsequent {@link WorkflowFragment#getConnectedInputs()} would return.
      *
-     * @return the input ports of the (to be) captured workflow fragment
+     * @return the inputs of the (to be) captured workflow fragment
      */
-    public List<Port> getInputPorts() {
-        return m_wfm.getOutgoingConnectionsFor(m_startNode.getID()).stream()//
-            .map(cc -> {
-                PortID pid = new PortID(NodeIDSuffix.create(m_wfm.getID(), cc.getDest()), cc.getDestPort());
-                return new Port(pid, m_wfm.getNodeContainer(cc.getDest()).getInPort(cc.getDestPort()).getPortType(),
-                    castToDTSpecOrNull(m_startNode.getOutPort(cc.getSourcePort()).getPortObjectSpec()));
-            }).collect(Collectors.toList());
+    public List<Input> getInputs() {
+        List<Input> res = new ArrayList<>();
+        for (int i = 0; i < m_startNode.getNrOutPorts(); i++) {
+            Set<PortID> connections = m_wfm.getOutgoingConnectionsFor(m_startNode.getID(), i).stream().map(cc -> {
+                return new PortID(NodeIDSuffix.create(m_wfm.getID(), cc.getDest()), cc.getDestPort());
+            }).collect(Collectors.toSet());
+            NodeOutPort outPort = m_startNode.getOutPort(i);
+            res.add(new Input(outPort.getPortType(), castToDTSpecOrNull(outPort.getPortObjectSpec()), connections));
+        }
+        return res;
     }
 
     /**
-     * Returns the output ports of the (to be) captured sub-workflow, i.e. the same ports {@link #capture()} with a
-     * subsequent {@link WorkflowFragment#getOutputPorts()} would return.
+     * Returns the outputs of the (to be) captured sub-workflow, i.e. the same ports {@link #capture()} with a
+     * subsequent {@link WorkflowFragment#getConnectedOutputs()} would return.
      *
-     * @return the output ports of the (to be) captured workflow fragment
+     * @return the outputs of the (to be) captured workflow fragment
      */
-    public List<Port> getOutputPorts() {
-        return m_wfm.getIncomingConnectionsFor(m_endNode.getID()).stream()//
-            .map(cc -> {
+    public List<Output> getOutputs() {
+        List<Output> res = new ArrayList<>();
+        for (int i = 0; i < m_endNode.getNrInPorts(); i++) {
+            ConnectionContainer cc = m_wfm.getIncomingConnectionFor(m_endNode.getID(), i);
+            PortID connectPort = null;
+            PortType type = null;
+            DataTableSpec spec = null;
+            if (cc != null) {
+                connectPort = new PortID(NodeIDSuffix.create(m_wfm.getID(), cc.getSource()), cc.getSourcePort());
                 NodeOutPort outPort = m_wfm.getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort());
-                PortID pid = new PortID(NodeIDSuffix.create(m_wfm.getID(), cc.getSource()), cc.getSourcePort());
-                return new Port(pid, outPort.getPortType(), castToDTSpecOrNull(outPort.getPortObjectSpec()));
-            }).collect(Collectors.toList());
+                type = outPort.getPortType();
+                spec = castToDTSpecOrNull(outPort.getPortObjectSpec());
+            }
+            res.add(new Output(type, spec, connectPort));
+        }
+        return res;
     }
 
     private static final DataTableSpec castToDTSpecOrNull(final PortObjectSpec spec) {

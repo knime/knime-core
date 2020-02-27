@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -114,24 +115,24 @@ public final class WorkflowFragment {
 
     private final Set<NodeIDSuffix> m_portObjectReferenceReaderNodes;
 
-    private final List<Port> m_inputPorts;
+    private final List<Input> m_inputs;
 
-    private final List<Port> m_outputPorts;
+    private final List<Output> m_outputs;
 
     /**
      * Creates a new instance.
      *
      * @param wfm the workflow manager representing the workflow fragment
-     * @param inputPorts workflow fragment's input ports
-     * @param outputPorts workflow fragment's output ports
+     * @param inputs workflow fragment's inputs
+     * @param outputs workflow fragment's outputs
      * @param portObjectReferenceReaderNodes relative node ids of nodes that reference port objects in another workflow
      */
-    public WorkflowFragment(final WorkflowManager wfm, final List<Port> inputPorts, final List<Port> outputPorts,
+    public WorkflowFragment(final WorkflowManager wfm, final List<Input> inputs, final List<Output> outputs,
         final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
         m_wfm = wfm;
         m_name = wfm.getName();
-        m_inputPorts = CheckUtils.checkArgumentNotNull(inputPorts);
-        m_outputPorts = CheckUtils.checkArgumentNotNull(outputPorts);
+        m_inputs = CheckUtils.checkArgumentNotNull(inputs);
+        m_outputs = CheckUtils.checkArgumentNotNull(outputs);
         m_portObjectReferenceReaderNodes = CheckUtils.checkArgumentNotNull(portObjectReferenceReaderNodes);
     }
 
@@ -140,15 +141,15 @@ public final class WorkflowFragment {
      * workflow data is subsequently loaded via {@link #loadWorkflowData(ZipInputStream)}.
      *
      * @param name
-     * @param inputPorts
-     * @param outputPorts
+     * @param inputs
+     * @param outputs
      * @param portObjectReferenceReaderNodes
      */
-    WorkflowFragment(final String name, final List<Port> inputPorts, final List<Port> outputPorts,
+    WorkflowFragment(final String name, final List<Input> inputs, final List<Output> outputs,
         final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
         m_name = CheckUtils.checkArgumentNotNull(name);
-        m_inputPorts = CheckUtils.checkArgumentNotNull(inputPorts);
-        m_outputPorts = CheckUtils.checkArgumentNotNull(outputPorts);
+        m_inputs = CheckUtils.checkArgumentNotNull(inputs);
+        m_outputs = CheckUtils.checkArgumentNotNull(outputs);
         m_portObjectReferenceReaderNodes = CheckUtils.checkArgumentNotNull(portObjectReferenceReaderNodes);
     }
 
@@ -273,49 +274,40 @@ public final class WorkflowFragment {
     }
 
     /**
-     * @return workflow fragment's input ports
+     * @return workflow fragment's inputs that are connected to at least one node (in the order of the capture node
+     *         start ports)
      */
-    public List<Port> getInputPorts() {
-        return m_inputPorts;
+    public List<Input> getConnectedInputs() {
+        return m_inputs.stream().filter(Input::isConnected).collect(Collectors.toList());
     }
 
     /**
-     * @return workflow fragment's output ports
+     * @return workflow fragment's output ports that are connected to a node (in the order of the capture node end
+     *         ports)
      */
-    public List<Port> getOutputPorts() {
-        return m_outputPorts;
+    public List<Output> getConnectedOutputs() {
+        return m_outputs.stream().filter(Output::isConnected).collect(Collectors.toList());
     }
 
     /**
-     * Represent a port in a workflow fragment enriched with some additional information.
+     * Represents a input/output in a workflow fragment enriched with some additional information.
      */
-    public static final class Port {
-
-        private final PortID m_portID;
+    public abstract static class IOInfo {
 
         private final PortType m_type;
 
         private final DataTableSpec m_spec;
 
         /**
-         * Creates an new port marker.
+         * Creates an new input marker.
          *
-         * @param portID the port id
-         * @param type - can be <code>null</code> if type couldn't be determined (final because the respective plugin is not
+         * @param type can be <code>null</code> if type couldn't be determined (final because the respective plugin is not
          *            installed)
-         * @param spec - can be <code>null</code>
+         * @param spec can be <code>null</code>
          */
-        public Port(final PortID portID, final PortType type, final DataTableSpec spec) {
+        public IOInfo(final PortType type, final DataTableSpec spec) {
             m_spec = spec;
-            m_portID = CheckUtils.checkArgumentNotNull(portID);
             m_type = type;
-        }
-
-        /**
-         * @return the port id
-         */
-        public PortID getID() {
-            return m_portID;
         }
 
         /**
@@ -333,35 +325,73 @@ public final class WorkflowFragment {
             return Optional.ofNullable(m_spec);
         }
 
+    }
+
+    /**
+     * Represents an input of a workflow fragment.
+     */
+    public static final class Input extends IOInfo {
+
+        private Set<PortID> m_connectedPorts;
+
         /**
-         * {@inheritDoc}
+         * @param type
+         * @param spec
+         * @param connectedPorts set of ports the input is connected to
          */
-        @Override
-        public String toString() {
-            return m_portID.toString();
+        public Input(final PortType type, final DataTableSpec spec, final Set<PortID> connectedPorts) {
+            super(type, spec);
+            m_connectedPorts = connectedPorts;
         }
 
         /**
-         * {@inheritDoc}
+         * @return set of ports the input is connected to
+         *
          */
-        @Override
-        public int hashCode() {
-            return m_portID.hashCode();
+        public Set<PortID> getConnectedPorts() {
+            return m_connectedPorts;
         }
 
         /**
-         * {@inheritDoc}
+         * @return whether the fragment input is connected to at least one node port
          */
-        @Override
-        public boolean equals(final Object obj) {
-            if (!(obj instanceof Port)) {
-                return false;
-            }
-            Port other = (Port)obj;
-            return m_portID.equals(other.m_portID);
+        public boolean isConnected() {
+            return !m_connectedPorts.isEmpty();
         }
     }
 
+    /**
+     * Represents an output of a workflow fragment.
+     */
+    public static final class Output extends IOInfo {
+
+        private PortID m_connectedPort;
+
+        /**
+         * @param type
+         * @param spec
+         * @param connectedPort the port that is connected to this output, can be <code>null</code> if nothing is
+         *            connected
+         */
+        public Output(final PortType type, final DataTableSpec spec, final PortID connectedPort) {
+            super(type, spec);
+            m_connectedPort = connectedPort;
+        }
+
+        /**
+         * @return the port which is connected to this output, or an empty optional if none connected
+         */
+        public Optional<PortID> getConnectedPort() {
+            return Optional.ofNullable(m_connectedPort);
+        }
+
+        /**
+         * @return whether a node port is connected to the fragment output
+         */
+        public boolean isConnected() {
+            return m_connectedPort != null;
+        }
+    }
 
     /**
      * References/marks ports in the workflow fragment by node id suffix and port index.

@@ -48,9 +48,6 @@
  */
 package org.knime.core.node.workflow.capture;
 
-import static org.knime.core.node.workflow.capture.WorkflowPortObjectSpec.loadPortID;
-import static org.knime.core.node.workflow.capture.WorkflowPortObjectSpec.savePortID;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -73,7 +70,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.config.Config;
 import org.knime.core.node.port.AbstractPortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
@@ -81,7 +77,6 @@ import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.BufferedDataTableView;
-import org.knime.core.node.workflow.capture.WorkflowFragment.PortID;
 
 /**
  * The worfklow port object.
@@ -103,7 +98,7 @@ public class WorkflowPortObject extends AbstractPortObject {
 
     private WorkflowPortObjectSpec m_spec;
 
-    private Map<PortID, DataTable> m_inputData = null;
+    private Map<String, DataTable> m_inputData = null;
 
     /** Empty framework constructor. <b>Do not use!</b> */
     public WorkflowPortObject() {
@@ -123,23 +118,23 @@ public class WorkflowPortObject extends AbstractPortObject {
      * Creates a new port object from a {@link WorkflowFragment} plus input data.
      *
      * @param spec the spec
-     * @param inputData input data mapped to input ports of the workflow fragment
+     * @param inputData input data mapped to inputs (by id) of the workflow fragment
      */
-    public WorkflowPortObject(final WorkflowPortObjectSpec spec, final Map<PortID, DataTable> inputData) {
+    public WorkflowPortObject(final WorkflowPortObjectSpec spec, final Map<String, DataTable> inputData) {
         m_spec = spec;
         m_inputData = inputData;
     }
 
     /**
-     * Returns stored input data for a given port if available.
+     * Returns stored input data for a given input if available.
      *
-     * @param p the port to get the input data for
-     * @return the input data or an empty optional if there is no input data for the port (either none has been stored
-     *         or the port is not a data table)
+     * @param id the id of the input
+     * @return the input data or an empty optional if there is no input data for the input (either none has been stored
+     *         or the input doesn't represent data table)
      */
-    public Optional<DataTable> getInputDataFor(final PortID p) {
+    public Optional<DataTable> getInputDataFor(final String id) {
         if (m_inputData != null) {
-            return Optional.ofNullable(m_inputData.get(p));
+            return Optional.ofNullable(m_inputData.get(id));
         }
         return Optional.empty();
     }
@@ -151,15 +146,15 @@ public class WorkflowPortObject extends AbstractPortObject {
     protected void save(final PortObjectZipOutputStream out, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         if (m_inputData != null && !m_inputData.isEmpty()) {
-            List<PortID> ports = new ArrayList<>(m_inputData.size());
+            List<String> ids = new ArrayList<>(m_inputData.size());
             List<DataTable> tables = new ArrayList<>(m_inputData.size());
-            for (Entry<PortID, DataTable> entry : m_inputData.entrySet()) {
-                ports.add(entry.getKey());
+            for (Entry<String, DataTable> entry : m_inputData.entrySet()) {
+                ids.add(entry.getKey());
                 tables.add(entry.getValue());
             }
             out.putNextEntry(new ZipEntry("input_data_ports.xml"));
             ModelContent model = new ModelContent("input_data_ports.xml");
-            savePortIDs(model, ports);
+            saveIDs(model, ids);
             try (final NonClosableOutputStream.Zip zout = new NonClosableOutputStream.Zip(out)) {
                 model.saveToXML(zout);
             }
@@ -171,11 +166,10 @@ public class WorkflowPortObject extends AbstractPortObject {
         }
     }
 
-    private static void savePortIDs(final ModelContentWO model, final List<PortID> ports) {
-        model.addInt("num_ports", ports.size());
-        for (int i = 0; i < ports.size(); i++) {
-            Config portConf = model.addConfig("port_" + i);
-            savePortID(portConf, ports.get(i));
+    private static void saveIDs(final ModelContentWO model, final List<String> ids) {
+        model.addInt("num_ids", ids.size());
+        for (int i = 0; i < ids.size(); i++) {
+            model.addString("id_" + i, ids.get(i));
         }
     }
 
@@ -190,7 +184,7 @@ public class WorkflowPortObject extends AbstractPortObject {
         if (entry != null && "input_data_ports.xml".equals(entry.getName())) {
             try (InputStream nonCloseIn = new NonClosableInputStream.Zip(in)) {
                 ModelContentRO model = ModelContent.loadFromXML(nonCloseIn);
-                List<PortID> ports = loadPortIDs(model);
+                List<String> ports = loadIDs(model);
                 m_inputData = new HashMap<>(ports.size());
                 for (int i = 0; i < ports.size(); i++) {
                     entry = in.getNextEntry();
@@ -204,14 +198,13 @@ public class WorkflowPortObject extends AbstractPortObject {
         }
     }
 
-    private static List<PortID> loadPortIDs(final ModelContentRO model) throws InvalidSettingsException {
-        int size = model.getInt("num_ports");
-        List<PortID> ports = new ArrayList<>(size);
+    private static List<String> loadIDs(final ModelContentRO model) throws InvalidSettingsException {
+        int size = model.getInt("num_ids");
+        List<String> ids = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            Config portConf = model.getConfig("port_" + i);
-            ports.add(loadPortID(portConf));
+            ids.add(model.getString("id_" + i));
         }
-        return ports;
+        return ids;
     }
 
     @Override

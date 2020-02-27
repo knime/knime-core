@@ -51,13 +51,13 @@ package org.knime.core.node.workflow.capture;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
@@ -76,10 +76,13 @@ import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.ModelContentOutPortView;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.capture.WorkflowFragment.Port;
+import org.knime.core.node.workflow.capture.WorkflowFragment.Input;
+import org.knime.core.node.workflow.capture.WorkflowFragment.Output;
 import org.knime.core.node.workflow.capture.WorkflowFragment.PortID;
+import org.knime.core.util.Pair;
 
 /**
  * The workflow port object spec essentially wrapping a {@link WorkflowFragment}.
@@ -92,11 +95,11 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
 
     private WorkflowFragment m_wf;
 
-    private final Map<PortID, String> m_inPortNames = new HashMap<>();
-
-    private final Map<PortID, String> m_outPortNames = new HashMap<>();
-
     private String m_customWorkflowName = null;
+
+    private List<String> m_inputIDs;
+
+    private List<String> m_outputIDs;
 
     /**
      * Serializer as registered in extension point.
@@ -134,6 +137,74 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
         }
     }
 
+    private static final String INPUT_ID_PREFIX = "Input";
+    private static final String OUTPUT_ID_PREFIX = "Output";
+
+    /**
+     * Makes sure that the list of ids are of the expected length.
+     *
+     * If not, it will either be truncated or extended with running default ids.
+     *
+     * @param ids the ids to test
+     * @param numInputs the expected number of ids
+     * @return the fixed list or the same if nothing needed to be fixed
+     */
+    public static List<String> ensureInputIDsCount(final List<String> ids, final int numInputs) {
+        return ensureInputOutputIDsValidity(ids, numInputs, INPUT_ID_PREFIX);
+    }
+
+    /**
+     * Makes sure that the list of ids are of the expected length.
+     *
+     * If not, it will either be truncated or extended with running default ids.
+     *
+     * @param ids the ids to test
+     * @param numOutputs the expected number of ids
+     * @return the fixed list or the same if nothing needed to be fixed
+     */
+    public static List<String> ensureOutputIDsCount(final List<String> ids, final int numOutputs) {
+        return ensureInputOutputIDsValidity(ids, numOutputs, OUTPUT_ID_PREFIX);
+    }
+
+    private static List<String> ensureInputOutputIDsValidity(final List<String> ids, final int expectedSize,
+        final String defaultPrefix) {
+        if (expectedSize == ids.size()) {
+            return ids;
+        } else if (expectedSize < ids.size()) {
+            return ids.stream().limit(expectedSize).collect(Collectors.toList());
+        } else {
+            List<String> res = new ArrayList<>(ids);
+            for (int i = ids.size(); i < expectedSize; i++) {
+                res.add(defaultPrefix + " " + (i + 1));
+            }
+            return res;
+        }
+    }
+
+    /**
+     * Makes sure that the list of ids doesn't contain duplicates.
+     *
+     * @param ids the list to check
+     * @return an empty optional if there are no duplicates, otherwise a list with fixed ids to be unique ('*' appended)
+     */
+    public static Optional<List<String>> ensureUniqueness(final List<String> ids) {
+        Set<String> set = new HashSet<>(ids);
+        if (set.size() == ids.size()) {
+            return Optional.empty();
+        }
+        List<String> res = new ArrayList<>();
+        set.clear();
+        for (int i = 0; i < ids.size(); i++) {
+            if (set.contains(ids.get(i))) {
+                res.add(ids.get(i) + "*");
+            } else {
+                res.add(ids.get(i));
+            }
+            set.add(res.get(i));
+        }
+        return Optional.of(res);
+    }
+
     /**
      * Don't use, framework constructor.
      */
@@ -145,30 +216,22 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
      * Constructor.
      *
      * @param wf the workflow fragment to use
-     */
-    public WorkflowPortObjectSpec(final WorkflowFragment wf) {
-        this(wf, null, null, null);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param wf the workflow fragment to use
      * @param customWorkflowName a custom workflow name or <code>null</code> if the name of the original
      *            {@link WorkflowFragment} should be used
-     * @param inPortNames optional names for the input ports, can be <code>null</code>
-     * @param outPortNames optional names for the input ports, can be <code>null</code>
+     * @param inputIDs a unique id for each input in the order of the inputs
+     * @param outputIDs a unique id for each output in the order of the outputs
      */
-    public WorkflowPortObjectSpec(final WorkflowFragment wf, final String customWorkflowName, final Map<PortID, String> inPortNames,
-        final Map<PortID, String> outPortNames) {
+    public WorkflowPortObjectSpec(final WorkflowFragment wf, final String customWorkflowName,
+        final List<String> inputIDs, final List<String> outputIDs) {
+        CheckUtils.checkNotNull(wf);
+        CheckUtils.checkNotNull(inputIDs);
+        CheckUtils.checkNotNull(outputIDs);
         m_wf = wf;
         m_customWorkflowName = customWorkflowName;
-        if (inPortNames != null) {
-            m_inPortNames.putAll(inPortNames);
-        }
-        if (outPortNames != null) {
-            m_outPortNames.putAll(outPortNames);
-        }
+        m_inputIDs = ensureInputIDsCount(inputIDs, wf.getConnectedInputs().size());
+        m_inputIDs = ensureUniqueness(m_inputIDs).orElse(m_inputIDs);
+        m_outputIDs = ensureOutputIDsCount(outputIDs, wf.getConnectedOutputs().size());
+        m_outputIDs = ensureUniqueness(m_outputIDs).orElse(m_outputIDs);
     }
 
     /**
@@ -186,17 +249,41 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
     }
 
     /**
-     * @return a map from port id to port name
+     * @return a map from id to input with deterministic iteration order(!)
      */
-    public Map<PortID, String> getInputPortNamesMap() {
-        return new HashMap<>(m_inPortNames);
+    public Map<String, Input> getInputs() {
+        List<Input> inputs = m_wf.getConnectedInputs();
+        Map<String, Input> res = new LinkedHashMap<>(inputs.size());
+        for (int i = 0; i < inputs.size(); i++) {
+            res.put(m_inputIDs.get(i), inputs.get(i));
+        }
+        return res;
     }
 
     /**
-     * @return a map from port id to port name
+     * @return a map from id to output with deterministic iteration order(!)
      */
-    public Map<PortID, String> getOutputPortNamesMap() {
-        return new HashMap<>(m_outPortNames);
+    public Map<String, Output> getOutputs() {
+        List<Output> outputs = m_wf.getConnectedOutputs();
+        Map<String, Output> res = new LinkedHashMap<>(outputs.size());
+        for (int i = 0; i < outputs.size(); i++) {
+            res.put(m_outputIDs.get(i), outputs.get(i));
+        }
+        return res;
+    }
+
+    /**
+     * @return the list of unique input ids in order
+     */
+    public List<String> getInputIDs() {
+        return m_inputIDs;
+    }
+
+    /**
+     * @return the list of unique output ids in order
+     */
+    public List<String> getOutputIDs() {
+        return m_outputIDs;
     }
 
     /**
@@ -216,39 +303,66 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
         }
 
         ModelContentWO inputPorts = model.addModelContent("input_ports");
-        savePorts(inputPorts, m_wf.getInputPorts());
+        saveInputs(inputPorts, m_wf.getConnectedInputs(), m_inputIDs);
 
         ModelContentWO outputPorts = model.addModelContent("output_ports");
-        savePorts(outputPorts, m_wf.getOutputPorts());
-
-
-        if (!m_inPortNames.isEmpty()) {
-            ModelContentWO inPortNames = model.addModelContent("input_port_names");
-            savePortNames(inPortNames, m_inPortNames);
-        }
-
-        if (!m_outPortNames.isEmpty()) {
-            ModelContentWO outPortNames = model.addModelContent("output_port_names");
-            savePortNames(outPortNames, m_outPortNames);
-        }
+        saveOutputs(outputPorts, m_wf.getConnectedOutputs(), m_outputIDs);
 
         if (m_customWorkflowName != null) {
             model.addString("custom_workflow_name", m_customWorkflowName);
         }
     }
 
-    private static void savePorts(final ModelContentWO model, final List<Port> ports) {
-        model.addInt("num_ports", ports.size());
-        for (int i = 0; i < ports.size(); i++) {
-            Config portConf = model.addConfig("port_" + i);
-            savePortID(portConf, ports.get(i).getID());
-            Config type = portConf.addConfig("type");
-            savePortType(type, ports.get(i).getType().get());
-            Optional<DataTableSpec> optionalSpec = ports.get(i).getSpec();
-            if (optionalSpec.isPresent()) {
-                Config spec = portConf.addConfig("spec");
-                saveSpec(spec, ports.get(i).getSpec().get());
+    private static void saveInputs(final ModelContentWO model, final List<Input> inputs, final List<String> inputIDs) {
+        model.addInt("num_inputs", inputs.size());
+        for (int i = 0; i < inputs.size(); i++) {
+            Input input = inputs.get(i);
+            Config inputConf = model.addConfig("input_" + i);
+            if (input.getType().isPresent()) {
+                Config type = inputConf.addConfig("type");
+                savePortType(type, input.getType().get());
             }
+            Optional<DataTableSpec> optionalSpec = input.getSpec();
+            if (optionalSpec.isPresent()) {
+                Config spec = inputConf.addConfig("spec");
+                saveSpec(spec, input.getSpec().get());
+            }
+
+            Set<PortID> connectedPorts = input.getConnectedPorts();
+            Config portsConf = inputConf.addConfig("connected_ports");
+            portsConf.addInt("num_ports", connectedPorts.size());
+            int j = 0;
+            for (PortID pid : connectedPorts) {
+                Config portConf = portsConf.addConfig("port_" + j);
+                savePortID(portConf, pid);
+                j++;
+            }
+            inputConf.addString("id", inputIDs.get(i));
+        }
+    }
+
+    private static void saveOutputs(final ModelContentWO model, final List<Output> outputs,
+        final List<String> outputIDs) {
+        model.addInt("num_outputs", outputs.size());
+        for (int i = 0; i < outputs.size(); i++) {
+            Output output = outputs.get(i);
+            Config outputConf = model.addConfig("output_" + i);
+            if (output.getType().isPresent()) {
+                Config type = outputConf.addConfig("type");
+                savePortType(type, output.getType().get());
+            }
+            Optional<DataTableSpec> optionalSpec = output.getSpec();
+            if (optionalSpec.isPresent()) {
+                Config spec = outputConf.addConfig("spec");
+                saveSpec(spec, output.getSpec().get());
+            }
+
+            Optional<PortID> connectedPort = output.getConnectedPort();
+            if (connectedPort.isPresent()) {
+                Config portConf = outputConf.addConfig("connected_port");
+                savePortID(portConf, connectedPort.get());
+            }
+            outputConf.addString("id", outputIDs.get(i));
         }
     }
 
@@ -257,20 +371,11 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
         config.addInt("index", portID.getIndex());
     }
 
-    private static void savePortNames(final ModelContentWO model, final Map<PortID, String> portNames) {
-        model.addInt("num_port_names", portNames.size());
-        int i = 0;
-        for (Entry<PortID, String> port : portNames.entrySet()) {
-            Config portConf = model.addConfig("port_" + i);
-            savePortID(portConf, port.getKey());
-            portConf.addString("name", port.getValue());
-            i++;
-        }
-    }
-
     private static void savePortType(final Config typeConf, final PortType type) {
-        typeConf.addString("portObjectClass", type.getPortObjectClass().getCanonicalName());
-        typeConf.addBoolean("isOptional", type.isOptional());
+        if (type != null) {
+            typeConf.addString("portObjectClass", type.getPortObjectClass().getCanonicalName());
+            typeConf.addBoolean("isOptional", type.isOptional());
+        }
     }
 
     private static void saveSpec(final Config specConf, final DataTableSpec spec) {
@@ -291,55 +396,63 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
             ids.add(new NodeIDSuffix(refNodeIds.getIntArray("ref_node_id_" + i)));
         }
         ModelContentRO model = metadata.getModelContent("input_ports");
-        List<Port> inputPorts = loadPorts(model);
+        Pair<List<Input>, List<String>> inputs = loadInputs(model);
 
         model = metadata.getModelContent("output_ports");
-        List<Port> outputPorts = loadPorts(model);
-
-        Map<PortID, String> inPortNames = null;
-        if (metadata.containsKey("input_port_names")) {
-            model = metadata.getModelContent("input_port_names");
-            inPortNames = loadPortNames(model);
-        }
-
-        Map<PortID, String> outPortNames = null;
-        if (metadata.containsKey("output_port_names")) {
-            model = metadata.getModelContent("output_port_names");
-            outPortNames = loadPortNames(model);
-        }
+        Pair<List<Output>, List<String>> outputs = loadOutputs(model);
 
         String customWfName = null;
         if (metadata.containsKey("custom_workflow_name")) {
             customWfName = metadata.getString("custom_workflow_name");
         }
 
-        WorkflowFragment wf = new WorkflowFragment(metadata.getString("name"), inputPorts, outputPorts, ids);
-        return new WorkflowPortObjectSpec(wf, customWfName, inPortNames, outPortNames);
+        WorkflowFragment wf =
+            new WorkflowFragment(metadata.getString("name"), inputs.getFirst(), outputs.getFirst(), ids);
+        return new WorkflowPortObjectSpec(wf, customWfName, inputs.getSecond(), outputs.getSecond());
     }
 
-    private static List<Port> loadPorts(final ModelContentRO model) throws InvalidSettingsException {
-        int size = model.getInt("num_ports");
-        List<Port> ports = new ArrayList<>(size);
+    private static Pair<List<Input>, List<String>> loadInputs(final ModelContentRO model)
+        throws InvalidSettingsException {
+        int size = model.getInt("num_inputs");
+        List<Input> inputs = new ArrayList<>(size);
+        List<String> inputIDs = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            Config portConf = model.getConfig("port_" + i);
-            ports.add(new Port(loadPortID(portConf), loadPortType(portConf.getConfig("type")),
-                portConf.containsKey("spec") ? loadTableSpec(portConf.getConfig("spec")) : null));
+            Config inputConf = model.getConfig("input_" + i);
+            Set<PortID> connectedPorts = new HashSet<>();
+            Config portsConf = inputConf.getConfig("connected_ports");
+            for (int j = 0; j < portsConf.getInt("num_ports"); j++) {
+                connectedPorts.add(loadPortID(portsConf.getConfig("port_" + j)));
+            }
+            Input input = new Input(inputConf.containsKey("type") ? loadPortType(inputConf.getConfig("type")) : null,
+                inputConf.containsKey("spec") ? loadTableSpec(inputConf.getConfig("spec")) : null, connectedPorts);
+            inputs.add(input);
+            inputIDs.add(inputConf.getString("id"));
         }
-        return ports;
+        return Pair.create(inputs, inputIDs);
+    }
+
+    private static Pair<List<Output>, List<String>> loadOutputs(final ModelContentRO model)
+        throws InvalidSettingsException {
+        int size = model.getInt("num_outputs");
+        List<Output> outputs = new ArrayList<>(size);
+        List<String> outputIDs = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            Config outputConf = model.getConfig("output_" + i);
+            PortID connectedPort = null;
+            if (outputConf.containsKey("connected_port")) {
+                connectedPort = loadPortID(outputConf.getConfig("connected_port"));
+            }
+            Output output =
+                new Output(outputConf.containsKey("type") ? loadPortType(outputConf.getConfig("type")) : null,
+                    outputConf.containsKey("spec") ? loadTableSpec(outputConf.getConfig("spec")) : null, connectedPort);
+            outputs.add(output);
+            outputIDs.add(outputConf.getString("id"));
+        }
+        return Pair.create(outputs, outputIDs);
     }
 
     static PortID loadPortID(final Config portConf) throws InvalidSettingsException {
         return new PortID(NodeIDSuffix.fromString(portConf.getString("node_id")), portConf.getInt("index"));
-    }
-
-    private static Map<PortID, String> loadPortNames(final ModelContentRO model) throws InvalidSettingsException {
-        int num = model.getInt("num_port_names");
-        Map<PortID, String> res = new HashMap<>(num);
-        for (int i = 0; i < num; i++) {
-            Config portConf = model.getConfig("port_" + i);
-            res.put(loadPortID(portConf), portConf.getString("name"));
-        }
-        return res;
     }
 
     private static PortType loadPortType(final Config type) throws InvalidSettingsException {
