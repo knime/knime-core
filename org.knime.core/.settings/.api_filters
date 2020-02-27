@@ -135,6 +135,22 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/config/ConfigEditTreeNodePanel.java" type="org.knime.core.node.config.ConfigEditTreeNodePanel">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.config.ConfigEditTreeNodePanel"/>
+                <message_argument value="ConfigEditTreeNodePanel(boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/config/ConfigEditTreeRenderer.java" type="org.knime.core.node.config.ConfigEditTreeRenderer">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.config.ConfigEditTreeRenderer"/>
+                <message_argument value="ConfigEditTreeRenderer()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/exec/dataexchange/in/PortObjectInNodeModel.java" type="org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel">
         <filter id="338792546">
             <message_arguments>

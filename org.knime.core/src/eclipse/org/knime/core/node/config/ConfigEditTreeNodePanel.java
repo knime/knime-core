@@ -101,6 +101,7 @@ import org.knime.core.node.workflow.VariableType.StringType;
  * @author Bernd Wiswedel, University of Konstanz
  */
 @SuppressWarnings("serial")
+// TODO: consider making this class package-scope
 public class ConfigEditTreeNodePanel extends JPanel {
     // The number of characters we allow in the label text before we start truncating via mid-excision
     private static final int MAXIMUM_LABEL_CHARACTER_COUNT = 30;
@@ -406,6 +407,13 @@ public class ConfigEditTreeNodePanel extends JPanel {
      */
     public void setFlowObjectStack(final FlowObjectStack flowObjectStack) {
         m_flowObjectStack = flowObjectStack;
+    }
+
+    /**
+     * @return the variableStack
+     */
+    public FlowObjectStack getFlowObjectStack() {
+        return m_flowObjectStack;
     }
 
     JLabel getKeyLabel() {

@@ -61,6 +61,7 @@ import org.knime.core.node.workflow.FlowObjectStack;
 /** Editor component for {@link ConfigEditJTree} implementation.
  * @author Bernd Wiswedel, University of Konstanz
  */
+//TODO: consider making this class package-scope
 public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
 
     /** Constructs new tree editor.

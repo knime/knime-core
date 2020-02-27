@@ -120,6 +120,13 @@ public class ConfigEditJTree extends JTree {
         super.setModel(newModel);
     }
 
+    /** Expand the tree. */
+    public void expandAll() {
+        for (int i = 0; i < getRowCount(); i++) {
+            expandRow(i);
+        }
+    }
+
     /**
      * This method will only ever be called from EDT during pai.
      *

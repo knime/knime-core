@@ -71,6 +71,7 @@ import org.knime.core.node.workflow.FlowObjectStack;
  * @author Bernd Wiswedel, University of Konstanz
  */
 @SuppressWarnings("serial")
+// TODO: consider making this class package-scope
 public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
     private final ConfigEditTreeNodePanel m_panelFull;
     private final ConfigEditTreeNodePanel m_panelPlain;
