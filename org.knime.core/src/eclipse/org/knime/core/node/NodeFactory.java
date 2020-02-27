@@ -51,7 +51,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -64,6 +63,7 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.missing.MissingNodeFactory;
+import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -79,9 +79,6 @@ import org.xml.sax.SAXException;
  * @param <T> the concrete type of the {@link NodeModel}
  */
 public abstract class NodeFactory<T extends NodeModel> {
-    private static final List<String> LOADED_NODE_FACTORIES = new ArrayList<String>();
-
-    private static final List<String> RO_LIST = Collections.unmodifiableList(LOADED_NODE_FACTORIES);
 
     /**
      * Enum for all node types.
@@ -215,10 +212,6 @@ public abstract class NodeFactory<T extends NodeModel> {
             m_logger.error("Node description of " + getClass().getName() + " does not conform to used XML schema: "
                 + ex.getMessage(), ex);
             m_nodeDescription = new NoDescriptionProxy(getClass());
-        }
-
-        if (NodeFactoryRepository.getInstance().isDeprecated(this)) {
-            setIsDeprecated(true);
         }
 
         m_icon = resolveIcon(m_nodeDescription.getIconPath());
@@ -676,22 +669,27 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Returns a collection of all loaded node factories.
+     * Used to return the list of all node factories, deprecated since 4.2 and returning an empty list since then.
      *
-     * @return a collection array of fully qualified node factory class names
+     * @return an empty list
+     * @deprecated Removed in 4.2 without replacement. Nodes are now collected in the framework only and not known
+     * to any 3rd party extension.
      */
+    @Deprecated
     public static List<String> getLoadedNodeFactories() {
-        return RO_LIST;
+        return Collections.emptyList();
     }
 
     /**
      * Adds the given factory class to the list of loaded factory classes.
      *
      * @param factoryClass a factory class
+     * @deprecated 3rd party contributions should register their nodes through KNIME's node extension point.
      */
-    @SuppressWarnings("rawtypes")
+    @Deprecated
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static void addLoadedFactory(final Class<? extends NodeFactory> factoryClass) {
-        LOADED_NODE_FACTORIES.add(factoryClass.getName());
+        FileNativeNodeContainerPersistor.addLoadedFactory((Class<? extends NodeFactory<NodeModel>>)factoryClass);
     }
 
     /////////////////////////////////////////////////////////////

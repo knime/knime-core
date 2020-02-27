@@ -58,7 +58,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -550,7 +552,11 @@ public class MappingFrameworkTest {
     public void availableProductionPathsTest() {
         final ProducerRegistry<String, H2OSource> reg = MappingFramework.forSourceType(H2OSource.class);
         final JavaToDataCellConverterRegistry convReg = JavaToDataCellConverterRegistry.getInstance();
-        assertTrue(reg.getAvailableProductionPaths().isEmpty());
+
+        assertTrue(
+            "Expected to be empty but is: " + reg.getAvailableProductionPaths().stream()
+                .map(pp -> Objects.toString(pp, "<null>")).collect(Collectors.joining("\n", "\"", "\"")),
+            reg.getAvailableProductionPaths().isEmpty());
 
         reg.register(intProducer);
         final List<ProductionPath> paths = reg.getAvailableProductionPaths();

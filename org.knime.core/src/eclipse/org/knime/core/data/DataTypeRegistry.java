@@ -77,7 +77,7 @@ import org.knime.core.util.EclipseUtil;
  * @since 3.0
  */
 public final class DataTypeRegistry {
-    private static final String EXT_POINT_ID = "org.knime.core.DataType";
+    static final String EXT_POINT_ID = "org.knime.core.DataType";
 
     private final Map<String, IConfigurationElement> m_factories = new HashMap<>();
 

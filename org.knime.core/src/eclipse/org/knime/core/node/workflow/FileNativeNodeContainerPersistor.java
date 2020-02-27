@@ -51,15 +51,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -78,6 +75,9 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
+import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
+import org.knime.core.node.extension.NodeFactoryExtension;
+import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
@@ -93,23 +93,11 @@ import org.knime.core.util.LoadVersion;
 public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPersistor
     implements NativeNodeContainerPersistor {
 
+    private static final List<Class<? extends NodeFactory<NodeModel>>> LOADED_NODE_FACTORIES = new ArrayList<>();
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(FileNativeNodeContainerPersistor.class);
 
     public static final String NODE_FILE = "node.xml";
-
-    private static final Method REPOS_LOAD_METHOD;
-    private static final Object REPOS_MANAGER;
-    static {
-        Class<?> repManClass;
-        try {
-            repManClass = Class.forName("org.knime.workbench.repository.RepositoryManager");
-            Field instanceField = repManClass.getField("INSTANCE");
-            REPOS_MANAGER = instanceField.get(null);
-            REPOS_LOAD_METHOD = repManClass.getMethod("getRoot");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
 
     private WorkflowPersistor m_parentPersistor;
 
@@ -313,7 +301,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
      */
     @SuppressWarnings("unchecked")
     public static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
-        InstantiationException, IllegalAccessException, ClassNotFoundException {
+        InstantiationException, IllegalAccessException,  InvalidNodeFactoryExtensionException{
         List<NodeFactoryClassMapper> classMapperList = NodeFactoryClassMapper.getRegisteredMappers();
         for (NodeFactoryClassMapper mapper : classMapperList) {
             @SuppressWarnings("rawtypes")
@@ -325,36 +313,41 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 return factory;
             }
         }
-        // use global Class Creator utility for Eclipse "compatibility"
-        try {
-            NodeFactory<NodeModel> f =
-                (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(factoryClassName)).newInstance());
-            return f;
-        } catch (ClassNotFoundException ex) {
-            try {
-                // Because of the changed startup process, not all factories
-                // may be loaded. Therefore in order to search for a matching
-                // factory below we need to initialize the whole repository
-                // first
-                REPOS_LOAD_METHOD.invoke(REPOS_MANAGER);
-            } catch (Exception ex1) {
-                LOGGER.error("Could not load repository manager", ex1);
-            }
-
-            String[] x = factoryClassName.split("\\.");
-            String simpleClassName = x[x.length - 1];
-
-            for (String s : NodeFactory.getLoadedNodeFactories()) {
-                if (s.endsWith("." + simpleClassName)) {
-                    NodeFactory<NodeModel> f =
-                        (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(s)).newInstance());
-                    LOGGER.warn(
-                        "Substituted '" + f.getClass().getName() + "' for unknown factory '" + factoryClassName + "'");
-                    return f;
-                }
-            }
-            throw ex;
+        Optional<NodeFactoryExtension> nodeFactoryExtension = NodeFactoryExtensionManager.getInstance().getNodeFactoryExtension(factoryClassName);
+        if (nodeFactoryExtension.isPresent()) {
+            return (NodeFactory<NodeModel>)nodeFactoryExtension.get().createFactory();
         }
+        Optional<Class<? extends NodeFactory<? extends NodeModel>>> factoryFromNodeSetDefinition =
+            NodeFactoryExtensionManager.getInstance().getFactoryFromNodeSetFactoryExtension(factoryClassName);
+        if (factoryFromNodeSetDefinition.isPresent()) {
+            return (NodeFactory<NodeModel>)factoryFromNodeSetDefinition.get().newInstance();
+        }
+        Optional<Class<? extends NodeFactory<NodeModel>>> loadedNodeFactory = LOADED_NODE_FACTORIES.stream()//
+                .filter(f -> f.getClass().getName().equals(factoryClassName)).findFirst();
+        if (loadedNodeFactory.isPresent()) {
+            return loadedNodeFactory.get().newInstance();
+        }
+        try {
+            Class<?> classInCore = Class.forName(factoryClassName);
+            if (NodeFactory.class.isAssignableFrom(classInCore)) {
+                return (NodeFactory<NodeModel>)classInCore.newInstance();
+            }
+        } catch (ClassNotFoundException cnfe) {
+            // ignore -- it's extremely unlikely that we find the class in the core (except for Compontent Input/Output)
+            // TODO introduce "hidden" flag in node extension point
+        }
+
+//        for (String s : NodeFactory.getLoadedNodeFactories()) {
+//            if (s.endsWith("." + simpleClassName)) {
+//                NodeFactory<NodeModel> f =
+//                    (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(s)).newInstance());
+//                LOGGER.warn(
+//                    "Substituted '" + f.getClass().getName() + "' for unknown factory '" + factoryClassName + "'");
+//                return f;
+//            }
+//        }
+        throw new InvalidSettingsException(String.format(
+            "Unknown factory class \"%s\" -- not registered via extension point", factoryClassName));
     }
 
     private static Optional<ModifiableNodeCreationConfiguration> loadCreationConfig(final NodeSettingsRO settings,
@@ -548,5 +541,15 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     private static void saveCreationConfig(final NodeSettingsWO settings, final Node node) {
         node.getCopyOfCreationConfig().ifPresent(config -> config.saveSettingsTo(settings));
     }
+
+    /**
+     * Added in 4.2 as implementation to {@link NodeFactory#addLoadedFactory(Class)}. Access discouraged and also
+     * deprecated as API in NodeFactory.
+     * @since 4.2
+     */
+    public static void addLoadedFactory(final Class<? extends NodeFactory<NodeModel>> factoryClass) {
+        LOADED_NODE_FACTORIES.add(factoryClass);
+    }
+
 
 }

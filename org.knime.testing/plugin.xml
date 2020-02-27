@@ -25,6 +25,12 @@
       </node>
       <node
             category-path="/testing"
+            factory-class="org.knime.testing.node.differNode.DiffNodeFactory"
+            deprecated="true"
+            >
+      </node>
+      <node
+            category-path="/testing"
             factory-class="org.knime.testing.node.executioncount.ExecutionCountNodeFactory"
             >
       </node>

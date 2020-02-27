@@ -2526,6 +2526,18 @@ public final class Node implements NodeModelWarningListener {
         view.closeView();
     }
 
+    /**
+     * Widens scope of {@link NodeFactory#setIsDeprecated(boolean)} so that the method isn't public API and easily
+     * discovered by node extensions.
+     *
+     * @param factory factory to call the above method with argument <code>true</code>.
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 4.2
+     */
+    public static void invokeNodeFactorySetDeprecated(final NodeFactory<? extends NodeModel> factory) {
+        factory.setIsDeprecated(true);
+    }
+
     // ////////////////////////
     // FlowObjectStack handling
     // ////////////////////////

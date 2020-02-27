@@ -137,20 +137,13 @@ public abstract class AbstractPortObject implements PortObject {
             } catch (InvalidSettingsException e1) {
                 throw new IOException("Unable to load settings", e1);
             }
-            Class<?> cl;
-            try {
-                cl = Class.forName(className);
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(
-                        "Unable to load class " + className, e);
-            }
+            Class<? extends PortObject> cl = PortTypeRegistry.getInstance().getObjectClass(className)
+                .orElseThrow(() -> new RuntimeException("Unable to load class " + className));
             if (!AbstractPortObject.class.isAssignableFrom(cl)) {
                 throw new RuntimeException(
-                        "Class \"" + className + "\" is not of type "
-                        + AbstractPortObject.class.getSimpleName());
+                    "Class \"" + className + "\" is not of type " + AbstractPortObject.class.getSimpleName());
             }
-            Class<? extends AbstractPortObject> acl =
-                cl.asSubclass(AbstractPortObject.class);
+            Class<? extends AbstractPortObject> acl = cl.asSubclass(AbstractPortObject.class);
             try {
                 result = acl.newInstance();
             } catch (Exception e) {

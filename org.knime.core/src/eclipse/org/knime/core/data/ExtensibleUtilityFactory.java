@@ -50,6 +50,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -379,12 +380,15 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
             IConfigurationElement[] elements = ext.getConfigurationElements();
             for (IConfigurationElement valueClassElement : elements) {
                 String valueClassName = valueClassElement.getAttribute("valueClass");
-                try {
-                    DataType.getUtilityFor((Class<? extends DataValue>)Class.forName(valueClassName));
-                } catch (ClassNotFoundException ex) {
-                    NodeLogger.getLogger(ExtensibleUtilityFactory.class).coding(
-                        "Could not find implementation for " + valueClassName, ex);
+                Optional<Class<? extends DataValue>> valueClass = DataTypeRegistry.getInstance().getValueClass(valueClassName);
+                if (!valueClass.isPresent()) {
+                    NodeLogger.getLogger(ExtensibleUtilityFactory.class).errorWithFormat(
+                        "Unable to locate interface definition for \"%s\" -- it's not (indirectly) "
+                            + "referenced via any contribution to the \"%s\" extension point (via plug-in \"%s\")",
+                        valueClassName, DataTypeRegistry.EXT_POINT_ID, valueClassElement.getContributor().getName());
+                    continue;
                 }
+                DataType.getUtilityFor(valueClass.get());
             }
         }
     }

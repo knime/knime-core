@@ -3,20 +3,40 @@
 <entry key="name" type="xstring" value="Group Loop Start"/>
 <config key="model">
 <config key="GroupColNames_Internals">
-<entry key="SettingsModelID" type="xstring" value="SMID_filterString"/>
+<entry key="SettingsModelID" type="xstring" value="SMID_columnfilter"/>
 <entry key="EnabledStatus" type="xboolean" value="true"/>
 </config>
 <config key="GroupColNames">
-<config key="InclList">
+<entry key="filter-type" type="xstring" value="STANDARD"/>
+<config key="included_names">
 <entry key="array-size" type="xint" value="2"/>
 <entry key="0" type="xstring" value="group 1"/>
 <entry key="1" type="xstring" value="group 2"/>
 </config>
-<config key="ExclList">
+<config key="excluded_names">
 <entry key="array-size" type="xint" value="1"/>
 <entry key="0" type="xstring" value="value"/>
 </config>
-<entry key="keep_all_columns_selected" type="xboolean" value="false"/>
+<entry key="enforce_option" type="xstring" value="EnforceExclusion"/>
+<config key="name_pattern">
+<entry key="pattern" type="xstring" value=""/>
+<entry key="type" type="xstring" value="Wildcard"/>
+<entry key="caseSensitive" type="xboolean" value="true"/>
+</config>
+<config key="datatype">
+<config key="typelist">
+<entry key="org.knime.core.data.StringValue" type="xboolean" value="false"/>
+<entry key="org.knime.core.data.IntValue" type="xboolean" value="false"/>
+<entry key="org.knime.core.data.BooleanValue" type="xboolean" value="false"/>
+<entry key="org.knime.core.data.DoubleValue" type="xboolean" value="false"/>
+<entry key="org.knime.core.data.LongValue" type="xboolean" value="false"/>
+<entry key="org.knime.core.data.date.DateAndTimeValue" type="xboolean" value="false"/>
+</config>
+</config>
+</config>
+<config key="GroupColNames_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_columnfilter"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
 </config>
 <config key="SortedInput_Internals">
 <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>

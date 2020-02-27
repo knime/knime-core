@@ -264,16 +264,8 @@ public final class PortUtil {
                 throw new IOException(
                     "Invalid stream, expected zip entry \"object.file\", got \"" + entry.getName() + "\"");
             }
-            Class<?> cl;
-            try {
-                cl = Class.forName(objClassName);
-            } catch (ClassNotFoundException e) {
-                throw new IOException("Can't load class \"" + specClassName + "\"", e);
-            }
-            if (!PortObject.class.isAssignableFrom(cl)) {
-                throw new IOException("Class \"" + cl.getSimpleName() + "\" does not a sub-class \""
-                    + PortObject.class.getSimpleName() + "\"");
-            }
+            Class<? extends PortObject> cl = PortTypeRegistry.getInstance().getObjectClass(objClassName)
+                .orElseThrow(() -> new IOException("Can't load class \"" + specClassName + "\""));
 
             PortObject portObject;
             try (PortObjectZipInputStream objIn = getPortObjectZipInputStream(new NonClosableInputStream.Zip(in))) {
@@ -350,16 +342,8 @@ public final class PortUtil {
             throw new IOException(
                 "Invalid stream, expected zip entry \"objectSpec.file\", got \"" + entry.getName() + "\"");
         }
-        Class<?> cl;
-        try {
-            cl = Class.forName(specClassName);
-        } catch (ClassNotFoundException e) {
-            throw new IOException("Can't load class \"" + specClassName + "\"", e);
-        }
-        if (!PortObjectSpec.class.isAssignableFrom(cl)) {
-            throw new IOException("Class \"" + cl.getSimpleName() + "\" does not a sub-class \""
-                + PortObjectSpec.class.getSimpleName() + "\"");
-        }
+        Class<? extends PortObjectSpec> cl = PortTypeRegistry.getInstance().getSpecClass(specClassName)
+            .orElseThrow(() -> new IOException("Can't load class \"" + specClassName + "\""));
         try (PortObjectSpecZipInputStream specIn =
             PortUtil.getPortObjectSpecZipInputStream(new NonClosableInputStream.Zip(in))) {
             PortObjectSpecSerializer<?> serializer =

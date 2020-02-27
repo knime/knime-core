@@ -261,19 +261,10 @@ public final class PortType {
             throw new InvalidSettingsException(
                 "No port object class found to create PortType object");
         }
-        Class<?> obClass;
-        try {
-            obClass = Class.forName(objectClassString);
-        } catch (ClassNotFoundException e) {
-            throw new InvalidSettingsException("Unable to restore port type, "
-                    + "can't load class \"" + objectClassString + "\"");
-        }
-        if (!PortObject.class.isAssignableFrom(obClass)) {
-            throw new InvalidSettingsException("Port object class \""
-                    + objectClassString + "\" does not extend "
-                    + PortObject.class.getSimpleName());
-        }
-        return PortTypeRegistry.getInstance().getPortType(obClass.asSubclass(PortObject.class));
+        Class<? extends PortObject> obClass = PortTypeRegistry.getInstance().getObjectClass(objectClassString)
+            .orElseThrow(() -> new InvalidSettingsException(
+                "Unable to restore port type, " + "can't load class \"" + objectClassString + "\""));
+        return PortTypeRegistry.getInstance().getPortType(obClass);
     }
 
     /**
