@@ -138,6 +138,8 @@ public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
                 m_active.setTreeNode(null);
             }
 
+            m_active.updateKeyLabelSize(myTree.getGraphics());
+
             return m_active;
         }
 

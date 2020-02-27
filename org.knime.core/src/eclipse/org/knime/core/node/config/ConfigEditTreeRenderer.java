@@ -49,18 +49,17 @@ package org.knime.core.node.config;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
 
 import javax.swing.Icon;
-import javax.swing.JLabel;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeNode;
 
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.workflow.FlowObjectStack;
 
@@ -73,6 +72,9 @@ import org.knime.core.node.workflow.FlowObjectStack;
 @SuppressWarnings("serial")
 // TODO: consider making this class package-scope
 public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
+    static final boolean PLATFORM_IS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
+
+
     private final ConfigEditTreeNodePanel m_panelFull;
     private final ConfigEditTreeNodePanel m_panelPlain;
     private ConfigEditTreeNodePanel m_active;
@@ -158,7 +160,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         if (r == null) {
             return panelSize;
         }
-        int width = Math.max(panelSize.width + getIconTextGap() + 16, r.width);
+        int width = Math.max(panelSize.width + getIconTextGap() + 16, r.width) + (PLATFORM_IS_WINDOWS ? 10 : 0);
         int height = 4 + Math.max(r.height, panelSize.height);
         return new Dimension(width, height);
     }
@@ -179,26 +181,13 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
     /** {@inheritDoc} */
     @Override
     protected void paintComponent(final Graphics g) {
-        int maxLabelWidth = m_parentTree.labelWidthToEnforce();
-        final JLabel keyLabel = m_active.getKeyLabel();
-        final FontMetrics fm = g.getFontMetrics(keyLabel.getFont());
-        final Dimension labelSize = keyLabel.getSize();
-        final int textWidth = fm.stringWidth(keyLabel.getText());
-        if (textWidth > maxLabelWidth) {
-            final Insets insets = keyLabel.getInsets();
-            maxLabelWidth = textWidth + insets.left + insets.right;
-        }
-        if (labelSize.width < maxLabelWidth) {
-            keyLabel.setSize(maxLabelWidth, labelSize.height);
-            keyLabel.setPreferredSize(new Dimension(maxLabelWidth, labelSize.height));
-            keyLabel.invalidate();
-        }
+        m_active.updateKeyLabelSize(g);
 
         final Insets insets = getInsets();
         final int iconWidth = (getIcon() != null) ? (getIcon().getIconWidth() + 2 * getIconTextGap()) : 0;
         final int x = insets.left + iconWidth;
         final int y = insets.top;
-        final int width = m_parentTree.getWidth() - insets.left - iconWidth - insets.right;
+        final int width = m_parentTree.getWidth() - insets.left - iconWidth - insets.right + (PLATFORM_IS_WINDOWS ? 10 : 0);
         final int height = getHeight() - insets.top - insets.bottom;
         m_paintBounds.setBounds(x, y, width, height);
 
@@ -208,7 +197,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
                                         : getBackgroundNonSelectionColor());
         SwingUtilities.paintComponent(g, m_active, this, m_paintBounds);
 
-        m_parentTree.renderedKeyLabelWithWidth(keyLabel.getSize().width);
+        m_parentTree.renderedKeyLabelWithWidth(m_active.getKeyLabel().getSize().width);
 
         super.paintComponent(g);
     }

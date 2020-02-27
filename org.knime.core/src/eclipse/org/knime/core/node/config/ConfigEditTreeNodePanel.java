@@ -50,6 +50,9 @@ package org.knime.core.node.config;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -108,6 +111,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
 
     private static final int MINIMUM_HEIGHT = 24;
     private static final Dimension LABEL_MINIMUM_SIZE = new Dimension(100, MINIMUM_HEIGHT);
+    private static final Dimension VALUE_COMBOBOX_MINIMUM_SIZE = new Dimension(180, MINIMUM_HEIGHT);
 
     private static final ComboBoxElement EMPTY_COMBOBOX_ELEMENT = new ComboBoxElement(null);
     private static final Icon ICON_UNKNOWN = DataValue.UTILITY.getIcon();
@@ -136,7 +140,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
     private final JLabel m_keyLabel;
     private Icon m_keyIcon;
     private final DefaultComboBoxModel<ComboBoxElement> m_valueComboBoxModel;
-    private final JComboBox<ComboBoxElement> m_valueField;
+    private final JComboBox<ComboBoxElement> m_valueComboBox;
     private FlowObjectStack m_flowObjectStack;
     private final JTextField m_exposeAsVariableField;
     private ConfigEditTreeNode m_treeNode;
@@ -160,9 +164,10 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_keyLabel = new JLabel();
         m_keyLabel.setMinimumSize(LABEL_MINIMUM_SIZE);
         m_valueComboBoxModel = new DefaultComboBoxModel<ComboBoxElement>();
-        m_valueField = new JComboBox<>(m_valueComboBoxModel);
-        m_valueField.setToolTipText(" "); // enable tooltip;
-        m_valueField.setRenderer(ComboBoxRenderer.INSTANCE);
+        m_valueComboBox = new JComboBox<>(m_valueComboBoxModel);
+        m_valueComboBox.setPreferredSize(VALUE_COMBOBOX_MINIMUM_SIZE);
+        m_valueComboBox.setToolTipText(" "); // enable tooltip;
+        m_valueComboBox.setRenderer(ComboBoxRenderer.INSTANCE);
         final FocusListener l = new FocusAdapter() {
             /** {@inheritDoc} */
             @Override
@@ -170,8 +175,8 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 commit();
             }
         };
-        m_valueField.addFocusListener(l);
-        m_valueField.addItemListener((e) -> {
+        m_valueComboBox.addFocusListener(l);
+        m_valueComboBox.addItemListener((e) -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 onSelectedItemChange(e.getItem());
             }
@@ -182,10 +187,18 @@ public class ConfigEditTreeNodePanel extends JPanel {
         add(m_keyLabel);
         add(Box.createHorizontalGlue());
         add(Box.createVerticalStrut(MINIMUM_HEIGHT));
+        if (ConfigEditTreeRenderer.PLATFORM_IS_WINDOWS) {
+            add(Box.createHorizontalGlue());
+            add(Box.createHorizontalStrut(6));
+        }
         if (isForConfig) {
             add(Box.createHorizontalGlue());
-            add(m_valueField);
+            add(m_valueComboBox);
             add(Box.createHorizontalGlue());
+            if (ConfigEditTreeRenderer.PLATFORM_IS_WINDOWS) {
+                add(Box.createHorizontalStrut(6));
+                add(Box.createHorizontalGlue());
+            }
             add(m_exposeAsVariableField);
         }
 
@@ -195,6 +208,22 @@ public class ConfigEditTreeNodePanel extends JPanel {
     private Collection<FlowVariable> getAllVariablesOfTypes(final VariableType<?>... types) {
         return (m_flowObjectStack != null) ? m_flowObjectStack.getAvailableFlowVariables(types).values()
                                            : Collections.emptyList();
+    }
+
+    void updateKeyLabelSize(final Graphics graphics) {
+        int maxLabelWidth = m_parentRenderer.getParentTree().labelWidthToEnforce();
+        final FontMetrics fm = graphics.getFontMetrics(m_keyLabel.getFont());
+        final Dimension labelSize = m_keyLabel.getSize();
+        final int textWidth = fm.stringWidth(m_keyLabel.getText());
+        if (textWidth > maxLabelWidth) {
+            final Insets insets = m_keyLabel.getInsets();
+            maxLabelWidth = textWidth + insets.left + insets.right;
+        }
+        if (labelSize.width < maxLabelWidth) {
+            m_keyLabel.setSize(maxLabelWidth, labelSize.height);
+            m_keyLabel.setPreferredSize(new Dimension(maxLabelWidth, labelSize.height));
+            m_keyLabel.invalidate();
+        }
     }
 
     @Override
@@ -214,7 +243,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         final boolean isEditable = (m_treeNode != null) && m_treeNode.isLeaf();
 
         String usedVariable;
-        m_valueField.setEnabled(isEditable);
+        m_valueComboBox.setEnabled(isEditable);
 
         VariableType<?> selType = null;
         final Collection<FlowVariable> suitableVariables = new ArrayList<>();
@@ -309,6 +338,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_keyLabel.setMinimumSize(LABEL_MINIMUM_SIZE);
         m_valueComboBoxModel.removeAllElements();
         m_valueComboBoxModel.addElement(EMPTY_COMBOBOX_ELEMENT);
+        m_valueComboBox.setPreferredSize((suitableVariables.size() > 0) ? null : VALUE_COMBOBOX_MINIMUM_SIZE);
         ComboBoxElement match = null;
         for (final FlowVariable v : suitableVariables) {
             final ComboBoxElement cbe = new ComboBoxElement(v);
@@ -334,7 +364,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         }
 
         if (match != null) {
-            m_valueField.setSelectedItem(match);
+            m_valueComboBox.setSelectedItem(match);
         } else if (usedVariable != null) {
             // show name in variable in arrows; makes also sure to
             // not violate the namespace of the variable (could be
@@ -366,9 +396,9 @@ public class ConfigEditTreeNodePanel extends JPanel {
             final String error = "Invalid variable \"" + usedVariable + "\"";
             final ComboBoxElement cbe = new ComboBoxElement(virtualVar, error);
             m_valueComboBoxModel.addElement(cbe);
-            m_valueField.setSelectedItem(cbe);
+            m_valueComboBox.setSelectedItem(cbe);
         }
-        m_valueField.setEnabled(m_valueComboBoxModel.getSize() > 1);
+        m_valueComboBox.setEnabled(m_valueComboBoxModel.getSize() > 1);
     }
 
     /** Write the currently edited values to the underlying model. */
@@ -377,15 +407,13 @@ public class ConfigEditTreeNodePanel extends JPanel {
             return;
         }
         String v = null;
-        Object selVar = m_valueField.getSelectedItem();
+        Object selVar = m_valueComboBox.getSelectedItem();
         if (selVar instanceof ComboBoxElement) {
             final ComboBoxElement cbe = (ComboBoxElement)selVar;
-            if (EMPTY_COMBOBOX_ELEMENT.equals(cbe)) {
-                return;
-            }
-
-            if (cbe.m_errorString == null) {
-                v = cbe.m_variable.getName();
+            if (!EMPTY_COMBOBOX_ELEMENT.equals(cbe)) {
+                if (cbe.m_errorString == null) {
+                    v = cbe.m_variable.getName();
+                }
             }
         }
         m_treeNode.setUseVariableName(StringUtils.isNotEmpty(v) ? v : null);
