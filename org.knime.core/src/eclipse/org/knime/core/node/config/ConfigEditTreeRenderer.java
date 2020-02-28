@@ -72,7 +72,7 @@ import org.knime.core.node.workflow.FlowObjectStack;
 @SuppressWarnings("serial")
 // TODO: consider making this class package-scope
 public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
-    static final boolean PLATFORM_IS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
+    static final boolean PLATFORM_IS_MAC = Platform.OS_MACOSX.equals(Platform.getOS());
 
 
     private final ConfigEditTreeNodePanel m_panelFull;
@@ -160,7 +160,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         if (r == null) {
             return panelSize;
         }
-        int width = Math.max(panelSize.width + getIconTextGap() + 16, r.width) + (PLATFORM_IS_WINDOWS ? 10 : 0);
+        int width = Math.max(panelSize.width + getIconTextGap() + 16, r.width) + (PLATFORM_IS_MAC ? 0 : 10);
         int height = 4 + Math.max(r.height, panelSize.height);
         return new Dimension(width, height);
     }
@@ -187,7 +187,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         final int iconWidth = (getIcon() != null) ? (getIcon().getIconWidth() + 2 * getIconTextGap()) : 0;
         final int x = insets.left + iconWidth;
         final int y = insets.top;
-        final int width = m_parentTree.getWidth() - insets.left - iconWidth - insets.right + (PLATFORM_IS_WINDOWS ? 10 : 0);
+        final int width = m_parentTree.getWidth() - insets.left - iconWidth - insets.right + (PLATFORM_IS_MAC ? 0 : 10);
         final int height = getHeight() - insets.top - insets.bottom;
         m_paintBounds.setBounds(x, y, width, height);
 

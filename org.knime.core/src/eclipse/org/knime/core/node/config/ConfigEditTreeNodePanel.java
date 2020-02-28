@@ -187,7 +187,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         add(m_keyLabel);
         add(Box.createHorizontalGlue());
         add(Box.createVerticalStrut(MINIMUM_HEIGHT));
-        if (ConfigEditTreeRenderer.PLATFORM_IS_WINDOWS) {
+        if (!ConfigEditTreeRenderer.PLATFORM_IS_MAC) {
             add(Box.createHorizontalGlue());
             add(Box.createHorizontalStrut(6));
         }
@@ -195,7 +195,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
             add(Box.createHorizontalGlue());
             add(m_valueComboBox);
             add(Box.createHorizontalGlue());
-            if (ConfigEditTreeRenderer.PLATFORM_IS_WINDOWS) {
+            if (!ConfigEditTreeRenderer.PLATFORM_IS_MAC) {
                 add(Box.createHorizontalStrut(6));
                 add(Box.createHorizontalGlue());
             }
