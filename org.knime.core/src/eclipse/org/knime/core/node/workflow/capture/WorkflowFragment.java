@@ -332,15 +332,16 @@ public final class WorkflowFragment {
      */
     public static final class Input extends IOInfo {
 
-        private Set<PortID> m_connectedPorts;
+        private final Set<PortID> m_connectedPorts;
 
         /**
-         * @param type
-         * @param spec
+         * @param type can be <code>null</code>
+         * @param spec can be <code>null</code>
          * @param connectedPorts set of ports the input is connected to
          */
         public Input(final PortType type, final DataTableSpec spec, final Set<PortID> connectedPorts) {
             super(type, spec);
+            CheckUtils.checkArgumentNotNull(connectedPorts);
             m_connectedPorts = connectedPorts;
         }
 
@@ -365,11 +366,11 @@ public final class WorkflowFragment {
      */
     public static final class Output extends IOInfo {
 
-        private PortID m_connectedPort;
+        private final PortID m_connectedPort;
 
         /**
-         * @param type
-         * @param spec
+         * @param type can be <code>null</code>
+         * @param spec can be <code>null</code>
          * @param connectedPort the port that is connected to this output, can be <code>null</code> if nothing is
          *            connected
          */

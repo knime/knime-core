@@ -51,6 +51,7 @@ package org.knime.core.node.workflow.capture;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -172,6 +173,9 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
             return ids;
         } else if (expectedSize < ids.size()) {
             return ids.stream().limit(expectedSize).collect(Collectors.toList());
+        } else if (expectedSize == 1) {
+            assert ids.isEmpty();
+            return Arrays.asList(defaultPrefix);
         } else {
             List<String> res = new ArrayList<>(ids);
             for (int i = ids.size(); i < expectedSize; i++) {
@@ -182,27 +186,16 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
     }
 
     /**
-     * Makes sure that the list of ids doesn't contain duplicates.
+     * Makes sure that the list of ids doesn't contain duplicates otherwise fails with an
+     * {@link IllegalArgumentException}.
      *
      * @param ids the list to check
-     * @return an empty optional if there are no duplicates, otherwise a list with fixed ids to be unique ('*' appended)
      */
-    public static Optional<List<String>> ensureUniqueness(final List<String> ids) {
+    public static void checkForDuplicates(final List<String> ids) {
         Set<String> set = new HashSet<>(ids);
-        if (set.size() == ids.size()) {
-            return Optional.empty();
+        if (set.size() != ids.size()) {
+            throw new IllegalArgumentException("There are duplicates in the list of ids");
         }
-        List<String> res = new ArrayList<>();
-        set.clear();
-        for (int i = 0; i < ids.size(); i++) {
-            if (set.contains(ids.get(i))) {
-                res.add(ids.get(i) + "*");
-            } else {
-                res.add(ids.get(i));
-            }
-            set.add(res.get(i));
-        }
-        return Optional.of(res);
     }
 
     /**
@@ -220,18 +213,19 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
      *            {@link WorkflowFragment} should be used
      * @param inputIDs a unique id for each input in the order of the inputs
      * @param outputIDs a unique id for each output in the order of the outputs
+     * @throws IllegalArgumentException if the list of output- or input-IDs contain duplicates
      */
     public WorkflowPortObjectSpec(final WorkflowFragment wf, final String customWorkflowName,
         final List<String> inputIDs, final List<String> outputIDs) {
         CheckUtils.checkNotNull(wf);
         CheckUtils.checkNotNull(inputIDs);
         CheckUtils.checkNotNull(outputIDs);
+        checkForDuplicates(inputIDs);
+        checkForDuplicates(outputIDs);
         m_wf = wf;
         m_customWorkflowName = customWorkflowName;
         m_inputIDs = ensureInputIDsCount(inputIDs, wf.getConnectedInputs().size());
-        m_inputIDs = ensureUniqueness(m_inputIDs).orElse(m_inputIDs);
         m_outputIDs = ensureOutputIDsCount(outputIDs, wf.getConnectedOutputs().size());
-        m_outputIDs = ensureUniqueness(m_outputIDs).orElse(m_outputIDs);
     }
 
     /**
@@ -253,7 +247,7 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
      */
     public Map<String, Input> getInputs() {
         List<Input> inputs = m_wf.getConnectedInputs();
-        Map<String, Input> res = new LinkedHashMap<>(inputs.size());
+        Map<String, Input> res = new LinkedHashMap<>();
         for (int i = 0; i < inputs.size(); i++) {
             res.put(m_inputIDs.get(i), inputs.get(i));
         }
@@ -265,7 +259,7 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
      */
     public Map<String, Output> getOutputs() {
         List<Output> outputs = m_wf.getConnectedOutputs();
-        Map<String, Output> res = new LinkedHashMap<>(outputs.size());
+        Map<String, Output> res = new LinkedHashMap<>();
         for (int i = 0; i < outputs.size(); i++) {
             res.put(m_outputIDs.get(i), outputs.get(i));
         }
