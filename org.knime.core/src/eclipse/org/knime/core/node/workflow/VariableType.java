@@ -680,53 +680,6 @@ public abstract class VariableType<T> {
         }
     }
 
-    /**
-     * Singleton type of {@link FlowVariable} for handling {@link FSConnectionFlowVariableValue} values. The singleton
-     * instance is accessible via the {@link FSConnectionType#INSTANCE} field.
-     *
-     * @since 4.1
-     */
-    public static final class FSConnectionType extends VariableType<FSConnectionFlowVariableValue> {
-
-        private static final class FSConnectionValue extends VariableValue<FSConnectionFlowVariableValue> {
-
-            private FSConnectionValue(final FSConnectionFlowVariableValue c) {
-                super(INSTANCE, c);
-            }
-
-            @Override
-            String asString() {
-                return get().connectionKey();
-            }
-        }
-
-        /**
-         * The singleton instance of the {@link FSConnectionType} type.
-         */
-        public static final FSConnectionType INSTANCE = new FSConnectionType();
-
-        private FSConnectionType() {
-            // singleton
-        }
-
-        @Override
-        VariableValue<FSConnectionFlowVariableValue> loadValue(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-            return new FSConnectionType.FSConnectionValue(
-                new FSConnectionFlowVariableValue(settings.getString("value")));
-        }
-
-        @Override
-        VariableValue<FSConnectionFlowVariableValue> newValue(final FSConnectionFlowVariableValue v) {
-            return new FSConnectionType.FSConnectionValue(v);
-        }
-
-        @Override
-        void saveValue(final NodeSettingsWO settings, final VariableValue<FSConnectionFlowVariableValue> v) {
-            settings.addString("value", v.get().connectionKey());
-        }
-    }
-
     private static final LazyInitializer<VariableType<?>[]> ALL_TYPES_INITER =
         new LazyInitializer<VariableType<?>[]>() {
 
@@ -743,8 +696,7 @@ public abstract class VariableType<T> {
                     LongArrayType.INSTANCE, //
                     BooleanType.INSTANCE, //
                     BooleanArrayType.INSTANCE, //
-                    CredentialsType.INSTANCE, //
-                    FSConnectionType.INSTANCE, //
+                    CredentialsType.INSTANCE //
                 };
             }
         };

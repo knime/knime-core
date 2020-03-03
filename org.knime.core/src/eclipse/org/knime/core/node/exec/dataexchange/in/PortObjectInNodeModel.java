@@ -55,7 +55,6 @@ import java.util.List;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.FSConnectionFlowVariableProvider;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeModel;
@@ -138,7 +137,6 @@ public final class PortObjectInNodeModel extends NodeModel {
             throws InvalidSettingsException {
         PortObjectIDSettings s = new PortObjectIDSettings();
         s.setCredentialsProvider(getCredentialsProvider());
-        s.setFSConnectionFlowVariableProvider(new FSConnectionFlowVariableProvider(this));
         s.loadSettings(settings);
     }
 
@@ -148,7 +146,6 @@ public final class PortObjectInNodeModel extends NodeModel {
             throws InvalidSettingsException {
         PortObjectIDSettings s = new PortObjectIDSettings();
         s.setCredentialsProvider(getCredentialsProvider());
-        s.setFSConnectionFlowVariableProvider(new FSConnectionFlowVariableProvider(this));
         s.loadSettings(settings);
         m_portObjectIDSettings = s;
     }

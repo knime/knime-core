@@ -57,7 +57,6 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue;
 import org.knime.core.node.workflow.VariableType.CredentialsType;
 import org.knime.core.node.workflow.VariableType.DoubleType;
-import org.knime.core.node.workflow.VariableType.FSConnectionType;
 import org.knime.core.node.workflow.VariableType.IntType;
 import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.node.workflow.VariableType.VariableValue;
@@ -231,18 +230,6 @@ public final class FlowVariable extends FlowObject {
     }
 
     /**
-     * create new FlowVariable containing a file system connection key. (Flow Scope)
-     *
-     * @param name of the variable
-     * @param fsConnection file system connection key object
-     * @noreference This constructor is not intended to be referenced by clients.
-     */
-    public FlowVariable(final String name, final FSConnectionFlowVariableValue fsConnection) {
-        this(name, FSConnectionType.INSTANCE, CheckUtils.checkArgumentNotNull(fsConnection, "Value must not be null"),
-            Scope.Flow);
-    }
-
-    /**
      * create new FlowVariable representing a string which can either be a global workflow variable or a local one.
      *
      * @param name of the variable
@@ -363,18 +350,6 @@ public final class FlowVariable extends FlowObject {
      */
     CredentialsFlowVariableValue getCredentialsValue() {
         return m_value.getType().equals(CredentialsType.INSTANCE) ? (CredentialsFlowVariableValue)m_value.get() : null;
-    }
-
-    /**
-     * Returns the file system connection key value, if present.
-     *
-     * @return the file system connection key value or null
-     * @since 4.1
-     * @noreference this method is not intended to be referenced by clients.
-     */
-    FSConnectionFlowVariableValue getFSConnectionValue() {
-        return m_value.getType().equals(FSConnectionType.INSTANCE) ? (FSConnectionFlowVariableValue)m_value.get()
-            : null;
     }
 
     /**

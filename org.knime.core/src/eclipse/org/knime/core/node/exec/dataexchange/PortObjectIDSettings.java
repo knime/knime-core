@@ -52,7 +52,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.knime.core.node.FSConnectionFlowVariableProvider;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -62,7 +61,6 @@ import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.node.workflow.VariableType.CredentialsType;
-import org.knime.core.node.workflow.VariableType.FSConnectionType;
 
 /**
  * Settings helper that reads/writes the port object ID that is used by the {@link PortObjectRepository}.
@@ -77,7 +75,6 @@ public final class PortObjectIDSettings {
     private List<FlowVariable> m_flowVariables;
     private boolean m_copyData;
     private CredentialsProvider m_credentialsProvider;
-    private FSConnectionFlowVariableProvider m_fsConnectionsProvider;
 
     /** Constructor, which sets a null ID (no id). */
     public PortObjectIDSettings() {
@@ -113,8 +110,6 @@ public final class PortObjectIDSettings {
                     final ICredentials credentials = m_credentialsProvider.get(name);
                     v = CredentialsStore.newCredentialsFlowVariable(credentials.getName(), credentials.getLogin(),
                         credentials.getPassword(), false, false);
-                } else if (typeS.equals(FSConnectionType.INSTANCE.getIdentifier())) {
-                    v = m_fsConnectionsProvider.flowVariableFor(name).orElse(null);
                 } else {
                     v = FlowVariable.load(child);
                 }
@@ -191,15 +186,4 @@ public final class PortObjectIDSettings {
     public void setCredentialsProvider(final CredentialsProvider cp) {
         m_credentialsProvider = cp;
     }
-
-    /**
-     * Sets the file system connection flow variable provider to read file system connection flow variables from.
-     * Only required for loading the settings.
-     *
-     * @param provider the file system connection flow variable provider
-     */
-    public void setFSConnectionFlowVariableProvider(final FSConnectionFlowVariableProvider provider) {
-        m_fsConnectionsProvider = provider;
-    }
-
 }
