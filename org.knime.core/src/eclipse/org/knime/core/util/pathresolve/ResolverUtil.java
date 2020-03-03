@@ -64,6 +64,20 @@ import org.osgi.util.tracker.ServiceTracker;
  * @since 2.6
  */
 public final class ResolverUtil {
+
+
+    /** A location within the workflow directory where some "KNIME native" nodes put temporary data. Currently used by
+     * "Create Temp Directory" and "File Upload (Widget)" nodes to cache temporary data created or received from a
+     * webportal application. The files will be deleted when the workflow is discarded (deleted by the nodes itself).
+     *
+     * This field will likely change in future versions (and also the concept where to put such temporary data) and
+     * hence should not be relied on by 3rd party node implementations.
+     *
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 4.2
+     */
+    public static final String IN_WORKFLOW_TEMP_DIR = "tmp";
+
     private static final ServiceTracker serviceTracker;
 
     static {
