@@ -60,6 +60,7 @@ import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -109,6 +110,13 @@ public class ConfigEditTreeNodePanel extends JPanel {
     // The number of characters we allow in the label text before we start truncating via mid-excision
     private static final int MAXIMUM_LABEL_CHARACTER_COUNT = 30;
 
+    // We do this ungainly thing to preserve the width in edit mode; the Swing default tree layout does
+    //      not consult this class' #getPreferredSize and as a result ends up with panes that grow wider
+    //      than the width of the panel. We combine this map, whose values are set via
+    //      #recordPostPaintPreferredSize(int, Dimension), with intercepting a #setBounds(int, int, int, int)
+    //      attempt, if the instance is intended for the editor. HACKY!
+    private static final HashMap<Integer, Dimension> PATH_DEPTH_PAINTED_PREFERRED_SIZE_MAP = new HashMap<>();
+
     private static final int MINIMUM_HEIGHT = 24;
     private static final Dimension LABEL_MINIMUM_SIZE = new Dimension(100, MINIMUM_HEIGHT);
     private static final Dimension VALUE_COMBOBOX_MINIMUM_SIZE = new Dimension(180, MINIMUM_HEIGHT);
@@ -147,18 +155,28 @@ public class ConfigEditTreeNodePanel extends JPanel {
 
     private final ConfigEditTreeRenderer m_parentRenderer;
 
+    // If this panel will be used as a node editor in our tree, this should be true; otherwise false (for the case
+    //      in which it is only used for painting.)
+    private final boolean m_panelIntendedForEditor;
+    // The depth of the node in the tree which this panel repesents; this value is only consulted if
+    //      m_panelIntendedForEditor is true
+    private int m_treePathDepth;
+
     /**
      * Constructs new panel.
      *
      * @param isForConfig if true, the combo box and the textfield are not shown (configs can't be overwritten, nor be
-     *              exported as variable).
+     *            exported as variable).
      * @param owningRenderer the renderer for which we are part of the nodes' display; we'd rather have the tree, which
-     *              we get from the renderer later, but the construction time sequence of events in which the cell
-     *              editor which creates two instances of this class prevents us from having access to the tree, but
-     *              indeed having reference to the renderer
+     *            we get from the renderer later, but the construction time sequence of events in which the cell editor
+     *            which creates two instances of this class prevents us from having access to the tree, but indeed
+     *            having reference to the renderer
+     * @param isIntendedForEditor true if his panel will be used as a node editor in our tree; false for the case in
+     *            which it is only used for painting.
      * @since 4.2
      */
-    public ConfigEditTreeNodePanel(final boolean isForConfig, final ConfigEditTreeRenderer owningRenderer) {
+    public ConfigEditTreeNodePanel(final boolean isForConfig, final ConfigEditTreeRenderer owningRenderer,
+                                   final boolean isIntendedForEditor) {
         super();
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         m_keyLabel = new JLabel();
@@ -203,11 +221,17 @@ public class ConfigEditTreeNodePanel extends JPanel {
         }
 
         m_parentRenderer = owningRenderer;
+
+        m_panelIntendedForEditor = isIntendedForEditor;
     }
 
     private Collection<FlowVariable> getAllVariablesOfTypes(final VariableType<?>... types) {
         return (m_flowObjectStack != null) ? m_flowObjectStack.getAvailableFlowVariables(types).values()
                                            : Collections.emptyList();
+    }
+
+    void setTreePathDepth(final int depth) {
+        m_treePathDepth = depth;
     }
 
     void updateKeyLabelSize(final Graphics graphics) {
@@ -226,11 +250,30 @@ public class ConfigEditTreeNodePanel extends JPanel {
         }
     }
 
+    void recordPostPaintPreferredSize(final int depth, final Dimension d) {
+        PATH_DEPTH_PAINTED_PREFERRED_SIZE_MAP.put(Integer.valueOf(depth), d);
+    }
+
     @Override
     public Dimension getPreferredSize() {
         final int insets = m_parentRenderer.getTotalWidthInsets(m_keyIcon);
 
         return new Dimension((m_parentRenderer.getParentTree().getSize().width - insets), (MINIMUM_HEIGHT + 4));
+    }
+
+    @Override
+    public void setBounds(final int x, final int y, final int width, final int height) {
+        int widthToUse = width;
+        int heightToUse = height;
+        if (m_panelIntendedForEditor) {
+            final Dimension d = PATH_DEPTH_PAINTED_PREFERRED_SIZE_MAP.get(Integer.valueOf(m_treePathDepth));
+
+            if (d != null) {
+                widthToUse = d.width;
+                heightToUse = d.height;
+            }
+        }
+        super.setBounds(x, y, widthToUse, heightToUse);
     }
 
     /**
@@ -455,10 +498,20 @@ public class ConfigEditTreeNodePanel extends JPanel {
             if (cbe.m_errorString != null) {
                 newToolTip = cbe.m_errorString;
             } else {
-                newToolTip = m_keyLabel.getText();
+                if (m_treeNode != null) {
+                    // Avoid truncated display text
+                    newToolTip = m_treeNode.getConfigEntry().getKey();
+                } else {
+                    newToolTip = m_keyLabel.getText();
+                }
             }
         } else {
-            newToolTip = m_keyLabel.getText();
+            if (m_treeNode != null) {
+                // Avoid truncated display text
+                newToolTip = m_treeNode.getConfigEntry().getKey();
+            } else {
+                newToolTip = m_keyLabel.getText();
+            }
         }
         final String oldToolTip = getToolTipText();
         if (!Objects.equals(oldToolTip, newToolTip)) {

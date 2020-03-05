@@ -91,8 +91,8 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
      * @since 4.2
      */
     public ConfigEditTreeRenderer(final ConfigEditJTree owningTree) {
-        m_panelPlain = new ConfigEditTreeNodePanel(false, this);
-        m_panelFull = new ConfigEditTreeNodePanel(true, this);
+        m_panelPlain = new ConfigEditTreeNodePanel(false, this, false);
+        m_panelFull = new ConfigEditTreeNodePanel(true, this, false);
         m_active = m_panelPlain;
 
         m_paintBounds = new Rectangle();
@@ -185,19 +185,24 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
 
         final Insets insets = getInsets();
         final int iconWidth = (getIcon() != null) ? (getIcon().getIconWidth() + 2 * getIconTextGap()) : 0;
-        final int x = insets.left + iconWidth;
-        final int y = insets.top;
-        final int width = m_parentTree.getWidth() - insets.left - iconWidth - insets.right + (PLATFORM_IS_MAC ? 0 : 10);
-        final int height = getHeight() - insets.top - insets.bottom;
+        // the x, y and width nudges are due to the editor placing the node panel in a different location
+        //      than where this component renders
+        final int x = insets.left + iconWidth - 4;
+        final int y = insets.top + 2;
+        final int width = m_parentTree.getWidth() - insets.left - iconWidth - insets.right
+                                + (PLATFORM_IS_MAC ? 0 : 10) + 4;
+        final int height = getHeight() - insets.top - insets.bottom + 2;
         m_paintBounds.setBounds(x, y, width, height);
 
-        m_active.setSize(m_active.getPreferredSize());
+        final Dimension preferredSize = m_active.getPreferredSize();
+        m_active.setSize(preferredSize);
         m_active.validate();
         m_active.setBackground(selected ? getBackgroundSelectionColor()
                                         : getBackgroundNonSelectionColor());
         SwingUtilities.paintComponent(g, m_active, this, m_paintBounds);
 
         m_parentTree.renderedKeyLabelWithWidth(m_active.getKeyLabel().getSize().width);
+        m_active.recordPostPaintPreferredSize(m_currentCellPathDepth, preferredSize);
 
         super.paintComponent(g);
     }

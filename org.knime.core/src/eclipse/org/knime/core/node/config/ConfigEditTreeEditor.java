@@ -54,6 +54,7 @@ import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellEditor;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellEditor;
+import javax.swing.tree.TreeNode;
 
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.workflow.FlowObjectStack;
@@ -114,8 +115,8 @@ public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
 
         private ComponentCreator() {
             super(new JTree(), new DefaultTreeCellRenderer());
-            m_panelPlain = new ConfigEditTreeNodePanel(false, (ConfigEditTreeRenderer)ConfigEditTreeEditor.this.renderer);
-            m_panelFull = new ConfigEditTreeNodePanel(true, (ConfigEditTreeRenderer)ConfigEditTreeEditor.this.renderer);
+            m_panelPlain = new ConfigEditTreeNodePanel(false, (ConfigEditTreeRenderer)ConfigEditTreeEditor.this.renderer, true);
+            m_panelFull = new ConfigEditTreeNodePanel(true, (ConfigEditTreeRenderer)ConfigEditTreeEditor.this.renderer, true);
             m_active = m_panelPlain;
         }
 
@@ -131,6 +132,9 @@ public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
                 if (outerTree instanceof ConfigEditJTree) {
                     stack = ((ConfigEditJTree)outerTree).getFlowObjectStack();
                 }
+                final int depth
+                    = ((ConfigEditJTree)ConfigEditTreeEditor.this.tree).getModel().getPathToRoot((TreeNode)value).length;
+                m_active.setTreePathDepth(depth);
                 m_active.setFlowObjectStack(stack);
                 m_active.setTreeNode(node);
             } else {
