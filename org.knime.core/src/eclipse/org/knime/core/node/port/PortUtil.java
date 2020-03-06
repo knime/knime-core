@@ -76,7 +76,6 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -246,7 +245,9 @@ public final class PortUtil {
             ZipEntry entry = in.getNextEntry();
 
             // Check that the given input stream really specifies a port object
-            CheckUtils.checkArgument(entry != null, "File does not specify a valid port object model");
+            if(entry == null) {
+                throw new IOException("File does not specify a valid port object model");
+            }
 
             if (!"content.xml".equals(entry.getName())) {
                 throw new IOException(
