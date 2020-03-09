@@ -331,21 +331,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
             return Collections.emptyMap();
         }
         NodeSettings fromModel = m_settings.getModelSettingsClone();
-        ConfigEditTreeModel configEditor;
-        try {
-            configEditor = ConfigEditTreeModel.create(fromModel, variablesSettings);
-        } catch (final InvalidSettingsException e) {
-            throw new InvalidSettingsException("Errors reading flow variables: " + e.getMessage(), e);
-        }
-        final Map<String, FlowVariable> flowVariablesMap =
-            getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes());
-        List<FlowVariable> newVariableList;
-        try {
-            newVariableList = configEditor.overwriteSettings(fromModel, flowVariablesMap);
-        } catch (InvalidSettingsException e) {
-            throw new InvalidSettingsException("Errors overwriting node settings with flow variables: "
-                + e.getMessage(), e);
-        }
+        List<FlowVariable> newVariableList = overwriteModelSettingsWithFlowVariables(fromModel, variablesSettings,
+            getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
 
         NodeContext.pushContext(this);
         try {
@@ -363,6 +350,48 @@ public abstract class SingleNodeContainer extends NodeContainer {
             }
         }
         return newVariableHash;
+    }
+
+    private static List<FlowVariable> overwriteModelSettingsWithFlowVariables(
+        final NodeSettings modelSettingsToOverwrite, final NodeSettingsRO variablesSettings,
+        final Map<String, FlowVariable> flowVariablesMap) throws InvalidSettingsException {
+        if (variablesSettings == null) {
+            return Collections.emptyList();
+        }
+        ConfigEditTreeModel configEditor;
+        try {
+            configEditor = ConfigEditTreeModel.create(modelSettingsToOverwrite, variablesSettings);
+        } catch (final InvalidSettingsException e) {
+            throw new InvalidSettingsException("Errors reading flow variables: " + e.getMessage(), e);
+        }
+        List<FlowVariable> newVariableList;
+        try {
+            newVariableList = configEditor.overwriteSettings(modelSettingsToOverwrite, flowVariablesMap);
+        } catch (InvalidSettingsException e) {
+            throw new InvalidSettingsException(
+                "Errors overwriting node settings with flow variables: " + e.getMessage(), e);
+        }
+        return newVariableList;
+    }
+
+    /**
+     * Extracts and returns the model settings of a node. The (sub-)settings that are controlled by flow variables are
+     * replaced by the flow variable value.
+     *
+     * NOTE: this method can fail if the set flow variables are not available in the flow object stack (mainly because
+     * upstream nodes aren't executed, yet)
+     *
+     * @return the node's 'model' settings, with setting values replaced with the value of the controlling flow variable
+     *         (if so)
+     * @throws InvalidSettingsException
+     *
+     * @since 4.2
+     */
+    public NodeSettings getModelSettingsUsingFlowObjectStack() throws InvalidSettingsException {
+        NodeSettings modelSettings = m_settings.getModelSettingsClone();
+        overwriteModelSettingsWithFlowVariables(modelSettings, m_settings.getVariablesSettings(),
+            getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
+        return modelSettings;
     }
 
     /** Load cleaned and "variable adjusted" into underlying implementation.  Throws exception
