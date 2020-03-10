@@ -54,7 +54,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -66,6 +65,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.capture.WorkflowFragment;
 import org.knime.core.node.workflow.capture.WorkflowFragment.Input;
 import org.knime.core.node.workflow.capture.WorkflowFragment.Output;
@@ -81,6 +81,17 @@ import org.knime.core.util.Pair;
  * @since 4.2
  */
 public final class WorkflowCaptureOperation {
+
+    /*
+     * Name of the component created if there are multiple readers representing multiple ports of the same
+     * 'static' input node.
+     */
+    private static final String READERS_COMPONENT_NAME = "Readers";
+
+    /*
+     * Amount of how much readers a vertically moved relative to each other if there are multiple readers.
+     */
+    private static final int READERS_VERTICAL_TRANSLATION = 120;
 
     private WorkflowManager m_wfm;
 
@@ -112,8 +123,6 @@ public final class WorkflowCaptureOperation {
             NodeID endNodeID = m_endNode.getID();
             WorkflowManager tempParent = WorkflowManager.EXTRACTED_WORKFLOW_ROOT
                 .createAndAddProject("Capture-" + endNodeID, new WorkflowCreationHelper());
-            // TODO we might have to revisit this when implementing AP-13335
-            Set<NodeIDSuffix> addedPortObjectReaderNodes = new HashSet<>();
 
             // "scope body" -- will copy those nodes later
             List<NodeContainer> nodesInScope = m_wfm.getWorkflow().getNodesInScope(m_endNode);
@@ -125,13 +134,20 @@ public final class WorkflowCaptureOperation {
             WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
             NodeID[] allIDs = nodesInScope.stream().map(NodeContainer::getID).toArray(NodeID[]::new);
             HashSet<NodeID> allIDsHashed = new HashSet<>(Arrays.asList(allIDs));
-            // map from dest port to src node
-            Map<Pair<NodeID, Integer>, NodeID> portObjectReaderConnections = new HashMap<>();
+            //port object reader nodes grouped by the original node
+            Map<NodeID, List<NodeID>> portObjectReaderGroups = new HashMap<>();
+            Set<NodeIDSuffix> addedPortObjectReaderNodes = new HashSet<>();
             NodeID[] allButScopeIDs = ArrayUtils.removeElements(allIDs, endNodeID, m_startNode.getID());
             copyContent.setNodeIDs(allButScopeIDs);
             copyContent.setIncludeInOutConnections(false);
 
+            final int[] boundingBox = NodeUIInformation.getBoundingBoxOf(nodesToDetermineBoundingBox);
+            final int[] moveUIDist = new int[]{-boundingBox[0] + 50, -boundingBox[1] + 50};
+            copyContent.setPositionOffset(moveUIDist);
+            tempParent.copyFromAndPasteHere(m_wfm, copyContent.build());
+
             // collect nodes outside the scope body but connected to the scope body (only incoming)
+            Map<Pair<NodeID, Integer>, NodeID> visitedSrcPorts = new HashMap<>(); //maps to 'pasted' node id
             for (int i = 0; i < allButScopeIDs.length; i++) {
                 NodeContainer oldNode = m_wfm.getNodeContainer(allButScopeIDs[i]);
                 for (int p = 0; p < oldNode.getNrInPorts(); p++) {
@@ -141,7 +157,8 @@ public final class WorkflowCaptureOperation {
                     } else if (allIDsHashed.contains(c.getSource())) {
                         // ignore: connection already retained by paste persistor
                     } else {
-                        if (!addedPortObjectReaderNodes.contains(NodeIDSuffix.create(m_wfm.getID(), c.getSource()))) {
+                        Pair<NodeID, Integer> currentSrcPort = Pair.create(c.getSource(), c.getSourcePort());
+                        if (!visitedSrcPorts.containsKey(currentSrcPort)) {
                             // only add portObjectReader if not inserted already in previous loop iteration
                             NodeID sourceID = c.getSource();
                             NodeUIInformation sourceUIInformation = m_wfm.getNodeContainer(sourceID).getUIInformation();
@@ -161,33 +178,51 @@ public final class WorkflowCaptureOperation {
 
                             NodeID pastedID = pastedIDSuffix.prependParent(tempParent.getID());
                             tempParent.getNodeContainer(pastedID).setUIInformation(sourceUIInformation);
+
+                            //TODO deal with WFMIN-connections
+                            visitedSrcPorts.put(Pair.create(c.getSource(), c.getSourcePort()), pastedID);
                             addedPortObjectReaderNodes.add(pastedIDSuffix);
+                            portObjectReaderGroups.computeIfAbsent(currentSrcPort.getFirst(), id -> new ArrayList<>())
+                                .add(pastedID);
                         }
-                        //TODO deal with WFMIN-connections
-                        portObjectReaderConnections.put(Pair.create(c.getDest(), c.getDestPort()), c.getSource());
+
+                        // connect all new port object readers to the in-scope-nodes
+                        NodeIDSuffix destID = NodeIDSuffix.create(m_wfm.getID(), c.getDest());
+                        tempParent.addConnection(visitedSrcPorts.get(currentSrcPort), 1,
+                            destID.prependParent(tempParent.getID()), c.getDestPort());
                     }
                 }
             }
 
-            final int[] boundingBox = NodeUIInformation.getBoundingBoxOf(nodesToDetermineBoundingBox);
-            final int[] moveUIDist = new int[]{-boundingBox[0] + 50, -boundingBox[1] + 50};
-            copyContent.setPositionOffset(moveUIDist);
+            // group and position port object readers
+            for (List<NodeID> readerGroup : portObjectReaderGroups.values()) {
+                for (int i = 0; i < readerGroup.size(); i++) {
+                    NodeUIInformation.moveNodeBy(tempParent.getNodeContainer(readerGroup.get(i)),
+                        new int[]{moveUIDist[0], moveUIDist[1] + i * READERS_VERTICAL_TRANSLATION});
+                }
+                if (readerGroup.size() > 1) {
+                    int[] boundsFirstNode =
+                        tempParent.getNodeContainer(readerGroup.get(0)).getUIInformation().getBounds();
 
-            tempParent.copyFromAndPasteHere(m_wfm, copyContent.build());
+                    //group
+                    CollapseIntoMetaNodeResult res =
+                        tempParent.collapseIntoMetaNode(readerGroup.toArray(new NodeID[readerGroup.size()]),
+                            new WorkflowAnnotation[0], READERS_COMPONENT_NAME);
+                    tempParent.convertMetaNodeToSubNode(res.getCollapsedMetanodeID());
 
-            // connect all new port object readers to the in-scope-nodes
-            for (Entry<Pair<NodeID, Integer>, NodeID> connection : portObjectReaderConnections.entrySet()) {
-                NodeIDSuffix srcID = NodeIDSuffix.create(m_wfm.getID(), connection.getValue());
-                NodeIDSuffix destID = NodeIDSuffix.create(m_wfm.getID(), connection.getKey().getFirst());
-                int destIdx = connection.getKey().getSecond();
-                tempParent.addConnection(srcID.prependParent(tempParent.getID()), 1,
-                    destID.prependParent(tempParent.getID()), destIdx);
-            }
-
-            // position port object readers
-            for (NodeIDSuffix suffix : addedPortObjectReaderNodes) {
-                NodeID srcID = suffix.prependParent(tempParent.getID());
-                NodeUIInformation.moveNodeBy(tempParent.getNodeContainer(srcID), moveUIDist);
+                    //update ids
+                    SubNodeContainer snc = (SubNodeContainer)tempParent.getNodeContainer(res.getCollapsedMetanodeID());
+                    for (NodeID id : readerGroup) {
+                        NodeIDSuffix suffix = NodeIDSuffix.create(tempParent.getID(), id);
+                        addedPortObjectReaderNodes.remove(suffix);
+                        addedPortObjectReaderNodes.add(NodeIDSuffix.create(tempParent.getID(),
+                            suffix.prependParent(snc.getWorkflowManager().getID())));
+                    }
+                    //move component
+                    snc.setUIInformation(NodeUIInformation.builder(snc.getUIInformation())
+                        .setNodeLocation(boundsFirstNode[0], boundsFirstNode[1], boundsFirstNode[2], boundsFirstNode[3])
+                        .build());
+                }
             }
 
             //transfer editor settings, too

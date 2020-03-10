@@ -764,7 +764,7 @@ public final class WorkflowManager extends NodeContainer
             final NodeID id;
             if (nodeIDSuffix >= 0) {
                 id = getID().createChild(nodeIDSuffix);
-                CheckUtils.checkArgument(!m_workflow.containsNodeKey(id), "ID already in use: %d", id);
+                CheckUtils.checkArgument(!m_workflow.containsNodeKey(id), "ID already in use: %s", id);
             } else {
                 id = m_workflow.createUniqueID();
             }

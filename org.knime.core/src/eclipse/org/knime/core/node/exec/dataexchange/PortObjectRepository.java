@@ -211,7 +211,8 @@ public final class PortObjectRepository {
      *            too (the port object is just referenced by the original node id and port index)
      * @param srcParentID the id of the workflow manager the referenced node (port) is part of
      * @param wfm the workflow manager the new node should be added to
-     * @param nodeIDSuffix
+     * @param nodeIDSuffix the id the to be added node will have (will be ignored if there is a node with the id
+     *            already!)
      * @return the id of the newly added node
      */
     // TODO we might have to revisit this when implementing AP-13335
@@ -228,7 +229,14 @@ public final class PortObjectRepository {
         boolean isTable = outport.getPortType().equals(BufferedDataTable.TYPE);
         NodeFactory<?> factory =
             isTable ? SandboxedNodeCreator.TABLE_READ_NODE_FACTORY : SandboxedNodeCreator.OBJECT_READ_NODE_FACTORY;
-        NodeID inID = wfm.addNodeAndApplyContext(factory, null, nodeIDSuffix);
+        NodeID inID;
+        if (wfm.containsNodeContainer(wfm.getID().createChild(nodeIDSuffix))) {
+            //create a new node id
+            inID = wfm.addNodeAndApplyContext(factory, null, -1);
+        } else {
+            //re-use node id
+            inID = wfm.addNodeAndApplyContext(factory, null, nodeIDSuffix);
+        }
         NodeSettings s = new NodeSettings("temp_data_in");
         try {
             wfm.saveNodeSettings(inID, s);
