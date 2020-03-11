@@ -48,6 +48,7 @@
  */
 package org.knime.core.util;
 
+
 import static org.hamcrest.CoreMatchers.is;
 
 import java.io.BufferedWriter;

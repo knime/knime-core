@@ -51,14 +51,16 @@ package org.knime.core;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.knime.core.data.container.DataContainerTest;
+import org.knime.core.node.workflow.BlobsInLoops;
+import org.knime.core.node.workflow.Bug5227_FileStorePortObjectAndLoops;
 
 /**
  *
  * @author wiswedel
  */
 @RunWith(Suite.class)
-@SuiteClasses({DataContainerTest.class})
+@SuiteClasses({BlobsInLoops.class, Bug5227_FileStorePortObjectAndLoops.class,
+    Bug5227_FileStorePortObjectAndLoops.class})
 public class DataTableRelatedTests {
 
 }

@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature id="org.knime.features.core" />
-   <feature id="org.knime.features.core.source" />
-   <feature id="org.knime.features.testing.core" />
-   <feature id="org.knime.features.testing.core.source" />
+   <feature id="org.knime.features.core">
+    <category name="knime-core"/>
+   </feature>
+   <feature id="org.knime.features.core.source">
+    <category name="knime-core"/>
+   </feature>
+   <feature id="org.knime.features.testing.core">
+    <category name="knime-core"/>
+   </feature>
+   <feature id="org.knime.features.testing.core.source">
+    <category name="knime-core"/>
+   </feature>
 
 	<category-def name="knime-core" label="Build artifacts from knime-core">
 		<description>Build artifacts from knime-core</description>
-		<query><expression type="match">id ~= /.+/</expression></query>
 	</category-def>   
 </site>

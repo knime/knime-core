@@ -23,18 +23,41 @@
 		<feature-branch-extension.appendArtifactoryProperties>false</feature-branch-extension.appendArtifactoryProperties>
 	</properties>
 
-	<modules>
-		<module>org.knime.core.data.uritype</module>
-		<module>org.knime.core.pmml</module>
-		<module>org.knime.core</module>
-		<module>org.knime.core.ui</module>
-		<module>org.knime.testing</module>
-		<module>org.knime.rsyntaxtextarea</module>
-		<module>org.knime.core.tests</module>
-		<module>org.knime.features.testing.core</module>
-		<module>org.knime.features.core</module>
-		<module>org.knime.update.core</module>
-	</modules>
+	<profiles>
+		<profile>
+			<id>build</id>
+			<modules>
+				<module>org.knime.core.data.uritype</module>
+				<module>org.knime.core.pmml</module>
+				<module>org.knime.core</module>
+				<module>org.knime.core.ui</module>
+				<module>org.knime.testing</module>
+				<module>org.knime.rsyntaxtextarea</module>
+				<module>org.knime.core.tests</module>
+				<module>org.knime.features.testing.core</module>
+				<module>org.knime.features.core</module>
+				<module>org.knime.update.core</module>
+			</modules>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+
+		<profile>
+			<id>test</id>
+			<modules>
+				<module>org.knime.core.data.uritype</module>
+				<module>org.knime.core.pmml</module>
+				<module>org.knime.core</module>
+				<module>org.knime.core.ui</module>
+				<module>org.knime.rsyntaxtextarea</module>
+				<module>org.knime.testing</module>
+				<module>org.knime.features.testing.core</module>
+				<module>org.knime.core.workflow.tests</module>
+			</modules>
+		</profile>
+	</profiles>
+
 
 	<repositories>
 		<repository>
