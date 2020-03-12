@@ -50,6 +50,7 @@ package org.knime.core.node.config;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -72,6 +73,10 @@ import org.knime.core.node.workflow.FlowObjectStack;
  */
 @SuppressWarnings("serial")
 public class ConfigEditJTree extends JTree {
+    // Part of implementing AP-11595 featured, for a moment in time, an attempt to fill the width; that functionality
+    //      is enabled or disabled by this flag.
+    static final boolean ROW_SHOULD_FILL_WIDTH = false;
+
     /** Fallback model. */
     private static final ConfigEditTreeModel EMPTY_MODEL = ConfigEditTreeModel.create(new NodeSettings("empty"));
 
@@ -80,7 +85,7 @@ public class ConfigEditJTree extends JTree {
     private FlowObjectStack m_flowObjectStack;
 
     /** The maximum width of all rendered key labels */
-    private int m_maxLabelWidthAsOfLastPaintCycle = Integer.MIN_VALUE;
+    private final HashMap<Integer, Integer> m_maxLabelWidthPathDepthMap;
     /** A holder for the currently running, if any, repaint timer */
     private final List<Runnable> m_repaintTimer = new ArrayList<>();
 
@@ -104,6 +109,7 @@ public class ConfigEditJTree extends JTree {
         setRowHeight(renderer.getPreferredSize().height);
         setEditable(true);
         setToolTipText("config tree"); // enable tooltip
+        m_maxLabelWidthPathDepthMap = new HashMap<>();
     }
 
     /**
@@ -130,14 +136,17 @@ public class ConfigEditJTree extends JTree {
     /**
      * This method will only ever be called from EDT during pai.
      *
+     * @param depth the tree depth of the row with the label
      * @param width the width of the {@code JLabel} component that has been rendered in
      *            {@link ConfigEditTreeRenderer#paintComponent(java.awt.Graphics)}
      */
-    void renderedKeyLabelWithWidth(final int width) {
-        final boolean needsRepaint = (width > m_maxLabelWidthAsOfLastPaintCycle);
+    void renderedKeyLabelAtDepthWithWidth(final int depth, final int width) {
+        final Integer key = Integer.valueOf(depth);
+        final Integer labelWidth = m_maxLabelWidthPathDepthMap.get(key);
+        final boolean needsRepaint = (labelWidth == null) || (width > labelWidth.intValue());
 
         if (needsRepaint) {
-            m_maxLabelWidthAsOfLastPaintCycle = width;
+            m_maxLabelWidthPathDepthMap.put(key, Integer.valueOf(width));
 
             synchronized (m_repaintTimer) {
                 if (m_repaintTimer.size() == 0) {
@@ -152,10 +161,14 @@ public class ConfigEditJTree extends JTree {
     }
 
     /**
-     * @return the width which a key label being rendered should be set to
+     * @param depth the tree depth of the row with the label
+     * @return the width which a key label being rendered should be set to, or -1 if the max width hasn't been defined
      */
-    int labelWidthToEnforce() {
-        return m_maxLabelWidthAsOfLastPaintCycle;
+    int labelWidthToEnforceForDepth(final int depth) {
+        final Integer key = Integer.valueOf(depth);
+        final Integer labelWidth = m_maxLabelWidthPathDepthMap.get(key);
+
+        return (labelWidth != null) ? labelWidth.intValue() : -1;
     }
 
     /** {@inheritDoc} */

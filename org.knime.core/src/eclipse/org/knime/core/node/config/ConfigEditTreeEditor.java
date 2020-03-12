@@ -138,7 +138,15 @@ public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
                 m_active.setFlowObjectStack(stack);
                 m_active.setTreeNode(node);
             } else {
+                final int depth;
+                if (value instanceof TreeNode) {
+                    depth = ((ConfigEditJTree)ConfigEditTreeEditor.this.tree).getModel().getPathToRoot((TreeNode)value).length;
+                } else {
+                    depth = 0;
+                }
+
                 m_active = m_panelPlain;
+                m_active.setTreePathDepth(depth);
                 m_active.setTreeNode(null);
             }
 

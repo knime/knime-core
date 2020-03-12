@@ -199,25 +199,40 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 onSelectedItemChange(e.getItem());
             }
         });
-        m_exposeAsVariableField = new JTextField(8);
+        m_exposeAsVariableField = new JTextField(12);
         m_exposeAsVariableField.addFocusListener(l);
 
         add(m_keyLabel);
-        add(Box.createHorizontalGlue());
-        add(Box.createVerticalStrut(MINIMUM_HEIGHT));
-        if (!ConfigEditTreeRenderer.PLATFORM_IS_MAC) {
+        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
             add(Box.createHorizontalGlue());
+            add(Box.createVerticalStrut(MINIMUM_HEIGHT));
+        }
+        if (!ConfigEditTreeRenderer.PLATFORM_IS_MAC) {
+            if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+                add(Box.createHorizontalGlue());
+            }
             add(Box.createHorizontalStrut(6));
         }
         if (isForConfig) {
-            add(Box.createHorizontalGlue());
-            add(m_valueComboBox);
-            add(Box.createHorizontalGlue());
-            if (!ConfigEditTreeRenderer.PLATFORM_IS_MAC) {
-                add(Box.createHorizontalStrut(6));
+            if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
                 add(Box.createHorizontalGlue());
             }
+            add(m_valueComboBox);
+            if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+                add(Box.createHorizontalGlue());
+            }
+            if (!ConfigEditTreeRenderer.PLATFORM_IS_MAC) {
+                add(Box.createHorizontalStrut(6));
+                if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+                    add(Box.createHorizontalGlue());
+                }
+            }
             add(m_exposeAsVariableField);
+            m_exposeAsVariableField.setMaximumSize(m_exposeAsVariableField.getPreferredSize());
+        }
+        if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+            add(Box.createHorizontalGlue());
+            add(Box.createVerticalStrut(MINIMUM_HEIGHT));
         }
 
         m_parentRenderer = owningRenderer;
@@ -234,20 +249,34 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_treePathDepth = depth;
     }
 
-    void updateKeyLabelSize(final Graphics graphics) {
-        int maxLabelWidth = m_parentRenderer.getParentTree().labelWidthToEnforce();
+    int computeMinimumWidth() {
+        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+            return getPreferredSize().width;
+        } else {
+            return m_keyLabel.getWidth() + m_valueComboBox.getWidth() + m_exposeAsVariableField.getWidth();
+        }
+    }
+
+    int updateKeyLabelSize(final Graphics graphics) {
+        int maxLabelWidth = m_parentRenderer.getParentTree().labelWidthToEnforceForDepth(m_treePathDepth);
         final FontMetrics fm = graphics.getFontMetrics(m_keyLabel.getFont());
         final Dimension labelSize = m_keyLabel.getSize();
-        final int textWidth = fm.stringWidth(m_keyLabel.getText());
+        final int textWidth = (int)(fm.stringWidth(m_keyLabel.getText()) * 1.05);
         if (textWidth > maxLabelWidth) {
             final Insets insets = m_keyLabel.getInsets();
             maxLabelWidth = textWidth + insets.left + insets.right;
         }
         if (labelSize.width < maxLabelWidth) {
-            m_keyLabel.setSize(maxLabelWidth, labelSize.height);
-            m_keyLabel.setPreferredSize(new Dimension(maxLabelWidth, labelSize.height));
+            m_keyLabel.setSize(maxLabelWidth, MINIMUM_HEIGHT);
+            m_keyLabel.setPreferredSize(new Dimension(maxLabelWidth, MINIMUM_HEIGHT));
+            if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+                m_keyLabel.setMaximumSize(m_keyLabel.getPreferredSize());
+            }
             m_keyLabel.invalidate();
+
+            return maxLabelWidth;
         }
+        return labelSize.width ;
     }
 
     void recordPostPaintPreferredSize(final int depth, final Dimension d) {
@@ -256,16 +285,24 @@ public class ConfigEditTreeNodePanel extends JPanel {
 
     @Override
     public Dimension getPreferredSize() {
-        final int insets = m_parentRenderer.getTotalWidthInsets(m_keyIcon);
+        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+            final int insets = m_parentRenderer.getTotalWidthInsets(m_keyIcon);
 
-        return new Dimension((m_parentRenderer.getParentTree().getSize().width - insets), (MINIMUM_HEIGHT + 4));
+            return new Dimension((m_parentRenderer.getParentTree().getSize().width - insets), (MINIMUM_HEIGHT + 4));
+        } else {
+            return super.getPreferredSize();
+        }
     }
 
+    // as long as ConfigEditJTree.ROW_SHOULD_FILL_WIDTH is false, Eclipse will be inconsistent and complain about
+    //      the if block containing dead code below.. even though the same "dead code" case exists in getPreferredSize()
+    //      above and Eclipse does not complain about that. lame.
+    @SuppressWarnings("unused")
     @Override
     public void setBounds(final int x, final int y, final int width, final int height) {
         int widthToUse = width;
         int heightToUse = height;
-        if (m_panelIntendedForEditor) {
+        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH && m_panelIntendedForEditor) {
             final Dimension d = PATH_DEPTH_PAINTED_PREFERRED_SIZE_MAP.get(Integer.valueOf(m_treePathDepth));
 
             if (d != null) {
@@ -273,6 +310,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 heightToUse = d.height;
             }
         }
+
         super.setBounds(x, y, widthToUse, heightToUse);
     }
 
@@ -381,7 +419,6 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_keyLabel.setMinimumSize(LABEL_MINIMUM_SIZE);
         m_valueComboBoxModel.removeAllElements();
         m_valueComboBoxModel.addElement(EMPTY_COMBOBOX_ELEMENT);
-        m_valueComboBox.setPreferredSize((suitableVariables.size() > 0) ? null : VALUE_COMBOBOX_MINIMUM_SIZE);
         ComboBoxElement match = null;
         for (final FlowVariable v : suitableVariables) {
             final ComboBoxElement cbe = new ComboBoxElement(v);
@@ -389,6 +426,10 @@ public class ConfigEditTreeNodePanel extends JPanel {
             if (v.getName().equals(usedVariable)) {
                 match = cbe;
             }
+        }
+        m_valueComboBox.setPreferredSize((suitableVariables.size() > 0) ? null : VALUE_COMBOBOX_MINIMUM_SIZE);
+        if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+            m_valueComboBox.setMaximumSize(m_valueComboBox.getPreferredSize());
         }
 
         if ((match == null) && (m_flowObjectStack != null)) {

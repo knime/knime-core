@@ -48,13 +48,16 @@
 package org.knime.core.node.config;
 
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
 
 import javax.swing.Icon;
+import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeNode;
@@ -73,6 +76,7 @@ import org.knime.core.node.workflow.FlowObjectStack;
 // TODO: consider making this class package-scope
 public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
     static final boolean PLATFORM_IS_MAC = Platform.OS_MACOSX.equals(Platform.getOS());
+    private final int PIXEL_INDENT_PER_PATH_DEPTH = 22;
 
 
     private final ConfigEditTreeNodePanel m_panelFull;
@@ -140,6 +144,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         }
         m_active.setFlowObjectStack(stack);
         m_active.setTreeNode(node);
+        m_active.setTreePathDepth(m_currentCellPathDepth);
         setLeafIcon(m_active.getIcon());
         setOpenIcon(m_active.getIcon());
         setClosedIcon(m_active.getIcon());
@@ -155,14 +160,46 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
     /** {@inheritDoc} */
     @Override
     public Dimension getPreferredSize() {
-        Dimension r = super.getPreferredSize();
-        Dimension panelSize = m_active.getPreferredSize();
+        final Dimension r = super.getPreferredSize();
+        final Dimension panelSize = m_active.getPreferredSize();
+        final Dimension viewportSize = viewportSize();
+        final Insets insets = getInsets();
         if (r == null) {
-            return panelSize;
+            if (viewportSize.width > 0) {
+                return new Dimension(viewportSize.width, (panelSize.height + insets.top + insets.bottom));
+            } else {
+                return panelSize;
+            }
         }
-        int width = Math.max(panelSize.width + getIconTextGap() + 16, r.width) + (PLATFORM_IS_MAC ? 0 : 10);
-        int height = 4 + Math.max(r.height, panelSize.height);
+        final int panelInfluencedWidth = panelSize.width + getIconTextGap() + 16;
+        final int otherWidth = (viewportSize.width > 0) ? (int)(viewportSize.width * 0.8) - PIXEL_INDENT_PER_PATH_DEPTH
+                                                        : r.width;
+        final int width = Math.max(panelInfluencedWidth, otherWidth) + (PLATFORM_IS_MAC ? 0 : 10);
+        final int height = 4 + Math.max(r.height, panelSize.height);
+
         return new Dimension(width, height);
+    }
+
+    private Dimension viewportSize() {
+        final Container panel = m_parentTree.getParent();
+        if (panel != null) {
+            final Container panelParent = panel.getParent();
+            final JViewport jv;
+
+            if (panelParent instanceof JViewport) {
+                jv = (JViewport)panelParent;
+            } else if (panelParent instanceof JScrollPane) {
+                jv = ((JScrollPane)panelParent).getViewport();
+            } else {
+                jv = null;
+            }
+
+            if (jv != null) {
+                return jv.getViewSize();
+            }
+        }
+
+        return new Dimension(-1, -1);
     }
 
     /**
@@ -173,36 +210,55 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
      */
     int getTotalWidthInsets(final Icon i) {
         final Insets insets = getInsets();
-        final int iconWidth = (i != null) ? (i.getIconWidth() + 2 * getIconTextGap()) : 0;
+        final int iconWidth = drawWidthForIcon(i);
 
-        return insets.left + iconWidth + insets.right + (m_currentCellPathDepth * 20);
+        return insets.left + iconWidth + insets.right + (m_currentCellPathDepth * PIXEL_INDENT_PER_PATH_DEPTH);
+    }
+
+    private int drawWidthForIcon(final Icon i) {
+        return (i != null) ? (i.getIconWidth() + 2 * getIconTextGap()) : 0;
     }
 
     /** {@inheritDoc} */
     @Override
     protected void paintComponent(final Graphics g) {
-        m_active.updateKeyLabelSize(g);
+        /*
+         * Arguably, a lot of this size calculation stuff should occur in an override of #validate() and not
+         *  here.
+         */
+        final int newKeyWidth = m_active.updateKeyLabelSize(g);
 
         final Insets insets = getInsets();
-        final int iconWidth = (getIcon() != null) ? (getIcon().getIconWidth() + 2 * getIconTextGap()) : 0;
         // the x, y and width nudges are due to the editor placing the node panel in a different location
         //      than where this component renders
-        final int x = insets.left + iconWidth - 4;
-        final int y = insets.top + 2;
-        final int width = m_parentTree.getWidth() - insets.left - iconWidth - insets.right
-                                + (PLATFORM_IS_MAC ? 0 : 10) + 4;
+        final int x = insets.left + drawWidthForIcon(getIcon()) - 4;
+        final int y = insets.top + (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH ? 2 : -1);
+        final int widthToUse;
+        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+            widthToUse = m_parentTree.getWidth();
+        } else {
+            final int paneMinimumWidth = m_active.computeMinimumWidth();
+            final int thisWidth = getWidth();
+            widthToUse = (thisWidth > paneMinimumWidth) ? thisWidth : paneMinimumWidth;
+        }
+        final int width = widthToUse + (PLATFORM_IS_MAC ? 0 : 10) + 4;
         final int height = getHeight() - insets.top - insets.bottom + 2;
         m_paintBounds.setBounds(x, y, width, height);
 
-        final Dimension preferredSize = m_active.getPreferredSize();
-        m_active.setSize(preferredSize);
+        final Dimension paneSize;
+        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+            paneSize = m_active.getPreferredSize();
+        } else {
+            paneSize = new Dimension(width, height);
+        }
+        m_active.setSize(paneSize);
         m_active.validate();
         m_active.setBackground(selected ? getBackgroundSelectionColor()
                                         : getBackgroundNonSelectionColor());
         SwingUtilities.paintComponent(g, m_active, this, m_paintBounds);
 
-        m_parentTree.renderedKeyLabelWithWidth(m_active.getKeyLabel().getSize().width);
-        m_active.recordPostPaintPreferredSize(m_currentCellPathDepth, preferredSize);
+        m_parentTree.renderedKeyLabelAtDepthWithWidth(m_currentCellPathDepth, newKeyWidth);
+        m_active.recordPostPaintPreferredSize(m_currentCellPathDepth, paneSize);
 
         super.paintComponent(g);
     }
