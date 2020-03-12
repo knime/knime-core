@@ -174,6 +174,30 @@ public final class FlowVariable extends FlowObject {
     }
 
     /**
+     * Creates a new {@link FlowVariable} that holds the provided {@link VariableValue value}
+     *
+     * Needed for {@link VariableTypeRegistry#createFromConfig(String, org.knime.core.node.config.Config)}.
+     * @param name the name of the variable
+     * @param value the {@link VariableValue} of the variable
+     */
+    FlowVariable(final String name, final VariableValue<?> value) {
+        this(name, value, Scope.Flow);
+    }
+
+    /**
+     * Creates a FlowVariable using {@link VariableType#defaultValue()}.
+     *
+     * @param name the name of the variable
+     * @param type the type of the variable
+     *
+     * @since 4.2
+     */
+    public <T> FlowVariable(final String name, final VariableType<T> type) {
+        this(name, CheckUtils.checkArgumentNotNull(type, "Type must not be null").defaultValue(), Scope.Flow);
+    }
+
+
+    /**
      * Create a new {@link FlowVariable} that holds a value of some {@link VariableType}.
      *
      * @param name the name of the variable
@@ -313,13 +337,19 @@ public final class FlowVariable extends FlowObject {
     public <T> T getValue(final VariableType<T> expectedType) {
         CheckUtils.checkArgumentNotNull(expectedType);
         final VariableType<?> actualType = m_value.getType();
-        CheckUtils.checkArgument(actualType.equals(expectedType),
-            "Flow variable does not represent value of class \"%s\" (but \"%s\")", expectedType, actualType);
+        CheckUtils.checkArgument(actualType.getConvertibleTypes().contains(expectedType),
+            "Flow variable does not represent value of class \"%s\" (but \"%s\") and also can't be converted to it.",
+            actualType, expectedType);
+        return m_value.getAs(expectedType);
+    }
 
-        // It's safe to make this unchecked cast, since we just checked that expected and actual types are identical.
-        @SuppressWarnings("unchecked")
-        VariableValue<T> result = (VariableValue<T>)m_value;
-        return result.get();
+    /**
+     * Retrieves the {@link VariableValue} held by this {@link FlowVariable}.
+     *
+     * @return the {@link VariableValue} held by this {@link FlowVariable}
+     */
+    VariableValue<?> getVariableValue() {
+        return m_value;
     }
 
     /**

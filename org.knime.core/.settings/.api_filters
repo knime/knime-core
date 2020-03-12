@@ -247,6 +247,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/VariableType.java" type="org.knime.core.node.workflow.VariableType$IntType">
+        <filter comment="The IntType constructor was public by accident." id="354463860">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.VariableType.IntType"/>
+                <message_argument value="IntType()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
         <filter id="338792546">
             <message_arguments>
