@@ -391,20 +391,30 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         m_listeners.remove(listener);
     }
 
-    /** Fire an event.
+    /**
+     * Fire an event.
+     *
      * @param treePath The tree path that has changed.
      * @param useVariable The new variable, which overwrites the user settings.
      * @param exposeVariableName The variable name to expose.
      */
-    void fireConfigEditTreeEvent(final String[] treePath,
-            final String useVariable, final String exposeVariableName) {
-        ConfigEditTreeEvent event = new ConfigEditTreeEvent(
-                this, treePath, useVariable, exposeVariableName);
-        for (ConfigEditTreeEventListener l : m_listeners) {
-            l.configEditTreeChanged(event);
-        }
+    void fireConfigEditTreeEvent(final String[] treePath, final String useVariable, final String exposeVariableName) {
+        final ConfigEditTreeEvent event = new ConfigEditTreeEvent(this, treePath, useVariable, exposeVariableName);
+        m_listeners.stream().forEach(l -> l.configEditTreeChanged(event));
     }
 
+    /**
+     * This triggers all children paths to be redrawn.
+     *
+     * @param tree the owning {@link ConfigEditJTree} instance
+     */
+    void forceModelRefresh(final ConfigEditJTree tree) {
+        final int[] childIndices = new int[getRoot().getChildCount()];
+        for (int i = 1; i < childIndices.length; i++) {
+            childIndices[i] = i;
+        }
+        fireTreeNodesChanged(tree, null, childIndices, null);
+    }
 
     /** Single Tree node implementation. */
     @SuppressWarnings("serial")

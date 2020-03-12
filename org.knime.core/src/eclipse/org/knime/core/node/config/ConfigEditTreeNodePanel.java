@@ -253,7 +253,8 @@ public class ConfigEditTreeNodePanel extends JPanel {
         if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
             return getPreferredSize().width;
         } else {
-            return m_keyLabel.getWidth() + m_valueComboBox.getWidth() + m_exposeAsVariableField.getWidth();
+            return m_keyLabel.getPreferredSize().width + m_valueComboBox.getPreferredSize().width
+                                + m_exposeAsVariableField.getPreferredSize().width;
         }
     }
 

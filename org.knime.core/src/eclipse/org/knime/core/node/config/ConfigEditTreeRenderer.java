@@ -162,19 +162,22 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
     public Dimension getPreferredSize() {
         final Dimension r = super.getPreferredSize();
         final Dimension panelSize = m_active.getPreferredSize();
+        final int computedMinimumWidth = m_active.computeMinimumWidth();
+        final int panelWidthToUse = Math.max(panelSize.width, computedMinimumWidth);
         final Dimension viewportSize = viewportSize();
         final Insets insets = getInsets();
         if (r == null) {
             if (viewportSize.width > 0) {
                 return new Dimension(viewportSize.width, (panelSize.height + insets.top + insets.bottom));
             } else {
-                return panelSize;
+                return new Dimension(panelWidthToUse, (panelSize.height + insets.top + insets.bottom));
             }
         }
-        final int panelInfluencedWidth = panelSize.width + getIconTextGap() + 16;
+        final int panelInfluencedWidth = panelWidthToUse + getIconTextGap() + 16;
         final int otherWidth = (viewportSize.width > 0) ? (int)(viewportSize.width * 0.8) - PIXEL_INDENT_PER_PATH_DEPTH
                                                         : r.width;
-        final int width = Math.max(panelInfluencedWidth, otherWidth) + (PLATFORM_IS_MAC ? 0 : 10);
+        final int width = Math.max(panelInfluencedWidth, otherWidth) + (PLATFORM_IS_MAC ? 0 : 10)
+                                + insets.left + insets.right;
         final int height = 4 + Math.max(r.height, panelSize.height);
 
         return new Dimension(width, height);

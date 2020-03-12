@@ -86,8 +86,8 @@ public class ConfigEditJTree extends JTree {
 
     /** The maximum width of all rendered key labels */
     private final HashMap<Integer, Integer> m_maxLabelWidthPathDepthMap;
-    /** A holder for the currently running, if any, repaint timer */
-    private final List<Runnable> m_repaintTimer = new ArrayList<>();
+    /** A holder for the currently running, if any, model forced refresh timer */
+    private final List<Runnable> m_forcedModelRefreshTimer = new ArrayList<>();
 
     /** Constructor for empty tree. */
     public ConfigEditJTree() {
@@ -143,18 +143,18 @@ public class ConfigEditJTree extends JTree {
     void renderedKeyLabelAtDepthWithWidth(final int depth, final int width) {
         final Integer key = Integer.valueOf(depth);
         final Integer labelWidth = m_maxLabelWidthPathDepthMap.get(key);
-        final boolean needsRepaint = (labelWidth == null) || (width > labelWidth.intValue());
+        final boolean needsForcedRefresh = (labelWidth == null) || (width > labelWidth.intValue());
 
-        if (needsRepaint) {
+        if (needsForcedRefresh) {
             m_maxLabelWidthPathDepthMap.put(key, Integer.valueOf(width));
 
-            synchronized (m_repaintTimer) {
-                if (m_repaintTimer.size() == 0) {
-                    final RepaintTrigger trigger = new RepaintTrigger();
-                    m_repaintTimer.add(trigger);
+            synchronized (m_forcedModelRefreshTimer) {
+                if (m_forcedModelRefreshTimer.size() == 0) {
+                    final ForcedModelRefreshTrigger trigger = new ForcedModelRefreshTrigger();
+                    m_forcedModelRefreshTimer.add(trigger);
                     (new Thread(trigger)).start();
                 } else {
-                    ((RepaintTrigger)m_repaintTimer.get(0)).retriggerTimer();
+                    ((ForcedModelRefreshTrigger)m_forcedModelRefreshTimer.get(0)).retriggerTimer();
                 }
             }
         }
@@ -188,10 +188,17 @@ public class ConfigEditJTree extends JTree {
     }
 
 
-    private class RepaintTrigger implements Runnable {
+    /*
+     * This forces the model to be told that all of its nodes have changed, which in turn repaints them. The reason
+     *  a simple {@link #repaint()} invocation fails is that if a row's content is out of the viewport, but at
+     *  whose paint-time, its clip rectangle was computed to be what is now too small (because a row after it
+     *  had a pixel-wider label string and so the subject row's label size grew) the repainter will deem the
+     *  out-of-viewport-bounds not dirtied.)
+     */
+    private class ForcedModelRefreshTrigger implements Runnable {
         private final AtomicBoolean m_retrigger;
 
-        private RepaintTrigger() {
+        private ForcedModelRefreshTrigger() {
             m_retrigger = new AtomicBoolean(false);
         }
 
@@ -211,10 +218,10 @@ public class ConfigEditJTree extends JTree {
                 sleep = m_retrigger.getAndSet(false);
             }
 
-            repaint();
+            getModel().forceModelRefresh(ConfigEditJTree.this);
 
-            synchronized (m_repaintTimer) {
-                m_repaintTimer.remove(0);
+            synchronized (m_forcedModelRefreshTimer) {
+                m_forcedModelRefreshTimer.remove(0);
             }
         }
     }
