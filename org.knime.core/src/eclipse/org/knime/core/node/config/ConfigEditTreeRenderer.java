@@ -124,7 +124,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
     }
 
     /**
-     * Called whenever a new value is to be renderer, updates underlying component.
+     * Called whenever a new value is to be rendered, updates underlying component.
      *
      * @param tree The associated tree (get the flow object stack from.)
      * @param value to be renderer, typically a <code>ConfigEditTreeNode</code>

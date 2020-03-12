@@ -77,6 +77,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
+import javax.swing.tree.TreeNode;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataValue;
@@ -84,18 +85,9 @@ import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.VariableType;
-import org.knime.core.node.workflow.VariableType.BooleanArrayType;
-import org.knime.core.node.workflow.VariableType.BooleanType;
-import org.knime.core.node.workflow.VariableType.DoubleArrayType;
-import org.knime.core.node.workflow.VariableType.DoubleType;
-import org.knime.core.node.workflow.VariableType.IntArrayType;
-import org.knime.core.node.workflow.VariableType.IntType;
-import org.knime.core.node.workflow.VariableType.LongArrayType;
-import org.knime.core.node.workflow.VariableType.LongType;
-import org.knime.core.node.workflow.VariableType.StringArrayType;
 import org.knime.core.node.workflow.VariableType.StringType;
+import org.knime.core.node.workflow.VariableTypeRegistry;
 
 /**
  * Panel that displays a single line/element of a {@link ConfigEditJTree}.
@@ -105,7 +97,7 @@ import org.knime.core.node.workflow.VariableType.StringType;
  * @author Bernd Wiswedel, University of Konstanz
  */
 @SuppressWarnings("serial")
-// TODO: consider making this class package-scope
+// TODO: consider making this class package-scope (and final)
 public class ConfigEditTreeNodePanel extends JPanel {
     // The number of characters we allow in the label text before we start truncating via mid-excision
     private static final int MAXIMUM_LABEL_CHARACTER_COUNT = 30;
@@ -181,10 +173,10 @@ public class ConfigEditTreeNodePanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         m_keyLabel = new JLabel();
         m_keyLabel.setMinimumSize(LABEL_MINIMUM_SIZE);
-        m_valueComboBoxModel = new DefaultComboBoxModel<ComboBoxElement>();
+        m_valueComboBoxModel = new DefaultComboBoxModel<>();
         m_valueComboBox = new JComboBox<>(m_valueComboBoxModel);
         m_valueComboBox.setPreferredSize(VALUE_COMBOBOX_MINIMUM_SIZE);
-        m_valueComboBox.setToolTipText(" "); // enable tooltip;
+        m_valueComboBox.setToolTipText(" "); // enable tooltip
         m_valueComboBox.setRenderer(ComboBoxRenderer.INSTANCE);
         final FocusListener l = new FocusAdapter() {
             /** {@inheritDoc} */
@@ -330,78 +322,14 @@ public class ConfigEditTreeNodePanel extends JPanel {
         VariableType<?> selType = null;
         final Collection<FlowVariable> suitableVariables = new ArrayList<>();
         if (m_treeNode != null) {
-            final AbstractConfigEntry entry = treeNode.getConfigEntry();
-            switch (entry.getType()) {
-                case config:
-                    if (m_treeNode.getArraySubType().isPresent()) {
-                        switch (m_treeNode.getArraySubType().get()) {
-                            case xbyte:
-                            case xshort:
-                            case xint:
-                                selType = IntArrayType.INSTANCE;
-                                suitableVariables.addAll(getAllVariablesOfTypes(IntType.INSTANCE));
-                                break;
-                            case xlong:
-                                selType = LongArrayType.INSTANCE;
-                                suitableVariables.addAll(
-                                    getAllVariablesOfTypes(IntArrayType.INSTANCE, IntType.INSTANCE, LongType.INSTANCE));
-                                break;
-                            case xfloat:
-                            case xdouble:
-                                selType = DoubleArrayType.INSTANCE;
-                                suitableVariables.addAll(getAllVariablesOfTypes(IntArrayType.INSTANCE,
-                                    LongArrayType.INSTANCE, IntType.INSTANCE, LongType.INSTANCE, DoubleType.INSTANCE));
-                                break;
-                            case xboolean:
-                                selType = BooleanArrayType.INSTANCE;
-                                suitableVariables.addAll(getAllVariablesOfTypes(BooleanType.INSTANCE));
-                                break;
-                            case xchar:
-                            case xstring:
-                                selType = StringArrayType.INSTANCE;
-                                suitableVariables
-                                    .addAll(getAllVariablesOfTypes(BooleanArrayType.INSTANCE, IntArrayType.INSTANCE,
-                                        LongArrayType.INSTANCE, DoubleArrayType.INSTANCE, BooleanType.INSTANCE,
-                                        IntType.INSTANCE, LongType.INSTANCE, DoubleType.INSTANCE, StringType.INSTANCE));
-                                break;
-                            default:
-                        }
-                    }
-                    break;
-                case xbyte:
-                case xshort:
-                case xint:
-                    selType = IntType.INSTANCE;
-                    break;
-                case xlong:
-                    selType = LongType.INSTANCE;
-                    suitableVariables.addAll(getAllVariablesOfTypes(IntType.INSTANCE));
-                    break;
-                case xfloat:
-                case xdouble:
-                    selType = DoubleType.INSTANCE;
-                    suitableVariables.addAll(getAllVariablesOfTypes(IntType.INSTANCE, LongType.INSTANCE));
-                    break;
-                case xboolean:
-                    selType = BooleanType.INSTANCE;
-                    suitableVariables.addAll(getAllVariablesOfTypes(StringType.INSTANCE));
-                    break;
-                case xchar:
-                case xtransientstring:
-                case xpassword:
-                case xstring:
-                default:
-                    selType = StringType.INSTANCE;
-                    suitableVariables.addAll(getAllVariablesOfTypes(BooleanType.INSTANCE, IntType.INSTANCE,
-                        LongType.INSTANCE, DoubleType.INSTANCE));
-            }
+            final AbstractConfigEntry entry = m_treeNode.getConfigEntry();
+            selType = fillSuitableVariablesNew(suitableVariables);
 
             if (selType == null) {
                 selType = StringType.INSTANCE;
                 m_keyIcon = ICON_UNKNOWN;
             } else {
                 m_keyIcon = selType.getIcon();
-                suitableVariables.addAll(getAllVariablesOfTypes(selType));
             }
             m_keyLabel.setText(displayTextForString(entry.getKey()));
             m_keyLabel.setToolTipText(entry.getKey());
@@ -434,10 +362,8 @@ public class ConfigEditTreeNodePanel extends JPanel {
         }
 
         if ((match == null) && (m_flowObjectStack != null)) {
-            @SuppressWarnings("deprecation")
             final Map<String, FlowVariable> allVars
-                        = m_flowObjectStack.getAvailableFlowVariables(Type.INTEGER, Type.DOUBLE, Type.STRING,
-                                                                      Type.CREDENTIALS, Type.OTHER);
+                        = m_flowObjectStack.getAllAvailableFlowVariables();
             if (allVars.containsKey(usedVariable)) {
                 final FlowVariable v = allVars.get(usedVariable);
                 final String error = "Variable \"" + usedVariable + "\" has wrong type (" + v.getVariableType()
@@ -451,39 +377,43 @@ public class ConfigEditTreeNodePanel extends JPanel {
         if (match != null) {
             m_valueComboBox.setSelectedItem(match);
         } else if (usedVariable != null) {
-            // show name in variable in arrows; makes also sure to
-            // not violate the namespace of the variable (could be
-            // node-local variable, which can't be created outside
-            // the workflow package)
-            final String errorName = "<" + usedVariable + ">";
-            final FlowVariable virtualVar;
-            if (selType.equals(DoubleArrayType.INSTANCE)) {
-                virtualVar = new FlowVariable(errorName, DoubleArrayType.INSTANCE, new Double[0]);
-            } else if (selType.equals(LongArrayType.INSTANCE)) {
-                virtualVar = new FlowVariable(errorName, LongArrayType.INSTANCE, new Long[0]);
-            } else if (selType.equals(IntArrayType.INSTANCE)) {
-                virtualVar = new FlowVariable(errorName, IntArrayType.INSTANCE, new Integer[0]);
-            } else if (selType.equals(BooleanArrayType.INSTANCE)) {
-                virtualVar = new FlowVariable(errorName, BooleanArrayType.INSTANCE, new Boolean[0]);
-            } else if (selType.equals(StringArrayType.INSTANCE)) {
-                virtualVar = new FlowVariable(errorName, StringArrayType.INSTANCE, new String[0]);
-            } else if (selType.equals(DoubleType.INSTANCE)) {
-                virtualVar = new FlowVariable(errorName, 0d);
-            } else if (selType.equals(LongType.INSTANCE)) {
-                virtualVar = new FlowVariable(errorName, LongType.INSTANCE, 0L);
-            } else if (selType.equals(IntType.INSTANCE)) {
-                virtualVar = new FlowVariable(errorName, 0);
-            } else if (selType.equals(BooleanType.INSTANCE)) {
-                virtualVar = new FlowVariable(errorName, BooleanType.INSTANCE, false);
-            } else {
-                virtualVar = new FlowVariable(errorName, "");
-            }
-            final String error = "Invalid variable \"" + usedVariable + "\"";
-            final ComboBoxElement cbe = new ComboBoxElement(virtualVar, error);
-            m_valueComboBoxModel.addElement(cbe);
-            m_valueComboBox.setSelectedItem(cbe);
+            addPlaceholderForInvalidVariable(usedVariable, selType);
         }
         m_valueComboBox.setEnabled(m_valueComboBoxModel.getSize() > 1);
+    }
+
+    private VariableType<?> fillSuitableVariablesNew(final Collection<FlowVariable> suitableVariables) {
+        final AbstractConfigEntry entry = m_treeNode.getConfigEntry();
+        final TreeNode parent = entry.getParent();
+        if (parent instanceof Config) {
+            final Config config = (Config)parent;
+            final String configKey = entry.getKey();
+            VariableType<?>[] suitableTypes =
+                VariableTypeRegistry.getInstance().getOverwritingTypes(config, configKey);
+            suitableVariables.addAll(getAllVariablesOfTypes(suitableTypes));
+
+            return VariableTypeRegistry.getInstance().getCorrespondingVariableType(config, configKey).orElse(null);
+        } else {
+            return null;
+        }
+    }
+
+    private void addPlaceholderForInvalidVariable(final String usedVariable, final VariableType<?> selType) {
+        // show name in variable in arrows; makes also sure to
+        // not violate the namespace of the variable (could be
+        // node-local variable, which can't be created outside
+        // the workflow package)
+        final String errorName = "<" + usedVariable + ">";
+        final FlowVariable virtualVar;
+        virtualVar = createVirtualVariableNew(selType, errorName);
+        final String error = "Invalid variable \"" + usedVariable + "\"";
+        final ComboBoxElement cbe = new ComboBoxElement(virtualVar, error);
+        m_valueComboBoxModel.addElement(cbe);
+        m_valueComboBox.setSelectedItem(cbe);
+    }
+
+    private static FlowVariable createVirtualVariableNew(final VariableType<?> selType, final String name) {
+        return new FlowVariable(name, selType);
     }
 
     /** Write the currently edited values to the underlying model. */

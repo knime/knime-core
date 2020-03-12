@@ -1338,9 +1338,29 @@ public abstract class NodeDialogPane {
      * @param key of corresponding settings object
      * @param type of variable/settings object
      * @return new FlowVariableModel which is already registered
+     * @deprecated use {@link NodeDialogPane#createFlowVariableModel(String, VariableType)} instead
      */
+    @Deprecated
     public FlowVariableModel createFlowVariableModel(
             final String key, final FlowVariable.Type type) {
+        return createFlowVariableModel(new String[] {key}, type);
+    }
+
+    /**
+     * Create model and register a new variable for a specific settings entry
+     * (in a non-hierarchical settings object).
+     * This can serve two purposes:
+     * 1) replace the actual value in the settings object by the value of
+     *    the variable
+     * 2) and/or put the current value of the settings object into the
+     *    specified variable.
+     * @param key of corresponding settings object
+     * @param type of variable/settings object
+     * @return new FlowVariableModel which is already registered
+     *
+     * @since 4.2
+     */
+    public FlowVariableModel createFlowVariableModel(final String key, final VariableType<?> type) {
         return createFlowVariableModel(new String[] {key}, type);
     }
 
@@ -1355,18 +1375,40 @@ public abstract class NodeDialogPane {
      * @param keys hierarchy of keys of corresponding settings object
      * @param type of variable/settings object
      * @return new FlowVariableModel which is already registered
+     * @deprecated use {@link NodeDialogPane#createFlowVariableModel(String[], VariableType)} instead
      */
+    @Deprecated
     public FlowVariableModel createFlowVariableModel(
             final String[] keys, final FlowVariable.Type type) {
         FlowVariableModel wvm = new FlowVariableModel(this, keys, type);
         m_flowVariablesModelList.add(wvm);
-        wvm.addChangeListener(new ChangeListener() {
-            /** {@inheritDoc} */
-            @Override
-            public void stateChanged(final ChangeEvent e) {
+        wvm.addChangeListener(e -> {
                 m_flowVariablesModelChanged = true;
                 updateFlowVariablesOverwriteWarning();
-            }
+        });
+        return wvm;
+    }
+
+    /**
+     * Create model and register a new variable for a specific settings entry
+     * for a hierarchical settings object.
+     * This can serve two purposes:
+     * 1) replace the actual value in the settings object by the value of
+     *    the variable
+     * 2) and/or put the current value of the settings object into the
+     *    specified variable.
+     *
+     * @param keys hierarchy of keys of corresponding settings object
+     * @param type of variable/settings object
+     * @return new FlowVariableModel which is already registered
+     * @since 4.2
+     */
+    public FlowVariableModel createFlowVariableModel(final String[] keys, final VariableType<?> type) {
+        FlowVariableModel wvm = new FlowVariableModel(this, keys, type);
+        m_flowVariablesModelList.add(wvm);
+        wvm.addChangeListener(e -> {
+                m_flowVariablesModelChanged = true;
+                updateFlowVariablesOverwriteWarning();
         });
         return wvm;
     }

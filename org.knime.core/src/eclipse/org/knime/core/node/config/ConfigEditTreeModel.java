@@ -48,54 +48,35 @@
 package org.knime.core.node.config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.IntStream;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.ConfigBooleanEntry;
-import org.knime.core.node.config.base.ConfigByteEntry;
-import org.knime.core.node.config.base.ConfigCharEntry;
-import org.knime.core.node.config.base.ConfigDoubleEntry;
 import org.knime.core.node.config.base.ConfigEntries;
-import org.knime.core.node.config.base.ConfigFloatEntry;
-import org.knime.core.node.config.base.ConfigIntEntry;
 import org.knime.core.node.config.base.ConfigLongEntry;
-import org.knime.core.node.config.base.ConfigPasswordEntry;
-import org.knime.core.node.config.base.ConfigShortEntry;
-import org.knime.core.node.config.base.ConfigStringEntry;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
-import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
-import org.knime.core.node.workflow.VariableType;
-import org.knime.core.node.workflow.VariableType.BooleanArrayType;
-import org.knime.core.node.workflow.VariableType.BooleanType;
-import org.knime.core.node.workflow.VariableType.DoubleArrayType;
-import org.knime.core.node.workflow.VariableType.DoubleType;
-import org.knime.core.node.workflow.VariableType.IntArrayType;
-import org.knime.core.node.workflow.VariableType.IntType;
-import org.knime.core.node.workflow.VariableType.LongArrayType;
-import org.knime.core.node.workflow.VariableType.LongType;
-import org.knime.core.node.workflow.VariableType.StringArrayType;
-import org.knime.core.node.workflow.VariableType.StringType;
+import org.knime.core.node.workflow.VariableType.InvalidConfigEntryException;
+import org.knime.core.node.workflow.VariableTypeRegistry;
 
 /**
  * Config editor that keeps a mask of variables to overwrite existing settings.
@@ -106,6 +87,7 @@ import org.knime.core.node.workflow.VariableType.StringType;
  * framework classes.
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public final class ConfigEditTreeModel extends DefaultTreeModel {
 
     /**
@@ -115,7 +97,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * 2, we can do better. But for reasons of backwards compatibility, we have to stick with how we did it earlier if
      * we find no version (or version 1) in the variable settings.
      */
-    private static enum Version {
+    private enum Version {
             /**
              * AP 4.0 and earlier - supports only flow variables of types String, Double, and Integer
              */
@@ -129,10 +111,6 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
 
         private Version(final int number) {
             m_number = number;
-        }
-
-        private int getNumber() {
-            return m_number;
         }
     }
 
@@ -197,7 +175,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 try {
                     childVariableValue = variableValue.getConfigBase(childKey);
                     for (final String variableKey : childVariableValue.keySet()) {
-                        if (childVariableValue.getEntry(variableKey).getType().equals(ConfigEntries.config)) {
+                        if (childVariableValue.getEntry(variableKey).getType() == ConfigEntries.config) {
                             childVariableValueHasGrandchildren = true;
                         }
                     }
@@ -210,26 +188,8 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             // instead interpret it as a leaf even though it is a config and actually has children
             // the only exception is if the child has descendants in the variable tree
             ConfigEntries childArraySubtype = null;
-            if (!childVariableValueHasGrandchildren && childValue.getType().equals(ConfigEntries.config)) {
-                if (configValue.getStringArray(childKey, (String[])null) != null) {
-                    childArraySubtype = ConfigEntries.xstring;
-                } else if (configValue.getCharArray(childKey, (char[])null) != null) {
-                    childArraySubtype = ConfigEntries.xchar;
-                } else if (configValue.getBooleanArray(childKey, (boolean[])null) != null) {
-                    childArraySubtype = ConfigEntries.xboolean;
-                } else if (configValue.getByteArray(childKey, (byte[])null) != null) {
-                    childArraySubtype = ConfigEntries.xbyte;
-                } else if (configValue.getShortArray(childKey, (short[])null) != null) {
-                    childArraySubtype = ConfigEntries.xshort;
-                } else if (configValue.getIntArray(childKey, (int[])null) != null) {
-                    childArraySubtype = ConfigEntries.xint;
-                } else if (configValue.getLongArray(childKey, (long[])null) != null) {
-                    childArraySubtype = ConfigEntries.xlong;
-                } else if (configValue.getFloatArray(childKey, (float[])null) != null) {
-                    childArraySubtype = ConfigEntries.xfloat;
-                } else if (configValue.getDoubleArray(childKey, (double[])null) != null) {
-                    childArraySubtype = ConfigEntries.xdouble;
-                }
+            if (!childVariableValueHasGrandchildren && childValue.getType() == ConfigEntries.config) {
+                childArraySubtype = getChildArraySubtype(configValue, childKey);
             }
 
             // determine if the child is an internal config
@@ -242,10 +202,34 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 final ConfigEditTreeNode childTreeNode =
                     new ConfigEditTreeNode(childValue, childArraySubtype, treeNode.m_version);
                 treeNode.add(childTreeNode);
-                if (childValue.getType().equals(ConfigEntries.config) && childArraySubtype == null) {
+                if (childValue.getType() == ConfigEntries.config && childArraySubtype == null) {
                     recursiveAdd(childTreeNode, (ConfigBase)childValue, childVariableValue);
                 }
             }
+        }
+    }
+
+    private static ConfigEntries getChildArraySubtype(final ConfigBase configValue, final String childKey) {
+        if (configValue.getStringArray(childKey, (String[])null) != null) {
+            return ConfigEntries.xstring;
+        } else if (configValue.getCharArray(childKey, (char[])null) != null) {
+            return ConfigEntries.xchar;
+        } else if (configValue.getBooleanArray(childKey, (boolean[])null) != null) {
+            return ConfigEntries.xboolean;
+        } else if (configValue.getByteArray(childKey, (byte[])null) != null) {
+            return ConfigEntries.xbyte;
+        } else if (configValue.getShortArray(childKey, (short[])null) != null) {
+            return ConfigEntries.xshort;
+        } else if (configValue.getIntArray(childKey, (int[])null) != null) {
+            return ConfigEntries.xint;
+        } else if (configValue.getLongArray(childKey, (long[])null) != null) {
+            return ConfigEntries.xlong;
+        } else if (configValue.getFloatArray(childKey, (float[])null) != null) {
+            return ConfigEntries.xfloat;
+        } else if (configValue.getDoubleArray(childKey, (double[])null) != null) {
+            return ConfigEntries.xdouble;
+        } else {
+            return null;
         }
     }
 
@@ -270,9 +254,9 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             case STRING:
                 return true;
             case DOUBLE:
-                return Type.DOUBLE.equals(actualType) || Type.INTEGER.equals(actualType);
+                return Type.DOUBLE == actualType || Type.INTEGER == actualType;
             case INTEGER:
-                return Type.INTEGER.equals(actualType);
+                return Type.INTEGER == actualType;
             case CREDENTIALS:
                 return false;
             case OTHER:
@@ -286,7 +270,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
     /** @param rootNode root node. */
     private ConfigEditTreeModel(final ConfigEditTreeNode rootNode) {
         super(rootNode);
-        m_listeners = new CopyOnWriteArrayList<ConfigEditTreeEventListener>();
+        m_listeners = new CopyOnWriteArrayList<>();
     }
 
     /** @return true if there is any mask (overwriting settings) below this
@@ -300,7 +284,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * indicated in the status bar of the node dialog.
      */
     public Set<String> getVariableControlledParameters() {
-        Set<String> result = new LinkedHashSet<String>();
+        Set<String> result = new LinkedHashSet<>();
         getRoot().addVariableControlledParameters(result);
         return result;
     }
@@ -316,7 +300,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * represented by this object.
      * @param settingsTree settings tree to modify (supposed to have
      * equivalent tree structure)
-     * @param variables The has of variables-values to apply.
+     * @param variables The map of variables-values to apply.
      * @return A list of exposed variables
      * @throws InvalidSettingsException If reading fails
      */
@@ -417,13 +401,12 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
     }
 
     /** Single Tree node implementation. */
-    @SuppressWarnings("serial")
     public static final class ConfigEditTreeNode extends DefaultMutableTreeNode {
         private final ConfigEntries m_arraySubType;
 
         private final Version m_version;
 
-        /** The tree model, which is null for all nodes accept for the root.
+        /** The tree model, which is null for all nodes except for the root.
          * It is set after the tree nodes are constructed. Used to propagate
          * events. */
         private ConfigEditTreeModel m_treeModel;
@@ -482,7 +465,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             if (value == null || value.length() == 0) {
                 newValue = null;
             }
-            if (!ConvenienceMethods.areEqual(
+            if (!Objects.equals(
                     getUserObject().m_useVarName, newValue)) {
                 getUserObject().m_useVarName = value;
                 fireEvent();
@@ -501,7 +484,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             if (variableName == null || variableName.length() == 0) {
                 newValue = null;
             }
-            if (!ConvenienceMethods.areEqual(getUserObject().m_exposeVarName,
+            if (!Objects.equals(getUserObject().m_exposeVarName,
                     newValue)) {
                 getUserObject().m_exposeVarName = newValue;
                 fireEvent();
@@ -530,7 +513,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
          * @return if mask exists in this node or any child node. */
         public boolean hasConfiguration() {
             if (getUserObject().isLeaf()) {
-                return getUseVariableName() != null
+                return isOverwrittenByVariable()
                 || getExposeVariableName() != null;
             }
             for (Enumeration<?> e = children(); e.hasMoreElements();) {
@@ -547,7 +530,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
          * @param toAdd List to add to. */
         public void addVariableControlledParameters(final Set<String> toAdd) {
             if (getUserObject().isLeaf()) {
-                if (getUseVariableName() != null) {
+                if (isOverwrittenByVariable()) {
                     toAdd.add(getUserObject().getKey());
                 }
             } else {
@@ -558,8 +541,15 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             }
         }
 
+        /**
+         * @return <code>true</code> if the associated setting is overwritten by a flow variable
+         */
+        private boolean isOverwrittenByVariable() {
+            return getUseVariableName() != null;
+        }
+
         /** Implements the functionality described in the
-         * {@link ConfigEditTreeNode#update(FlowVariableModel)} method.
+         * {@link ConfigEditTreeModel#update(FlowVariableModel)} method.
          * @param model The model that provides the update.
          */
         void update(final FlowVariableModel model) {
@@ -619,7 +609,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 String key = getConfigEntry().getKey();
                 subConfig = variableTree.addConfigBase(key);
             } else {
-                if (m_version.equals(Version.V_2008_04_08)) {
+                if (m_version == Version.V_2008_04_08) {
                     subConfig = variableTree;
                 } else {
                     variableTree.addString(VERSION_KEY, m_version.name());
@@ -649,272 +639,91 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             List<FlowVariable> result = null;
             AbstractConfigEntry thisEntry = getConfigEntry();
             String key = thisEntry.getKey();
-            AbstractConfigEntry original;
+            final AbstractConfigEntry original;
             if (isCounterpartParent) {
                 original = counterpart.getEntry(key);
             } else {
                 original = counterpart;
             }
-            if (original == null) {
-                throw new InvalidSettingsException(
-                        "No matching element found for entry with key: " + key);
-            }
-            if (!original.getType().equals(thisEntry.getType())) {
-                throw new InvalidSettingsException("Non matching config "
-                        + "elements for key \"" + key + "\", "
-                        + original.getType() + " vs. " + thisEntry.getType());
-            }
-            String varName = getUseVariableName();
-            if (varName != null) {
-                switch (original.getType()) {
-                    case xboolean:
-                        if (getVariable(varName, variables).getVariableType() == StringType.INSTANCE) {
-                            String bool = getStringVariable(varName, variables);
-                            if (bool == null) {
-                                throw new InvalidSettingsException("Value of \"" + varName + "\" is null");
-                            }
-                            bool = bool.toLowerCase();
-                            if (bool.equals("true") || bool.equals("false")) {
-                                counterpart.addBoolean(key, Boolean.parseBoolean(bool));
-                            } else {
-                                throw new InvalidSettingsException(
-                                    "Unable to parse \"" + bool + "\" (variable \"" + varName + "\")"
-                                        + " as boolean expression (settings " + "parameter \"" + key + "\")");
-                            }
-                        } else {
-                            counterpart.addBoolean(key, getBooleanVariable(varName, variables));
-                        }
-                        break;
-                    case xchar:
-                        final String charS = getStringVariable(varName, variables);
-                        if (charS != null && charS.length() == 1) {
-                            counterpart.addChar(key, charS.charAt(0));
-                        } else {
-                            throw new InvalidSettingsException("Unable to parse \"" + charS + "\" (variable \""
-                                + varName + "\") as char " + "(settings parameter \"" + key + "\")");
-                        }
-                        break;
-                    case xtransientstring:
-                        counterpart.addTransientString(key, getStringVariable(varName, variables));
-                        break;
-                    case xstring:
-                        counterpart.addString(key, getStringVariable(varName, variables));
-                        break;
-                    case xlong:
-                        counterpart.addLong(key, getLongVariable(varName, variables));
-                        break;
-                    case xint:
-                    case xshort:
-                    case xbyte:
-                        final int value = getIntVariable(varName, variables);
-                        switch (original.getType()) {
-                            case xint:
-                                counterpart.addInt(key, value);
-                                break;
-                            case xshort:
-                                counterpart.addShort(key, (short)value);
-                                if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
-                                    throw new InvalidSettingsException(
-                                        "Value of variable \"" + varName + "\" can't be cast to " + original.getType()
-                                            + "(settings parameter " + "\"" + key + "\"), out of range: " + value);
-                                }
-                                break;
-                            case xbyte:
-                                counterpart.addByte(key, (byte)value);
-                                if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
-                                    throw new InvalidSettingsException(
-                                        "Value of variable \"" + varName + "\" can't be cast to " + original.getType()
-                                            + "(settings parameter " + "\"" + key + "\"), out of range: " + value);
-                                }
-                                break;
-                            default:
-                                assert false : "Unreachable case";
-                        }
-                        break;
-                    case xfloat:
-                        counterpart.addFloat(key, (float)getDoubleVariable(varName, variables));
-                        break;
-                    case xdouble:
-                        counterpart.addDouble(key, getDoubleVariable(varName, variables));
-                        break;
-                    case config:
-                        if (m_arraySubType != null) {
-                            switch (m_arraySubType) {
-                                case xbyte:
-                                case xshort:
-                                case xint:
-                                    counterpart.addIntArray(key, getIntArrayVariable(varName, variables));
-                                    break;
-                                case xlong:
-                                    counterpart.addLongArray(key, getLongArrayVariable(varName, variables));
-                                    break;
-                                case xfloat:
-                                case xdouble:
-                                    counterpart.addDoubleArray(key, getDoubleArrayVariable(varName, variables));
-                                    break;
-                                case xboolean:
-                                    counterpart.addBooleanArray(key, getBooleanArrayVariable(varName, variables));
-                                    break;
-                                case xchar:
-                                case xstring:
-                                    counterpart.addStringArray(key, getStringArrayVariable(varName, variables));
-                                    break;
-                                default:
-                                    assert false : "Unreachable case: " + original.getType();
-                            }
-                            break;
-                        }
-                    default:
-                        assert false : "Unreachable case: " + original.getType();
-                }
+            CheckUtils.checkSetting(original != null, "No matching element found for entry with key: %s", key);
+            @SuppressWarnings("null") // the above check ensures that original is not null
+            ConfigEntries originalType = original.getType();
+            CheckUtils.checkSetting(originalType == thisEntry.getType(),
+                "Non matching config elements for key \"%s\", %s vs. %s", key, originalType, thisEntry.getType());
+            if (isOverwrittenByVariable()) {
+                overwriteWithVariable(counterpart, variables, key);
             }
             String newVar = getExposeVariableName();
             if (newVar != null) {
                 assert isLeaf() && isCounterpartParent;
-                AbstractConfigEntry newValue = counterpart.getEntry(key);
-                FlowVariable exposed;
-                switch (newValue.getType()) {
-                case xboolean:
-                    boolean b = ((ConfigBooleanEntry)newValue).getBoolean();
-                    switch (m_version) {
-                        case V_2008_04_08:
-                            exposed = new FlowVariable(newVar, Boolean.toString(b));
-                            break;
-                        case V_2019_09_13:
-                        default:
-                            exposed = new FlowVariable(newVar, BooleanType.INSTANCE, b);
-                    }
-                    break;
-                case xstring:
-                    String s = ((ConfigStringEntry)newValue).getString();
-                    exposed = new FlowVariable(newVar, s);
-                    break;
-                case xchar:
-                    char c = ((ConfigCharEntry)newValue).getChar();
-                    exposed = new FlowVariable(newVar, Character.toString(c));
-                    break;
-                case xbyte:
-                    byte by = ((ConfigByteEntry)newValue).getByte();
-                    exposed = new FlowVariable(newVar, by);
-                    break;
-                case xshort:
-                    short sh = ((ConfigShortEntry)newValue).getShort();
-                    exposed = new FlowVariable(newVar, sh);
-                    break;
-                case xint:
-                    int i = ((ConfigIntEntry)newValue).getInt();
-                    exposed = new FlowVariable(newVar, i);
-                    break;
-                case xlong:
-                    long l = ((ConfigLongEntry)newValue).getLong();
-                    switch (m_version) {
-                        case V_2008_04_08:
-                            if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
-                                throw new InvalidSettingsException(
-                                    "Can't export value \"" + l + "\" as "
-                                            + "variable \"" + newVar + "\", out of range");
-                            }
-                            exposed = new FlowVariable(newVar, (int)l);
-                            break;
-                        case V_2019_09_13:
-                        default:
-                            exposed = new FlowVariable(newVar, LongType.INSTANCE, l);
-                    }
-                    break;
-                case xfloat:
-                    float f = ((ConfigFloatEntry)newValue).getFloat();
-                    exposed = new FlowVariable(newVar, f);
-                    break;
-                case xdouble:
-                    double d = ((ConfigDoubleEntry)newValue).getDouble();
-                    exposed = new FlowVariable(newVar, d);
-                    break;
-                case xpassword:
-                    String pass = ((ConfigPasswordEntry)newValue).getPassword();
-                    exposed = new FlowVariable(newVar, pass);
-                    break;
-                case config:
-                    if (m_arraySubType != null) {
-                        switch (m_arraySubType) {
-                            case xstring:
-                                final String[] strings = counterpart.getStringArray(key);
-                                exposed = new FlowVariable(newVar, StringArrayType.INSTANCE, strings);
-                                break;
-                            case xchar:
-                                final char[] chars = counterpart.getCharArray(key);
-                                final String[] charsAsStrings = IntStream.range(0, chars.length)//
-                                        .mapToObj(idx -> Character.toString(chars[idx]))//
-                                        .toArray(String[]::new);
-                                exposed = new FlowVariable(newVar, StringArrayType.INSTANCE, charsAsStrings);
-                                break;
-                            case xboolean:
-                                final Boolean[] booleans = ArrayUtils.toObject(counterpart.getBooleanArray(key));
-                                exposed = new FlowVariable(newVar, BooleanArrayType.INSTANCE, booleans);
-                                break;
-                            case xbyte:
-                                final byte[] bytes = counterpart.getByteArray(key);
-                                final Integer[] bytesAsInts = IntStream.range(0, bytes.length)//
-                                        .mapToObj(idx -> Integer.valueOf(bytes[idx]))//
-                                        .toArray(Integer[]::new);
-                                exposed = new FlowVariable(newVar, IntArrayType.INSTANCE, bytesAsInts);
-                                break;
-                            case xshort:
-                                final short[] shorts = counterpart.getShortArray(key);
-                                final Integer[] shortsAsInts = IntStream.range(0, shorts.length)//
-                                        .mapToObj(idx -> Integer.valueOf(shorts[idx]))//
-                                        .toArray(Integer[]::new);
-                                exposed = new FlowVariable(newVar, IntArrayType.INSTANCE, shortsAsInts);
-                                break;
-                            case xint:
-                                final Integer[] ints = ArrayUtils.toObject(counterpart.getIntArray(key));
-                                exposed = new FlowVariable(newVar, IntArrayType.INSTANCE, ints);
-                                break;
-                            case xlong:
-                                final Long[] longs = ArrayUtils.toObject(counterpart.getLongArray(key));
-                                exposed = new FlowVariable(newVar, LongArrayType.INSTANCE, longs);
-                                break;
-                            case xfloat:
-                                final float[] floats = counterpart.getFloatArray(key);
-                                final Double[] floatsAsDoubles = IntStream.range(0, floats.length)//
-                                        .mapToObj(idx -> Double.valueOf(floats[idx]))//
-                                        .toArray(Double[]::new);
-                                exposed = new FlowVariable(newVar, DoubleArrayType.INSTANCE, floatsAsDoubles);
-                                break;
-                            case xdouble:
-                                final Double[] doubles = ArrayUtils.toObject(counterpart.getDoubleArray(key));
-                                exposed = new FlowVariable(newVar, DoubleArrayType.INSTANCE, doubles);
-                                break;
-                            default:
-                                throw new InvalidSettingsException(
-                                    "Can't export " + newValue.getType() + "with array subtype "
-                                        + m_arraySubType + " as variable \"" + newVar + "\"");
-                        }
-                        break;
-                    }
-                default:
-                    throw new InvalidSettingsException("Can't export "
-                            + newValue.getType() + " as variable \""
-                            + newVar + "\"");
-                }
-                result = new ArrayList<FlowVariable>();
-                result.add(exposed);
+                result = getExposedVariables(counterpart, key, newVar);
             }
 
             if (!isLeaf()) {
-                for (Enumeration<?> e = children(); e.hasMoreElements();) {
-                    ConfigEditTreeNode c = (ConfigEditTreeNode)e.nextElement();
-                    List<FlowVariable> r = c.overwriteSettings(
-                            (Config)original, variables, true);
-                    if (!r.isEmpty()) {
-                        if (result == null) {
-                            result = new ArrayList<FlowVariable>();
-                        }
-                        result.addAll(r);
-                    }
-                }
+                result = recursivelyOverwriteSettingsInChildren(variables, result, original);
             }
             if (result == null) {
                 result = Collections.emptyList();
+            }
+            return result;
+        }
+
+        private void overwriteWithVariable(final Config counterpart, final Map<String, FlowVariable> variables,
+            final String key) throws InvalidSettingsException {
+            final String varName = getUseVariableName();
+            try {
+                VariableTypeRegistry.overwriteWithVariable(counterpart, key,
+                    getVariable(varName, variables));
+            } catch (InvalidConfigEntryException ex) {
+                throw new InvalidSettingsException(ex.getErrorMessageWithVariableName(varName).orElse(ex.getMessage()),
+                    ex);
+            }
+        }
+
+        private List<FlowVariable> getExposedVariables(final Config counterpart,
+            final String key, final String newVar) throws InvalidSettingsException {
+            FlowVariable exposed = resolveExposedVariable(counterpart, key, newVar);
+            final List<FlowVariable> result = new ArrayList<>();
+            result.add(exposed);
+            return result;
+        }
+
+        private FlowVariable resolveExposedVariable(final Config counterpart, final String key, final String newVar)
+            throws InvalidSettingsException {
+            final AbstractConfigEntry newValue = counterpart.getEntry(key);
+            final ConfigEntries configType = newValue.getType();
+            if (m_version == Version.V_2008_04_08 && configType == ConfigEntries.xboolean) {
+                return new FlowVariable(newVar, Boolean.toString(((ConfigBooleanEntry)newValue).getBoolean()));
+            } else if (m_version == Version.V_2008_04_08 && configType == ConfigEntries.xlong) {
+                final long l = ((ConfigLongEntry)newValue).getLong();
+                if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
+                    throw new InvalidSettingsException(
+                        "Can't export value \"" + l + "\" as "
+                                + "variable \"" + newVar + "\", out of range");
+                }
+                return new FlowVariable(newVar, (int)l);
+            } else {
+                try {
+                    return VariableTypeRegistry.getInstance().createFromConfig(newVar, counterpart, key);
+                } catch (InvalidConfigEntryException ex) {
+                    throw new InvalidSettingsException(
+                        ex.getErrorMessageWithVariableName(newVar).orElse(ex.getMessage()), ex);
+                }
+            }
+        }
+
+        private List<FlowVariable> recursivelyOverwriteSettingsInChildren(final Map<String, FlowVariable> variables,
+            List<FlowVariable> result, final AbstractConfigEntry original) throws InvalidSettingsException {
+            for (Enumeration<?> e = children(); e.hasMoreElements();) {
+                ConfigEditTreeNode c = (ConfigEditTreeNode)e.nextElement();
+                List<FlowVariable> r = c.overwriteSettings(
+                        (Config)original, variables, true);
+                if (!r.isEmpty()) {
+                    if (result == null) {
+                        result = new ArrayList<>();
+                    }
+                    result.addAll(r);
+                }
             }
             return result;
         }
@@ -932,7 +741,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
          * @param indent indentation.
          */
         public void toString(final StringBuilder b, final String indent) {
-            boolean edited = getUseVariableName() != null
+            boolean edited = isOverwrittenByVariable()
                 || getExposeVariableName() != null;
             String thisEntry = getUserObject().toString() + (edited ? "*" : "");
             b.append(indent + thisEntry + "\n");
@@ -942,187 +751,14 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             }
         }
 
-        /** Getter method throws excpetion of variable name does not exist
+        /** Getter method throws exception if variable name does not exist
          * in map. */
         private static FlowVariable getVariable(final String varString,
                 final Map<String, FlowVariable> variables)
             throws InvalidSettingsException {
             FlowVariable var = variables.get(varString);
-            if (var == null) {
-                throw new InvalidSettingsException(
-                        "Unknown variable \"" + varString + "\"");
-            }
+            CheckUtils.checkSetting(var != null, "Unknown variable \"%s\"", varString);
             return var;
-        }
-
-        private static boolean getBooleanVariable(final String varString, final Map<String, FlowVariable> variables)
-            throws InvalidSettingsException {
-            final FlowVariable v = getVariable(varString, variables);
-            final VariableType<?> type = v.getVariableType();
-            if (type.equals(BooleanType.INSTANCE)) {
-                return v.getValue(BooleanType.INSTANCE);
-            } else {
-                throw new InvalidSettingsException("Can't evaluate variable \"" + varString
-                    + "\" as boolean expression, it is a " + type + " (\"" + v + "\")");
-            }
-        }
-
-        private static boolean[] getBooleanArrayVariable(final String varString,
-            final Map<String, FlowVariable> variables) throws InvalidSettingsException {
-            final FlowVariable v = getVariable(varString, variables);
-            final VariableType<?> type = v.getVariableType();
-            if (type.equals(BooleanArrayType.INSTANCE)) {
-                return ArrayUtils.toPrimitive(v.getValue(BooleanArrayType.INSTANCE));
-            } else if (type.equals(BooleanType.INSTANCE)) {
-                return new boolean[]{v.getValue(BooleanType.INSTANCE)};
-            } else {
-                throw new InvalidSettingsException("Can't evaluate variable \"" + varString
-                    + "\" as boolean array expression, it is a " + type + " (\"" + v + "\")");
-            }
-        }
-
-        /** Getter method to get double value. */
-        private static double getDoubleVariable(final String varString, final Map<String, FlowVariable> variables)
-            throws InvalidSettingsException {
-            final FlowVariable v = getVariable(varString, variables);
-            final VariableType<?> type = v.getVariableType();
-            if (type.equals(DoubleType.INSTANCE)) {
-                return v.getValue(DoubleType.INSTANCE);
-            } else if (type.equals(LongType.INSTANCE)) {
-                return v.getValue(LongType.INSTANCE);
-            } else if (type.equals(IntType.INSTANCE)) {
-                return v.getValue(IntType.INSTANCE);
-            } else {
-                throw new InvalidSettingsException("Can't evaluate variable \"" + varString
-                    + "\" as double expression, it is a " + type + " (\"" + v + "\")");
-            }
-        }
-
-        private static double[] getDoubleArrayVariable(final String varString,
-            final Map<String, FlowVariable> variables) throws InvalidSettingsException {
-            final FlowVariable v = getVariable(varString, variables);
-            final VariableType<?> type = v.getVariableType();
-            if (type.equals(DoubleArrayType.INSTANCE)) {
-                return ArrayUtils.toPrimitive(v.getValue(DoubleArrayType.INSTANCE));
-            } else if (type.equals(LongArrayType.INSTANCE)) {
-                return Arrays.stream(v.getValue(LongArrayType.INSTANCE)).mapToDouble(Long::doubleValue)
-                    .toArray();
-            } else if (type.equals(IntArrayType.INSTANCE)) {
-                return Arrays.stream(v.getValue(IntArrayType.INSTANCE)).mapToDouble(Integer::doubleValue)
-                    .toArray();
-            } else if (type.equals(DoubleType.INSTANCE)) {
-                return new double[]{v.getDoubleValue()};
-            } else if (type.equals(LongType.INSTANCE)) {
-                return new double[]{v.getValue(LongType.INSTANCE)};
-            } else if (type.equals(IntType.INSTANCE)) {
-                return new double[]{v.getIntValue()};
-            } else {
-                throw new InvalidSettingsException("Can't evaluate variable \"" + varString
-                    + "\" as double array expression, it is a " + type + " (\"" + v + "\")");
-            }
-        }
-
-        /** Getter method to get double value. */
-        private static long getLongVariable(final String varString, final Map<String, FlowVariable> variables)
-            throws InvalidSettingsException {
-            final FlowVariable v = getVariable(varString, variables);
-            final VariableType<?> type = v.getVariableType();
-            if (type.equals(LongType.INSTANCE)) {
-                return v.getValue(LongType.INSTANCE);
-            } else if (type.equals(IntType.INSTANCE)) {
-                return v.getValue(IntType.INSTANCE);
-            } else {
-                throw new InvalidSettingsException("Can't evaluate variable \"" + varString
-                    + "\" as long expression, it is a " + type + " (\"" + v + "\")");
-            }
-        }
-
-        private static long[] getLongArrayVariable(final String varString, final Map<String, FlowVariable> variables)
-            throws InvalidSettingsException {
-            final FlowVariable v = getVariable(varString, variables);
-            final VariableType<?> type = v.getVariableType();
-            if (type.equals(LongArrayType.INSTANCE)) {
-                return ArrayUtils.toPrimitive(v.getValue(LongArrayType.INSTANCE));
-            } else if (type.equals(IntArrayType.INSTANCE)) {
-                return Arrays.stream(v.getValue(IntArrayType.INSTANCE)).mapToLong(Integer::longValue)
-                    .toArray();
-            } else if (type.equals(LongType.INSTANCE)) {
-                return new long[]{v.getValue(LongType.INSTANCE)};
-            } else if (type.equals(IntType.INSTANCE)) {
-                return new long[]{v.getIntValue()};
-            } else {
-                throw new InvalidSettingsException("Can't evaluate variable \"" + varString
-                    + "\" as long array expression, it is a " + type + " (\"" + v + "\")");
-            }
-        }
-
-        /** Getter method to get int value. */
-        private static int getIntVariable(final String varString, final Map<String, FlowVariable> variables)
-            throws InvalidSettingsException {
-            final FlowVariable v = getVariable(varString, variables);
-            final VariableType<?> type = v.getVariableType();
-            if (type.equals(IntType.INSTANCE)) {
-                return v.getValue(IntType.INSTANCE);
-            } else {
-                throw new InvalidSettingsException("Can't evaluate variable \"" + varString
-                    + "\" as integer expression, it is a " + type + " (\"" + v + "\")");
-            }
-        }
-
-        private static int[] getIntArrayVariable(final String varString, final Map<String, FlowVariable> variables)
-            throws InvalidSettingsException {
-            final FlowVariable v = getVariable(varString, variables);
-            final VariableType<?> type = v.getVariableType();
-            if (type.equals(IntArrayType.INSTANCE)) {
-                return ArrayUtils.toPrimitive(v.getValue(IntArrayType.INSTANCE));
-            } else if (type.equals(IntType.INSTANCE)) {
-                return new int[]{v.getIntValue()};
-            } else {
-                throw new InvalidSettingsException("Can't evaluate variable \"" + varString
-                    + "\" as integer array expression, it is a " + type + " (\"" + v + "\")");
-            }
-        }
-
-        /** Getter method to get string value. */
-        private static String getStringVariable(final String varString, final Map<String, FlowVariable> variables)
-            throws InvalidSettingsException {
-            final FlowVariable v = getVariable(varString, variables);
-            final VariableType<?> type = v.getVariableType();
-            if (type.equals(StringType.INSTANCE) || type.equals(BooleanType.INSTANCE) || type.equals(IntType.INSTANCE)
-                || type.equals(LongType.INSTANCE) || type.equals(DoubleType.INSTANCE)) {
-                return v.getValueAsString();
-            } else {
-                throw new InvalidSettingsException("Can't evaluate variable \"" + varString
-                    + "\" as string expression, it's a " + type + " (\"" + v + "\")");
-            }
-        }
-
-        private static String[] getStringArrayVariable(final String varString,
-            final Map<String, FlowVariable> variables) throws InvalidSettingsException {
-            final FlowVariable v = getVariable(varString, variables);
-            final VariableType<?> type = v.getVariableType();
-            if (type.equals(StringArrayType.INSTANCE)) {
-                return v.getValue(StringArrayType.INSTANCE);
-            } else if (type.equals(BooleanArrayType.INSTANCE)) {
-                return Arrays.stream(v.getValue(BooleanArrayType.INSTANCE)).map(b -> Boolean.toString(b))
-                    .toArray(String[]::new);
-            } else if (type.equals(DoubleArrayType.INSTANCE)) {
-                return Arrays.stream(v.getValue(DoubleArrayType.INSTANCE)).map(d -> Double.toString(d))
-                    .toArray(String[]::new);
-            } else if (type.equals(LongArrayType.INSTANCE)) {
-                return Arrays.stream(v.getValue(LongArrayType.INSTANCE)).map(l -> Long.toString(l))
-                    .toArray(String[]::new);
-            } else if (type.equals(IntArrayType.INSTANCE)) {
-                return Arrays.stream(v.getValue(IntArrayType.INSTANCE)).map(l -> Integer.toString(l))
-                    .toArray(String[]::new);
-            } else if (type.equals(StringType.INSTANCE) || type.equals(BooleanType.INSTANCE)
-                || type.equals(IntType.INSTANCE) || type.equals(LongType.INSTANCE)
-                || type.equals(DoubleType.INSTANCE)) {
-                return new String[]{v.getValueAsString()};
-            } else {
-                throw new InvalidSettingsException("Can't evaluate variable \"" + varString
-                    + "\" as string array expression, it is a " + type + " (\"" + v + "\")");
-            }
         }
     }
 

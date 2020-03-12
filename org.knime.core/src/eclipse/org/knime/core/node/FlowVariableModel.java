@@ -47,16 +47,21 @@
  */
 package org.knime.core.node;
 
-import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.node.config.ConfigEditTreeModel;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.VariableType;
+import org.knime.core.node.workflow.VariableType.CredentialsType;
+import org.knime.core.node.workflow.VariableType.DoubleType;
+import org.knime.core.node.workflow.VariableType.IntType;
+import org.knime.core.node.workflow.VariableType.StringType;
+import org.knime.core.node.workflow.VariableTypeRegistry;
 
 
 /** Container holding information regarding variables which represent
@@ -66,13 +71,14 @@ import org.knime.core.node.workflow.FlowVariable;
  * information related to variable/settings replacements.
  *
  * @author Michael Berthold, University of Konstanz
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class FlowVariableModel {
 
     // private members
-    private NodeDialogPane m_parent;
-    private String[] m_keys;  // the hierarchy of Config Keys for this object
-    private FlowVariable.Type m_type;   // the class of the variable
+    private final NodeDialogPane m_parent;
+    private final String[] m_keys;  // the hierarchy of Config Keys for this object
+    private final VariableType<?> m_variableType;
 
     /* variable names that are to be used for the corresponding settings
      * as "input" resp. "output". If one or both are null, the replacement
@@ -81,20 +87,68 @@ public class FlowVariableModel {
     private String m_inputVariableName;
     private String m_outputVariableName;
 
-    private final CopyOnWriteArrayList<ChangeListener> m_listeners;
+    private final CopyOnWriteArrayList<ChangeListener> m_listeners = new CopyOnWriteArrayList<>();
 
     /** Create a new WVM object.
      *
      * @param parent NodeDialogPane (needed to retrieve visible variables)
      * @param keys of corresponding settings object
      * @param type of variable/settings object
+     * @deprecated use {@link FlowVariableModel#FlowVariableModel(NodeDialogPane, String[], VariableType)} instead
      */
+    @Deprecated
     FlowVariableModel(final NodeDialogPane parent, final String[] keys,
             final FlowVariable.Type type) {
         m_parent = parent;
         m_keys = keys.clone();
-        m_type = type;
-        m_listeners = new CopyOnWriteArrayList<ChangeListener>();
+        m_variableType = getVariableTypeFromType(type);
+    }
+
+    // the whole purpose of the method is to map from the deprecated Type to VariableType
+    @SuppressWarnings("deprecation")
+    private static VariableType<?> getVariableTypeFromType(final FlowVariable.Type type) {
+        switch (type) {
+            case DOUBLE:
+                return DoubleType.INSTANCE;
+            case INTEGER:
+                return IntType.INSTANCE;
+            case STRING:
+                return StringType.INSTANCE;
+            case CREDENTIALS:
+            case OTHER:
+            default:
+                // this is safe because FlowVariableModel never worked for any type other than Double, Integer or String
+                throw new IllegalArgumentException("Unsupported type " + type);
+
+        }
+    }
+
+    // this method acts as an adapter between the new VariableType and the deprecated FlowVariable.Type
+    @SuppressWarnings("deprecation")
+    private static FlowVariable.Type getType(final VariableType<?> variableType) {
+        if (variableType.equals(StringType.INSTANCE)) {
+            return FlowVariable.Type.STRING;
+        } else if (variableType.equals(IntType.INSTANCE)) {
+            return FlowVariable.Type.INTEGER;
+        } else if (variableType.equals(DoubleType.INSTANCE)) {
+            return FlowVariable.Type.DOUBLE;
+        } else if (variableType.equals(CredentialsType.INSTANCE)) {
+            return FlowVariable.Type.CREDENTIALS;
+        } else {
+            return FlowVariable.Type.OTHER;
+        }
+    }
+
+    /** Create a new WVM object.
+    *
+    * @param parent NodeDialogPane (needed to retrieve visible variables)
+    * @param keys of corresponding settings object
+    * @param type of variable/settings object
+    */
+    FlowVariableModel(final NodeDialogPane parent, final String[] keys, final VariableType<?> type) {
+        m_variableType = type;
+        m_keys = keys.clone();
+        m_parent = parent;
     }
 
     /**
@@ -113,9 +167,19 @@ public class FlowVariableModel {
 
     /**
      * @return the type of the variable/settings object.
+     * @deprecated use {@link FlowVariableModel#getVariableType()} instead
      */
+    @Deprecated
     public FlowVariable.Type getType() {
-        return m_type;
+        return getType(m_variableType);
+    }
+
+    /**
+     * @return the type of the variable
+     * @since 4.2
+     */
+    public VariableType<?> getVariableType() {
+        return m_variableType;
     }
 
     /**
@@ -132,7 +196,7 @@ public class FlowVariableModel {
      * @since 3.3
      */
     public Optional<FlowVariable> getVariableValue() {
-        return Optional.ofNullable(getParent().getAvailableFlowVariables().get(m_inputVariableName));
+        return Optional.ofNullable(getParent().getAvailableFlowVariables(m_variableType).get(m_inputVariableName));
     }
 
     /**
@@ -140,7 +204,7 @@ public class FlowVariableModel {
      * if no replacement is wanted.
      */
     public void setInputVariableName(final String variableName) {
-        if (!ConvenienceMethods.areEqual(variableName, m_inputVariableName)) {
+        if (!Objects.equals(variableName, m_inputVariableName)) {
             m_inputVariableName = variableName;
             notifyChangeListeners();
         }
@@ -165,7 +229,7 @@ public class FlowVariableModel {
      * if no replacement is wanted.
      */
     public void setOutputVariableName(final String variableName) {
-        if (!ConvenienceMethods.areEqual(variableName, m_outputVariableName)) {
+        if (!Objects.equals(variableName, m_outputVariableName)) {
             m_outputVariableName = variableName;
             notifyChangeListeners();
         }
@@ -175,14 +239,10 @@ public class FlowVariableModel {
      * @return array of variables names that match the type of this model.
      */
     FlowVariable[] getMatchingVariables() {
-        ArrayList<FlowVariable> list = new ArrayList<FlowVariable>();
-        for (FlowVariable sv
-                : getParent().getAvailableFlowVariables().values()) {
-            if (ConfigEditTreeModel.doesTypeAccept(m_type, sv.getType())) {
-                list.add(sv);
-            }
-        }
-        return list.toArray(new FlowVariable[list.size()]);
+        VariableType<?>[] allTypes = VariableTypeRegistry.getInstance().getAllTypes();
+        Map<String, FlowVariable> variables = getParent().getAvailableFlowVariables(allTypes);
+        return variables.values().stream()
+            .filter(v -> v.getVariableType().isConvertible(m_variableType)).toArray(FlowVariable[]::new);
     }
 
     /**

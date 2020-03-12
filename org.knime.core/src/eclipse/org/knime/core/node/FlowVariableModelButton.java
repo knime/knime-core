@@ -138,18 +138,20 @@ implements ChangeListener, ActionListener {
             this.setText(enabled ? "v!" : "v?");
             return;
         }
+        updateTooltip(enabled);
+    }
+
+    private void updateTooltip(final boolean enabled) {
         // compose tooltip with current var names (if available)
-        StringBuffer tooltip = new StringBuffer("Flow variable: ");
+        final StringBuilder tooltip = new StringBuilder("Flow variable: ");
         if (enabled) {
-            tooltip.append("replacing with '" + m_model.getInputVariableName()
-                    + "'");
+            tooltip.append("replacing with '").append(m_model.getInputVariableName()).append("'");
         } else {
             tooltip.append("<no variable replacement>");
         }
         tooltip.append(", ");
         if (m_model.getOutputVariableName() != null) {
-            tooltip.append("export as '"
-                    + m_model.getOutputVariableName() + "'");
+            tooltip.append("export as '").append(m_model.getOutputVariableName()).append("'");
         } else {
             tooltip.append("<no export as variable>");
         }
@@ -185,7 +187,7 @@ implements ChangeListener, ActionListener {
         ved.setVisible(true);
     }
 
-    private class FlowVarEditDialog extends JDialog {
+    private final class FlowVarEditDialog extends JDialog {
 
         FlowVarEditDialog(final Frame f) {
             // set title and make dialog modal
@@ -219,12 +221,7 @@ implements ChangeListener, ActionListener {
             panelTop.setBorder(new TitledBorder("Use Variable:"));
             panelTop.setLayout(new GridLayout(1, 2));
             m_enableInputVar = new JCheckBox();
-            m_enableInputVar.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent evt) {
-                    m_inputVar.setEnabled(m_enableInputVar.isSelected());
-                }
-            });
+            m_enableInputVar.addActionListener(e -> m_inputVar.setEnabled(m_enableInputVar.isSelected()));
             panelTop.add(m_enableInputVar);
             FlowVariable[] matchingVars = m_model.getMatchingVariables();
             if (matchingVars.length > 0) {
@@ -243,12 +240,7 @@ implements ChangeListener, ActionListener {
             panelMiddle.setBorder(new TitledBorder("Create Variable:"));
             panelMiddle.setLayout(new GridLayout(1, 2));
             m_enableOutputVar = new JCheckBox();
-            m_enableOutputVar.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent evt) {
-                    m_outputVar.setEnabled(m_enableOutputVar.isSelected());
-                }
-            });
+            m_enableOutputVar.addActionListener(e -> m_outputVar.setEnabled(m_enableOutputVar.isSelected()));
             panelMiddle.add(m_enableOutputVar);
             m_outputVar = new JTextField();
             m_outputVar.setEnabled(false);
@@ -261,9 +253,7 @@ implements ChangeListener, ActionListener {
             panelBottom.add(Box.createHorizontalGlue());
             m_ok = new JButton("OK");
             m_ok.setAlignmentY(Component.BOTTOM_ALIGNMENT);
-            m_ok.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent arg0) {
+            m_ok.addActionListener(e -> {
                     // write values back to model
                     if (m_enableInputVar.isSelected()) {
                         m_model.setInputVariableName(
@@ -278,19 +268,13 @@ implements ChangeListener, ActionListener {
                         m_model.setOutputVariableName(null);
                     }
                     setVisible(false);
-                }
-            });
+                });
             panelBottom.add(m_ok);
             panelBottom.add(Box.createRigidArea(new Dimension(10, 0)));
             m_cancel = new JButton("Cancel");
             m_cancel.setAlignmentY(Component.BOTTOM_ALIGNMENT);
-            m_cancel.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent arg0) {
-                    // do nothing here!
-                    setVisible(false);
-                }
-            });
+            // do nothing here!
+            m_cancel.addActionListener(e -> setVisible(false));
             panelBottom.add(m_cancel);
             cp.add(Box.createRigidArea(new Dimension(0, 5)));
             cp.add(panelBottom);
