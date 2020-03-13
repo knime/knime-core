@@ -8873,6 +8873,44 @@ public final class WorkflowManager extends NodeContainer
         return m_editorInfo;
     }
 
+    //will not be persisted - all hidden metanodes are supposed to be temporary
+    private boolean m_hideInUI = false;
+
+    /**
+     * Will cause this workflow manager (i.e. metanode) to not be shown in the workflow editor (and therewith from the
+     * user's view). Only applicable if the workflow manager doesn't have any inputs nor outputs, if it's not part of a
+     * component (i.e. needs to be a metanode) and if it's not a project workflow manager.
+     *
+     * One use case is a node that executes captured fragments ({@link WorkflowFragment}) within the same workflow
+     * again. The to be executed fragment is copied into a temporary metanode for execution and can be hidden from the
+     * user.
+     *
+     * @since 4.2
+     * @throws IllegalStateException if the workflow manager to be hidden has inputs/outputs, is part of a component or
+     *             is a project workflow
+     */
+    public void hideInUI() {
+        if (!canBeHidden()) {
+            throw new IllegalStateException("Metanode cannot be hidden in workflow editor");
+        }
+        m_hideInUI = true;
+    }
+
+    private boolean canBeHidden() {
+        return !(getDirectNCParent() instanceof SubNodeContainer) && getNrInPorts() == 0 && getNrOutPorts() == 0
+            && !isProject();
+    }
+
+    /**
+     * @return will return true if {@link #hideInUI()} has been called previously and the conditions required for a
+     *         metanode to be hidden (still) apply
+     *
+     * @since 4.2
+     */
+    public boolean isHiddenInUI() {
+        return canBeHidden() ? m_hideInUI : false;
+    }
+
     /** {@inheritDoc} */
     @Override
     void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {

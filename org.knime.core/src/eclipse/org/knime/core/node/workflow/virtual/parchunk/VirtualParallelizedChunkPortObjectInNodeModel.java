@@ -62,6 +62,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.VariableType;
 
 /**
  * 
@@ -88,25 +89,18 @@ public class VirtualParallelizedChunkPortObjectInNodeModel extends NodeModel {
 			throw new Exception("Output objects in virtual input node have " 
 					+ "not been set");
 		}
-		for (FlowVariable f : m_input.getFlowVariables()) {
-			switch (f.getType()) {
-			case DOUBLE:
-				pushFlowVariableDouble(f.getName(), f.getDoubleValue());
-				break;
-			case INTEGER:
-				pushFlowVariableInt(f.getName(), f.getIntValue());
-				break;
-			case STRING:
-				pushFlowVariableString(f.getName(), f.getStringValue());
-				break;
-			default:
-				throw new Exception("Unsupported flow variable type: " 
-						+ f.getType());
-			}
-		}
-		return m_input.getInputObjects();
+        for (FlowVariable f : m_input.getFlowVariables()) {
+            pushFlowVariable(f);
+        }
+        return m_input.getInputObjects();
 	}
-	
+
+    @SuppressWarnings("unchecked")
+    private <T> void pushFlowVariable(final FlowVariable fv) {
+        pushFlowVariable(fv.getName(), (VariableType<T>)fv.getVariableType(), (T)fv.getValue(fv.getVariableType()));
+    }
+
+
 	/**
 	 * {@inheritDoc}
 	 */

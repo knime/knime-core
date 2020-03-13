@@ -539,4 +539,32 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
                 "The supported port types have to contain the default port type");
         }
     }
+
+    /**
+     * {@link NodeDialogPane}s implementing this interface will gain control over the node creation. That is, e.g., port
+     * configurations (adding/removing ports) can be adjusted in a dialog and applied as soon as the dialog is closed.
+     *
+     * When a dialog configuration is applied (or the dialog is closed), the respective node will essentially be
+     * deleted, a new node created based on the (new) {@link ModifiableNodeCreationConfiguration} and the (new) settings
+     * transfered.
+     *
+     * @since 4.2
+     */
+    public interface ConfigurableNodeDialog {
+
+        /**
+         * Provides the current node creation configuration. Will be called shortly before the is dialog is opened.
+         *
+         * @param config
+         */
+        void setCurrentNodeCreationConfiguration(ModifiableNodeCreationConfiguration config);
+
+        /**
+         * The dialog provides the new node creation configuration here. Will be called and therewith applied right
+         * after the dialog has been closed (or the dialog config applied).
+         *
+         * @return the new node creation configuration or an empty optional if no change should be done to the node
+         */
+        Optional<ModifiableNodeCreationConfiguration> getNewNodeCreationConfiguration();
+    }
 }
