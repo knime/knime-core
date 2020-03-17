@@ -2,12 +2,6 @@
 <?eclipse version="3.4"?>
 <fragment>
    <extension
-         point="org.knime.testing.TestcaseCollector">
-      <TestcaseCollector
-            TestcaseCollector="org.knime.core.CoreTestcaseCollector">
-      </TestcaseCollector>
-   </extension>
-   <extension
          point="org.knime.core.DataValueRenderer">
       <dataValue
             valueClass="org.knime.core.data.renderer.TestDataValue">
