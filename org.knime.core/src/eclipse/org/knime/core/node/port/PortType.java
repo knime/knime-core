@@ -235,6 +235,17 @@ public final class PortType {
         return spec == null || m_specClass.isAssignableFrom(spec.getClass());
     }
 
+    /**
+     * @param specClass
+     * @return true if this instance's spec class is assignable from the parameter value {@code Class} OR if
+     *                  {@code specClass} is null - which seems weird, i would have assumed null should
+     *                  return false - but we are keeping with the logic of {@link #acceptsPortObjectSpec(PortObjectSpec)}
+     * @since 4.2
+     */
+    public boolean acceptsPortObjectSpecClass(final Class<? extends PortObjectSpec> specClass) {
+        return ((specClass == null) || m_specClass.isAssignableFrom(specClass));
+    }
+
     public boolean acceptsPortObject(final PortObject obj) {
         return obj == null || m_objectClass.isAssignableFrom(obj.getClass());
     }

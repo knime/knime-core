@@ -2159,7 +2159,16 @@ public final class Node implements NodeModelWarningListener {
     public NodeDialogPane getDialogPane() {
         if (m_dialogPane == null) {
             if (hasDialog()) {
-                m_dialogPane = createDialogPane(getFactory(), getNrOutPorts(), true, m_creationConfig);
+                final int nonFVPortCount = getNrOutPorts() - 1;
+                boolean outputsDataTableSpec = false;
+                for (int i = 0; i < nonFVPortCount; i++) {
+                    final PortType pt = m_model.getOutPortType(i);
+                    if (pt.acceptsPortObjectSpecClass(DataTableSpec.class)) {
+                        outputsDataTableSpec = true;
+                        break;
+                    }
+                }
+                m_dialogPane = createDialogPane(getFactory(), outputsDataTableSpec, true, m_creationConfig);
             } else {
                 throw new IllegalStateException("Can't return dialog pane, node has no dialog!");
             }
@@ -2171,7 +2180,9 @@ public final class Node implements NodeModelWarningListener {
      * Helper method to create a node dialog pane from a {@link NodeFactory} instance.
      *
      * @param factory the factory instance to create the node dialog pane from
-     * @param nrOutPorts the number of output ports (mainly used to determine whether to add a misc tab)
+     * @param nrOutPorts the number of output ports (mainly used to determine whether to add a misc tab); as of AP-9198, this
+     *                          value is ignored; com.knime.gateway.local.workflow.EntityProxyNativeNodeContainer
+     *                          (? and others ?) need be modified appropriately
      * @param addJobMgrTab whether the job manager tab should be added
      *
      * @return Reference to dialog pane.
@@ -2179,15 +2190,16 @@ public final class Node implements NodeModelWarningListener {
      * @since 3.6
      */
     public static NodeDialogPane createDialogPane(final NodeFactory<NodeModel> factory, final int nrOutPorts,
-        final boolean addJobMgrTab) {
-        return createDialogPane(factory, nrOutPorts, addJobMgrTab, null);
+                                                  final boolean addJobMgrTab) {
+        return createDialogPane(factory, true, addJobMgrTab, null);
     }
 
     /**
      * Helper method to create a node dialog pane from a {@link NodeFactory} instance.
      *
      * @param factory the factory instance to create the node dialog pane from
-     * @param nrOutPorts the number of output ports (mainly used to determine whether to add a misc tab)
+     * @param oneOrMorOutportsSupportsDataTableSpec if true, one or more of the outports supports {@code DataTableSpec}
+     *                      which will cause the dialog tab pane to display the 'Memory Policy' tab.
      * @param addJobMgrTab whether the job manager tab should be added
      * @param creationConfig the node creation configuration
      *
@@ -2195,8 +2207,10 @@ public final class Node implements NodeModelWarningListener {
      * @throws IllegalStateException If node has no dialog.
      * @since 4.1
      */
-    public static NodeDialogPane createDialogPane(final NodeFactory<NodeModel> factory, final int nrOutPorts,
-        final boolean addJobMgrTab, final NodeCreationConfiguration creationConfig) {
+    public static NodeDialogPane createDialogPane(final NodeFactory<NodeModel> factory,
+                                                  final boolean oneOrMorOutportsSupportsDataTableSpec,
+                                                  final boolean addJobMgrTab,
+                                                  final NodeCreationConfiguration creationConfig) {
         AtomicReference<NodeDialogPane> dialogPaneRef = new AtomicReference<>();
         if (factory.hasDialog()) {
             final AtomicReference<Throwable> exRef = new AtomicReference<Throwable>();
@@ -2231,10 +2245,10 @@ public final class Node implements NodeModelWarningListener {
         } else {
             dialogPaneRef.set(new EmptyNodeDialogPane());
         }
-        if (nrOutPorts > 0) {
+        if (oneOrMorOutportsSupportsDataTableSpec) {
             dialogPaneRef.get().addMiscTab();
         }
-        if (addJobMgrTab && NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
+        if (addJobMgrTab && (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1)) {
             // TODO: set the splittype depending on the nodemodel
             SplitType splitType = SplitType.USER;
             dialogPaneRef.get().addJobMgrTab(splitType);
