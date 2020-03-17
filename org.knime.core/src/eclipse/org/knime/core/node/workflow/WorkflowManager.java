@@ -5609,7 +5609,7 @@ public final class WorkflowManager extends NodeContainer
         }
         // set summarization message if any of the internal nodes has an error
         if (internalNodeHasError) {
-            setNodeMessage(new NodeMessage(NodeMessage.Type.ERROR, "Error in sub flow."));
+            setNodeMessage(new NodeMessage(NodeMessage.Type.ERROR, getNodeErrorSummary().get()));
         } else {
             setNodeMessage(NodeMessage.NONE);
         }
