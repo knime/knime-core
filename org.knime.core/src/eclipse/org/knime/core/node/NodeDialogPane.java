@@ -205,6 +205,8 @@ public abstract class NodeDialogPane {
 
     /** The tab containing the flow variables. */
     private final FlowVariablesTab m_flowVariableTab;
+    /** If flow variables tab exists, this listener sits on the pane listening for changes to that tab */
+    private ChangeListener m_flowTabSelectionChangeListener;
 
     /** The flow object stack, it's also used when the variables tab get's
      * activated. */
@@ -470,10 +472,12 @@ public abstract class NodeDialogPane {
             m_logger.error("Error loading model settings", exRef.get());
         }
 
-        // add the flow variables tab
+        // add the flow variables tab if flow variables exist
         addFlowVariablesTab();
         m_flowVariablesModelChanged = false;
-        initFlowVariablesTab(modelSettings, flowVariablesSettings);
+        if (initFlowVariablesTab(modelSettings, flowVariablesSettings) == 0) {
+            removeTab(TAB_NAME_VARIABLES);
+        }
 
         // output memory policy and job manager (stored in NodeContainer)
         if (m_memPolicyTab != null || m_jobMgrTab != null) {
@@ -856,15 +860,15 @@ public abstract class NodeDialogPane {
     protected void addFlowVariablesTab() {
         if (getTab(TAB_NAME_VARIABLES) == null) {
             addTab(TAB_NAME_VARIABLES, m_flowVariableTab);
-            m_pane.addChangeListener(new ChangeListener() {
-                /** {@inheritDoc} */
-                @Override
-                public void stateChanged(final ChangeEvent e) {
+            if (m_flowTabSelectionChangeListener == null) {
+                m_flowTabSelectionChangeListener = (changeEvent) -> {
                     if (m_pane.getSelectedIndex() == getTabIndex(TAB_NAME_VARIABLES)) {
                         updateFlowVariablesTab();
                     }
-                }
-            });
+                };
+
+                m_pane.addChangeListener(m_flowTabSelectionChangeListener);
+            }
         }
     }
 
@@ -1379,26 +1383,30 @@ public abstract class NodeDialogPane {
                 dc.getFlowVariableType());
     }
 
-    /** Sets the settings from the second argument into the flow variables tab.
-     * The parameter tree is supposed to follow the node settings argument.
+    /**
+     * Sets the settings from the second argument into the flow variables tab. The parameter tree is supposed to follow
+     * the node settings argument.
+     *
      * @param nodeSettings The (user) settings of the node.
      * @param variableSettings The flow variable settings.
+     * @return the child count of the root node of the config tree model
      */
     @SuppressWarnings("unchecked")
-    private void initFlowVariablesTab(final NodeSettingsRO nodeSettings,
+    private int initFlowVariablesTab(final NodeSettingsRO nodeSettings,
             final NodeSettingsRO variableSettings) {
         m_flowVariableTab.setErrorLabel("");
-        m_flowVariableTab.setVariableSettings(nodeSettings, variableSettings,
-                m_flowObjectStack, Collections.EMPTY_SET);
-        for (FlowVariableModel m : m_flowVariablesModelList) {
-            ConfigEditTreeNode configNode = m_flowVariableTab
-            .findTreeNodeForChild(m.getKeys());
+        final int childCount = m_flowVariableTab.setVariableSettings(nodeSettings, variableSettings, m_flowObjectStack,
+                                                                     Collections.EMPTY_SET);
+        for (final FlowVariableModel m : m_flowVariablesModelList) {
+            final ConfigEditTreeNode configNode = m_flowVariableTab.findTreeNodeForChild(m.getKeys());
             if (configNode != null) {
                 m.setInputVariableName(configNode.getUseVariableName());
                 m.setOutputVariableName(configNode.getExposeVariableName());
             }
         }
         m_flowVariablesModelChanged = false;
+
+        return childCount;
     }
 
     /** Updates the flow variable tab to reflect the current parameter tree.
@@ -1516,37 +1524,35 @@ public abstract class NodeDialogPane {
             return m_tree.getModel().findChildForKeyPath(keyPath);
         }
 
-        /** Update the panel to reflect new properties.
-         * @param nodeSettings Settings of the node (or currently entered in
-         *  the remaining tabs of the dialog.
-         * @param varSettings  The variable mask.
+        /**
+         * Update the panel to reflect new properties.
+         *
+         * @param nodeSettings Settings of the node (or currently entered in the remaining tabs of the dialog.
+         * @param varSettings The variable mask.
          * @param stack the stack to get the variables from.
-         * @param variableModels The models that may be used in the main panels
-         * of the dialog to overwrite settings in place. */
-        void setVariableSettings(final NodeSettingsRO nodeSettings,
+         * @param variableModels The models that may be used in the main panels of the dialog to overwrite settings in
+         *            place.
+         * @return the child count of the root node of the config tree model
+         */
+        int setVariableSettings(final NodeSettingsRO nodeSettings,
                 final NodeSettingsRO varSettings,
                 final FlowObjectStack stack,
                 final Collection<FlowVariableModel> variableModels) {
             if (nodeSettings != null && !(nodeSettings instanceof Config)) {
                 m_logger.debug("Node settings object not instance of "
                         + Config.class + " -- disabling flow variables tab");
-                return;
+                return 0;
             }
             if (varSettings != null && !(varSettings instanceof Config)) {
                 m_logger.debug("Variable settings object not instance of "
                         + Config.class + " -- disabling flow variables tab");
-                return;
+                return 0;
             }
-            Config nodeSetsCopy = nodeSettings == null
-            ? new NodeSettings("variables") : (Config)nodeSettings;
+            final Config nodeSetsCopy = (nodeSettings == null) ? new NodeSettings("variables") : (Config)nodeSettings;
             ConfigEditTreeModel model;
             try {
-                if (varSettings == null) {
-                    model = ConfigEditTreeModel.create(nodeSetsCopy);
-                } else {
-                    model = ConfigEditTreeModel.create(
-                            nodeSetsCopy, varSettings);
-                }
+                model = (varSettings == null) ? ConfigEditTreeModel.create(nodeSetsCopy)
+                                              : ConfigEditTreeModel.create(nodeSetsCopy, varSettings);
             } catch (InvalidSettingsException e) {
                 JOptionPane.showMessageDialog(this, "Errors reading variable "
                         + "configuration: " + e.getMessage(), "Error",
@@ -1575,6 +1581,12 @@ public abstract class NodeDialogPane {
                     });
                 }
             });
+
+            if (newModel.getRoot() != null) {
+                return newModel.getRoot().getChildCount();
+            }
+
+            return 0;
         }
 
         /**
