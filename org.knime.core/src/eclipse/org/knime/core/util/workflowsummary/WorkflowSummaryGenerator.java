@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -103,6 +104,7 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.XMLUtils;
 import org.knime.core.xml.MetadataXML;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -133,13 +135,13 @@ public final class WorkflowSummaryGenerator {
 
     private static final String V_1_0_0 = "1.0.0";
 
-    private final WorkflowManager m_wfm;
-
     private static XmlMapper XML_MAPPER;
 
     private static JsonMapper JSON_MAPPER;
 
     private final List<NodeID> m_nodesToIgnore;
+
+    private final WorkflowManager m_wfm;
 
     /**
      * A new generator instance.
@@ -159,7 +161,7 @@ public final class WorkflowSummaryGenerator {
      * @throws IOException
      */
     public void generateXML(final OutputStream out) throws IOException {
-        getXmlMapper().writeValue(out, new WorkflowSummary());
+        getXmlMapper().writeValue(out, new WorkflowSummary(XMLUtils::escape));
     }
 
     /**
@@ -169,7 +171,7 @@ public final class WorkflowSummaryGenerator {
      * @throws IOException
      */
     public void generateJSON(final OutputStream out) throws IOException {
-        getJsonMapper().writeValue(out, new WorkflowSummary());
+        getJsonMapper().writeValue(out, new WorkflowSummary(null));
     }
 
     private static XmlMapper getXmlMapper() {
@@ -198,6 +200,12 @@ public final class WorkflowSummaryGenerator {
     @JsonPropertyOrder({"version", "summaryCreationDateTime", "environment", "workflow"})
     private class WorkflowSummary {
 
+        private UnaryOperator<String> m_textEncoder;
+
+        WorkflowSummary(final UnaryOperator<String> textEncoder) {
+            m_textEncoder = textEncoder;
+        }
+
         @JacksonXmlProperty(isAttribute = true)
         String getVersion() {
             return V_1_0_0;
@@ -213,7 +221,7 @@ public final class WorkflowSummaryGenerator {
         }
 
         Workflow getWorkflow() {
-            return Workflow.create(m_wfm, m_nodesToIgnore);
+            return Workflow.create(m_wfm, m_nodesToIgnore, m_textEncoder);
         }
 
     }
@@ -315,7 +323,8 @@ public final class WorkflowSummaryGenerator {
 
         WorkflowMetadata getMetadata();
 
-        static Workflow create(final WorkflowManager wfm, final List<NodeID> nodesToIgnore) {
+        static Workflow create(final WorkflowManager wfm, final List<NodeID> nodesToIgnore,
+            final UnaryOperator<String> textEncoder) {
             return new Workflow() {
 
                 @Override
@@ -324,7 +333,7 @@ public final class WorkflowSummaryGenerator {
                     if (nodesToIgnore != null) {
                         stream = stream.filter(nc -> !nodesToIgnore.contains(nc.getID()));
                     }
-                    return stream.map(nc -> Node.create(nc, nodesToIgnore)).collect(Collectors.toList());
+                    return stream.map(nc -> Node.create(nc, nodesToIgnore, textEncoder)).collect(Collectors.toList());
                 }
 
                 @Override
@@ -382,7 +391,8 @@ public final class WorkflowSummaryGenerator {
 
         JobManager getJobManager();
 
-        static Node create(final NodeContainer nc, final List<NodeID> nodesToIgnore) {
+        static Node create(final NodeContainer nc, final List<NodeID> nodesToIgnore,
+            final UnaryOperator<String> textEncoder) {
             return new Node() {
 
                 @Override
@@ -437,7 +447,7 @@ public final class WorkflowSummaryGenerator {
                         SingleNodeContainer snc = (SingleNodeContainer)nc;
                         if (nc.getNodeContainerState().isExecuted()) {
                             try {
-                                return Setting.create((snc).getModelSettingsUsingFlowObjectStack());
+                                return Setting.create((snc).getModelSettingsUsingFlowObjectStack(), textEncoder);
                             } catch (InvalidSettingsException ex) {
                                 throw new IllegalStateException(
                                     "Problem extracting settings of node '" + snc.getNameWithID() + "'", ex);
@@ -446,7 +456,7 @@ public final class WorkflowSummaryGenerator {
                             NodeSettings nodeSettings = snc.getNodeSettings();
                             if (nodeSettings.containsKey("model")) {
                                 try {
-                                    return Setting.create(nodeSettings.getConfig("model"));
+                                    return Setting.create(nodeSettings.getConfig("model"), textEncoder);
                                 } catch (InvalidSettingsException ex) {
                                     //can never happen - checked before
                                 }
@@ -459,9 +469,9 @@ public final class WorkflowSummaryGenerator {
                 @Override
                 public Workflow getSubWorkfow() {
                     if (nc instanceof WorkflowManager) {
-                        return Workflow.create((WorkflowManager)nc, null);
+                        return Workflow.create((WorkflowManager)nc, null, textEncoder);
                     } else if (nc instanceof SubNodeContainer) {
-                        return Workflow.create(((SubNodeContainer)nc).getWorkflowManager(), null);
+                        return Workflow.create(((SubNodeContainer)nc).getWorkflowManager(), null, textEncoder);
                     } else {
                         return null;
                     }
@@ -492,7 +502,7 @@ public final class WorkflowSummaryGenerator {
 
                 @Override
                 public JobManager getJobManager() {
-                    return JobManager.create(nc.getJobManager());
+                    return JobManager.create(nc.getJobManager(), textEncoder);
                 }
 
                 @Override
@@ -625,7 +635,7 @@ public final class WorkflowSummaryGenerator {
         @JacksonXmlProperty(localName = "setting")
         List<Setting> getSettings();
 
-        static JobManager create(final NodeExecutionJobManager mgr) {
+        static JobManager create(final NodeExecutionJobManager mgr, final UnaryOperator<String> textEncoder) {
             if (mgr == null) {
                 return null;
             }
@@ -645,7 +655,7 @@ public final class WorkflowSummaryGenerator {
                 public List<Setting> getSettings() {
                     NodeSettings ns = new NodeSettings("job_manager_settings");
                     mgr.save(ns);
-                    return Setting.create(ns);
+                    return Setting.create(ns, textEncoder);
                 }
 
             };
@@ -790,8 +800,7 @@ public final class WorkflowSummaryGenerator {
                     if (nc != null) {
                         List<Successor> res = nc.getParent().getOutgoingConnectionsFor(nc.getID(), index).stream()
                             .filter(cc -> nodesToIgnore == null || !nodesToIgnore.contains(cc.getDest()))
-                            .map(cc -> Successor.create(cc, nc.getParent().getProjectWFM()))
-                            .sorted() //for deterministic results for testing
+                            .map(cc -> Successor.create(cc, nc.getParent().getProjectWFM())).sorted() //for deterministic results for testing
                             .collect(toList());
                         return res.isEmpty() ? null : res;
                     }
@@ -995,7 +1004,7 @@ public final class WorkflowSummaryGenerator {
         @JacksonXmlProperty(localName = "setting")
         List<Setting> getSettings();
 
-        static List<Setting> create(final Config config) {
+        static List<Setting> create(final Config config, final UnaryOperator<String> textEncoder) {
             Iterator<String> iterator = config.iterator();
             List<Setting> res = new ArrayList<>();
             while (iterator.hasNext()) {
@@ -1011,7 +1020,11 @@ public final class WorkflowSummaryGenerator {
                     @Override
                     public String getValue() {
                         if (entry.getType() != ConfigEntries.config) {
-                            return entry.toStringValue();
+                            String s = entry.toStringValue();
+                            if (s != null) {
+                                return textEncoder == null ? s : textEncoder.apply(s);
+                            }
+                            return null;
                         } else {
                             return null;
                         }
@@ -1025,7 +1038,7 @@ public final class WorkflowSummaryGenerator {
                     @Override
                     public List<Setting> getSettings() {
                         if (entry.getType() == ConfigEntries.config) {
-                            return Setting.create((Config)entry);
+                            return Setting.create((Config)entry, textEncoder);
                         } else {
                             return null;
                         }
