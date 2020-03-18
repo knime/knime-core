@@ -550,7 +550,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
      *
      * @since 4.2
      */
-    public interface ConfigurableNodeDialog {
+    public static interface ConfigurableNodeDialog {
 
         /**
          * Provides the current node creation configuration. Will be called shortly before the is dialog is opened.

@@ -267,6 +267,15 @@ public final class WorkflowManager extends NodeContainer
      */
     private EditorUIInformation m_editorInfo = null;
 
+    /**
+     * Flag whether to hide this workflow from UI (only if it's a metanode without any ports). State of the flag will
+     * not be persisted with the workflow - all hidden metanodes are supposed to be temporary
+     *
+     * @since 4.2
+     */
+    private boolean m_hideInUI = false;
+
+
     /** Vector holding workflow specific variables. */
     private Vector<FlowVariable> m_workflowVariables;
 
@@ -8873,9 +8882,6 @@ public final class WorkflowManager extends NodeContainer
         return m_editorInfo;
     }
 
-    //will not be persisted - all hidden metanodes are supposed to be temporary
-    private boolean m_hideInUI = false;
-
     /**
      * Will cause this workflow manager (i.e. metanode) to not be shown in the workflow editor (and therewith from the
      * user's view). Only applicable if the workflow manager doesn't have any inputs nor outputs, if it's not part of a
@@ -8885,13 +8891,14 @@ public final class WorkflowManager extends NodeContainer
      * again. The to be executed fragment is copied into a temporary metanode for execution and can be hidden from the
      * user.
      *
+     * @throws UnsupportedOperationException if the workflow manager to be hidden has inputs/outputs, is part of a
+     *             component or is a project workflow
      * @since 4.2
-     * @throws IllegalStateException if the workflow manager to be hidden has inputs/outputs, is part of a component or
-     *             is a project workflow
+     * @noreference This method is not intended to be referenced by clients.
      */
     public void hideInUI() {
         if (!canBeHidden()) {
-            throw new IllegalStateException("Metanode cannot be hidden in workflow editor");
+            throw new UnsupportedOperationException("Metanode cannot be hidden in workflow editor");
         }
         m_hideInUI = true;
     }
@@ -8906,9 +8913,13 @@ public final class WorkflowManager extends NodeContainer
      *         metanode to be hidden (still) apply
      *
      * @since 4.2
+     * @noreference This method is not intended to be referenced by clients.
      */
     public boolean isHiddenInUI() {
-        return canBeHidden() ? m_hideInUI : false;
+        if (m_hideInUI && !canBeHidden()) {
+            throw new IllegalStateException("Metanode is set to be hidden but doesn't fulfill the preconditions");
+        }
+        return m_hideInUI;
     }
 
     /** {@inheritDoc} */
