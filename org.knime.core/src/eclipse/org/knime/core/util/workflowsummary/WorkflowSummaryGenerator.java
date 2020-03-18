@@ -703,6 +703,9 @@ public final class WorkflowSummaryGenerator {
             }
             final ReferencedFile rf = wfm.getProjectWFM().getWorkingDir();
             File metadataFile = new File(rf.getFile(), WorkflowPersistor.METAINFO_FILE);
+            if (!metadataFile.exists()) {
+                return null;
+            }
             String[] meta = new String[5];
             try {
                 Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(metadataFile);
