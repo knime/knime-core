@@ -2180,9 +2180,8 @@ public final class Node implements NodeModelWarningListener {
      * Helper method to create a node dialog pane from a {@link NodeFactory} instance.
      *
      * @param factory the factory instance to create the node dialog pane from
-     * @param nrOutPorts the number of output ports (mainly used to determine whether to add a misc tab); as of AP-9198, this
-     *                          value is ignored; com.knime.gateway.local.workflow.EntityProxyNativeNodeContainer
-     *                          (? and others ?) need be modified appropriately
+     * @param nrOutPorts the number of output ports (mainly used to determine whether to add a misc ("Memory Policy")
+     *                          tab; if this value is greater than zero, such a tab will be added)
      * @param addJobMgrTab whether the job manager tab should be added
      *
      * @return Reference to dialog pane.
@@ -2191,15 +2190,15 @@ public final class Node implements NodeModelWarningListener {
      */
     public static NodeDialogPane createDialogPane(final NodeFactory<NodeModel> factory, final int nrOutPorts,
                                                   final boolean addJobMgrTab) {
-        return createDialogPane(factory, true, addJobMgrTab, null);
+        return createDialogPane(factory, nrOutPorts, addJobMgrTab, null);
     }
 
     /**
      * Helper method to create a node dialog pane from a {@link NodeFactory} instance.
      *
      * @param factory the factory instance to create the node dialog pane from
-     * @param oneOrMorOutportsSupportsDataTableSpec if true, one or more of the outports supports {@code DataTableSpec}
-     *                      which will cause the dialog tab pane to display the 'Memory Policy' tab.
+     * @param nrOutPorts the number of output ports (mainly used to determine whether to add a misc ("Memory Policy")
+     *                          tab; if this value is greater than zero, such a tab will be added)
      * @param addJobMgrTab whether the job manager tab should be added
      * @param creationConfig the node creation configuration
      *
@@ -2208,8 +2207,7 @@ public final class Node implements NodeModelWarningListener {
      * @since 4.1
      */
     public static NodeDialogPane createDialogPane(final NodeFactory<NodeModel> factory,
-                                                  final boolean oneOrMorOutportsSupportsDataTableSpec,
-                                                  final boolean addJobMgrTab,
+                                                  final int nrOutPorts, final boolean addJobMgrTab,
                                                   final NodeCreationConfiguration creationConfig) {
         AtomicReference<NodeDialogPane> dialogPaneRef = new AtomicReference<>();
         if (factory.hasDialog()) {
@@ -2245,7 +2243,7 @@ public final class Node implements NodeModelWarningListener {
         } else {
             dialogPaneRef.set(new EmptyNodeDialogPane());
         }
-        if (oneOrMorOutportsSupportsDataTableSpec) {
+        if (nrOutPorts > 0) {
             dialogPaneRef.get().addMiscTab();
         }
         if (addJobMgrTab && (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1)) {
@@ -2254,6 +2252,26 @@ public final class Node implements NodeModelWarningListener {
             dialogPaneRef.get().addJobMgrTab(splitType);
         }
         return dialogPaneRef.get();
+    }
+
+    /**
+     * Helper method to create a node dialog pane from a {@link NodeFactory} instance.
+     *
+     * @param factory the factory instance to create the node dialog pane from
+     * @param oneOrMorOutportsSupportsDataTableSpec if true, one or more of the outports supports {@code DataTableSpec}
+     *                      which will cause the dialog tab pane to display the 'Memory Policy' tab.
+     * @param addJobMgrTab whether the job manager tab should be added
+     * @param creationConfig the node creation configuration
+     *
+     * @return Reference to dialog pane.
+     * @throws IllegalStateException If node has no dialog.
+     * @since 4.2
+     */
+    public static NodeDialogPane createDialogPane(final NodeFactory<NodeModel> factory,
+                                                  final boolean oneOrMorOutportsSupportsDataTableSpec,
+                                                  final boolean addJobMgrTab,
+                                                  final NodeCreationConfiguration creationConfig) {
+        return createDialogPane(factory, (oneOrMorOutportsSupportsDataTableSpec ? 1 : 0), addJobMgrTab, creationConfig);
     }
 
     /**
