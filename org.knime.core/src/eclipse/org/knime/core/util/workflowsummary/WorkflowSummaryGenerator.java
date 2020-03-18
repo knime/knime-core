@@ -710,6 +710,11 @@ public final class WorkflowSummaryGenerator {
             try {
                 Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(metadataFile);
                 doc.normalize();
+                //once a metadata version is present, we need to parse it differently here!
+                //this should remind us
+                assert doc.getElementsByTagName(MetadataXML.METADATA_WRITE_ELEMENT).item(0).getAttributes()
+                    .getNamedItem(
+                        MetadataXML.METADATA_VERSION) == null : "Implementation problem: metadata version not supported, yet";
                 NodeList elements = doc.getElementsByTagName(MetadataXML.ATOM_WRITE_ELEMENT);
                 for (int i = 0; i < elements.getLength(); i++) {
                     org.w3c.dom.Node item = elements.item(i);
