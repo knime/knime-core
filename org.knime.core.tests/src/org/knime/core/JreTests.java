@@ -61,6 +61,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -75,6 +76,7 @@ public class JreTests {
      * @throws Exception if an error occurs
      */
     @Test
+    @Ignore("Does not work with tycho")
     public void checkForCACertificate() throws Exception {
         TrustManagerFactory trustManagerFactory =
             TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -99,6 +101,7 @@ public class JreTests {
      * @throws Exception if an error occurs
      */
     @Test
+    @Ignore("Does not work with tycho")
     public void checkForDefaultServerCertificate() throws Exception {
         TrustManagerFactory trustManagerFactory =
             TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());

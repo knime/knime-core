@@ -55,6 +55,7 @@ import static org.junit.Assume.assumeThat;
 import java.util.Optional;
 
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.util.EclipseUtil;
@@ -65,6 +66,7 @@ import org.osgi.framework.Bundle;
  *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
+@Ignore("Does not work with tycho")
 public class OSGIHelperTest {
     /**
      * Checks whether the feature for a bundle is resolved correctly.
