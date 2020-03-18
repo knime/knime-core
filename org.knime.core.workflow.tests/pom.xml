@@ -12,6 +12,13 @@
 	<artifactId>org.knime.core.workflow.tests</artifactId>
 	<packaging>eclipse-test-plugin</packaging>
 
+	<properties>
+		<surefireArgLine>-Dsun.java2d.d3d=false -Dosgi.classloader.lock=classname \
+		-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -XX:+UseG1GC \
+		-Dsun.net.client.defaultReadTimeout=0 \
+		-XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot
+		</surefireArgLine>
+	</properties>
 
 	<repositories>
 		<repository>
