@@ -46,7 +46,7 @@
  * History
  *   May 26, 2019 (loki): created
  */
-package org.knime.core.xml;
+package org.knime.core.node.workflow.metadata;
 
 /**
  * This is a class of static constants used in our XML storage of workflow metadata. This was created for the 3.8

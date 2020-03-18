@@ -53,9 +53,12 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -104,8 +107,9 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.node.workflow.metadata.MetaInfoFile;
+import org.knime.core.node.workflow.metadata.MetadataXML;
 import org.knime.core.util.XMLUtils;
-import org.knime.core.xml.MetadataXML;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -134,6 +138,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 public final class WorkflowSummaryGenerator {
 
     private static final String V_1_0_0 = "1.0.0";
+
+    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss Z";
+
+    private static final String DATE_FORMAT = "yyyy-MM-dd";
 
     private static XmlMapper XML_MAPPER;
 
@@ -213,7 +221,8 @@ public final class WorkflowSummaryGenerator {
 
         @JacksonXmlProperty(isAttribute = true)
         String getSummaryCreationDateTime() {
-            return ZonedDateTime.now().toString();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+            return formatter.format(ZonedDateTime.now());
         }
 
         Environment getEnvironment() {
@@ -315,6 +324,10 @@ public final class WorkflowSummaryGenerator {
 
     @JsonPropertyOrder({"nodes", "annotations", "metadata"})
     private interface Workflow {
+
+        @JacksonXmlProperty(isAttribute = true)
+        String getName();
+
         @JacksonXmlProperty(localName = "node")
         List<Node> getNodes();
 
@@ -326,6 +339,11 @@ public final class WorkflowSummaryGenerator {
         static Workflow create(final WorkflowManager wfm, final List<NodeID> nodesToIgnore,
             final UnaryOperator<String> textEncoder) {
             return new Workflow() {
+
+                @Override
+                public String getName() {
+                    return wfm.getName();
+                }
 
                 @Override
                 public List<Node> getNodes() {
@@ -718,7 +736,15 @@ public final class WorkflowSummaryGenerator {
 
                 @Override
                 public String getCreationDate() {
-                    return meta[1];
+                    Calendar cal = MetaInfoFile.calendarFromDateString(meta[1]);
+                    if (cal != null) {
+                        //Only the date is provided here.
+                        //The time is meaningless because it is attached to the date as constant value,
+                        //see org.knime.workbench.descriptionview.metadata.atoms.DateMetaInfoAtom.TIME_OF_DAY_SUFFIX
+                        SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+                        return formatter.format(cal.getTime());
+                    }
+                    return null;
                 }
 
                 @Override
