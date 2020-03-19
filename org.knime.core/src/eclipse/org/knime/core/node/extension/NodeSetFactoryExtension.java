@@ -73,7 +73,7 @@ import org.osgi.framework.Bundle;
  * <p>
  * Used within the framework to make node set implementations known to the framework/core and the workbench.
  *
- * @author @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  *
  * @noreference This class is not intended to be referenced by clients.
  */

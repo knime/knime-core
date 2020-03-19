@@ -62,7 +62,8 @@ import org.knime.core.node.NodeLogger;
  * @author Michael Berthold, University of Konstanz
  * @deprecated Since 2.4 the KNIME core is using the Eclipse Buddy-Classloading
  * mechanism. So the workaround via the GlobalClassCreator is not necessary any
- * more.
+ * more. Update: Since 4.2 the Buddy-Classloading mechanism has been ditched and
+ * class loading is done via extension points (the standard way).
  */
 @Deprecated
 public final class GlobalClassCreator {

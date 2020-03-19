@@ -70,9 +70,8 @@ import org.knime.core.node.util.CheckUtils;
 /**
  * Represents the singleton used to collect nodes and node sets (such as for weka, spark, etc.)
  *
- * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
- * @since 4.2
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class NodeFactoryExtensionManager {
 
