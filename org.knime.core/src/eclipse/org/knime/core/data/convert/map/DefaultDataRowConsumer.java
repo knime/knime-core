@@ -104,81 +104,98 @@ public final class DefaultDataRowConsumer<D extends Destination<?>, CP extends C
         m_mappers = mappers;
     }
 
+    @SuppressWarnings("unchecked")
     private Mapper<CP, ?, ?> createMapper(final DataCellToJavaConverterFactory<?, ?> converterFactory,
         final CellValueConsumerFactory<?, ?, ?, ?> consumerFactory) {
         Mapper<CP, ?, ?> mapper = null;
         // Check if both value converter and consumer are applicable to the same primitive type.
         // This allows us to create a mapper that avoids autoboxing.
-        if (converterFactory.getDestinationType().isPrimitive()
-            && converterFactory instanceof TypedDataCellToJavaConverterFactory
-            && consumerFactory.getSourceType().isPrimitive()
-            && consumerFactory instanceof TypedCellValueConsumerFactory) {
-            final Class<?> converterType =
-                ((TypedDataCellToJavaConverterFactory<?, ?, ?>)converterFactory).getConverterType();
-            final Class<?> consumerType =
-                ((TypedCellValueConsumerFactory<?, ?, ?, ?, ?>)consumerFactory).getConsumerType();
-            // double:
-            if (DataCellToDoubleConverter.class.isAssignableFrom(converterType)
-                && DoubleCellValueConsumer.class.isAssignableFrom(consumerType)) {
-                mapper = new DoubleMapper(
-                    (TypedDataCellToJavaConverterFactory<?, ?, DataCellToDoubleConverter<?>>)converterFactory,
-                    (TypedCellValueConsumerFactory<D, ?, ?, CP, DoubleCellValueConsumer<D, CP>>)consumerFactory);
-            }
-            // int:
-            else if (DataCellToIntConverter.class.isAssignableFrom(converterType)
-                && IntCellValueConsumer.class.isAssignableFrom(consumerType)) {
-                mapper = new IntMapper(
-                    (TypedDataCellToJavaConverterFactory<?, ?, DataCellToIntConverter<?>>)converterFactory,
-                    (TypedCellValueConsumerFactory<D, ?, ?, CP, IntCellValueConsumer<D, CP>>)consumerFactory);
-            }
-            // long:
-            else if (DataCellToLongConverter.class.isAssignableFrom(converterType)
-                && LongCellValueConsumer.class.isAssignableFrom(consumerType)) {
-                mapper = new LongMapper(
-                    (TypedDataCellToJavaConverterFactory<?, ?, DataCellToLongConverter<?>>)converterFactory,
-                    (TypedCellValueConsumerFactory<D, ?, ?, CP, LongCellValueConsumer<D, CP>>)consumerFactory);
-            }
-            // boolean:
-            else if (DataCellToBooleanConverter.class.isAssignableFrom(converterType)
-                && BooleanCellValueConsumer.class.isAssignableFrom(consumerType)) {
-                mapper = new BooleanMapper(
-                    (TypedDataCellToJavaConverterFactory<?, ?, DataCellToBooleanConverter<?>>)converterFactory,
-                    (TypedCellValueConsumerFactory<D, ?, ?, CP, BooleanCellValueConsumer<D, CP>>)consumerFactory);
-            }
-            // float:
-            else if (DataCellToFloatConverter.class.isAssignableFrom(converterType)
-                && FloatCellValueConsumer.class.isAssignableFrom(consumerType)) {
-                mapper = new FloatMapper(
-                    (TypedDataCellToJavaConverterFactory<?, ?, DataCellToFloatConverter<?>>)converterFactory,
-                    (TypedCellValueConsumerFactory<D, ?, ?, CP, FloatCellValueConsumer<D, CP>>)consumerFactory);
-            }
-            // byte:
-            else if (DataCellToByteConverter.class.isAssignableFrom(converterType)
-                && ByteCellValueConsumer.class.isAssignableFrom(consumerType)) {
-                mapper = new ByteMapper(
-                    (TypedDataCellToJavaConverterFactory<?, ?, DataCellToByteConverter<?>>)converterFactory,
-                    (TypedCellValueConsumerFactory<D, ?, ?, CP, ByteCellValueConsumer<D, CP>>)consumerFactory);
-            }
-            // short:
-            else if (DataCellToShortConverter.class.isAssignableFrom(converterType)
-                && ShortCellValueConsumer.class.isAssignableFrom(consumerType)) {
-                mapper = new ShortMapper(
-                    (TypedDataCellToJavaConverterFactory<?, ?, DataCellToShortConverter<?>>)converterFactory,
-                    (TypedCellValueConsumerFactory<D, ?, ?, CP, ShortCellValueConsumer<D, CP>>)consumerFactory);
-            }
-            // char:
-            else if (DataCellToCharConverter.class.isAssignableFrom(converterType)
-                && CharCellValueConsumer.class.isAssignableFrom(consumerType)) {
-                mapper = new CharMapper(
-                    (TypedDataCellToJavaConverterFactory<?, ?, DataCellToCharConverter<?>>)converterFactory,
-                    (TypedCellValueConsumerFactory<D, ?, ?, CP, CharCellValueConsumer<D, CP>>)consumerFactory);
-            }
+        if (canAvoidAutoboxing(converterFactory, consumerFactory)) {
+            mapper = createPrimitiveMapper(converterFactory, consumerFactory);
         }
         if (mapper == null) {
             // Fall-through.
-            mapper = new ObjectMapper(converterFactory, (CellValueConsumerFactory<D, ?, ?, CP>)consumerFactory);
+            final CellValueConsumer<D, Object, CP> consumer =
+                (CellValueConsumer<D, Object, CP>)((CellValueConsumerFactory<D, ?, ?, CP>)consumerFactory).create();
+            mapper = new ObjectMapper(converterFactory.create(), consumer);
         }
         return mapper;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Mapper<CP, ?, ?> createPrimitiveMapper(final DataCellToJavaConverterFactory<?, ?> converterFactory,
+        final CellValueConsumerFactory<?, ?, ?, ?> consumerFactory) {
+        final Class<?> converterType =
+            ((TypedDataCellToJavaConverterFactory<?, ?, ?>)converterFactory).getConverterType();
+        final Class<?> consumerType = ((TypedCellValueConsumerFactory<?, ?, ?, ?, ?>)consumerFactory).getConsumerType();
+        // double:
+        if (DataCellToDoubleConverter.class.isAssignableFrom(converterType)
+            && DoubleCellValueConsumer.class.isAssignableFrom(consumerType)) {
+            return new DoubleMapper(
+                ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToDoubleConverter<?>>)converterFactory).create(),
+                ((TypedCellValueConsumerFactory<D, ?, ?, CP, DoubleCellValueConsumer<D, CP>>)consumerFactory).create());
+        }
+        // int:
+        else if (DataCellToIntConverter.class.isAssignableFrom(converterType)
+            && IntCellValueConsumer.class.isAssignableFrom(consumerType)) {
+            return new IntMapper(
+                ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToIntConverter<?>>)converterFactory).create(),
+                ((TypedCellValueConsumerFactory<D, ?, ?, CP, IntCellValueConsumer<D, CP>>)consumerFactory).create());
+        }
+        // long:
+        else if (DataCellToLongConverter.class.isAssignableFrom(converterType)
+            && LongCellValueConsumer.class.isAssignableFrom(consumerType)) {
+            return new LongMapper(
+                ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToLongConverter<?>>)converterFactory).create(),
+                ((TypedCellValueConsumerFactory<D, ?, ?, CP, LongCellValueConsumer<D, CP>>)consumerFactory).create());
+        }
+        // boolean:
+        else if (DataCellToBooleanConverter.class.isAssignableFrom(converterType)
+            && BooleanCellValueConsumer.class.isAssignableFrom(consumerType)) {
+            return new BooleanMapper(
+                ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToBooleanConverter<?>>)converterFactory).create(),
+                ((TypedCellValueConsumerFactory<D, ?, ?, CP, BooleanCellValueConsumer<D, CP>>)consumerFactory)
+                    .create());
+        }
+        // float:
+        else if (DataCellToFloatConverter.class.isAssignableFrom(converterType)
+            && FloatCellValueConsumer.class.isAssignableFrom(consumerType)) {
+            return new FloatMapper(
+                ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToFloatConverter<?>>)converterFactory).create(),
+                ((TypedCellValueConsumerFactory<D, ?, ?, CP, FloatCellValueConsumer<D, CP>>)consumerFactory).create());
+        }
+        // byte:
+        else if (DataCellToByteConverter.class.isAssignableFrom(converterType)
+            && ByteCellValueConsumer.class.isAssignableFrom(consumerType)) {
+            return new ByteMapper(
+                ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToByteConverter<?>>)converterFactory).create(),
+                ((TypedCellValueConsumerFactory<D, ?, ?, CP, ByteCellValueConsumer<D, CP>>)consumerFactory).create());
+        }
+        // short:
+        else if (DataCellToShortConverter.class.isAssignableFrom(converterType)
+            && ShortCellValueConsumer.class.isAssignableFrom(consumerType)) {
+            return new ShortMapper(
+                ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToShortConverter<?>>)converterFactory).create(),
+                ((TypedCellValueConsumerFactory<D, ?, ?, CP, ShortCellValueConsumer<D, CP>>)consumerFactory).create());
+        }
+        // char:
+        else if (DataCellToCharConverter.class.isAssignableFrom(converterType)
+            && CharCellValueConsumer.class.isAssignableFrom(consumerType)) {
+            return new CharMapper(
+                ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToCharConverter<?>>)converterFactory).create(),
+                ((TypedCellValueConsumerFactory<D, ?, ?, CP, CharCellValueConsumer<D, CP>>)consumerFactory).create());
+        } else {
+            // no primitive mapper matches -> return null and let caller create a meaningful default
+            return null;
+        }
+    }
+
+    private static boolean canAvoidAutoboxing(final DataCellToJavaConverterFactory<?, ?> converterFactory,
+        final CellValueConsumerFactory<?, ?, ?, ?> consumerFactory) {
+        return converterFactory.getDestinationType().isPrimitive()
+            && converterFactory instanceof TypedDataCellToJavaConverterFactory
+            && consumerFactory.getSourceType().isPrimitive()
+            && consumerFactory instanceof TypedCellValueConsumerFactory;
     }
 
     @Override
@@ -190,233 +207,185 @@ public final class DefaultDataRowConsumer<D extends Destination<?>, CP extends C
 
     // Mapper implementations:
 
-    private final class DoubleMapper extends Mapper<CP, //
-            TypedDataCellToJavaConverterFactory<?, ?, DataCellToDoubleConverter<?>>, //
-            TypedCellValueConsumerFactory<D, ?, ?, CP, DoubleCellValueConsumer<D, CP>>> {
+    @SuppressWarnings("rawtypes")
+    private final class DoubleMapper extends Mapper<CP, DataCellToDoubleConverter, DoubleCellValueConsumer<D, CP>> {
 
-        private DoubleMapper(
-            final TypedDataCellToJavaConverterFactory<?, ?, DataCellToDoubleConverter<?>> converterFactory,
-            final TypedCellValueConsumerFactory<D, ?, ?, CP, DoubleCellValueConsumer<D, CP>> consumerFactory) {
-            super(converterFactory, consumerFactory);
+        private DoubleMapper(final DataCellToDoubleConverter converter, final DoubleCellValueConsumer<D, CP> consumer) {
+            super(converter, consumer);
         }
 
         @Override
         protected void map(final DataCell cell, final CP params) throws Exception {
-            @SuppressWarnings("rawtypes")
-            final DataCellToDoubleConverter converter = m_converterFactory.create();
-            final DoubleCellValueConsumer<D, CP> consumer = m_consumerFactory.create();
             if (cell.isMissing()) {
-                consumer.consumeMissingCellValue(m_destination, params);
+                m_consumer.consumeMissingCellValue(m_destination, params);
             } else {
                 @SuppressWarnings("unchecked")
-                final double value = converter.convertIntoDouble(cell);
-                consumer.consumeDoubleCellValue(m_destination, value, params);
+                final double value = m_converter.convertIntoDouble(cell);
+                m_consumer.consumeDoubleCellValue(m_destination, value, params);
             }
         }
     }
 
-    private final class IntMapper extends Mapper<CP, //
-            TypedDataCellToJavaConverterFactory<?, ?, DataCellToIntConverter<?>>, //
-            TypedCellValueConsumerFactory<D, ?, ?, CP, IntCellValueConsumer<D, CP>>> {
+    @SuppressWarnings("rawtypes")
+    private final class IntMapper extends Mapper<CP, DataCellToIntConverter, IntCellValueConsumer<D, CP>> {
 
-        private IntMapper(final TypedDataCellToJavaConverterFactory<?, ?, DataCellToIntConverter<?>> converterFactory,
-            final TypedCellValueConsumerFactory<D, ?, ?, CP, IntCellValueConsumer<D, CP>> consumerFactory) {
-            super(converterFactory, consumerFactory);
+        private IntMapper(final DataCellToIntConverter converter, final IntCellValueConsumer<D, CP> consumer) {
+            super(converter, consumer);
         }
 
         @Override
         protected void map(final DataCell cell, final CP params) throws Exception {
-            @SuppressWarnings("rawtypes")
-            final DataCellToIntConverter converter = m_converterFactory.create();
-            final IntCellValueConsumer<D, CP> consumer = m_consumerFactory.create();
             if (cell.isMissing()) {
-                consumer.consumeMissingCellValue(m_destination, params);
+                m_consumer.consumeMissingCellValue(m_destination, params);
             } else {
                 @SuppressWarnings("unchecked")
-                final int value = converter.convertIntoInt(cell);
-                consumer.consumeIntCellValue(m_destination, value, params);
+                final int value = m_converter.convertIntoInt(cell);
+                m_consumer.consumeIntCellValue(m_destination, value, params);
             }
         }
     }
 
-    private final class LongMapper extends Mapper<CP, //
-            TypedDataCellToJavaConverterFactory<?, ?, DataCellToLongConverter<?>>, //
-            TypedCellValueConsumerFactory<D, ?, ?, CP, LongCellValueConsumer<D, CP>>> {
+    @SuppressWarnings("rawtypes")
+    private final class LongMapper extends Mapper<CP, DataCellToLongConverter, LongCellValueConsumer<D, CP>> {
 
-        private LongMapper(final TypedDataCellToJavaConverterFactory<?, ?, DataCellToLongConverter<?>> converterFactory,
-            final TypedCellValueConsumerFactory<D, ?, ?, CP, LongCellValueConsumer<D, CP>> consumerFactory) {
-            super(converterFactory, consumerFactory);
+        private LongMapper(final DataCellToLongConverter<?> converter, final LongCellValueConsumer<D, CP> consumer) {
+            super(converter, consumer);
         }
 
         @Override
         protected void map(final DataCell cell, final CP params) throws Exception {
-            @SuppressWarnings("rawtypes")
-            final DataCellToLongConverter converter = m_converterFactory.create();
-            final LongCellValueConsumer<D, CP> consumer = m_consumerFactory.create();
             if (cell.isMissing()) {
-                consumer.consumeMissingCellValue(m_destination, params);
+                m_consumer.consumeMissingCellValue(m_destination, params);
             } else {
                 @SuppressWarnings("unchecked")
-                final long value = converter.convertIntoLong(cell);
-                consumer.consumeLongCellValue(m_destination, value, params);
+                final long value = m_converter.convertIntoLong(cell);
+                m_consumer.consumeLongCellValue(m_destination, value, params);
             }
         }
     }
 
-    private final class BooleanMapper extends Mapper<CP, //
-            TypedDataCellToJavaConverterFactory<?, ?, DataCellToBooleanConverter<?>>, //
-            TypedCellValueConsumerFactory<D, ?, ?, CP, BooleanCellValueConsumer<D, CP>>> {
+    @SuppressWarnings("rawtypes")
+    private final class BooleanMapper extends Mapper<CP, DataCellToBooleanConverter, BooleanCellValueConsumer<D, CP>> {
 
-        private BooleanMapper(
-            final TypedDataCellToJavaConverterFactory<?, ?, DataCellToBooleanConverter<?>> converterFactory,
-            final TypedCellValueConsumerFactory<D, ?, ?, CP, BooleanCellValueConsumer<D, CP>> consumerFactory) {
-            super(converterFactory, consumerFactory);
+        private BooleanMapper(final DataCellToBooleanConverter converter,
+            final BooleanCellValueConsumer<D, CP> consumer) {
+            super(converter, consumer);
         }
 
         @Override
         protected void map(final DataCell cell, final CP params) throws Exception {
-            @SuppressWarnings("rawtypes")
-            final DataCellToBooleanConverter converter = m_converterFactory.create();
-            final BooleanCellValueConsumer<D, CP> consumer = m_consumerFactory.create();
             if (cell.isMissing()) {
-                consumer.consumeMissingCellValue(m_destination, params);
+                m_consumer.consumeMissingCellValue(m_destination, params);
             } else {
                 @SuppressWarnings("unchecked")
-                final boolean value = converter.convertIntoBoolean(cell);
-                consumer.consumeBooleanCellValue(m_destination, value, params);
+                final boolean value = m_converter.convertIntoBoolean(cell);
+                m_consumer.consumeBooleanCellValue(m_destination, value, params);
             }
         }
     }
 
-    private final class FloatMapper extends Mapper<CP, //
-            TypedDataCellToJavaConverterFactory<?, ?, DataCellToFloatConverter<?>>, //
-            TypedCellValueConsumerFactory<D, ?, ?, CP, FloatCellValueConsumer<D, CP>>> {
+    @SuppressWarnings("rawtypes")
+    private final class FloatMapper extends Mapper<CP, DataCellToFloatConverter, FloatCellValueConsumer<D, CP>> {
 
-        private FloatMapper(
-            final TypedDataCellToJavaConverterFactory<?, ?, DataCellToFloatConverter<?>> converterFactory,
-            final TypedCellValueConsumerFactory<D, ?, ?, CP, FloatCellValueConsumer<D, CP>> consumerFactory) {
-            super(converterFactory, consumerFactory);
+        private FloatMapper(final DataCellToFloatConverter converter, final FloatCellValueConsumer<D, CP> consumer) {
+            super(converter, consumer);
         }
 
         @Override
         protected void map(final DataCell cell, final CP params) throws Exception {
-            @SuppressWarnings("rawtypes")
-            final DataCellToFloatConverter converter = m_converterFactory.create();
-            final FloatCellValueConsumer<D, CP> consumer = m_consumerFactory.create();
             if (cell.isMissing()) {
-                consumer.consumeMissingCellValue(m_destination, params);
+                m_consumer.consumeMissingCellValue(m_destination, params);
             } else {
                 @SuppressWarnings("unchecked")
-                final float value = converter.convertIntoFloat(cell);
-                consumer.consumeFloatCellValue(m_destination, value, params);
+                final float value = m_converter.convertIntoFloat(cell);
+                m_consumer.consumeFloatCellValue(m_destination, value, params);
             }
         }
     }
 
-    private final class ByteMapper extends Mapper<CP, //
-            TypedDataCellToJavaConverterFactory<?, ?, DataCellToByteConverter<?>>, //
-            TypedCellValueConsumerFactory<D, ?, ?, CP, ByteCellValueConsumer<D, CP>>> {
+    @SuppressWarnings("rawtypes")
+    private final class ByteMapper extends Mapper<CP, DataCellToByteConverter, ByteCellValueConsumer<D, CP>> {
 
-        private ByteMapper(final TypedDataCellToJavaConverterFactory<?, ?, DataCellToByteConverter<?>> converterFactory,
-            final TypedCellValueConsumerFactory<D, ?, ?, CP, ByteCellValueConsumer<D, CP>> consumerFactory) {
-            super(converterFactory, consumerFactory);
+        private ByteMapper(final DataCellToByteConverter converter, final ByteCellValueConsumer<D, CP> consumer) {
+            super(converter, consumer);
         }
 
         @Override
         protected void map(final DataCell cell, final CP params) throws Exception {
-            @SuppressWarnings("rawtypes")
-            final DataCellToByteConverter converter = m_converterFactory.create();
-            final ByteCellValueConsumer<D, CP> consumer = m_consumerFactory.create();
             if (cell.isMissing()) {
-                consumer.consumeMissingCellValue(m_destination, params);
+                m_consumer.consumeMissingCellValue(m_destination, params);
             } else {
                 @SuppressWarnings("unchecked")
-                final byte value = converter.convertIntoByte(cell);
-                consumer.consumeByteCellValue(m_destination, value, params);
+                final byte value = m_converter.convertIntoByte(cell);
+                m_consumer.consumeByteCellValue(m_destination, value, params);
             }
         }
     }
 
-    private final class ShortMapper extends Mapper<CP, //
-            TypedDataCellToJavaConverterFactory<?, ?, DataCellToShortConverter<?>>, //
-            TypedCellValueConsumerFactory<D, ?, ?, CP, ShortCellValueConsumer<D, CP>>> {
+    @SuppressWarnings("rawtypes")
+    private final class ShortMapper extends Mapper<CP, DataCellToShortConverter, ShortCellValueConsumer<D, CP>> {
 
-        private ShortMapper(
-            final TypedDataCellToJavaConverterFactory<?, ?, DataCellToShortConverter<?>> converterFactory,
-            final TypedCellValueConsumerFactory<D, ?, ?, CP, ShortCellValueConsumer<D, CP>> consumerFactory) {
-            super(converterFactory, consumerFactory);
+        private ShortMapper(final DataCellToShortConverter converter, final ShortCellValueConsumer<D, CP> consumer) {
+            super(converter, consumer);
         }
 
         @Override
         protected void map(final DataCell cell, final CP params) throws Exception {
-            @SuppressWarnings("rawtypes")
-            final DataCellToShortConverter converter = m_converterFactory.create();
-            final ShortCellValueConsumer<D, CP> consumer = m_consumerFactory.create();
             if (cell.isMissing()) {
-                consumer.consumeMissingCellValue(m_destination, params);
+                m_consumer.consumeMissingCellValue(m_destination, params);
             } else {
                 @SuppressWarnings("unchecked")
-                final short value = converter.convertIntoShort(cell);
-                consumer.consumeShortCellValue(m_destination, value, params);
+                final short value = m_converter.convertIntoShort(cell);
+                m_consumer.consumeShortCellValue(m_destination, value, params);
             }
         }
     }
 
-    private final class CharMapper extends Mapper<CP, //
-            TypedDataCellToJavaConverterFactory<?, ?, DataCellToCharConverter<?>>, //
-            TypedCellValueConsumerFactory<D, ?, ?, CP, CharCellValueConsumer<D, CP>>> {
+    @SuppressWarnings("rawtypes")
+    private final class CharMapper extends Mapper<CP, DataCellToCharConverter, CharCellValueConsumer<D, CP>> {
 
-        private CharMapper(final TypedDataCellToJavaConverterFactory<?, ?, DataCellToCharConverter<?>> converterFactory,
-            final TypedCellValueConsumerFactory<D, ?, ?, CP, CharCellValueConsumer<D, CP>> consumerFactory) {
-            super(converterFactory, consumerFactory);
+        private CharMapper(final DataCellToCharConverter converter, final CharCellValueConsumer<D, CP> consumer) {
+            super(converter, consumer);
         }
 
         @Override
         protected void map(final DataCell cell, final CP params) throws Exception {
-            @SuppressWarnings("rawtypes")
-            final DataCellToCharConverter converter = m_converterFactory.create();
-            final CharCellValueConsumer<D, CP> consumer = m_consumerFactory.create();
             if (cell.isMissing()) {
-                consumer.consumeMissingCellValue(m_destination, params);
+                m_consumer.consumeMissingCellValue(m_destination, params);
             } else {
                 @SuppressWarnings("unchecked")
-                final char value = converter.convertIntoChar(cell);
-                consumer.consumeCharCellValue(m_destination, value, params);
+                final char value = m_converter.convertIntoChar(cell);
+                m_consumer.consumeCharCellValue(m_destination, value, params);
             }
         }
     }
 
-    private final class ObjectMapper extends Mapper<CP, //
-            DataCellToJavaConverterFactory<?, ?>, //
-            CellValueConsumerFactory<D, ?, ?, CP>> {
+    private final class ObjectMapper
+        extends Mapper<CP, DataCellToJavaConverter<?, ?>, CellValueConsumer<D, Object, CP>> {
 
-        private ObjectMapper(final DataCellToJavaConverterFactory<?, ?> converterFactory,
-            final CellValueConsumerFactory<D, ?, ?, CP> consumerFactory) {
-            super(converterFactory, consumerFactory);
+        private ObjectMapper(final DataCellToJavaConverter<?, ?> converter,
+            final CellValueConsumer<D, Object, CP> consumer) {
+            super(converter, consumer);
         }
 
         @Override
         protected void map(final DataCell cell, final CP params) throws Exception {
-            final DataCellToJavaConverter<?, ?> converter = m_converterFactory.create();
-            @SuppressWarnings("unchecked")
-            final CellValueConsumer<D, Object, CP> consumer =
-                (CellValueConsumer<D, Object, CP>)m_consumerFactory.create();
-            final Object cellValue = cell.isMissing() ? null : converter.convertUnsafe(cell);
-            consumer.consumeCellValue(m_destination, cellValue, params);
+            final Object cellValue = cell.isMissing() ? null : m_converter.convertUnsafe(cell);
+            m_consumer.consumeCellValue(m_destination, cellValue, params);
         }
     }
 
     private abstract static class Mapper<CP extends ConsumerParameters<?>, //
-            DC extends DataCellToJavaConverterFactory<?, ?>, //
-            CC extends CellValueConsumerFactory<?, ?, ?, ?>> {
+            P extends DataCellToJavaConverter<?, ?>, //
+            C extends CellValueConsumer<?, ?, CP>> {
 
-        protected final DC m_converterFactory;
+        protected final P m_converter;
 
-        protected final CC m_consumerFactory;
+        protected final C m_consumer;
 
-        private Mapper(final DC converterFactory, final CC consumerFactory) {
-            m_converterFactory = converterFactory;
-            m_consumerFactory = consumerFactory;
+        protected Mapper(final P converter, final C consumer) {
+            m_converter = converter;
+            m_consumer = consumer;
         }
 
         protected abstract void map(DataCell cell, final CP params) throws Exception;
