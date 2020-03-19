@@ -94,18 +94,18 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
     private final DataCell[] m_tempCells;
 
     /**
-    * Creates a new data row producer for the given source and the given mapping.
-    *
-    * @param source The source from which to create data rows.
-    * @param mapping Production paths that describe the mapping from source to {@link DataCell data cells}. The number
-    *            and order of the passed paths must match the ones of the parameters later passed to
-    *            {@link #produceDataRow(RowKey, ProducerParameters[])}.
-    * @param exec Execution context. Potentially required to create converters. May be {@code null} if it is known that
-    *            none of the converter factories in {@code mapping} require an execution context.
-    * @see #DefaultDataRowProducer(Source, ProductionPath[], FileStoreFactory)
-    */
-   public DefaultDataRowProducer(final S source, final ProductionPath[] mapping, final ExecutionContext exec) {
-       this(source, mapping, FileStoreFactory.createFileStoreFactory(exec));
+     * Creates a new data row producer for the given source and the given mapping.
+     *
+     * @param source The source from which to create data rows.
+     * @param mapping Production paths that describe the mapping from source to {@link DataCell data cells}. The number
+     *            and order of the passed paths must match the ones of the parameters later passed to
+     *            {@link #produceDataRow(RowKey, ProducerParameters[])}.
+     * @param exec Execution context. Potentially required to create converters. May be {@code null} if it is known that
+     *            none of the converter factories in {@code mapping} require an execution context.
+     * @see #DefaultDataRowProducer(Source, ProductionPath[], FileStoreFactory)
+     */
+    public DefaultDataRowProducer(final S source, final ProductionPath[] mapping, final ExecutionContext exec) {
+        this(source, mapping, FileStoreFactory.createFileStoreFactory(exec));
     }
 
     /**
@@ -140,76 +140,97 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         Mapper<PP, ?, ?> mapper = null;
         // Check if both value producer and converter are applicable to the same primitive type.
         // This allows us to create a mapper that avoids autoboxing.
-        if (producerFactory.getDestinationType().isPrimitive()
-            && producerFactory instanceof TypedCellValueProducerFactory
-            && converterFactory.getSourceType().isPrimitive()
-            && converterFactory instanceof TypedJavaToDataCellConverterFactory) {
-            final Class<?> producerType =
-                ((TypedCellValueProducerFactory<?, ?, ?, ?, ?>)producerFactory).getProducerType();
-            final Class<?> converterType =
-                ((TypedJavaToDataCellConverterFactory<?, ?>)converterFactory).getConverterType();
-            // double:
-            if (DoubleCellValueProducer.class.isAssignableFrom(producerType)
-                && DoubleToDataCellConverter.class.isAssignableFrom(converterType)) {
-                mapper = new DoubleMapper(
-                    (TypedCellValueProducerFactory<S, ?, ?, PP, DoubleCellValueProducer<S, PP>>)producerFactory,
-                    (TypedJavaToDataCellConverterFactory<?, DoubleToDataCellConverter>)converterFactory);
-            }
-            // int:
-            else if (IntCellValueProducer.class.isAssignableFrom(producerType)
-                && IntToDataCellConverter.class.isAssignableFrom(converterType)) {
-                mapper = new IntMapper(
-                    (TypedCellValueProducerFactory<S, ?, ?, PP, IntCellValueProducer<S, PP>>)producerFactory,
-                    (TypedJavaToDataCellConverterFactory<?, IntToDataCellConverter>)converterFactory);
-            }
-            // long:
-            else if (LongCellValueProducer.class.isAssignableFrom(producerType)
-                && LongToDataCellConverter.class.isAssignableFrom(converterType)) {
-                mapper = new LongMapper(
-                    (TypedCellValueProducerFactory<S, ?, ?, PP, LongCellValueProducer<S, PP>>)producerFactory,
-                    (TypedJavaToDataCellConverterFactory<?, LongToDataCellConverter>)converterFactory);
-            }
-            // boolean:
-            else if (BooleanCellValueProducer.class.isAssignableFrom(producerType)
-                && BooleanToDataCellConverter.class.isAssignableFrom(converterType)) {
-                mapper = new BooleanMapper(
-                    (TypedCellValueProducerFactory<S, ?, ?, PP, BooleanCellValueProducer<S, PP>>)producerFactory,
-                    (TypedJavaToDataCellConverterFactory<?, BooleanToDataCellConverter>)converterFactory);
-            }
-            // float:
-            else if (FloatCellValueProducer.class.isAssignableFrom(producerType)
-                && FloatToDataCellConverter.class.isAssignableFrom(converterType)) {
-                mapper = new FloatMapper(
-                    (TypedCellValueProducerFactory<S, ?, ?, PP, FloatCellValueProducer<S, PP>>)producerFactory,
-                    (TypedJavaToDataCellConverterFactory<?, FloatToDataCellConverter>)converterFactory);
-            }
-            // byte:
-            else if (ByteCellValueProducer.class.isAssignableFrom(producerType)
-                && ByteToDataCellConverter.class.isAssignableFrom(converterType)) {
-                mapper = new ByteMapper(
-                    (TypedCellValueProducerFactory<S, ?, ?, PP, ByteCellValueProducer<S, PP>>)producerFactory,
-                    (TypedJavaToDataCellConverterFactory<?, ByteToDataCellConverter>)converterFactory);
-            }
-            // short:
-            else if (ShortCellValueProducer.class.isAssignableFrom(producerType)
-                && ShortToDataCellConverter.class.isAssignableFrom(converterType)) {
-                mapper = new ShortMapper(
-                    (TypedCellValueProducerFactory<S, ?, ?, PP, ShortCellValueProducer<S, PP>>)producerFactory,
-                    (TypedJavaToDataCellConverterFactory<?, ShortToDataCellConverter>)converterFactory);
-            }
-            // char:
-            else if (CharCellValueProducer.class.isAssignableFrom(producerType)
-                && CharToDataCellConverter.class.isAssignableFrom(converterType)) {
-                mapper = new CharMapper(
-                    (TypedCellValueProducerFactory<S, ?, ?, PP, CharCellValueProducer<S, PP>>)producerFactory,
-                    (TypedJavaToDataCellConverterFactory<?, CharToDataCellConverter>)converterFactory);
-            }
+        if (canAvoidAutoboxing(producerFactory, converterFactory)) {
+            mapper = createPrimitiveMapper(producerFactory, converterFactory);
         }
         if (mapper == null) {
             // Fall-through.
-            mapper = new ObjectMapper((CellValueProducerFactory<S, ?, ?, PP>)producerFactory, converterFactory);
+            mapper = new ObjectMapper(((CellValueProducerFactory<S, ?, ?, PP>)producerFactory).create(),
+                converterFactory.create(m_fileStoreFactory));
         }
         return mapper;
+    }
+
+    @SuppressWarnings("unchecked") // Type safety is mostly ensured by instance checks.
+    private Mapper<PP, ?, ?> createPrimitiveMapper(final CellValueProducerFactory<?, ?, ?, ?> producerFactory,
+        final JavaToDataCellConverterFactory<?> converterFactory) {
+        final Class<?> producerType = ((TypedCellValueProducerFactory<?, ?, ?, ?, ?>)producerFactory).getProducerType();
+        final Class<?> converterType = ((TypedJavaToDataCellConverterFactory<?, ?>)converterFactory).getConverterType();
+        // double:
+        if (DoubleCellValueProducer.class.isAssignableFrom(producerType)
+            && DoubleToDataCellConverter.class.isAssignableFrom(converterType)) {
+            return new DoubleMapper(
+                ((TypedCellValueProducerFactory<S, ?, ?, PP, DoubleCellValueProducer<S, PP>>)producerFactory).create(),
+                ((TypedJavaToDataCellConverterFactory<?, DoubleToDataCellConverter>)converterFactory)
+                    .create(m_fileStoreFactory));
+        }
+        // int:
+        else if (IntCellValueProducer.class.isAssignableFrom(producerType)
+            && IntToDataCellConverter.class.isAssignableFrom(converterType)) {
+            return new IntMapper(
+                ((TypedCellValueProducerFactory<S, ?, ?, PP, IntCellValueProducer<S, PP>>)producerFactory).create(),
+                ((TypedJavaToDataCellConverterFactory<?, IntToDataCellConverter>)converterFactory)
+                    .create(m_fileStoreFactory));
+        }
+        // long:
+        else if (LongCellValueProducer.class.isAssignableFrom(producerType)
+            && LongToDataCellConverter.class.isAssignableFrom(converterType)) {
+            return new LongMapper(
+                ((TypedCellValueProducerFactory<S, ?, ?, PP, LongCellValueProducer<S, PP>>)producerFactory).create(),
+                ((TypedJavaToDataCellConverterFactory<?, LongToDataCellConverter>)converterFactory)
+                    .create(m_fileStoreFactory));
+        }
+        // boolean:
+        else if (BooleanCellValueProducer.class.isAssignableFrom(producerType)
+            && BooleanToDataCellConverter.class.isAssignableFrom(converterType)) {
+            return new BooleanMapper(
+                ((TypedCellValueProducerFactory<S, ?, ?, PP, BooleanCellValueProducer<S, PP>>)producerFactory).create(),
+                ((TypedJavaToDataCellConverterFactory<?, BooleanToDataCellConverter>)converterFactory)
+                    .create(m_fileStoreFactory));
+        }
+        // float:
+        else if (FloatCellValueProducer.class.isAssignableFrom(producerType)
+            && FloatToDataCellConverter.class.isAssignableFrom(converterType)) {
+            return new FloatMapper(
+                ((TypedCellValueProducerFactory<S, ?, ?, PP, FloatCellValueProducer<S, PP>>)producerFactory).create(),
+                ((TypedJavaToDataCellConverterFactory<?, FloatToDataCellConverter>)converterFactory)
+                    .create(m_fileStoreFactory));
+        }
+        // byte:
+        else if (ByteCellValueProducer.class.isAssignableFrom(producerType)
+            && ByteToDataCellConverter.class.isAssignableFrom(converterType)) {
+            return new ByteMapper(
+                ((TypedCellValueProducerFactory<S, ?, ?, PP, ByteCellValueProducer<S, PP>>)producerFactory).create(),
+                ((TypedJavaToDataCellConverterFactory<?, ByteToDataCellConverter>)converterFactory)
+                    .create(m_fileStoreFactory));
+        }
+        // short:
+        else if (ShortCellValueProducer.class.isAssignableFrom(producerType)
+            && ShortToDataCellConverter.class.isAssignableFrom(converterType)) {
+            return new ShortMapper(
+                ((TypedCellValueProducerFactory<S, ?, ?, PP, ShortCellValueProducer<S, PP>>)producerFactory).create(),
+                ((TypedJavaToDataCellConverterFactory<?, ShortToDataCellConverter>)converterFactory)
+                    .create(m_fileStoreFactory));
+        }
+        // char:
+        else if (CharCellValueProducer.class.isAssignableFrom(producerType)
+            && CharToDataCellConverter.class.isAssignableFrom(converterType)) {
+            return new CharMapper(
+                ((TypedCellValueProducerFactory<S, ?, ?, PP, CharCellValueProducer<S, PP>>)producerFactory).create(),
+                ((TypedJavaToDataCellConverterFactory<?, CharToDataCellConverter>)converterFactory)
+                    .create(m_fileStoreFactory));
+        } else {
+            // no primitive mapper matched -> return null and let caller create the default mapper
+            return null;
+        }
+    }
+
+    private static boolean canAvoidAutoboxing(final CellValueProducerFactory<?, ?, ?, ?> producerFactory,
+        final JavaToDataCellConverterFactory<?> converterFactory) {
+        return producerFactory.getDestinationType().isPrimitive()
+            && producerFactory instanceof TypedCellValueProducerFactory
+            && converterFactory.getSourceType().isPrimitive()
+            && converterFactory instanceof TypedJavaToDataCellConverterFactory;
     }
 
     @Override
@@ -223,214 +244,163 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
 
     // Mapper implementations:
 
-    private final class DoubleMapper extends Mapper<PP, //
-            TypedCellValueProducerFactory<S, ?, ?, PP, DoubleCellValueProducer<S, PP>>, //
-            TypedJavaToDataCellConverterFactory<?, DoubleToDataCellConverter>> {
+    private final class DoubleMapper extends Mapper<PP, DoubleCellValueProducer<S, PP>, DoubleToDataCellConverter> {
 
-        private DoubleMapper(
-            final TypedCellValueProducerFactory<S, ?, ?, PP, DoubleCellValueProducer<S, PP>> producerFactory,
-            final TypedJavaToDataCellConverterFactory<?, DoubleToDataCellConverter> converterFactory) {
-            super(producerFactory, converterFactory);
+        private DoubleMapper(final DoubleCellValueProducer<S, PP> producer, final DoubleToDataCellConverter converter) {
+            super(producer, converter);
         }
 
         @Override
         protected final DataCell map(final PP params) throws Exception {
-            final DoubleCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final DoubleToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
-            if (producer.producesMissingCellValue(m_source, params)) {
+            if (m_producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
-                return converter.convertDouble(producer.produceDoubleCellValue(m_source, params));
+                return m_converter.convertDouble(m_producer.produceDoubleCellValue(m_source, params));
             }
         }
     }
 
-    private final class IntMapper extends Mapper<PP, //
-            TypedCellValueProducerFactory<S, ?, ?, PP, IntCellValueProducer<S, PP>>, //
-            TypedJavaToDataCellConverterFactory<?, IntToDataCellConverter>> {
+    private final class IntMapper extends Mapper<PP, IntCellValueProducer<S, PP>, IntToDataCellConverter> {
 
-        private IntMapper(final TypedCellValueProducerFactory<S, ?, ?, PP, IntCellValueProducer<S, PP>> producerFactory,
-            final TypedJavaToDataCellConverterFactory<?, IntToDataCellConverter> converterFactory) {
-            super(producerFactory, converterFactory);
+        private IntMapper(final IntCellValueProducer<S, PP> producer, final IntToDataCellConverter converter) {
+            super(producer, converter);
         }
 
         @Override
         protected final DataCell map(final PP params) throws Exception {
-            final IntCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final IntToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
-            if (producer.producesMissingCellValue(m_source, params)) {
+            if (m_producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
-                return converter.convertInt(producer.produceIntCellValue(m_source, params));
+                return m_converter.convertInt(m_producer.produceIntCellValue(m_source, params));
             }
         }
     }
 
-    private final class LongMapper extends Mapper<PP, //
-            TypedCellValueProducerFactory<S, ?, ?, PP, LongCellValueProducer<S, PP>>, //
-            TypedJavaToDataCellConverterFactory<?, LongToDataCellConverter>> {
+    private final class LongMapper extends Mapper<PP, LongCellValueProducer<S, PP>, LongToDataCellConverter> {
 
-        private LongMapper(
-            final TypedCellValueProducerFactory<S, ?, ?, PP, LongCellValueProducer<S, PP>> producerFactory,
-            final TypedJavaToDataCellConverterFactory<?, LongToDataCellConverter> converterFactory) {
-            super(producerFactory, converterFactory);
+        private LongMapper(final LongCellValueProducer<S, PP> producer, final LongToDataCellConverter converter) {
+            super(producer, converter);
         }
 
         @Override
         protected final DataCell map(final PP params) throws Exception {
-            final LongCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final LongToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
-            if (producer.producesMissingCellValue(m_source, params)) {
+            if (m_producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
-                return converter.convertLong(producer.produceLongCellValue(m_source, params));
+                return m_converter.convertLong(m_producer.produceLongCellValue(m_source, params));
             }
         }
     }
 
-    private final class BooleanMapper extends Mapper<PP, //
-            TypedCellValueProducerFactory<S, ?, ?, PP, BooleanCellValueProducer<S, PP>>, //
-            TypedJavaToDataCellConverterFactory<?, BooleanToDataCellConverter>> {
+    private final class BooleanMapper extends Mapper<PP, BooleanCellValueProducer<S, PP>, BooleanToDataCellConverter> {
 
-        private BooleanMapper(
-            final TypedCellValueProducerFactory<S, ?, ?, PP, BooleanCellValueProducer<S, PP>> producerFactory,
-            final TypedJavaToDataCellConverterFactory<?, BooleanToDataCellConverter> converterFactory) {
-            super(producerFactory, converterFactory);
+        private BooleanMapper(final BooleanCellValueProducer<S, PP> producer,
+            final BooleanToDataCellConverter converter) {
+            super(producer, converter);
         }
 
         @Override
         protected final DataCell map(final PP params) throws Exception {
-            final BooleanCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final BooleanToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
-            if (producer.producesMissingCellValue(m_source, params)) {
+            if (m_producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
-                return converter.convertBoolean(producer.produceBooleanCellValue(m_source, params));
+                return m_converter.convertBoolean(m_producer.produceBooleanCellValue(m_source, params));
             }
         }
     }
 
-    private final class FloatMapper extends Mapper<PP, //
-            TypedCellValueProducerFactory<S, ?, ?, PP, FloatCellValueProducer<S, PP>>, //
-            TypedJavaToDataCellConverterFactory<?, FloatToDataCellConverter>> {
+    private final class FloatMapper extends Mapper<PP, FloatCellValueProducer<S, PP>, FloatToDataCellConverter> {
 
-        private FloatMapper(
-            final TypedCellValueProducerFactory<S, ?, ?, PP, FloatCellValueProducer<S, PP>> producerFactory,
-            final TypedJavaToDataCellConverterFactory<?, FloatToDataCellConverter> converterFactory) {
-            super(producerFactory, converterFactory);
+        private FloatMapper(final FloatCellValueProducer<S, PP> producer, final FloatToDataCellConverter converter) {
+            super(producer, converter);
         }
 
         @Override
         protected final DataCell map(final PP params) throws Exception {
-            final FloatCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final FloatToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
-            if (producer.producesMissingCellValue(m_source, params)) {
+            if (m_producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
-                return converter.convertFloat(producer.produceFloatCellValue(m_source, params));
+                return m_converter.convertFloat(m_producer.produceFloatCellValue(m_source, params));
             }
         }
     }
 
-    private final class ByteMapper extends Mapper<PP, //
-            TypedCellValueProducerFactory<S, ?, ?, PP, ByteCellValueProducer<S, PP>>, //
-            TypedJavaToDataCellConverterFactory<?, ByteToDataCellConverter>> {
+    private final class ByteMapper extends Mapper<PP, ByteCellValueProducer<S, PP>, ByteToDataCellConverter> {
 
-        private ByteMapper(
-            final TypedCellValueProducerFactory<S, ?, ?, PP, ByteCellValueProducer<S, PP>> producerFactory,
-            final TypedJavaToDataCellConverterFactory<?, ByteToDataCellConverter> converterFactory) {
-            super(producerFactory, converterFactory);
+        private ByteMapper(final ByteCellValueProducer<S, PP> producer, final ByteToDataCellConverter converter) {
+            super(producer, converter);
         }
 
         @Override
         protected final DataCell map(final PP params) throws Exception {
-            final ByteCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final ByteToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
-            if (producer.producesMissingCellValue(m_source, params)) {
+            if (m_producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
-                return converter.convertByte(producer.produceByteCellValue(m_source, params));
+                return m_converter.convertByte(m_producer.produceByteCellValue(m_source, params));
             }
         }
     }
 
-    private final class ShortMapper extends Mapper<PP, //
-            TypedCellValueProducerFactory<S, ?, ?, PP, ShortCellValueProducer<S, PP>>, //
-            TypedJavaToDataCellConverterFactory<?, ShortToDataCellConverter>> {
+    private final class ShortMapper extends Mapper<PP, ShortCellValueProducer<S, PP>, ShortToDataCellConverter> {
 
-        private ShortMapper(
-            final TypedCellValueProducerFactory<S, ?, ?, PP, ShortCellValueProducer<S, PP>> producerFactory,
-            final TypedJavaToDataCellConverterFactory<?, ShortToDataCellConverter> converterFactory) {
-            super(producerFactory, converterFactory);
+        private ShortMapper(final ShortCellValueProducer<S, PP> producer, final ShortToDataCellConverter converter) {
+            super(producer, converter);
         }
 
         @Override
         protected final DataCell map(final PP params) throws Exception {
-            final ShortCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final ShortToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
-            if (producer.producesMissingCellValue(m_source, params)) {
+            if (m_producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
-                return converter.convertShort(producer.produceShortCellValue(m_source, params));
+                return m_converter.convertShort(m_producer.produceShortCellValue(m_source, params));
             }
         }
     }
 
-    private final class CharMapper extends Mapper<PP, //
-            TypedCellValueProducerFactory<S, ?, ?, PP, CharCellValueProducer<S, PP>>, //
-            TypedJavaToDataCellConverterFactory<?, CharToDataCellConverter>> {
+    private final class CharMapper extends Mapper<PP, CharCellValueProducer<S, PP>, CharToDataCellConverter> {
 
-        private CharMapper(
-            final TypedCellValueProducerFactory<S, ?, ?, PP, CharCellValueProducer<S, PP>> producerFactory,
-            final TypedJavaToDataCellConverterFactory<?, CharToDataCellConverter> converterFactory) {
-            super(producerFactory, converterFactory);
+        private CharMapper(final CharCellValueProducer<S, PP> producer, final CharToDataCellConverter converter) {
+            super(producer, converter);
         }
 
         @Override
         protected final DataCell map(final PP params) throws Exception {
-            final CharCellValueProducer<S, PP> producer = m_producerFactory.create();
-            final CharToDataCellConverter converter = m_converterFactory.create(m_fileStoreFactory);
-            if (producer.producesMissingCellValue(m_source, params)) {
+            if (m_producer.producesMissingCellValue(m_source, params)) {
                 return new MissingCell(null);
             } else {
-                return converter.convertChar(producer.produceCharCellValue(m_source, params));
+                return m_converter.convertChar(m_producer.produceCharCellValue(m_source, params));
             }
         }
     }
 
-    private final class ObjectMapper extends Mapper<PP, //
-            CellValueProducerFactory<S, ?, ?, PP>, //
-            JavaToDataCellConverterFactory<?>> {
+    private final class ObjectMapper extends Mapper<PP, CellValueProducer<S, ?, PP>, JavaToDataCellConverter<?>> {
 
-        private ObjectMapper(final CellValueProducerFactory<S, ?, ?, PP> producerFactory,
-            final JavaToDataCellConverterFactory<?> converterFactory) {
-            super(producerFactory, converterFactory);
+        private ObjectMapper(final CellValueProducer<S, ?, PP> producer, final JavaToDataCellConverter<?> converter) {
+            super(producer, converter);
         }
 
         @Override
         protected final DataCell map(final PP params) throws Exception {
-            final CellValueProducer<S, ?, PP> producer = m_producerFactory.create();
-            final JavaToDataCellConverter<?> converter = m_converterFactory.create(m_fileStoreFactory);
-            final Object value = producer.produceCellValue(m_source, params);
+            final Object value = m_producer.produceCellValue(m_source, params);
             if (value == null) {
                 return new MissingCell(null);
             } else {
-                return converter.convertUnsafe(value);
+                return m_converter.convertUnsafe(value);
             }
         }
     }
 
     private abstract static class Mapper<PP extends ProducerParameters<?>, //
-            P extends CellValueProducerFactory<?, ?, ?, ?>, //
-            C extends JavaToDataCellConverterFactory<?>> {
+            P extends CellValueProducer<?, ?, PP>, //
+            C extends JavaToDataCellConverter<?>> {
 
-        protected final P m_producerFactory;
+        protected final P m_producer;
 
-        protected final C m_converterFactory;
+        protected final C m_converter;
 
-        private Mapper(final P producerFactory, final C converterFactory) {
-            m_producerFactory = producerFactory;
-            m_converterFactory = converterFactory;
+        protected Mapper(final P producer, final C converter) {
+            m_producer = producer;
+            m_converter = converter;
         }
 
         protected abstract DataCell map(PP params) throws Exception;
