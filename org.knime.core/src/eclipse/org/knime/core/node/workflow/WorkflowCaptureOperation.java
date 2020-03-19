@@ -86,7 +86,7 @@ public final class WorkflowCaptureOperation {
      * Name of the component created if there are multiple readers representing multiple ports of the same
      * 'static' input node.
      */
-    private static final String READERS_COMPONENT_NAME = "Readers";
+    private static final String READERS_METANODE_NAME = "Readers";
 
     /*
      * Amount of how much readers a vertically moved relative to each other if there are multiple readers.
@@ -207,19 +207,18 @@ public final class WorkflowCaptureOperation {
                     //group
                     CollapseIntoMetaNodeResult res =
                         tempParent.collapseIntoMetaNode(readerGroup.toArray(new NodeID[readerGroup.size()]),
-                            new WorkflowAnnotation[0], READERS_COMPONENT_NAME);
-                    tempParent.convertMetaNodeToSubNode(res.getCollapsedMetanodeID());
+                            new WorkflowAnnotation[0], READERS_METANODE_NAME);
 
                     //update ids
-                    SubNodeContainer snc = (SubNodeContainer)tempParent.getNodeContainer(res.getCollapsedMetanodeID());
+                    WorkflowManager readersMetanode = (WorkflowManager)tempParent.getNodeContainer(res.getCollapsedMetanodeID());
                     for (NodeID id : readerGroup) {
                         NodeIDSuffix suffix = NodeIDSuffix.create(tempParent.getID(), id);
                         addedPortObjectReaderNodes.remove(suffix);
                         addedPortObjectReaderNodes.add(NodeIDSuffix.create(tempParent.getID(),
-                            suffix.prependParent(snc.getWorkflowManager().getID())));
+                            suffix.prependParent(readersMetanode.getID())));
                     }
                     //move component
-                    snc.setUIInformation(NodeUIInformation.builder(snc.getUIInformation())
+                    readersMetanode.setUIInformation(NodeUIInformation.builder(readersMetanode.getUIInformation())
                         .setNodeLocation(boundsFirstNode[0], boundsFirstNode[1], boundsFirstNode[2], boundsFirstNode[3])
                         .build());
                 }
