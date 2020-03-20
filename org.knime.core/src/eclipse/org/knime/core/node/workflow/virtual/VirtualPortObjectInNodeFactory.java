@@ -65,4 +65,9 @@ public class VirtualPortObjectInNodeFactory extends VirtualParallelizedChunkPort
         super(outTypes);
     }
 
+    @Override
+    protected boolean isDeprecatedInternal() {
+        return true;
+    }
+
 }

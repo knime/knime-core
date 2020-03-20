@@ -134,6 +134,11 @@ public final class NodeFactoryExtension {
         return m_isDeprecated.booleanValue();
     }
 
+    /** @return the "hidden" field in the extension point. */
+    public boolean isHidden() {
+        return Boolean.parseBoolean(m_configurationElement.getAttribute("hidden"));
+    }
+
     /** @return the "after" field in the extension point or an empty string. */
     public String getAfterID() {
         return ObjectUtils.defaultIfNull(m_configurationElement.getAttribute("after"), "");

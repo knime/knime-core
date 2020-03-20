@@ -665,4 +665,11 @@
             dataColumnMetaDataExtension="org.knime.core.data.probability.nominal.NominalDistributionValueMetaDataExtension">
       </DataColumnMetaData>
    </extension>
+   <extension
+         point="org.knime.workbench.repository.nodesets">
+      <nodeset
+            deprecated="false"
+            factory-class="org.knime.core.node.workflow.virtual.VirtualNodeSetFactory">
+      </nodeset>
+   </extension>
 </plugin>

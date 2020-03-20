@@ -315,15 +315,6 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 return factory;
             }
         }
-        try {
-            Class<?> classInCore = Class.forName(factoryClassName);
-            if (NodeFactory.class.isAssignableFrom(classInCore)) {
-                return (NodeFactory<NodeModel>)classInCore.newInstance();
-            }
-        } catch (ClassNotFoundException cnfe) {
-            // ignore -- it's extremely unlikely that we find the class in the core (except for Compontent Input/Output)
-            // TODO introduce "hidden" flag in node extension point
-        }
 
 //        for (String s : NodeFactory.getLoadedNodeFactories()) {
 //            if (s.endsWith("." + simpleClassName)) {
@@ -334,6 +325,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 //                return f;
 //            }
 //        }
+
         throw new InvalidSettingsException(String.format(
             "Unknown factory class \"%s\" -- not registered via extension point", factoryClassName));
     }

@@ -128,9 +128,11 @@ public class NodeFactoryExtensionManager {
             long totalNodes = instance.m_factoryNameToNodeFactoryExtensionMap.size();
             long deprecatedNodes = instance.m_factoryNameToNodeFactoryExtensionMap.values()//
                     .stream().filter(d -> d.isDeprecated()).count();
+            long hiddenNodes = instance.m_factoryNameToNodeFactoryExtensionMap.values()//
+                    .stream().filter(d -> d.isHidden()).count();
 
-            LOGGER.debugWithFormat("Collected %s extensions... found %d nodes (%d deprecated) in %.1fs",
-                NodeFactory.class.getSimpleName(), totalNodes, deprecatedNodes,
+            LOGGER.debugWithFormat("Collected %s extensions... found %d nodes (%d deprecated, %d hidden) in %.1fs",
+                NodeFactory.class.getSimpleName(), totalNodes, deprecatedNodes, hiddenNodes,
                 (System.currentTimeMillis() - start) / 1000.0);
             start = System.currentTimeMillis();
             instance.collectNodeSetFactoryExtensions();
@@ -244,7 +246,10 @@ public class NodeFactoryExtensionManager {
         long totalNodes = m_factoryNameToNodeFactoryExtensionMap.size();
         long deprecatedNodes = m_factoryNameToNodeFactoryExtensionMap.values()//
                 .stream().filter(d -> d.isDeprecated()).count();
+        long hiddenNodes = m_factoryNameToNodeFactoryExtensionMap.values()//
+                .stream().filter(d -> d.isHidden()).count();
         long nodesets = m_factoryNameToNodeSetFactoryExtensionMap.values().stream().distinct().count();
-        return String.format("%d nodes (%d deprecated), %d node sets", totalNodes, deprecatedNodes, nodesets);
+        return String.format("%d nodes (%d deprecated, %d hidden), %d node sets", totalNodes, deprecatedNodes,
+            hiddenNodes, nodesets);
     }
 }

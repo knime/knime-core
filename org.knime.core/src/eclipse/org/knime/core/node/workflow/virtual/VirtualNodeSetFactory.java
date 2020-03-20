@@ -44,35 +44,93 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 7, 2014 (wiswedel): created
+ *   Mar 20, 2020 (hornm): created
  */
 package org.knime.core.node.workflow.virtual;
 
-import org.knime.core.node.port.PortType;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSetFactory;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeFactory;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectOutNodeFactory;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 
 /**
- * Empty extension of {@link VirtualSubNodeOutputNodeFactory} for backward compatibility reasons
- * (fully qualified name possibly saved in workflows).
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @deprecated Use super class instead
+ * Contains the virtual inputs and outputs for components and parallel chunk 'executables'.
+ *
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @noreference This class is not intended to be referenced by clients.
  */
-@Deprecated
-public class VirtualPortObjectOutNodeFactory extends VirtualParallelizedChunkPortObjectOutNodeFactory {
+public final class VirtualNodeSetFactory implements NodeSetFactory {
 
-    /** Persistor used by constructor.
-     * @since 2.10 */
-    public VirtualPortObjectOutNodeFactory() {
+    private static Map<String, Class<? extends NodeFactory<? extends NodeModel>>> VIRTUAL_NODES;
+
+    private static Map<String, Class<? extends NodeFactory<? extends NodeModel>>> getVirtualNodes() {
+        if (VIRTUAL_NODES == null) {
+            VIRTUAL_NODES = new HashMap<>();
+            addClass(VirtualSubNodeInputNodeFactory.class);
+            addClass(VirtualSubNodeOutputNodeFactory.class);
+            addClass(VirtualParallelizedChunkPortObjectInNodeFactory.class);
+            addClass(VirtualParallelizedChunkPortObjectOutNodeFactory.class);
+            addClass(VirtualPortObjectInNodeFactory.class);
+            addClass(VirtualPortObjectOutNodeFactory.class);
+        }
+        return VIRTUAL_NODES;
     }
 
-    /** Client side constructor. */
-    public VirtualPortObjectOutNodeFactory(final PortType[] inTypes) {
-        super(inTypes);
+    private static void addClass(final Class<? extends NodeFactory<? extends NodeModel>> clazz) {
+        VIRTUAL_NODES.put(clazz.getCanonicalName(), clazz);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<String> getNodeFactoryIds() {
+        return getVirtualNodes().keySet();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<? extends NodeFactory<? extends NodeModel>> getNodeFactory(final String id) {
+        return getVirtualNodes().get(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getCategoryPath(final String id) {
+        //nodes are hidden -> no category necessary
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getAfterID(final String id) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConfigRO getAdditionalSettings(final String id) {
+        return null;
     }
 
     @Override
-    protected boolean isDeprecatedInternal() {
+    public boolean isHidden() {
         return true;
     }
 

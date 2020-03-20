@@ -92,4 +92,17 @@ public interface NodeSetFactory {
      * @return additional settings for the node factory
      */
     public ConfigRO getAdditionalSettings(final String id);
+
+    /**
+     * Specifies whether the nodes of this node set are hidden. If a node is hidden it will not appear in the node
+     * repository such that the user can't add it as a new node to workflows. However, it will still be loaded if it's
+     * already part of a workflow.
+     *
+     * @return if <code>true</code> if the node set is hidden, <code>false</code> otherwise
+     * @since 4.2
+     */
+    public default boolean isHidden() {
+        return false;
+    }
+
 }
