@@ -76,7 +76,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
-import org.knime.core.node.extension.NodeFactoryExtension;
 import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.PortObject;
@@ -92,8 +91,6 @@ import org.knime.core.util.LoadVersion;
  */
 public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPersistor
     implements NativeNodeContainerPersistor {
-
-    private static final List<Class<? extends NodeFactory<NodeModel>>> LOADED_NODE_FACTORIES = new ArrayList<>();
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(FileNativeNodeContainerPersistor.class);
 
@@ -302,6 +299,11 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     @SuppressWarnings("unchecked")
     public static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
         InstantiationException, IllegalAccessException,  InvalidNodeFactoryExtensionException{
+        Optional<NodeFactory<? extends NodeModel>> facOptional =
+                NodeFactoryExtensionManager.getInstance().createNodeFactory(factoryClassName);
+        if (facOptional.isPresent()) {
+            return (NodeFactory<NodeModel>)facOptional.get();
+        }
         List<NodeFactoryClassMapper> classMapperList = NodeFactoryClassMapper.getRegisteredMappers();
         for (NodeFactoryClassMapper mapper : classMapperList) {
             @SuppressWarnings("rawtypes")
@@ -312,20 +314,6 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                     mapper.getClass().getName()));
                 return factory;
             }
-        }
-        Optional<NodeFactoryExtension> nodeFactoryExtension = NodeFactoryExtensionManager.getInstance().getNodeFactoryExtension(factoryClassName);
-        if (nodeFactoryExtension.isPresent()) {
-            return (NodeFactory<NodeModel>)nodeFactoryExtension.get().createFactory();
-        }
-        Optional<Class<? extends NodeFactory<? extends NodeModel>>> factoryFromNodeSetDefinition =
-            NodeFactoryExtensionManager.getInstance().getFactoryFromNodeSetFactoryExtension(factoryClassName);
-        if (factoryFromNodeSetDefinition.isPresent()) {
-            return (NodeFactory<NodeModel>)factoryFromNodeSetDefinition.get().newInstance();
-        }
-        Optional<Class<? extends NodeFactory<NodeModel>>> loadedNodeFactory = LOADED_NODE_FACTORIES.stream()//
-                .filter(f -> f.getClass().getName().equals(factoryClassName)).findFirst();
-        if (loadedNodeFactory.isPresent()) {
-            return loadedNodeFactory.get().newInstance();
         }
         try {
             Class<?> classInCore = Class.forName(factoryClassName);
@@ -541,15 +529,5 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     private static void saveCreationConfig(final NodeSettingsWO settings, final Node node) {
         node.getCopyOfCreationConfig().ifPresent(config -> config.saveSettingsTo(settings));
     }
-
-    /**
-     * Added in 4.2 as implementation to {@link NodeFactory#addLoadedFactory(Class)}. Access discouraged and also
-     * deprecated as API in NodeFactory.
-     * @since 4.2
-     */
-    public static void addLoadedFactory(final Class<? extends NodeFactory<NodeModel>> factoryClass) {
-        LOADED_NODE_FACTORIES.add(factoryClass);
-    }
-
 
 }

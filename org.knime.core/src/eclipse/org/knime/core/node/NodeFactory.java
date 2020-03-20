@@ -62,8 +62,8 @@ import org.apache.xmlbeans.XmlException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.context.NodeCreationConfiguration;
+import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.missing.MissingNodeFactory;
-import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -684,12 +684,14 @@ public abstract class NodeFactory<T extends NodeModel> {
      * Adds the given factory class to the list of loaded factory classes.
      *
      * @param factoryClass a factory class
-     * @deprecated 3rd party contributions should register their nodes through KNIME's node extension point.
+     * @deprecated 3rd party contributions should register their nodes through KNIME's node extension point, possibly
+     *             setting the "hidden" flag.
      */
     @Deprecated
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void addLoadedFactory(final Class<? extends NodeFactory> factoryClass) {
-        FileNativeNodeContainerPersistor.addLoadedFactory((Class<? extends NodeFactory<NodeModel>>)factoryClass);
+        NodeFactoryExtensionManager.getInstance()
+            .addLoadedFactory((Class<? extends NodeFactory<NodeModel>>)factoryClass);
     }
 
     /////////////////////////////////////////////////////////////

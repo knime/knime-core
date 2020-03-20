@@ -50,8 +50,9 @@ package org.knime.core.node;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
-import org.knime.core.eclipseUtil.GlobalClassCreator;
+import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.util.Pair;
 
 /**
@@ -89,11 +90,7 @@ public abstract class RegexNodeFactoryClassMapper extends NodeFactoryClassMapper
         return m_regexRules;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    @SuppressWarnings("unchecked")
     public final NodeFactory<? extends NodeModel> mapFactoryClassName(final String factoryClassName) {
         for (final String regexPattern : getRegexRules().keySet()) {
             if (factoryClassName.matches(regexPattern)) {
@@ -101,7 +98,11 @@ public abstract class RegexNodeFactoryClassMapper extends NodeFactoryClassMapper
                 final String newClassName =
                     factoryClassName.replaceAll(replacement.getFirst(), replacement.getSecond());
                 try {
-                    return (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(newClassName)).newInstance());
+                    Optional<NodeFactory<? extends NodeModel>> replacementFacOptional =
+                            NodeFactoryExtensionManager.getInstance().createNodeFactory(newClassName);
+                    if (replacementFacOptional.isPresent()) {
+                        return replacementFacOptional.get();
+                    }
                 } catch (final Exception e) {
                     LOGGER.debug("Could not find class " + newClassName + " for " + factoryClassName);
                 }

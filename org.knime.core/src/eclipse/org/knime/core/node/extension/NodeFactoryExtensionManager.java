@@ -49,11 +49,13 @@
 package org.knime.core.node.extension;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -82,6 +84,12 @@ public class NodeFactoryExtensionManager {
 
     /** ID of "nodesets" extension point */
     static final String ID_NODE_SET = "org.knime.workbench.repository.nodesets";
+
+    /**
+     * List of nodes added via {@link NodeFactory#addLoadedFactory(Class)} (even though that is discourages as of 4.2)
+     */
+    private final Collection<Class<? extends NodeFactory<NodeModel>>> m_loadedNodeFactories =
+        new ConcurrentLinkedQueue<>();
 
     private static NodeFactoryExtensionManager instance;
 
@@ -139,33 +147,11 @@ public class NodeFactoryExtensionManager {
     private NodeFactoryExtensionManager() {
     }
 
-    /** Used by workflow persistor to map the fully qualified factory class to the instance (if available/known).
-     * @param factoryClassName class of interested
-     * @return The extension, if factory is known.
-     */
-    public Optional<NodeFactoryExtension> getNodeFactoryExtension(final String factoryClassName) {
-        NodeFactoryExtension value = m_factoryNameToNodeFactoryExtensionMap.get(factoryClassName);
-        return Optional.ofNullable(value);
-    }
-
     /**
      * @return iterator over all known node extensions.
      */
     public Iterable<NodeFactoryExtension> getNodeFactoryExtensions() {
         return m_factoryNameToNodeFactoryExtensionMap.values();
-    }
-
-    /** Used by workflow persistor to map the fully qualified NodeSetFactory class to the instance (if available/known).
-     * @param factoryClassName ...
-     * @return ...
-     */
-    public Optional<Class<? extends NodeFactory<? extends NodeModel>>>
-        getFactoryFromNodeSetFactoryExtension(final String factoryClassName) {
-        NodeSetFactoryExtension nodeSetFactoryExtension = m_factoryNameToNodeSetFactoryExtensionMap.get(factoryClassName);
-        if (nodeSetFactoryExtension != null) {
-            return Optional.of(nodeSetFactoryExtension.getClassForFactoryClassName(factoryClassName));
-        }
-        return Optional.empty();
     }
 
     /**
@@ -175,19 +161,36 @@ public class NodeFactoryExtensionManager {
         return m_factoryNameToNodeSetFactoryExtensionMap.values();
     }
 
-    /** Reads the "deprecated" field in the extension point contribution. For {@link NodeSetFactory} this corresponds
-     * to all nodes in the set.
-     * @param factory Factory of interest
-     * @return field as per extension point definition.
+    /**
+     * Attempts to instantiate a concreate {@link NodeFactory} with the given fully qualified class name. It will first
+     * consult the regular node extension, then the node set extensions, then node registered through
+     * {@link NodeFactory#addLoadedFactory(Class)}, and finally give up an throw an exception.
+     *
+     * @param factoryClassName fully qualified class name
+     * @return The factory instance
+     * @throws InstantiationException Problems invoking the factory constructor
+     * @throws IllegalAccessException Problems invoking the factory constructor
+     * @throws InvalidNodeFactoryExtensionException Problems finding the class despite it being registered through an
+     *             extension point
      */
-    public boolean isDeprecatedInExtension(final NodeFactory<? extends NodeModel> factory) {
-        Optional<Boolean> simpleNodeDeprecated =
-            getNodeFactoryExtension(factory.getClass().getName()).map(NodeFactoryExtension::isDeprecated);
-        if (simpleNodeDeprecated.isPresent()) {
-            return simpleNodeDeprecated.get();
+    public Optional<NodeFactory<? extends NodeModel>> createNodeFactory(final String factoryClassName)
+        throws InstantiationException, IllegalAccessException, InvalidNodeFactoryExtensionException {
+        NodeFactoryExtension nodeFactoryExtension = m_factoryNameToNodeFactoryExtensionMap.get(factoryClassName);
+        if (nodeFactoryExtension != null) {
+            return Optional.of(nodeFactoryExtension.createFactory());
         }
-        NodeSetFactoryExtension extension = m_factoryNameToNodeSetFactoryExtensionMap.get(factory.getClass().getName());
-        return extension != null && extension.isDeprecated();
+        NodeSetFactoryExtension nodeSetFactoryExtension = m_factoryNameToNodeSetFactoryExtensionMap.get(factoryClassName);
+        if (nodeSetFactoryExtension != null) {
+            Class<? extends NodeFactory<? extends NodeModel>> classForFactoryClassName =
+                nodeSetFactoryExtension.getClassForFactoryClassName(factoryClassName);
+            return Optional.of(classForFactoryClassName.newInstance());
+        }
+        Optional<Class<? extends NodeFactory<NodeModel>>> loadedNodeFactory = m_loadedNodeFactories.stream()//
+            .filter(f -> f.getClass().getName().equals(factoryClassName)).findFirst();
+        if (loadedNodeFactory.isPresent()) {
+            return Optional.of(loadedNodeFactory.get().newInstance());
+        }
+        return Optional.empty();
     }
 
     private void collectNodeFactoryExtensions() {
@@ -224,6 +227,16 @@ public class NodeFactoryExtensionManager {
             nodeSetFactoryExtension.getClassNameToFactoryMap().keySet().stream()
                 .forEach(clName -> m_factoryNameToNodeSetFactoryExtensionMap.put(clName, nodeSetFactoryExtension));
         }
+    }
+
+    /**
+     * Added in 4.2 as implementation to {@link NodeFactory#addLoadedFactory(Class)}. Access discouraged and also
+     * deprecated as API in NodeFactory.
+     * @param factoryClass The factory to add
+     * @since 4.2
+     */
+    public void addLoadedFactory(final Class<? extends NodeFactory<NodeModel>> factoryClass) {
+        m_loadedNodeFactories.add(factoryClass);
     }
 
     @Override
