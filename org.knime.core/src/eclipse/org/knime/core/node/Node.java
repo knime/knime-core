@@ -2160,15 +2160,15 @@ public final class Node implements NodeModelWarningListener {
         if (m_dialogPane == null) {
             if (hasDialog()) {
                 final int nonFVPortCount = getNrOutPorts() - 1;
-                boolean outputsDataTableSpec = false;
+                boolean outputsBufferedDataTable = false;
                 for (int i = 0; i < nonFVPortCount; i++) {
                     final PortType pt = m_model.getOutPortType(i);
-                    if (pt.acceptsPortObjectSpecClass(DataTableSpec.class)) {
-                        outputsDataTableSpec = true;
+                    if (pt.acceptsPortObjectClass(BufferedDataTable.class)) {
+                        outputsBufferedDataTable = true;
                         break;
                     }
                 }
-                m_dialogPane = createDialogPane(getFactory(), outputsDataTableSpec, true, m_creationConfig);
+                m_dialogPane = createDialogPane(getFactory(), outputsBufferedDataTable, true, m_creationConfig);
             } else {
                 throw new IllegalStateException("Can't return dialog pane, node has no dialog!");
             }
