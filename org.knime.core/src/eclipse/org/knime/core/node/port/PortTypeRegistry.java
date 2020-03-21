@@ -115,9 +115,10 @@ public final class PortTypeRegistry {
         m_specClassMap.put(DataTableSpec.class.getName(), DataTableSpec.class);
         m_specSerializers.put(DataTableSpec.class, new DataTableSpec.Serializer());
 
-        m_allPortTypes.put(PortObject.class, new PortType(PortObject.class, false, null, PortType.DEFAULT_COLOR, true));
+        m_allPortTypes.put(PortObject.class,
+            new PortType(PortObject.class, false, "Generic Port", PortType.DEFAULT_COLOR, false));
         m_allOptionalPortTypes.put(PortObject.class,
-            new PortType(PortObject.class, true, null, PortType.DEFAULT_COLOR, true));
+            new PortType(PortObject.class, true, "Generic Port", PortType.DEFAULT_COLOR, false));
 
         m_allPortTypes.put(BufferedDataTable.class, new PortType(BufferedDataTable.class, false, "Data", 0, false));
         m_allOptionalPortTypes.put(BufferedDataTable.class,
