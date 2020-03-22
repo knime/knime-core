@@ -672,4 +672,17 @@
             factory-class="org.knime.core.node.workflow.virtual.VirtualNodeSetFactory">
       </nodeset>
    </extension>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+      <node
+            deprecated="false"
+            factory-class="org.knime.core.node.exec.dataexchange.in.BDTInNodeFactory"
+            hidden="true">
+      </node>
+      <node
+            deprecated="false"
+            factory-class="org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory"
+            hidden="true">
+      </node>
+   </extension>
 </plugin>
