@@ -159,13 +159,20 @@ public final class PortTypeRegistry {
             color = PortType.DEFAULT_COLOR;
         }
 
-        PortType pt = new PortType(getObjectClass(e.getAttribute("objectClass")).get(), false, e.getAttribute("name"),
-            color, Boolean.parseBoolean(e.getAttribute("hidden")));
-        m_allPortTypes.put(pt.getPortObjectClass(), pt);
+        final String poClassName = e.getAttribute("objectClass");
+        try {
+            PortType pt = new PortType(getObjectClass(poClassName).get(), false, e.getAttribute("name"), color,
+                Boolean.parseBoolean(e.getAttribute("hidden")));
+            m_allPortTypes.put(pt.getPortObjectClass(), pt);
 
-        pt = new PortType(getObjectClass(e.getAttribute("objectClass")).get(), true, e.getAttribute("name"), color,
-            Boolean.parseBoolean(e.getAttribute("hidden")));
-        m_allOptionalPortTypes.put(pt.getPortObjectClass(), pt);
+            pt = new PortType(getObjectClass(poClassName).get(), true, e.getAttribute("name"), color,
+                Boolean.parseBoolean(e.getAttribute("hidden")));
+            m_allOptionalPortTypes.put(pt.getPortObjectClass(), pt);
+        } catch (Exception ex) {
+            NodeLogger.getLogger(getClass())
+                .error(String.format("Could not create port type for '%s' from plug-in '%s': %s", poClassName,
+                    e.getNamespaceIdentifier(), ex.getMessage()), ex);
+        }
     }
 
     /**
