@@ -50,9 +50,6 @@ package org.knime.core.node.config;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Insets;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -125,7 +122,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
      * @param original
      * @return a truncated via mid-excision string if the original is longer than {@link #MAXIMUM_LABEL_CHARACTER_COUNT}
      */
-    private static String displayTextForString(final String original) {
+    static String displayTextForString(final String original) {
         if (original.length() > MAXIMUM_LABEL_CHARACTER_COUNT) {
             final int exciseLength = (original.length() - MAXIMUM_LABEL_CHARACTER_COUNT) + 3;
             final int exciseStart = (original.length() - exciseLength) / 2;
@@ -171,6 +168,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
                                    final boolean isIntendedForEditor) {
         super();
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        setOpaque(true);
         m_keyLabel = new JLabel();
         m_keyLabel.setMinimumSize(LABEL_MINIMUM_SIZE);
         m_valueComboBoxModel = new DefaultComboBoxModel<>();
@@ -237,8 +235,22 @@ public class ConfigEditTreeNodePanel extends JPanel {
                                            : Collections.emptyList();
     }
 
+    /**
+     * This sets both the depth (which is used in overriding setBounds if we are for an editor) and sets the
+     *  size of the key label based on the pre-computed maximum width per depth.
+     *
+     * @param depth depth of the node we're representing within the tree
+     */
     void setTreePathDepth(final int depth) {
         m_treePathDepth = depth;
+
+        final int maxLabelWidth = m_parentRenderer.getParentTree().labelWidthToEnforceForDepth(m_treePathDepth);
+        m_keyLabel.setSize(maxLabelWidth, MINIMUM_HEIGHT);
+        m_keyLabel.setPreferredSize(new Dimension(maxLabelWidth, MINIMUM_HEIGHT));
+        if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+            m_keyLabel.setMaximumSize(m_keyLabel.getPreferredSize());
+        }
+        m_keyLabel.invalidate();
     }
 
     int computeMinimumWidth() {
@@ -248,28 +260,6 @@ public class ConfigEditTreeNodePanel extends JPanel {
             return m_keyLabel.getPreferredSize().width + m_valueComboBox.getPreferredSize().width
                                 + m_exposeAsVariableField.getPreferredSize().width;
         }
-    }
-
-    int updateKeyLabelSize(final Graphics graphics) {
-        int maxLabelWidth = m_parentRenderer.getParentTree().labelWidthToEnforceForDepth(m_treePathDepth);
-        final FontMetrics fm = graphics.getFontMetrics(m_keyLabel.getFont());
-        final Dimension labelSize = m_keyLabel.getSize();
-        final int textWidth = (int)(fm.stringWidth(m_keyLabel.getText()) * 1.05);
-        if (textWidth > maxLabelWidth) {
-            final Insets insets = m_keyLabel.getInsets();
-            maxLabelWidth = textWidth + insets.left + insets.right;
-        }
-        if (labelSize.width < maxLabelWidth) {
-            m_keyLabel.setSize(maxLabelWidth, MINIMUM_HEIGHT);
-            m_keyLabel.setPreferredSize(new Dimension(maxLabelWidth, MINIMUM_HEIGHT));
-            if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-                m_keyLabel.setMaximumSize(m_keyLabel.getPreferredSize());
-            }
-            m_keyLabel.invalidate();
-
-            return maxLabelWidth;
-        }
-        return labelSize.width ;
     }
 
     void recordPostPaintPreferredSize(final int depth, final Dimension d) {

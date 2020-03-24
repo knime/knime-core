@@ -78,12 +78,17 @@ public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
 
     /** {@inheritDoc} */
     @Override
-    public Component getTreeCellEditorComponent(final JTree myTree,
-            final Object value, final boolean isSelected,
-            final boolean expanded, final boolean leaf, final int row) {
-        ((ConfigEditTreeRenderer)super.renderer).setValue(myTree, value);
-        return super.getTreeCellEditorComponent(
-                myTree, value, isSelected, expanded, leaf, row);
+    public Component getTreeCellEditorComponent(final JTree myTree, final Object value, final boolean isSelected,
+                                                final boolean expanded, final boolean leaf, final int row) {
+        final int nodeDepth;
+        if (value instanceof TreeNode) {
+            nodeDepth = ((ConfigEditTreeModel)myTree.getModel()).getPathToRoot((TreeNode)value).length;
+        } else {
+            nodeDepth = 0;
+        }
+        ((ConfigEditTreeRenderer)super.renderer).setValue(tree, value, nodeDepth);
+
+        return super.getTreeCellEditorComponent(myTree, value, isSelected, expanded, leaf, row);
     }
 
     /** {@inheritDoc} */
@@ -134,9 +139,9 @@ public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
                 }
                 final int depth
                     = ((ConfigEditJTree)ConfigEditTreeEditor.this.tree).getModel().getPathToRoot((TreeNode)value).length;
-                m_active.setTreePathDepth(depth);
                 m_active.setFlowObjectStack(stack);
                 m_active.setTreeNode(node);
+                m_active.setTreePathDepth(depth);
             } else {
                 final int depth;
                 if (value instanceof TreeNode) {
@@ -146,11 +151,9 @@ public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
                 }
 
                 m_active = m_panelPlain;
-                m_active.setTreePathDepth(depth);
                 m_active.setTreeNode(null);
+                m_active.setTreePathDepth(depth);
             }
-
-            m_active.updateKeyLabelSize(myTree.getGraphics());
 
             return m_active;
         }

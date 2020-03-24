@@ -49,12 +49,15 @@ package org.knime.core.node.config;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
-import java.util.ArrayList;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.image.BufferedImage;
 import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
@@ -85,9 +88,7 @@ public class ConfigEditJTree extends JTree {
     private FlowObjectStack m_flowObjectStack;
 
     /** The maximum width of all rendered key labels */
-    private final HashMap<Integer, Integer> m_maxLabelWidthPathDepthMap;
-    /** A holder for the currently running, if any, model forced refresh timer */
-    private final List<Runnable> m_forcedModelRefreshTimer = new ArrayList<>();
+    private HashMap<Integer, Integer> m_maxLabelWidthPathDepthMap;
 
     /** Constructor for empty tree. */
     public ConfigEditJTree() {
@@ -109,7 +110,6 @@ public class ConfigEditJTree extends JTree {
         setRowHeight(renderer.getPreferredSize().height);
         setEditable(true);
         setToolTipText("config tree"); // enable tooltip
-        m_maxLabelWidthPathDepthMap = new HashMap<>();
     }
 
     /**
@@ -123,6 +123,8 @@ public class ConfigEditJTree extends JTree {
             throw new IllegalArgumentException("Argument must be of class " + ConfigEditTreeModel.class.getSimpleName());
         }
 
+        generateWidthDepthMap((ConfigEditTreeModel)newModel);
+
         super.setModel(newModel);
     }
 
@@ -133,30 +135,40 @@ public class ConfigEditJTree extends JTree {
         }
     }
 
-    /**
-     * This method will only ever be called from EDT during pai.
-     *
-     * @param depth the tree depth of the row with the label
-     * @param width the width of the {@code JLabel} component that has been rendered in
-     *            {@link ConfigEditTreeRenderer#paintComponent(java.awt.Graphics)}
-     */
-    void renderedKeyLabelAtDepthWithWidth(final int depth, final int width) {
-        final Integer key = Integer.valueOf(depth);
-        final Integer labelWidth = m_maxLabelWidthPathDepthMap.get(key);
-        final boolean needsForcedRefresh = (labelWidth == null) || (width > labelWidth.intValue());
+    private void generateWidthDepthMap(final ConfigEditTreeModel newTreeModel) {
+        final BufferedImage image = new BufferedImage(800, 40, BufferedImage.TYPE_INT_ARGB);
+        final Graphics2D g2d = image.createGraphics();
+        final JLabel donorLabel = new JLabel();
 
-        if (needsForcedRefresh) {
-            m_maxLabelWidthPathDepthMap.put(key, Integer.valueOf(width));
+        if (m_maxLabelWidthPathDepthMap == null) {
+            m_maxLabelWidthPathDepthMap = new HashMap<>();
+        } else {
+            m_maxLabelWidthPathDepthMap.clear();
+        }
 
-            synchronized (m_forcedModelRefreshTimer) {
-                if (m_forcedModelRefreshTimer.size() == 0) {
-                    final ForcedModelRefreshTrigger trigger = new ForcedModelRefreshTrigger();
-                    m_forcedModelRefreshTimer.add(trigger);
-                    (new Thread(trigger)).start();
-                } else {
-                    ((ForcedModelRefreshTrigger)m_forcedModelRefreshTimer.get(0)).retriggerTimer();
-                }
-            }
+        generateWidthDepthForChild(newTreeModel, newTreeModel.getRoot(), donorLabel.getFont(), donorLabel.getInsets(), g2d);
+
+        g2d.dispose();
+    }
+
+    private void generateWidthDepthForChild(final ConfigEditTreeModel newTreeModel,
+                                            final ConfigEditTreeModel.ConfigEditTreeNode child,
+                                            final Font font, final Insets insets, final Graphics2D g2d) {
+        final String wholeLabelText = child.getConfigEntry().getKey();
+        final String displayText = ConfigEditTreeNodePanel.displayTextForString(wholeLabelText);
+        final FontMetrics fm = g2d.getFontMetrics(font);
+        final int textWidth = (int)(fm.stringWidth(displayText) * 1.05) + insets.left + insets.right;
+        final Integer depth = Integer.valueOf(newTreeModel.getPathToRoot(child).length);
+        final Integer maxWidth = m_maxLabelWidthPathDepthMap.get(depth);
+
+        if ((maxWidth == null) || (textWidth > maxWidth.intValue())) {
+            m_maxLabelWidthPathDepthMap.put(depth, Integer.valueOf(textWidth));
+        }
+
+        final int childrenCount = child.getChildCount();
+        for (int i = 0; i < childrenCount; i++) {
+            generateWidthDepthForChild(newTreeModel, (ConfigEditTreeModel.ConfigEditTreeNode)child.getChildAt(i),
+                                       font, insets, g2d);
         }
     }
 
@@ -187,44 +199,6 @@ public class ConfigEditJTree extends JTree {
         return m_flowObjectStack;
     }
 
-
-    /*
-     * This forces the model to be told that all of its nodes have changed, which in turn repaints them. The reason
-     *  a simple {@link #repaint()} invocation fails is that if a row's content is out of the viewport, but at
-     *  whose paint-time, its clip rectangle was computed to be what is now too small (because a row after it
-     *  had a pixel-wider label string and so the subject row's label size grew) the repainter will deem the
-     *  out-of-viewport-bounds not dirtied.)
-     */
-    private class ForcedModelRefreshTrigger implements Runnable {
-        private final AtomicBoolean m_retrigger;
-
-        private ForcedModelRefreshTrigger() {
-            m_retrigger = new AtomicBoolean(false);
-        }
-
-        private void retriggerTimer() {
-            m_retrigger.set(true);
-        }
-
-        @Override
-        public void run() {
-            boolean sleep = true;
-
-            while (sleep) {
-                try {
-                    Thread.sleep(80);
-                } catch (final Exception e) { } // NOPMD
-
-                sleep = m_retrigger.getAndSet(false);
-            }
-
-            getModel().forceModelRefresh(ConfigEditJTree.this);
-
-            synchronized (m_forcedModelRefreshTimer) {
-                m_forcedModelRefreshTimer.remove(0);
-            }
-        }
-    }
 
     /**
      * Public testing method that displays a simple tree with no flow variable stack, though.

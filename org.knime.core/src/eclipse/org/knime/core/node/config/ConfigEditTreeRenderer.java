@@ -118,7 +118,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         } else {
             m_currentCellPathDepth = 0;
         }
-        setValue(tree, value);
+        setValue(tree, value, m_currentCellPathDepth);
 
         return super.getTreeCellRendererComponent(tree, value, isSelected, expanded, leaf, row, isFocused);
     }
@@ -130,6 +130,18 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
      * @param value to be renderer, typically a <code>ConfigEditTreeNode</code>
      */
     public void setValue(final JTree tree, final Object value) {
+        setValue(tree, value, m_currentCellPathDepth);
+    }
+
+    /**
+     * Called whenever a new value is to be renderer, updates underlying component.
+     *
+     * @param tree The associated tree (get the flow object stack from.)
+     * @param value to be renderer, typically a <code>ConfigEditTreeNode</code>
+     * @param nodeDepth the depth of this node in the tree
+     * @since 4.2
+     */
+    public void setValue(final JTree tree, final Object value, final int nodeDepth) {
         final ConfigEditTreeNode node;
         if (value instanceof ConfigEditTreeNode) {
             node = (ConfigEditTreeNode)value;
@@ -144,7 +156,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         }
         m_active.setFlowObjectStack(stack);
         m_active.setTreeNode(node);
-        m_active.setTreePathDepth(m_currentCellPathDepth);
+        m_active.setTreePathDepth(nodeDepth);
         setLeafIcon(m_active.getIcon());
         setOpenIcon(m_active.getIcon());
         setClosedIcon(m_active.getIcon());
@@ -225,12 +237,6 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
     /** {@inheritDoc} */
     @Override
     protected void paintComponent(final Graphics g) {
-        /*
-         * Arguably, a lot of this size calculation stuff should occur in an override of #validate() and not
-         *  here.
-         */
-        final int newKeyWidth = m_active.updateKeyLabelSize(g);
-
         final Insets insets = getInsets();
         // the x, y and width nudges are due to the editor placing the node panel in a different location
         //      than where this component renders
@@ -260,7 +266,6 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
                                         : getBackgroundNonSelectionColor());
         SwingUtilities.paintComponent(g, m_active, this, m_paintBounds);
 
-        m_parentTree.renderedKeyLabelAtDepthWithWidth(m_currentCellPathDepth, newKeyWidth);
         m_active.recordPostPaintPreferredSize(m_currentCellPathDepth, paneSize);
 
         super.paintComponent(g);
