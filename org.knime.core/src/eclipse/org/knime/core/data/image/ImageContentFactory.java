@@ -58,7 +58,9 @@ import org.knime.core.node.port.image.ImagePortObject;
  * {@link ImagePortObject}s.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @since 4.2
+ *
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface ImageContentFactory {
 

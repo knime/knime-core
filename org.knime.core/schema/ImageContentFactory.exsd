@@ -8,6 +8,7 @@
       <documentation>
          This extension point allows other plugins to contribute new image formats to an image port object.
 The extension point implementer provides a factory to create image content instances. Those in turn implement routines to load and save the image content as well as to render a preview of the image.
+THIS IS NOT PUBLIC API!
       </documentation>
    </annotation>
 
@@ -81,7 +82,23 @@ The implementation must provide an empty constructor.
    </annotation>
 
 
+   <annotation>
+      <appInfo>
+         <meta.section type="apiinfo"/>
+      </appInfo>
+      <documentation>
+         No public API
+      </documentation>
+   </annotation>
 
 
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         KNIME AG, Zurich, Switzerland
+      </documentation>
+   </annotation>
 
 </schema>
