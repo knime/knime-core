@@ -148,6 +148,16 @@
 							</requirement>
 							<requirement>
 								<type>eclipse-feature</type>
+								<id>org.knime.features.ext.textprocessing</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
+								<id>org.knime.features.workbench</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
 								<id>org.knime.features.js.views</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
