@@ -50,15 +50,23 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
 import javax.swing.JScrollPane;
 
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.image.ImageContent;
+import org.knime.core.data.image.ImageContentFactory;
+import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -93,6 +101,9 @@ public class ImagePortObject extends AbstractPortObject {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ImagePortObject.class);
+
+    /** List containing all {@link ImageContent} implementations, collected from extension point contributions. */
+    private static Map<String, ImageContentFactory> IMAGE_CONTENT_MAP;
 
     private ImageContent m_content;
 
@@ -188,35 +199,7 @@ public class ImagePortObject extends AbstractPortObject {
             throws IOException, CanceledExecutionException {
         ZipEntry nextEntry = in.getNextEntry();
         String contentClName = nextEntry.getName();
-
-        Class<? extends ImageContent> contentCl;
-        try {
-            contentCl =
-                    (Class<? extends ImageContent>)Class.forName(contentClName);
-        } catch (ClassNotFoundException ex) {
-            throw new IOException("ImageContent class '" + contentClName + "'"
-                    + " does not exist", ex);
-        }
-
-        if (!ImageContent.class.isAssignableFrom(contentCl)) {
-            throw new IOException("Class '" + contentClName
-                    + "' is not an ImageContent");
-        }
-
-        Constructor<? extends ImageContent> cons;
-        try {
-            cons = contentCl.getConstructor(InputStream.class);
-        } catch (Exception ex) {
-            throw new IOException("ImageContent class '" + contentClName + "' "
-                    + "is missing a required constructor, see javadoc", ex);
-        }
-
-        try {
-            m_content = cons.newInstance(in);
-        } catch (Exception ex) {
-            throw new IOException("Could not create an instance of '"
-                    + contentClName + "'", ex);
-        }
+        m_content = getRegisteredImageContentFactories().get(contentClName).create(in);
         in.close();
         m_spec = (ImagePortObjectSpec)spec;
     }
@@ -229,5 +212,63 @@ public class ImagePortObject extends AbstractPortObject {
         out.putNextEntry(new ZipEntry(m_content.getClass().getName()));
         m_content.save(out);
         out.close();
+    }
+
+    private static Map<String, ImageContentFactory> getRegisteredImageContentFactories() {
+        if (IMAGE_CONTENT_MAP == null) {
+            IMAGE_CONTENT_MAP = collectImageContentFactories();
+        }
+        return IMAGE_CONTENT_MAP;
+    }
+
+    private static Map<String, ImageContentFactory> collectImageContentFactories() {
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IExtensionPoint point = registry.getExtensionPoint(ImageContentFactory.EXT_POINT_ID);
+        if (point == null) {
+            LOGGER.error("Invalid extension point: " + ImageContentFactory.EXT_POINT_ID);
+            return Collections.emptyMap();
+        }
+
+        Map<String, ImageContentFactory> resultList = new HashMap<>();
+        for (IConfigurationElement elem : point.getConfigurationElements()) {
+            String imageContentCLName = elem.getAttribute(ImageContentFactory.EXT_POINT_ATTR_CLASS_NAME);
+            String decl = elem.getDeclaringExtension().getUniqueIdentifier();
+
+            if (imageContentCLName == null || imageContentCLName.isEmpty()) {
+                LOGGER.error("The extension '" + decl + "' doesn't provide the required attribute '"
+                    + ImageContentFactory.EXT_POINT_ATTR_CLASS_NAME + "' - ignoring it");
+                continue;
+            }
+
+            ImageContentFactory instance = null;
+            try {
+                instance =
+                    (ImageContentFactory)elem.createExecutableExtension(ImageContentFactory.EXT_POINT_ATTR_CLASS_NAME);
+            } catch (Throwable t) {
+                LOGGER.error("Problems during initialization of image content factory (with id '"
+                        + imageContentCLName + "'.)", t);
+                if (decl != null) {
+                    LOGGER.error("Extension " + decl + " ignored.");
+                }
+            }
+            if (instance != null) { // We do not want to add invalid image content impls to this list.
+                resultList.put(instance.getImageContentClass().getName(), instance);
+            }
+        }
+        //add the image content implementations from core
+        resultList.put(PNGImageContent.class.getName(), new ImageContentFactory() {
+
+            @Override
+            public Class<? extends ImageContent> getImageContentClass() {
+                return PNGImageContent.class;
+            }
+
+            @Override
+            public ImageContent create(final InputStream in) throws IOException {
+                return new PNGImageContent(in);
+            }
+        });
+        return Collections.unmodifiableMap(resultList);
+
     }
 }

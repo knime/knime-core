@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,55 +41,49 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Mar 24, 2020 (hornm): created
  */
 package org.knime.core.data.image;
 
-import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.node.port.image.ImagePortObject;
 
-
-/** Generic content of an image. Such content objects are used in
- * (individual) data cell implementations and generic port objects.
+/**
+ * Interface for the ImageContentFactory extension point. Creates {@link ImageContent} instances that are, e.g., used in
+ * {@link ImagePortObject}s.
  *
- * <p><b>Note:</b> Objects of this interface must be read-only!
- *
- * @author Thomas Gabriel, KNIME AG, Zurich, Switzerland
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @since 4.2
  */
-public interface ImageContent {
-    /** Render image into argument graphics object. The aspect ration of the
-     * image must be retained, i.e. the width and height are maximum values
-     * that do not need to be fulfilled both at the same time.
+public interface ImageContentFactory {
+
+    /**
+     * The extension point id.
+     */
+    public static final String EXT_POINT_ID = "org.knime.core.ImageContentFactory";
+
+    /**
+     * The extension point attribute specifying the interface implementation.
+     */
+    public static final String EXT_POINT_ATTR_CLASS_NAME = "ImageContentFactory";
+
+    /**
+     * @return the specific image content class
+     */
+    Class<? extends ImageContent> getImageContentClass();
+
+    /**
+     * Creates a new image content instances loaded from the provided input stream.
      *
-     * @param g To paint to.
-     * @param maxWidth image maximum width
-     * @param maxHeight image maximum height
+     * @param in to load from
+     * @return the actual image content instance loaded from the input stream
+     * @throws IOException
      */
-    public void paint(final Graphics2D g, final int maxWidth,
-            final int maxHeight);
+    ImageContent create(InputStream in) throws IOException;
 
-    /** Preferred dimension, width and height, for the given image to be
-     * rendered.
-     * @return preferred dimension
-     */
-    public Dimension getPreferredSize();
-
-    /** Factory method to generate cell implementation.
-     * @return A (likely new) cell representing this image.
-     */
-    public DataCell toImageCell();
-
-    /** Save the image content to an output stream.
-     * @param out To save to.
-     * @throws IOException If that fails.
-     */
-    public void save(final OutputStream out) throws IOException;
-
-    /** @return short summary representing this image content object. */
-    public String getSummary();
 }
-
