@@ -8,6 +8,22 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.eclipseUtil.GlobalClassCreator">
+        <filter comment="buddy class loading deactivated" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.eclipseUtil.GlobalClassCreator"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.eclipseUtil.GlobalObjectInputStream">
+        <filter comment="buddy class loading deactivated" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.eclipseUtil.GlobalObjectInputStream"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.FSConnectionFlowVariableProvider">
         <filter comment="Removes FSConnection flow variable type in 4.2.0 (which existed but was @noreference in 4.1.0)" id="305324134">
             <message_arguments>

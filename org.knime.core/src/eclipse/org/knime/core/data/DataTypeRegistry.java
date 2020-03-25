@@ -64,7 +64,6 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.filestore.FileStoreFactory;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
@@ -202,9 +201,6 @@ public final class DataTypeRegistry {
      * Returns the {@link DataCell} class for the given class name. This method looks through all registered
      * {@link DataCell} implementations. If no data cell implementation is found, an empty optional is returned.
      * <br>
-     * As a fallback mechanism, the {@link GlobalClassCreator} is used. This will be changed with the next major
-     * release.
-     * <br>
      * This method should only be used by {@link DataType} for creating data types that were saved to disc.
      *
      * @param className a class name
@@ -227,25 +223,9 @@ public final class DataTypeRegistry {
             return Optional.of(m_cellClassMap.get(className));
         }
 
-        try {
-            cellClass = (Class<? extends DataCell>)GlobalClassCreator.createClass(className);
-            NodeLogger.getLogger(getClass()).coding(
-                "Data cell implementation '" + className + "' is not registered at extension point '" + EXT_POINT_ID
-                    + "' via it's serializer, using buddy classloading as fallback. Please change your implementation "
-                    + "and use the extension point.");
-
-            if (!DataCell.class.isAssignableFrom(cellClass)) {
-                throw new ClassCastException(
-                    "Class '" + className + "' is not a subclass of '" + DataCell.class + "'");
-            }
-            m_cellClassMap.put(className, cellClass);
-            collectValueInterfaces(cellClass);
-            return Optional.of(cellClass);
-        } catch (ClassNotFoundException ex) {
-            NodeLogger.getLogger(getClass())
-                .debug("Cell class implementation '" + className + "' not found: " + ex.getMessage());
-        }
-
+        NodeLogger.getLogger(getClass())
+            .coding("Data cell implementation '" + className + "' is not registered at extension point '" + EXT_POINT_ID
+                + "' via it's serializer. Please change your implementation and use the extension point.");
         return Optional.empty();
     }
 
@@ -253,15 +233,11 @@ public final class DataTypeRegistry {
      * Returns the {@link DataValue} class for the given class name. This method looks through all registered
      * {@link DataCell} implementations and inspects their implemented interfaces. If no data cell implements the given
      * value class, an empty optional is returned.
-     * <br>
-     * As a fallback mechanism, the {@link GlobalClassCreator} is used. This will be changed with the next major
-     * release.
      *
      * @param className a class name
      * @return an optional containing the requested value class
      * @throws ClassCastException if the loaded class does not extend {@link DataValue}
      */
-    @SuppressWarnings({"unchecked"})
     public Optional<Class<? extends DataValue>> getValueClass(final String className) {
         Class<? extends DataValue> valueClass = m_valueClassMap.get(className);
 
@@ -275,25 +251,8 @@ public final class DataTypeRegistry {
             return Optional.of(valueClass);
         }
 
-
-        // use buddy classloading
-        // TODO remove with next major release
-        try {
-            valueClass = (Class<? extends DataCell>)GlobalClassCreator.createClass(className);
-            NodeLogger.getLogger(getClass()).coding(
-                "Data value extension '" + className + "' is not available via data cell serializer at extension point "
-                    + EXT_POINT_ID + ", using buddy classloading as fallback.");
-
-            if (!DataValue.class.isAssignableFrom(valueClass)) {
-                throw new ClassCastException(
-                    "Class '" + className + "' is not a subclass of '" + DataValue.class + "'");
-            }
-            m_valueClassMap.put(className, valueClass);
-            return Optional.of(valueClass);
-        } catch (ClassNotFoundException ex) {
-            NodeLogger.getLogger(getClass())
-                .debug("Data value '" + className + "' not found: " + ex.getMessage());
-        }
+        NodeLogger.getLogger(getClass()).coding("Data value extension '" + className
+            + "' is not available via data cell serializer at extension point " + EXT_POINT_ID + ".");
         return Optional.empty();
     }
 

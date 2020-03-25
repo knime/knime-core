@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 7, 2006 (wiswedel): created
  */
@@ -49,33 +49,32 @@ package org.knime.core.data.container;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 
-import org.knime.core.eclipseUtil.GlobalObjectInputStream;
-
 /**
- * Object input stream, which can be used to load classes using a given 
+ * Object input stream, which can be used to load classes using a given
  * preferred ClassLoader. This class loader is typically the bundle
- * class loader of the DataCell to be read next from the stream. 
+ * class loader of the DataCell to be read next from the stream.
  * @author Bernd Wiswedel, University of Konstanz
  */
-class PriorityGlobalObjectInputStream extends GlobalObjectInputStream {
+class PriorityGlobalObjectInputStream extends ObjectInputStream {
     private ClassLoader m_classLoader;
-    
+
     /** Delegates to super.
      * @param in Delegated to super.
      * @throws IOException If super throws an exception.
      */
-    PriorityGlobalObjectInputStream(final InputStream in) 
+    PriorityGlobalObjectInputStream(final InputStream in)
         throws IOException {
         super(in);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Class<?> resolveClass(final ObjectStreamClass desc) 
+    protected Class<?> resolveClass(final ObjectStreamClass desc)
         throws IOException, ClassNotFoundException {
         if (m_classLoader != null) {
             try {
@@ -86,8 +85,8 @@ class PriorityGlobalObjectInputStream extends GlobalObjectInputStream {
         }
         return super.resolveClass(desc);
     }
-    
-    /** Set the class loader to use next or <code>null</code> if to use 
+
+    /** Set the class loader to use next or <code>null</code> if to use
      * the default.
      * @param l to use.
      */

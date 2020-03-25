@@ -52,6 +52,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.OutputStream;
@@ -69,7 +70,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.eclipseUtil.GlobalObjectInputStream;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -286,7 +286,7 @@ public final class PortObjectRepository {
 
     /** Input stream used for cloning the a data cell. */
     private static final class DataCellCloneObjectInputStream
-        extends GlobalObjectInputStream implements DataCellDataInput {
+        extends ObjectInputStream implements DataCellDataInput {
 
         private final ClassLoader m_loader;
 

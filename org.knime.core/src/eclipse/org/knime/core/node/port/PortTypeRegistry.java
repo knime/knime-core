@@ -61,7 +61,6 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
@@ -220,15 +219,11 @@ public final class PortTypeRegistry {
     /**
      * Returns the {@link PortObject} class for the given class name. This method looks through all registered
      * {@link PortObject} implementations. If no port object implementation is found, an empty optional is returned.
-     * <br>
-     * As a fallback mechanism, the {@link GlobalClassCreator} is used. This will be changed with the next major
-     * release. <br>
      *
      * @param className a class name
      * @return an optional containing the requested port object class
      * @throws ClassCastException if the loaded class does not extend {@link PortObject}
      */
-    @SuppressWarnings({"deprecation", "unchecked"})
     public Optional<Class<? extends PortObject>> getObjectClass(final String className) {
         Class<? extends PortObject> objectClass = m_objectClassMap.get(className);
         if (objectClass != null) {
@@ -240,39 +235,21 @@ public final class PortTypeRegistry {
             return Optional.of(m_objectClassMap.get(className));
         }
 
-        try {
-            objectClass = (Class<? extends PortObject>)GlobalClassCreator.createClass(className);
-            NodeLogger.getLogger(getClass())
-                .coding("Port object implementation '" + className + "' is not registered at extension point '"
-                    + EXT_POINT_ID
-                    + "' via it's serializer, using buddy classloading as fallback. Please change your implementation "
-                    + "and use the extension point.");
-
-            if (!PortObject.class.isAssignableFrom(objectClass)) {
-                throw new ClassCastException(
-                    "Class '" + className + "' is not a subclass of '" + PortObject.class + "'");
-            }
-            m_objectClassMap.put(className, objectClass);
-            return Optional.of(objectClass);
-        } catch (ClassNotFoundException ex) {
-            NodeLogger.getLogger(getClass())
-                .debug("Port object implementation '" + className + "' not found: " + ex.getMessage(), ex);
-        }
-
+        NodeLogger.getLogger(getClass()).coding(
+            "Port object implementation '" + className + "' is not registered at extension point '" + EXT_POINT_ID
+                + "' via it's serializer. Please change your implementation " + "and use the extension point.");
         return Optional.empty();
     }
 
     /**
      * Returns the {@link PortObjectSpec} class for the given class name. This method looks through all registered
-     * {@link PortObjectSpec} implementations. If port object spec implementation is found, an empty optional is returned. <br>
-     * As a fallback mechanism, the {@link GlobalClassCreator} is used. This will be changed with the next major
-     * release. <br>
+     * {@link PortObjectSpec} implementations. If port object spec implementation is found, an empty optional is
+     * returned.
      *
      * @param className a class name
      * @return an optional containing the requested data cell class
      * @throws ClassCastException if the loaded class does not extend {@link PortObjectSpec}
      */
-    @SuppressWarnings({"deprecation", "unchecked"})
     public Optional<Class<? extends PortObjectSpec>> getSpecClass(final String className) {
         Class<? extends PortObjectSpec> specClass = m_specClassMap.get(className);
         if (specClass != null) {
@@ -284,24 +261,10 @@ public final class PortTypeRegistry {
             return Optional.of(m_specClassMap.get(className));
         }
 
-        try {
-            specClass = (Class<? extends PortObjectSpec>)GlobalClassCreator.createClass(className);
-            NodeLogger.getLogger(getClass())
-                .coding("Port object spec implementation '" + className + "' is not registered at extension point '"
-                    + EXT_POINT_ID + "' via it's serializer, using buddy classloading as fallback. Please change your "
-                    + "implementation and use the extension point.");
-
-            if (!PortObjectSpec.class.isAssignableFrom(specClass)) {
-                throw new ClassCastException(
-                    "Class '" + className + "' is not a subclass of '" + PortObjectSpec.class + "'");
-            }
-            m_specClassMap.put(className, specClass);
-            return Optional.of(specClass);
-        } catch (ClassNotFoundException ex) {
-            NodeLogger.getLogger(getClass())
-                .debug("Port object spec implementation '" + className + "' not found: " + ex.getMessage(), ex);
-        }
-
+        NodeLogger.getLogger(getClass())
+            .coding("Port object spec implementation '" + className + "' is not registered at extension point '"
+                + EXT_POINT_ID
+                + "' via it's serializer. Please change your implementation and use the extension point.");
         return Optional.empty();
     }
 
