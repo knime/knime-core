@@ -59,7 +59,7 @@ If you want to support creating cells from different sources you can implement s
 A DataCellFactory is optional, however generic input nodes won&apos;t be able to create cells of this type.
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn=":org.knime.core.data.DataCellParser"/>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.DataCellFactory"/>
                </appInfo>
             </annotation>
          </attribute>
