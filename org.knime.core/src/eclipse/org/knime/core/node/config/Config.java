@@ -61,6 +61,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.BooleanCell;
@@ -71,7 +72,6 @@ import org.knime.core.data.def.FuzzyNumberCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.eclipseUtil.GlobalObjectInputStream;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config.DataCellEntry.BooleanCellEntry;
@@ -609,9 +609,9 @@ public abstract class Config extends ConfigBase
             try {
                 String serString = config.getString(CFG_DATA_CELL_SER, null);
                 if (serString == null) { // backward comp. to v1.0.0
-                    return (DataCell)Config.readObject(className, null);
+                    return (DataCell)Config.readDataCell(className, null);
                 } else {
-                    return (DataCell)Config.readObject(className, serString);
+                    return (DataCell)Config.readDataCell(className, serString);
                 }
             } catch (IOException ioe) {
                 LOGGER.warn("Could not read DataCell: " + className);
@@ -987,23 +987,28 @@ public abstract class Config extends ConfigBase
      * @throws ClassNotFoundException if the class of the serialized object
      *  cannot be found.
      */
-    private static final Object readObject(final String className,
+    private static final Object readDataCell(final String className,
             final String serString)
             throws IOException, ClassNotFoundException {
         byte[] bytes = Base64.getDecoder().decode(serString);
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-        GlobalObjectInputStream ois;
+        ObjectInputStream ois;
         if (className == null) {
-            ois = new GlobalObjectInputStream(bais);
+            ois = new ObjectInputStream(bais);
         } else {
-            final Class<?> cl = Class.forName(className);
-            ois = new GlobalObjectInputStream(bais) {
+            final Class<? extends DataCell> dataCellClass = DataTypeRegistry.getInstance().getCellClass(className)
+                .orElseThrow(() -> new ClassNotFoundException("No data cell implementation '" + className + "' found"));
+            ois = new ObjectInputStream(bais) {
                 @Override
                 protected Class<?> resolveClass(final ObjectStreamClass desc)
-                        throws IOException, ClassNotFoundException {
-                    ClassLoader clLoader = cl.getClassLoader();
+                    throws IOException, ClassNotFoundException {
+                    if (desc.getName().equals(className)) {
+                        return dataCellClass;
+                    }
+
+                    //if the class to be loaded is not a DataCell
                     try {
-                        return Class.forName(desc.getName(), true, clLoader);
+                        return Class.forName(desc.getName(), true, dataCellClass.getClassLoader());
                     } catch (ClassNotFoundException cnfe) {
                         // ignore and let super try to do it.
                     }
