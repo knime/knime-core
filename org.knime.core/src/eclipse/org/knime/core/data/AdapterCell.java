@@ -132,7 +132,6 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
      * @param input a data cell input provided by a data cell serializer
      * @throws IOException if an error during de-serialization occurs
      */
-    @SuppressWarnings("unchecked")
     protected AdapterCell(final DataCellDataInput input) throws IOException {
         int valueCount = input.readByte();
         if (valueCount == 0) {
@@ -141,17 +140,13 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
 
         m_adapterMap = new BlobWrapperHashMap();
 
-        List<Class<? extends DataValue>> values = new ArrayList<Class<? extends DataValue>>(Math.max(valueCount, 4));
+        List<Class<? extends DataValue>> values = new ArrayList<>(Math.max(valueCount, 4));
         while (valueCount > 0) {
             // first read names of values classes
             for (int i = 0; i < valueCount; i++) {
                 String className = input.readUTF();
-                try {
-                    values.add((Class<? extends DataValue>)Class.forName(className));
-                } catch (ClassNotFoundException ex) {
-                    throw new IOException("Error while reading adapter values, value class " + className
-                            + " is unknown", ex);
-                }
+                values.add(DataTypeRegistry.getInstance().getValueClass(className).orElseThrow(() -> new IOException(
+                    "Error while reading adapter values, value class " + className + " is unknown")));
             }
             DataCell cell = input.readDataCell();
             for (Class<? extends DataValue> cl : values) {
