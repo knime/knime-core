@@ -65,6 +65,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.ComplexNumberCell;
 import org.knime.core.data.def.DoubleCell;
@@ -542,7 +545,7 @@ public final class NodeSettingsTest {
         assertTrue(m_settings.getDataCell("unknownCell").equals(unknownCell));
     }
 
-    private static class UnknownCell extends DataCell {
+    public static class UnknownCell extends DataCell {
         @Override
         protected boolean equalsDataCell(final DataCell dc) {
             return dc instanceof UnknownCell;
@@ -557,6 +560,19 @@ public final class NodeSettingsTest {
         }
     }
 
+    public static class UnknownCellSerializer implements DataCellSerializer<UnknownCell> {
+
+        @Override
+        public void serialize(final UnknownCell cell, final DataCellDataOutput output) throws IOException {
+            //
+        }
+
+        @Override
+        public UnknownCell deserialize(final DataCellDataInput input) throws IOException {
+            return new UnknownCell();
+        }
+
+    }
 
     /**
      * Test write/read of DataType elements.

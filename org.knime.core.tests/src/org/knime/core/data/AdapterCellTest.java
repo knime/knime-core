@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.knime.core.data.AdapterCell.AdapterCellSerializer;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeSettings;
 
@@ -96,6 +97,13 @@ public class AdapterCellTest {
         @Override
         public int hashCode() {
             return 0;
+        }
+    }
+
+    public static class MyAdapterCellSerializer extends AdapterCellSerializer<MyAdapterCell> {
+        @Override
+        public MyAdapterCell deserialize(final DataCellDataInput input) throws IOException {
+            return new MyAdapterCell(input);
         }
     }
 

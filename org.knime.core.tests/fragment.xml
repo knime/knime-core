@@ -48,4 +48,21 @@
             hidden="true">
       </node>
    </extension>
+   <extension
+         point="org.knime.core.DataType">
+      <DataType
+            cellClass="org.knime.core.data.AdapterCellTest$MyAdapterCell">
+         <serializer
+               cellClass="org.knime.core.data.AdapterCellTest$MyAdapterCell"
+               serializerClass="org.knime.core.data.AdapterCellTest$MyAdapterCellSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.node.NodeSettingsTest$UnknownCell">
+         <serializer
+               cellClass="org.knime.core.node.NodeSettingsTest$UnknownCell"
+               serializerClass="org.knime.core.node.NodeSettingsTest$UnknownCellSerializer">
+         </serializer>
+      </DataType>
+   </extension>
 </fragment>
