@@ -88,12 +88,15 @@ public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
         final JFileChooser fileChooser = new JFileChooser(getFileSystemView());
         setFileView(fileChooser);
         fileChooser.setAcceptAllFileFilterUsed(true);
-        List<SimpleFileFilter> filters = createFiltersFromSuffixes(suffixes);
-        for (SimpleFileFilter filter : filters) {
+        final List<SimpleFileFilter> filters = createFiltersFromSuffixes(suffixes);
+        for (final SimpleFileFilter filter : filters) {
             fileChooser.addChoosableFileFilter(filter);
         }
         if (filters.size() > 0) {
             fileChooser.setFileFilter(filters.get(0));
+            if (dialogType == DialogType.SAVE_DIALOG) {
+                fileChooser.setAcceptAllFileFilterUsed(false);
+            }
         }
         fileChooser.setFileSelectionMode(fileSelectionMode.getJFileChooserCode());
         fileChooser.setDialogType(dialogType.getJFileChooserCode());
@@ -135,7 +138,13 @@ public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
         if (r == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             if (dialogType == DialogType.SAVE_DIALOG) {
-                String forceFileExtension = StringUtils.defaultString(forcedFileExtensionOnSave);
+                final String[] currentFilter = ((SimpleFileFilter)fileChooser.getFileFilter()).getValidExtensions();
+                String forceFileExtension;
+                if (currentFilter.length == 1) {
+                    forceFileExtension = currentFilter[0];
+                } else {
+                    forceFileExtension = StringUtils.defaultString(forcedFileExtensionOnSave);
+                }
                 final String fileName = file.getName();
                 if (!(StringUtils.endsWithAny(fileName, suffixes)
                     || StringUtils.endsWithIgnoreCase(fileName, forcedFileExtensionOnSave))) {
@@ -169,11 +178,15 @@ public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
     }
 
     private static List<SimpleFileFilter> createFiltersFromSuffixes(final String... extensions) {
-        List<SimpleFileFilter> filters = new ArrayList<>(extensions.length);
+        final List<SimpleFileFilter> filters = new ArrayList<>(extensions.length);
 
         for (final String extension : extensions) {
             if (extension.indexOf('|') > 0) {
-                filters.add(new SimpleFileFilter(extension.split("\\|")));
+                final String[] splitExtensions = extension.split("\\|");
+                filters.add(new SimpleFileFilter(splitExtensions));
+                for (final String ext : splitExtensions) {
+                    filters.add(new SimpleFileFilter(ext));
+                }
             } else {
                 filters.add(new SimpleFileFilter(extension));
             }
@@ -210,7 +223,7 @@ public abstract class AbstractJFileChooserBrowser implements FileSystemBrowser {
     }
 
     private void setFileView(final JFileChooser jfc) {
-        FileView fileView = getFileView();
+        final FileView fileView = getFileView();
         if (fileView != null) {
             jfc.setFileView(fileView);
         }
