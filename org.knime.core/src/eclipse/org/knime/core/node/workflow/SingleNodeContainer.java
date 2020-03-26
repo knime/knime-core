@@ -388,6 +388,10 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * @since 4.2
      */
     public NodeSettings getModelSettingsUsingFlowObjectStack() throws InvalidSettingsException {
+        if (m_settings.getModelSettings() == null) {
+            //model settings haven't been initialized, yet (freshly added node)
+            saveNodeSettingsToDefault();
+        }
         NodeSettings modelSettings = m_settings.getModelSettingsClone();
         overwriteModelSettingsWithFlowVariables(modelSettings, m_settings.getVariablesSettings(),
             getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));

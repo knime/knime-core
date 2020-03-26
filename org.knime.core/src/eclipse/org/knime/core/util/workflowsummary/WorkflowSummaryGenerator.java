@@ -465,7 +465,7 @@ public final class WorkflowSummaryGenerator {
                         SingleNodeContainer snc = (SingleNodeContainer)nc;
                         if (nc.getNodeContainerState().isExecuted()) {
                             try {
-                                return Setting.create((snc).getModelSettingsUsingFlowObjectStack(), textEncoder);
+                                return Setting.create(snc.getModelSettingsUsingFlowObjectStack(), textEncoder);
                             } catch (InvalidSettingsException ex) {
                                 throw new IllegalStateException(
                                     "Problem extracting settings of node '" + snc.getNameWithID() + "'", ex);
