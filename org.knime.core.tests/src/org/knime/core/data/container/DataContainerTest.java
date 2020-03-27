@@ -842,7 +842,7 @@ public class DataContainerTest extends TestCase {
             }
         }
     }
-    
+
     /**
      * Tests that when a table is created, (partly) iterated over and cleared, no memory alert listeners remain
      * unregistered.
@@ -893,7 +893,75 @@ public class DataContainerTest extends TestCase {
             String.format("Number of registered memory alert listeners should be %d but is %d.", expected, actual),
             expected, actual);
     }
-    
+
+    /**
+     * Tests that a FromListFallBackFromFileIterator falls back to iterate from file and closes that input stream when
+     * it is closed itself.
+     *
+     * @throws InterruptedException thrown when the thread is unexpectedly interrupted during sleep
+     */
+    @Test(timeout = 5000)
+    public void testNoDanglingFallBackFromFileIterators() throws InterruptedException {
+        // invoke GC to free up memory
+        MemoryAlertSystemTest.forceGC();
+
+        // create buffer
+        Buffer mediumSizedTable = generateMediumSizedTable().getBuffer();
+        int nrOpenInputStreams = mediumSizedTable.getNrOpenInputStreams();
+        Assert.assertTrue(
+            String.format("Number of open input streams on buffer should be 0 but is %d.", nrOpenInputStreams),
+            nrOpenInputStreams == 0);
+
+        // wait for buffer to be flushed to disk
+        waitForBufferToBeFlushed(mediumSizedTable);
+
+        // create iterator and iterate for a bit, then send a memory alert and force a garbage collection
+        try (CloseableRowIterator it = mediumSizedTable.iterator()) {
+            it.next();
+            waitForBufferToBeCollected(mediumSizedTable);
+
+            // GC of in-memory table should have iterator fall back to reading from disk on the next iteration
+            checkNumberOfOpenInputStreams(mediumSizedTable, 0);
+            it.next();
+            checkNumberOfOpenInputStreams(mediumSizedTable, 1);
+        }
+
+        // once the iterator has been closed, its underlying FallBackFromFileIterator should have also been closed
+        checkNumberOfOpenInputStreams(mediumSizedTable, 0);
+
+        // create another buffer
+        mediumSizedTable = generateMediumSizedTable().getBuffer();
+        nrOpenInputStreams = mediumSizedTable.getNrOpenInputStreams();
+        Assert.assertTrue(
+            String.format("Number of open input streams on buffer should be 0 but is %d.", nrOpenInputStreams),
+            nrOpenInputStreams == 0);
+
+        // wait for buffer to be flushed to disk
+        waitForBufferToBeFlushed(mediumSizedTable);
+
+        // create iterator and iterate for a bit, then send a memory alert and force a garbage collection
+        @SuppressWarnings("resource") // we explicitly want to test that we catch this leak by clearing the buffer
+        CloseableRowIterator it = mediumSizedTable.iterator();
+        it.next();
+        waitForBufferToBeCollected(mediumSizedTable);
+
+        // GC of in-memory table should have iterator fall back to reading from disk on the next iteration
+        checkNumberOfOpenInputStreams(mediumSizedTable, 0);
+        it.next();
+        checkNumberOfOpenInputStreams(mediumSizedTable, 1);
+
+        // clear the buffer and make sure that the FallBackFromFileIterator is closed as well
+        mediumSizedTable.performClear();
+        checkNumberOfOpenInputStreams(mediumSizedTable, 0);
+    }
+
+    private static void checkNumberOfOpenInputStreams(final Buffer buffer, final int expected) {
+        final int actual = buffer.getNrOpenInputStreams();
+        Assert.assertEquals(
+            String.format("Number of open input streams on buffer should be %d but is %d.", expected, actual), expected,
+            actual);
+    }
+
     /**
      * Wait for all asynchronous disk write threads to terminate.
      *
