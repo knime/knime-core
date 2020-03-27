@@ -1934,6 +1934,15 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
+     * Get the number of open input streams associated with this buffer.
+     *
+     * @return the number of open input streams
+     */
+    int getNrOpenInputStreams() {
+        return m_nrOpenInputStreams.get();
+    }
+
+    /**
      * Clear the argument iterator (free the allocated resources.
      *
      * @param it The iterator
