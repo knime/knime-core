@@ -2187,13 +2187,19 @@ public class Buffer implements KNIMEStreamConstants {
 
         @Override
         public boolean hasNext() {
-            return m_nextIndex <= m_toIndex;
+            final boolean hasNext = m_nextIndex <= m_toIndex;
+            if (!hasNext) {
+                closeFallBackFromFileIterator();
+            }
+            return hasNext;
         }
 
         void initFallBackFromFileIterator() {
             m_fallBackFromFileIterator =
                 m_outputReader.iteratorWithFilter(TableFilter.filterRangeOfRows(m_nextIndex, m_toIndex), m_exec);
             m_fallBackFromFileIterator.setBuffer(Buffer.this);
+            m_openIteratorSet.put(m_fallBackFromFileIterator, DUMMY);
+            m_nrOpenInputStreams.incrementAndGet();
         }
 
         @Override
@@ -2222,7 +2228,14 @@ public class Buffer implements KNIMEStreamConstants {
 
         @Override
         public void close() {
+            closeFallBackFromFileIterator();
             m_nextIndex = (int) size();
+        }
+
+        private void closeFallBackFromFileIterator() {
+            if (m_fallBackFromFileIterator != null) {
+                m_fallBackFromFileIterator.close();
+            }
         }
 
     }
