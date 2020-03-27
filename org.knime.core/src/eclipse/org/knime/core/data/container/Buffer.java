@@ -2267,14 +2267,18 @@ public class Buffer implements KNIMEStreamConstants {
      */
     private final class FromListIterator extends FromListFallBackFromFileIterator {
 
+        private MemoryAlertListener m_memoryAlertListener;
+
         private BackIntoMemoryIterator m_backIntoMemoryIterator;
 
         private FromListIterator(final List<BlobSupportDataRow> list,
             final BackIntoMemoryIterator backIntoMemoryIterator, final ExecutionMonitor exec) {
             super(list, 0, (int) size() - 1, exec);
-            m_backIntoMemoryIterator = backIntoMemoryIterator;
-            MemoryAlertSystem.getInstanceUncollected()
-                .addListener(new BackIntoMemoryIteratorDropper(FromListIterator.this));
+            if (backIntoMemoryIterator != null) {
+                m_backIntoMemoryIterator = backIntoMemoryIterator;
+                m_memoryAlertListener = new BackIntoMemoryIteratorDropper(FromListIterator.this);
+                MemoryAlertSystem.getInstanceUncollected().addListener(m_memoryAlertListener);
+            }
         }
 
         private void dropBackIntoMemoryIterator() {
@@ -2311,6 +2315,28 @@ public class Buffer implements KNIMEStreamConstants {
                     m_backIntoMemoryIterator = null;
                 }
                 return next;
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            final boolean hasNext = super.hasNext();
+            if (!hasNext) {
+            	unregisterMemoryAlertListener();
+            }
+            return hasNext;
+        }
+
+        @Override
+        public void close() {
+            super.close();
+            unregisterMemoryAlertListener();
+        }
+
+        private void unregisterMemoryAlertListener() {
+            if (m_memoryAlertListener != null) {
+                MemoryAlertSystem.getInstanceUncollected().removeListener(m_memoryAlertListener);
+                m_memoryAlertListener = null;
             }
         }
 
