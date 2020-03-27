@@ -387,22 +387,22 @@ public final class MemoryAlertSystem {
         final int initialSize = m_listeners.size();
 
         LOGGER.debugWithFormat("%d listeners will be notified.", initialSize);
-            int removeCount = 0;
+        int removeCount = 0;
         for (final Iterator<MemoryAlertListener> it = m_listeners.keySet().iterator(); it.hasNext();) {
             final MemoryAlertListener listener = it.next();
-                NodeContext.pushContext(listener.getNodeContext());
-                try {
-                    if (listener.memoryAlert(alert)) {
-                        it.remove();
+            NodeContext.pushContext(listener.getNodeContext());
+            try {
+                if (listener.memoryAlert(alert)) {
+                    it.remove();
                     removeCount++;
-                    }
-                } catch (Exception ex) {
+                }
+            } catch (Exception ex) {
                 LOGGER.errorWithFormat("Error while notifying memory alert listener %s: %s", listener, ex.getMessage(),
                     ex);
-                } finally {
-                    NodeContext.removeLastContext();
-                }
+            } finally {
+                NodeContext.removeLastContext();
             }
+        }
 
         LOGGER.debugWithFormat("%d/%d listeners have been removed, %d are remaining.", removeCount, initialSize,
             m_listeners.size());
@@ -493,5 +493,16 @@ public final class MemoryAlertSystem {
      */
     public static MemoryAlertSystem getInstanceUncollected() {
         return IS_G1 ? INSTANCE_UNCOLLECTED : getInstance();
+    }
+
+    /**
+     * Method for obtaining the number of currently registered listeners. For testing purposes only.
+     *
+     * @return the number of currently registered listeners
+     * @since 4.1
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static long getNumberOfListeners() {
+        return (long)INSTANCE.m_listeners.size() + INSTANCE_UNCOLLECTED.m_listeners.size();
     }
 }
