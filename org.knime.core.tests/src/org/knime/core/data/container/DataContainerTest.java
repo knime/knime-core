@@ -844,6 +844,57 @@ public class DataContainerTest extends TestCase {
     }
     
     /**
+     * Tests that when a table is created, (partly) iterated over and cleared, no memory alert listeners remain
+     * unregistered.
+     *
+     * @throws InterruptedException thrown when the thread is unexpectedly interrupted during sleep
+     */
+    @Test(timeout = 5000)
+    public void testNoDanglingMemoryAlertListeners() throws InterruptedException {
+        // invoke GC to free up memory
+        MemoryAlertSystemTest.forceGC();
+        final long numberOfListenersAtOnset = MemoryAlertSystem.getNumberOfListeners();
+
+        // create a small-sized table, which registers a MemoryAlertListener of type BufferFlusher
+        Buffer smallSizedTable = generateSmallSizedTable().getBuffer();
+        checkNumberOfRegisteredMemoryAlertListeners(numberOfListenersAtOnset + 1);
+
+        // asynchronously clear the small-sized table, which should unregister the BufferFlusher
+        smallSizedTable.clear();
+        checkNumberOfRegisteredMemoryAlertListeners(numberOfListenersAtOnset);
+
+        // create a medium-sized and a small-sized table
+        smallSizedTable = generateSmallSizedTable().getBuffer();
+        final Buffer mediumSizedTable = generateMediumSizedTable().getBuffer();
+
+        // send memory alert and wait for these tables to be collected
+        waitForBufferToBeCollected(smallSizedTable);
+        waitForBufferToBeCollected(mediumSizedTable);
+
+        // the BufferFlusher associated with the smallSizedTable whould have been unregistered
+        checkNumberOfRegisteredMemoryAlertListeners(numberOfListenersAtOnset);
+
+        // create iterators, which should iterate the table back into memory, which, in turn, should lead to two
+        // MemoryAlertListener of type BackIntoMemoryIteratorDropper being registered
+        try (CloseableRowIterator smallIt = smallSizedTable.iterator();
+                CloseableRowIterator mediumIt = mediumSizedTable.iterator();) {
+            smallIt.next();
+            mediumIt.next();
+            checkNumberOfRegisteredMemoryAlertListeners(numberOfListenersAtOnset + 2);
+        }
+
+        // once the iterators have been closed, its underlying memory alert listeners should have also been unregistered
+        checkNumberOfRegisteredMemoryAlertListeners(numberOfListenersAtOnset);
+    }
+
+    private static void checkNumberOfRegisteredMemoryAlertListeners(final long expected) {
+        final long actual = MemoryAlertSystem.getNumberOfListeners();
+        Assert.assertEquals(
+            String.format("Number of registered memory alert listeners should be %d but is %d.", expected, actual),
+            expected, actual);
+    }
+    
+    /**
      * Wait for all asynchronous disk write threads to terminate.
      *
      * @param buffer the to-be-flushed buffer
@@ -878,6 +929,22 @@ public class DataContainerTest extends TestCase {
             MemoryAlertSystemTest.forceGC();
             Thread.sleep(10);
         }
+    }
+
+    /**
+     * Generate a small-sized table. Medium-sized means smaller than a container's maximum number of cells.
+     *
+     * @return a small-sized table
+     */
+    static ContainerTable generateSmallSizedTable() {
+        // in particular, we simply instantiate a tiny container and add a slighlty larger number of rows to it
+        final DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, 20, false);
+        final int count = 5;
+        for (RowIterator it = generateRows(count); it.hasNext();) {
+            container.addRowToTable(it.next());
+        }
+        container.close();
+        return container.getBufferedTable();
     }
 
     /**
