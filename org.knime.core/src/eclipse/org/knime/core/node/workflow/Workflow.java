@@ -47,6 +47,8 @@
  */
 package org.knime.core.node.workflow;
 
+import static java.util.Arrays.asList;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1542,18 +1544,20 @@ class Workflow {
                 break;
             }
         }
-        ArrayList<NodeContainer> result = new ArrayList<NodeContainer>();
         if (scope == null) {
             // no scope - return anchor only
-            result.add(anchor);
+            return asList(anchor);
         } else {
+            // this is a set because m_nodeAnnotationCache 'contains' metanodes multiple times under some
+            // circumstances (metanodes with multiple outports)
+            Set<NodeID> result = new LinkedHashSet<>();
             for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
                 if (nga.startNodeStackContains(scope)) {
-                    result.add(m_nodes.get(nga.getID()));
+                    result.add(nga.getID());
                 }
             }
+            return result.stream().map(m_nodes::get).collect(Collectors.toList());
         }
-        return result;
     }
 
     ///////////////////////////
