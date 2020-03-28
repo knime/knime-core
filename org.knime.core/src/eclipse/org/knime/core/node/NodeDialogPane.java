@@ -90,6 +90,8 @@ import javax.swing.LayoutFocusTraversalPolicy;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
@@ -477,9 +479,7 @@ public abstract class NodeDialogPane {
         // add the flow variables tab if flow variables exist
         addFlowVariablesTab();
         m_flowVariablesModelChanged = false;
-        if (initFlowVariablesTab(modelSettings, flowVariablesSettings) == 0) {
-            removeTab(TAB_NAME_VARIABLES);
-        }
+        initFlowVariablesTab(modelSettings, flowVariablesSettings);
 
         // output memory policy and job manager (stored in NodeContainer)
         if (m_memPolicyTab != null || m_jobMgrTab != null) {
@@ -870,6 +870,19 @@ public abstract class NodeDialogPane {
                 };
 
                 m_pane.addChangeListener(m_flowTabSelectionChangeListener);
+                m_panel.addAncestorListener(new AncestorListener() {
+                    @Override
+                    public void ancestorAdded(final AncestorEvent event) {
+                        // we're notified via this when our parent component becomes visible
+                        m_flowTabSelectionChangeListener.stateChanged(null);
+                    }
+
+                    @Override
+                    public void ancestorRemoved(final AncestorEvent event) { }
+
+                    @Override
+                    public void ancestorMoved(final AncestorEvent event) { }
+                });
             }
         }
     }
@@ -1433,13 +1446,12 @@ public abstract class NodeDialogPane {
      *
      * @param nodeSettings The (user) settings of the node.
      * @param variableSettings The flow variable settings.
-     * @return the child count of the root node of the config tree model
      */
     @SuppressWarnings("unchecked")
-    private int initFlowVariablesTab(final NodeSettingsRO nodeSettings,
+    private void initFlowVariablesTab(final NodeSettingsRO nodeSettings,
             final NodeSettingsRO variableSettings) {
         m_flowVariableTab.setErrorLabel("");
-        final int childCount = m_flowVariableTab.setVariableSettings(nodeSettings, variableSettings, m_flowObjectStack,
+        m_flowVariableTab.setVariableSettings(nodeSettings, variableSettings, m_flowObjectStack,
                                                                      Collections.EMPTY_SET);
         for (final FlowVariableModel m : m_flowVariablesModelList) {
             final ConfigEditTreeNode configNode = m_flowVariableTab.findTreeNodeForChild(m.getKeys());
@@ -1449,8 +1461,6 @@ public abstract class NodeDialogPane {
             }
         }
         m_flowVariablesModelChanged = false;
-
-        return childCount;
     }
 
     /** Updates the flow variable tab to reflect the current parameter tree.
@@ -1477,8 +1487,8 @@ public abstract class NodeDialogPane {
         } finally {
             NodeContext.removeLastContext();
         }
-        m_flowVariableTab.setVariableSettings(settings, variableSettings,
-                m_flowObjectStack, m_flowVariablesModelList);
+        m_flowVariableTab.setVariableSettings(settings, variableSettings, m_flowObjectStack,
+                                              m_flowVariablesModelList);
     }
 
     /** Updates the warning message below the panel to inform the user
@@ -1509,11 +1519,20 @@ public abstract class NodeDialogPane {
         }
     }
 
-    private static String buildVariableOverwriteWarning(
-            final Collection<String> params) {
-        StringBuilder b = new StringBuilder();
+    /**
+     * Returns the node context with which this dialog pane has been created.
+     *
+     * @return a node context
+     * @since 2.8
+     */
+    protected final NodeContext getNodeContext() {
+        return m_nodeContext;
+    }
+
+    private static String buildVariableOverwriteWarning(final Collection<String> params) {
+        final StringBuilder b = new StringBuilder();
         if (params.size() == 1) {
-            String key = params.iterator().next();
+            final String key = params.iterator().next();
             b.append("The \"").append(key);
             b.append("\" parameter is controlled by a variable.");
         } else {
@@ -1535,28 +1554,37 @@ public abstract class NodeDialogPane {
         return b.toString();
     }
 
-    /** The tab currently called "Flow Variables". It allows the user to mask
-     * certain settings of the dialog (for instance to use variables instead
-     * of hard-coded values.) */
-    private class FlowVariablesTab extends JPanel
-    implements ConfigEditTreeEventListener {
 
+    /**
+     * The tab currently called "Flow Variables". It allows the user to mask certain settings of the dialog (for
+     * instance to use variables instead of hard-coded values.)
+     */
+    @SuppressWarnings("serial")
+    private class FlowVariablesTab extends JPanel implements ConfigEditTreeEventListener {
         private final ConfigEditJTree m_tree;
         private final JLabel m_errorLabel;
+        private final JScrollPane m_scrollPane;
+        private final JPanel m_noFlowVariablesDisplay;
 
         /** Creates new tab. */
         public FlowVariablesTab() {
             super(new BorderLayout());
             m_tree = new ConfigEditJTree();
-            m_errorLabel = new JLabel();
-            m_errorLabel.setForeground(Color.RED);
+            m_noFlowVariablesDisplay = new JPanel(new BorderLayout());
+            final JLabel noVariablesMessage = new JLabel("There are no flow variables.");
+            noVariablesMessage.setHorizontalAlignment(SwingConstants.CENTER);
+            noVariablesMessage.setVerticalAlignment(SwingConstants.CENTER);
+            m_noFlowVariablesDisplay.add(noVariablesMessage, BorderLayout.CENTER);
+            m_noFlowVariablesDisplay.setBackground(new Color(255, 252, 234));
             // nesting m_tree directly into the scrollpane causes the dialog
             // to take oversized dimensions
-            JPanel panel = new JPanel(new BorderLayout());
+            final JPanel panel = new JPanel(new BorderLayout());
             panel.add(m_tree, BorderLayout.CENTER);
-            JScrollPane scrPanel = new JScrollPane(panel);
-            scrPanel.setPreferredSize(new Dimension(150, 100));
-            add(scrPanel, BorderLayout.CENTER);
+            m_scrollPane = new JScrollPane(panel);
+            m_scrollPane.setPreferredSize(new Dimension(150, 100));
+            add(m_scrollPane, BorderLayout.CENTER);
+            m_errorLabel = new JLabel();
+            m_errorLabel.setForeground(Color.RED);
             add(m_errorLabel, BorderLayout.NORTH);
             scrPanel.getViewport().addComponentListener(new ComponentAdapter() {
                @Override
@@ -1574,6 +1602,27 @@ public abstract class NodeDialogPane {
             return m_tree.getModel().findChildForKeyPath(keyPath);
         }
 
+        private void updateView() {
+            final ConfigEditTreeNode root = m_tree.getModel().getRoot();
+            final boolean displayTree = ((root != null) && (root.getChildCount() > 0));
+
+            if (displayTree) {
+                if (m_scrollPane.getParent() == null) {
+                    ViewUtils.invokeAndWaitInEDT(() -> {
+                        remove(m_noFlowVariablesDisplay);
+                        add(m_scrollPane, BorderLayout.CENTER);
+                    });
+                }
+            } else {
+                if (m_noFlowVariablesDisplay.getParent() == null) {
+                    ViewUtils.invokeAndWaitInEDT(() -> {
+                        remove(m_scrollPane);
+                        add(m_noFlowVariablesDisplay, BorderLayout.CENTER);
+                    });
+                }
+            }
+        }
+
         /**
          * Update the panel to reflect new properties.
          *
@@ -1582,21 +1631,20 @@ public abstract class NodeDialogPane {
          * @param stack the stack to get the variables from.
          * @param variableModels The models that may be used in the main panels of the dialog to overwrite settings in
          *            place.
-         * @return the child count of the root node of the config tree model
          */
-        int setVariableSettings(final NodeSettingsRO nodeSettings,
-                final NodeSettingsRO varSettings,
-                final FlowObjectStack stack,
-                final Collection<FlowVariableModel> variableModels) {
+        void setVariableSettings(final NodeSettingsRO nodeSettings,
+                                 final NodeSettingsRO varSettings,
+                                 final FlowObjectStack stack,
+                                 final Collection<FlowVariableModel> variableModels) {
             if (nodeSettings != null && !(nodeSettings instanceof Config)) {
                 m_logger.debug("Node settings object not instance of "
                         + Config.class + " -- disabling flow variables tab");
-                return 0;
+                return;
             }
             if (varSettings != null && !(varSettings instanceof Config)) {
                 m_logger.debug("Variable settings object not instance of "
                         + Config.class + " -- disabling flow variables tab");
-                return 0;
+                return;
             }
             final Config nodeSetsCopy = (nodeSettings == null) ? new NodeSettings("variables") : (Config)nodeSettings;
             ConfigEditTreeModel model;
@@ -1632,11 +1680,7 @@ public abstract class NodeDialogPane {
                 }
             });
 
-            if (newModel.getRoot() != null) {
-                return newModel.getRoot().getChildCount();
-            }
-
-            return 0;
+            updateView();
         }
 
         /**
@@ -1676,16 +1720,6 @@ public abstract class NodeDialogPane {
                 }
             }
         }
-    }
-
-    /**
-     * Returns the node context with which this dialog pane has been created.
-     *
-     * @return a node context
-     * @since 2.8
-     */
-    protected final NodeContext getNodeContext() {
-        return m_nodeContext;
     }
 }
 
