@@ -61,6 +61,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
+import javax.swing.plaf.basic.BasicTreeUI;
 import javax.swing.tree.TreeModel;
 
 import org.knime.core.node.NodeSettings;
@@ -78,7 +80,7 @@ import org.knime.core.node.workflow.FlowObjectStack;
 public class ConfigEditJTree extends JTree {
     // Part of implementing AP-11595 featured, for a moment in time, an attempt to fill the width; that functionality
     //      is enabled or disabled by this flag.
-    static final boolean ROW_SHOULD_FILL_WIDTH = false;
+    static final boolean ROW_SHOULD_FILL_WIDTH = true;
 
     /** Fallback model. */
     private static final ConfigEditTreeModel EMPTY_MODEL = ConfigEditTreeModel.create(new NodeSettings("empty"));
@@ -89,6 +91,11 @@ public class ConfigEditJTree extends JTree {
 
     /** The maximum width of all rendered key labels */
     private HashMap<Integer, Integer> m_maxLabelWidthPathDepthMap;
+
+    private final int m_childIndentSum;
+
+    // the visible width of this tree (the parent viewport's width)
+    private int m_visibleWidth = -1;
 
     /** Constructor for empty tree. */
     public ConfigEditJTree() {
@@ -104,12 +111,30 @@ public class ConfigEditJTree extends JTree {
         super(model);
         setRootVisible(false);
         setShowsRootHandles(true);
+        final BasicTreeUI treeUI = (BasicTreeUI)getUI();
+        m_childIndentSum = (treeUI.getLeftChildIndent() + treeUI.getRightChildIndent());
         final ConfigEditTreeRenderer renderer = new ConfigEditTreeRenderer(this);
         setCellRenderer(renderer);
         setCellEditor(new ConfigEditTreeEditor(this, renderer));
         setRowHeight(renderer.getPreferredSize().height);
         setEditable(true);
         setToolTipText("config tree"); // enable tooltip
+    }
+
+    /**
+     * This should be called providing the tree's parent viewport's width.
+     * @param w the width of the parent viewport
+     * @since 4.2
+     */
+    public void setViewportWidth(final int w) {
+        m_visibleWidth = w - m_childIndentSum;
+        SwingUtilities.invokeLater(() -> {
+            getModel().forceModelRefresh(ConfigEditJTree.this);
+        });
+    }
+
+    int getVisibleWidth() {
+        return m_visibleWidth;
     }
 
     /**

@@ -393,11 +393,23 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * @param tree the owning {@link ConfigEditJTree} instance
      */
     void forceModelRefresh(final ConfigEditJTree tree) {
-        final int[] childIndices = new int[getRoot().getChildCount()];
+        forceModelRefresh(tree, getRoot());
+    }
+
+    private void forceModelRefresh(final ConfigEditJTree tree, final TreeNode parent) {
+        final int[] childIndices = new int[parent.getChildCount()];
         for (int i = 1; i < childIndices.length; i++) {
             childIndices[i] = i;
         }
-        fireTreeNodesChanged(tree, null, childIndices, null);
+        fireTreeNodesChanged(tree, getPathToRoot(parent), childIndices, null);
+
+        final Enumeration<?> en = parent.children();
+        while (en.hasMoreElements()) {
+            final TreeNode child = (TreeNode)en.nextElement();
+            if (child.getChildCount() > 0) {
+                forceModelRefresh(tree, child);
+            }
+        }
     }
 
     /** Single Tree node implementation. */

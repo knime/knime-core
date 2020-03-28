@@ -57,7 +57,6 @@ import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -99,16 +98,9 @@ public class ConfigEditTreeNodePanel extends JPanel {
     // The number of characters we allow in the label text before we start truncating via mid-excision
     private static final int MAXIMUM_LABEL_CHARACTER_COUNT = 30;
 
-    // We do this ungainly thing to preserve the width in edit mode; the Swing default tree layout does
-    //      not consult this class' #getPreferredSize and as a result ends up with panes that grow wider
-    //      than the width of the panel. We combine this map, whose values are set via
-    //      #recordPostPaintPreferredSize(int, Dimension), with intercepting a #setBounds(int, int, int, int)
-    //      attempt, if the instance is intended for the editor. HACKY!
-    private static final HashMap<Integer, Dimension> PATH_DEPTH_PAINTED_PREFERRED_SIZE_MAP = new HashMap<>();
-
     private static final int MINIMUM_HEIGHT = 24;
     private static final Dimension LABEL_MINIMUM_SIZE = new Dimension(100, MINIMUM_HEIGHT);
-    private static final Dimension VALUE_COMBOBOX_MINIMUM_SIZE = new Dimension(180, MINIMUM_HEIGHT);
+    private static final Dimension VALUE_COMBOBOX_SIZE = new Dimension(222, MINIMUM_HEIGHT);
 
     private static final ComboBoxElement EMPTY_COMBOBOX_ELEMENT = new ComboBoxElement(null);
     private static final Icon ICON_UNKNOWN = DataValue.UTILITY.getIcon();
@@ -147,9 +139,10 @@ public class ConfigEditTreeNodePanel extends JPanel {
     // If this panel will be used as a node editor in our tree, this should be true; otherwise false (for the case
     //      in which it is only used for painting.)
     private final boolean m_panelIntendedForEditor;
-    // The depth of the node in the tree which this panel repesents; this value is only consulted if
-    //      m_panelIntendedForEditor is true
+    // The depth of the node in the tree which this panel repesents
     private int m_treePathDepth;
+    // The visible width for that this pane should use for its total size computations
+    private int m_visibleWidth = -1;
 
     /**
      * Constructs new panel.
@@ -173,8 +166,10 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_keyLabel.setMinimumSize(LABEL_MINIMUM_SIZE);
         m_valueComboBoxModel = new DefaultComboBoxModel<>();
         m_valueComboBox = new JComboBox<>(m_valueComboBoxModel);
-        m_valueComboBox.setPreferredSize(VALUE_COMBOBOX_MINIMUM_SIZE);
-        m_valueComboBox.setToolTipText(" "); // enable tooltip
+        m_valueComboBox.setMinimumSize(VALUE_COMBOBOX_SIZE);
+        m_valueComboBox.setPreferredSize(VALUE_COMBOBOX_SIZE);
+        m_valueComboBox.setSize(VALUE_COMBOBOX_SIZE);
+        m_valueComboBox.setToolTipText(" "); // enable tooltip;
         m_valueComboBox.setRenderer(ComboBoxRenderer.INSTANCE);
         final FocusListener l = new FocusAdapter() {
             /** {@inheritDoc} */
@@ -218,7 +213,9 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 }
             }
             add(m_exposeAsVariableField);
-            m_exposeAsVariableField.setMaximumSize(m_exposeAsVariableField.getPreferredSize());
+            if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+                m_exposeAsVariableField.setMaximumSize(m_exposeAsVariableField.getPreferredSize());
+            }
         }
         if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
             add(Box.createHorizontalGlue());
@@ -247,9 +244,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         final int maxLabelWidth = m_parentRenderer.getParentTree().labelWidthToEnforceForDepth(m_treePathDepth);
         m_keyLabel.setSize(maxLabelWidth, MINIMUM_HEIGHT);
         m_keyLabel.setPreferredSize(new Dimension(maxLabelWidth, MINIMUM_HEIGHT));
-        if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-            m_keyLabel.setMaximumSize(m_keyLabel.getPreferredSize());
-        }
+        m_keyLabel.setMaximumSize(m_keyLabel.getPreferredSize());
         m_keyLabel.invalidate();
     }
 
@@ -262,8 +257,8 @@ public class ConfigEditTreeNodePanel extends JPanel {
         }
     }
 
-    void recordPostPaintPreferredSize(final int depth, final Dimension d) {
-        PATH_DEPTH_PAINTED_PREFERRED_SIZE_MAP.put(Integer.valueOf(depth), d);
+    void setVisibleWidth(final int w) {
+        m_visibleWidth = w;
     }
 
     @Override
@@ -271,30 +266,22 @@ public class ConfigEditTreeNodePanel extends JPanel {
         if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
             final int insets = m_parentRenderer.getTotalWidthInsets(m_keyIcon);
 
-            return new Dimension((m_parentRenderer.getParentTree().getSize().width - insets), (MINIMUM_HEIGHT + 4));
+            return new Dimension((m_visibleWidth - insets), (MINIMUM_HEIGHT + 4));
         } else {
             return super.getPreferredSize();
         }
     }
 
-    // as long as ConfigEditJTree.ROW_SHOULD_FILL_WIDTH is false, Eclipse will be inconsistent and complain about
-    //      the if block containing dead code below.. even though the same "dead code" case exists in getPreferredSize()
-    //      above and Eclipse does not complain about that. lame.
-    @SuppressWarnings("unused")
     @Override
     public void setBounds(final int x, final int y, final int width, final int height) {
         int widthToUse = width;
-        int heightToUse = height;
         if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH && m_panelIntendedForEditor) {
-            final Dimension d = PATH_DEPTH_PAINTED_PREFERRED_SIZE_MAP.get(Integer.valueOf(m_treePathDepth));
+            final int insets = m_parentRenderer.getTotalWidthInsets(m_keyIcon);
 
-            if (d != null) {
-                widthToUse = d.width;
-                heightToUse = d.height;
-            }
+            widthToUse = (m_visibleWidth - insets);
         }
 
-        super.setBounds(x, y, widthToUse, heightToUse);
+        super.setBounds(x, y, widthToUse, height);
     }
 
     /**
@@ -346,7 +333,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 match = cbe;
             }
         }
-        m_valueComboBox.setPreferredSize((suitableVariables.size() > 0) ? null : VALUE_COMBOBOX_MINIMUM_SIZE);
+        m_valueComboBox.setSize(VALUE_COMBOBOX_SIZE);
         if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
             m_valueComboBox.setMaximumSize(m_valueComboBox.getPreferredSize());
         }

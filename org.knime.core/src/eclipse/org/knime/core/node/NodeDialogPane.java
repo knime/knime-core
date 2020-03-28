@@ -54,6 +54,8 @@ import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.io.IOException;
@@ -1556,6 +1558,12 @@ public abstract class NodeDialogPane {
             scrPanel.setPreferredSize(new Dimension(150, 100));
             add(scrPanel, BorderLayout.CENTER);
             add(m_errorLabel, BorderLayout.NORTH);
+            scrPanel.getViewport().addComponentListener(new ComponentAdapter() {
+               @Override
+               public void componentResized(final ComponentEvent ce) {
+                   m_tree.setViewportWidth(ce.getComponent().getWidth());
+               }
+            });
         }
 
         /** Find the tree node that is associated with the given key path.

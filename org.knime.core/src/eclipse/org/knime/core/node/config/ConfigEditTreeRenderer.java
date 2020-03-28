@@ -76,7 +76,7 @@ import org.knime.core.node.workflow.FlowObjectStack;
 // TODO: consider making this class package-scope
 public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
     static final boolean PLATFORM_IS_MAC = Platform.OS_MACOSX.equals(Platform.getOS());
-    private final int PIXEL_INDENT_PER_PATH_DEPTH = 22;
+    static final int PIXEL_INDENT_PER_PATH_DEPTH = 19;
 
 
     private final ConfigEditTreeNodePanel m_panelFull;
@@ -119,6 +119,12 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
             m_currentCellPathDepth = 0;
         }
         setValue(tree, value, m_currentCellPathDepth);
+
+        final ConfigEditJTree ceJT = (ConfigEditJTree)tree;
+        final int indent = m_currentCellPathDepth * PIXEL_INDENT_PER_PATH_DEPTH;
+        final int visibleWidth = ceJT.getVisibleWidth() - indent;
+
+        m_active.setVisibleWidth(visibleWidth);
 
         return super.getTreeCellRendererComponent(tree, value, isSelected, expanded, leaf, row, isFocused);
     }
@@ -227,7 +233,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         final Insets insets = getInsets();
         final int iconWidth = drawWidthForIcon(i);
 
-        return insets.left + iconWidth + insets.right + (m_currentCellPathDepth * PIXEL_INDENT_PER_PATH_DEPTH);
+        return insets.left + iconWidth + insets.right;
     }
 
     private int drawWidthForIcon(final Icon i) {
@@ -265,8 +271,6 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         m_active.setBackground(selected ? getBackgroundSelectionColor()
                                         : getBackgroundNonSelectionColor());
         SwingUtilities.paintComponent(g, m_active, this, m_paintBounds);
-
-        m_active.recordPostPaintPreferredSize(m_currentCellPathDepth, paneSize);
 
         super.paintComponent(g);
     }

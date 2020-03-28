@@ -129,6 +129,8 @@ public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
         @Override
         public Component getTreeCellEditorComponent(final JTree myTree, final Object value, final boolean isSelected,
                                                     final boolean expanded, final boolean leaf, final int row) {
+            final ConfigEditJTree ceJT = (ConfigEditJTree)ConfigEditTreeEditor.this.tree;
+            final int depth;
             if (value instanceof ConfigEditTreeNode) {
                 final ConfigEditTreeNode node = (ConfigEditTreeNode)value;
                 m_active = node.isLeaf() ? m_panelFull : m_panelPlain;
@@ -137,23 +139,23 @@ public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
                 if (outerTree instanceof ConfigEditJTree) {
                     stack = ((ConfigEditJTree)outerTree).getFlowObjectStack();
                 }
-                final int depth
-                    = ((ConfigEditJTree)ConfigEditTreeEditor.this.tree).getModel().getPathToRoot((TreeNode)value).length;
+                depth = ceJT.getModel().getPathToRoot((TreeNode)value).length;
                 m_active.setFlowObjectStack(stack);
                 m_active.setTreeNode(node);
-                m_active.setTreePathDepth(depth);
             } else {
-                final int depth;
                 if (value instanceof TreeNode) {
-                    depth = ((ConfigEditJTree)ConfigEditTreeEditor.this.tree).getModel().getPathToRoot((TreeNode)value).length;
+                    depth = ceJT.getModel().getPathToRoot((TreeNode)value).length;
                 } else {
                     depth = 0;
                 }
 
                 m_active = m_panelPlain;
                 m_active.setTreeNode(null);
-                m_active.setTreePathDepth(depth);
             }
+            final int indent = depth * ConfigEditTreeRenderer.PIXEL_INDENT_PER_PATH_DEPTH;
+            final int visibleWidth = ceJT.getVisibleWidth() - indent;
+            m_active.setVisibleWidth(visibleWidth);
+            m_active.setTreePathDepth(depth);
 
             return m_active;
         }
