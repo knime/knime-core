@@ -81,6 +81,8 @@ public enum SharedIcons {
     WARNING("icons/warning.png"),
     /** Info sign filled **/
     INFO("icons/info.png"),
+    /** Info balloon - approximately like SWT's SWT.ICON_INFORMATION **/
+    INFO_BALLOON("icons/info_balloon.png"),
     /** Info sign outline **/
     INFO_OUTLINE("icons/info_outline.png"),
     /** Settings cog wheel **/

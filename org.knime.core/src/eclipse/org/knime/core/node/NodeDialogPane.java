@@ -109,6 +109,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowObjectStack;
@@ -1574,8 +1575,9 @@ public abstract class NodeDialogPane {
             final JLabel noVariablesMessage = new JLabel("There are no flow variables.");
             noVariablesMessage.setHorizontalAlignment(SwingConstants.CENTER);
             noVariablesMessage.setVerticalAlignment(SwingConstants.CENTER);
+            noVariablesMessage.setIcon(SharedIcons.INFO_BALLOON.get());
             m_noFlowVariablesDisplay.add(noVariablesMessage, BorderLayout.CENTER);
-            m_noFlowVariablesDisplay.setBackground(new Color(255, 252, 234));
+            m_noFlowVariablesDisplay.setOpaque(true);
             // nesting m_tree directly into the scrollpane causes the dialog
             // to take oversized dimensions
             final JPanel panel = new JPanel(new BorderLayout());
