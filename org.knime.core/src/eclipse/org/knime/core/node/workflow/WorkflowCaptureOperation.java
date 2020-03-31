@@ -119,9 +119,10 @@ public final class WorkflowCaptureOperation {
      * @return the captured sub-workflow
      */
     public WorkflowFragment capture() {
+        WorkflowManager tempParent = null;
         try (WorkflowLock lock = m_wfm.lock()) {
             NodeID endNodeID = m_endNode.getID();
-            WorkflowManager tempParent = WorkflowManager.EXTRACTED_WORKFLOW_ROOT
+            tempParent = WorkflowManager.EXTRACTED_WORKFLOW_ROOT
                 .createAndAddProject("Capture-" + endNodeID, new WorkflowCreationHelper());
 
             // "scope body" -- will copy those nodes later
@@ -232,6 +233,12 @@ public final class WorkflowCaptureOperation {
 
             return new WorkflowFragment(tempParent, workflowFragmentInputs, workflowFragmentOutputs,
                 addedPortObjectReaderNodes);
+        } catch (Exception e) {
+            if (tempParent != null) {
+                WorkflowManager.EXTRACTED_WORKFLOW_ROOT.removeNode(tempParent.getID());
+                tempParent = null;
+            }
+            throw e;
         }
     }
 
