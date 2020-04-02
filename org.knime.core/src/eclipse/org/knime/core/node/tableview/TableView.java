@@ -1483,7 +1483,7 @@ public class TableView extends JScrollPane {
                         return;
                     }
                     if (m_searchPosition == null) {
-                        initNewSearchPostion(new SearchOptions(true, false, true));
+                        initNewSearchPostion(new SearchOptions(true, true, true));
                     }
                     m_searchPosition.reset();
                     SearchOptions searchOptions = m_searchPosition.getSearchOptions();
