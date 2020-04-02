@@ -1499,8 +1499,8 @@ public class TableView extends JScrollPane {
                     colNameBox.addItemListener(new AtLeastOnButtonSelectedItemListener(rowKeyBox, asArray));
                     dataBox.addItemListener(new AtLeastOnButtonSelectedItemListener(rowKeyBox, asArray));
 
-                    JCheckBox ignoreCaseBox = new JCheckBox("Case insensitive",
-                        m_searchString.map(i -> i.isIgnoreCase()).orElse(false));
+                    JCheckBox caseSensitiveBox = new JCheckBox("Case sensitive",
+                    		m_searchString.map(i -> !i.isIgnoreCase()).orElse(false));
 
                     JCheckBox regexBox = new JCheckBox("Regular Expression",
                         m_searchString.map(i -> i.isRegex()).orElse(false));
@@ -1512,7 +1512,7 @@ public class TableView extends JScrollPane {
                     centerPanel.add(colNameBox);
                     centerPanel.add(dataBox);
                     centerPanel.add(new JLabel());
-                    centerPanel.add(ignoreCaseBox);
+                    centerPanel.add(caseSensitiveBox);
                     centerPanel.add(regexBox);
                     centerPanel.add(new JLabel());
                     panel.add(centerPanel, BorderLayout.CENTER);
@@ -1528,7 +1528,7 @@ public class TableView extends JScrollPane {
                             return;
                         }
                         try {
-                            newSearchString = new SearchString(in, ignoreCaseBox.isSelected(), regexBox.isSelected());
+                            newSearchString = new SearchString(in, !caseSensitiveBox.isSelected(), regexBox.isSelected());
                             break;
                         } catch (PatternSyntaxException pse) {
                             JOptionPane.showMessageDialog(TableView.this,
