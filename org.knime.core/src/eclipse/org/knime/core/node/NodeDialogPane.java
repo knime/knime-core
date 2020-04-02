@@ -1580,7 +1580,10 @@ public abstract class NodeDialogPane {
             final JPanel panel = new JPanel(new BorderLayout());
             panel.add(m_tree, BorderLayout.CENTER);
             m_scrollPane = new JScrollPane(panel);
-            m_scrollPane.setPreferredSize(new Dimension(150, 100));
+            final int panelMinimumWidth = ConfigEditJTree.MINIMUM_ROW_WIDTH;
+            final Dimension scrollPaneSize = new Dimension(panelMinimumWidth, 167);
+            m_scrollPane.setMinimumSize(scrollPaneSize);
+            m_scrollPane.setPreferredSize(scrollPaneSize);
             add(m_scrollPane, BorderLayout.CENTER);
             m_errorLabel = new JLabel();
             m_errorLabel.setForeground(Color.RED);
@@ -1721,4 +1724,3 @@ public abstract class NodeDialogPane {
         }
     }
 }
-

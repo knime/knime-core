@@ -95,12 +95,15 @@ import org.knime.core.node.workflow.VariableTypeRegistry;
 @SuppressWarnings("serial")
 // TODO: consider making this class package-scope (and final)
 public class ConfigEditTreeNodePanel extends JPanel {
+    static final int MINIMUM_LABEL_WIDTH = 100;
+    static final int COMBOBOX_WIDTH = 222;
+
     // The number of characters we allow in the label text before we start truncating via mid-excision
     private static final int MAXIMUM_LABEL_CHARACTER_COUNT = 30;
 
     private static final int MINIMUM_HEIGHT = 24;
-    private static final Dimension LABEL_MINIMUM_SIZE = new Dimension(100, MINIMUM_HEIGHT);
-    private static final Dimension VALUE_COMBOBOX_SIZE = new Dimension(222, MINIMUM_HEIGHT);
+    private static final Dimension LABEL_MINIMUM_SIZE = new Dimension(MINIMUM_LABEL_WIDTH, MINIMUM_HEIGHT);
+    private static final Dimension VALUE_COMBOBOX_SIZE = new Dimension(COMBOBOX_WIDTH, MINIMUM_HEIGHT);
 
     private static final ComboBoxElement EMPTY_COMBOBOX_ELEMENT = new ComboBoxElement(null);
     private static final Icon ICON_UNKNOWN = DataValue.UTILITY.getIcon();
