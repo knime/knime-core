@@ -56,6 +56,7 @@ import org.knime.core.node.InvalidSettingsException;
 
 
 /**
+ * A node that contributes to a component configuration dialog.
  *
  * @author Christian Albrecht, KNIME AG, Zurich, Switzerland
  * @param <REP> The configuration content of the dialog node.

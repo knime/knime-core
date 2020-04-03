@@ -125,6 +125,7 @@
       <xs:enumeration value="LoopStart" />
       <xs:enumeration value="LoopEnd" />
       <xs:enumeration value="QuickForm" />
+      <xs:enumeration value="Configuration" />
       <xs:enumeration value="Other" />
       <xs:enumeration value="Unknown" />
       <xs:enumeration value="ScopeStart" />

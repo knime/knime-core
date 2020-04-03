@@ -45,6 +45,8 @@
  */
 package org.knime.core.quickform;
 
+import org.knime.core.node.dialog.DialogNode;
+import org.knime.core.node.dialog.InputNode;
 import org.knime.core.quickform.in.QuickFormInputNode;
 import org.knime.core.quickform.out.QuickFormOutputNode;
 
@@ -58,7 +60,9 @@ import org.knime.core.quickform.out.QuickFormOutputNode;
  * @since 2.7
  *
  * @noimplement Not yet stable API.
+ * @deprecated use either {@link InputNode} or {@link DialogNode}
  */
+@Deprecated
 public interface QuickFormNode {
 
     /**

@@ -110,8 +110,13 @@ public abstract class NodeFactory<T extends NodeModel> {
         /** End node of a scope.
          * @since 2.8*/
         ScopeEnd,
-        /** A node contributing to quick/web form. */
+        /** A node contributing to quick/web form.
+         * @deprecated use {@link #Configuration} instead */
+        @Deprecated
         QuickForm,
+        /** A node contributing a configuration input to a component dialog.
+         * @since 4.2*/
+        Configuration,
         /** All other nodes. */
         Other,
         /** A missing node (framework use only).

@@ -46,6 +46,8 @@
 package org.knime.core.quickform.in;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.dialog.DialogNode;
+import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
@@ -62,7 +64,9 @@ import org.knime.core.util.node.quickform.in.AbstractQuickFormInElement;
  * @since 2.6
  *
  * @noimplement Not yet stable API.
+ * @deprecated Use {@link DialogNode} or {@link InputNode} instead
  */
+@Deprecated
 public interface QuickFormInputNode extends QuickFormNode, MetaNodeDialogNode {
 
     /** Filter used in {@link WorkflowManager#findNextWaitingWorkflowManager(Class, NodeModelFilter)}.
