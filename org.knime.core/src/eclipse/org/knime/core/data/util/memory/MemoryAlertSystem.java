@@ -56,11 +56,11 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
@@ -172,7 +172,10 @@ public final class MemoryAlertSystem {
      */
     private static final int CHECK_HEAP_SIZE_INTERVAL = 5;
 
-    private final Collection<MemoryAlertListener> m_listeners = new ArrayList<>();
+    private final Map<MemoryAlertListener, Object> m_listeners = new ConcurrentHashMap<>();
+
+    /** Dummy object for the listerners map. */
+    private static final Object DUMMY = new Object();
 
     private final MemoryPoolMXBean m_memPool = OLD_GEN_POOL;
 
@@ -297,9 +300,7 @@ public final class MemoryAlertSystem {
      * @return <code>true</code> if the listener was added, <code>false</code> otherwise
      */
     public boolean addListener(final MemoryAlertListener listener) {
-        synchronized (m_listeners) {
-            return m_listeners.add(listener);
-        }
+        return m_listeners.put(listener, DUMMY) == null;
     }
 
     /**
@@ -309,9 +310,7 @@ public final class MemoryAlertSystem {
      * @return <code>true</code> if the listener was removed, <code>false</code> otherwise
      */
     public boolean removeListener(final MemoryAlertListener listener) {
-        synchronized (m_listeners) {
-            return m_listeners.remove(listener);
-        }
+        return m_listeners.remove(listener) == DUMMY;
     }
 
     /**
@@ -384,30 +383,29 @@ public final class MemoryAlertSystem {
     }
 
     private void notifyListeners() {
-        MemoryAlert alert = new MemoryAlert(getUsedMemory(), getMaximumMemory());
+        final MemoryAlert alert = new MemoryAlert(getUsedMemory(), getMaximumMemory());
+        final int initialSize = m_listeners.size();
 
-        synchronized (m_listeners) {
-            int initialSize = m_listeners.size();
-            int removeCount = 0;
-            for (Iterator<MemoryAlertListener> it = m_listeners.iterator(); it.hasNext();) {
-                MemoryAlertListener listener = it.next();
-                NodeContext.pushContext(listener.getNodeContext());
-                try {
-                    if (listener.memoryAlert(alert)) {
-                        removeCount++;
-                        it.remove();
-                    }
-                } catch (Exception ex) {
-                    LOGGER
-                        .error("Error while notifying memory alert listener " + listener + ": " + ex.getMessage(), ex);
-                } finally {
-                    NodeContext.removeLastContext();
+        LOGGER.debugWithFormat("%d listeners will be notified.", initialSize);
+        int removeCount = 0;
+        for (final Iterator<MemoryAlertListener> it = m_listeners.keySet().iterator(); it.hasNext();) {
+            final MemoryAlertListener listener = it.next();
+            NodeContext.pushContext(listener.getNodeContext());
+            try {
+                if (listener.memoryAlert(alert)) {
+                    removeCount++;
+                    it.remove();
                 }
+            } catch (Exception ex) {
+                LOGGER.errorWithFormat("Error while notifying memory alert listener %s: %s", listener, ex.getMessage(),
+                    ex);
+            } finally {
+                NodeContext.removeLastContext();
             }
-
-            LOGGER.debug(removeCount + "/" + initialSize + " listeners have been removed,  " + m_listeners.size()
-                + " are remaining");
         }
+
+        LOGGER.debugWithFormat("%d/%d listeners have been removed, %d are remaining.", removeCount, initialSize,
+            m_listeners.size());
     }
 
     /**
