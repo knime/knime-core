@@ -177,7 +177,7 @@ final class BufferCache {
         CheckUtils.checkArgumentNotNull(buffer);
         CheckUtils.checkArgumentNotNull(list);
 
-        final long uniqueId = buffer.getUniqueID();
+        final Long uniqueId = buffer.getUniqueID();
 
         /** disallow modification */
         final List<BlobSupportDataRow> unmodifiableList = Collections.unmodifiableList(list);
@@ -271,7 +271,7 @@ final class BufferCache {
     private Optional<List<BlobSupportDataRow>> getInternal(final Buffer buffer, final boolean silent) {
         CheckUtils.checkArgumentNotNull(buffer);
 
-        final long uniqueId = buffer.getUniqueID();
+        final Long uniqueId = buffer.getUniqueID();
 
         final WeakReference<List<BlobSupportDataRow>> weakRef = m_weakCache.get(uniqueId);
         if (weakRef == null) {
@@ -334,7 +334,7 @@ final class BufferCache {
      * @param buffer the buffer which the to-be-invalidated table is associated with
      */
     synchronized void invalidate(final Buffer buffer) {
-        final long uniqueId = buffer.getUniqueID();
+        final Long uniqueId = buffer.getUniqueID();
 
         m_hardMap.remove(uniqueId);
         m_LRUCache.remove(uniqueId);

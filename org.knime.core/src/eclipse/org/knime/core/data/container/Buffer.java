@@ -478,9 +478,10 @@ public class Buffer implements KNIMEStreamConstants {
     private final int m_bufferID;
 
     /**
-     * The unique id of this buffer, as required for interacting with the static {@link BufferCache CACHE}.
+     * The unique id of this buffer, as required for interacting with the static {@link BufferCache CACHE}. Will never
+     * be null.
      */
-    private final long m_uniqueID = RUNNING_ID.getAndIncrement();
+    private final Long m_uniqueID = RUNNING_ID.getAndIncrement();
 
     /**
      * A map with other buffers that may have written certain blob cells. We reference them by using the bufferID that
@@ -1911,7 +1912,7 @@ public class Buffer implements KNIMEStreamConstants {
      *
      * @return the unique ID of this buffer
      */
-    long getUniqueID() {
+    Long getUniqueID() {
         return m_uniqueID;
     }
 
