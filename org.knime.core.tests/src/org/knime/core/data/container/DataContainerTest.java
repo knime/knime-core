@@ -59,12 +59,8 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Assert;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -80,7 +76,6 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.ObjectToDataCellConverter;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
-import org.knime.core.data.util.memory.MemoryAlertSystemTest;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
@@ -712,14 +707,8 @@ public class DataContainerTest extends TestCase {
      */
     @Test(timeout = 5000)
     public void testWriteRead() throws IOException, CanceledExecutionException, InterruptedException {
-        // (1) create a spec and table
-        final DataContainer c = new DataContainer(SPEC_STR_INT_DBL, true);
-        IntStream
-            .range(0, 1000).mapToObj(i -> new DefaultRow(RowKey.createRowKey((long)i),
-                new StringCell(Integer.toString(i)), new IntCell(i), new DoubleCell(i + .5)))
-            .forEach(r -> c.addRowToTable(r));
-        c.close();
-        final ContainerTable writeTable = c.getBufferedTable();
+        // (1) create table
+        final ContainerTable writeTable = generateMediumSizedTable();
 
         // (2) create file to write to / read from and start monitoring file creation and deletion in temp dir
         final File file = FileUtil.createTempFile("testWriteStream", ".zip");
@@ -727,16 +716,7 @@ public class DataContainerTest extends TestCase {
 
         // wait for all asynchronous disk write threads to terminate such that they do not interfere with our
         // monitoring of file creation / deletion.
-        Future<?> voidTask = Buffer.ASYNC_EXECUTOR.submit(new Runnable() {
-            @Override
-            public void run() {
-            }
-        });
-        try {
-            voidTask.get();
-        } catch (ExecutionException e) {
-            // the void task should not be able to throw an ExecutionExecption
-        }
+        BufferTest.waitForBufferToBeFlushed(writeTable.getBuffer());
         try (WatchService watcher = FileSystems.getDefault().newWatchService()) {
             Path dir = FileUtil.getWorkflowTempDir().toPath();
             WatchKey key =
@@ -792,82 +772,28 @@ public class DataContainerTest extends TestCase {
     }
 
     /**
-     * Test that even medium-sized tables (larger then the container's maximum number of cells) are kept in memory. Also
-     * test that once the table has been evicted from memory, it is read back into memory on next iteration.
+     * Generate a small-sized table. Medium-sized means smaller than a container's maximum number of cells.
      *
-     * @throws InterruptedException thrown when the thread is unexpectedly interrupted during sleep.
+     * @return a small-sized table
      */
-    @Test(timeout = 2000)
-    public void testMediumSizedTables() throws InterruptedException {
-        // generate a medium-sized table and check that it is held in memory
-        final Buffer buffer = generateMediumSizedTable();
-        Assert.assertTrue("Recently generated medium-sized table not held in memory.", buffer.isHeldInMemory());
-
-        // generate more medium-sized tables that should eventually evict the first table from the LRU cache
-        for (int i = 0; i < BufferSettings.getDefault().getLRUCacheSize(); i++) {
-            generateMediumSizedTable();
+    static ContainerTable generateSmallSizedTable() {
+        // in particular, we simply instantiate a tiny container and add a slighlty larger number of rows to it
+        final DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, 20, false);
+        final int count = 5;
+        for (RowIterator it = generateRows(count); it.hasNext();) {
+            container.addRowToTable(it.next());
         }
-
-        // once evicted from the LRU cache, the table should only be weakly referenced and can be garbage-collected
-        while (buffer.isHeldInMemory()) {
-            // invoke garbage collection and hope that it collects weakly referenced tables
-            MemoryAlertSystemTest.forceGC();
-        }
-
-        // we should check that now that the table is no longer held in memory, it has actually been written to a file
-        Assert.assertTrue("Medium-sized table dropped from memory but not written to disk.", buffer.isFlushedToDisk());
-
-        // finally, we iterate over the table and make sure that it has been read back into memory
-        try (final CloseableRowIterator it = buffer.iterator();) {
-            while (it.hasNext()) {
-                it.next();
-            }
-        }
-        Assert.assertTrue("Medium-sized table not read back into memory from disk.", buffer.isHeldInMemory());
-        Assert.assertTrue("Previously flushed medium-sized table not flushed any more.", buffer.isFlushedToDisk());
-    }
-
-    /**
-     * Tests that when a memory alert is thrown while an in-memory table is being iterated over, that table is
-     * garbage-collected and iteration continues by reading the flushed table from disk.
-     *
-     * @throws InterruptedException thrown when the thread is unexpectedly interrupted during sleep
-     */
-    @Test(timeout = 2000)
-    public void testTableDroppedWhileIteratedOver() throws InterruptedException {
-        // generate a table, put it into the cache and wait for it being flushed to disk
-        final Buffer table = DataContainerTest.generateMediumSizedTable();
-        while (!table.isFlushedToDisk()) {
-            Thread.sleep(10);
-        }
-
-        final DataRow refRow = table.iterator().next();
-        try (final CloseableRowIterator iterator = table.iterator()) {
-
-            // send a memory alert and wait for the table to be garbage-collected
-            MemoryAlertSystem.getInstanceUncollected().sendMemoryAlert();
-            MemoryAlertSystemTest.forceGC();
-            while (table.isHeldInMemory()) {
-                MemoryAlertSystemTest.forceGC();
-                Thread.sleep(10);
-            }
-
-            // check that despite being garbage collected, the table can still be iterated over
-            final DataRow row = iterator.next();
-            Assert.assertEquals("Row key in row ", row.getKey(), refRow.getKey());
-            for (int j = 0; j < refRow.getNumCells(); j++) {
-                Assert.assertEquals("Cell " + j + " in Row ", refRow.getCell(j), row.getCell(j));
-            }
-        }
+        container.close();
+        return container.getBufferedTable();
     }
 
     /**
      * Generate a medium-sized table. Medium-sized means larger than a container's maximum number of cells, but smaller
      * than Java heap space.
      *
-     * @return a medium-sized tables
+     * @return a medium-sized table
      */
-    static Buffer generateMediumSizedTable() {
+    static ContainerTable generateMediumSizedTable() {
         // in particular, we simply instantiate a tiny container and add a slighlty larger number of rows to it
         final DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, 10, false);
         final int count = 20;
@@ -875,7 +801,7 @@ public class DataContainerTest extends TestCase {
             container.addRowToTable(it.next());
         }
         container.close();
-        return container.getBufferedTable().getBuffer();
+        return container.getBufferedTable();
     }
 
     static DataRow createRandomRow(final int index, final int colCount, final Random rand1,

@@ -494,4 +494,15 @@ public final class MemoryAlertSystem {
     public static MemoryAlertSystem getInstanceUncollected() {
         return IS_G1 ? INSTANCE_UNCOLLECTED : getInstance();
     }
+
+    /**
+     * Method for obtaining the number of currently registered listeners. For testing purposes only.
+     *
+     * @return the number of currently registered listeners
+     * @since 4.2
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static long getNumberOfListeners() {
+        return (long)INSTANCE.m_listeners.size() + INSTANCE_UNCOLLECTED.m_listeners.size();
+    }
 }

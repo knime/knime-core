@@ -75,7 +75,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -101,11 +100,11 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.data.container.BufferResource.BufferResourceRegistry;
 import org.knime.core.data.container.DCObjectOutputVersion2.BlockableDCObjectOutputVersion2;
 import org.knime.core.data.container.filter.FilterDelegateRowIterator;
 import org.knime.core.data.container.filter.TableFilter;
@@ -136,6 +135,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -541,13 +541,23 @@ public class Buffer implements KNIMEStreamConstants {
     private DataTableSpec m_spec;
 
     /**
-     * List of file iterators that look at this buffer. Need to close them when the node is reset and the file shall be
-     * deleted.
+     * A registry that holds open resources owned by iterators iterating over this buffer. These resources are usually
+     * released (and unregistered from the registry) when their auto-closeable owning iterators are closed. The purpose
+     * of this data structure is to release resources also when these iterators are not closed properly. To this end, it
+     * identifies resources whose owning iterators have been garbage-collected and releases such stale resources. In
+     * addition, when the buffer is cleared, all registered resources are released.
+     *
+     * Specifically, the BufferResources are held by owners and registered in this registry as follows:
+     *
+     * (1) any <code>BackIntoMemoryTableDroppers</code> owned by <code>FromListIterators</code> and created in
+     * <code>FromListIterator#setBackIntoMemoryIterator</code>, (2) any <code>TableStoreCloseableRowIterators</code>
+     * owned by <code>FromListFallBackFromFileIterators</code> and created in
+     * <code>FromListFallBackFromFileIterator#initFallBackFromFileIterator</code>, (3) a potential
+     * <code>TableStoreCloseableRowIterator</code> owned by the <code>BackIntoMemoryIterator</code> and created in
+     * <code>#iteratorWithFilter</code>, and (4) <code>TableStoreCloseableRowIterators</code> "owned" by itself and
+     * created in <code>#iteratorWithFilter</code>.
      */
-    private final WeakHashMap<TableStoreCloseableRowIterator, Object> m_openIteratorSet;
-
-    /** Dummy object for the file iterator map. */
-    private static final Object DUMMY = new Object();
+    private final BufferResourceRegistry m_openResources = new BufferResourceRegistry();
 
     /** Number of open file input streams on m_binFile. */
     private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
@@ -626,7 +636,6 @@ public class Buffer implements KNIMEStreamConstants {
         m_bufferSettings = settings;
         m_maxRowsInMem = maxRowsInMemory;
         m_lifecycle = m_bufferSettings.useLRU() ? new SoftRefLRULifecycle() : new MemorizeIfSmallLifecycle();
-        m_openIteratorSet = new WeakHashMap<>();
         CACHE.setLRUCacheSize(m_bufferSettings.getLRUCacheSize());
         /**
          * independent of the lifecycle, if maxRowsInMemory is zero, the buffer is expected to flush to disk (e.g, see
@@ -688,7 +697,6 @@ public class Buffer implements KNIMEStreamConstants {
         m_binFile = binFile;
         m_blobDir = blobDir;
         m_bufferID = bufferID;
-        m_openIteratorSet = new WeakHashMap<>();
         if (dataRepository == null) {
             LOGGER
                 .debug("no data repository set, using new instance of " + NotInWorkflowDataRepository.class.getName());
@@ -1626,12 +1634,15 @@ public class Buffer implements KNIMEStreamConstants {
 
             // Case 1: We don't have have the table in memory and want to iterate it back into memory.
             if (m_useBackIntoMemoryIterator) {
-                // the order of the following lines is very important!
                 m_useBackIntoMemoryIterator = false;
-                final BackIntoMemoryIterator backIntoMemoryIt = new BackIntoMemoryIterator(iterator(), size());
-                m_backIntoMemoryIteratorRef = new WeakReference<BackIntoMemoryIterator>(backIntoMemoryIt);
-                final CloseableRowIterator listIt =
-                    new FromListIterator(backIntoMemoryIt.getList(), backIntoMemoryIt, exec);
+                final TableStoreCloseableRowIterator tableStoreIt = m_outputReader.iterator();
+                tableStoreIt.setBuffer(this);
+                m_nrOpenInputStreams.incrementAndGet();
+                final BackIntoMemoryIterator backIntoMemoryIt = new BackIntoMemoryIterator(tableStoreIt, size());
+                m_openResources.register(tableStoreIt, backIntoMemoryIt);
+                m_backIntoMemoryIteratorRef = new WeakReference<>(backIntoMemoryIt);
+                final FromListIterator listIt = new FromListIterator(backIntoMemoryIt.getList(), exec);
+                listIt.setBackIntoMemoryIterator(backIntoMemoryIt);
                 return filter == null ? listIt : new FilterDelegateRowIterator(listIt, filter, size(), exec);
             }
 
@@ -1641,9 +1652,7 @@ public class Buffer implements KNIMEStreamConstants {
             // register the table store iterator with this buffer
             tableStoreIt.setBuffer(this);
             m_nrOpenInputStreams.incrementAndGet();
-            synchronized (m_openIteratorSet) {
-                m_openIteratorSet.put(tableStoreIt, DUMMY);
-            }
+            m_openResources.register(tableStoreIt, tableStoreIt);
             return tableStoreIt;
 
         } else {
@@ -1676,14 +1685,19 @@ public class Buffer implements KNIMEStreamConstants {
 
                 // Case 4: We are currently iterating the table back into memory and want to apply a filter.
                 else {
-                    return new FilterDelegateRowIterator(new FromListIterator(list, backIntoMemoryIt, exec), filter,
-                        size(), exec);
+                    final FromListIterator listIt = new FromListIterator(list, exec);
+                    listIt.setBackIntoMemoryIterator(backIntoMemoryIt);
+                    return new FilterDelegateRowIterator(listIt, filter, size(), exec);
                 }
 
             }
 
             // Case 5: We have at least parts of the table in memory and don't want to apply a filter.
-            return new FromListIterator(list, backIntoMemoryIt, exec);
+            final FromListIterator listIt = new FromListIterator(list, exec);
+            if (backIntoMemoryIt != null) {
+                listIt.setBackIntoMemoryIterator(backIntoMemoryIt);
+            }
+            return listIt;
         }
     }
 
@@ -1796,15 +1810,17 @@ public class Buffer implements KNIMEStreamConstants {
                 copy.initOutputWriter(tempFile);
             }
             int count = 1;
-            for (RowIterator it = iterator(); it.hasNext();) {
-                final BlobSupportDataRow row = (BlobSupportDataRow)it.next();
-                final int countCurrent = count;
-                exec.setProgress(count / (double)size(),
-                    () -> "Writing row " + countCurrent + " (\"" + row.getKey() + "\")");
-                exec.checkCanceled();
-                // make a deep copy of blobs if we have a version hop
-                copy.addRow(row, m_version < IVERSION, false);
-                count++;
+            try (CloseableRowIterator it = iterator()) {
+                while (it.hasNext()) {
+                    final BlobSupportDataRow row = (BlobSupportDataRow)it.next();
+                    final int countCurrent = count;
+                    exec.setProgress(count / (double)size(),
+                        () -> "Writing row " + countCurrent + " (\"" + row.getKey() + "\")");
+                    exec.checkCanceled();
+                    // make a deep copy of blobs if we have a version hop
+                    copy.addRow(row, m_version < IVERSION, false);
+                    count++;
+                }
             }
             synchronized (copy) {
                 copy.closeInternal();
@@ -1917,26 +1933,43 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
+     * Get the number of open input streams associated with this buffer. For testing purposes only.
+     *
+     * @return the number of open input streams
+     */
+    int getNrOpenInputStreams() {
+        return m_nrOpenInputStreams.get();
+    }
+
+    /**
+     * Get the number of open {@link BufferResource BufferResources} owned by non-garbage-collected
+     * {@link CloseableRowIterator CloseableRowIterators} iterating over this buffer. For testing purposes only.
+     *
+     * @return the number of open resources owned by iterators iterating over this buffer
+     */
+    int getNrOpenResources() {
+        return m_openResources.size();
+    }
+
+    /**
      * Clear the argument iterator (free the allocated resources.
      *
      * @param it The iterator
-     * @param removeFromHash Whether to remove from global hash.
      */
-    public synchronized void clearIteratorInstance(final TableStoreCloseableRowIterator it, final boolean removeFromHash) {
-        String closeMes =
-                (m_binFile != null) ? "Closing input stream on \"" + m_binFile.getAbsolutePath() + "\", " : "";
+    public synchronized void clearIteratorInstance(final TableStoreCloseableRowIterator it,
+        final boolean removeFromHash) {
+        final String closeMes =
+            (m_binFile != null) ? String.format("Closing input stream on \"%s\", ", m_binFile.getAbsolutePath()) : "";
         try {
             if (it.performClose()) {
                 m_nrOpenInputStreams.decrementAndGet();
-                logDebug(closeMes + m_nrOpenInputStreams + " remaining", null);
+                logDebug(String.format("%s%s remaining", closeMes, m_nrOpenInputStreams), null);
                 if (removeFromHash) {
-                    synchronized (m_openIteratorSet) {
-                        m_openIteratorSet.remove(it);
-                    }
+                    m_openResources.unregister(it);
                 }
             }
         } catch (IOException ioe) {
-            logDebug(closeMes + "failed!", ioe);
+            logDebug(String.format("%sfailed!", closeMes), ioe);
         }
     }
 
@@ -1951,12 +1984,8 @@ public class Buffer implements KNIMEStreamConstants {
                 BufferTracker.getInstance().bufferCleared(this);
                 m_listWhileAddRow = null;
                 CACHE.invalidate(this);
+                m_openResources.releaseResourcesAndClear();
                 if (m_binFile != null) {
-                    synchronized (m_openIteratorSet) {
-                        m_openIteratorSet.keySet().stream().filter(f -> f != null)
-                        .forEach(f -> clearIteratorInstance(f, false));
-                        m_openIteratorSet.clear();
-                    }
                     if (m_outputWriter != null) {
                         try {
                             m_outputWriter.close();
@@ -2085,7 +2114,7 @@ public class Buffer implements KNIMEStreamConstants {
      * FromListIterators and is only weak-referenced in the outer Buffer class. This way, we make sure that the
      * reference on m_list held by the BackIntoMemoryIterator is dropped when FromListIterators are closed.
      */
-    private final class BackIntoMemoryIterator {
+    private final class BackIntoMemoryIterator extends CloseableRowIterator {
 
     	/**
     	 * The iterator for reading additional rows from disk.
@@ -2108,14 +2137,20 @@ public class Buffer implements KNIMEStreamConstants {
          */
         private BackIntoMemoryIterator(final CloseableRowIterator iterator, final long size) {
             m_iterator = iterator;
-            m_listWhileBackIntoMemory = new ArrayList<BlobSupportDataRow>((int)size);
+            m_listWhileBackIntoMemory = new ArrayList<>((int)size);
         }
 
-        private boolean hasNext() {
-            return m_iterator.hasNext();
+        @Override
+        public boolean hasNext() {
+            final boolean hasNext = m_iterator.hasNext();
+            if (!hasNext) {
+                m_iterator.close();
+            }
+            return hasNext;
         }
 
-        private DataRow next() {
+        @Override
+        public DataRow next() {
             DataRow next = m_iterator.next();
             if (!hasNext()) {
                 // ... we put the table back into the cache
@@ -2127,6 +2162,11 @@ public class Buffer implements KNIMEStreamConstants {
 
         private List<BlobSupportDataRow> getList() {
             return m_listWhileBackIntoMemory;
+        }
+
+        @Override
+        public void close() {
+            m_iterator.close();
         }
 
     }
@@ -2159,13 +2199,19 @@ public class Buffer implements KNIMEStreamConstants {
 
         @Override
         public boolean hasNext() {
-            return m_nextIndex <= m_toIndex;
+            final boolean hasNext = m_nextIndex <= m_toIndex;
+            if (!hasNext) {
+                closeFallBackFromFileIterator();
+            }
+            return hasNext;
         }
 
         void initFallBackFromFileIterator() {
             m_fallBackFromFileIterator =
                 m_outputReader.iteratorWithFilter(TableFilter.filterRangeOfRows(m_nextIndex, m_toIndex), m_exec);
             m_fallBackFromFileIterator.setBuffer(Buffer.this);
+            m_openResources.register(m_fallBackFromFileIterator, this);
+            m_nrOpenInputStreams.incrementAndGet();
         }
 
         @Override
@@ -2194,7 +2240,14 @@ public class Buffer implements KNIMEStreamConstants {
 
         @Override
         public void close() {
+            closeFallBackFromFileIterator();
             m_nextIndex = (int) size();
+        }
+
+        private void closeFallBackFromFileIterator() {
+            if (m_fallBackFromFileIterator != null) {
+                m_fallBackFromFileIterator.close();
+            }
         }
 
     }
@@ -2221,7 +2274,8 @@ public class Buffer implements KNIMEStreamConstants {
      * Memory alert listener that will - on memory alert - prevent a FromListIterator to read some table further back
      * into memory.
      */
-    private static final class BackIntoMemoryIteratorDropper extends MemoryAlertListener {
+    private static final class BackIntoMemoryIteratorDropper extends BufferMemoryAlertListener
+        implements BufferResource {
 
         private final WeakReference<FromListIterator> m_iteratorRef;
 
@@ -2238,6 +2292,11 @@ public class Buffer implements KNIMEStreamConstants {
             }
             return true;
         }
+
+        @Override
+        public final void releaseResource() {
+            unregister();
+        }
     }
 
     /**
@@ -2248,18 +2307,21 @@ public class Buffer implements KNIMEStreamConstants {
      */
     private final class FromListIterator extends FromListFallBackFromFileIterator {
 
+        private BackIntoMemoryIteratorDropper m_memoryAlertListener;
+
         private BackIntoMemoryIterator m_backIntoMemoryIterator;
 
-        private FromListIterator(final List<BlobSupportDataRow> list,
-            final BackIntoMemoryIterator backIntoMemoryIterator, final ExecutionMonitor exec) {
-            super(list, 0, (int) size() - 1, exec);
-            m_backIntoMemoryIterator = backIntoMemoryIterator;
-            MemoryAlertSystem.getInstanceUncollected()
-                .addListener(new BackIntoMemoryIteratorDropper(FromListIterator.this));
+        private FromListIterator(final List<BlobSupportDataRow> list, final ExecutionMonitor exec) {
+            super(list, 0, (int)size() - 1, exec);
         }
 
-        private void dropBackIntoMemoryIterator() {
-            m_backIntoMemoryIterator = null;
+        void setBackIntoMemoryIterator(final BackIntoMemoryIterator backIntoMemoryIterator) {
+            CheckUtils.checkState(m_backIntoMemoryIterator == null, "Back into memory iterator has already been set.");
+            CheckUtils.checkArgumentNotNull(backIntoMemoryIterator, "Back into memory iterator must not be null.");
+            m_backIntoMemoryIterator = backIntoMemoryIterator;
+            m_memoryAlertListener = new BackIntoMemoryIteratorDropper(this);
+            m_memoryAlertListener.register();
+            m_openResources.register(m_memoryAlertListener, this);
         }
 
         @Override
@@ -2289,9 +2351,33 @@ public class Buffer implements KNIMEStreamConstants {
                 // once we've read all rows back into memory, ...
                 if (++m_nextIndex >= size()) {
                 	assert !backIntoMemoryIterator.hasNext() : "File iterator returns more rows than buffer contains";
-                    m_backIntoMemoryIterator = null;
+                	dropBackIntoMemoryIterator();
                 }
                 return next;
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            final boolean hasNext = super.hasNext();
+            if (!hasNext) {
+                dropBackIntoMemoryIterator();
+            }
+            return hasNext;
+        }
+
+        @Override
+        public void close() {
+            super.close();
+            dropBackIntoMemoryIterator();
+        }
+
+        private void dropBackIntoMemoryIterator() {
+            if (m_backIntoMemoryIterator != null) {
+                m_backIntoMemoryIterator = null;
+                m_memoryAlertListener.unregister();
+                m_openResources.unregister(m_memoryAlertListener);
+                m_memoryAlertListener = null;
             }
         }
 
@@ -2490,11 +2576,24 @@ public class Buffer implements KNIMEStreamConstants {
         return true;
     }
 
+    private abstract static class BufferMemoryAlertListener extends MemoryAlertListener {
+
+        private final MemoryAlertSystem m_mas = MemoryAlertSystem.getInstanceUncollected();
+
+        final void register() {
+            m_mas.addListener(this);
+        }
+
+        final void unregister() {
+            m_mas.removeListener(this);
+        }
+    }
+
     /**
      * Background task that will write the buffer data on memory alert. This is kept as static inner class in order to
      * allow for a garbage collection of the outer class.
      */
-    private static final class BufferFlusher extends MemoryAlertListener {
+    private static final class BufferFlusher extends BufferMemoryAlertListener {
 
         private final WeakReference<Buffer> m_bufferRef;
 
@@ -2507,7 +2606,30 @@ public class Buffer implements KNIMEStreamConstants {
             final Buffer buffer = m_bufferRef.get();
             if (buffer != null) {
                 ASYNC_EXECUTOR.submit(new ASyncWriteCallable(buffer));
-                LOGGER.debug("Writing " + buffer.size() + " rows in order to free memory.");
+                LOGGER.debugWithFormat("Writing %d rows in order to free memory.", buffer.size());
+            }
+            return true;
+        }
+    }
+
+    /**
+     * Background task that will invalidate the buffer in the cache on memory alert. This is kept as static inner class
+     * in order to allow for a garbage collection of the outer class.
+     */
+    private static final class CacheInvalidator extends BufferMemoryAlertListener {
+
+        private final WeakReference<Buffer> m_bufferRef;
+
+        CacheInvalidator(final Buffer buffer) {
+            m_bufferRef = new WeakReference<>(buffer);
+        }
+
+        @Override
+        protected boolean memoryAlert(final MemoryAlert alert) {
+            final Buffer buffer = m_bufferRef.get();
+            if (buffer != null) {
+                CACHE.invalidate(buffer);
+                LOGGER.debugWithFormat("Invalidating buffer with %d rows in order to free memory.", buffer.size());
             }
             return true;
         }
@@ -2582,7 +2704,7 @@ public class Buffer implements KNIMEStreamConstants {
      */
     final class MemorizeIfSmallLifecycle implements Lifecycle {
 
-        private MemoryAlertListener m_memoryAlertListener;
+        private BufferMemoryAlertListener m_memoryAlertListener;
 
         @Override
         public void onAddRowToLargeList() {
@@ -2596,7 +2718,7 @@ public class Buffer implements KNIMEStreamConstants {
             assert Thread.holdsLock(Buffer.this);
 
             m_memoryAlertListener = new BufferFlusher(Buffer.this);
-            MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
+            m_memoryAlertListener.register();
         }
 
         @Override
@@ -2604,7 +2726,7 @@ public class Buffer implements KNIMEStreamConstants {
             assert Thread.holdsLock(Buffer.this);
 
             if (m_memoryAlertListener != null) {
-                MemoryAlertSystem.getInstance().removeListener(m_memoryAlertListener);
+                m_memoryAlertListener.unregister();
                 m_memoryAlertListener = null;
             }
         }
@@ -2627,13 +2749,7 @@ public class Buffer implements KNIMEStreamConstants {
         public void onAllRowsReadBackIntoMemory() {
             synchronized (Buffer.this) {
                 if (m_memoryAlertListener == null) {
-                    m_memoryAlertListener = new MemoryAlertListener() {
-                        @Override
-                        protected boolean memoryAlert(final MemoryAlert alert) {
-                            CACHE.invalidate(Buffer.this);
-                            return true;
-                        }
-                    };
+                    m_memoryAlertListener = new CacheInvalidator(Buffer.this);
                 }
             }
         }
@@ -2660,7 +2776,7 @@ public class Buffer implements KNIMEStreamConstants {
          */
         private boolean m_fitsIntoMemory = false;
 
-        private MemoryAlertListener m_memoryAlertListener;
+        private BufferMemoryAlertListener m_memoryAlertListener;
 
         /**
          * The object that represent the pending task of writing a full table from memory to disk.
@@ -2681,7 +2797,7 @@ public class Buffer implements KNIMEStreamConstants {
 
             if (size() <= m_maxRowsInMem) {
                 m_memoryAlertListener = new BufferFlusher(Buffer.this);
-                MemoryAlertSystem.getInstanceUncollected().addListener(m_memoryAlertListener);
+                m_memoryAlertListener.register();
             } else {
                 /**
                  * We'd like to flush early so that we can garbage-collect if memory becomes critical and we don't run out
@@ -2703,7 +2819,7 @@ public class Buffer implements KNIMEStreamConstants {
             assert Thread.holdsLock(Buffer.this);
 
             if (m_memoryAlertListener != null) {
-                MemoryAlertSystem.getInstanceUncollected().removeListener(m_memoryAlertListener);
+                m_memoryAlertListener.unregister();
                 m_memoryAlertListener = null;
             }
 

@@ -69,6 +69,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.Buffer;
+import org.knime.core.data.container.BufferResource;
 import org.knime.core.data.container.CellClassInfo;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
@@ -382,7 +383,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
      * the hard disk. It provides additional methods for registering the iterator with a {@link Buffer} and for closing
      * the file input stream provided by the underlying table store.
      */
-    public static abstract class TableStoreCloseableRowIterator extends CloseableRowIterator {
+    public abstract static class TableStoreCloseableRowIterator extends CloseableRowIterator implements BufferResource {
         private Buffer m_buffer;
 
         /**
@@ -407,6 +408,11 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
          * @throws IOException if anything goes wrong during the close attempt
          */
         public abstract boolean performClose() throws IOException;
+
+        @Override
+        public void releaseResource() {
+            m_buffer.clearIteratorInstance(this, false);
+        }
     }
 
 }
