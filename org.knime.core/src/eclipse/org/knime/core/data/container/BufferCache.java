@@ -118,6 +118,21 @@ final class BufferCache {
      */
     private final ReferenceQueue<List<BlobSupportDataRow>> m_weakCacheRefQueue = new ReferenceQueue<>();
 
+    /**
+     * We should remove soft-referenced tables from the LRU cache on memory alert. Otherwise, the LRU cache would block
+     * memory despite memory alerts. This could lead to a scenario where new buffers are always flushed to disk and old
+     * buffers are kept in the LRU cache indefinitely.
+     */
+    private final MemoryAlertListener m_memoryAlertListener = new MemoryAlertListener() {
+        @Override
+        protected boolean memoryAlert(final MemoryAlert alert) {
+            synchronized (BufferCache.this) {
+                m_LRUCache.clear();
+            }
+            return false;
+        }
+    };
+
     /** Some counters for instrumentation / statistics. */
     private long m_nTables = 0;
 
@@ -136,6 +151,10 @@ final class BufferCache {
     private long m_nMisses = 0;
 
     private long m_timeOfLastLog = System.currentTimeMillis();
+
+    BufferCache() {
+        MemoryAlertSystem.getInstanceUncollected().addListener(m_memoryAlertListener);
+    }
 
     private void logStatistics() {
         while (m_weakCacheRefQueue.poll() != null) {
@@ -195,21 +214,8 @@ final class BufferCache {
     }
 
     private void putIntoLRUCache(final long uniqueId, final List<BlobSupportDataRow> list) {
-        final MemoryAlertSystem mas = MemoryAlertSystem.getInstanceUncollected();
-        if (!mas.isMemoryLow()) {
+        if (!MemoryAlertSystem.getInstanceUncollected().isMemoryLow()) {
             m_LRUCache.put(uniqueId, new SoftReference<List<BlobSupportDataRow>>(list));
-            /**
-             * We should remove soft-referenced tables from the LRU cache on memory alert. Otherwise, the LRU cache
-             * would block memory despite memory alerts. This could lead to a scenario where new buffers are always
-             * flushed to disk and old buffers are kept in the LRU cache indefinitely.
-             */
-            mas.addListener(new MemoryAlertListener() {
-                @Override
-                protected boolean memoryAlert(final MemoryAlert alert) {
-                    m_LRUCache.remove(uniqueId);
-                    return true;
-                }
-            });
         }
     }
 
