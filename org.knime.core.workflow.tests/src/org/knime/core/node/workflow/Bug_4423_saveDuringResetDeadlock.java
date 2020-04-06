@@ -57,6 +57,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.ExecutionMonitor;
@@ -99,6 +100,7 @@ public class Bug_4423_saveDuringResetDeadlock extends WorkflowTestCase {
     }
 
     @Test
+    @Ignore("x-server issues")
     public void testExecAfterLoad() throws Exception {
         final Pointer<Exception> throwablePointer = Pointer.newInstance(null);
 
