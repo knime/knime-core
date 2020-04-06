@@ -159,18 +159,20 @@ public final class PortTypeRegistry {
         }
 
         final String poClassName = e.getAttribute("objectClass");
-        try {
-            PortType pt = new PortType(getObjectClass(poClassName).get(), false, e.getAttribute("name"), color,
-                Boolean.parseBoolean(e.getAttribute("hidden")));
-            m_allPortTypes.put(pt.getPortObjectClass(), pt);
-
-            pt = new PortType(getObjectClass(poClassName).get(), true, e.getAttribute("name"), color,
-                Boolean.parseBoolean(e.getAttribute("hidden")));
-            m_allOptionalPortTypes.put(pt.getPortObjectClass(), pt);
-        } catch (Exception ex) {
-            NodeLogger.getLogger(getClass())
-                .error(String.format("Could not create port type for '%s' from plug-in '%s': %s", poClassName,
-                    e.getNamespaceIdentifier(), ex.getMessage()), ex);
+        final Optional<Class<? extends PortObject>> poClassOpt = getObjectClass(poClassName);
+        if (poClassOpt.isPresent()) {
+            final Class<? extends PortObject> poClass = poClassOpt.get();
+            final boolean isHidden = Boolean.parseBoolean(e.getAttribute("hidden"));
+            final String name = e.getAttribute("name");
+            // The initialization of a PortType can throw a NoClassDefFoundError, see AP-13925.
+            try {
+                m_allPortTypes.put(poClass, new PortType(poClass, false, name, color, isHidden));
+                m_allOptionalPortTypes.put(poClass, new PortType(poClass, true, name, color, isHidden));
+            } catch (NoClassDefFoundError ex) {
+                NodeLogger.getLogger(getClass())
+                    .error(String.format("Could not create port type for '%s' from plug-in '%s': %s", poClassName,
+                        e.getNamespaceIdentifier(), ex.getMessage()), ex);
+            }
         }
     }
 
