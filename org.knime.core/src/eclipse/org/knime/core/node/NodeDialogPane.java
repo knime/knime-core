@@ -477,7 +477,7 @@ public abstract class NodeDialogPane {
             m_logger.error("Error loading model settings", exRef.get());
         }
 
-        // add the flow variables tab if flow variables exist
+        // add the flow variables tab
         addFlowVariablesTab();
         m_flowVariablesModelChanged = false;
         initFlowVariablesTab(modelSettings, flowVariablesSettings);
@@ -1448,12 +1448,10 @@ public abstract class NodeDialogPane {
      * @param nodeSettings The (user) settings of the node.
      * @param variableSettings The flow variable settings.
      */
-    @SuppressWarnings("unchecked")
-    private void initFlowVariablesTab(final NodeSettingsRO nodeSettings,
-            final NodeSettingsRO variableSettings) {
+    private void initFlowVariablesTab(final NodeSettingsRO nodeSettings, final NodeSettingsRO variableSettings) {
         m_flowVariableTab.setErrorLabel("");
         m_flowVariableTab.setVariableSettings(nodeSettings, variableSettings, m_flowObjectStack,
-                                                                     Collections.EMPTY_SET);
+                                                                     Collections.emptySet());
         for (final FlowVariableModel m : m_flowVariablesModelList) {
             final ConfigEditTreeNode configNode = m_flowVariableTab.findTreeNodeForChild(m.getKeys());
             if (configNode != null) {
@@ -1488,8 +1486,7 @@ public abstract class NodeDialogPane {
         } finally {
             NodeContext.removeLastContext();
         }
-        m_flowVariableTab.setVariableSettings(settings, variableSettings, m_flowObjectStack,
-                                              m_flowVariablesModelList);
+        m_flowVariableTab.setVariableSettings(settings, variableSettings, m_flowObjectStack, m_flowVariablesModelList);
     }
 
     /** Updates the warning message below the panel to inform the user
@@ -1588,7 +1585,7 @@ public abstract class NodeDialogPane {
             m_errorLabel = new JLabel();
             m_errorLabel.setForeground(Color.RED);
             add(m_errorLabel, BorderLayout.NORTH);
-            scrPanel.getViewport().addComponentListener(new ComponentAdapter() {
+            m_scrollPane.getViewport().addComponentListener(new ComponentAdapter() {
                @Override
                public void componentResized(final ComponentEvent ce) {
                    m_tree.setViewportWidth(ce.getComponent().getWidth());
