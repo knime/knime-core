@@ -98,6 +98,9 @@ public abstract class NodeFactory<T extends NodeModel> {
         Manipulator,
         /** A visualizing node. */
         Visualizer,
+        /** A widget node.
+         * @since 4.2*/
+        Widget,
         /** A metanode. */
         Meta,
         /** Start node of a loop. */
@@ -111,7 +114,7 @@ public abstract class NodeFactory<T extends NodeModel> {
          * @since 2.8*/
         ScopeEnd,
         /** A node contributing to quick/web form.
-         * @deprecated use {@link #Configuration} instead */
+         * @deprecated use {@link #Widget} instead */
         @Deprecated
         QuickForm,
         /** A node contributing a configuration input to a component dialog.

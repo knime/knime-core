@@ -46,10 +46,14 @@
  */
 package org.knime.core.node.wizard;
 
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.web.WebViewContent;
 
 /**
+ * A node that provides a JS-view (that also can be displayed in the WebPortal) which is used to interact with the user
+ * (very often to let one input parameters etc.). Also referred to as 'Widget' (preferred node type is
+ * {@link NodeType#Widget}.
  *
  * @author Christian Albrecht, KNIME AG, Zurich, Switzerland
  * @param <T> requires {@link NodeModel} implementing {@link WizardNode}
