@@ -199,7 +199,11 @@ public class ImagePortObject extends AbstractPortObject {
             throws IOException, CanceledExecutionException {
         ZipEntry nextEntry = in.getNextEntry();
         String contentClName = nextEntry.getName();
-        m_content = getRegisteredImageContentFactories().get(contentClName).create(in);
+        ImageContentFactory imageContentFactory = getRegisteredImageContentFactories().get(contentClName);
+        if (imageContentFactory == null) {
+            throw new IOException("No image content factory for class name '" + contentClName + "' registered.");
+        }
+        m_content = imageContentFactory.create(in);
         in.close();
         m_spec = (ImagePortObjectSpec)spec;
     }
