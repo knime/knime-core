@@ -129,25 +129,25 @@ final class WorkflowCipher implements Cloneable {
             return true;
         }
         String hint = getPasswordHint();
+        boolean isPromptForComponent = prompt.isPromptForComponent();
         if (hint == null || hint.length() == 0) {
-            hint = "Metanode is protected by password: ";
+            hint = (isPromptForComponent ? "Component" : "Metanode") + " is protected by password: ";
         }
         boolean result;
-        LOGGER.debug("Prompting user for metanode password, hint \""
-                + hint + "\"");
+        LOGGER.debug("Prompting user for " + (isPromptForComponent ? "component" : "metanode") + " password, hint \""
+            + hint + "\"");
         try {
             String enteredPass = prompt.prompt(hint, null);
             byte[] digest = hashPassword(enteredPass);
-            while (enteredPass == null || !Arrays.equals(
-                    m_passwordDigest, digest)) {
-                enteredPass = prompt.prompt(hint,
-                        "The entered password is wrong.");
+            while (enteredPass == null || !Arrays.equals(m_passwordDigest, digest)) {
+                enteredPass = prompt.prompt(hint, "The entered password is wrong.");
                 digest = hashPassword(enteredPass);
             }
-            LOGGER.debug("Entered password is correct; metanode unlocked");
+            LOGGER.debug(
+                "Entered password is correct; " + (isPromptForComponent ? "component" : "metanode") + " unlocked");
             result = true;
         } catch (PromptCancelled cancel) {
-            LOGGER.debug("Metanode password prompt was cancelled");
+            LOGGER.debug((isPromptForComponent ? "Component" : "Metanode") + " password prompt was cancelled");
             result = false;
         } catch (NoSuchAlgorithmException e) {
             LOGGER.error("Unable to check password", e);

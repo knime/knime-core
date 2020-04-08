@@ -64,6 +64,15 @@ public class WorkflowCipherPrompt {
         throw new PromptCancelled();
     }
 
+    /**
+     * @return isPromptForComponent whether the prompt is for a component (<code>true</code>) or a metanode
+     *         (<code>false</code>)
+     * @since 4.2
+     */
+    public boolean isPromptForComponent() {
+        return false;
+    }
+
     /** Thrown to indicate that user gives up entering the password. */
     @SuppressWarnings("serial")
     public static final class PromptCancelled extends Exception {
