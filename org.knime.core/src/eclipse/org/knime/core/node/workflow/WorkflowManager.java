@@ -935,10 +935,14 @@ public final class WorkflowManager extends NodeContainer
      * @since 4.1
      */
     public boolean isComponentProjectWFM() {
-        return getDirectNCParent() instanceof SubNodeContainer && ((SubNodeContainer)getDirectNCParent()).isProject();
+        return isComponentWFM() && ((SubNodeContainer)getDirectNCParent()).isProject();
     }
 
-   /**
+    private boolean isComponentWFM() {
+        return getDirectNCParent() instanceof SubNodeContainer;
+    }
+
+    /**
      * Creates new metanode from a persistor instance.
      *
      * @param persistor to read from
@@ -7438,6 +7442,12 @@ public final class WorkflowManager extends NodeContainer
                     }
                 }
                 break;
+            case LockStatus:
+                // also notify direct parent in case of a component wfm
+                // (e.g. in order to update the lock icon on the component in the workflow editor)
+                if (isComponentWFM()) {
+                    ((SubNodeContainer)getDirectNCParent()).notifyNodePropertyChangedListener(property);
+                }
             default:
                 // ignore children notification
         }
