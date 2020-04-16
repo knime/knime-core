@@ -93,15 +93,21 @@ public class BufferedDataTableIteratorWithFilterTest {
             new DataColumnSpecCreator("boolean", BooleanCell.TYPE).createSpec());
 
     // keep only rows with an index between 14 and 16
-    private static final TableFilter FILTER_MOST = (new TableFilter.Builder())
-            .withFromRowIndex(14).withToRowIndex(16).build();
+    private static final TableFilter FILTER_MOST =
+        (new TableFilter.Builder()).withFromRowIndex(14).withToRowIndex(16).build();
 
     private static final NodeProgressMonitor PROGRESS = new DefaultNodeProgressMonitor();
 
+    private static final VirtualParallelizedChunkPortObjectInNodeFactory FACTORY =
+        new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0]);
+
+    private static final Node NODE = new Node((NodeFactory)FACTORY);
+
+    private static final NotInWorkflowDataRepository NEW_INSTANCE = NotInWorkflowDataRepository.newInstance();
+
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static final ExecutionContext EXEC = new ExecutionContext(PROGRESS,
-        new Node((NodeFactory)new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0])),
-        SingleNodeContainer.MemoryPolicy.CacheSmallInMemory, NotInWorkflowDataRepository.newInstance());
+    private static final ExecutionContext EXEC =
+        new ExecutionContext(PROGRESS, NODE, SingleNodeContainer.MemoryPolicy.CacheSmallInMemory, NEW_INSTANCE);
 
     private static BufferedDataTable createTable(final int rowCount, final int indexOfFirstRow,
         final boolean keepInMemory) {
@@ -159,8 +165,11 @@ public class BufferedDataTableIteratorWithFilterTest {
         }
     }
 
-    /** See AP-12239 -- iterating an empty 'concatenate table' will throw exception.
-     * @throws Exception ... */
+    /**
+     * See AP-12239 -- iterating an empty 'concatenate table' will throw exception.
+     *
+     * @throws Exception ...
+     */
     @Test
     public void testIterateEmptyConcatenateTableWithFilter() throws Exception {
         BufferedDataTable table1 = createTable(0, 0, false);
@@ -190,8 +199,11 @@ public class BufferedDataTableIteratorWithFilterTest {
         }
     }
 
-    /** See AP-12239 -- iterating an empty 'concatenate table' will throw exception.
-     * @throws Exception ... */
+    /**
+     * See AP-12239 -- iterating an empty 'concatenate table' will throw exception.
+     *
+     * @throws Exception ...
+     */
     @Test
     public void testIterateConcatenateTableWithFilter() throws Exception {
         BufferedDataTable table1 = createTable(3, 0, false);

@@ -86,12 +86,19 @@ import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPor
  */
 public class KnowsRowCountTableIteratorWithFilterTest {
 
+
+    private static final NotInWorkflowDataRepository REPO = NotInWorkflowDataRepository.newInstance();
+
     private static final NodeProgressMonitor PROGRESS = new DefaultNodeProgressMonitor();
 
+    private static final VirtualParallelizedChunkPortObjectInNodeFactory FACTORY =
+        new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0]);
+
+    private static final Node NODE = new Node((NodeFactory)FACTORY);
+
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static final ExecutionContext EXEC = new ExecutionContext(PROGRESS,
-        new Node((NodeFactory)new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0])),
-        SingleNodeContainer.MemoryPolicy.CacheSmallInMemory, NotInWorkflowDataRepository.newInstance());
+    private static final ExecutionContext EXEC =
+        new ExecutionContext(PROGRESS, NODE, SingleNodeContainer.MemoryPolicy.CacheSmallInMemory, REPO);
 
     private static BufferedDataTable createTable(final int columnsFrom, final int columnsTo, final int offset,
         final int rowsFrom, final int rowsTo) {

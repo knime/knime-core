@@ -44,6 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -113,6 +115,7 @@ public class Bug_5630_DelayedNodeViewNotification extends WorkflowTestCase {
     @Test
     public void testExecuteAndClose() throws Exception {
         NativeNodeContainer crossTabNode = (NativeNodeContainer)findNodeContainer(m_crossTab2);
+        assertNotNull(crossTabNode);
         NodeView<?> view = (NodeView<?>)crossTabNode.getView(0);
         Node.invokeOpenView(view, "Test View");
         ViewUtils.invokeLaterInEDT(new Runnable() {
