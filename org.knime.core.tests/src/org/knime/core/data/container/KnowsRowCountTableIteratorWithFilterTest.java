@@ -86,19 +86,16 @@ import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPor
  */
 public class KnowsRowCountTableIteratorWithFilterTest {
 
-
     private static final NotInWorkflowDataRepository REPO = NotInWorkflowDataRepository.newInstance();
 
     private static final NodeProgressMonitor PROGRESS = new DefaultNodeProgressMonitor();
 
-    private static final VirtualParallelizedChunkPortObjectInNodeFactory FACTORY =
-        new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0]);
-
-    private static final Node NODE = new Node((NodeFactory)FACTORY);
-
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static final ExecutionContext EXEC =
-        new ExecutionContext(PROGRESS, NODE, SingleNodeContainer.MemoryPolicy.CacheSmallInMemory, REPO);
+    private static final ExecutionContext exec() {
+        return new ExecutionContext(PROGRESS,
+            new Node((NodeFactory)new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0])),
+            SingleNodeContainer.MemoryPolicy.CacheSmallInMemory, REPO);
+    }
 
     private static BufferedDataTable createTable(final int columnsFrom, final int columnsTo, final int offset,
         final int rowsFrom, final int rowsTo) {
@@ -114,7 +111,7 @@ public class KnowsRowCountTableIteratorWithFilterTest {
                     .toArray(DataCell[]::new)))//
             .toArray(DataRow[]::new);
 
-        final BufferedDataContainer cont = EXEC.createDataContainer(spec);
+        final BufferedDataContainer cont = exec().createDataContainer(spec);
 
         // write the data
         for (final DataRow r : rows) {
@@ -149,7 +146,8 @@ public class KnowsRowCountTableIteratorWithFilterTest {
 
         final BufferedDataTable leftTable = createTable(0, 8, 16, 0, 16);
         final BufferedDataTable rightTable = createTable(8, 16, 16, 0, 16);
-        final BufferedDataTable concatenateTable = EXEC.createJoinedTable(leftTable, rightTable, EXEC);
+        ExecutionContext exec = exec();
+        final BufferedDataTable concatenateTable = exec.createJoinedTable(leftTable, rightTable, exec);
 
         final TableFilter filter = createFilter(4, 12, 4, 12);
 
@@ -174,12 +172,13 @@ public class KnowsRowCountTableIteratorWithFilterTest {
 
         final BufferedDataTable table = createTable(0, 8, 8, 0, 16);
 
+        ExecutionContext exec = exec();
         ColumnRearranger rearranger = new ColumnRearranger(table.getSpec());
         rearranger.permute(new int[]{7, 6, 5, 4, 3, 2, 1, 0});
-        final BufferedDataTable rearrangedTable = EXEC.createColumnRearrangeTable(table, rearranger, EXEC);
+        final BufferedDataTable rearrangedTable = exec.createColumnRearrangeTable(table, rearranger, exec);
         rearranger = new ColumnRearranger(rearrangedTable.getSpec());
         rearranger.permute(new int[]{7, 6, 5, 4, 3, 2, 1, 0});
-        final BufferedDataTable reRearrangedTable = EXEC.createColumnRearrangeTable(rearrangedTable, rearranger, EXEC);
+        final BufferedDataTable reRearrangedTable = exec.createColumnRearrangeTable(rearrangedTable, rearranger, exec);
 
         final TableFilter filter = createFilter(2, 6, 4, 12);
         compareTables(table, reRearrangedTable, filter);
@@ -199,7 +198,8 @@ public class KnowsRowCountTableIteratorWithFilterTest {
 
         ColumnRearranger rearranger = new ColumnRearranger(table.getSpec());
         rearranger.remove(4, 5, 6, 7);
-        final BufferedDataTable shortenedTable = EXEC.createColumnRearrangeTable(table, rearranger, EXEC);
+        ExecutionContext exec = exec();
+        final BufferedDataTable shortenedTable = exec.createColumnRearrangeTable(table, rearranger, exec);
 
         rearranger = new ColumnRearranger(shortenedTable.getSpec());
         final BufferedDataTable appendTable = createTable(4, 8, 8, 0, 16);
@@ -235,7 +235,7 @@ public class KnowsRowCountTableIteratorWithFilterTest {
 
         });
 
-        final BufferedDataTable restoredTable = EXEC.createColumnRearrangeTable(shortenedTable, rearranger, EXEC);
+        final BufferedDataTable restoredTable = exec.createColumnRearrangeTable(shortenedTable, rearranger, exec);
 
         compareTables(table, restoredTable, createFilter(2, 6, 4, 12));
 
@@ -259,7 +259,7 @@ public class KnowsRowCountTableIteratorWithFilterTest {
         final BufferedDataTable topTable = createTable(0, 16, 16, 0, 8);
         final BufferedDataTable bottomTable = createTable(0, 16, 16, 8, 16);
         final BufferedDataTable concatenateTable =
-            EXEC.createConcatenateTable(new ExecutionMonitor(PROGRESS), topTable, bottomTable);
+            exec().createConcatenateTable(new ExecutionMonitor(PROGRESS), topTable, bottomTable);
 
         compareTables(fullTable, concatenateTable, createFilter(4, 12, 4, 12));
 
