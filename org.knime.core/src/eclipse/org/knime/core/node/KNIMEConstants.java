@@ -61,6 +61,10 @@ import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.ImageIcon;
@@ -562,6 +566,21 @@ public final class KNIMEConstants {
 
     /** The global thread pool from which all threads should be taken. */
     public static final ThreadPool GLOBAL_THREAD_POOL;
+
+    /**
+     * A single-threaded executor for asynchronous disk I/O threads.
+     *
+     * @since 4.2
+     * @noreference This field is not intended to be referenced by clients.
+     */
+    public static final ExecutorService IO_EXECUTOR = Executors.newSingleThreadExecutor(new ThreadFactory() {
+        private final AtomicInteger m_threadCount = new AtomicInteger();
+
+        @Override
+        public Thread newThread(final Runnable r) {
+            return new Thread(r, "KNIME-DISK_IO-" + m_threadCount.incrementAndGet());
+        }
+    });
 
     /** Global flag indicating whether assertions are enabled or disabled. */
     public static final boolean ASSERTIONS_ENABLED;
