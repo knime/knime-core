@@ -23,6 +23,11 @@
 						<extraRequirements>
 							<requirement>
 								<type>eclipse-feature</type>
+								<id>org.knime.features.workbench</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
 								<id>org.knime.features.core</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>

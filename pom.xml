@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -55,6 +54,119 @@
 				<module>org.knime.features.testing.core</module>
 				<module>org.knime.core.workflow.tests</module>
 			</modules>
+
+			<repositories>
+				<repository>
+					<id>p2-knime-base</id>
+					<layout>p2</layout>
+					<url>${knime.base.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-workbench</id>
+					<layout>p2</layout>
+					<url>${knime.workbench.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-expressions</id>
+					<layout>p2</layout>
+					<url>${knime.expressions.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-js-core</id>
+					<layout>p2</layout>
+					<url>${knime.js.core.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-js-base</id>
+					<layout>p2</layout>
+					<url>${knime.js.base.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-svg</id>
+					<layout>p2</layout>
+					<url>${knime.svg.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-javasnippet</id>
+					<layout>p2</layout>
+					<url>${knime.javasnippet.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-dev</id>
+					<layout>p2</layout>
+					<url>${knime.dev.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-product</id>
+					<layout>p2</layout>
+					<url>${knime.product.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-server-client</id>
+					<layout>p2</layout>
+					<url>${knime.server.client.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-json</id>
+					<layout>p2</layout>
+					<url>${knime.json.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-ensembles</id>
+					<layout>p2</layout>
+					<url>${knime.ensembles.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-distance</id>
+					<layout>p2</layout>
+					<url>${knime.distance.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-streaming</id>
+					<layout>p2</layout>
+					<url>${knime.streaming.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-datageneration</id>
+					<layout>p2</layout>
+					<url>${knime.datageneration.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-xml</id>
+					<layout>p2</layout>
+					<url>${knime.xml.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-python</id>
+					<layout>p2</layout>
+					<url>${knime.python.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-filehandling</id>
+					<layout>p2</layout>
+					<url>${knime.filehandling.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-database</id>
+					<layout>p2</layout>
+					<url>${knime.database.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-kerberos</id>
+					<layout>p2</layout>
+					<url>${knime.kerberos.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-textprocessing</id>
+					<layout>p2</layout>
+					<url>${knime.textprocessing.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-virtual</id>
+					<layout>p2</layout>
+					<url>${knime.virtual.p2}</url>
+				</repository>
+			</repositories>
 		</profile>
 	</profiles>
 
