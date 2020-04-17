@@ -76,7 +76,13 @@ public interface FileSystemBrowser {
 
         }
 
-        protected int getJFileChooserCode() {
+        /**
+         * Returns the JFileChooserCode corresponding to this FileSelectionMode.
+         *
+         * @return the corresponding JFileChooserCode
+         * @since 4.2
+         */
+        public int getJFileChooserCode() {
             return m_jFileChooserCode;
         }
 
@@ -107,7 +113,13 @@ public interface FileSystemBrowser {
 
         }
 
-        protected int getJFileChooserCode() {
+        /**
+         * Returns the JFileChooserCode corresponding to this DialogType.
+         *
+         * @return the corresponding JFileChooserCode
+         * @since 4.2
+         */
+        public int getJFileChooserCode() {
             return m_jFileChooserCode;
         }
 
