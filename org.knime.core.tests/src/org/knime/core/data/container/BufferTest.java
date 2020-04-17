@@ -56,6 +56,7 @@ import org.junit.Test;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.util.memory.MemoryAlertSystemTest;
+import org.knime.core.node.KNIMEConstants;
 
 /**
  * Test cases for the class {@link Buffer}.
@@ -159,7 +160,7 @@ public class BufferTest {
      * @throws InterruptedException thrown when the thread is unexpectedly interrupted during sleep
      */
     static void waitForBufferToBeFlushed(final Buffer buffer) throws InterruptedException {
-        Future<?> voidTask = Buffer.ASYNC_EXECUTOR.submit(() -> {
+        Future<?> voidTask = KNIMEConstants.IO_EXECUTOR.submit(() -> {
         });
         try {
             voidTask.get();
