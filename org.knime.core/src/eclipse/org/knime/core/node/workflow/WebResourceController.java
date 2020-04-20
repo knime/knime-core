@@ -370,12 +370,21 @@ public abstract class WebResourceController {
      * @since 3.4
      */
     protected boolean isSubnodeViewAvailable(final NodeID subnodeId) {
-        return isSubnodeViewAvailable(subnodeId, m_manager);
+        return isWizardPage(subnodeId, m_manager);
     }
 
-    private boolean isSubnodeViewAvailable(final NodeID subnodeId, final WorkflowManager wfm) {
+    /**
+     * Checks whether a node (i.e. component) represents a wizard page.
+     *
+     * @param componentId the id of the node to check
+     * @param wfm the workflow manager that contains the node to check
+     * @return <code>true</code> if the node for the given id represents a wizard page, otherwise <code>false</code>
+     *
+     * @since 4.2
+     */
+    public static boolean isWizardPage(final NodeID componentId, final WorkflowManager wfm) {
         // potentially null when queried from contained metanode
-        NodeContainer sourceNC = wfm.getWorkflow().getNode(subnodeId);
+        NodeContainer sourceNC = wfm.getWorkflow().getNode(componentId);
         // only consider nodes that are...SubNodes and...
         if (!(sourceNC instanceof SubNodeContainer)) {
             return false;
@@ -400,7 +409,7 @@ public abstract class WebResourceController {
             // also consider nested SubNodes which might have views to display
             Map<NodeID, SubNodeContainer> sncSet = getSubnodeContainers(subNodeWFM);
             for (NodeID id : sncSet.keySet()) {
-                if (isSubnodeViewAvailable(id, subNodeWFM)) {
+                if (isWizardPage(id, subNodeWFM)) {
                     allInactive = false;
                     break;
                 }
@@ -459,7 +468,7 @@ public abstract class WebResourceController {
                 subWfm.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false).entrySet().stream()
                     .forEach(e -> viewMap.put(NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()), e.getValue()));
                 Map<NodeID, SubNodeContainer> nestedSubs = getSubnodeContainers(subWfm);
-                nestedSubs.entrySet().stream().filter(e -> isSubnodeViewAvailable(e.getKey(), subWfm))
+                nestedSubs.entrySet().stream().filter(e -> isWizardPage(e.getKey(), subWfm))
                     .forEach(e -> viewMap.put(NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()), e.getValue()));
                 pageLayout = LayoutUtil.createDefaultLayout(viewMap);
             } catch (IOException ex) {
@@ -525,7 +534,7 @@ public abstract class WebResourceController {
         Map<NodeID, SubNodeContainer> subnodeContainers = getSubnodeContainers(subNC.getWorkflowManager());
         for (Entry<NodeID, SubNodeContainer> entry : subnodeContainers.entrySet()) {
             SubNodeContainer snc = entry.getValue();
-            if (isSubnodeViewAvailable(snc.getID(), subWFM)) {
+            if (isWizardPage(snc.getID(), subWFM)) {
                 NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(m_manager.getID(), snc.getID());
                 sncMap.put(idSuffix, snc);
                 findNestedViewNodes(snc, resultMap, infoMap, sncMap, initialHiliteHandlerSet);

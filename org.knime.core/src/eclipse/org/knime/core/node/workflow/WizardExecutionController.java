@@ -165,6 +165,16 @@ public final class WizardExecutionController extends WebResourceController imple
         }
     }
 
+    /**
+     * @return the id of the component representing the current wizard page
+     * @throws IllegalStateException if there is no current wizard page (as per {@link #hasCurrentWizardPage()})
+     * @since 4.2
+     */
+    public NodeID getCurrentWizardPageNodeID() {
+        CheckUtils.checkState(hasCurrentWizardPage(), "No current wizard page");
+        return m_waitingSubnodes.get(0);
+    }
+
     /** ...
      * @return ...
      * @deprecated Use {@link #hasCurrentWizardPage()} instead.
