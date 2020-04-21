@@ -45,6 +45,8 @@
  */
 package org.knime.core.quickform.out;
 
+import org.knime.core.node.dialog.DialogNode;
+import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.quickform.QuickFormNode;
@@ -56,7 +58,9 @@ import org.knime.core.util.node.quickform.out.AbstractQuickFormOutElement;
  * @since 2.6
  *
  * @noimplement Not yet stable API.
+ * @deprecated Use {@link DialogNode} or {@link OutputNode} instead
  */
+@Deprecated
 public interface QuickFormOutputNode extends QuickFormNode {
 
     /** Filter used in {@link WorkflowManager#findExecutedNodes(Class, NodeModelFilter)}.
