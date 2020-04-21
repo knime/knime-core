@@ -64,6 +64,1662 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.ADocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.ADocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.AbstractView">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.AbstractView"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.BDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.BDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.BrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.BrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.DescriptionDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.DescriptionDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.FullDescriptionDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.FullDescriptionDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.H3Document">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.H3Document"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.H4Document">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.H4Document"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.HDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.HDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.IDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.IDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.InPortDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.InPortDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.IntroDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.IntroDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.KnimeNodeDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.KnimeNodeDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.LiDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.LiDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.NameDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.NameDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.OlDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.OlDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.OptionDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.OptionDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.OutPortDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.OutPortDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.PDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.PDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.PortsDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.PortsDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.PreDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.PreDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.ShortDescriptionDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.ShortDescriptionDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.SubDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.SubDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.SupDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.SupDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.TabDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.TabDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.TableDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.TableDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.TdDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.TdDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.ThDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.ThDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.TrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.TrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.TtDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.TtDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.UDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.UDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.UlDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.UlDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.ViewDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.ViewDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.ViewsDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.ViewsDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.ADocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.ADocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.AbstractView">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.AbstractView"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.BDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.BDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.BrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.BrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.Description">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Description"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.ExtendedDescription">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.ExtendedDescription"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.FullDescription">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.FullDescription"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.H3Document">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.H3Document"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.H4Document">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.H4Document"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.HDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.HDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.IDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.IDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.InPort">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.InPort"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.Intro">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Intro"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.KnimeNode">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.KnimeNode"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.KnimeNodeDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.KnimeNodeDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.LiDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.LiDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.MinimalTags">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.MinimalTags"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.NodeType">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.OlDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.OlDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.Option">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Option"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.OutPort">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.OutPort"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.PDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.PDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.Port">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Port"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.Ports">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Ports"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.PreDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.PreDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.SubDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.SubDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.SupDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.SupDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.Tab">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Tab"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.TableDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.TableDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.TdDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.TdDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.TextTags">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.TextTags"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.ThDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.ThDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.TrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.TrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.TtDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.TtDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.UDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.UDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.UlDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.UlDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.View">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.View"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v212.Views">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Views"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.ADocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.ADocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.AbstractView">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.AbstractView"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.BDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.BDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.BrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.BrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.FullDescriptionDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.FullDescriptionDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.H3Document">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.H3Document"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.H4Document">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.H4Document"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.HDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.HDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.IDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.IDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.InPortDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.InPortDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.IntroDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.IntroDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.KnimeNodeDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.KnimeNodeDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.LiDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.LiDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.NameDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.NameDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.OlDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.OlDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.OptionDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.OptionDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.OutPortDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.OutPortDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.PDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.PDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.PortsDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.PortsDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.PreDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.PreDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.ShortDescriptionDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.ShortDescriptionDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.SubDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.SubDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.SupDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.SupDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.TabDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.TabDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.TableDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.TableDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.TdDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.TdDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.ThDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.ThDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.TrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.TrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.TtDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.TtDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.UDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.UDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.UlDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.UlDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.ViewDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.ViewDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v28.ViewsDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.ViewsDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.ADocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.ADocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.AbstractView">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.AbstractView"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.BDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.BDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.BrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.BrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.Description">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.Description"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.ExtendedDescription">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.ExtendedDescription"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.FullDescription">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.FullDescription"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.H3Document">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.H3Document"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.H4Document">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.H4Document"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.HrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.HrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.IDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.IDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.InPort">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.InPort"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.Intro">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.Intro"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.KnimeNode">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.KnimeNode"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.KnimeNodeDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.KnimeNodeDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.LiDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.LiDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.MinimalTags">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.MinimalTags"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.NodeType">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.NodeType"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.OlDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.OlDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.Option">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.Option"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.OutPort">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.OutPort"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.PDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.PDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.Port">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.Port"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.Ports">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.Ports"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.PreDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.PreDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.SubDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.SubDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.SupDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.SupDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.Tab">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.Tab"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.TableDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.TableDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.TdDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.TdDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.TextTags">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.TextTags"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.ThDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.ThDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.TrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.TrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.TtDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.TtDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.UDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.UDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.UlDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.UlDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.View">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.View"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v31.Views">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.Views"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.ADocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.ADocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.BDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.BDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.BrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.BrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.FullDescriptionDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.FullDescriptionDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.H3Document">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.H3Document"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.H4Document">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.H4Document"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.HDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.HDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.IDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.IDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.InPortDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.InPortDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.IntroDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.IntroDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.KnimeNodeDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.KnimeNodeDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.LiDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.LiDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.NameDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.NameDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.OlDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.OptionDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OptionDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.OutPortDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OutPortDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.PDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.PDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.PortsDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.PortsDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.PreDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.PreDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.ShortDescriptionDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.ShortDescriptionDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.SubDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.SubDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.SupDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.SupDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.TabDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.TabDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.TableDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.TableDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.TdDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.TdDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.ThDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.ThDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.TrDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.TrDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.TtDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.TtDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.UDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.UlDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.ViewDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.ViewDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.ViewsDocument">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.ViewsDocument"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.ADocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.ADocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.BDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.BDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.BrDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.BrDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.FullDescriptionDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.FullDescriptionDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.H3DocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.H3DocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.H4DocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.H4DocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.HDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.HDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.IDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.IDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.InPortDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.InPortDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.IntroDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.IntroDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.KnimeNodeDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.KnimeNodeDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.LiDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.LiDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.NameDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.NameDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.OlDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.OptionDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OptionDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.OutPortDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OutPortDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.PDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.PDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.PortsDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.PortsDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.PreDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.PreDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.ShortDescriptionDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.ShortDescriptionDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.SubDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.SubDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.SupDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.SupDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.TabDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.TabDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.TableDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.TableDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.TdDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.TdDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.ThDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.ThDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.TrDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.TrDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.TtDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.TtDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.UDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.UlDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.ViewDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.ViewDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.node2012.impl.ViewsDocumentImpl">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.ViewsDocumentImpl"/>
+                <message_argument value="org.knime.core_4.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/cache/WindowCacheTable.java" type="org.knime.core.data.cache.WindowCacheTable">
         <filter id="576725006">
             <message_arguments>
