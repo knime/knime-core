@@ -132,7 +132,13 @@ public abstract class NodeFactory<T extends NodeModel> {
         /** @since 2.10 */
         VirtualIn,
         /** @since 2.10 */
-        VirtualOut
+        VirtualOut,
+        /**
+         * Container nodes (input and output).
+         * Framework use only.
+         * @since 4.2
+         */
+        Container
     }
 
     private static final Pattern ICON_PATH_PATTERN = Pattern.compile("[^\\./]+/\\.\\./");

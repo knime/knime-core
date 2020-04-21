@@ -131,6 +131,7 @@
       <xs:enumeration value="Unknown" />
       <xs:enumeration value="ScopeStart" />
       <xs:enumeration value="ScopeEnd" />
+      <xs:enumeration value="Container" />
     </xs:restriction>
   </xs:simpleType>
   
