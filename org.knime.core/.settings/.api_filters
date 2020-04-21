@@ -151,6 +151,23 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowCipherPrompt.java" type="org.knime.core.node.workflow.WorkflowCipherPrompt">
+        <filter comment="fix backported from master" id="1141899266">
+            <message_arguments>
+                <message_argument value="4.2"/>
+                <message_argument value="4.1"/>
+                <message_argument value="isPromptForComponent()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="addNodeAndApplyContext(NodeFactory&lt;?&gt;, NodeCreationContext)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/artifacts/WorkflowConfigArtifactsGenerator.java" type="org.knime.core.node.workflow.artifacts.WorkflowConfigArtifactsGenerator">
         <filter id="623939596">
             <message_arguments>
@@ -179,14 +196,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.util.GUIDeadlockDetector"/>
                 <message_argument value="createStacktrace()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
-                <message_argument value="addNodeAndApplyContext(NodeFactory&lt;?&gt;, NodeCreationContext)"/>
             </message_arguments>
         </filter>
     </resource>
