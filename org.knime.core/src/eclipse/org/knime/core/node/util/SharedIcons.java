@@ -67,6 +67,9 @@ public enum SharedIcons {
     /**
      * Actions
      */
+    /** Red error sign
+     * @since 4.2**/
+    ERROR("icons/error.png"),
     /** Funnel **/
     FILTER("icons/filter.png"),
     /** Logical and operation sign
@@ -79,9 +82,12 @@ public enum SharedIcons {
     HELP("icons/help.png"),
     /** Warning sign filled **/
     WARNING("icons/warning.png"),
+    /** Yellow warning sign
+     * @since 4.2**/
+    WARNING_YELLOW("icons/warning_yellow.png"),
     /** Info sign filled **/
     INFO("icons/info.png"),
-    /** Info balloon - approximately like SWT's SWT.ICON_INFORMATION 
+    /** Info balloon - approximately like SWT's SWT.ICON_INFORMATION
      * @since 4.2**/
     INFO_BALLOON("icons/info_balloon.png"),
     /** Info sign outline **/
