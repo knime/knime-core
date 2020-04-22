@@ -96,6 +96,8 @@ public final class WizardExecutionController extends WebResourceController imple
      */
     private final List<NodeID> m_waitingSubnodes;
 
+    private boolean m_hasExecutionStarted = false;
+
     /** Created from workflow.
      * @param manager ...
      */
@@ -175,6 +177,15 @@ public final class WizardExecutionController extends WebResourceController imple
         return m_waitingSubnodes.get(0);
     }
 
+    /**
+     * @return <code>true</code> if execution has been started, i.e. {@link #stepFirst()} has been called, otherwise
+     *         <code>false</code>
+     * @since 4.2
+     */
+    public boolean hasExecutionStarted() {
+        return m_hasExecutionStarted;
+    }
+
     /** ...
      * @return ...
      * @deprecated Use {@link #hasCurrentWizardPage()} instead.
@@ -240,6 +251,7 @@ public final class WizardExecutionController extends WebResourceController imple
     private void stepFirstInternal() {
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
+        m_hasExecutionStarted = true;
         manager.executeAll();
     }
 
@@ -325,6 +337,7 @@ public final class WizardExecutionController extends WebResourceController imple
             m_manager.executeUpToHere(id);
         }
         // in case of back-stepping we need to mark all nodes again (for execution)
+        m_hasExecutionStarted = true;
         m_manager.executeAll();
     }
 
