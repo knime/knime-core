@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.knime.core.node.NodeLogger;
@@ -287,7 +288,7 @@ class Workflow {
             final NodeID id, final boolean skipWFM) {
         // assemble unsorted list of successors
         HashSet<NodeID> inclusionList = new HashSet<NodeID>();
-        completeSet(inclusionList, id, -1);
+        getDepthFirstListOfNodeAndSuccessors(inclusionList, id, -1, nc -> false, false, false);
         // and then get all successors which are part of this list in a nice
         // BFS order
         LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes = new LinkedHashMap<NodeID, Set<Integer>>();
@@ -372,40 +373,68 @@ class Workflow {
         return bfsSortedNodes;
     }
 
-    /** Complete set of nodes depth-first starting with node id. If the given
-     * node is already in the set, nothing happens. Note that this function
-     * does not pursue connections leaving this workflow - we will only add
-     * our own ID (the workflow) as "last" node in the chain.
+    /**
+     * Complete set of nodes depth-first starting with node id. If the given node is already in the set, nothing
+     * happens. Note that this function does not pursue connections leaving this workflow - we will only add our own ID
+     * (the workflow) as "last" node in the chain.
      *
      * @param nodes set of nodes to be completed
      * @param id of node to start search from
-     * @param index of port the incoming connection connected to
-     *   (useful when start node is a metanode!)
+     * @param incomingPortIndex index of port the incoming connection connected to (useful when start node is a
+     *            metanode!)
+     * @param stopCondition if the condition evaluates to <code>true</code> for a given node, the node will be added but
+     *            none it's successors, never <code>null</code>
+     * @param includePerfectSuccessorsOnly a perfect successor is a node whose predecessors are all part of provided
+     *            node set. If this parameter is <code>true</code>, only perfect successors will be included. If
+     *            <code>false</code> nodes with at least one predecessor in the node set will be included.
+     * @param handleMetaNodeAsSingleNode if <code>true</code> metanodes are regarded as single nodes, i.e. the metanode
+     *            predecessors are always regarded as connected to the metanode successors no matter how the metanode's
+     *            workflow looks like. If <code>false</code>, the metanode's workflow is considered to determine wether
+     *            predecessors and successors are actually connected (through the metanode)
      */
-    private void completeSet(final HashSet<NodeID> nodes, final NodeID id, final int incomingPortIndex) {
-        if (nodes.add(id)) {  // only if id was not already contained in set!
+    void getDepthFirstListOfNodeAndSuccessors(final Set<NodeID> nodes, final NodeID id, final int incomingPortIndex,
+        final Predicate<NodeContainer> stopCondition, final boolean includePerfectSuccessorsOnly,
+        final boolean handleMetaNodeAsSingleNode) {
+        if (nodes.add(id)) { // only if id was not already contained in set!
             NodeContainer thisNode = m_nodes.get(id);
+            if (stopCondition.test(thisNode)) {
+                //stop adding the successors at this point
+                return;
+            }
             for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
                 NodeID nextNodeID = cc.getDest();
                 if (!nextNodeID.equals(getID())) {
+                    if (includePerfectSuccessorsOnly) {
+                        // check whether all predecessor nodes are in the current list of nodes
+                        // if not, skip the node
+                        if (!m_connectionsByDest.get(nextNodeID).stream()
+                            .allMatch(predCC -> nodes.contains(predCC.getSource()))) {
+                            continue;
+                        }
+                    }
+                    boolean addNextNode;
                     // avoid to follow any connections leaving the workflow!
-                    if (thisNode instanceof SingleNodeContainer) {
-                        // easy - just add normal nodes
-                        completeSet(nodes, nextNodeID, cc.getDestPort());
-                    } else {
-                        assert thisNode instanceof WorkflowManager;
+                    if (thisNode instanceof WorkflowManager && !handleMetaNodeAsSingleNode) {
                         WorkflowManager wfm = (WorkflowManager)thisNode;
                         // not so easy - we need to find out who is connected
                         // through this WFM (if we have a port index, of course)
                         if (incomingPortIndex < 0) {
                             // TODO check for unconnected metaoutports?
-                            completeSet(nodes, nextNodeID, cc.getDestPort());
+                            addNextNode = true;
                         } else {
-                            Set<Integer> outports = wfm.getWorkflow().connectedOutPorts(cc.getDestPort());
+                            Set<Integer> outports = wfm.getWorkflow().connectedOutPorts(incomingPortIndex);
                             if (outports.contains(cc.getSourcePort())) {
-                                completeSet(nodes, nextNodeID, cc.getDestPort());
+                                addNextNode = true;
+                            } else {
+                                addNextNode = false;
                             }
                         }
+                    } else {
+                        addNextNode = true;
+                    }
+                    if (addNextNode) {
+                        getDepthFirstListOfNodeAndSuccessors(nodes, nextNodeID, cc.getDestPort(), stopCondition,
+                            includePerfectSuccessorsOnly, handleMetaNodeAsSingleNode);
                     }
                 } else {
                     // make sure the WFM itself is in the list (if reached)
@@ -429,7 +458,7 @@ class Workflow {
             if (!nextNodeID.equals(getID())
                     && outPortIndices.contains(cc.getSourcePort())) {
                 // avoid to follow any connections leaving the workflow!
-                completeSet(nodes, nextNodeID, cc.getDestPort());
+                getDepthFirstListOfNodeAndSuccessors(nodes, nextNodeID, cc.getDestPort(), nc -> false, false, false);
             }
         }
     }
@@ -940,7 +969,8 @@ class Workflow {
                 // avoid to follow any connections leaving the workflow!
                 if (thisNode instanceof SingleNodeContainer) {
                     // easy - just add normal nodes
-                    completeSet(nodes, prevNodeID, cc.getSourcePort());
+                    getDepthFirstListOfNodeAndSuccessors(nodes, prevNodeID, cc.getSourcePort(), nc -> false, false,
+                        false);
                 } else {
                     assert thisNode instanceof WorkflowManager;
                     WorkflowManager wfm = (WorkflowManager)thisNode;
