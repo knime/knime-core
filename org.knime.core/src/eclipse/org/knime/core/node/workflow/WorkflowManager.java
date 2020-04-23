@@ -9040,10 +9040,13 @@ public final class WorkflowManager extends NodeContainer
             getConnectionContainers().stream().forEach(c -> c.cleanup());
             if (m_tmpDir != null) {
                 // delete the flow temp dir that we created
-                KNIMEConstants.IO_EXECUTOR.submit(() -> {
-                    if (m_tmpDir.isDirectory() && !FileUtil.deleteRecursively(m_tmpDir)) {
-                        LOGGER.infoWithFormat("Could not delete temporary directory for workflow %s at %s", getName(),
-                            m_tmpDir);
+                KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (m_tmpDir.isDirectory() && !FileUtil.deleteRecursively(m_tmpDir)) {
+                            LOGGER.info(
+                                "Could not delete temporary directory for workflow " + getName() + " at " + m_tmpDir);
+                        }
                     }
                 });
             }

@@ -78,8 +78,11 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
@@ -396,6 +399,17 @@ public class Buffer implements KNIMEStreamConstants {
 
     /** A cache for holding tables in memory. */
     private static final BufferCache CACHE = new BufferCache();
+
+    /** A single-threaded executor for asynchronous disk I/O threads. */
+    static final ExecutorService ASYNC_EXECUTOR = Executors.newSingleThreadExecutor(new ThreadFactory() {
+        private final AtomicInteger m_threadCount = new AtomicInteger();
+
+        /** {@inheritDoc} */
+        @Override
+        public Thread newThread(final Runnable r) {
+            return new Thread(r, "KNIME-BackgroundTableWriter-" + m_threadCount.incrementAndGet());
+        }
+    });
 
     /**
      * Hash used to reduce the overhead of reading a blob cell over and over again. Useful in cases where a blob is
@@ -2591,7 +2605,7 @@ public class Buffer implements KNIMEStreamConstants {
         protected boolean memoryAlert(final MemoryAlert alert) {
             final Buffer buffer = m_bufferRef.get();
             if (buffer != null) {
-                KNIMEConstants.IO_EXECUTOR.submit(new ASyncWriteCallable(buffer));
+                ASYNC_EXECUTOR.submit(new ASyncWriteCallable(buffer));
                 LOGGER.debugWithFormat("Writing %d rows in order to free memory.", buffer.size());
             }
             return true;
@@ -2786,12 +2800,12 @@ public class Buffer implements KNIMEStreamConstants {
                 m_memoryAlertListener.register();
             } else {
                 /**
-                 * We'd like to flush early so that we can garbage-collect if memory becomes critical and we don't run
-                 * out of memory. At the same time, we'd like to flush late so that we don't interfere with I/O tasks in
-                 * the node generating this table. In this implementation, we flush as soon as possible once the buffer
-                 * has been closed (and the node likely has terminated).
+                 * We'd like to flush early so that we can garbage-collect if memory becomes critical and we don't run out
+                 * of memory. At the same time, we'd like to flush late so that we don't interfere with I/O tasks in the
+                 * node generating this table. In this implementation, we flush as soon as possible once the buffer has been
+                 * closed (and the node likely has terminated).
                  */
-                m_asyncAddFuture = KNIMEConstants.IO_EXECUTOR.submit(new ASyncWriteCallable(Buffer.this));
+                m_asyncAddFuture = ASYNC_EXECUTOR.submit(new ASyncWriteCallable(Buffer.this));
             }
         }
 
