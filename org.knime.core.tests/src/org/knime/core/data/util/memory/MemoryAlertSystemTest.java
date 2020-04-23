@@ -53,6 +53,8 @@ import static org.junit.Assert.assertThat;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -81,6 +83,11 @@ public class MemoryAlertSystemTest {
      */
     @Before
     public void checkAvailableMemory() throws Exception {
+        for (MemoryAlertSystem mas : new LinkedHashSet<>(Arrays.asList(
+            MemoryAlertSystem.getInstance(), MemoryAlertSystem.getInstanceUncollected()))) {
+            mas.sendMemoryAlert();
+        }
+        Thread.sleep(1000);
         forceGC();
         for (int i = 0; i < 10 && MemoryAlertSystem.getInstance().isMemoryLow(); i++) {
             forceGC();
