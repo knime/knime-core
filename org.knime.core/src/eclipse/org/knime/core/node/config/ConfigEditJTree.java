@@ -93,7 +93,7 @@ public class ConfigEditJTree extends JTree {
 
     // Part of implementing AP-11595 featured, for a moment in time, an attempt to fill the width; that functionality
     //      is enabled or disabled by this flag.
-    static final boolean ROW_SHOULD_FILL_WIDTH = true;
+    static final boolean ROW_SHOULD_FILL_WIDTH = false;
 
     /** Fallback model. */
     private static final ConfigEditTreeModel EMPTY_MODEL = ConfigEditTreeModel.create(new NodeSettings("empty"));
