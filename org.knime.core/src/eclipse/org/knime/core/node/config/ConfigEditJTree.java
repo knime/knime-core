@@ -147,31 +147,33 @@ public class ConfigEditJTree extends JTree {
     public void setViewportWidth(final int w) {
         m_visibleWidth = w - m_childIndentSum;
 
-        synchronized (m_instantiatedTriggerDueToMissedTrain) {
-            final boolean createTrigger;
-            if (m_modelRefreshTrigger != null) {
-                createTrigger = !m_modelRefreshTrigger.retrigger();
-                if (createTrigger) {
-                    m_instantiatedTriggerDueToMissedTrain.set(true);
+        if (ROW_SHOULD_FILL_WIDTH) {
+            synchronized (m_instantiatedTriggerDueToMissedTrain) {
+                final boolean createTrigger;
+                if (m_modelRefreshTrigger != null) {
+                    createTrigger = !m_modelRefreshTrigger.retrigger();
+                    if (createTrigger) {
+                        m_instantiatedTriggerDueToMissedTrain.set(true);
+                    }
+                } else {
+                    createTrigger = true;
                 }
-            } else {
-                createTrigger = true;
-            }
 
-            if (createTrigger) {
-                final Runnable r = () -> {
-                    SwingUtilities.invokeLater(() -> {
-                        getModel().forceModelRefresh(ConfigEditJTree.this);
+                if (createTrigger) {
+                    final Runnable r = () -> {
+                        SwingUtilities.invokeLater(() -> {
+                            getModel().forceModelRefresh(ConfigEditJTree.this);
 
-                        synchronized (m_instantiatedTriggerDueToMissedTrain) {
-                            if (!m_instantiatedTriggerDueToMissedTrain.getAndSet(false)) {
-                                m_modelRefreshTrigger = null;
+                            synchronized (m_instantiatedTriggerDueToMissedTrain) {
+                                if (!m_instantiatedTriggerDueToMissedTrain.getAndSet(false)) {
+                                    m_modelRefreshTrigger = null;
+                                }
                             }
-                        }
-                    });
-                };
-                m_modelRefreshTrigger = new RetriggerableDelayedRunnable(r, 200);
-                KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(m_modelRefreshTrigger);
+                        });
+                    };
+                    m_modelRefreshTrigger = new RetriggerableDelayedRunnable(r, 200);
+                    KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(m_modelRefreshTrigger);
+                }
             }
         }
     }

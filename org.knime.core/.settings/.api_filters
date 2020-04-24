@@ -183,6 +183,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/config/ConfigEditJTree.java" type="org.knime.core.node.config.ConfigEditJTree">
+        <filter id="336658481">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.config.ConfigEditJTree"/>
+                <message_argument value="MINIMUM_ROW_WIDTH"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/config/ConfigEditTreeNodePanel.java" type="org.knime.core.node.config.ConfigEditTreeNodePanel">
         <filter id="338722907">
             <message_arguments>

@@ -103,7 +103,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
 
     private static final int MINIMUM_HEIGHT = 24;
     private static final Dimension LABEL_MINIMUM_SIZE = new Dimension(MINIMUM_LABEL_WIDTH, MINIMUM_HEIGHT);
-    private static final Dimension VALUE_COMBOBOX_SIZE = new Dimension(COMBOBOX_WIDTH, MINIMUM_HEIGHT);
+    private static final Dimension VALUE_INPUTS_SIZE = new Dimension(COMBOBOX_WIDTH, MINIMUM_HEIGHT);
 
     private static final ComboBoxElement EMPTY_COMBOBOX_ELEMENT = new ComboBoxElement(null);
     private static final Icon ICON_UNKNOWN = DataValue.UTILITY.getIcon();
@@ -169,9 +169,9 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_keyLabel.setMinimumSize(LABEL_MINIMUM_SIZE);
         m_valueComboBoxModel = new DefaultComboBoxModel<>();
         m_valueComboBox = new JComboBox<>(m_valueComboBoxModel);
-        m_valueComboBox.setMinimumSize(VALUE_COMBOBOX_SIZE);
-        m_valueComboBox.setPreferredSize(VALUE_COMBOBOX_SIZE);
-        m_valueComboBox.setSize(VALUE_COMBOBOX_SIZE);
+        m_valueComboBox.setMinimumSize(VALUE_INPUTS_SIZE);
+        m_valueComboBox.setPreferredSize(VALUE_INPUTS_SIZE);
+        m_valueComboBox.setSize(VALUE_INPUTS_SIZE);
         m_valueComboBox.setToolTipText(" "); // enable tooltip;
         m_valueComboBox.setRenderer(ComboBoxRenderer.INSTANCE);
         final FocusListener l = new FocusAdapter() {
@@ -188,6 +188,9 @@ public class ConfigEditTreeNodePanel extends JPanel {
             }
         });
         m_exposeAsVariableField = new JTextField(12);
+        if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
+            m_exposeAsVariableField.setPreferredSize(VALUE_INPUTS_SIZE);
+        }
         m_exposeAsVariableField.addFocusListener(l);
 
         add(m_keyLabel);
@@ -275,6 +278,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         }
     }
 
+    @SuppressWarnings("unused") // ROW_SHOULD_FILL_WIDTH being false triggers Eclipse here, but not above... ??
     @Override
     public void setBounds(final int x, final int y, final int width, final int height) {
         int widthToUse = width;
@@ -336,7 +340,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 match = cbe;
             }
         }
-        m_valueComboBox.setSize(VALUE_COMBOBOX_SIZE);
+        m_valueComboBox.setSize(VALUE_INPUTS_SIZE);
         if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
             m_valueComboBox.setMaximumSize(m_valueComboBox.getPreferredSize());
         }
