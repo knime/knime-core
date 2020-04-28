@@ -18,13 +18,22 @@ try {
 	        knimetools.defaultTychoBuild('org.knime.update.core')
         },
         'Testing: Linux': {
-             runIntegratedWorkflowTests('ubuntu18.04 && workflow-tests')
+            node("ubuntu18.04 && workflow-tests") {
+                checkout scm
+                knimetools.runIntegratedWorkflowTests(profile: 'test')
+            }
          },
         'Testing: Windows': {
-            runIntegratedWorkflowTests('windows && p2-director')
+            node('windows && p2-director') {
+                checkout scm
+                knimetools.runIntegratedWorkflowTests(profile: 'test')
+            }
         },
         'Testing: MacOs': {
-            runIntegratedWorkflowTests('macosx')
+            node('macosx') {
+                checkout scm
+                knimetools.runIntegratedWorkflowTests(profile: 'test')
+            }
         },
      )
 
@@ -46,34 +55,4 @@ try {
 	notifications.notifyBuild(currentBuild.result);
 }
 
-def runIntegratedWorkflowTests(String image){
-    node(image){ 
-        stage('Integrated Workflow Tests:'){
-            env.lastStage = env.STAGE_NAME
-            checkout scm
-            withMavenJarsignerCredentials(options: [artifactsPublisher(disabled: true)]) {
-                withCredentials([usernamePassword(credentialsId: 'ARTIFACTORY_CREDENTIALS', passwordVariable: 'ARTIFACTORY_PASSWORD', usernameVariable: 'ARTIFACTORY_LOGIN')]) {
-                    sh '''
-                        export TEMP="${WORKSPACE}/tmp"
-                        rm -rf "${TEMP}"; mkdir "${TEMP}"
-                        
-                        XVFB=$(which Xvfb) || true
-                        if [[ -x "$XVFB" ]]; then
-                            Xvfb :$$ -pixdepths 24 -screen 0 1280x1024x24 +extension RANDR &
-                            XVFB_PID=$!
-                            export DISPLAY=:$$
-                        fi
-
-                        mvn -Dmaven.test.failure.ignore=true -Dknime.p2.repo=${P2_REPO} clean verify -P test
-                        rm -rf "${TEMP}"
-                        if [[ -n "$XVFB_PID" ]]; then
-                            kill $XVFB_PID
-                        fi
-                    '''
-                }
-            }
-            junit allowEmptyResults: true, testResults: '**/target/surefire-reports/TEST-*.xml'
-        }
-    }
-}
  /* vim: set ts=4: */
