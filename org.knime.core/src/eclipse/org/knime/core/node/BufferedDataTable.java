@@ -63,6 +63,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
@@ -1095,6 +1097,101 @@ public final class BufferedDataTable implements DataTable, PortObject {
             }
         }
         return new JComponent[] {new BufferedDataTableView(this)};
+    }
+
+    /**
+     * Allows to recursively split the table in half for parallel processing.
+     */
+    @Override
+    public Spliterator<DataRow> spliterator() {
+        return new BufferedDataTableSpliterator(0, size());
+    }
+
+    class BufferedDataTableSpliterator implements Spliterator<DataRow> {
+
+        /* Index of the first row to be processed by this spliterator */
+        private long m_from;
+        /* Index of the next row to be delivered by this spliterator (like an iterator delivers a row) */
+        private long m_current;
+        /* Index of the first row not to be processed by this spliterator */
+        private long m_toExclusive;
+        private long m_minimumPartitionSize;
+
+        // make this a parameter
+        private static final long DEFAULT_MINIMUM_PARTITION_SIZE = 1000;
+
+        /* Does all the iterating work, the spliterator only recursively splits the ranges of iterators. */
+        CloseableRowIterator rangeIterator;
+
+        public BufferedDataTableSpliterator(final long fromRowIdx, final long toRowIdxExclusive,
+            final long minimumPartitionSize) {
+            m_from = fromRowIdx;
+            m_current = m_from;
+            m_toExclusive = toRowIdxExclusive;
+            m_minimumPartitionSize = minimumPartitionSize;
+
+            // TableFilter has inclusive range end semantics
+            rangeIterator = m_delegate.iteratorWithFilter(TableFilter.filterRangeOfRows(m_from, m_toExclusive - 1));
+        }
+
+        public BufferedDataTableSpliterator(final long fromRowIdx, final long toRowIdxExclusive) {
+            this(fromRowIdx, toRowIdxExclusive, DEFAULT_MINIMUM_PARTITION_SIZE);
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super DataRow> action) {
+            // if the next row hasn't been split of to another iterator or the range doesn't have more rows
+            if(m_current < m_toExclusive && rangeIterator.hasNext()) {
+                DataRow next = rangeIterator.next();
+                action.accept(next);
+                m_current++;
+            } else {
+                // this spliterator has done its work
+                rangeIterator.close();
+            }
+            // whether there are more rows to be processed by this spliterator
+            return m_current < m_toExclusive && rangeIterator.hasNext();
+        }
+
+        /**
+         * Split the remaining rows in half if the resulting range has length at least minimumPartitionSize
+         * {@inheritDoc}
+         */
+        @Override
+        public Spliterator<DataRow> trySplit() {
+
+            // split the remaining row range in half
+            // e.g., (9 + 10) / 2 = 9
+            long middle = (m_current + m_toExclusive) / 2;
+
+            // don't split if splitting would produce a partition smaller than the minimum size
+            long remainingRows = m_toExclusive - m_current;
+            if(remainingRows < 2 * m_minimumPartitionSize) {
+                return null;
+            } else {
+                long secondHalfFrom = middle;
+                long secondHalfToExclusive = m_toExclusive;
+
+                // give second half to a new spliterator
+                this.m_toExclusive = secondHalfFrom;
+                return new BufferedDataTableSpliterator(secondHalfFrom, secondHalfToExclusive);
+            }
+        }
+
+        @Override
+        public long estimateSize() {
+            // e.g., 10 - 0 = 10
+            return m_toExclusive - m_current;
+        }
+
+        @Override
+        public int characteristics() {
+            /* can't add ORDERED because that requires to always split off the _first_ half (which would require
+             * us to advance the ramgeIterator until we reach the second half. Iterating a lot without using the
+             * elements doesn't sound good. */
+            return SIZED + SUBSIZED + NONNULL + IMMUTABLE;
+        }
+
     }
 }
 
