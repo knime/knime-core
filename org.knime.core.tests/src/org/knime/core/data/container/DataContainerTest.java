@@ -215,7 +215,7 @@ public class DataContainerTest extends TestCase {
      */
     public static final void testMemoryAlertWhileRestore() throws Exception {
         DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, /* no rows in mem */ 0, false);
-        int count = 100000;
+        int count = 1000;
         for (RowIterator it = generateRows(count); it.hasNext();) {
             container.addRowToTable(it.next());
         }
