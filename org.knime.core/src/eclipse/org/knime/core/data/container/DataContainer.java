@@ -348,13 +348,21 @@ public class DataContainer implements RowAppender {
      * @param maxCellsInMemory Maximum count of cells in memory before swapping.
      * @param forceSynchronousIO Whether to force synchronous IO. If this property is false, it's using the default
      *            (which is false unless specified otherwise through {@link KNIMEConstants#PROPERTY_SYNCHRONOUS_IO})
+     * @param repository the data repository
+     * @param localTableRepository the local table repository
+     * @param fileStoreHandler a filestore handler
+     * @param forceCopyOfBlobs true, if blobs should be copied
      * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0 or the spec is null
      */
     protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
-        final boolean forceSynchronousIO) {
+        final boolean forceSynchronousIO, final IDataRepository repository,
+        final Map<Integer, ContainerTable> localTableRepository, final IWriteFileStoreHandler fileStoreHandler,
+        final boolean forceCopyOfBlobs) {
         this(spec,
             DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
-                .withForceSequentialRowHandling(forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()));
+                .withForceSequentialRowHandling(
+                    forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()),
+            repository, localTableRepository, fileStoreHandler, forceCopyOfBlobs);
     }
 
     /**
@@ -365,6 +373,17 @@ public class DataContainer implements RowAppender {
      * @noreference This constructor is not intended to be referenced by clients.
      */
     public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
+        this(spec, settings, NotInWorkflowDataRepository.newInstance(), new HashMap<>(), null, false);
+    }
+
+    /**
+     * @param spec
+     * @param withForceSequentialRowHandling
+     * @param repository
+     */
+    private DataContainer(final DataTableSpec spec, final DataContainerSettings settings,
+        final IDataRepository repository, final Map<Integer, ContainerTable> localTableRepository,
+        final IWriteFileStoreHandler fileStoreHandler, final boolean forceCopyOfBlobs) {
         CheckUtils.checkArgumentNotNull(spec, "Spec must not be null!");
         CheckUtils.checkArgument(settings.getMaxCellsInMemory() >= 0, "Cell count must be positive: %s",
             settings.getMaxCellsInMemory());
@@ -398,6 +417,26 @@ public class DataContainer implements RowAppender {
         final int colCount = spec.getNumColumns();
         m_maxRowsInMemory = settings.getMaxCellsInMemory() / ((colCount > 0) ? colCount : 1);
         m_bufferCreator = new BufferCreator(settings.getBufferSettings());
+        m_dataRepository = repository;
+        m_forceCopyOfBlobs = forceCopyOfBlobs;
+        m_localMap = localTableRepository;
+        if (fileStoreHandler == null) {
+            m_fileStoreHandler = NotInWorkflowWriteFileStoreHandler.create();
+            m_fileStoreHandler.addToRepository(m_dataRepository);
+        } else {
+            m_fileStoreHandler = fileStoreHandler;
+        }
+    }
+
+    /**
+     * Used for testing purposes
+     */
+    protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
+        final boolean forceSynchronousIO) {
+        this(spec,
+            DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
+                .withForceSequentialRowHandling(
+                    forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()));
     }
 
     private void addRowToTableWrite(final DataRow row) {
@@ -498,22 +537,6 @@ public class DataContainer implements RowAppender {
     }
 
     /**
-     * If true any blob that is not owned by this container, will be copied and this container will take ownership. This
-     * option is true for loop end nodes, which need to aggregate the data generated in the loop body.
-     *
-     * @param forceCopyOfBlobs this above described property
-     * @throws IllegalStateException If this buffer has already added rows, i.e. this method must be called right after
-     *             construction.
-     */
-    protected final void setForceCopyOfBlobs(final boolean forceCopyOfBlobs) {
-        if (size() > 0) {
-            throw new IllegalStateException("Container already has rows;  invocation of this method is only permitted"
-                + " immediately after constructor call.");
-        }
-        m_forceCopyOfBlobs = forceCopyOfBlobs;
-    }
-
-    /**
      * Get the property, which has possibly been set by {@link #setForceCopyOfBlobs(boolean)}.
      *
      * @return this property.
@@ -570,7 +593,7 @@ public class DataContainer implements RowAppender {
         }
         if (m_buffer == null) {
             m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, createInternalBufferID(),
-                getDataRepository(), getLocalTableRepository(), getFileStoreHandler());
+                m_dataRepository, m_localMap, m_fileStoreHandler);
         }
         if (!m_forceSequentialRowHandling) {
             try {
@@ -599,7 +622,7 @@ public class DataContainer implements RowAppender {
             throw new DuplicateKeyException("Found duplicate row ID \"" + key + "\" (at unknown position)", key);
         }
         m_table = new ContainerTable(m_buffer);
-        getLocalTableRepository().put(m_table.getBufferID(), m_table);
+        m_localMap.put(m_table.getBufferID(), m_table);
         m_buffer = null;
         m_spec = null;
         m_duplicateChecker.clear();
@@ -743,10 +766,8 @@ public class DataContainer implements RowAppender {
     private void initBufferIfRequired() {
         if (m_buffer == null) {
             final int bufID = createInternalBufferID();
-            final Map<Integer, ContainerTable> localTableRep = getLocalTableRepository();
-            final IWriteFileStoreHandler fileStoreHandler = getFileStoreHandler();
-            m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, bufID, getDataRepository(),
-                localTableRep, fileStoreHandler);
+            m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, bufID, m_dataRepository, m_localMap,
+                m_fileStoreHandler);
             if (m_buffer == null) {
                 throw new NullPointerException("Implementation error, must not return a null buffer.");
             }
@@ -870,7 +891,8 @@ public class DataContainer implements RowAppender {
      * @return -1 or a unique buffer ID.
      */
     protected int createInternalBufferID() {
-        return NOT_IN_WORKFLOW_BUFFER;
+        return m_dataRepository instanceof NotInWorkflowDataRepository ? NOT_IN_WORKFLOW_BUFFER
+            : m_dataRepository.generateNewID();
     }
 
     /**
@@ -896,60 +918,6 @@ public class DataContainer implements RowAppender {
         } catch (DuplicateKeyException dke) {
             throw new DuplicateKeyException("Encountered duplicate row ID \"" + dke.getKey() + "\"", dke.getKey());
         }
-    }
-
-    /**
-     * @return The file store handler for this container (either initialized lazy or previously set by the node).
-     * @since 2.6
-     * @nooverride
-     * @noreference This method is not intended to be referenced by clients.
-     */
-    protected IWriteFileStoreHandler getFileStoreHandler() {
-        if (m_fileStoreHandler == null) {
-            m_fileStoreHandler = NotInWorkflowWriteFileStoreHandler.create();
-            m_fileStoreHandler.addToRepository(getDataRepository());
-        }
-        return m_fileStoreHandler;
-    }
-
-    /**
-     * @param handler the fileStoreHandler to set
-     * @nooverride
-     * @noreference This method is not intended to be referenced by clients.
-     */
-    protected final void setFileStoreHandler(final IWriteFileStoreHandler handler) {
-        if (m_fileStoreHandler != null) {
-            throw new IllegalStateException("File store handler already assigned");
-        }
-        if (handler == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_fileStoreHandler = handler;
-    }
-
-    /**
-     * Get the data repository. Overridden in {@link org.knime.core.node.BufferedDataContainer}.
-     *
-     * @return A data repository for deserializing blobs and file stores and for handling table ids
-     * @since 3.7
-     */
-    protected IDataRepository getDataRepository() {
-        if (m_dataRepository == null) {
-            m_dataRepository = NotInWorkflowDataRepository.newInstance();
-        }
-        return m_dataRepository;
-    }
-
-    /**
-     * Get the local repository. Overridden in {@link org.knime.core.node.BufferedDataContainer}
-     *
-     * @return A local repository to which tables are added that have been created during the node's execution.
-     */
-    protected Map<Integer, ContainerTable> getLocalTableRepository() {
-        if (m_localMap == null) {
-            m_localMap = new HashMap<Integer, ContainerTable>();
-        }
-        return m_localMap;
     }
 
     /**
@@ -1263,8 +1231,10 @@ public class DataContainer implements RowAppender {
             m_batchIdx = batchIdx;
             m_dataTableDomainCreator = domainCreator;
             m_dataTableDomainCreator.setBatchId(m_batchIdx);
-            /** The node context may be null if the DataContainer has been created outside of a node's context (e.g., in
-             * unit tests). This is also the reason why this class does not extend the RunnableWithContext class. */
+            /**
+             * The node context may be null if the DataContainer has been created outside of a node's context (e.g., in
+             * unit tests). This is also the reason why this class does not extend the RunnableWithContext class.
+             */
             m_nodeContext = NodeContext.getContext();
         }
 
