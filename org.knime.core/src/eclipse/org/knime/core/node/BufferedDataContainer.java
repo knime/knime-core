@@ -114,8 +114,6 @@ import org.knime.core.node.workflow.WorkflowDataRepository;
 public class BufferedDataContainer extends DataContainer {
 
     private final Node m_node;
-    private final IDataRepository m_dataRepository;
-    private final Map<Integer, ContainerTable> m_localTableRepository;
     private BufferedDataTable m_resultTable;
 
     /**
@@ -147,18 +145,15 @@ public class BufferedDataContainer extends DataContainer {
          */
         super(spec, initDomain, maxCellsInMemory < 0
                 ? getMaxCellsInMemory(policy) : maxCellsInMemory,
-                        node.isForceSychronousIO());
+                        node.isForceSychronousIO(), (dataRepository == null) ? NotInWorkflowDataRepository.newInstance() : dataRepository, localTableRepository,
+                            /**
+                             * "in theory" the data repository should never be null for non-cleared file store handlers. However...
+                             * resetting nodes in fully executed loops causes the loop start to be reset first and then the loop body+end,
+                             * see also WorkflowManager.resetAndConfigureAffectedLoopContext() (can be reproduced using unit test
+                             * Bug4409_inactiveInnerLoop
+                             */
+                            fileStoreHandler, forceCopyOfBlobs);
         m_node = node;
-        m_localTableRepository = localTableRepository;
-        /**
-         * "in theory" the data repository should never be null for non-cleared file store handlers. However...
-         * resetting nodes in fully executed loops causes the loop start to be reset first and then the loop body+end,
-         * see also WorkflowManager.resetAndConfigureAffectedLoopContext() (can be reproduced using unit test
-         * Bug4409_inactiveInnerLoop
-         */
-        m_dataRepository = (dataRepository == null) ? NotInWorkflowDataRepository.newInstance() : dataRepository;
-        super.setFileStoreHandler(fileStoreHandler);
-        super.setForceCopyOfBlobs(forceCopyOfBlobs);
     }
 
     /**
@@ -175,30 +170,6 @@ public class BufferedDataContainer extends DataContainer {
         } else {
             return 0;
         }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int createInternalBufferID() {
-        return getDataRepository().generateNewID();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected IDataRepository getDataRepository() {
-        return m_dataRepository;
-    }
-
-    /**
-     * Returns the local repository of tables. It contains tables that have
-     * been created during the execution of a node.
-     * {@inheritDoc}
-     */
-    @Override
-    protected Map<Integer, ContainerTable> getLocalTableRepository() {
-        return m_localTableRepository;
     }
 
     /**
