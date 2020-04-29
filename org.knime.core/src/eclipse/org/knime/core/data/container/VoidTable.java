@@ -77,6 +77,7 @@ import org.knime.core.node.workflow.WorkflowDataRepository;
  */
 public final class VoidTable implements KnowsRowCountTable {
 
+    private static final BufferedDataTable[] EMPTY_ARRAY = new BufferedDataTable[0];
     private final DataTableSpec m_spec;
 
     /**
@@ -136,7 +137,7 @@ public final class VoidTable implements KnowsRowCountTable {
     /** {@inheritDoc} */
     @Override
     public BufferedDataTable[] getReferenceTables() {
-        return ContainerTable.EMPTY_ARRAY;
+        return EMPTY_ARRAY;
     }
 
     /** {@inheritDoc}

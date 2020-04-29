@@ -64,6 +64,7 @@ import java.util.zip.ZipInputStream;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.DataContainer.BufferCreator;
+import org.knime.core.data.container.DataContainer.NoKeyBufferCreator;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
@@ -116,12 +117,12 @@ final class CopyOnAccessTask {
      */
     CopyOnAccessTask(final ReferencedFile fileRef, final DataTableSpec spec,
             final int bufferID, final IDataRepository dataRepository,
-            final BufferCreator creator) {
+            final boolean rowKeys) {
         m_fileRef = fileRef;
         m_spec = spec;
         m_bufferID = bufferID;
         m_dataRepository = dataRepository;
-        m_bufferCreator = creator;
+        m_bufferCreator = rowKeys ? new BufferCreator() : new NoKeyBufferCreator();
     }
 
     /**
@@ -212,7 +213,7 @@ final class CopyOnAccessTask {
                     NodeSettings.loadFromXML(nonClosableStream);
                 try {
                     NodeSettingsRO specSettings = settings.getNodeSettings(
-                            DataContainer.CFG_TABLESPEC);
+                        DataContainer.CFG_TABLESPEC);
                     spec = DataTableSpec.load(specSettings);
                     isSpecFound = true;
                 } catch (InvalidSettingsException ise) {

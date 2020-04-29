@@ -119,6 +119,7 @@ public final class DataTableCompressionTest extends TestCase {
             writeData(data.getSecond(), cont);
 
             // get the buffer and close the data container
+            @SuppressWarnings("resource")
             final Buffer b = cont.getBuffer();
             cont.close();
 

@@ -163,5 +163,4 @@ class NoKeyBuffer extends Buffer {
         return new NoKeyBuffer(getTableSpec(), 0, getBufferID(), getDataRepository(), Collections.emptyMap(),
             castAndGetFileStoreHandler());
     }
-
 }

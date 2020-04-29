@@ -357,12 +357,12 @@ public class DataContainer implements RowAppender {
     protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
         final boolean forceSynchronousIO, final IDataRepository repository,
         final Map<Integer, ContainerTable> localTableRepository, final IWriteFileStoreHandler fileStoreHandler,
-        final boolean forceCopyOfBlobs) {
+        final boolean forceCopyOfBlobs, final boolean rowKeys) {
         this(spec,
             DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
                 .withForceSequentialRowHandling(
                     forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()),
-            repository, localTableRepository, fileStoreHandler, forceCopyOfBlobs);
+            repository, localTableRepository, fileStoreHandler, forceCopyOfBlobs, rowKeys);
     }
 
     /**
@@ -373,7 +373,8 @@ public class DataContainer implements RowAppender {
      * @noreference This constructor is not intended to be referenced by clients.
      */
     public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
-        this(spec, settings, NotInWorkflowDataRepository.newInstance(), new HashMap<>(), null, false);
+        this(spec, settings, NotInWorkflowDataRepository.newInstance(), new HashMap<>(),
+            null, false, true);
     }
 
     /**
@@ -383,7 +384,7 @@ public class DataContainer implements RowAppender {
      */
     private DataContainer(final DataTableSpec spec, final DataContainerSettings settings,
         final IDataRepository repository, final Map<Integer, ContainerTable> localTableRepository,
-        final IWriteFileStoreHandler fileStoreHandler, final boolean forceCopyOfBlobs) {
+        final IWriteFileStoreHandler fileStoreHandler, final boolean forceCopyOfBlobs, final boolean rowKeys) {
         CheckUtils.checkArgumentNotNull(spec, "Spec must not be null!");
         CheckUtils.checkArgument(settings.getMaxCellsInMemory() >= 0, "Cell count must be positive: %s",
             settings.getMaxCellsInMemory());
@@ -416,14 +417,15 @@ public class DataContainer implements RowAppender {
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
         m_maxRowsInMemory = settings.getMaxCellsInMemory() / ((colCount > 0) ? colCount : 1);
-        m_bufferCreator = new BufferCreator(settings.getBufferSettings());
+        m_bufferCreator = rowKeys ? new BufferCreator(settings.getBufferSettings()) : new NoKeyBufferCreator();
         m_dataRepository = repository;
         m_forceCopyOfBlobs = forceCopyOfBlobs;
         m_localMap = localTableRepository;
+
         if (fileStoreHandler == null) {
             m_fileStoreHandler = NotInWorkflowWriteFileStoreHandler.create();
             m_fileStoreHandler.addToRepository(m_dataRepository);
-        } else {
+        }else {
             m_fileStoreHandler = fileStoreHandler;
         }
     }
@@ -517,23 +519,6 @@ public class DataContainer implements RowAppender {
                 throw new DataContainerException(error.toString(), t);
             }
         }
-    }
-
-    /**
-     * Set a buffer creator to be used to initialize the buffer. This method must be called before any rows are added.
-     *
-     * @param bufferCreator To be used.
-     * @throws NullPointerException If the argument is <code>null</code>.
-     * @throws IllegalStateException If the buffer has already been created.
-     */
-    protected void setBufferCreator(final BufferCreator bufferCreator) {
-        if (m_buffer != null) {
-            throw new IllegalStateException("Buffer has already been created.");
-        }
-        if (bufferCreator == null) {
-            throw new NullPointerException("BufferCreator must not be null.");
-        }
-        m_bufferCreator = bufferCreator;
     }
 
     /**
@@ -1060,7 +1045,7 @@ public class DataContainer implements RowAppender {
      * @see #writeToZip(DataTable, File, ExecutionMonitor)
      */
     public static ContainerTable readFromZip(final File zipFile) throws IOException {
-        return readFromZip(new ReferencedFile(zipFile), new BufferCreator());
+        return readFromZip(new ReferencedFile(zipFile), true);
     }
 
     /**
@@ -1079,7 +1064,7 @@ public class DataContainer implements RowAppender {
     public static ContainerTable readFromStream(final InputStream in) throws IOException {
         // mimic the behavior of readFromZip(ReferencedFile)
         CopyOnAccessTask coa = new CopyOnAccessTask(/*File*/null, null, -1, NotInWorkflowDataRepository.newInstance(),
-            new BufferCreator());
+           true);
         // executing the createBuffer() method will start the copying process
         Buffer buffer = coa.createBuffer(in);
         return new ContainerTable(buffer);
@@ -1097,7 +1082,7 @@ public class DataContainer implements RowAppender {
     // This method is used from #readFromZip(File) or from a
     // RearrangeColumnsTable when it reads a table that has been written
     // with KNIME 1.1.x or before.
-    static ContainerTable readFromZip(final ReferencedFile zipFileRef, final BufferCreator creator) throws IOException {
+    static ContainerTable readFromZip(final ReferencedFile zipFileRef, final boolean rowKeys) throws IOException {
         /*
          * Ideally, the entire functionality of reading the zip file should take
          * place in the Buffer class (as that is also the place where save is
@@ -1111,7 +1096,7 @@ public class DataContainer implements RowAppender {
         // bufferID = -1: all blobs are contained in buffer, no fancy
         // reference handling to other buffer objects
         CopyOnAccessTask coa =
-            new CopyOnAccessTask(zipFileRef, null, -1, NotInWorkflowDataRepository.newInstance(), creator);
+            new CopyOnAccessTask(zipFileRef, null, -1, NotInWorkflowDataRepository.newInstance(), rowKeys);
         // executing the createBuffer() method will start the copying process
         Buffer buffer = coa.createBuffer();
         return new ContainerTable(buffer);
@@ -1129,7 +1114,7 @@ public class DataContainer implements RowAppender {
      */
     protected static ContainerTable readFromZipDelayed(final ReferencedFile zipFile, final DataTableSpec spec,
         final int bufferID, final WorkflowDataRepository dataRepository) {
-        CopyOnAccessTask t = new CopyOnAccessTask(zipFile, spec, bufferID, dataRepository, new BufferCreator());
+        CopyOnAccessTask t = new CopyOnAccessTask(zipFile, spec, bufferID, dataRepository, true);
         return readFromZipDelayed(t, spec);
     }
 
@@ -1381,6 +1366,24 @@ public class DataContainer implements RowAppender {
             return new Buffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler,
                 m_bufferSettings);
         }
+    }
 
+    /** Creates NoKeyBuffer objects rather then Buffer objects. */
+    static class NoKeyBufferCreator extends DataContainer.BufferCreator {
+
+        /** {@inheritDoc} */
+        @Override
+        Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory, final int bufferID,
+            final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTableRep,
+            final IWriteFileStoreHandler fileStoreHandler) {
+            return new NoKeyBuffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        Buffer createBuffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
+            final InputStream metaIn, final int bufID, final IDataRepository dataRepository) throws IOException {
+            return new NoKeyBuffer(binFile, blobDir, spec, metaIn, bufID, dataRepository);
+        }
     }
 }

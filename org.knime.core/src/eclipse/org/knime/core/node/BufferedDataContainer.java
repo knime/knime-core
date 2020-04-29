@@ -137,7 +137,8 @@ public class BufferedDataContainer extends DataContainer {
             final boolean forceCopyOfBlobs, final int maxCellsInMemory,
             final IDataRepository dataRepository,
             final Map<Integer, ContainerTable> localTableRepository,
-            final IWriteFileStoreHandler fileStoreHandler) {
+            final IWriteFileStoreHandler fileStoreHandler,
+            final boolean rowKeys) {
         /**
          * Force sequential handling of rows when the node is a loop end: At a loop end, rows containing blobs need to
          * be written instantly as their owning buffer is discarded in the next loop iteration, see bug 2935. To be
@@ -152,7 +153,7 @@ public class BufferedDataContainer extends DataContainer {
                              * see also WorkflowManager.resetAndConfigureAffectedLoopContext() (can be reproduced using unit test
                              * Bug4409_inactiveInnerLoop
                              */
-                            fileStoreHandler, forceCopyOfBlobs);
+                            fileStoreHandler, forceCopyOfBlobs, rowKeys);
         m_node = node;
     }
 
