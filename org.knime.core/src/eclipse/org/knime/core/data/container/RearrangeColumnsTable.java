@@ -51,7 +51,6 @@ import static org.knime.core.data.container.filter.TableFilter.materializeCols;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -70,14 +69,12 @@ import org.knime.core.data.DataCellTypeConverter;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.filestore.FileStoreFactory;
-import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -201,7 +198,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
             // was written with version 1.1.x or before (i.e. table spec
             // is contained in zip file)
             if (spec == null) {
-                m_appendTable = DataContainer.readFromZip(f, new NoKeyBufferCreator());
+                m_appendTable = DataContainer.readFromZip(f, false);
                 DataTableSpec appendSpec = m_appendTable.getDataTableSpec();
                 if (appendSpec.getNumColumns() != appendColCount) {
                     throw new IOException("Inconsistency in data file \"" + f + "\", read "
@@ -221,7 +218,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
                 assert index == appendColCount;
                 DataTableSpec appendSpec = new DataTableSpec(appendColSpecs);
                 CopyOnAccessTask noKeyBufferOnAccessTask =
-                    new CopyOnAccessTask(f, appendSpec, tableID, dataRepository, new NoKeyBufferCreator());
+                    new CopyOnAccessTask(f, appendSpec, tableID, dataRepository, false);
                 m_appendTable = DataContainer.readFromZipDelayed(noKeyBufferOnAccessTask, appendSpec);
             }
         } else {
@@ -372,8 +369,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         // the reference table but does not add any new column we avoid to scan
         // the entire table (nothing is written anyway))
         if (newColCount > 0) {
-            DataContainer container = context.createDataContainer(new DataTableSpec(newColSpecs));
-            container.setBufferCreator(new NoKeyBufferCreator());
+            DataContainer container = context.createDataContainer(new DataTableSpec(newColSpecs), true, -1, false);
             assert newColumnFactoryList.size() == newColCount;
             try {
                 if (workerCount <= 0) {
@@ -705,25 +701,6 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
             return true;
         }
         return false;
-    }
-
-    /** Creates NoKeyBuffer objects rather then Buffer objects. */
-    private static class NoKeyBufferCreator extends DataContainer.BufferCreator {
-
-        /** {@inheritDoc} */
-        @Override
-        Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory, final int bufferID,
-            final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTableRep,
-            final IWriteFileStoreHandler fileStoreHandler) {
-            return new NoKeyBuffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        Buffer createBuffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
-            final InputStream metaIn, final int bufID, final IDataRepository dataRepository) throws IOException {
-            return new NoKeyBuffer(binFile, blobDir, spec, metaIn, bufID, dataRepository);
-        }
     }
 
     /**

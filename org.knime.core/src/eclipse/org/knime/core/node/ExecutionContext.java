@@ -57,6 +57,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
@@ -357,11 +358,43 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataContainer createDataContainer(final DataTableSpec spec,
             final boolean initDomain, final int maxCellsInMemory) {
+        return createDataContainer(spec, initDomain, maxCellsInMemory, true);
+    }
+
+    /**
+     * Creates a container to which rows can be added, overwriting the
+     * node's memory policy. This method has the same behavior as
+     * {@link #createDataContainer(DataTableSpec, boolean)} except for the
+     * last argument <code>maxCellsInMemory</code>. It controls the memory
+     * policy of the data container (which is otherwise controlled by a user
+     * setting in the dialog).
+     *
+     * <p>
+     * <b>Note:</b> It's strongly advised to use
+     * {@link #createDataContainer(DataTableSpec, boolean)} instead of this
+     * method as the above method realizes the memory policy specified by the
+     * user. Use this method only if you have good reasons to do so
+     * (for instance if you create many containers, whose default memory
+     * options would yield a high accumulated memory consumption).
+     * @param spec The spec to open the container.
+     * @param initDomain If the domain information from the argument shall
+     * be used to initialize the domain (min, max, possible values). If false,
+     * the domain will be determined on the fly.
+     * @param maxCellsInMemory Number of cells to be kept in memory, especially
+     * 0 forces the table to write to disk immediately. A value smaller than 0
+     * will respect the user setting (as defined by the accompanying node).
+     * @param rowKeys if true, {@link RowKey}s are expected to be part of a {@link DataRow}.
+     * @return A container to which rows can be added and which provides
+     * the <code>BufferedDataTable</code>.
+     * @throws NullPointerException If the spec argument is <code>null</code>.
+     */
+    public BufferedDataContainer createDataContainer(final DataTableSpec spec,
+        final boolean initDomain, final int maxCellsInMemory, final boolean rowKeys) {
         boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
                 || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory, m_dataRepository,
-                m_localTableRepository, m_fileStoreHandler);
+                m_localTableRepository, m_fileStoreHandler, rowKeys);
     }
 
     /**
