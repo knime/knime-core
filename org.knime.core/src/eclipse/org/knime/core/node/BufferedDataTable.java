@@ -76,6 +76,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobSupportDataRow;
+import org.knime.core.data.container.BufferedContainerTable;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
@@ -202,7 +203,8 @@ public final class BufferedDataTable implements DataTable, PortObject {
      */
     BufferedDataTable(final RearrangeColumnsTable table, final IDataRepository dataRepository) {
         this(table,
-            table.getAppendTable() != null ? table.getAppendTable().getBufferID() : dataRepository.generateNewID(), dataRepository);
+            table.getAppendTable() != null ? table.getAppendTable().getTableId() : dataRepository.generateNewID(),
+            dataRepository);
     }
 
     /**
@@ -561,8 +563,8 @@ public final class BufferedDataTable implements DataTable, PortObject {
         File outFile = new File(dir, TABLE_FILE);
         if (!savedTableIDs.add(bufferedTableID)) {
             s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REFERENCE_IN_SAME_NODE);
-        } else if (m_delegate instanceof ContainerTable) {
-            final TableStoreFormat format = ((ContainerTable)m_delegate).getTableStoreFormat();
+        } else if (m_delegate instanceof BufferedContainerTable) {
+            final TableStoreFormat format = ((BufferedContainerTable)m_delegate).getTableStoreFormat();
             if (!DefaultTableStoreFormat.class.equals(format.getClass())) {
                 // use different identifier to cause old versions of KNIME to fail loading newer workflows
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER_CUSTOM);
@@ -580,7 +582,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
             m_delegate.saveToFile(outFile, s, exec);
         } else {
             if (m_delegate instanceof RearrangeColumnsTable) {
-                final ContainerTable appendTable = ((RearrangeColumnsTable)m_delegate).getAppendTable();
+                final BufferedContainerTable appendTable = (BufferedContainerTable)((RearrangeColumnsTable)m_delegate).getAppendTable();
                 if (appendTable != null) {
                     final TableStoreFormat format = appendTable.getTableStoreFormat();
                     if (!DefaultTableStoreFormat.class.equals(format.getClass())) {

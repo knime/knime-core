@@ -683,7 +683,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
     @Override
     public void putIntoTableRepository(final WorkflowDataRepository dataRepository) {
         if (m_appendTable != null) {
-            dataRepository.addTable(m_appendTable.getBufferID(), m_appendTable);
+            dataRepository.addTable(m_appendTable.getTableId(), m_appendTable);
         }
     }
 
@@ -693,7 +693,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
     @Override
     public boolean removeFromTableRepository(final WorkflowDataRepository dataRepository) {
         if (m_appendTable != null) {
-            int id = m_appendTable.getBufferID();
+            int id = m_appendTable.getTableId();
             if (!dataRepository.removeTable(id).isPresent()) {
                 LOGGER.debugWithFormat("Failed to remove appended table with id %s from global table repository.", id);
                 return false;

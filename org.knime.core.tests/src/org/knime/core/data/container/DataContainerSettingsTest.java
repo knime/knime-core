@@ -49,11 +49,8 @@
 package org.knime.core.data.container;
 
 import static org.junit.Assert.assertNotEquals;
-import static org.knime.core.data.container.DataContainer.ASYNC_CACHE_SIZE;
-import static org.knime.core.data.container.DataContainer.INIT_DOMAIN;
 import static org.knime.core.data.container.DataContainer.MAX_CELLS_IN_MEMORY;
 import static org.knime.core.data.container.DataContainer.MAX_POSSIBLE_VALUES;
-import static org.knime.core.data.container.DataContainer.SYNCHRONOUS_IO;
 
 import org.junit.Test;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -77,12 +74,12 @@ public final class DataContainerSettingsTest extends TestCase {
     @Test
     public void testDefault() {
         final DataContainerSettings settings = DataContainerSettings.getDefault();
-        assertEquals("Wrong default (cache size)", ASYNC_CACHE_SIZE, settings.getRowBatchSize());
+//        assertEquals("Wrong default (cache size)", ASYNC_CACHE_SIZE, settings.getRowBatchSize());
         assertEquals("Wrong default (number of cells in memory)", MAX_CELLS_IN_MEMORY, settings.getMaxCellsInMemory());
         assertEquals("Wrong default (number of possible domain values)", MAX_POSSIBLE_VALUES,
             settings.getMaxDomainValues());
-        assertEquals("Wrong default (asynchronous IO flag)", SYNCHRONOUS_IO, settings.isForceSequentialRowHandling());
-        assertEquals("Wrong default (intialize domain flag)", INIT_DOMAIN, settings.getInitializeDomain());
+//        assertEquals("Wrong default (asynchronous IO flag)", SYNCHRONOUS_IO, settings.isForceSequentialRowHandling());
+//        assertEquals("Wrong default (intialize domain flag)", INIT_DOMAIN, settings.getInitializeDomain());
         assertEquals("Wrong default (asynchrnous write threads)", Runtime.getRuntime().availableProcessors(),
             settings.getMaxContainerThreads());
         assertEquals("Wrong default (container threads)", Runtime.getRuntime().availableProcessors(),

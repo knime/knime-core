@@ -184,8 +184,8 @@ public class BufferedDataContainer extends DataContainer {
     @Override
     public BufferedDataTable getTable() {
         if (m_resultTable == null) {
-            ContainerTable buffer = getBufferedTable();
-            m_resultTable = new BufferedDataTable(buffer, buffer.getBufferID());
+            ContainerTable table = getBufferedTable();
+            m_resultTable = new BufferedDataTable(table, table.getTableId());
             m_resultTable.setOwnerRecursively(m_node);
         }
         return m_resultTable;

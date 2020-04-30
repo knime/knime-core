@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,34 +41,56 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
-
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Apr 30, 2020 (dietzc): created
  */
 package org.knime.core.data.container;
 
-import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
+import org.knime.core.data.DataTableSpec;
 
 /**
- * Class implementing the <code>DataTable</code> interface and using a buffer from a <code>DataContainer</code> as data
- * source. This class doesn't do functional things. It only provides the <code>DataTable</code> methods.
  *
- * <p>
- * We split it from the <code>Buffer</code> implementation as a buffer is dynamic in size. This table should only be
- * used when the buffer has been fixed.
- *
- * @author Bernd Wiswedel, University of Konstanz
+ * @author Christian Dietz
  */
-public interface ContainerTable extends KnowsRowCountTable {
+public interface RowContainer extends RowAppender, AutoCloseable {
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void close();
+
+    /**
+     * Can only be closed after close() has been called.
+     *
+     * @return the underlying {@link ContainerTable}.
+     */
+    ContainerTable getTable();
+
+    /**
+     * Clears the table
+     */
+    void clear();
 
     /**
      * @return
      */
-    int getTableId();
+    boolean isClosed();
 
     /**
-     * TODO only used for tests. can we remove that?
      * @return
      */
-    boolean isOpen();
+    long size();
 
+    /**
+     * TODO I want to get rid of this method asap!
+     */
+    void setMaxPossibleValues(int maxPossibleValues);
+
+    /**
+     * @return
+     */
+    DataTableSpec getTableSpec();
 }

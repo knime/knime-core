@@ -88,6 +88,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/DataContainer.java" type="org.knime.core.data.container.DataContainer">
+        <filter id="643850349">
+            <message_arguments>
+                <message_argument value="IWriteFileStoreHandler"/>
+                <message_argument value="DataContainer"/>
+                <message_argument value="DataContainer(DataTableSpec, boolean, int, boolean, IDataRepository, Map&lt;Integer,ContainerTable&gt;, IWriteFileStoreHandler, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/JoinedTable.java" type="org.knime.core.data.container.JoinedTable">
         <filter id="576725006">
             <message_arguments>

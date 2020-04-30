@@ -191,7 +191,7 @@ public class BufferCacheTest {
                 container.addRowToTable(row);
             }
             container.close();
-            final Buffer buffer = container.getBufferedTable().getBuffer();
+            final Buffer buffer = ((BufferedContainerTable)container.getBufferedTable()).getBuffer();
             result.add(new Pair<Buffer, List<BlobSupportDataRow>>(buffer, list));
         }
 
