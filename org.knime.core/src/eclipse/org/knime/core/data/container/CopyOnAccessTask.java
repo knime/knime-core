@@ -63,8 +63,8 @@ import java.util.zip.ZipInputStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.container.DataContainer.BufferCreator;
-import org.knime.core.data.container.DataContainer.NoKeyBufferCreator;
+import org.knime.core.data.container.BufferedRowContainer.BufferCreator;
+import org.knime.core.data.container.BufferedRowContainer.NoKeyBufferCreator;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
@@ -205,7 +205,7 @@ final class CopyOnAccessTask {
                     fileStoreDir = FileUtil.createTempDir("knime_fs_datacontainer-");
                 }
                 copyEntryToDir(entry, inStream, fileStoreDir);
-            } else if (name.equals(DataContainer.ZIP_ENTRY_SPEC)
+            } else if (name.equals(BufferedRowContainer.ZIP_ENTRY_SPEC)
                     && !isSpecFound) {
                 InputStream nonClosableStream =
                     new NonClosableInputStream.Zip(inStream);
@@ -213,7 +213,7 @@ final class CopyOnAccessTask {
                     NodeSettings.loadFromXML(nonClosableStream);
                 try {
                     NodeSettingsRO specSettings = settings.getNodeSettings(
-                        DataContainer.CFG_TABLESPEC);
+                        BufferedRowContainer.CFG_TABLESPEC);
                     spec = DataTableSpec.load(specSettings);
                     isSpecFound = true;
                 } catch (InvalidSettingsException ise) {
@@ -234,7 +234,7 @@ final class CopyOnAccessTask {
                     + " in file");
         }
         if (!isSpecFound) {
-            throw new IOException("No entry " + DataContainer.ZIP_ENTRY_SPEC
+            throw new IOException("No entry " + BufferedRowContainer.ZIP_ENTRY_SPEC
                     + " in file");
         }
         InputStream metaIn = new BufferedInputStream(

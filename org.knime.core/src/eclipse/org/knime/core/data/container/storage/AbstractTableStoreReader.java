@@ -70,6 +70,7 @@ import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.Buffer;
 import org.knime.core.data.container.BufferResource;
+import org.knime.core.data.container.BufferedContainerTable;
 import org.knime.core.data.container.CellClassInfo;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
@@ -174,7 +175,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
             if (!cnTbl.isPresent()) {
                 throw new IOException("Unable to retrieve table that owns the blob cell");
             }
-            blobBuffer = cnTbl.get().getBuffer();
+            blobBuffer = ((BufferedContainerTable)cnTbl.get()).getBuffer();
         }
         return new BlobWrapperDataCell(blobBuffer, address, type);
     }

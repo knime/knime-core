@@ -964,7 +964,12 @@ public class Buffer implements KNIMEStreamConstants {
                 } else {
                     // table that's been created somewhere in the workflow
                     Optional<ContainerTable> t = m_dataRepository.getTable(ad.getBufferID());
-                    ownerBuffer = t.map(ContainerTable::getBuffer).orElse(null);
+                    ContainerTable containerTable = t.orElse(null);
+                    if (containerTable != null) {
+                        ownerBuffer = ((BufferedContainerTable)containerTable).getBuffer();
+                    } else {
+                        ownerBuffer = null;
+                    }
                 }
                 /* this can only be true if the argument row contains wrapper
                  * cells for blobs that do not have a buffer set; that is,
@@ -1048,7 +1053,7 @@ public class Buffer implements KNIMEStreamConstants {
                     m_copiedBlobsMap.put(ad, rewrite);
                 } else {
                     ContainerTable tbl = m_localRepository.get(ad.getBufferID());
-                    b = tbl == null ? null : tbl.getBuffer();
+                    b = tbl == null ? null : ((BufferedContainerTable)tbl).getBuffer();
                 }
                 if (b != null && !isToCloneForVersionHop) {
                     int indexBlobInCol = m_indicesOfBlobInColumns[col]++;
@@ -1117,11 +1122,11 @@ public class Buffer implements KNIMEStreamConstants {
             Buffer originalBuffer = null;
             Optional<ContainerTable> tableOptional = getDataRepository().getTable(originalBufferIndex);
             if (tableOptional.isPresent()) {
-                originalBuffer = tableOptional.get().getBuffer();
+                originalBuffer = ((BufferedContainerTable)tableOptional.get()).getBuffer();
             } else if (getLocalRepository() != null) {
                 ContainerTable t = getLocalRepository().get(originalBufferIndex);
                 if (t != null) {
-                    originalBuffer = t.getBuffer();
+                    originalBuffer = ((BufferedContainerTable)t).getBuffer();
                 }
             }
             if (originalBuffer != null) {
@@ -1475,7 +1480,7 @@ public class Buffer implements KNIMEStreamConstants {
         if (blobBufferID != m_bufferID) {
             ContainerTable cnTbl = m_dataRepository.getTable(blobBufferID)
                 .orElseThrow(() -> new IOException("Unable to retrieve table that owns the blob cell"));
-            Buffer blobBuffer = cnTbl.getBuffer();
+            Buffer blobBuffer =( (BufferedContainerTable)cnTbl).getBuffer();
             return blobBuffer.readBlobDataCell(blobAddress, cl);
         }
         SoftReference<BlobDataCell> softRef = m_blobLRUCache.get(blobAddress);

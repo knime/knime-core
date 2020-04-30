@@ -120,7 +120,7 @@ public final class DataTableCompressionTest extends TestCase {
 
             // get the buffer and close the data container
             @SuppressWarnings("resource")
-            final Buffer b = cont.getBuffer();
+            final Buffer b = ((BufferedRowContainer)cont.getRowContainer()).getBuffer();
             cont.close();
 
             // check that the proper compressor has been used to write the file
