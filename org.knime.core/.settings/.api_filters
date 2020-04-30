@@ -8,6 +8,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.eclipse.core.runtime.IPluginDescriptor">
+        <filter comment="removed as part of Eclipse update" id="305422471">
+            <message_arguments>
+                <message_argument value="org.eclipse.core.runtime.IPluginDescriptor"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.eclipseUtil.GlobalClassCreator">
         <filter comment="buddy class loading deactivated" id="305324134">
             <message_arguments>
@@ -2105,6 +2113,152 @@
             <message_arguments>
                 <message_argument value="org.knime.core.util.GUIDeadlockDetector"/>
                 <message_argument value="createStacktrace()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/NodeType.java" type="org.knime.node.v212.NodeType">
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+                <message_argument value="INT_LOOP_END"/>
+                <message_argument value="8"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+                <message_argument value="INT_LOOP_START"/>
+                <message_argument value="7"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+                <message_argument value="INT_OTHER"/>
+                <message_argument value="10"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+                <message_argument value="INT_QUICK_FORM"/>
+                <message_argument value="9"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+                <message_argument value="INT_SCOPE_END"/>
+                <message_argument value="13"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+                <message_argument value="INT_SCOPE_START"/>
+                <message_argument value="12"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+                <message_argument value="INT_UNKNOWN"/>
+                <message_argument value="11"/>
+            </message_arguments>
+        </filter>
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+                <message_argument value="INT_WIDGET"/>
+            </message_arguments>
+        </filter>
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+                <message_argument value="WIDGET"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="INT_WIDGET"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="WIDGET"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v31/NodeType.java" type="org.knime.node.v31.NodeType">
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.NodeType"/>
+                <message_argument value="INT_LOOP_END"/>
+                <message_argument value="8"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.NodeType"/>
+                <message_argument value="INT_LOOP_START"/>
+                <message_argument value="7"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.NodeType"/>
+                <message_argument value="INT_OTHER"/>
+                <message_argument value="10"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.NodeType"/>
+                <message_argument value="INT_QUICK_FORM"/>
+                <message_argument value="9"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.NodeType"/>
+                <message_argument value="INT_SCOPE_END"/>
+                <message_argument value="13"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.NodeType"/>
+                <message_argument value="INT_SCOPE_START"/>
+                <message_argument value="12"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.NodeType"/>
+                <message_argument value="INT_UNKNOWN"/>
+                <message_argument value="11"/>
+            </message_arguments>
+        </filter>
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.NodeType"/>
+                <message_argument value="INT_WIDGET"/>
+            </message_arguments>
+        </filter>
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.node.v31.NodeType"/>
+                <message_argument value="WIDGET"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="INT_WIDGET"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="WIDGET"/>
             </message_arguments>
         </filter>
     </resource>

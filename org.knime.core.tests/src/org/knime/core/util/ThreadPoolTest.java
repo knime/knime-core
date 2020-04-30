@@ -425,7 +425,7 @@ public class ThreadPoolTest extends TestCase {
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
-            ClassLoader outerCl = new ContextFinder(cl);
+            ClassLoader outerCl = new ContextFinder(cl, null);
             Thread.currentThread().setContextClassLoader(outerCl);
             Future<ClassLoader> future = root.enqueue(callable);
             ClassLoader innerCl = future.get();
