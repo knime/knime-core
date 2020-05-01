@@ -465,7 +465,6 @@ public class BufferedRowContainer implements RowContainer {
             throw new DuplicateKeyException("Found duplicate row ID \"" + key + "\" (at unknown position)", key);
         }
         m_table = new BufferedContainerTable(m_buffer);
-        m_localRepository.put(m_table.getTableId(), m_table);
         m_buffer = null;
         m_spec = null;
         m_duplicateChecker.clear();

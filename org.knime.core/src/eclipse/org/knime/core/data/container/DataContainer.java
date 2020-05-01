@@ -132,6 +132,7 @@ public class DataContainer implements RowAppender {
 
     private DataTableSpec m_spec;
 
+    private final Map<Integer, ContainerTable> m_localRepository;
     /**
      * Consider using {@link ExecutionContext#createDataContainer(DataTableSpec)} instead of invoking this constructor
      * directly.
@@ -245,6 +246,7 @@ public class DataContainer implements RowAppender {
         final IDataRepository repository, final Map<Integer, ContainerTable> localRepository,
         final IWriteFileStoreHandler fileStoreHandler, final boolean forceCopyOfBlobs, final boolean rowKeys) {
         m_spec = spec;
+        m_localRepository = localRepository;
 
         m_rowContainer = new BufferedRowContainer(spec, settings, repository, localRepository,
             initFileStoreHandler(fileStoreHandler, repository), forceCopyOfBlobs, rowKeys);
@@ -338,6 +340,8 @@ public class DataContainer implements RowAppender {
      */
     public void close() {
         m_rowContainer.close();
+        ContainerTable table = m_rowContainer.getTable();
+        m_localRepository.put(table.getTableId(), table);
     }
 
     /**
