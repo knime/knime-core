@@ -48,6 +48,7 @@ package org.knime.core.node;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -61,6 +62,8 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.DefaultLocalDataRepository;
+import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
@@ -125,7 +128,7 @@ public class ExecutionContext extends ExecutionMonitor {
 
     private final Node m_node;
     private final MemoryPolicy m_memoryPolicy;
-    private final HashMap<Integer, ContainerTable> m_localTableRepository;
+    private final ILocalDataRepository m_localTableRepository;
     private final IWriteFileStoreHandler m_fileStoreHandler;
     private final IDataRepository m_dataRepository;
 
@@ -177,7 +180,7 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public ExecutionContext(final NodeProgressMonitor progMon, final Node node,
             final MemoryPolicy policy, final IDataRepository dataRepository) {
-        this(progMon, node, policy, dataRepository, new HashMap<Integer, ContainerTable>(),
+        this(progMon, node, policy, dataRepository, new DefaultLocalDataRepository(),
             (node.getFileStoreHandler() instanceof IWriteFileStoreHandler
                 ? (IWriteFileStoreHandler)node.getFileStoreHandler() : null));
     }
@@ -195,7 +198,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * @param tableRepository see other constructor.
      */
     private ExecutionContext(final NodeProgressMonitor progMon, final Node node, final MemoryPolicy policy,
-        final IDataRepository dataRepository, final HashMap<Integer, ContainerTable> localTableRepository,
+        final IDataRepository dataRepository, final ILocalDataRepository localTableRepository,
         final IWriteFileStoreHandler fileStoreHandler) {
         super(progMon);
         m_node = CheckUtils.checkArgumentNotNull(node);
@@ -645,7 +648,7 @@ public class ExecutionContext extends ExecutionMonitor {
         // maybe never will). The arg table is added to the local rep during
         // DataContainer#close but it can remove itself during clear()...
         // that's why we do it here.
-        m_localTableRepository.remove(id);
+        m_localTableRepository.removeTable(id);
     }
 
     /**
@@ -705,13 +708,20 @@ public class ExecutionContext extends ExecutionMonitor {
      * repository after execution.
      * @return The local table repository.
      */
-    HashMap<Integer, ContainerTable> getLocalTableRepository() {
-        return m_localTableRepository;
+    Map<Integer, ContainerTable> getLocalTableRepository() {
+        return m_localTableRepository.toMap();
     }
 
     /** @return the node */
     Node getNode() {
         return m_node;
+    }
+
+    /** Called when node was canceled. */
+    void onCancel() {
+        m_localTableRepository.forEach((c) -> c.clear());
+        m_localTableRepository.onCancel();
+        m_localTableRepository.clear();
     }
 
     /**

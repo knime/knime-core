@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -606,7 +605,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     public final void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
         WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
         m_node.putOutputTablesIntoGlobalRepository(dataRepository);
-        HashMap<Integer, ContainerTable> localRep =
+        Map<Integer, ContainerTable> localRep =
                 Node.getLocalTableRepositoryFromContext(c);
         Set<ContainerTable> localTables = new HashSet<ContainerTable>();
         for (Map.Entry<Integer, ContainerTable> t : localRep.entrySet()) {
