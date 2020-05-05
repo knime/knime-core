@@ -145,7 +145,7 @@ public abstract class DataCell implements DataValue, Serializable {
      *         <code>false</code> otherwise
      * @see DataType#getMissingCell()
      */
-    public final boolean isMissing() {
+    public boolean isMissing() {
         return isMissingInternal();
     }
 

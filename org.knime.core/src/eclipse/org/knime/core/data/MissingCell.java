@@ -115,7 +115,7 @@ public final class MissingCell extends DataCell implements MissingValue {
      * {@inheritDoc}
      */
     @Override
-    boolean isMissingInternal() {
+   public boolean isMissing() {
         return true;
     }
 
