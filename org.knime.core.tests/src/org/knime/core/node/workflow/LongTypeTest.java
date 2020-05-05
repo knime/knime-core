@@ -76,7 +76,7 @@ import com.google.common.collect.Sets;
 public class LongTypeTest extends AbstractSimpleVariableTypeTest<Long> {
 
     private static final Set<ConfigEntries> OVERWRITABLE = EnumSet.of(ConfigEntries.xlong, ConfigEntries.xfloat,
-        ConfigEntries.xdouble, ConfigEntries.xstring, ConfigEntries.xtransientstring);
+        ConfigEntries.xdouble, ConfigEntries.xstring, ConfigEntries.xtransientstring, ConfigEntries.xpassword);
 
     private static final Set<ConfigEntries> CREATION_COMPATIBLE = EnumSet.of(ConfigEntries.xlong);
 

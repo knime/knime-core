@@ -83,11 +83,11 @@ import com.google.common.collect.Sets;
  */
 public class StringTypeTest extends AbstractSimpleVariableTypeTest<String> {
 
-    private static final Set<ConfigEntries> OVERWRITABLE =
-        EnumSet.of(ConfigEntries.xboolean, ConfigEntries.xchar, ConfigEntries.xstring, ConfigEntries.xtransientstring);
+    private static final Set<ConfigEntries> OVERWRITABLE = EnumSet.of(ConfigEntries.xboolean, ConfigEntries.xchar,
+        ConfigEntries.xstring, ConfigEntries.xtransientstring, ConfigEntries.xpassword);
 
     private static final Set<ConfigEntries> CREATION_COMPATIBLE =
-        EnumSet.of(ConfigEntries.xchar, ConfigEntries.xstring);
+        EnumSet.of(ConfigEntries.xchar, ConfigEntries.xstring, ConfigEntries.xpassword);
 
     /**
      * Constructor.

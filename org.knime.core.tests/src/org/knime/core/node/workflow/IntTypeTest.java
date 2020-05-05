@@ -79,7 +79,7 @@ public class IntTypeTest extends AbstractSimpleVariableTypeTest<Integer> {
 
     private static final Set<ConfigEntries> OVERWRITABLE = EnumSet.of(ConfigEntries.xbyte, ConfigEntries.xshort,
         ConfigEntries.xint, ConfigEntries.xlong, ConfigEntries.xfloat, ConfigEntries.xdouble, ConfigEntries.xchar,
-        ConfigEntries.xstring, ConfigEntries.xtransientstring);
+        ConfigEntries.xstring, ConfigEntries.xtransientstring, ConfigEntries.xpassword);
 
     private static final Set<ConfigEntries> CREATION_COMPATIBLE =
         EnumSet.of(ConfigEntries.xbyte, ConfigEntries.xshort, ConfigEntries.xint);

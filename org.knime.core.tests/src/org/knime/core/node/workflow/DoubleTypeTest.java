@@ -73,8 +73,8 @@ import com.google.common.collect.Sets;
  */
 public class DoubleTypeTest extends AbstractSimpleVariableTypeTest<Double> {
 
-    private static final Set<ConfigEntries> OVERWRITABLE =
-        EnumSet.of(ConfigEntries.xfloat, ConfigEntries.xdouble, ConfigEntries.xstring, ConfigEntries.xtransientstring);
+    private static final Set<ConfigEntries> OVERWRITABLE = EnumSet.of(ConfigEntries.xfloat, ConfigEntries.xdouble,
+        ConfigEntries.xstring, ConfigEntries.xtransientstring, ConfigEntries.xpassword);
 
     private static final Set<ConfigEntries> CREATION_COMPATIBLE =
         EnumSet.of(ConfigEntries.xfloat, ConfigEntries.xdouble);

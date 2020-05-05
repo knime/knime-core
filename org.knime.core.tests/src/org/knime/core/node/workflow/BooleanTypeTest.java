@@ -77,8 +77,8 @@ import com.google.common.collect.Sets;
 @RunWith(MockitoJUnitRunner.class)
 public class BooleanTypeTest extends AbstractSimpleVariableTypeTest<Boolean> {
 
-    private static final Set<ConfigEntries> OVERWRITABLE =
-        EnumSet.of(ConfigEntries.xboolean, ConfigEntries.xstring, ConfigEntries.xtransientstring);
+    private static final Set<ConfigEntries> OVERWRITABLE = EnumSet.of(ConfigEntries.xboolean, ConfigEntries.xstring,
+        ConfigEntries.xtransientstring, ConfigEntries.xpassword);
 
     private static final Set<ConfigEntries> CREATION_COMPATIBLE = EnumSet.of(ConfigEntries.xboolean);
 

@@ -95,6 +95,7 @@ import javax.swing.Icon;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.Config;
@@ -122,9 +123,19 @@ import com.google.common.collect.Sets;
  */
 public abstract class VariableType<T> {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(VariableType.class);
+
     private static final String CFG_CLASS = "class";
 
     private static final String CFG_VALUE = "value";
+
+    /**
+     * AP-14067: It's not actually possible to overwrite an xpassword but we pretend to anyway for backward
+     * compatibility
+     */
+    private static final String PASSWORD_OVERWRITE_ERROR =
+        "Attempt to overwrite the password with config key '%s' failed. "
+            + "It's not possible to overwrite passwords with flow variables.";
 
     /**
      * The value of a {@link FlowVariable}. Associates a simple value (e.g. String, Double, Integer) with a {@link VariableType}.
@@ -385,8 +396,10 @@ public abstract class VariableType<T> {
 
         private static BiPredicate<Config, String> createOverwritablePredicate() {
             return createTypePredicate(
-                EnumSet.of(ConfigEntries.xboolean, ConfigEntries.xstring, ConfigEntries.xtransientstring))
-                    .or(VariableTypeUtils::isBooleanArray).or(VariableTypeUtils::isStringArray);
+                // AP-14067: We pretend to overwrite xpassword for backward compatibility
+                EnumSet.of(ConfigEntries.xboolean, ConfigEntries.xstring, ConfigEntries.xtransientstring,
+                    ConfigEntries.xpassword)).or(VariableTypeUtils::isBooleanArray)
+                        .or(VariableTypeUtils::isStringArray);
         }
 
         @Override
@@ -460,6 +473,11 @@ public abstract class VariableType<T> {
                     break;
                 case xtransientstring:
                     config.addTransientString(configKey, value.toString());
+                    break;
+                case xpassword:
+                    // AP-14067: xpassword is not actually overwritable
+                    // but we have to support it for backward compatibility
+                    LOGGER.errorWithFormat(PASSWORD_OVERWRITE_ERROR, configKey);
                     break;
                 case config:
                     if (overwriteArray(value, config, configKey)) {
@@ -647,7 +665,8 @@ public abstract class VariableType<T> {
 
         private static BiPredicate<Config, String> createOverwritablePredicate() {
             return createTypePredicate(EnumSet.of(ConfigEntries.xfloat, ConfigEntries.xdouble, ConfigEntries.xstring,
-                ConfigEntries.xtransientstring)).or(VariableTypeUtils::isFloatArray)
+                // AP-14067: xpassword is not actually overwritable but we have to support it for backward compatibility
+                ConfigEntries.xtransientstring, ConfigEntries.xpassword)).or(VariableTypeUtils::isFloatArray)
                     .or(VariableTypeUtils::isDoubleArray).or(VariableTypeUtils::isStringArray);
         }
 
@@ -724,6 +743,11 @@ public abstract class VariableType<T> {
                     break;
                 case xtransientstring:
                     config.addTransientString(configKey, value.toString());
+                    break;
+                case xpassword:
+                    // AP-14067: xpassword is not actually overwritable
+                    // but we have to support it for backward compatibility
+                    LOGGER.errorWithFormat(PASSWORD_OVERWRITE_ERROR, configKey);
                     break;
                 case config:
                     if (overwriteArray(value, config, configKey)) {
@@ -920,7 +944,8 @@ public abstract class VariableType<T> {
         private static BiPredicate<Config, String> createOverwritablePredicate() {
             return createTypePredicate(EnumSet.of(ConfigEntries.xbyte, ConfigEntries.xshort, ConfigEntries.xint,
                 ConfigEntries.xlong, ConfigEntries.xfloat, ConfigEntries.xdouble, ConfigEntries.xchar,
-                ConfigEntries.xstring, ConfigEntries.xtransientstring))//
+                // AP-14067: We pretend to overwrite xpassword for backward compatibility
+                ConfigEntries.xstring, ConfigEntries.xtransientstring, ConfigEntries.xpassword))//
                     .or(VariableTypeUtils::isStringArray)//
                     .or(VariableTypeUtils::isDoubleArray)//
                     .or(VariableTypeUtils::isLongArray)//
@@ -1031,6 +1056,11 @@ public abstract class VariableType<T> {
                     break;
                 case xtransientstring:
                     config.addTransientString(configKey, value.toString());
+                    break;
+                case xpassword:
+                    // AP-14067: xpassword is not actually overwritable
+                    // but we have to support it for backward compatibility
+                    LOGGER.errorWithFormat(PASSWORD_OVERWRITE_ERROR, configKey);
                     break;
                 case xstring:
                     config.addString(configKey, value.toString());
@@ -1278,7 +1308,8 @@ public abstract class VariableType<T> {
 
         private static BiPredicate<Config, String> createOverwritablePredicate() {
             return createTypePredicate(EnumSet.of(ConfigEntries.xlong, ConfigEntries.xfloat, ConfigEntries.xdouble,
-                ConfigEntries.xstring, ConfigEntries.xtransientstring))//
+                // AP-14067: xpassword is not actually overwritable but we have to support it for backward compatibility
+                ConfigEntries.xstring, ConfigEntries.xtransientstring, ConfigEntries.xpassword))//
                     .or(VariableTypeUtils::isLongArray)//
                     .or(VariableTypeUtils::isFloatArray)//
                     .or(VariableTypeUtils::isDoubleArray)//
@@ -1365,6 +1396,11 @@ public abstract class VariableType<T> {
                     break;
                 case xtransientstring:
                     config.addTransientString(configKey, value.toString());
+                    break;
+                case xpassword:
+                    // AP-14067: xpassword is not actually overwritable
+                    // but we have to support it for backward compatibility
+                    LOGGER.errorWithFormat(PASSWORD_OVERWRITE_ERROR, configKey);
                     break;
                 case config:
                     if (overwriteArray(value, config, configKey)) {
@@ -1559,7 +1595,8 @@ public abstract class VariableType<T> {
 
         private static BiPredicate<Config, String> createOverwritablePredicate() {
             return createTypePredicate(EnumSet.of(ConfigEntries.xboolean, ConfigEntries.xchar, ConfigEntries.xstring,
-                ConfigEntries.xtransientstring))//
+                // AP-14067: We only pretend to overwrite xpassword for backward compatibility
+                ConfigEntries.xtransientstring, ConfigEntries.xpassword))//
                     .or(VariableTypeUtils::isBooleanArray)//
                     .or(VariableTypeUtils::isCharArray)//
                     .or(VariableTypeUtils::isStringArray);
@@ -1644,6 +1681,11 @@ public abstract class VariableType<T> {
                     break;
                 case xchar:
                     config.addChar(configKey, toChar(value, configKey));
+                    break;
+                case xpassword:
+                    // AP-14067: xpassword is not actually overwritable
+                    // but we have to support it for backward compatibility
+                    LOGGER.errorWithFormat(PASSWORD_OVERWRITE_ERROR, configKey);
                     break;
                 case config:
                     if (overwriteArray(value, config, configKey)) {
