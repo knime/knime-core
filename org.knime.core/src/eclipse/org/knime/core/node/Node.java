@@ -56,7 +56,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1706,7 +1705,7 @@ public final class Node implements NodeModelWarningListener {
      * @param c To access.
      * @return Its local table repository.
      */
-    public static HashMap<Integer, ContainerTable> getLocalTableRepositoryFromContext(
+    public static Map<Integer, ContainerTable> getLocalTableRepositoryFromContext(
             final ExecutionContext c) {
         return c.getLocalTableRepository();
     }

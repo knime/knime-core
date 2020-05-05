@@ -51,8 +51,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataRow;
@@ -132,7 +130,10 @@ public class DataContainer implements RowAppender {
 
     private DataTableSpec m_spec;
 
-    private final Map<Integer, ContainerTable> m_localRepository;
+    private final ILocalDataRepository m_localRepository;
+
+    private final ICancellationListener m_cancellationListener;
+
     /**
      * Consider using {@link ExecutionContext#createDataContainer(DataTableSpec)} instead of invoking this constructor
      * directly.
@@ -200,7 +201,7 @@ public class DataContainer implements RowAppender {
      */
     protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
         final boolean forceSynchronousIO, final IDataRepository repository,
-        final Map<Integer, ContainerTable> localTableRepository, final IWriteFileStoreHandler fileStoreHandler,
+        final ILocalDataRepository localTableRepository, final IWriteFileStoreHandler fileStoreHandler,
         final boolean forceCopyOfBlobs, final boolean rowKeys) {
         this(spec,
             DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
@@ -217,7 +218,8 @@ public class DataContainer implements RowAppender {
      * @noreference This constructor is not intended to be referenced by clients.
      */
     public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
-        this(spec, settings, NotInWorkflowDataRepository.newInstance(), new HashMap<>(), null, false, true);
+        this(spec, settings, NotInWorkflowDataRepository.newInstance(), new DefaultLocalDataRepository(), null, false,
+            true);
     }
 
     /**
@@ -243,13 +245,21 @@ public class DataContainer implements RowAppender {
      * @param repository
      */
     private DataContainer(final DataTableSpec spec, final DataContainerSettings settings,
-        final IDataRepository repository, final Map<Integer, ContainerTable> localRepository,
+        final IDataRepository repository, final ILocalDataRepository localRepository,
         final IWriteFileStoreHandler fileStoreHandler, final boolean forceCopyOfBlobs, final boolean rowKeys) {
         m_spec = spec;
         m_localRepository = localRepository;
-
         m_rowContainer = new BufferedRowContainer(spec, settings, repository, localRepository,
             initFileStoreHandler(fileStoreHandler, repository), forceCopyOfBlobs, rowKeys);
+        m_cancellationListener = new ICancellationListener() {
+
+            @Override
+            public void onCancel() {
+                m_rowContainer.clear();
+                m_localRepository.removeCancellationListener(this);
+            }
+        };
+        m_localRepository.addCancellationListener(m_cancellationListener);
     }
 
     /**
@@ -341,7 +351,8 @@ public class DataContainer implements RowAppender {
     public void close() {
         m_rowContainer.close();
         ContainerTable table = m_rowContainer.getTable();
-        m_localRepository.put(table.getTableId(), table);
+        m_localRepository.addTable(table);
+        m_localRepository.removeCancellationListener(m_cancellationListener);
     }
 
     /**
@@ -497,7 +508,7 @@ public class DataContainer implements RowAppender {
     public static void writeToStream(final DataTable table, final OutputStream out, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         // TODO switch according to table implementation.
-       BufferedRowContainer.writeToStream(table, out, exec);
+        BufferedRowContainer.writeToStream(table, out, exec);
     }
 
     /**

@@ -488,7 +488,7 @@ public class Buffer implements KNIMEStreamConstants {
      * is written to the file. This temporary repository exists only while a node is executing. It is only important
      * while writing to this buffer.
      */
-    private Map<Integer, ContainerTable> m_localRepository;
+    private ILocalDataRepository m_localRepository;
 
     /** {@link #getDataRepository()}. */
     private final IDataRepository m_dataRepository;
@@ -610,7 +610,7 @@ public class Buffer implements KNIMEStreamConstants {
      * @param outputFormat the output table store format
      */
     Buffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
-        final IDataRepository dataRepository, final Map<Integer, ContainerTable> localRep,
+        final IDataRepository dataRepository, final ILocalDataRepository localRep,
         final IWriteFileStoreHandler fileStoreHandler) {
         this(spec, maxRowsInMemory, bufferID, dataRepository, localRep, fileStoreHandler, BufferSettings.getDefault());
     }
@@ -629,7 +629,7 @@ public class Buffer implements KNIMEStreamConstants {
      * @param settings the {@link BufferSettings}
      */
     Buffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
-        final IDataRepository dataRepository, final Map<Integer, ContainerTable> localRep,
+        final IDataRepository dataRepository, final ILocalDataRepository localRep,
         final IWriteFileStoreHandler fileStoreHandler, final BufferSettings settings) {
         assert (maxRowsInMemory >= 0);
         m_flushedToDisk = false;
@@ -1052,7 +1052,7 @@ public class Buffer implements KNIMEStreamConstants {
                     b = ownerBuffer;
                     m_copiedBlobsMap.put(ad, rewrite);
                 } else {
-                    ContainerTable tbl = m_localRepository.get(ad.getBufferID());
+                    ContainerTable tbl = m_localRepository.getTable(ad.getBufferID());
                     b = tbl == null ? null : ((BufferedContainerTable)tbl).getBuffer();
                 }
                 if (b != null && !isToCloneForVersionHop) {
@@ -1124,7 +1124,7 @@ public class Buffer implements KNIMEStreamConstants {
             if (tableOptional.isPresent()) {
                 originalBuffer = ((BufferedContainerTable)tableOptional.get()).getBuffer();
             } else if (getLocalRepository() != null) {
-                ContainerTable t = getLocalRepository().get(originalBufferIndex);
+                ContainerTable t = m_localRepository.getTable(originalBufferIndex);
                 if (t != null) {
                     originalBuffer = ((BufferedContainerTable)t).getBuffer();
                 }
@@ -1463,7 +1463,7 @@ public class Buffer implements KNIMEStreamConstants {
      *
      * @return (Workflow-) global table repository.
      */
-    final Map<Integer, ContainerTable> getLocalRepository() {
+    final ILocalDataRepository getLocalRepository() {
         return m_localRepository;
     }
 
@@ -1756,7 +1756,7 @@ public class Buffer implements KNIMEStreamConstants {
      * @return A new buffer with the same ID, which is only used locally to update the stream.
      */
     Buffer createLocalCloneForWriting() {
-        return new Buffer(m_spec, 0, getBufferID(), m_dataRepository, Collections.emptyMap(),
+        return new Buffer(m_spec, 0, getBufferID(), m_dataRepository, new DefaultLocalDataRepository(),
             castAndGetFileStoreHandler(), m_bufferSettings);
     }
 

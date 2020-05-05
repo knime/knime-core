@@ -48,7 +48,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -61,7 +60,6 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
@@ -595,11 +593,7 @@ public abstract class NodeModel implements ViewableModel {
             }
         } catch (Exception e) {
             // clear local tables (which otherwise would continue to block resources)
-            final HashMap<Integer, ContainerTable> localTables = exec.getLocalTableRepository();
-            for (ContainerTable localTable : localTables.values()) {
-                localTable.clear();
-            }
-            localTables.clear();
+            exec.onCancel();
             throw e;
         }
 

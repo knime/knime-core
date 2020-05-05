@@ -50,9 +50,7 @@ package org.knime.core.data.container;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
@@ -109,7 +107,7 @@ class NoKeyBuffer extends Buffer {
      * @param forceSynchronousWrite passed on to super.
      */
     NoKeyBuffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
-        final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTblRep,
+        final IDataRepository dataRepository, final ILocalDataRepository localTblRep,
         final IWriteFileStoreHandler fileStoreHandler) {
         super(spec, maxRowsInMemory, bufferID, dataRepository, localTblRep, fileStoreHandler);
     }
@@ -160,7 +158,7 @@ class NoKeyBuffer extends Buffer {
     /** {@inheritDoc} */
     @Override
     Buffer createLocalCloneForWriting() {
-        return new NoKeyBuffer(getTableSpec(), 0, getBufferID(), getDataRepository(), Collections.emptyMap(),
+        return new NoKeyBuffer(getTableSpec(), 0, getBufferID(), getDataRepository(), new DefaultLocalDataRepository(),
             castAndGetFileStoreHandler());
     }
 }

@@ -47,13 +47,12 @@
  */
 package org.knime.core.node;
 
-import java.util.Map;
-
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.DataContainerSettings;
+import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.internal.ReferencedFile;
@@ -136,7 +135,7 @@ public class BufferedDataContainer extends DataContainer {
             final Node node, final MemoryPolicy policy,
             final boolean forceCopyOfBlobs, final int maxCellsInMemory,
             final IDataRepository dataRepository,
-            final Map<Integer, ContainerTable> localTableRepository,
+            final ILocalDataRepository localTableRepository,
             final IWriteFileStoreHandler fileStoreHandler,
             final boolean rowKeys) {
         /**

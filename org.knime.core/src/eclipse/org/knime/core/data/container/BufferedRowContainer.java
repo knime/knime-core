@@ -55,7 +55,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -239,7 +238,7 @@ public class BufferedRowContainer implements RowContainer {
     private IDataRepository m_repository;
 
     // TODO
-    private final Map<Integer, ContainerTable> m_localRepository;
+    private final ILocalDataRepository m_localRepository;
 
     /**
      * A file store handler. It's lazy initialized in this class. The buffered data container sets the FSH of the
@@ -255,7 +254,7 @@ public class BufferedRowContainer implements RowContainer {
      * @param repository
      */
     BufferedRowContainer(final DataTableSpec spec, final DataContainerSettings settings,
-        final IDataRepository repository, final Map<Integer, ContainerTable> localRepository,
+        final IDataRepository repository, final ILocalDataRepository localRepository,
         final IWriteFileStoreHandler fileStoreHandler, final boolean forceCopyOfBlobs, final boolean rowKeys) {
         CheckUtils.checkArgumentNotNull(spec, "Spec must not be null!");
         CheckUtils.checkArgument(settings.getMaxCellsInMemory() >= 0, "Cell count must be positive: %s",
@@ -537,7 +536,12 @@ public class BufferedRowContainer implements RowContainer {
 
     @Override
     public void clear() {
-        m_table.clear();
+        if (m_table != null) {
+            // also clears buffer
+            m_table.clear();
+        } else if (m_buffer != null) {
+            m_buffer.clear();
+        }
     }
 
     /**
@@ -891,7 +895,7 @@ public class BufferedRowContainer implements RowContainer {
          * @return A newly created buffer.
          */
         Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory, final int bufferID,
-            final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTableRep,
+            final IDataRepository dataRepository, final ILocalDataRepository localTableRep,
             final IWriteFileStoreHandler fileStoreHandler) {
             return new Buffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler,
                 m_bufferSettings);
@@ -904,7 +908,7 @@ public class BufferedRowContainer implements RowContainer {
         /** {@inheritDoc} */
         @Override
         Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory, final int bufferID,
-            final IDataRepository dataRepository, final Map<Integer, ContainerTable> localTableRep,
+            final IDataRepository dataRepository, final ILocalDataRepository localTableRep,
             final IWriteFileStoreHandler fileStoreHandler) {
             return new NoKeyBuffer(spec, rowsInMemory, bufferID, dataRepository, localTableRep, fileStoreHandler);
         }
@@ -916,7 +920,6 @@ public class BufferedRowContainer implements RowContainer {
             return new NoKeyBuffer(binFile, blobDir, spec, metaIn, bufID, dataRepository);
         }
     }
-
 
     /** Used in write/readFromZip: Name of the zip entry containing the spec. */
     static final String ZIP_ENTRY_SPEC = "spec.xml";
@@ -995,7 +998,8 @@ public class BufferedRowContainer implements RowContainer {
      * @throws IOException
      * @throws CanceledExecutionException
      */
-    public static void writeToStream(final DataTable table, final OutputStream out, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+    public static void writeToStream(final DataTable table, final OutputStream out, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         Buffer buf;
         ExecutionMonitor e = exec;
         boolean canUseBuffer = table instanceof ContainerTable;
@@ -1011,7 +1015,7 @@ public class BufferedRowContainer implements RowContainer {
             exec.setMessage("Archiving table");
             e = exec.createSubProgress(0.8);
             buf = new Buffer(table.getDataTableSpec(), 0, -1, NotInWorkflowDataRepository.newInstance(),
-                new HashMap<Integer, ContainerTable>(), NotInWorkflowWriteFileStoreHandler.create());
+                new DefaultLocalDataRepository(), NotInWorkflowWriteFileStoreHandler.create());
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
