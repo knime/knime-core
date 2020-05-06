@@ -50,6 +50,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.data.container.BufferedContainerTable;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
@@ -78,13 +79,13 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
         WorkflowManager manager = getManager();
         ContainerTable fileReaderTable = getExecuteFileReaderTable();
         // tables are not extracted to workflow temp space after load (lazy init)
-        Assert.assertFalse(fileReaderTable.isOpen());
+        Assert.assertFalse(((BufferedContainerTable)fileReaderTable).isOpen());
         checkState(m_fileReader2, InternalNodeContainerState.EXECUTED);
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_fileReader1, m_diffChecker3);
         Assert.assertNotNull(manager.getContext());
         Assert.assertEquals(manager.getNodeContainerDirectory().getFile(), manager.getContext().getCurrentLocation());
         executeAndWait(m_diffChecker3);
-        Assert.assertTrue(fileReaderTable.isOpen());
+        Assert.assertTrue(((BufferedContainerTable)fileReaderTable).isOpen());
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_fileReader2, m_fileReader1, m_diffChecker3);
     }
 
@@ -94,7 +95,7 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
         WorkflowManager manager = getManager();
         ContainerTable fileReaderTable = getExecuteFileReaderTable();
         // tables are not extracted to workflow temp space after load (lazy init)
-        Assert.assertFalse(fileReaderTable.isOpen());
+        Assert.assertFalse(((BufferedContainerTable)fileReaderTable).isOpen());
         Assert.assertNotNull(manager.getContext());
         Assert.assertEquals(manager.getNodeContainerDirectory().getFile(), manager.getContext().getCurrentLocation());
         File saveAsFolder = FileUtil.createTempDir(getClass().getName());
@@ -107,11 +108,11 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
 
         // if this fails (= assertion thrown) this means the workflow format has changed and all nodes are dirty
         // when save-as is called.
-        Assert.assertFalse(fileReaderTable.isOpen());
+        Assert.assertFalse(((BufferedContainerTable)fileReaderTable).isOpen());
 
         executeAndWait(m_diffChecker3);
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_fileReader2, m_fileReader1, m_diffChecker3);
-        Assert.assertTrue(fileReaderTable.isOpen());
+        Assert.assertTrue(((BufferedContainerTable)fileReaderTable).isOpen());
     }
 
     private ContainerTable getExecuteFileReaderTable() {
