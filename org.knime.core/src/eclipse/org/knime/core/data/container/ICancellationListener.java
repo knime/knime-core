@@ -52,8 +52,10 @@ package org.knime.core.data.container;
  * Simply a listener
  *
  * @author Christian Dietz, KNIME GmbH
+ *
+ * @since 4.2
  */
-public interface ICancellationListener {
+interface ICancellationListener {
 
     /**
      * Called when node was cancelled

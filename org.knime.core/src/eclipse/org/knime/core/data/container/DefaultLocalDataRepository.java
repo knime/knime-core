@@ -56,6 +56,9 @@ import java.util.function.Consumer;
  * Default implementation of a {@link ILocalDataRepository}.
  *
  * @author Christian Dietz, KNIME GmbH
+ *
+ * @since 4.2
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class DefaultLocalDataRepository implements ILocalDataRepository {
 
@@ -64,7 +67,7 @@ public class DefaultLocalDataRepository implements ILocalDataRepository {
     private final Map<ICancellationListener, ICancellationListener> m_cancellationListeners;
 
     /**
-     * Empty local repository
+     * Create an empty local repository
      */
     public DefaultLocalDataRepository() {
         this(new HashMap<>());
