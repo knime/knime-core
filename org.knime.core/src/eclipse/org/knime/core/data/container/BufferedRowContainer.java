@@ -405,7 +405,7 @@ public class BufferedRowContainer implements RowContainer {
      *
      * @return <code>true</code> if container is accepting rows.
      */
-    public boolean isOpen() {
+    boolean isOpen() {
         return !isClosed();
     }
 

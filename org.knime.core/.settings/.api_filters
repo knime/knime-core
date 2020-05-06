@@ -81,6 +81,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/ContainerTable.java" type="org.knime.core.data.container.ContainerTable">
+        <filter id="576720909">
+            <message_arguments>
+                <message_argument value="KnowsRowCountTable"/>
+                <message_argument value="ContainerTable"/>
+            </message_arguments>
+        </filter>
         <filter id="576725006">
             <message_arguments>
                 <message_argument value="KnowsRowCountTable"/>

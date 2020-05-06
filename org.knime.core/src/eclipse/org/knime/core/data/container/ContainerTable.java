@@ -48,26 +48,17 @@ package org.knime.core.data.container;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 /**
- * Class implementing the <code>DataTable</code> interface and using a buffer from a <code>DataContainer</code> as data
- * source. This class doesn't do functional things. It only provides the <code>DataTable</code> methods.
+ * {@link KnowsRowCountTable}s which have a table id.
  *
- * <p>
- * We split it from the <code>Buffer</code> implementation as a buffer is dynamic in size. This table should only be
- * used when the buffer has been fixed.
- *
- * @author Bernd Wiswedel, University of Konstanz
+ * @author Christian Dietz, KNIME GmbH
+ * @since 4.2
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface ContainerTable extends KnowsRowCountTable {
 
     /**
-     * @return
+     * @return the table id
      */
     int getTableId();
-
-    /**
-     * TODO only used for tests. can we remove that?
-     * @return
-     */
-    boolean isOpen();
 
 }
