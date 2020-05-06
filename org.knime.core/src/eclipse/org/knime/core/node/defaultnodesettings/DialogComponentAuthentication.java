@@ -49,6 +49,8 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
+
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -504,13 +506,13 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
             case USER_PWD:
                 userName = m_usernameField.getText();
                 final char[] password = m_passwordField.getPassword();
-                if (password != null && password.length > 1) {
+                if (isNotEmpty(password)) {
                     pwd = new String(password);
                 }
                 break;
             case PWD:
                 final char[] passwordOnly = m_passwordOnlyField.getPassword();
-                if (passwordOnly != null && passwordOnly.length > 1) {
+                if (isNotEmpty(passwordOnly)) {
                     pwd = new String(passwordOnly);
                 }
                 break;
@@ -570,7 +572,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
                 String modelPwd = model.getPassword();
                 char[] password = m_passwordField.getPassword();
                 String componentPwd = null;
-                if (password != null && password.length > 1) {
+                if (isNotEmpty(password)) {
                     componentPwd = new String(password);
                 }
                 if (!Objects.equals(componentPwd, modelPwd)) {
@@ -584,7 +586,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
                 String modelPwd = model.getPassword();
                 char[] password = m_passwordOnlyField.getPassword();
                 String componentPwd = null;
-                if (password != null && password.length > 1) {
+                if (isNotEmpty(password)) {
                     componentPwd = new String(password);
                 }
                 if (!Objects.equals(componentPwd, modelPwd)) {
@@ -658,7 +660,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      */
     @Override
     public void setToolTipText(final String text) {
-        //TODO
+        super.getComponentPanel().setToolTipText(text);
     }
 
     /**
