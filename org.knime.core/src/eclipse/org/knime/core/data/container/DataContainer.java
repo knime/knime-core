@@ -134,6 +134,8 @@ public class DataContainer implements RowAppender {
 
     private final ICancellationListener m_cancellationListener;
 
+    private boolean m_isClosed;
+
     /**
      * Consider using {@link ExecutionContext#createDataContainer(DataTableSpec)} instead of invoking this constructor
      * directly.
@@ -353,6 +355,7 @@ public class DataContainer implements RowAppender {
         ContainerTable table = m_rowContainer.getTable();
         m_localRepository.addTable(table);
         m_localRepository.removeCancellationListener(m_cancellationListener);
+        m_isClosed = true;
     }
 
     /**
@@ -362,7 +365,7 @@ public class DataContainer implements RowAppender {
      * @return <code>true</code> if table is available, <code>false</code> otherwise.
      */
     public boolean isClosed() {
-        return m_rowContainer.isClosed();
+        return m_isClosed;
     }
 
     /**

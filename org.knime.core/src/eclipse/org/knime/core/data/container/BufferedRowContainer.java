@@ -79,6 +79,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
@@ -97,10 +98,16 @@ import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
 
 /**
+ * {@link RowContainer} implementation using {@link Buffer} and {@link TableStoreFormat}.
+ * Previously implemented in {@link DataContainer}. Separated out to make it exchangeable.
  *
- * @author dietzc
+ * @author Bernd Wiswedel, KNIME GmbH
+ * @author Mark Ortmann, KNIME GmbH
+ * @author Christian Dietz, KNIME GmbH
+ *
+ * @since 4.2
  */
-public class BufferedRowContainer implements RowContainer {
+class BufferedRowContainer implements RowContainer {
 
     /** The executor, which runs the IO tasks. Currently used only while writing rows. */
     static final ThreadPoolExecutor ASYNC_EXECUTORS;
@@ -406,18 +413,7 @@ public class BufferedRowContainer implements RowContainer {
      * @return <code>true</code> if container is accepting rows.
      */
     boolean isOpen() {
-        return !isClosed();
-    }
-
-    /**
-     * Returns <code>true</code> if table has been closed and <code>getTable()</code> will return a
-     * <code>DataTable</code> object.
-     *
-     * @return <code>true</code> if table is available, <code>false</code> otherwise.
-     */
-    @Override
-    public boolean isClosed() {
-        return m_table != null;
+        return m_table == null;
     }
 
     /**
@@ -430,7 +426,7 @@ public class BufferedRowContainer implements RowContainer {
      */
     @Override
     public void close() {
-        if (isClosed()) {
+        if (m_table!=null) {
             return;
         }
         if (m_buffer == null) {
@@ -481,7 +477,7 @@ public class BufferedRowContainer implements RowContainer {
      */
     @Override
     public long size() {
-        if (isClosed()) {
+        if (m_table!=null) {
             return m_table.getBuffer().size();
         }
         return m_size;
@@ -509,7 +505,7 @@ public class BufferedRowContainer implements RowContainer {
      */
     @Override
     public DataTableSpec getTableSpec() {
-        if (isClosed()) {
+        if (m_table!=null) {
             return m_table.getDataTableSpec();
         } else if (isOpen()) {
             return m_spec;
