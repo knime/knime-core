@@ -55,7 +55,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -137,7 +136,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         final Version version = Version.valueOf(variablesMask.getString(VERSION_KEY, Version.V_2008_04_08.name()));
         final ConfigBaseRO variableTree = version.equals(Version.V_2008_04_08) || !variablesMask.containsKey(TREE_KEY)
             ? variablesMask : variablesMask.getConfigBase(TREE_KEY);
-        final ConfigEditTreeNode rootNode = new ConfigEditTreeNode(settingsTree, null, version);
+        final ConfigEditTreeNode rootNode = new ConfigEditTreeNode(settingsTree, false, version);
         recursiveAdd(rootNode, settingsTree, variableTree);
         final ConfigEditTreeModel result = new ConfigEditTreeModel(rootNode);
         rootNode.setTreeModel(result); // allows event propagation
@@ -152,7 +151,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      */
     public static ConfigEditTreeModel create(final ConfigBase settingsTree) {
         // if we create an empty mask, we set the version number to the current version
-        final ConfigEditTreeNode rootNode = new ConfigEditTreeNode(settingsTree, null, CURRENT_VERSION);
+        final ConfigEditTreeNode rootNode = new ConfigEditTreeNode(settingsTree, false, CURRENT_VERSION);
         recursiveAdd(rootNode, settingsTree, null);
         final ConfigEditTreeModel result = new ConfigEditTreeModel(rootNode);
         rootNode.setTreeModel(result); // allows event propagation
@@ -188,9 +187,12 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             // instead interpret it as a leaf even though it is a config and actually has children
             // the only exception is if the child has descendants in the variable tree
             ConfigEntries childArraySubtype = null;
+            // TODO why did we need the grandchildren check?
             if (!childVariableValueHasGrandchildren && childValue.getType() == ConfigEntries.config) {
                 childArraySubtype = getChildArraySubtype(configValue, childKey);
             }
+
+            final boolean isLeaf = isLeaf(configValue, childKey, childValue);
 
             // determine if the child is an internal config
             final boolean childIsInternals =
@@ -200,13 +202,26 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             // the only exception is if the child has descendants in the variable tree
             if (!childIsInternals) {
                 final ConfigEditTreeNode childTreeNode =
-                    new ConfigEditTreeNode(childValue, childArraySubtype, treeNode.m_version);
+                    new ConfigEditTreeNode(childValue, isLeaf, treeNode.m_version);
                 treeNode.add(childTreeNode);
-                if (childValue.getType() == ConfigEntries.config && childArraySubtype == null) {
+                if (childValue.getType() == ConfigEntries.config && !isLeaf) {
+                    // no leaf -> add the children of this config recursively
                     recursiveAdd(childTreeNode, (ConfigBase)childValue, childVariableValue);
                 }
             }
         }
+    }
+
+    private static boolean isLeaf(final ConfigBase configValue, final String childKey,
+        final AbstractConfigEntry childValue) {
+        // all non-config entries are leafs
+        final boolean isLeaf = childValue.getType() != ConfigEntries.config;
+        if (!isLeaf && configValue instanceof Config) {
+            // the child is a config but configs could also be a leaf e.g. if it represent an array
+            return VariableTypeRegistry.getInstance().getCorrespondingVariableType((Config)configValue, childKey)
+                .isPresent();
+        }
+        return isLeaf;
     }
 
     private static ConfigEntries getChildArraySubtype(final ConfigBase configValue, final String childKey) {
@@ -414,7 +429,6 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
 
     /** Single Tree node implementation. */
     public static final class ConfigEditTreeNode extends DefaultMutableTreeNode {
-        private final ConfigEntries m_arraySubType;
 
         private final Version m_version;
 
@@ -430,9 +444,8 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
          * @param arraySubType the array type of this node, possibly null
          * @param the version number of this tree node
          */
-        ConfigEditTreeNode(final AbstractConfigEntry entry, final ConfigEntries arraySubType, final Version version) {
-            super(new Wrapper(entry, !(entry instanceof Config) || arraySubType != null));
-            m_arraySubType = arraySubType;
+        ConfigEditTreeNode(final AbstractConfigEntry entry, final boolean isLeaf, final Version version) {
+            super(new Wrapper(entry, !(entry instanceof Config) || isLeaf));
             m_version = version;
             setAllowsChildren(!getUserObject().isLeaf());
         }
@@ -465,10 +478,6 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         /** @return associated config entry. */
         public AbstractConfigEntry getConfigEntry() {
             return getUserObject().m_configEntry;
-        }
-
-        Optional<ConfigEntries> getArraySubType() {
-            return Optional.ofNullable(m_arraySubType);
         }
 
         /** @param value the new variable to use. */
