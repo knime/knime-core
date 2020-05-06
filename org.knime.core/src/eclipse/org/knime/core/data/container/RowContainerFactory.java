@@ -44,53 +44,34 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 30, 2020 (dietzc): created
+ *   May 9, 2020 (dietzc): created
  */
 package org.knime.core.data.container;
 
-import org.knime.core.data.DataRow;
+import java.io.File;
+
 import org.knime.core.data.DataTableSpec;
 
 /**
- * RowContainer store {@link DataRow}s and are able to provide a {@link ContainerTable} after
- * RowContainer#close()' was called.
+ * TODO
  *
  * @author Christian Dietz, KNIME GmbH
- * @since 4.2
  */
-public interface RowContainer extends RowAppender, AutoCloseable {
+public interface RowContainerFactory {
 
     /**
-     * {@inheritDoc}
+     * @param spec to check for support
+     * @return true, if RowContainerFactory supports spec
      */
-    @Override
-    void close();
+    boolean supports(DataTableSpec spec);
 
     /**
-     * Can only be called after RowContainer#close() has been called.
-     *
-     * @return the underlying {@link ContainerTable}.
+     * @param tableId
+     * @param spec
+     * @param rowKeys
+     * @param dest
+     * @return a new instance of a {@link RowContainer}.
      */
-    ContainerTable getTable();
+    RowContainer create(long tableId, DataTableSpec spec, File dest, boolean rowKeys);
 
-    /**
-     * Clears the RowContainer, i.e. all associated temporary data and memory will be removed.
-     */
-    void clear();
-
-    /**
-     * @return size of the RowContainer. Can increase until RowContainer is closed.
-     */
-    long size();
-
-    /**
-     * TODO I want to get rid of this method asap!
-     */
-    void setMaxPossibleValues(int maxPossibleValues);
-
-    /**
-     * @return the underlying {@link DataTableSpec}. On close, the {@link DataTableSpec} will comprise domain
-     *         information for each column.
-     */
-    DataTableSpec getTableSpec();
 }

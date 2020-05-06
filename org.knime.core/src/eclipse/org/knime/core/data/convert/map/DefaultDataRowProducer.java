@@ -50,6 +50,7 @@ package org.knime.core.data.convert.map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
@@ -383,7 +384,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         protected final DataCell map(final PP params) throws Exception {
             final Object value = m_producer.produceCellValue(m_source, params);
             if (value == null) {
-                return new MissingCell(null);
+                return DataType.getMissingCell();
             } else {
                 return m_converter.convertUnsafe(value);
             }

@@ -69,9 +69,9 @@ import org.knime.core.data.DataCellTypeConverter;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
+import org.knime.core.data.container.fast.FastTableRowContainerFactory;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.filestore.FileStoreFactory;
@@ -99,6 +99,11 @@ import org.knime.core.util.Pair;
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class RearrangeColumnsTable implements KnowsRowCountTable {
+
+    /**
+     *
+     */
+    private static final String CONTAINER_TYPE_FASTTABLE = "CONTAINER_TYPE_FASTTABLE";
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RearrangeColumnsTable.class);
 
@@ -178,8 +183,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
      */
     public RearrangeColumnsTable(final ReferencedFile f, final NodeSettingsRO settings,
         final Map<Integer, BufferedDataTable> tblRep, final DataTableSpec spec, final int tableID,
-        final WorkflowDataRepository dataRepository)
-        throws IOException, InvalidSettingsException {
+        final WorkflowDataRepository dataRepository) throws IOException, InvalidSettingsException {
         NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
         int refTableID = subSettings.getInt(CFG_REFERENCE_ID);
         m_reference = BufferedDataTable.getDataTable(tblRep, refTableID, dataRepository);
@@ -201,8 +205,8 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
                 m_appendTable = DataContainer.readFromZip(f, false);
                 DataTableSpec appendSpec = m_appendTable.getDataTableSpec();
                 if (appendSpec.getNumColumns() != appendColCount) {
-                    throw new IOException("Inconsistency in data file \"" + f + "\", read "
-                        + appendSpec.getNumColumns() + " columns, expected " + appendColCount);
+                    throw new IOException("Inconsistency in data file \"" + f + "\", read " + appendSpec.getNumColumns()
+                        + " columns, expected " + appendColCount);
                 }
                 for (int i = 0; i < appendSpec.getNumColumns(); i++) {
                     appendColSpecs[i] = appendSpec.getColumnSpec(i);
@@ -215,11 +219,17 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
                         appendColSpecs[index++] = spec.getColumnSpec(i);
                     }
                 }
+
                 assert index == appendColCount;
                 DataTableSpec appendSpec = new DataTableSpec(appendColSpecs);
-                CopyOnAccessTask noKeyBufferOnAccessTask =
-                    new CopyOnAccessTask(f, appendSpec, tableID, dataRepository, false);
-                m_appendTable = DataContainer.readFromZipDelayed(noKeyBufferOnAccessTask, appendSpec);
+                // TODO this definitively SHOULDN't happen in here, but outside and append table should be handed to ColumnRearranger.
+                if (settings.containsKey(CONTAINER_TYPE_FASTTABLE) && settings.getBoolean(CONTAINER_TYPE_FASTTABLE)) {
+                    m_appendTable = FastTableRowContainerFactory.readFromFileDelayed(f, appendSpec, tableID, dataRepository, settings);
+                } else {
+                    final CopyOnAccessTask noKeyBufferOnAccessTask =
+                        new CopyOnAccessTask(f, appendSpec, tableID, dataRepository, false);
+                    m_appendTable = DataContainer.readFromZipDelayed(noKeyBufferOnAccessTask, appendSpec);
+                }
             }
         } else {
             m_appendTable = null;
@@ -279,6 +289,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
                 .filter(i -> !m_isFromRefTable[i])//
                 .map(i -> m_map[i])//
                 .toArray();
+            // TODO if appendIndices == apendTable.getNumColumns -> why filter?
             final TableFilter appendFilter = materializeCols(appendIndices);
             appendIt = m_appendTable.iteratorWithFilter(appendFilter);
         }
@@ -300,12 +311,13 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         final Supplier<IntStream> indicesSup = () -> filter.getMaterializeColumnIndices()
             .map(o -> o.stream().mapToInt(i -> i)).orElse(IntStream.range(0, m_map.length));
 
-         // determine iterator for appended table
+        // determine iterator for appended table
         CloseableRowIterator appendIt = EMPTY_ITERATOR;
         if (m_appendTable != null) {
             final TableFilter.Builder appendFilterBuilder = new TableFilter.Builder(filter);
             final int[] appendIndices = indicesSup.get().filter(i -> !m_isFromRefTable[i]).map(i -> m_map[i]).toArray();
             appendFilterBuilder.withMaterializeColumnIndices(appendIndices);
+            // TODO special case for case where indices.length = 0?
             appendIt = m_appendTable.iteratorWithFilter(appendFilterBuilder.build());
         }
 
@@ -335,8 +347,8 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         Vector<SpecAndFactoryObject> includes = rearranger.getIncludes();
         // names and types of the specs must match
         if (!table.getDataTableSpec().equalStructure(originalSpec)) {
-            throw new IllegalArgumentException("The argument table's spec does not match the original "
-                + "spec passed in the constructor.");
+            throw new IllegalArgumentException(
+                "The argument table's spec does not match the original " + "spec passed in the constructor.");
         }
         int size = includes.size();
         ArrayList<DataColumnSpec> newColSpecsList = new ArrayList<DataColumnSpec>();
@@ -416,8 +428,10 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         return new RearrangeColumnsTable(table, includesIndex, isFromRefTable, spec, appendTable);
     }
 
-    /** Set a file store factory on the {@link AbstractCellFactory}.
-     * See {@link AbstractCellFactory#getFileStoreFactory()} for details.
+    /**
+     * Set a file store factory on the {@link AbstractCellFactory}. See
+     * {@link AbstractCellFactory#getFileStoreFactory()} for details.
+     *
      * @param newColumnFactoryList To work on.
      * @param ctx Non-null context to init {@link FileStoreFactory}.
      * @since 2.11
@@ -430,9 +444,11 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
             }
         }
     }
+
     /**
      * Calls {@link AbstractCellFactory#afterProcessing()} and
      * {@link AbstractCellFactory#setFileStoreFactory(FileStoreFactory)} on all unique factories in the argument.
+     *
      * @param newColumnFactoryList ...
      */
     static void finishProcessing(final NewColumnsProducerMapping newColumnFactoryList) {
@@ -453,7 +469,8 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         final int factoryCount = newColsFactories.size();
         int r = 0;
         CellFactory facForProgress = factoryCount > 0 ? newColsFactories.iterator().next() : null;
-        for (RowIterator it = table.iterator(); it.hasNext(); r++) {
+        final CloseableRowIterator it = table.iterator();
+        for (; it.hasNext(); r++) {
             DataRow row = it.next();
             DataRow append = calcNewCellsForRow(row, newColsProducerMapping);
             container.addRowToTable(append);
@@ -465,6 +482,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
             }
             subProgress.checkCanceled();
         }
+        it.close();
     }
 
     /**
@@ -494,9 +512,8 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         assert facForProgress != null;
         assert workers > 0 : "Nr workers <= 0: " + workers;
         assert queueSize > 0 : "queue size <= 0: " + queueSize;
-        ConcurrentNewColCalculator calculator =
-            new ConcurrentNewColCalculator(queueSize, workers, container, subProgress, finalRowCount,
-                newColsProducerMapping, facForProgress);
+        ConcurrentNewColCalculator calculator = new ConcurrentNewColCalculator(queueSize, workers, container,
+            subProgress, finalRowCount, newColsProducerMapping, facForProgress);
         try {
             calculator.run(table);
         } catch (InterruptedException e) {
@@ -622,6 +639,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
 
     /**
      * {@inheritDoc}
+     *
      * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
      */
     @Override
@@ -632,6 +650,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
 
     /**
      * {@inheritDoc}
+     *
      * @since 3.0
      */
     @Override
@@ -643,15 +662,22 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
      * {@inheritDoc}
      */
     @Override
-    public void saveToFile(final File f, final NodeSettingsWO s, final ExecutionMonitor exec) throws IOException,
-        CanceledExecutionException {
+    public void saveToFile(final File f, final NodeSettingsWO s, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        // TODO we want to move all of this somewhere else. Rearrange column table shouldn't have to deal with distinction between fast table, buffered table etc.
         NodeSettingsWO subSettings = s.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addInt(CFG_REFERENCE_ID, m_reference.getBufferedTableId());
         subSettings.addIntArray(CFG_MAP, m_map);
         subSettings.addBooleanArray(CFG_FLAGS, m_isFromRefTable);
         if (m_appendTable != null) {
             // subSettings argument is ignored in ContainerTable
-            m_appendTable.saveToFile(f, subSettings, exec);
+            if (FastTableRowContainerFactory.isFastTable(m_appendTable)) {
+                s.addBoolean(CONTAINER_TYPE_FASTTABLE, true);
+                FastTableRowContainerFactory.saveToFile(m_appendTable, f, s, exec);
+            } else {
+                s.addBoolean(CONTAINER_TYPE_FASTTABLE, false);
+                m_appendTable.saveToFile(f, subSettings, exec);
+            }
         }
     }
 
@@ -748,8 +774,8 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
 
         /** {@inheritDoc} */
         @Override
-        protected void processFinished(final ComputationTask task) throws ExecutionException, CancellationException,
-            InterruptedException {
+        protected void processFinished(final ComputationTask task)
+            throws ExecutionException, CancellationException, InterruptedException {
             int r = (int)task.getIndex(); // row count in table is integer
             RowKey key = task.getInput().getKey();
             DataRow append = task.get(); // exception falls through

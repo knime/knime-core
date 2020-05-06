@@ -43,6 +43,18 @@
 			<url>${knime.shared.p2}</url>
 		</repository>
 		<repository>
+			<id>p2-knime-table</id>
+			<layout>p2</layout>
+			<!-- <url>${knime.table.p2}</url> -->
+			<url>${knime.p2.repo}/knime-table/${git.branch}</url>
+		</repository>
+		<repository>
+			<id>p2-knime-table-arrow</id>
+			<layout>p2</layout>
+			<!-- <url>${knime.table.arrow.p2}</url> -->
+			<url>${knime.p2.repo}/knime-table-arrow/${git.branch}</url>
+		</repository>
+		<repository>
 			<id>p2-knime-tp</id>
 			<layout>p2</layout>
 			<url>${knime.tp.p2}</url>

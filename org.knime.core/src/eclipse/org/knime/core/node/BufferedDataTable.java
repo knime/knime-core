@@ -87,6 +87,7 @@ import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.VoidTable;
 import org.knime.core.data.container.WrappedTable;
+import org.knime.core.data.container.fast.FastTableRowContainerFactory;
 import org.knime.core.data.container.filter.CloseableDataRowIterable;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.container.storage.TableStoreFormat;
@@ -103,38 +104,40 @@ import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.util.MutableBoolean;
 
 /**
- * DataTable implementation that is passed along the KNIME workflow. This
- * implementation is provided in a NodeModel's
- * {@link org.knime.core.node.NodeModel#execute(
- * BufferedDataTable[], ExecutionContext)} method as input data and
- * must also be returned as output data.
+ * DataTable implementation that is passed along the KNIME workflow. This implementation is provided in a NodeModel's
+ * {@link org.knime.core.node.NodeModel#execute( BufferedDataTable[], ExecutionContext)} method as input data and must
+ * also be returned as output data.
  *
- * <p><code>BufferedDataTable</code> are not created directly (via a
- * constructor, for instance) but they are rather instantiated using the
- * {@link ExecutionContext} that is provided in the execute method.
+ * <p>
+ * <code>BufferedDataTable</code> are not created directly (via a constructor, for instance) but they are rather
+ * instantiated using the {@link ExecutionContext} that is provided in the execute method.
  *
- * <p>Implementation note: The iterator returned by this class is a
- * {@link CloseableRowIterator}, meaning that if your implementation is likely
- * to open many iterators without pushing them to the end of the table, you
- * should consider to close them when done in order to free system resources.
-
+ * <p>
+ * Implementation note: The iterator returned by this class is a {@link CloseableRowIterator}, meaning that if your
+ * implementation is likely to open many iterators without pushing them to the end of the table, you should consider to
+ * close them when done in order to free system resources.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class BufferedDataTable implements DataTable, PortObject {
 
-    /** Define port type of objects of this class when used as PortObjects.
+    /**
+     * Define port type of objects of this class when used as PortObjects.
      */
     public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(BufferedDataTable.class);
 
-    /** A port type representing an optional input table (as used, for instance
-     * in the Concatenate node).
-     * @since 2.6 */
+    /**
+     * A port type representing an optional input table (as used, for instance in the Concatenate node).
+     *
+     * @since 2.6
+     */
     public static final PortType TYPE_OPTIONAL =
         PortTypeRegistry.getInstance().getPortType(BufferedDataTable.class, true);
 
     /**
-     * Method that is used internally while the workflow is being loaded. Not
-     * intended to be used directly by node implementations.
+     * Method that is used internally while the workflow is being loaded. Not intended to be used directly by node
+     * implementations.
+     *
      * @param tblRep The table repository
      * @param tableID The table ID
      * @param dataRepository The data repository (needed for blobs, file stores, and table ids).
@@ -149,8 +152,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
         BufferedDataTable result = tblRep.get(tableID);
         if (result == null) {
-            throw new InvalidSettingsException("No BufferedDataTable "
-                    + " with ID " + tableID);
+            throw new InvalidSettingsException("No BufferedDataTable " + " with ID " + tableID);
         }
         // update the lastID counter!
         assert result.m_tableID == tableID;
@@ -159,31 +161,42 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     /**
-     * Method that is used internally while the workflow is being loaded. Not
-     * intended to be used directly by node implementations.
+     * Method that is used internally while the workflow is being loaded. Not intended to be used directly by node
+     * implementations.
+     *
      * @param tblRep The table repository
      * @param t The table to put into the repository.
      */
-    public static void putDataTable(
-            final Map<Integer, BufferedDataTable> tblRep,
-            final BufferedDataTable t) {
+    public static void putDataTable(final Map<Integer, BufferedDataTable> tblRep, final BufferedDataTable t) {
         tblRep.put(t.getBufferedTableId(), t);
     }
 
-    /** Throws <code>IllegalStateException</code> as this method is not
-     * supposed to be called; refer to the API of {@link PortObject} for details
-     * on this method. The KNIME engine treats objects of this kind differently.
+    /**
+     * Throws <code>IllegalStateException</code> as this method is not supposed to be called; refer to the API of
+     * {@link PortObject} for details on this method. The KNIME engine treats objects of this kind differently.
+     *
      * @return Nothing as an exception is being thrown.
      */
     static PortObjectSerializer<BufferedDataTable> getPortObjectSerializer() {
-        throw new IllegalStateException("No access on BufferedDataTables "
-                + "via generic PortObjectSerializer");
+        throw new IllegalStateException("No access on BufferedDataTables " + "via generic PortObjectSerializer");
     }
 
     private final MutableBoolean m_isCleared = new MutableBoolean(false);
+
     private final KnowsRowCountTable m_delegate;
+
     private int m_tableID;
+
     private Node m_owner;
+
+    /**
+     * Creates a new buffered data table based on a container table (caching everything).
+     *
+     * @param table The reference.
+     */
+    BufferedDataTable(final ContainerTable table) {
+        this(table, table.getTableId(), null);
+    }
 
     /**
      * Creates a new buffered data table based on a container table (caching everything).
@@ -267,29 +280,31 @@ public final class BufferedDataTable implements DataTable, PortObject {
         this(table, dataRepository.generateNewID(), dataRepository);
     }
 
-    private BufferedDataTable(final KnowsRowCountTable table, final int id,
-        final IDataRepository dataRepository) {
+    private BufferedDataTable(final KnowsRowCountTable table, final int id, final IDataRepository dataRepository) {
         m_delegate = table;
         if (dataRepository != null) {
             // table ID -1 is used for old workflows (1.1.x) - no notion of blobs at that time
             // see also DataContainer.readFromZip(ReferencedFile, BufferCreator)
             assert id == -1 || Integer.toUnsignedLong(id) <= Integer.toUnsignedLong(dataRepository.getLastId()) //
-                    : "Table identifiers not unique " + id;
+            : "Table identifiers not unique " + id;
         }
         m_tableID = id;
     }
 
-    /** Package scope getter for underlying table implementation. Only needed
-     * if underlying table is of special kind and can be treated differently/
-     * more efficiently by individual node implementations.
+    /**
+     * Package scope getter for underlying table implementation. Only needed if underlying table is of special kind and
+     * can be treated differently/ more efficiently by individual node implementations.
+     *
      * @return underlying table.
      */
     /*package*/ KnowsRowCountTable getDelegate() {
         return m_delegate;
     }
 
-    /** Called after execution of node has finished to put the tables that
-     * are returned from the execute method into a global table repository.
+    /**
+     * Called after execution of node has finished to put the tables that are returned from the execute method into a
+     * global table repository.
+     *
      * @param dataRepository The repository from the workflow
      */
     void putIntoTableRepository(final WorkflowDataRepository dataRepository) {
@@ -300,14 +315,15 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
     }
 
-    /** Remove this table and all of its delegates from the table repository,
-     * if and only if its owner is the argument node.
+    /**
+     * Remove this table and all of its delegates from the table repository, if and only if its owner is the argument
+     * node.
+     *
      * @param dataRepository The repository to be removed from.
      * @param owner The dedicated owner.
      * @return The number of tables effectively removed, used for assertions.
      */
-    int removeFromTableRepository(final WorkflowDataRepository dataRepository,
-            final Node owner) {
+    int removeFromTableRepository(final WorkflowDataRepository dataRepository, final Node owner) {
         if (getOwner() != owner) { // can safely test for hard references here
             return 0;
         }
@@ -332,6 +348,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
 
     /**
      * {@inheritDoc}
+     *
      * @see #getDataTableSpec()
      */
     @Override
@@ -388,28 +405,22 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     /**
-     * Get an iterator instance that will return missing values when the table
-     * is cleared as part of a node reset.
+     * Get an iterator instance that will return missing values when the table is cleared as part of a node reset.
      *
      * <p>
-     * In general, node implementations are guaranteed not to be active
-     * (executing none of the abstract methods) when a node is reset. However,
-     * if the data is displayed in a view using an iterator (e.g. a table view),
-     * there is no guarantee when the data is accessed. Reading the data and
-     * clearing the table may occur concurrently, specifically if used in fast
-     * executing loops. An iterator returned by this method will ensure that
-     * (invalid = missing) data is returned and that there are as many rows as
-     * suggested by the {@link #size()} method.
+     * In general, node implementations are guaranteed not to be active (executing none of the abstract methods) when a
+     * node is reset. However, if the data is displayed in a view using an iterator (e.g. a table view), there is no
+     * guarantee when the data is accessed. Reading the data and clearing the table may occur concurrently, specifically
+     * if used in fast executing loops. An iterator returned by this method will ensure that (invalid = missing) data is
+     * returned and that there are as many rows as suggested by the {@link #size()} method.
      *
      * <p>
-     * Client implementations should generally use the {@link #iterator()}
-     * method to read the data unless the data is potentially accessed in a node
-     * or port view outside the
+     * Client implementations should generally use the {@link #iterator()} method to read the data unless the data is
+     * potentially accessed in a node or port view outside the
      * {@link NodeModel#execute(BufferedDataTable[], ExecutionContext)} method.
      *
-     * @return A new iterator instance that will return missing values and
-     *          fake row ids in case the table is cleared (either before this
-     *          method is called or while the iteration is in progress).
+     * @return A new iterator instance that will return missing values and fake row ids in case the table is cleared
+     *         (either before this method is called or while the iteration is in progress).
      */
     public CloseableRowIterator iteratorFailProve() {
         synchronized (m_isCleared) {
@@ -426,6 +437,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
 
     /**
      * Get the row count of the this table.
+     *
      * @return Number of rows in the table.
      * @since 3.0
      * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
@@ -445,22 +457,24 @@ public final class BufferedDataTable implements DataTable, PortObject {
         return m_delegate.size();
     }
 
-
-    /** Method being used internally, not interesting for the implementor of
-     * a new node model. It will return a unique ID to identify the table
-     * while loading.
+    /**
+     * Method being used internally, not interesting for the implementor of a new node model. It will return a unique ID
+     * to identify the table while loading.
+     *
      * @return The unique ID.
      */
     public Integer getBufferedTableId() {
         return m_tableID;
     }
 
-    private final class CloseableFailProveRowIterator
-        extends CloseableRowIterator {
+    private final class CloseableFailProveRowIterator extends CloseableRowIterator {
 
         private final int m_cellCount;
+
         private final long m_maxRows;
+
         private final CloseableRowIterator m_it;
+
         private long m_rowIndex;
 
         private CloseableFailProveRowIterator(final CloseableRowIterator it) {
@@ -476,8 +490,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 if (m_isCleared.booleanValue()) {
                     DataCell[] cells = new DataCell[m_cellCount];
                     Arrays.fill(cells, DataType.getMissingCell());
-                    result = new BlobSupportDataRow(new RowKey(
-                            "Cleared_row_" + m_rowIndex), cells);
+                    result = new BlobSupportDataRow(new RowKey("Cleared_row_" + m_rowIndex), cells);
                 } else {
                     result = m_it.next();
                 }
@@ -501,56 +514,84 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     private static final String CFG_TABLE_META = "table_meta_info";
+
     private static final String CFG_TABLE_REFERENCE = "table_references";
+
     private static final String CFG_TABLE_TYPE = "table_type";
+
     private static final String CFG_TABLE_ID = "table_ID";
+
     private static final String CFG_TABLE_FILE_NAME = "table_file_name";
+
     private static final String CFG_TABLE_CONTAINER_FORMAT = "table_format";
+
     private static final String CFG_TABLE_CONTAINER_FORMAT_VERSION = "table_format_version";
+
     private static final String CFG_TABLE_COMPRESSION_FORMAT = "table_compression_format";
 
     private static final String TABLE_TYPE_CONTAINER = "container_table";
+
     /**
      * As of 3.6 KNIME saves container tables written with a format other than the {@link DefaultTableStoreFormat} under
      * this value in order to make KNIME <= 3.5 fail when loading such a workflow.
      */
     private static final String TABLE_TYPE_CONTAINER_CUSTOM = "container_table_custom";
+
     /**
      * As of 4.0 KNIME saves container tables written with the {@link DefaultTableStoreFormat}, but compressed with a
      * format other than GZIP under this value in order to make KNIME <= 3.7 fail when loading such a workflow.
      */
     private static final String TABLE_TYPE_CONTAINER_COMPRESS = "container_table_compressed";
+
+    /**
+     * As of 4.2 KNIME offers a new type of table API.
+     */
+    private static final String TABLE_TYPE_CONTAINER_FAST = "container_table_fast";
+
     private static final String TABLE_TYPE_REARRANGE_COLUMN = "rearrange_columns_table";
+
     /**
      * Similar to the container table (see above), we have to make sure that earlier versions of KNIME complain when
      * loading a workflow that has been written with a custom table store format (e.g., Parquet) or custom compression
      * formats (e.g., Snappy).
      */
     private static final String TABLE_TYPE_REARRANGE_COLUMN_CUSTOM = "rearrange_columns_table_custom";
+
     private static final String TABLE_TYPE_REARRANGE_COLUMN_COMPRESS = "rearrange_columns_table_compressed";
+
     private static final String TABLE_TYPE_NEW_SPEC = "new_spec_table";
+
     private static final String TABLE_TYPE_WRAPPED = "wrapped_table";
+
     private static final String TABLE_TYPE_CONCATENATE = "concatenate_table";
+
     private static final String TABLE_TYPE_JOINED = "joined_table";
+
     private static final String TABLE_TYPE_VOID = "void_table";
-    /** The table is referenced multiple times in a node, e.g. provided at
-     * different outputs (possibly wrapped) or it is used as output-port table
-     * and as internally held table. See bug 2117.
-     * @since 2.6 */
+
+    /**
+     * The table is referenced multiple times in a node, e.g. provided at different outputs (possibly wrapped) or it is
+     * used as output-port table and as internally held table. See bug 2117.
+     *
+     * @since 2.6
+     */
     private static final String TABLE_TYPE_REFERENCE_IN_SAME_NODE = "reference_from_same_node_table";
+
     private static final String TABLE_TYPE_EXTENSION = "extension_table";
+
     private static final String TABLE_FILE = "data.zip";
+
     private static final String TABLE_DESCRIPTION_FILE = "data.xml";
+
     private static final String TABLE_SPEC_FILE = "spec.xml";
 
-
-    /** Saves the table to a directory and writes some settings to the argument
-     * NodeSettingsWO object. It will also write the reference table in case
-     * this node is responsible for it (i.e. this node created the reference
-     * table).
+    /**
+     * Saves the table to a directory and writes some settings to the argument NodeSettingsWO object. It will also write
+     * the reference table in case this node is responsible for it (i.e. this node created the reference table).
+     *
      * @param dir The directory to write to.
-     * @param savedTableIDs Ids of tables that were previously saved, used to identify
-     * tables that are referenced by the same nodes multiple times.
+     * @param savedTableIDs Ids of tables that were previously saved, used to identify tables that are referenced by the
+     *            same nodes multiple times.
      * @param exec The progress monitor for cancellation.
      * @throws IOException If writing fails.
      * @throws CanceledExecutionException If canceled.
@@ -580,23 +621,37 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 }
             }
             m_delegate.saveToFile(outFile, s, exec);
+        } else if (FastTableRowContainerFactory.isFastTable(m_delegate)) {
+            // TODO do we need to store anything else here? everything else can be stored by the format, right?
+            s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER_FAST);
+            FastTableRowContainerFactory.saveToFile(m_delegate, outFile, s, exec);
         } else {
             if (m_delegate instanceof RearrangeColumnsTable) {
-                final BufferedContainerTable appendTable = (BufferedContainerTable)((RearrangeColumnsTable)m_delegate).getAppendTable();
+                ContainerTable appendTable = ((RearrangeColumnsTable)m_delegate).getAppendTable();
+                // TODO delegate couldbe a fast table
                 if (appendTable != null) {
-                    final TableStoreFormat format = appendTable.getTableStoreFormat();
-                    if (!DefaultTableStoreFormat.class.equals(format.getClass())) {
-                        // use different identifier to cause old versions of KNIME to fail loading newer workflows
-                        s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN_CUSTOM);
-                        s.addString(CFG_TABLE_CONTAINER_FORMAT, appendTable.getTableStoreFormat().getClass().getName());
-                        s.addString(CFG_TABLE_CONTAINER_FORMAT_VERSION, appendTable.getTableStoreFormat().getVersion());
+                    if (FastTableRowContainerFactory.isFastTable(m_delegate)) {
+                        s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
                     } else {
-                        final DefaultTableStoreFormat defaultFormat = (DefaultTableStoreFormat)format;
-                        if (!Arrays.asList(NONE, GZIP).contains(defaultFormat.getCompressionFormat())) {
-                            s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN_COMPRESS);
-                            s.addString(CFG_TABLE_COMPRESSION_FORMAT, defaultFormat.getCompressionFormat().toString());
+                        final BufferedContainerTable buffered = (BufferedContainerTable)appendTable;
+                        // TODO isn't all of that code duplication from above?
+                        final TableStoreFormat format = buffered.getTableStoreFormat();
+                        if (!DefaultTableStoreFormat.class.equals(format.getClass())) {
+                            // use different identifier to cause old versions of KNIME to fail loading newer workflows
+                            s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN_CUSTOM);
+                            s.addString(CFG_TABLE_CONTAINER_FORMAT,
+                                buffered.getTableStoreFormat().getClass().getName());
+                            s.addString(CFG_TABLE_CONTAINER_FORMAT_VERSION,
+                                buffered.getTableStoreFormat().getVersion());
                         } else {
-                            s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
+                            final DefaultTableStoreFormat defaultFormat = (DefaultTableStoreFormat)format;
+                            if (!Arrays.asList(NONE, GZIP).contains(defaultFormat.getCompressionFormat())) {
+                                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN_COMPRESS);
+                                s.addString(CFG_TABLE_COMPRESSION_FORMAT,
+                                    defaultFormat.getCompressionFormat().toString());
+                            } else {
+                                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
+                            }
                         }
                     }
                 } else {
@@ -619,8 +674,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
             BufferedDataTable[] references = m_delegate.getReferenceTables();
             ArrayList<String> referenceDirs = new ArrayList<String>();
             for (BufferedDataTable reference : references) {
-                if (reference.getOwner() == getOwner()
-                        && !savedTableIDs.contains(reference.getBufferedTableId())) {
+                if (reference.getOwner() == getOwner() && !savedTableIDs.contains(reference.getBufferedTableId())) {
                     int index = referenceDirs.size();
                     String dirName = "r" + index;
                     File subDir = new File(dir, dirName);
@@ -634,8 +688,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                     reference.save(subDir, savedTableIDs, exec);
                 }
             }
-            s.addStringArray(CFG_TABLE_REFERENCE,
-                    referenceDirs.toArray(new String[referenceDirs.size()]));
+            s.addStringArray(CFG_TABLE_REFERENCE, referenceDirs.toArray(new String[referenceDirs.size()]));
             m_delegate.saveToFile(outFile, s, exec);
         }
         // only write the data file to the settings if it has been created
@@ -652,14 +705,13 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     /**
-     * Utility method that is used when the node saves its state. It saves
-     * it to a file spec.xml.
+     * Utility method that is used when the node saves its state. It saves it to a file spec.xml.
+     *
      * @param spec To save
      * @param dataPortDir destination directory
      * @throws IOException if that fails for any reason
      */
-    static void saveSpec(final DataTableSpec spec, final File dataPortDir)
-        throws IOException {
+    static void saveSpec(final DataTableSpec spec, final File dataPortDir) throws IOException {
         // do not write file, if spec is null (may be the case when node
         // is configured but can't calculate output, e.g. transpose node)
         if (spec == null) {
@@ -674,21 +726,21 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     /**
-     * Utility method used in the node's load method. It reads the spec from
-     * a file spec.xml in <code>dataPortDir</code>.
+     * Utility method used in the node's load method. It reads the spec from a file spec.xml in
+     * <code>dataPortDir</code>.
+     *
      * @param dataPortDir To load from.
      * @return The spec contained in this directory.
      * @throws IOException If that fails.
-     * @throws InvalidSettingsException If the settings in the spec.xml can't
-     * be parsed.
+     * @throws InvalidSettingsException If the settings in the spec.xml can't be parsed.
      */
-    static DataTableSpec loadSpec(final ReferencedFile dataPortDir)
-        throws IOException, InvalidSettingsException {
+    static DataTableSpec loadSpec(final ReferencedFile dataPortDir) throws IOException, InvalidSettingsException {
         File specFile = new File(dataPortDir.getFile(), TABLE_SPEC_FILE);
         if (specFile.exists()) {
             if (specFile.length() > 10 * 1024 * 1024) { // 10MB
-                NodeLogger.getLogger(BufferedDataTable.class).warn(String.format(
-                    "Table spec file is %s large - this may result in increased memory consumption (path '%s')",
+                NodeLogger.getLogger(BufferedDataTable.class)
+                    .warn(String.format(
+                        "Table spec file is %s large - this may result in increased memory consumption (path '%s')",
                         FileUtils.byteCountToDisplaySize(specFile.length()), specFile.getAbsolutePath()));
             }
             try (InputStream in = new BufferedInputStream(new FileInputStream(specFile))) {
@@ -696,13 +748,13 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 return DataTableSpec.load(c);
             }
         } else {
-            throw new IOException("No such file \""
-                    + specFile.getAbsolutePath() + "\"");
+            throw new IOException("No such file \"" + specFile.getAbsolutePath() + "\"");
         }
     }
 
-    /** Factory method to restore a table that has been written using
-     * the save method.
+    /**
+     * Factory method to restore a table that has been written using the save method.
+     *
      * @param dirRef The directory to load from.
      * @param settings The settings to load from.
      * @param exec The exec mon for progress/cancel
@@ -713,12 +765,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @throws CanceledExecutionException If canceled.
      * @throws InvalidSettingsException If settings are invalid.
      */
-    static BufferedDataTable loadFromFile(final ReferencedFile dirRef,
-            final NodeSettingsRO settings, final ExecutionMonitor exec,
-            final Map<Integer, BufferedDataTable> tblRep,
-            final WorkflowDataRepository dataRepository)
-            throws IOException, CanceledExecutionException,
-            InvalidSettingsException {
+    static BufferedDataTable loadFromFile(final ReferencedFile dirRef, final NodeSettingsRO settings,
+        final ExecutionMonitor exec, final Map<Integer, BufferedDataTable> tblRep,
+        final WorkflowDataRepository dataRepository)
+        throws IOException, CanceledExecutionException, InvalidSettingsException {
         File dir = dirRef.getFile();
         NodeSettingsRO s;
         // in version 1.1.x and before, the information was stored in
@@ -728,8 +778,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
         // no xml file present and no settings passed in method:
         // loading an exported workflow without data
         if (!dataXML.exists() && settings == null) {
-            throw new IOException("No such data file: "
-                    + dataXML.getAbsolutePath());
+            throw new IOException("No such data file: " + dataXML.getAbsolutePath());
         }
         DataTableSpec spec;
         if (dataXML.exists()) { // version 1.2.0 and later
@@ -788,6 +837,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 final ContainerTable cont = BufferedDataContainer.readFromZipDelayed(fileRef, spec, id, dataRepository);
                 t = new BufferedDataTable(cont, id);
                 break;
+            case TABLE_TYPE_CONTAINER_FAST: // added in 4.2
+                final ContainerTable fastTable = FastTableRowContainerFactory.readFromFileDelayed(fileRef, spec, id, dataRepository, s);
+                // TODO I introduced the constructor without id (getting ID from fast-table). can ID of delegate and BufferedTable differ?
+                t = new BufferedDataTable(fastTable);
+                break;
             case TABLE_TYPE_REARRANGE_COLUMN_CUSTOM:
             case TABLE_TYPE_REARRANGE_COLUMN_COMPRESS:
             case TABLE_TYPE_REARRANGE_COLUMN:
@@ -813,6 +867,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 }
                 if (Arrays.asList(TABLE_TYPE_REARRANGE_COLUMN, TABLE_TYPE_REARRANGE_COLUMN_CUSTOM,
                     TABLE_TYPE_REARRANGE_COLUMN_COMPRESS).contains(tableType)) {
+
+                    // TODO load fast tables differently than buffered data tables. Rearrange column table SHOULDNT know which implementation is used.
+                    // TODO Currently it does :-(
+
                     t = new BufferedDataTable(new RearrangeColumnsTable(fileRef, s, tblRep, spec, id, dataRepository),
                         dataRepository);
                 } else if (tableType.equals(TABLE_TYPE_JOINED)) {
@@ -891,12 +949,14 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
     }
 
-    /** Finds all tables owned by the argument node, which are directly
-     * reachable (including this table).
+    /**
+     * Finds all tables owned by the argument node, which are directly reachable (including this table).
+     *
      * @param dataOwner The owner.
-     * @param result The set to add to. */
-    synchronized void collectTableAndReferencesOwnedBy(
-            final Node dataOwner, final Collection<BufferedDataTable> result) {
+     * @param result The set to add to.
+     */
+    synchronized void collectTableAndReferencesOwnedBy(final Node dataOwner,
+        final Collection<BufferedDataTable> result) {
         if (dataOwner != getOwner()) {
             return;
         }
@@ -907,10 +967,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
     }
 
-    /** Clears any associated storage, for instance temp files. This call also
-     * clears all referenced tables (if they are owned by the same node).
-     * @param dataOwner The owner of the tables. If
-     * getOwner() != dataOwner, we return immediately.
+    /**
+     * Clears any associated storage, for instance temp files. This call also clears all referenced tables (if they are
+     * owned by the same node).
+     *
+     * @param dataOwner The owner of the tables. If getOwner() != dataOwner, we return immediately.
      */
     synchronized void clear(final Node dataOwner) {
         // only take responsibility for our data tables
@@ -930,10 +991,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
     }
 
-    /** Clears any associated storage, for instance temp files. This call does
-     * not clear referenced tables owned by the same node.
-     * @param dataOwner The owner of the tables. Used for assertion (table
-     * must be owned by argument node!)
+    /**
+     * Clears any associated storage, for instance temp files. This call does not clear referenced tables owned by the
+     * same node.
+     *
+     * @param dataOwner The owner of the tables. Used for assertion (table must be owned by argument node!)
      */
     synchronized void clearSingle(final Node dataOwner) {
         // only take responsibility for our data tables
@@ -950,9 +1012,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
     }
 
-    /** Reads table from its saved location (usually the workspace). Used
-     * to allow for later re-saving in a cleared workspace (used for
-     * version hop) */
+    /**
+     * Reads table from its saved location (usually the workspace). Used to allow for later re-saving in a cleared
+     * workspace (used for version hop)
+     */
     void ensureOpen() {
         BufferedDataTable[] references = m_delegate.getReferenceTables();
         for (BufferedDataTable reference : references) {
@@ -962,14 +1025,15 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     /**
-     * Internally used interface. You won't have any benefit by implementing
-     * this interface! It's used for selected classes in the KNIME core.
+     * Internally used interface. You won't have any benefit by implementing this interface! It's used for selected
+     * classes in the KNIME core.
      *
      * @noimplement This interface is not intended to be implemented by clients.
      */
     public static interface KnowsRowCountTable extends DataTable {
         /**
          * ow count of the table.
+         *
          * @return The row count.
          * @since 3.0
          * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
@@ -985,27 +1049,29 @@ public final class BufferedDataTable implements DataTable, PortObject {
          */
         long size();
 
-        /** Save the table to a file.
+        /**
+         * Save the table to a file.
+         *
          * @param f To write to.
          * @param settings To add meta information to.
          * @param exec For progress/cancel.
          * @throws IOException If writing fails.
          * @throws CanceledExecutionException If canceled.
          */
-        void saveToFile(final File f, final NodeSettingsWO settings,
-                final ExecutionMonitor exec)
-                throws IOException, CanceledExecutionException;
+        void saveToFile(final File f, final NodeSettingsWO settings, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException;
 
-        /** Clears any allocated temporary files. The table won't be used
-         * anymore.
+        /**
+         * Clears any allocated temporary files. The table won't be used anymore.
          */
         void clear();
 
         /** Implementation of link BufferedDataTable#ensureOpen(). */
         void ensureOpen();
 
-        /** Overridden to narrow return type to closeable iterator.
-         * {@inheritDoc} */
+        /**
+         * Overridden to narrow return type to closeable iterator. {@inheritDoc}
+         */
         @Override
         public CloseableRowIterator iterator();
 
@@ -1034,27 +1100,28 @@ public final class BufferedDataTable implements DataTable, PortObject {
          */
         CloseableRowIterator iteratorWithFilter(TableFilter filter, ExecutionMonitor exec);
 
-        /** Reference to the underlying tables, if any. A reference
-         * table exists if this object is just a wrapper, such as a
-         * RearrangeColumnsTable or if this table concatenates a set of
-         * other tables.
+        /**
+         * Reference to the underlying tables, if any. A reference table exists if this object is just a wrapper, such
+         * as a RearrangeColumnsTable or if this table concatenates a set of other tables.
+         *
          * @return The reference table or <code>null</code>.
          */
         BufferedDataTable[] getReferenceTables();
 
-        /** Put this table into the global table repository. Called when
-         * execution finished.
+        /**
+         * Put this table into the global table repository. Called when execution finished.
+         *
          * @param dataRepository The workflow table repository.
          * @since 3.7
          */
         void putIntoTableRepository(final WorkflowDataRepository dataRepository);
 
-        /** Remove this table from global table repository. Called when
-         * node is reset.
+        /**
+         * Remove this table from global table repository. Called when node is reset.
+         *
          * @param dataRepository The workflow table repository.
-         * @return If this table was indeed removed from the table repository
-         *         (true for ordinary container tables but false for wrappers
-         *         such as concatenate or spec replacer)
+         * @return If this table was indeed removed from the table repository (true for ordinary container tables but
+         *         false for wrappers such as concatenate or spec replacer)
          * @since 3.7
          */
         boolean removeFromTableRepository(final WorkflowDataRepository dataRepository);
@@ -1073,7 +1140,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 throw new IllegalStateException("Row count is greater than " + Integer.MAX_VALUE + ". The current node "
                     + "cannot handle more than this number. Please ask the vendor to update the implementation.");
             }
-            return (int) count;
+            return (int)count;
         }
     }
 
@@ -1096,7 +1163,6 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 return views;
             }
         }
-        return new JComponent[] {new BufferedDataTableView(this)};
+        return new JComponent[]{new BufferedDataTableView(this)};
     }
 }
-

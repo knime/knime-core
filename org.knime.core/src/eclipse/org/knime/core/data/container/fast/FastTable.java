@@ -44,53 +44,47 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 30, 2020 (dietzc): created
+ *   May 1, 2020 (dietzc): created
  */
-package org.knime.core.data.container;
+package org.knime.core.data.container.fast;
 
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.table.store.TableReadStore;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 /**
- * RowContainer store {@link DataRow}s and are able to provide a {@link ContainerTable} after
- * RowContainer#close()' was called.
+ * Alternative to Buffer based implementations of {@link ContainerTable}s.
+ *
+ * TODO naming, docs
  *
  * @author Christian Dietz, KNIME GmbH
  * @since 4.2
+ *
+ * @noreference This interface is not intended to be referenced by clients.
  */
-public interface RowContainer extends RowAppender, AutoCloseable {
+interface FastTable extends ContainerTable {
 
     /**
-     * {@inheritDoc}
+     * @return <code>true</code> if {@link RowKey}s are stored part of this table.
      */
+    boolean isRowKeys();
+
+    /**
+     * @return the underlying store
+     */
+    TableReadStore getStore();
+
     @Override
-    void close();
+    default BufferedDataTable[] getReferenceTables() {
+        return new BufferedDataTable[0];
+    }
 
-    /**
-     * Can only be called after RowContainer#close() has been called.
-     *
-     * @return the underlying {@link ContainerTable}.
-     */
-    ContainerTable getTable();
+    @SuppressWarnings("deprecation")
+    @Override
+    default int getRowCount() {
+        return KnowsRowCountTable.checkRowCount(size());
+    }
 
-    /**
-     * Clears the RowContainer, i.e. all associated temporary data and memory will be removed.
-     */
-    void clear();
-
-    /**
-     * @return size of the RowContainer. Can increase until RowContainer is closed.
-     */
-    long size();
-
-    /**
-     * TODO I want to get rid of this method asap!
-     */
-    void setMaxPossibleValues(int maxPossibleValues);
-
-    /**
-     * @return the underlying {@link DataTableSpec}. On close, the {@link DataTableSpec} will comprise domain
-     *         information for each column.
-     */
-    DataTableSpec getTableSpec();
 }

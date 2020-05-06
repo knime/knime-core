@@ -152,7 +152,7 @@ public class BufferedDataContainer extends DataContainer {
                              * see also WorkflowManager.resetAndConfigureAffectedLoopContext() (can be reproduced using unit test
                              * Bug4409_inactiveInnerLoop
                              */
-                            fileStoreHandler, forceCopyOfBlobs, rowKeys);
+                            fileStoreHandler, forceCopyOfBlobs, rowKeys, true);
         m_node = node;
     }
 

@@ -44,53 +44,46 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 30, 2020 (dietzc): created
+ *   May 9, 2020 (dietzc): created
  */
 package org.knime.core.data.container;
 
-import org.knime.core.data.DataRow;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.fast.FastTableRowContainerFactory;
 
 /**
- * RowContainer store {@link DataRow}s and are able to provide a {@link ContainerTable} after
- * RowContainer#close()' was called.
+ * Factory to create {@link RowContainer}s.
  *
  * @author Christian Dietz, KNIME GmbH
- * @since 4.2
  */
-public interface RowContainer extends RowAppender, AutoCloseable {
+public final class RowContainerFactoryRegistry {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    void close();
+    // TODO later: sorted by priority etc.
+    private final static List<RowContainerFactory> FACTORIES = new ArrayList<>();
 
-    /**
-     * Can only be called after RowContainer#close() has been called.
-     *
-     * @return the underlying {@link ContainerTable}.
-     */
-    ContainerTable getTable();
+    static {
+        // TODO we don't want this dependency here
+        add(new FastTableRowContainerFactory());
+    }
 
-    /**
-     * Clears the RowContainer, i.e. all associated temporary data and memory will be removed.
-     */
-    void clear();
+    private RowContainerFactoryRegistry() {
+    }
 
-    /**
-     * @return size of the RowContainer. Can increase until RowContainer is closed.
-     */
-    long size();
+    // TODO could serve as an entry point for an extension point later...
+    public static void add(final RowContainerFactory factory) {
+        FACTORIES.add(factory);
+    }
 
-    /**
-     * TODO I want to get rid of this method asap!
-     */
-    void setMaxPossibleValues(int maxPossibleValues);
-
-    /**
-     * @return the underlying {@link DataTableSpec}. On close, the {@link DataTableSpec} will comprise domain
-     *         information for each column.
-     */
-    DataTableSpec getTableSpec();
+    public static Optional<RowContainerFactory> get(final DataTableSpec spec) {
+        for (final RowContainerFactory fac : FACTORIES) {
+            if (fac.supports(spec)) {
+                return Optional.of(fac);
+            }
+        }
+        return Optional.empty();
+    }
 }

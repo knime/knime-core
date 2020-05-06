@@ -44,53 +44,112 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 30, 2020 (dietzc): created
+ *   May 3, 2020 (dietzc): created
  */
-package org.knime.core.data.container;
+package org.knime.core.data.container.fast;
 
+import java.util.Iterator;
+
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.UnmaterializedCell;
+import org.knime.core.data.container.CloseableRowIterator;
 
 /**
- * RowContainer store {@link DataRow}s and are able to provide a {@link ContainerTable} after
- * RowContainer#close()' was called.
  *
- * @author Christian Dietz, KNIME GmbH
- * @since 4.2
+ * @author dietzc
  */
-public interface RowContainer extends RowAppender, AutoCloseable {
+class EmptyRowNoKeyIterator extends CloseableRowIterator {
+
+    private final DataRow m_rowInstance;
+
+    private final long m_size;
+
+    private long m_index;
+
+    public EmptyRowNoKeyIterator(final int numCells, final long size) {
+        m_size = size;
+        m_rowInstance = new CompletelyUnmaterializedRow(numCells);
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    void close();
+    public void close() {
+        // No op
+    }
 
     /**
-     * Can only be called after RowContainer#close() has been called.
-     *
-     * @return the underlying {@link ContainerTable}.
+     * {@inheritDoc}
      */
-    ContainerTable getTable();
+    @Override
+    public boolean hasNext() {
+        return m_index < m_size;
+    }
 
     /**
-     * Clears the RowContainer, i.e. all associated temporary data and memory will be removed.
+     * {@inheritDoc}
      */
-    void clear();
+    @Override
+    public DataRow next() {
+        m_index++;
+        return m_rowInstance;
+    }
 
-    /**
-     * @return size of the RowContainer. Can increase until RowContainer is closed.
-     */
-    long size();
+    static class CompletelyUnmaterializedRow implements DataRow {
 
-    /**
-     * TODO I want to get rid of this method asap!
-     */
-    void setMaxPossibleValues(int maxPossibleValues);
+        private static final UnmaterializedCell INSTANCE = UnmaterializedCell.getInstance();
 
-    /**
-     * @return the underlying {@link DataTableSpec}. On close, the {@link DataTableSpec} will comprise domain
-     *         information for each column.
-     */
-    DataTableSpec getTableSpec();
+        private final int m_numCells;
+
+        CompletelyUnmaterializedRow(final int numCells) {
+            m_numCells = numCells;
+        }
+
+        // TODO in case of filtering, over what columns do I actually iterate?
+        @Override
+        public Iterator<DataCell> iterator() {
+            return new Iterator<DataCell>() {
+
+                int i = 0;
+
+                @Override
+                public boolean hasNext() {
+                    return i < m_numCells;
+                }
+
+                @Override
+                public DataCell next() {
+                    i++;
+                    return INSTANCE;
+                }
+            };
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int getNumCells() {
+            return m_numCells;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public RowKey getKey() {
+            throw new IllegalStateException("RowKey requested but not available!");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell getCell(final int index) {
+            return INSTANCE;
+        }
+    }
 }

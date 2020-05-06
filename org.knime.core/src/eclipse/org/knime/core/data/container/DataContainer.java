@@ -51,6 +51,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataRow;
@@ -58,7 +59,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
@@ -199,18 +199,9 @@ public class DataContainer implements RowAppender {
      * @param fileStoreHandler a filestore handler
      * @param forceCopyOfBlobs true, if blobs should be copied
      * @param rowKeys if <code>true</code>, {@link RowKey}s are expected to be part of a {@link DataRow}.
+     * @param enableFastTables if <code>true</code> fast table implementation can be used.
      * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0 or the spec is null
      */
-    protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
-        final boolean forceSynchronousIO, final IDataRepository repository,
-        final ILocalDataRepository localTableRepository, final IWriteFileStoreHandler fileStoreHandler,
-        final boolean forceCopyOfBlobs, final boolean rowKeys) {
-        this(spec,
-            DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
-                .withForceSequentialRowHandling(
-                    forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()),
-            repository, localTableRepository, fileStoreHandler, forceCopyOfBlobs, rowKeys);
-    }
 
     /**
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
@@ -221,7 +212,19 @@ public class DataContainer implements RowAppender {
      */
     public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
         this(spec, settings, NotInWorkflowDataRepository.newInstance(), new DefaultLocalDataRepository(), null, false,
-            true);
+            true, false);
+    }
+
+    // TODO move rowKeys / fasttables into DataContainer settings
+    protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
+        final boolean forceSynchronousIO, final IDataRepository repository,
+        final ILocalDataRepository localTableRepository, final IWriteFileStoreHandler fileStoreHandler,
+        final boolean forceCopyOfBlobs, final boolean rowKeys, final boolean enableFastTables) {
+        this(spec,
+            DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
+                .withForceSequentialRowHandling(
+                    forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()),
+            repository, localTableRepository, fileStoreHandler, forceCopyOfBlobs, rowKeys, enableFastTables);
     }
 
     /**
@@ -241,18 +244,12 @@ public class DataContainer implements RowAppender {
                     forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()));
     }
 
-    /**
-     * @param spec
-     * @param withForceSequentialRowHandling
-     * @param repository
-     */
     private DataContainer(final DataTableSpec spec, final DataContainerSettings settings,
         final IDataRepository repository, final ILocalDataRepository localRepository,
-        final IWriteFileStoreHandler fileStoreHandler, final boolean forceCopyOfBlobs, final boolean rowKeys) {
+        final IWriteFileStoreHandler fileStoreHandler, final boolean forceCopyOfBlobs, final boolean rowKeys,
+        final boolean enableNewTables) {
         m_spec = spec;
         m_localRepository = localRepository;
-        m_rowContainer = new BufferedRowContainer(spec, settings, repository, localRepository,
-            initFileStoreHandler(fileStoreHandler, repository), forceCopyOfBlobs, rowKeys);
         m_cancellationListener = new ICancellationListener() {
 
             @Override
@@ -262,6 +259,22 @@ public class DataContainer implements RowAppender {
             }
         };
         m_localRepository.addCancellationListener(m_cancellationListener);
+        m_spec = spec;
+
+        final Optional<RowContainerFactory> facOptional = RowContainerFactoryRegistry.get(spec);
+        if (facOptional.isPresent() && enableNewTables) {
+            try {
+                final RowContainerFactory fac = facOptional.get();
+                m_rowContainer = fac.create(repository.generateNewID(), spec, createTempFile(".knable"), rowKeys);
+            } catch (IOException ex) {
+                // TODO (?)
+                throw new RuntimeException(ex);
+            }
+        } else {
+            // fallback: use pre 4.2 default implementation of RowContainer
+            m_rowContainer = new BufferedRowContainer(spec, settings, repository, localRepository,
+                initFileStoreHandler(fileStoreHandler, repository), forceCopyOfBlobs, rowKeys);
+        }
     }
 
     /**
@@ -559,6 +572,7 @@ public class DataContainer implements RowAppender {
     // RearrangeColumnsTable when it reads a table that has been written
     // with KNIME 1.1.x or before.
     static ContainerTable readFromZip(final ReferencedFile zipFileRef, final boolean rowKeys) throws IOException {
+        // TODO
         return BufferedRowContainer.readFromZip(zipFileRef, rowKeys);
     }
 
