@@ -48,13 +48,17 @@
  */
 package org.knime.core.data.container;
 
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 
 /**
+ * RowContainer store {@link DataRow}s and are able to provide a {@link ContainerTable} after
+ * RowContainer#close()' was called.
  *
- * @author Christian Dietz
+ * @author Christian Dietz, KNIME GmbH
+ * @since 4.2
  */
-public interface RowContainer extends RowAppender, AutoCloseable {
+interface RowContainer extends RowAppender, AutoCloseable {
 
     /**
      * {@inheritDoc}
@@ -63,24 +67,19 @@ public interface RowContainer extends RowAppender, AutoCloseable {
     void close();
 
     /**
-     * Can only be closed after close() has been called.
+     * Can only be called after RowContainer#close() has been called.
      *
      * @return the underlying {@link ContainerTable}.
      */
     ContainerTable getTable();
 
     /**
-     * Clears the table
+     * Clears the RowContainer, i.e. all associated temporary data and memory will be removed.
      */
     void clear();
 
     /**
-     * @return
-     */
-    boolean isClosed();
-
-    /**
-     * @return
+     * @return size of the RowContainer. Can increase until RowContainer is closed.
      */
     long size();
 
@@ -90,7 +89,8 @@ public interface RowContainer extends RowAppender, AutoCloseable {
     void setMaxPossibleValues(int maxPossibleValues);
 
     /**
-     * @return
+     * @return the underlying {@link DataTableSpec}. On close, the {@link DataTableSpec} will comprise domain
+     *         information for each column.
      */
     DataTableSpec getTableSpec();
 }
