@@ -57,6 +57,7 @@ import java.util.function.Consumer;
  *
  * @author Christian Dietz, KNIME GmbH
  * @since 4.2
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface ILocalDataRepository {
 
