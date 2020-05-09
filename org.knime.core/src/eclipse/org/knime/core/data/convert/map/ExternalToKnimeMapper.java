@@ -46,7 +46,6 @@ package org.knime.core.data.convert.map;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.convert.map.Source.ProducerParameters;
 
 /**
  * An executor of production and external to KNIME type mapping operations.
@@ -60,7 +59,7 @@ import org.knime.core.data.convert.map.Source.ProducerParameters;
  * @author Noemi Balassa
  * @since 4.1
  */
-public interface ExternalToKnimeMapper<S extends Source<?>, P extends ProducerParameters<S>> {
+public interface ExternalToKnimeMapper<S, P> {
     /**
      * Reads and maps data from an external source to a {@link DataRow}.
      *

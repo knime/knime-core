@@ -215,6 +215,7 @@ public class ClassUtil {
      * @param destElementType element type for the array
      * @return the class of ElementType[]
      */
+    @SuppressWarnings("unchecked")
     public static <ARRAY_TYPE> Class<ARRAY_TYPE> getArrayType(final Class<?> destElementType) {
         return (Class<ARRAY_TYPE>)Array.newInstance(destElementType, 0).getClass();
     }

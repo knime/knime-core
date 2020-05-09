@@ -51,20 +51,20 @@ package org.knime.core.data.convert.map;
 /**
  * Interface for {@link CellValueProducer producers} of Java primitive {@code double} values.
  *
- * @param <S> Type of {@link Source} from which this producer reads.
- * @param <PP> Subtype of {@link Source.ProducerParameters} that can be used to configure this producer.
+ * @param <S> Type of source from which this producer reads.
+ * @param <PP> Parameters that can be used to configure this producer.
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  */
-public interface DoubleCellValueProducer<S extends Source<?>, PP extends Source.ProducerParameters<S>>
+public interface DoubleCellValueProducer<S, PP>
     extends PrimitiveCellValueProducer<S, Double, PP> {
 
     /**
      * Reads an {@code double} value from the given source using the given parameters.
      *
-     * @param source The {@link Source}.
+     * @param source The source.
      * @param params The parameters further specifying how to read from the given source, e.g., from which SQL column or
-     *            table to read. Specific to the type of {@link Source} and {@link CellValueProducer} that is being
+     *            table to read. Specific to the type of source and {@link CellValueProducer} that is being
      *            used.
      * @return The value which was read from source.
      * @throws MappingException If an exception occurs while producing the cell value.

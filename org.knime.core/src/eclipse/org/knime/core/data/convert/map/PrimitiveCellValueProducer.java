@@ -51,22 +51,22 @@ package org.knime.core.data.convert.map;
 import org.knime.core.data.DataCell;
 
 /**
- * Base interface for producers that read values of a certain Java primitive type from a {@link Source} which can then
+ * Base interface for producers that read values of a certain Java primitive type from a source which can then
  * be written to a KNIME {@link DataCell}.
  * <P>
  * Implementation note: Implementations of this interface are advised to throw a {@link MappingException} in their
  * primitive producing methods if they would produce a missing value. Clients should avoid that situation by checking
- * for missing values first by calling {@link #producesMissingCellValue(Source, Source.ProducerParameters)}.
+ * for missing values first by calling producesMissingCellValue(S, PP).
  *
- * @param <S> Type of {@link Source} from which this producer reads.
+ * @param <S> Type of source from which this producer reads.
  * @param <T> The wrapper type of the Java primitive values that this producer produces. E.g., {@link Integer} for the
  *            Java primitive type {@code int}.
- * @param <PP> Subtype of {@link Source.ProducerParameters} that can be used to configure this producer.
+ * @param <PP> Parameters that can be used to configure this producer.
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  * @see CellValueProducer
  */
-public interface PrimitiveCellValueProducer<S extends Source<?>, T, PP extends Source.ProducerParameters<S>>
+public interface PrimitiveCellValueProducer<S, T, PP>
     extends CellValueProducer<S, T, PP> {
 
     /**
@@ -74,9 +74,9 @@ public interface PrimitiveCellValueProducer<S extends Source<?>, T, PP extends S
      * always be called before asking implementations of this interface to read a value from source since Java primitive
      * types cannot represent missing values.
      *
-     * @param source The {@link Source} for which to check for a missing value.
+     * @param source The source for which to check for a missing value.
      * @param params The parameters further specifying how to read from the given source, e.g., from which SQL column or
-     *            table to read. Specific to the type of {@link Source} and {@link CellValueProducer} that is being
+     *            table to read. Specific to the type of source and {@link CellValueProducer} that is being
      *            used.
      * @return {@code true} if reading from the given source using the given parameters produces a missing value,
      *         {@code false} otherwise.

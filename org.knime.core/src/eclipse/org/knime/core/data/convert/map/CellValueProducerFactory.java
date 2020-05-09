@@ -49,7 +49,6 @@
 package org.knime.core.data.convert.map;
 
 import org.knime.core.data.convert.ConverterFactory;
-import org.knime.core.data.convert.map.Source.ProducerParameters;
 
 /**
  * Factory for {@link CellValueProducer}.
@@ -57,11 +56,11 @@ import org.knime.core.data.convert.map.Source.ProducerParameters;
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @param <S> Type of source
  * @param <ET> Type of the external type
- * @param <T> Java type the created consumer is able to accept
- * @param <PP> Subclass of {@link ProducerParameters} for given destination type
+ * @param <T> Java type the created producer is able to accept
+ * @param <PP> Parameters for given source type
  * @since 3.6
  */
-public interface CellValueProducerFactory<S extends Source<ET>, ET, T, PP extends ProducerParameters<S>>
+public interface CellValueProducerFactory<S, ET, T, PP>
     extends ConverterFactory<ET, Class<?>> {
 
     @Override

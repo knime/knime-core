@@ -64,25 +64,24 @@ import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.datacell.LongToDataCellConverter;
 import org.knime.core.data.convert.datacell.ShortToDataCellConverter;
 import org.knime.core.data.convert.datacell.TypedJavaToDataCellConverterFactory;
-import org.knime.core.data.convert.map.Source.ProducerParameters;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.ExecutionContext;
 
 /**
- * Default implementation of {@link DataRowProducer} that creates data rows out of a {@link Source} using a set of
+ * Default implementation of {@link DataRowProducer} that creates data rows out of a source using a set of
  * {@link ProductionPath production paths}.
  * <P>
  * Internally, each production path is translated to an executable mapper. There are mapper implementations for all Java
  * primitive types (to avoid autoboxing) as well as a common one for all object types.
  *
- * @param <S> Type of the {@link Source} from which to create data rows.
- * @param <PP> Subtype of {@link Source.ProducerParameters} that can be used to configure the producers per call to
- *            {@link #produceDataRow(RowKey, ProducerParameters[])}.
+ * @param <S> Type of the source from which to create data rows.
+ * @param <PP> Subtype of parameters that can be used to configure the producers per call to
+ *            produceDataRow(RowKey, ProducerParameters[]).
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  */
-public final class DefaultDataRowProducer<S extends Source<?>, PP extends ProducerParameters<S>>
+public final class DefaultDataRowProducer<S, PP>
     implements DataRowProducer<PP> {
 
     private final S m_source;
@@ -99,10 +98,9 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
      * @param source The source from which to create data rows.
      * @param mapping Production paths that describe the mapping from source to {@link DataCell data cells}. The number
      *            and order of the passed paths must match the ones of the parameters later passed to
-     *            {@link #produceDataRow(RowKey, ProducerParameters[])}.
+     *            produceDataRow(RowKey, ProducerParameters[]).
      * @param exec Execution context. Potentially required to create converters. May be {@code null} if it is known that
      *            none of the converter factories in {@code mapping} require an execution context.
-     * @see #DefaultDataRowProducer(Source, ProductionPath[], FileStoreFactory)
      */
     public DefaultDataRowProducer(final S source, final ProductionPath[] mapping, final ExecutionContext exec) {
         this(source, mapping, FileStoreFactory.createFileStoreFactory(exec));
@@ -114,7 +112,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
      * @param source The source from which to create data rows.
      * @param mapping Production paths that describe the mapping from source to {@link DataCell data cells}. The number
      *            and order of the passed paths must match the ones of the parameters later passed to
-     *            {@link #produceDataRow(RowKey, ProducerParameters[])}.
+     *            produceDataRow(RowKey, ProducerParameters[]).
      * @param fileStoreFactory {@link FileStoreFactory} which may be used for creating {@link CellFactory}s.
      * @since 4.0
      */
@@ -390,7 +388,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         }
     }
 
-    private abstract static class Mapper<PP extends ProducerParameters<?>, //
+    private abstract static class Mapper<PP, //
             P extends CellValueProducer<?, ?, PP>, //
             C extends JavaToDataCellConverter<?>> {
 

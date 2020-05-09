@@ -48,25 +48,23 @@
  */
 package org.knime.core.data.convert.map;
 
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
-
 /**
  * Consumer factory that is typed on the (base) type of the consumers that it creates. The type is exposed via
  * {@link #getConsumerType()}. It is guaranteed that all created consumers are assignment-compatible with this type.
  * This allows clients to check with which specific consumer type they will be dealing.
  *
- * @param <D> Type of {@link Destination} to which consumers created by this factory write.
+ * @param <D> Type of destination to which consumers created by this factory write.
  * @param <ET> Type of the external type.
  * @param <T> The Java type of the values that consumers created by this factory accept.
- * @param <CP> Subtype of {@link ConsumerParameters}} that can be used to configure the consumers created by this
+ * @param <CP> Subtype of parameters} that can be used to configure the consumers created by this
  *            factory.
  * @param <C> The (base) type of the consumers created by this factory.
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  * @see CellValueConsumerFactory
  */
-public interface TypedCellValueConsumerFactory<D extends Destination<?>, T, ET, CP extends ConsumerParameters<D>, //
-        C extends CellValueConsumer<D, T, CP>>
+public interface TypedCellValueConsumerFactory<D, T, ET, CP, //
+        C extends CellValueConsumer<D, T>>
     extends CellValueConsumerFactory<D, T, ET, CP> {
 
     /**
@@ -81,5 +79,5 @@ public interface TypedCellValueConsumerFactory<D extends Destination<?>, T, ET, 
      *         returned by {@link #getConsumerType()}.
      */
     @Override
-    C create();
+    C create(CP params);
 }

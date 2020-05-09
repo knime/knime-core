@@ -227,7 +227,7 @@ public final class JavaToDataCellConverterRegistry extends
     /**
      * Get all {@link JavaToDataCellConverterFactory converter factories} which create {@link JavaToDataCellConverter}s
      * that convert <code>sourceType</code> into <code>destType</code>. If you do not require more than one converter
-     * factory, you should consider using {@link #getPreferredConverterFactory(Class, DataType)} instead.
+     * factory, you should consider using getPreferredConverterFactory(Class, DataType) instead.
      *
      * @param sourceType Source type to convert
      * @param destType {@link DataType} to convert to
@@ -236,6 +236,7 @@ public final class JavaToDataCellConverterRegistry extends
      * @param <S> A JavaToDataCellConverter type (letting java infer the type is highly recommended)
      */
     // we only put JavaToDataCellConverter<T> into the map for Class<T>
+    @SuppressWarnings("unchecked")
     public <S> Collection<JavaToDataCellConverterFactory<S>> getConverterFactories(final Class<S> sourceType,
         final DataType destType) {
 
@@ -285,7 +286,7 @@ public final class JavaToDataCellConverterRegistry extends
      * @param <D> Destination array type
      * @since 3.4
      */
-    public <SE, D> JavaToDataCellConverterFactory<D>
+    public static <SE, D> JavaToDataCellConverterFactory<D>
         getArrayConverterFactory(final JavaToDataCellConverterFactory<SE> elementFactory) {
         return new ArrayToCollectionConverterFactory<>(elementFactory);
     }
@@ -396,7 +397,7 @@ public final class JavaToDataCellConverterRegistry extends
      * @param name the name of the
      * @return
      */
-    private boolean validateFactoryName(final JavaToDataCellConverterFactory<?> factory) {
+    private static boolean validateFactoryName(final JavaToDataCellConverterFactory<?> factory) {
         final String name = factory.getName();
         final String className = factory.getSourceType().getSimpleName();
         return name.matches(Pattern.quote(className) + "(| \\(.+\\))");

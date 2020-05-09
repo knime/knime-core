@@ -140,6 +140,7 @@ public abstract class AbstractConverterFactoryRegistry<ST, DT, ConverterFactoryT
      * @param factory the factory to register
      * @return self (for method chaining)
      */
+    @SuppressWarnings("unchecked")
     public RegistryImpl register(final ConverterFactoryType factory) {
         if (factory == null) {
             throw new IllegalArgumentException("factory must not be null");

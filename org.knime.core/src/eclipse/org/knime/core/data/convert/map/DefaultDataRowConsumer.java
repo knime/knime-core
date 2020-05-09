@@ -61,22 +61,21 @@ import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToLongConverter;
 import org.knime.core.data.convert.java.DataCellToShortConverter;
 import org.knime.core.data.convert.java.TypedDataCellToJavaConverterFactory;
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
 
 /**
- * Default implementation of {@link DataRowConsumer} that writes data to a {@link Destination} using a set of
+ * Default implementation of {@link DataRowConsumer} that writes data to a destination using a set of
  * {@link ConsumptionPath consumption paths}.
  * <P>
  * Internally, each consumption path is translated to an executable mapper. There are mapper implementations for all
  * Java primitive types (to avoid autoboxing) as well as a common one for all object types.
  *
- * @param <D> Type of the {@link Destination} to which to write the data rows.
- * @param <CP> Subtype of {@link ConsumerParameters} that can be used to configure the consumers per call to
- *            {@link #consumeDataRow(DataRow, ConsumerParameters[])}.
+ * @param <D> Type of the destination to which to write the data rows.
+ * @param <CP> Subtype of parameters that can be used to configure the consumers per call to
+ *            {@link #consumeDataRow(DataRow, CP[])}.
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  */
-public final class DefaultDataRowConsumer<D extends Destination<?>, CP extends ConsumerParameters<D>>
+public final class DefaultDataRowConsumer<D, CP>
     implements DataRowConsumer<CP> {
 
     private final D m_destination;
@@ -89,7 +88,7 @@ public final class DefaultDataRowConsumer<D extends Destination<?>, CP extends C
      * @param destination The destination to which to write data rows.
      * @param mapping Consumption paths that describe the mapping from {@link DataCell data cells} to destination. The
      *            number and order of the passed paths must match the ones of the parameters and data cells later passed
-     *            to {@link #consumeDataRow(DataRow, ConsumerParameters[])}.
+     *            to {@link #consumeDataRow(DataRow, CP[])}.
      */
     public DefaultDataRowConsumer(final D destination, final ConsumptionPath[] mapping) {
         m_destination = destination;
@@ -375,7 +374,7 @@ public final class DefaultDataRowConsumer<D extends Destination<?>, CP extends C
         }
     }
 
-    private abstract static class Mapper<CP extends ConsumerParameters<?>, //
+    private abstract static class Mapper<CP, //
             P extends DataCellToJavaConverter<?, ?>, //
             C extends CellValueConsumer<?, ?, CP>> {
 

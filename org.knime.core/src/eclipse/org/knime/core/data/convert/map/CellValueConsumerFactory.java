@@ -48,7 +48,6 @@
 package org.knime.core.data.convert.map;
 
 import org.knime.core.data.convert.ConverterFactory;
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
 
 /**
  * Factory to create {@link CellValueConsumer} instances.
@@ -57,18 +56,19 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * @param <D> Type of destination
  * @param <T> Java value to be consumed by the created {@link CellValueConsumer}
  * @param <ET> Type of destination types
- * @param <CP> Subclass of {@link ConsumerParameters} for the given source type
+ * @param <CP> Subclass of parameters for the given source type
  * @since 3.6
  */
-public interface CellValueConsumerFactory<D extends Destination<?>, T, ET, CP extends ConsumerParameters<D>>
+public interface CellValueConsumerFactory<D, T, ET, CP>
     extends ConverterFactory<Class<?>, ET> {
 
     /**
      * Create a {@link CellValueConsumer}.
+     * @param params of the consumer
      *
      * @return The created consumer
      */
-    public CellValueConsumer<D, T, CP> create();
+    public CellValueConsumer<D, T> create(CP params);
 
     @Override
     default String getName() {

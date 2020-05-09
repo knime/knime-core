@@ -48,8 +48,6 @@
  */
 package org.knime.core.data.convert.map;
 
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
-
 /**
  * Simple implementation of {@link CellValueConsumerFactory} that allows passing the consumption procedure as a lambda
  * expression.
@@ -58,19 +56,19 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * @param <D> Type of destination the consumer can write to
  * @param <T> Java type the created consumer is able to accept
  * @param <ET> Type of external types
- * @param <CP> Subclass of {@link ConsumerParameters} for given destination type
+ * @param <CP> Subclass of parameters for given destination type
  *
  * @since 3.6
  */
-public class SimpleCellValueConsumerFactory<D extends Destination<ET>, T, ET, CP extends ConsumerParameters<D>>
+public class SimpleCellValueConsumerFactory<D, T, ET, CP>
     extends AbstractCellValueConsumerFactory<D, T, ET, CP>
-    implements TypedCellValueConsumerFactory<D, T, ET, CP, CellValueConsumer<D, T, CP>> {
+    implements TypedCellValueConsumerFactory<D, T, ET, CP, CellValueConsumer<D, T>> {
 
     final ET m_externalType;
 
     final Class<?> m_sourceType;
 
-    final CellValueConsumer<D, T, CP> m_consumer;
+    final CellValueConsumer<D, T> m_consumer;
 
     /**
      * Constructor
@@ -80,7 +78,7 @@ public class SimpleCellValueConsumerFactory<D extends Destination<ET>, T, ET, CP
      * @param consumer The consumer function (e.g. as lambda expression)
      */
     public SimpleCellValueConsumerFactory(final Class<?> sourceType, final ET externalType,
-        final CellValueConsumer<D, T, CP> consumer) {
+        final CellValueConsumer<D, T> consumer) {
         m_sourceType = sourceType;
         m_externalType = externalType;
         m_consumer = consumer;
@@ -92,7 +90,7 @@ public class SimpleCellValueConsumerFactory<D extends Destination<ET>, T, ET, CP
     }
 
     @Override
-    public CellValueConsumer<D, T, CP> create() {
+    public CellValueConsumer<D, T> create(final CP params) {
         return m_consumer;
     }
 
@@ -107,10 +105,10 @@ public class SimpleCellValueConsumerFactory<D extends Destination<ET>, T, ET, CP
     }
 
     @Override
-    public Class<CellValueConsumer<D, T, CP>> getConsumerType() {
+    public Class<CellValueConsumer<D, T>> getConsumerType() {
         @SuppressWarnings("unchecked")
-        final Class<CellValueConsumer<D, T, CP>> consumerType =
-            (Class<CellValueConsumer<D, T, CP>>)m_consumer.getClass();
+        final Class<CellValueConsumer<D, T>> consumerType =
+            (Class<CellValueConsumer<D, T>>)m_consumer.getClass();
         return consumerType;
     }
 }

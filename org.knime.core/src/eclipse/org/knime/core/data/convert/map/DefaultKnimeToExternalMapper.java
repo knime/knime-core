@@ -54,7 +54,6 @@ import java.util.ListIterator;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.convert.java.DataCellToJavaConverter;
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
 import org.knime.core.util.Pair;
 
 /**
@@ -64,7 +63,7 @@ import org.knime.core.util.Pair;
  * @param <P> the type of the consumption processes' parameters.
  * @author Noemi Balassa
  */
-class DefaultKnimeToExternalMapper<D extends Destination<?>, P extends ConsumerParameters<D>>
+class DefaultKnimeToExternalMapper<D, P>
     implements KnimeToExternalMapper<D, P> {
     private final int m_cellCount;
 

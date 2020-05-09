@@ -56,14 +56,14 @@ import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
 
 /**
- * Registry for {@link CellValueProducerFactory} per source type (i.e. implementor of {@link Source})
+ * Registry for {@link CellValueProducerFactory} per source type (i.e. implementor of source)
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @param <ET> Type of the external type
- * @param <ST> Type of {@link Source} for which this registry holds consumers.
+ * @param <ST> Type of source for which this registry holds consumers.
  * @since 3.6
  */
-public class ProducerRegistry<ET, ST extends Source<ET>> extends
+public class ProducerRegistry<ET, ST> extends
     AbstractConverterFactoryRegistry<ET, Class<?>, CellValueProducerFactory<ST, ET, ?, ?>, ProducerRegistry<ET, ST>> {
 
     /**
@@ -75,14 +75,15 @@ public class ProducerRegistry<ET, ST extends Source<ET>> extends
     /**
      * Set parent source type.
      *
-     * Makes this registry inherit all producers of the parent type. Will always priorize producers of the more
+     * Makes this registry inherit all producers of the parent type. Will always prioritize producers of the more
      * specialized (child) type.
      *
-     * @param parentType type of {@link Destination}, which should be this types parent.
+     * @param parentType type of destination, which should be this types parent.
      * @return reference to self (for method chaining)
      * @param <PT> Type of the parent registry
      */
-    public <PT extends Source<ET>> ProducerRegistry<ET, ST> setParent(final Class<PT> parentType) {
+    @SuppressWarnings("unchecked")
+    public <PT> ProducerRegistry<ET, ST> setParent(final Class<PT> parentType) {
         m_parent = (ProducerRegistry<ET, ST>)MappingFramework.forSourceType(parentType);
         return this;
     }

@@ -48,27 +48,23 @@
  */
 package org.knime.core.data.convert.map;
 
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
-
 /**
  * Interface for {@link CellValueConsumer consumers} of Java primitive {@code char} values.
  *
- * @param <D> Type of {@link Destination} to which this consumer writes.
- * @param <CP> Subtype of {@link ConsumerParameters} that can be used to configure this consumer.
+ * @param <D> Type of destination to which this consumer writes.
+ * @param <CP> Subtype of parameters that can be used to configure this consumer.
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  */
-public interface CharCellValueConsumer<D extends Destination<?>, CP extends Destination.ConsumerParameters<D>>
-    extends PrimitiveCellValueConsumer<D, Character, CP> {
+public interface CharCellValueConsumer<D, CP> extends PrimitiveCellValueConsumer<D, Character, CP> {
 
     /**
      * Writes the given {@code char} value to the given destination using the given parameters.
      *
-     * @param destination The {@link Destination}.
+     * @param destination The destination.
      * @param value The value to write.
      * @param params The parameters further specifying how to write to the destination, e.g., to which SQL column or
-     *            table to write. Specific to the type of {@link Destination} and {@link CellValueConsumer} that is
-     *            being used.
+     *            table to write. Specific to the type of destination and {@link CellValueConsumer} that is being used.
      * @throws MappingException If an exception occurs while consuming the cell value.
      */
     void consumeCharCellValue(D destination, char value, CP params) throws MappingException;

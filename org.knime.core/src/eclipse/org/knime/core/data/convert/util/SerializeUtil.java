@@ -61,10 +61,8 @@ import org.knime.core.data.convert.map.CellValueConsumerFactory;
 import org.knime.core.data.convert.map.CellValueProducerFactory;
 import org.knime.core.data.convert.map.ConsumerRegistry;
 import org.knime.core.data.convert.map.ConsumptionPath;
-import org.knime.core.data.convert.map.Destination;
 import org.knime.core.data.convert.map.ProducerRegistry;
 import org.knime.core.data.convert.map.ProductionPath;
-import org.knime.core.data.convert.map.Source;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigBaseRO;
@@ -280,7 +278,7 @@ public final class SerializeUtil {
      * @throws InvalidSettingsException
      * @since 3.6
      */
-    public static <ExternalType, DestType extends Destination<ExternalType>> Optional<ConsumptionPath>
+    public static <ExternalType, DestType> Optional<ConsumptionPath>
         loadConsumptionPath(final ConfigBaseRO config, final ConsumerRegistry<ExternalType, DestType> registry,
             final String key) throws InvalidSettingsException {
         final Optional<DataCellToJavaConverterFactory<?, ?>> converter =
@@ -324,7 +322,7 @@ public final class SerializeUtil {
      * @throws InvalidSettingsException
      * @since 3.6
      */
-    public static <ExternalType, SourceType extends Source<ExternalType>> Optional<ProductionPath> loadProductionPath(
+    public static <ExternalType, SourceType> Optional<ProductionPath> loadProductionPath(
         final ConfigBaseRO config, final ProducerRegistry<ExternalType, SourceType> registry, final String key)
         throws InvalidSettingsException {
         final Optional<JavaToDataCellConverterFactory<?>> converter =

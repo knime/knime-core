@@ -56,7 +56,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
-import org.knime.core.data.convert.map.Source.ProducerParameters;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.util.Pair;
@@ -68,7 +67,7 @@ import org.knime.core.util.Pair;
  * @param <P> the type of the production processes' parameters.
  * @author Noemi Balassa
  */
-class DefaultExternalToKnimeMapper<S extends Source<?>, P extends ProducerParameters<S>>
+class DefaultExternalToKnimeMapper<S, P>
     implements ExternalToKnimeMapper<S, P> {
     private final int m_cellCount;
 

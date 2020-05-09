@@ -48,8 +48,6 @@
  */
 package org.knime.core.data.convert.map;
 
-import org.knime.core.data.convert.map.Source.ProducerParameters;
-
 /**
  * Simple implementation of {@link CellValueProducerFactory} that allows passing the production function as a lambda
  * expression.
@@ -58,11 +56,11 @@ import org.knime.core.data.convert.map.Source.ProducerParameters;
  * @param <S> Type of source this producer can read from
  * @param <ET> Type of external types
  * @param <T> Java type the created producer returns
- * @param <PP> Subclass of {@link ProducerParameters} for the given source type
+ * @param <PP> Subclass of parameters for the given source type
  *
  * @since 3.6
  */
-public class SimpleCellValueProducerFactory<S extends Source<ET>, ET, T, PP extends ProducerParameters<S>>
+public class SimpleCellValueProducerFactory<S, ET, T, PP>
     extends AbstractCellValueProducerFactory<S, ET, T, PP>
     implements TypedCellValueProducerFactory<S, ET, T, PP, CellValueProducer<S, T, PP>> {
 

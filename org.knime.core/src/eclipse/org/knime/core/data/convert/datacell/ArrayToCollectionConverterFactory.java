@@ -287,6 +287,7 @@ public class ArrayToCollectionConverterFactory<S, SE> implements JavaToDataCellC
         };
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Class<S> getSourceType() {
         return (Class<S>)Array.newInstance(m_elementConverterFactory.getSourceType(), 0).getClass();

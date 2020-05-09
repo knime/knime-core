@@ -50,24 +50,23 @@ package org.knime.core.data.convert.map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
 
 /**
- * Base interface for objects that consume a {@link DataRow} given a set of {@link ConsumerParameters parameters}.
+ * Base interface for objects that consume a {@link DataRow} given a set of parameters.
  *
  * @param <CP> The type of the parameters that are used to configure the consumption of a single data row.
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  * @see DataRowProducer
  */
-public interface DataRowConsumer<CP extends ConsumerParameters<?>> {
+public interface DataRowConsumer<CP> {
 
     /**
      * Consumes a data row given a set of parameters. The cells in the given data row and the given parameters must be
      * of equal number and order.
      *
      * @param row The row to consume.
-     * @param params The per-{@link DataCell cell} {@link ConsumerParameters parameters} that configure how the data row
+     * @param params The per-{@link DataCell cell} parameters that configure how the data row
      *            is consumed.
      * @throws Exception If consuming the data row failed.
      */

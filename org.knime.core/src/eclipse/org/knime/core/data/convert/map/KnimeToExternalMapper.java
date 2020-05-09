@@ -45,7 +45,6 @@
 package org.knime.core.data.convert.map;
 
 import org.knime.core.data.DataRow;
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
 
 /**
  * An executor of consumption and KNIME to external type mapping operations.
@@ -59,7 +58,7 @@ import org.knime.core.data.convert.map.Destination.ConsumerParameters;
  * @author Noemi Balassa
  * @since 4.1
  */
-public interface KnimeToExternalMapper<D extends Destination<?>, P extends ConsumerParameters<D>> {
+public interface KnimeToExternalMapper<D, P> {
     /**
      * Maps and writes data from a {@link DataRow} to an external destination.
      *

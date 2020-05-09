@@ -48,24 +48,22 @@
  */
 package org.knime.core.data.convert.map;
 
-import org.knime.core.data.convert.map.Source.ProducerParameters;
-
 /**
  * Producer factory that is typed on the (base) type of the producers that it creates. The type is exposed via
  * {@link #getProducerType()}. It is guaranteed that all created producers are assignment-compatible with this type.
  * This allows clients to check with which specific producer type they will be dealing.
  *
- * @param <S> Type of {@link Source} from which producers created by this factory read.
+ * @param <S> Type of source from which producers created by this factory read.
  * @param <ET> Type of the external type.
  * @param <T> The Java type of the values that producers created by this factory produce.
- * @param <PP> Subtype of {@link Source.ProducerParameters} that can be used to configure the producers created by this
+ * @param <PP> Parameters that can be used to configure the producers created by this
  *            factory.
  * @param <P> The (base) type of the producers created by this factory.
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  * @see CellValueProducerFactory
  */
-public interface TypedCellValueProducerFactory<S extends Source<ET>, ET, T, PP extends ProducerParameters<S>, //
+public interface TypedCellValueProducerFactory<S, ET, T, PP, //
         P extends CellValueProducer<S, T, PP>>
     extends CellValueProducerFactory<S, ET, T, PP> {
 

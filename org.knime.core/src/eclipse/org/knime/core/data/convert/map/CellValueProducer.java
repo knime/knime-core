@@ -51,25 +51,25 @@ package org.knime.core.data.convert.map;
 import org.knime.core.data.DataCell;
 
 /**
- * A cell value producer fetches a value of a certain external type from a {@link Source} which can then be written to a
+ * A cell value producer fetches a value of a certain external type from a source which can then be written to a
  * KNIME {@link DataCell}.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
- * @param <S> Type of {@link Source} from which this producer reads.
+ * @param <S> Type of source from which this producer reads.
  * @param <T> The type of the values that this producer produces.
- * @param <PP> Subtype of {@link Source.ProducerParameters} that can be used to configure this producer.
+ * @param <PP> Parameters that can be used to configure this producer.
  * @since 3.6
  * @see CellValueConsumer
  */
 @FunctionalInterface
-public interface CellValueProducer<S extends Source<?>, T, PP extends Source.ProducerParameters<S>> {
+public interface CellValueProducer<S, T, PP> {
 
     /**
      * Reads a value from the given source using the given parameters.
      *
-     * @param source The {@link Source}.
+     * @param source The source.
      * @param params The parameters further specifying how to read from the given source, e.g., from which SQL column or
-     *            table to read. Specific to the type of {@link Source} and {@link CellValueProducer} that is being
+     *            table to read. Specific to the type of source and {@link CellValueProducer} that is being
      *            used.
      * @return The value which was read from source.
      * @throws MappingException If an exception occurs while producing the cell value.

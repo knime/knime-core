@@ -101,6 +101,7 @@ public final class ConversionKey {
      *
      * @return the source type of the factory
      */
+    @SuppressWarnings("unchecked")
     public <T> T getSourceType() {
         return (T)m_sourceType;
     }
@@ -110,6 +111,7 @@ public final class ConversionKey {
      *
      * @return the destination type of the factory
      */
+    @SuppressWarnings("unchecked")
     public <T> T getDestType() {
         return (T)m_destType;
     }

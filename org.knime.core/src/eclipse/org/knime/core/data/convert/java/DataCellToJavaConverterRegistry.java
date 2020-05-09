@@ -197,6 +197,7 @@ public final class DataCellToJavaConverterRegistry extends
                 final Class<?> sourceType = cls.getSourceType();
 
                 // sourceType could be a DataCell subclass!
+                @SuppressWarnings("unchecked")
                 final DataType elementType = (DataCell.class.isAssignableFrom(sourceType))
                     ? DataType.getType((Class<? extends DataCell>)sourceType) : m_preferredTypes.get(sourceType);
                 if (elementType == null) {
@@ -224,6 +225,7 @@ public final class DataCellToJavaConverterRegistry extends
      * @return a {@link Collection} of all possible source types which can be converted into the given
      *         <code>destType</code>. The first is always the preferred type.
      */
+    @SuppressWarnings("unchecked")
     public Collection<DataCellToJavaConverterFactory<?, ?>> getFactoriesForSourceType(final DataType sourceType) {
         final LinkedHashSet<DataCellToJavaConverterFactory<?, ?>> set = new LinkedHashSet<>();
 
@@ -294,6 +296,7 @@ public final class DataCellToJavaConverterRegistry extends
      * @return collection of {@link DataCellToJavaConverterFactory converter factories} which create converters which
      *         convert from <code>sourceType</code> into <code>destType</code>.
      */
+    @SuppressWarnings("unchecked")
     public <D> Collection<DataCellToJavaConverterFactory<? extends DataValue, D>>
         getConverterFactories(final DataType sourceType, final Class<D> destType) {
         if (sourceType.equals(DataType.getMissingCell().getType())) {
@@ -338,6 +341,7 @@ public final class DataCellToJavaConverterRegistry extends
      * @return the preferred {@link DataCellToJavaConverterFactory} for given <code>sourceType</code> and
      *         <code>destType</code>.
      */
+    @SuppressWarnings("unchecked")
     public <D> Optional<DataCellToJavaConverterFactory<? extends DataValue, D>>
         getPreferredConverterFactory(final DataType sourceType, final Class<D> destType) {
 
@@ -364,7 +368,7 @@ public final class DataCellToJavaConverterRegistry extends
      * @param sourceType Type the created converters convert to
      * @return the {@link DataCellToJavaConverterFactory} or <code>null</code> if none matched the given types
      */
-    private <D, SE extends DataValue, DE> Collection<DataCellToJavaConverterFactory<CollectionDataValue, D>>
+    private <D> Collection<DataCellToJavaConverterFactory<CollectionDataValue, D>>
         getCollectionConverterFactories(final DataType sourceType, final Class<D> destType) {
 
         if (!sourceType.isCollectionType() || !destType.isArray()) {
@@ -393,6 +397,7 @@ public final class DataCellToJavaConverterRegistry extends
      * @param <D> Destination array type
      * @since 3.4
      */
+    @SuppressWarnings("static-method")
     public <DE, D> DataCellToJavaConverterFactory<CollectionDataValue, D>
         getCollectionConverterFactory(final DataCellToJavaConverterFactory<? extends DataValue, DE> elementFactory) {
         return new CollectionConverterFactory<>(elementFactory);
@@ -509,8 +514,10 @@ public final class DataCellToJavaConverterRegistry extends
         final DataValueAccessMethod annotation) {
 
         try {
+            @SuppressWarnings("unchecked")
             final Class<T> javaType = (Class<T>)ClassUtil.ensureObjectType(method.getReturnType());
             final String name = annotation.name();
+            @SuppressWarnings("unchecked")
             final DataCellToJavaConverterFactory<?, ?> factory = new SimpleDataCellToJavaConverterFactory<>(valueClass,
                 javaType, (value) -> (T)method.invoke(value), name);
 
@@ -539,7 +546,7 @@ public final class DataCellToJavaConverterRegistry extends
      * @param name the name of the
      * @return
      */
-    private boolean validateFactoryName(final DataCellToJavaConverterFactory<?, ?> factory) {
+    private static boolean validateFactoryName(final DataCellToJavaConverterFactory<?, ?> factory) {
         final String name = factory.getName();
         final String className = factory.getDestinationType().getSimpleName();
         return name.matches(Pattern.quote(className) + "(| \\(.+\\))");

@@ -57,6 +57,7 @@ import org.knime.core.data.DataValue;
  *
  * @param <S> Type from which the converters created by this factory can convert.
  * @param <D> Type to which the converters created by this factory can convert.
+ * @param <C> Type of {@link DataCellToJavaConverter}
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  * @see DataCellToJavaConverterFactory

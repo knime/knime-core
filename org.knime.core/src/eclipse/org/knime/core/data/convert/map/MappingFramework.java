@@ -16,8 +16,6 @@ import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
 import org.knime.core.data.convert.java.DataCellToJavaConverter;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
-import org.knime.core.data.convert.map.Source.ProducerParameters;
 import org.knime.core.data.convert.util.SerializeUtil;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.filestore.FileStoreFactory;
@@ -28,7 +26,7 @@ import org.knime.core.node.ExecutionContext;
  *
  * <p>
  * A frequent use case for KNIME nodes is to write or read data from an external storage. (A storage can be used as a
- * {@link Source source} or {@link Destination destination}.) In this case the value held by a KNIME {@link DataCell}
+ * source or destination.) In this case the value held by a KNIME {@link DataCell}
  * needs to be mapped to an external value.
  * </p>
  *
@@ -47,11 +45,11 @@ import org.knime.core.node.ExecutionContext;
  *
  * <p>
  * Some external types do not have a Java representation. We can therefore not simply map from Java object to a Java
- * representation of an external type. Instead we wrap the concepts of {@link Source source} and {@link Destination
- * destination} and the concepts of "how to write to" ({@link CellValueConsumer}) and "how to read from"
+ * representation of an external type. Instead we wrap the concepts of source and destination
+ * and the concepts of "how to write to" ({@link CellValueConsumer}) and "how to read from"
  * ({@link CellValueProducer}) them. The destination and source are the external equivalent to a KNIME input or output
  * table. How to write/read from them is defined per set of types, but configurable via
- * {@link ConsumerParameters}/{@link ProducerParameters}. These parameters may include column index and row index, but
+ * parameters. These parameters may include column index and row index, but
  * are fully dependent on the type of external storage and meant as a way in which the node communicates with an
  * instance of {@link CellValueConsumer} or {@link CellValueProducer}.
  * </p>
@@ -129,7 +127,7 @@ public class MappingFramework {
      * @throws NullPointerException if {@code paths} or any of its elements is {@code null}.
      * @since 4.1
      */
-    public static <D extends Destination<?>, P extends ConsumerParameters<D>> KnimeToExternalMapper<D, P>
+    public static <D, P> KnimeToExternalMapper<D, P>
         createMapper(final ConsumptionPath... paths) {
         return new DefaultKnimeToExternalMapper<>(paths);
     }
@@ -147,7 +145,7 @@ public class MappingFramework {
      *             elements is {@code null}.
      * @since 4.1
      */
-    public static <S extends Source<?>, P extends ProducerParameters<S>> ExternalToKnimeMapper<S, P>
+    public static <S, P> ExternalToKnimeMapper<S, P>
         createMapper(final IntFunction<FileStoreFactory> fileStoreFactoryFunction, final ProductionPath... paths) {
         return new DefaultExternalToKnimeMapper<>(fileStoreFactoryFunction, paths);
     }
@@ -159,12 +157,12 @@ public class MappingFramework {
     /**
      * Get the {@link CellValueConsumer} registry for given destination type.
      *
-     * @param destinationType {@link Destination} type for which to get the registry
+     * @param destinationType destination type for which to get the registry
      * @return Per destination type consumer registry for given destination type.
      * @param <ET> External type
      * @param <D> Destination type
      */
-    public static <ET, D extends Destination<ET>> ConsumerRegistry<ET, D>
+    public static <ET, D> ConsumerRegistry<ET, D>
         forDestinationType(final Class<? extends D> destinationType) {
 
         final ConsumerRegistry<ET, D> perDT = getConsumerRegistry(destinationType);
@@ -178,12 +176,12 @@ public class MappingFramework {
     /**
      * Get the {@link CellValueProducer} registry for given source type.
      *
-     * @param sourceType {@link Source} type for which to get the registry
+     * @param sourceType source type for which to get the registry
      * @return Per source type producer registry for given source type.
      * @param <ET> External type
      * @param <S> Source type
      */
-    public static <ET, S extends Source<ET>> ProducerRegistry<ET, S>
+    public static <ET, S> ProducerRegistry<ET, S>
         forSourceType(final Class<? extends S> sourceType) {
         final ProducerRegistry<ET, S> perST = getProducerRegistry(sourceType);
         if (perST == null) {
@@ -193,13 +191,13 @@ public class MappingFramework {
         return perST;
     }
 
-    private static HashMap<Class<? extends Destination<?>>, ConsumerRegistry<?, ?>> m_destinationTypes =
+    private static HashMap<Class<?>, ConsumerRegistry<?, ?>> m_destinationTypes =
         new HashMap<>();
 
-    private static HashMap<Class<? extends Source<?>>, ProducerRegistry<?, ?>> m_sourceTypes = new HashMap<>();
+    private static HashMap<Class<?>, ProducerRegistry<?, ?>> m_sourceTypes = new HashMap<>();
 
     /* Get the consumer registry for given destination type */
-    private static <ET, DT extends Destination<ET>> ConsumerRegistry<ET, DT>
+    private static <ET, DT> ConsumerRegistry<ET, DT>
         getConsumerRegistry(final Class<? extends DT> destinationType) {
         @SuppressWarnings("unchecked")
         final ConsumerRegistry<ET, DT> registry = (ConsumerRegistry<ET, DT>)m_destinationTypes.get(destinationType);
@@ -207,7 +205,7 @@ public class MappingFramework {
     }
 
     /* Get the producer registry for given destination type */
-    private static <ET, S extends Source<ET>> ProducerRegistry<ET, S>
+    private static <ET, S> ProducerRegistry<ET, S>
         getProducerRegistry(final Class<? extends S> sourceType) {
         @SuppressWarnings("unchecked")
         final ProducerRegistry<ET, S> registry = (ProducerRegistry<ET, S>)m_sourceTypes.get(sourceType);
@@ -215,7 +213,7 @@ public class MappingFramework {
     }
 
     /* Create the consumer registry for given destination type */
-    private static <ET, D extends Destination<ET>> ConsumerRegistry<ET, D>
+    private static <ET, D> ConsumerRegistry<ET, D>
         createConsumerRegistry(final Class<? extends D> destinationType) {
         final ConsumerRegistry<ET, D> registry = new ConsumerRegistry<ET, D>();
         m_destinationTypes.put(destinationType, registry);
@@ -223,7 +221,7 @@ public class MappingFramework {
     }
 
     /* Create the producer registry for given destination type */
-    private static <ET, S extends Source<ET>> ProducerRegistry<ET, S>
+    private static <ET, S> ProducerRegistry<ET, S>
         createProducerRegistry(final Class<? extends S> sourceType) {
         final ProducerRegistry<ET, S> registry = new ProducerRegistry<ET, S>();
         m_sourceTypes.put(sourceType, registry);
@@ -231,7 +229,7 @@ public class MappingFramework {
     }
 
     /**
-     * Creates a {@link DataRowProducer} that allows to produce data rows from a given {@link Source source} using a
+     * Creates a {@link DataRowProducer} that allows to produce data rows from a given source using a
      * given {@link ProductionPath mapping}.
      *
      * @param <S> Type of the source from which to create data rows.
@@ -244,13 +242,13 @@ public class MappingFramework {
      * @since 3.7
      * @see #createDataRowProducer(FileStoreFactory, Source, ProductionPath[])
      */
-    public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRowProducer<PP>
+    public static <S, PP> DataRowProducer<PP>
         createDataRowProducer(final S source, final ProductionPath[] mapping, final ExecutionContext exec) {
         return new DefaultDataRowProducer<>(source, mapping, FileStoreFactory.createFileStoreFactory(exec));
     }
 
     /**
-     * Creates a {@link DataRowProducer} that allows to produce data rows from a given {@link Source source} using a
+     * Creates a {@link DataRowProducer} that allows to produce data rows from a given source using a
      * given {@link ProductionPath mapping}.
      *
      * @param fileStoreFactory {@link FileStoreFactory} which may be used for creating {@link CellFactory}s.
@@ -262,7 +260,7 @@ public class MappingFramework {
      * @return The data row producer for the given source and the given mapping.
      * @since 4.0
      */
-    public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRowProducer<PP>
+    public static <S, PP> DataRowProducer<PP>
         createDataRowProducer(final FileStoreFactory fileStoreFactory, final S source, final ProductionPath[] mapping) {
         return new DefaultDataRowProducer<>(source, mapping, fileStoreFactory);
     }
@@ -279,9 +277,9 @@ public class MappingFramework {
      * @throws Exception If conversion fails
      * @param <S> Source type
      * @param <PP> Producer parameters subclass
-     * @see #map(RowKey, FileStoreFactory, Source, ProductionPath[], ProducerParameters[])
+     * @see #map(RowKey, FileStoreFactory, Source, ProductionPath[], PP[])
      */
-    public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRow map(final RowKey key, final S source,
+    public static <S, PP> DataRow map(final RowKey key, final S source,
         final ProductionPath[] mapping, final PP[] params, final ExecutionContext context) throws Exception {
         return map(key, FileStoreFactory.createFileStoreFactory(context), source, mapping, params);
     }
@@ -300,7 +298,7 @@ public class MappingFramework {
      * @param <PP> Producer parameters subclass
      * @since 4.0
      */
-    public static <S extends Source<?>, PP extends ProducerParameters<S>> DataRow map(final RowKey key,
+    public static <S, PP> DataRow map(final RowKey key,
         final FileStoreFactory fileStoreFactory, final S source, final ProductionPath[] mapping, final PP[] params)
         throws Exception {
 
@@ -330,7 +328,7 @@ public class MappingFramework {
     }
 
     /**
-     * Creates a {@link DataRowConsumer} that allows to write data rows to a given {@link Destination destination} using
+     * Creates a {@link DataRowConsumer} that allows to write data rows to a given destination using
      * a given {@link ConsumptionPath mapping}.
      *
      * @param <D> Type of the destination to which to write data rows.
@@ -341,7 +339,7 @@ public class MappingFramework {
      * @return The data row consumer for the given destination and the given mapping.
      * @since 3.7
      */
-    public static <D extends Destination<?>, CP extends ConsumerParameters<D>> DataRowConsumer<CP>
+    public static <D, CP> DataRowConsumer<CP>
         createDataRowConsumer(final D destination, final ConsumptionPath[] mapping) {
         return new DefaultDataRowConsumer<>(destination, mapping);
     }
@@ -356,20 +354,20 @@ public class MappingFramework {
      * @param params Per column parameters for the consumers used
      * @throws Exception If an exception occurs during conversion or mapping
      * @param <D> Destination type
-     * @param <CP> Consumer parameters subclass
+     * @param <CP> Consumer parameters
      */
-    public static <D extends Destination<?>, CP extends ConsumerParameters<D>> void map(final DataRow row, final D dest,
+    public static <D, CP> void map(final DataRow row, final D dest,
         final ConsumptionPath[] mapping, final CP[] params) throws Exception {
 
         int i = 0;
         for (final DataCell cell : row) {
             final DataCellToJavaConverter<?, ?> converter = mapping[i].m_converterFactory.create();
             @SuppressWarnings("unchecked")
-            final CellValueConsumer<D, Object, CP> consumer =
-                (CellValueConsumer<D, Object, CP>)mapping[i].m_consumerFactory.create();
+            final CellValueConsumer<D, Object> consumer =
+                (CellValueConsumer<D, Object>)mapping[i].m_consumerFactory.create(params[i]);
             try {
                 final Object cellValue = cell.isMissing() ? null : converter.convertUnsafe(cell);
-                consumer.consumeCellValue(dest, cellValue, params[i]);
+                consumer.consumeCellValue(dest, cellValue);
             } catch (final Exception e) {
                 final Throwable cause = e.getCause();
                 final String message;

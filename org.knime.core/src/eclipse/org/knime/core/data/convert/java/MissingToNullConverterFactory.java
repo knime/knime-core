@@ -74,6 +74,7 @@ final class MissingToNullConverterFactory<D> implements DataCellToJavaConverterF
         return MissingValue.class;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Class<D> getDestinationType() {
         return (Class<D>)Object.class;
@@ -84,6 +85,7 @@ final class MissingToNullConverterFactory<D> implements DataCellToJavaConverterF
      *
      * @return instance of this singleton
      */
+    @SuppressWarnings("unchecked")
     public static <D> MissingToNullConverterFactory<D> getInstance() {
         return (MissingToNullConverterFactory<D>)INSTANCE;
     }

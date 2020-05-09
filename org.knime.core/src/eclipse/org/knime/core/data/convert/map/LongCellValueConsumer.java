@@ -48,38 +48,37 @@
  */
 package org.knime.core.data.convert.map;
 
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
 
 /**
  * Interface for {@link CellValueConsumer consumers} of Java primitive {@code long} values.
  *
- * @param <D> Type of {@link Destination} to which this consumer writes.
- * @param <CP> Subtype of {@link ConsumerParameters} that can be used to configure this consumer.
+ * @param <D> Type of destination to which this consumer writes.
+ * @param <CP> Subtype of parameters that can be used to configure this consumer.
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  */
-public interface LongCellValueConsumer<D extends Destination<?>, CP extends Destination.ConsumerParameters<D>>
-    extends PrimitiveCellValueConsumer<D, Long, CP> {
+public interface LongCellValueConsumer<D, CP>
+    extends PrimitiveCellValueConsumer<D, Long> {
 
     /**
      * Writes the given {@code long} value to the given destination using the given parameters.
      *
-     * @param destination The {@link Destination}.
+     * @param destination The destination.
      * @param value The value to write.
      * @param params The parameters further specifying how to write to the destination, e.g., to which SQL column or
-     *            table to write. Specific to the type of {@link Destination} and {@link CellValueConsumer} that is
+     *            table to write. Specific to the type of destination and {@link CellValueConsumer} that is
      *            being used.
      * @throws MappingException If an exception occurs while consuming the cell value.
      */
-    void consumeLongCellValue(D destination, long value, CP params) throws MappingException;
+    void consumeLongCellValue(D destination, long value) throws MappingException;
 
     @Override
-    default void consumeCellValue(final D destination, final Long value, final CP consumerParams)
+    default void consumeCellValue(final D destination, final Long value)
         throws MappingException {
         if (value != null) {
-            consumeLongCellValue(destination, value, consumerParams);
+            consumeLongCellValue(destination, value);
         } else {
-            consumeMissingCellValue(destination, consumerParams);
+            consumeMissingCellValue(destination);
         }
     }
 }

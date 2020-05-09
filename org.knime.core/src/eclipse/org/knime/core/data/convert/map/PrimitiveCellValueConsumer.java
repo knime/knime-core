@@ -48,31 +48,29 @@
  */
 package org.knime.core.data.convert.map;
 
-import org.knime.core.data.convert.map.Destination.ConsumerParameters;
-
 /**
  * Base interface for consumers that accept values of a certain Java primitive type and write them to a
- * {@link Destination} as a certain external type.
+ * destination as a certain external type.
  *
- * @param <D> Type of {@link Destination} to which this consumer writes.
+ * @param <D> Type of destination to which this consumer writes.
  * @param <T> The wrapper type of the Java primitive values that this consumer accepts. E.g., {@link Integer} for the
  *            Java primitive type {@code int}.
- * @param <CP> Subtype of {@link ConsumerParameters} that can be used to configure this consumer.
+ * @param <CP> Subtype of parameters that can be used to configure this consumer.
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  * @see CellValueConsumer
  */
-public interface PrimitiveCellValueConsumer<D extends Destination<?>, T, CP extends Destination.ConsumerParameters<D>>
-    extends CellValueConsumer<D, T, CP> {
+public interface PrimitiveCellValueConsumer<D, T>
+    extends CellValueConsumer<D, T> {
 
     /**
      * Writes a missing value to the given destination using the given parameters.
      *
-     * @param destination The {@link Destination} to which to write the missing value.
+     * @param destination The destination to which to write the missing value.
      * @param params The parameters further specifying how to write to the destination, e.g., to which SQL column or
-     *            table to write. Specific to the type of {@link Destination} and {@link CellValueConsumer} that is
+     *            table to write. Specific to the type of destination and {@link CellValueConsumer} that is
      *            being used.
      * @throws MappingException If an exception occurs while consuming the missing value.
      */
-    void consumeMissingCellValue(D destination, CP params) throws MappingException;
+    void consumeMissingCellValue(D destination) throws MappingException;
 }

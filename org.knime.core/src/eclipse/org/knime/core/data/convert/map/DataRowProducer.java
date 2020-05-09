@@ -51,24 +51,23 @@ package org.knime.core.data.convert.map;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.convert.map.Source.ProducerParameters;
 
 /**
  * Base interface for objects that produce a {@link DataRow} given its prospective row key and a set of
- * {@link ProducerParameters parameters}.
+ * parameters.
  *
  * @param <PP> The type of the parameters that are used to configure the production of a single data row.
  * @since 3.7
  * @author Marcel Wiedenmann, KNIME GmbH, Konstanz, Germany
  * @see DataRowConsumer
  */
-public interface DataRowProducer<PP extends ProducerParameters<?>> {
+public interface DataRowProducer<PP> {
 
     /**
      * Creates a data row given its prospective row key and a set of parameters.
      *
      * @param rowKey The row key for the created row.
-     * @param params The per-{@link DataCell cell} {@link ProducerParameters parameters} that configure how the data row
+     * @param params The per-{@link DataCell cell} parameters that configure how the data row
      *            is produced.
      * @return The produced data row.
      * @throws Exception If producing the data row failed.

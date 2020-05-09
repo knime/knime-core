@@ -6,7 +6,7 @@ import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 
 /**
  * A selection of {@link DataCellToJavaConverterFactory} to {@link CellValueConsumerFactory} to read a value from a
- * {@link Source} into a {@link DataCell}.
+ * source into a {@link DataCell}.
  *
  * @author Jonathan Hale
  * @since 3.6
