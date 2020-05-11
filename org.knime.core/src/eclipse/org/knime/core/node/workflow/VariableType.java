@@ -1756,13 +1756,18 @@ public abstract class VariableType<T> {
         public static final StringArrayType INSTANCE = new StringArrayType();
 
         private StringArrayType() {
-            super(createCompatibleConfigs());
+            super(createOverwritableConfigs(), createCreationCompatibleConfigs());
         }
 
-        private static BiPredicate<Config, String> createCompatibleConfigs() {
+        private static BiPredicate<Config, String> createOverwritableConfigs() {
             return wrap(VariableTypeUtils::isCharArray)//
                 .or(VariableTypeUtils::isStringArray)//
                 .or(VariableTypeUtils::isBooleanArray);
+        }
+
+        private static BiPredicate<Config, String> createCreationCompatibleConfigs() {
+            return wrap(VariableTypeUtils::isCharArray)//
+                .or(VariableTypeUtils::isStringArray);
         }
 
         @Override
