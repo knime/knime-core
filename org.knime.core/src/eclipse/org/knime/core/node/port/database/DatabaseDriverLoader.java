@@ -282,7 +282,8 @@ public final class DatabaseDriverLoader {
                 ZipEntry entry;
                 while ((entry = is.getNextEntry()) != null) {
                     String name = entry.getName();
-                    if (name.endsWith(".class")) {
+                    //don't try to load Java 9 and later classes that are located in META-INF/versions/
+                    if (name.endsWith(".class") && !name.startsWith("META-INF/versions/")) {
                         Class<?> driverClass = loadClass(name, bundleClassLoader, fileClassLoader);
                         if ((driverClass != null) && Driver.class.isAssignableFrom(driverClass) &&
                                 ((driverClass.getModifiers() & Modifier.ABSTRACT) == 0)) {
