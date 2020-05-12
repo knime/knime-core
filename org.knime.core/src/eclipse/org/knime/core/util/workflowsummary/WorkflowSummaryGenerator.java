@@ -68,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -100,6 +101,7 @@ import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
+import org.knime.core.node.workflow.NodeGraphAnnotation;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeTimer;
@@ -365,8 +367,8 @@ public final class WorkflowSummaryGenerator {
         }
     }
 
-    @JsonPropertyOrder({"id", "name", "type", "state", "annotation", "metanode", "component", "factoryKey",
-        "nodeMessage", "settings", "outputs", "subWorkflow", "executionStatistics", "jobManager"})
+    @JsonPropertyOrder({"id", "name", "type", "state", "graphDepth", "annotation", "metanode", "component",
+        "factoryKey", "nodeMessage", "settings", "outputs", "subWorkflow", "executionStatistics", "jobManager"})
     private interface Node {
 
         @JacksonXmlProperty(isAttribute = true)
@@ -389,6 +391,9 @@ public final class WorkflowSummaryGenerator {
 
         @JacksonXmlProperty(isAttribute = true)
         String getState();
+
+        @JacksonXmlProperty(isAttribute = true)
+        Integer getGraphDepth();
 
         NodeFactoryKey getFactoryKey();
 
@@ -455,6 +460,15 @@ public final class WorkflowSummaryGenerator {
                 @Override
                 public String getState() {
                     return nc.getNodeContainerState().toString();
+                }
+
+                @Override
+                public Integer getGraphDepth() {
+                    Set<NodeGraphAnnotation> nga = nc.getParent().getNodeGraphAnnotation(nc.getID());
+                    if (!nga.isEmpty()) {
+                        return nga.iterator().next().getDepth();
+                    }
+                    return null;
                 }
 
                 @Override
