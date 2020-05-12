@@ -124,6 +124,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
@@ -273,6 +274,7 @@ public final class WorkflowSummaryGenerator {
 
     private interface Installation {
         @JacksonXmlProperty(localName = "plugin")
+        @JacksonXmlElementWrapper(localName = "plugins")
         List<Plugin> getPlugins();
 
         static Installation create() {
@@ -322,9 +324,11 @@ public final class WorkflowSummaryGenerator {
         String getName();
 
         @JacksonXmlProperty(localName = "node")
+        @JacksonXmlElementWrapper(localName = "nodes")
         List<Node> getNodes();
 
         @JacksonXmlProperty(localName = "annotation")
+        @JacksonXmlElementWrapper(localName = "annotations")
         List<String> getAnnotations();
 
         WorkflowMetadata getMetadata();
@@ -391,11 +395,13 @@ public final class WorkflowSummaryGenerator {
         NodeMessage getNodeMessage();
 
         @JacksonXmlProperty(localName = "setting")
+        @JacksonXmlElementWrapper(localName = "settings")
         List<Setting> getSettings();
 
         Workflow getSubWorkflow();
 
         @JacksonXmlProperty(localName = "output")
+        @JacksonXmlElementWrapper(localName = "outputs")
         List<OutputPort> getOutputs();
 
         ExecutionStatistics getExecutionStatistics();
@@ -657,6 +663,7 @@ public final class WorkflowSummaryGenerator {
         String getName();
 
         @JacksonXmlProperty(localName = "setting")
+        @JacksonXmlElementWrapper(localName = "settings")
         List<Setting> getSettings();
 
         static JobManager create(final NodeExecutionJobManager mgr, final WorkflowSummaryConfiguration config) {
@@ -800,6 +807,7 @@ public final class WorkflowSummaryGenerator {
         String getSummary();
 
         @JacksonXmlProperty(localName = "successor")
+        @JacksonXmlElementWrapper(localName = "successors")
         List<Successor> getSuccessors();
 
         static OutputPort create(final int index, final NodeOutPort p, final WorkflowSummaryConfiguration config) {
@@ -898,6 +906,7 @@ public final class WorkflowSummaryGenerator {
 
     private interface TableSpec {
         @JacksonXmlProperty(localName = "column")
+        @JacksonXmlElementWrapper(localName = "columns")
         List<Column> getColumns();
 
         static TableSpec create(final DataTableSpec spec) {
@@ -927,6 +936,7 @@ public final class WorkflowSummaryGenerator {
         ColumnDomain getColumnDomain();
 
         @JacksonXmlProperty(localName = "columnproperty")
+        @JacksonXmlElementWrapper(localName = "columnproperties")
         List<ColumnProperty> getColumnProperties();
 
         static Column create(final int index, final DataColumnSpec colSpec) {
@@ -964,6 +974,8 @@ public final class WorkflowSummaryGenerator {
     @JsonPropertyOrder({"values", "lowerBound", "upperBound"})
     private interface ColumnDomain {
 
+        @JacksonXmlProperty(localName = "value")
+        @JacksonXmlElementWrapper(localName = "values")
         List<String> getValues();
 
         String getLowerBound();
@@ -1046,6 +1058,7 @@ public final class WorkflowSummaryGenerator {
         String getType();
 
         @JacksonXmlProperty(localName = "setting")
+        @JacksonXmlElementWrapper(localName = "settings")
         List<Setting> getSettings();
 
         static List<Setting> create(final Config config, final WorkflowSummaryConfiguration summaryConfig) {
