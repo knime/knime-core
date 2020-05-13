@@ -48,7 +48,10 @@
  */
 package org.knime.core.util.string;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.Collator;
@@ -809,5 +812,133 @@ public class KnimeStringUtils {
             newArr[i] = null != str[i] && str[i].isEmpty() ? null : str[i];
         }
         return newArr;
+    }
+
+
+    /**
+     * Replaces percent encoded character triplets back to their referenced characters. For instance:
+     * "%20" -> " "
+     * "%2F" -> "/"
+     *
+     * Uses the java standard library implementation {@link URLDecoder#decode(String, String)}.
+     * @param str the string to decode
+     * @param charsetName the character set to use
+     * @return the decoded string
+     */
+    public static String urlDecode(final String str, final String charsetName) {
+        try {
+            return URLDecoder.decode(str, charsetName);
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.error(e.getMessage());
+            return str;
+        }
+    }
+
+    /**
+     * Replaces characters that are not allowed or reserved in an URL by applying percent encoding. This replaces the
+     * octet (8 bits) by a character triplet starting with a percent sign. For instance: " " -> "%20" "/" -> "%2F" "?"
+     * -> "%3F"
+     *
+     * Uses the java standard library implementation: {@link URLEncoder#encode(String, String)}. set.
+     *
+     * See https://en.wikipedia.org/wiki/Percent-encoding and the URI RFC on details when to apply percent encoding.
+     * https://tools.ietf.org/html/rfc3986#section-2.1
+     *
+     * @param str string to apply percent encoding to
+     * @param charsetName the character set to use
+     * @return the escaped string
+     */
+    public static String urlEncode(final String str, final String charsetName) {
+        try {
+            return URLEncoder.encode(str, charsetName);
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.error(e.getMessage());
+            return str;
+        }
+    }
+
+    /**
+     * Replaces characters not allowed in an URL by ASCII characters. Considers only either the path or query part
+     * (encode scope) of the URI.
+     *
+     * @param scope the part of the URI to fix. Possible values: "path" and "query". Use "path" to encode only the path
+     *            portion of an URI-like string. Use "query" to encode only the query portion of an URI-like string.
+     *            Note: a "both" option wouldn't be wise since a third option may be added in the future. Likewise, an
+     *            "all" option might be misleading (since it actually refers only to some parts of the URI)
+     *
+     * @param str the URI to fix
+     * @param pathDelimiter the delimiter for the path part of a URI, usually "/"
+     * @param charsetName the character set to use
+     * @return the escaped string
+     */
+    public static String urlEncodeScope(final String scope, final String str, final String pathDelimiter,
+        final String charsetName) {
+
+        if ("path".equalsIgnoreCase(scope.trim())) {
+            // split the path part by delimiter and encode each individual part
+
+            int schemeDelimiterPos = str.indexOf("//");
+            int queryDelimiterPos = str.indexOf("?");
+            int fragmentDelimiterPos = str.indexOf("#");
+
+            // use first slash as path begin marker
+            // skip initial scheme:// if present
+            int pathStart;
+            if (schemeDelimiterPos != -1) {
+                pathStart = str.indexOf("/", schemeDelimiterPos + 2);
+            } else {
+                pathStart = str.indexOf("/");
+            }
+
+            // no path part found, we're done
+            if (pathStart == -1) {
+                return str;
+            }
+
+            // use fragment start marker ("#") or query start marker ("?") if present as path end marker
+            // if query exists, it ends the path
+            int pathEnd;
+            if (queryDelimiterPos != -1) {
+                pathEnd = queryDelimiterPos;
+                // if no query exists the path might be ended by a fragment
+            } else if (fragmentDelimiterPos != -1) {
+                pathEnd = fragmentDelimiterPos;
+            } else {
+                // otherwise it extends until the end
+                pathEnd = str.length();
+            }
+
+            // don't use a stream here, because it may be called a million times during processing a table
+            String path = str.substring(pathStart + 1, pathEnd);
+            String[] parts = path.split(pathDelimiter);
+            for (int i = 0; i < parts.length; i++) {
+                parts[i] = urlEncode(parts[i], charsetName).replace("+", "%20");
+            }
+            final String encodedPath = String.join(pathDelimiter, parts);
+
+            return str.substring(0, pathStart + 1) + encodedPath + str.substring(pathEnd - 1);
+
+        } else if ("query".equalsIgnoreCase(scope.trim())) {
+
+            int firstQuestionMark = str.indexOf("?");
+
+            // string has no query part -- we're done
+            if (firstQuestionMark == -1) {
+                return str;
+            }
+
+            // assume everything after the first question mark is query
+            String queryPart = str.substring(firstQuestionMark + 1);
+
+            // encode query part
+            final String encodedQuery = urlEncode(queryPart, charsetName);
+
+            // include the question mark again
+            return str.substring(0, firstQuestionMark + 1) + encodedQuery;
+
+        } else {
+            LOGGER.error(String.format("Scope %s is not supported. Use \"path\" or \"query\".", scope));
+            return str;
+        }
     }
 }
