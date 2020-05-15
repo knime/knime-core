@@ -803,6 +803,40 @@ public abstract class NameFilterPanel<T> extends JPanel {
         return Optional.ofNullable(m_additionalCheckbox);
     }
 
+    /**
+     * @return The EnforceOption corresponding to the selection of the corresponding radio buttons. Empty
+     * if radio buttons are not displayed or neither is selected.
+     */
+    public Optional<EnforceOption> getSelectedEnforceOption() {
+        if (!m_nameFilterPanel.isAncestorOf(m_enforceExclusion)
+            || !m_nameFilterPanel.isAncestorOf(m_enforceInclusion)) {
+            return Optional.empty();
+        }
+        if (m_enforceInclusion.isSelected()) {
+            return Optional.of(EnforceOption.EnforceInclusion);
+        }
+        if (m_enforceExclusion.isSelected()) {
+            return Optional.of(EnforceOption.EnforceExclusion);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Set the selection of the enforce inclusion/exclusion radio buttons according to the given
+     * `enforceOption`
+     * @param enforceOption
+     */
+    public void setSelectedEnforceOption(final EnforceOption enforceOption) {
+        switch (enforceOption) {
+            case EnforceInclusion:
+                m_enforceInclusion.setSelected(true);
+                break;
+            case EnforceExclusion:
+                m_enforceExclusion.setSelected(true);
+                break;
+        }
+    }
+
     /** @return a list cell renderer from items to be rendered in the filer
      *  @deprecated JLists were replaced by JTables. Use getTableCellRenderer instead.
      * */
