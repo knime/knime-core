@@ -70,6 +70,9 @@ public enum SharedIcons {
     /** Red error sign
      * @since 4.2**/
     ERROR("icons/error.png"),
+    /** Green check mark
+     * @since 4.2 **/
+    SUCCESS("icons/success.png"),
     /** Funnel **/
     FILTER("icons/filter.png"),
     /** Logical and operation sign
