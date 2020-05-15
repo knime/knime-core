@@ -50,7 +50,6 @@ package org.knime.core.data.container;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * Default implementation of a {@link ILocalDataRepository}.
@@ -128,6 +127,9 @@ public class DefaultLocalDataRepository implements ILocalDataRepository {
      */
     @Override
     public void clear() {
+        for (final ContainerTable table : m_localRepository.values()) {
+            table.clear();
+        }
         m_localRepository.clear();
         m_cancellationListeners.clear();
     }
@@ -140,16 +142,8 @@ public class DefaultLocalDataRepository implements ILocalDataRepository {
         for (final ICancellationListener listener : m_cancellationListeners.values()) {
             listener.onCancel();
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void forEach(final Consumer<ContainerTable> consumer) {
-        for (final ContainerTable table : m_localRepository.values()) {
-            consumer.accept(table);
-        }
+        // cancel is cancel is cancel.
+        clear();
     }
 
     /**

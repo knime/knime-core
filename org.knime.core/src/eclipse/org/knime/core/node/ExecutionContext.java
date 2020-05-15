@@ -719,9 +719,7 @@ public class ExecutionContext extends ExecutionMonitor {
 
     /** Called when node was canceled. */
     void onCancel() {
-        m_localTableRepository.forEach((c) -> c.clear());
         m_localTableRepository.onCancel();
-        m_localTableRepository.clear();
     }
 
     /**

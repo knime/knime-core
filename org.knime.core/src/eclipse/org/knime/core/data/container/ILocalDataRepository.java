@@ -49,7 +49,6 @@
 package org.knime.core.data.container;
 
 import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * Interface for a local data repository. Contains temporarily created tables. Allows adding and removing cancellation
@@ -97,7 +96,8 @@ public interface ILocalDataRepository {
     void removeCancellationListener(ICancellationListener listener);
 
     /**
-     * Removes all entries from the repository
+     * Calls {@link ContainerTable}{@link #clear()} for each table and clears entire repository. Removes all entries
+     * from the repository.
      */
     void clear();
 
@@ -109,15 +109,7 @@ public interface ILocalDataRepository {
     void addTable(ContainerTable table);
 
     /**
-     * Calls cancel on all listeners
+     * Calls cancel on all listeners and {@link #clear()}s repository.
      */
     void onCancel();
-
-    /**
-     * Called for each ContainerTable
-     *
-     * @param table consumer consuming the tables.
-     */
-    void forEach(Consumer<ContainerTable> table);
-
 }
