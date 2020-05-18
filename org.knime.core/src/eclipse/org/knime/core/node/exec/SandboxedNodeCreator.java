@@ -56,6 +56,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -247,7 +248,7 @@ public final class SandboxedNodeCreator {
         final int inCnt = m_inData.length;
         // port object IDs in static port object map, one entry for
         // each connected input (no value for unconnected optional inputs)
-        List<Integer> portObjectRepositoryIDs = new ArrayList<Integer>(inCnt);
+        List<UUID> portObjectRepositoryIDs = new ArrayList<>(inCnt);
         try {
             NodeID[] ins = new NodeID[inCnt];
             for (int i = 0; i < inCnt; i++) {
@@ -260,7 +261,7 @@ public final class SandboxedNodeCreator {
                     continue;
                 }
                 List<FlowVariable> flowVars = getFlowVariablesOnPort(i);
-                int portObjectRepositoryID = PortObjectRepository.add(in);
+                UUID portObjectRepositoryID = PortObjectRepository.add(in);
                 PortObjectIDSettings settings = new PortObjectIDSettings();
                 settings.setId(portObjectRepositoryID);
                 settings.setCopyData(m_copyDataIntoNewContext);

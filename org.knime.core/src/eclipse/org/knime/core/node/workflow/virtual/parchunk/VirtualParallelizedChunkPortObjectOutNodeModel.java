@@ -42,7 +42,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 30, 2011 (wiswedel): created
  */
@@ -61,14 +61,16 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.ScopeEndNode;
 
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public final class VirtualParallelizedChunkPortObjectOutNodeModel extends NodeModel {
-	
+public final class VirtualParallelizedChunkPortObjectOutNodeModel extends NodeModel
+    implements ScopeEndNode<FlowVirtualScopeContext> {
+
 	private PortObjectSpec[] m_outSpecs;
 	private PortObject[] m_outObjects;
 	

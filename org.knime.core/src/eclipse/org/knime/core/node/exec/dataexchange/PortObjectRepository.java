@@ -56,10 +56,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.knime.core.data.DataCell;
@@ -91,6 +91,8 @@ import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowManager;
 
+import com.google.common.collect.MapMaker;
+
 /**
  * Static repository of {@link PortObject PortObjects}. It is used to virtually set output objects of port object
  * in node models.
@@ -103,9 +105,9 @@ public final class PortObjectRepository {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(PortObjectRepository.class);
 
-    private static final Map<Integer, PortObject> MAP = new HashMap<>();
+    private static final Map<UUID, PortObject> MAP = new MapMaker().weakValues().makeMap();
 
-    private static int nextID;
+    private static final Map<PortObject, UUID> BEFORE_COPY_TO_ID_MAP = new MapMaker().weakKeys().makeMap();
 
     private PortObjectRepository() {
         // empty
@@ -116,23 +118,59 @@ public final class PortObjectRepository {
      * @return the unique id this object is associated with
      * @throws NullPointerException If argument is null.
      */
-    public static synchronized int add(final PortObject object) {
+    public static synchronized UUID add(final PortObject object) {
         CheckUtils.checkArgumentNotNull(object);
-        int id = nextID;
-        nextID += 1;
-        assert !MAP.containsKey(id) : "Map contains ID " + id;
+        UUID id = UUID.randomUUID();
+        add(id, object);
+        return id;
+    }
+
+    /**
+     * Adds a copy of the passed port object (by using the provided execution context).
+     *
+     * @param po the port object to copy and add
+     * @param exec the execution context for the copy
+     * @return the new id
+     * @throws IOException if the copy failed
+     * @throws CanceledExecutionException if the copy process has been interrupted
+     */
+    public static synchronized UUID addCopy(final PortObject po, final ExecutionContext exec)
+        throws IOException, CanceledExecutionException {
+        UUID id = add(copy(po, exec, exec));
+        BEFORE_COPY_TO_ID_MAP.put(po, id);
+        return id;
+    }
+
+    /**
+     * Returns the id for a port object, if known. Identity (==) will be used to look up the port objects.
+     *
+     * Only will return an id for port objects that have been added via {@link #addCopy(PortObject, ExecutionContext)}.
+     *
+     * @param po the original port object to get the id for
+     * @return the id or an empty optional of not found
+     */
+    public static synchronized Optional<UUID> getIDFor(final PortObject po) {
+        return Optional.ofNullable(BEFORE_COPY_TO_ID_MAP.get(po));
+    }
+
+    /** Add new port object to repository.
+     * @param object Object to be added
+     * @param id the id of the added port object
+     * @throws NullPointerException If argument is null.
+     */
+    public static synchronized void add(final UUID id, final PortObject object) {
+        CheckUtils.checkArgumentNotNull(object);
         MAP.put(id, object);
         LOGGER.debug("Added port object (" + object.getClass().getSimpleName()
                 + ") to static repository, assigned ID " + id
                 + " (total count " + MAP.size() + ")");
-        return id;
     }
 
     /** Remove the port object that is associated with the given id.
      * @param id The id of the object
      * @return The removed object or null if it was not contained.
      */
-    public static synchronized PortObject remove(final int id) {
+    public static synchronized PortObject remove(final UUID id) {
         PortObject object = MAP.remove(id);
         if (object != null) {
             LOGGER.debug("Removed port object with id " + id + " ("
@@ -148,10 +186,10 @@ public final class PortObjectRepository {
 
     /** Get the port object that is associated with the given id.
      * @param id The id of the object
-     * @return The object or null if it is not contained.
+     * @return The object or an empty optional if it is not contained.
      */
-    public static synchronized PortObject get(final int id) {
-        return MAP.get(id);
+    public static synchronized Optional<PortObject> get(final UUID id) {
+        return Optional.ofNullable(MAP.get(id));
     }
 
     /** Copies the argument object by means of the associated serializer.
@@ -207,6 +245,9 @@ public final class PortObjectRepository {
     /**
      * Adds a "Port Object Reference Reader" node to the workflow, which will read the object passed in as argument.
      *
+     * The added reference reader node references the data (i.e. port object) by referencing the port (original node id
+     * plus port index).
+     *
      * @param outport the outport to get the port object and flow variables from that the to be added node will provide,
      *            too (the port object is just referenced by the original node id and port index)
      * @param srcParentID the id of the workflow manager the referenced node (port) is part of
@@ -216,8 +257,8 @@ public final class PortObjectRepository {
      * @return the id of the newly added node
      */
     // TODO we might have to revisit this when implementing AP-13335
-    public static NodeID addPortObjectReferenceReaderToWorkflow(final NodeOutPort outport, final NodeID srcParentID,
-        final WorkflowManager wfm, final int nodeIDSuffix) {
+    public static NodeID addPortObjectReferenceReaderWithNodeReference(final NodeOutPort outport,
+        final NodeID srcParentID, final WorkflowManager wfm, final int nodeIDSuffix) {
         NodeID sourceNodeID = outport.getConnectedNodeContainer().getID();
         int portIndex = outport.getPortIndex();
 
@@ -227,6 +268,35 @@ public final class PortObjectRepository {
         portObjectIDSettings.setNodeReference(NodeIDSuffix.create(srcParentID, sourceNodeID), portIndex);
         portObjectIDSettings.setFlowVariables(variables);
         boolean isTable = outport.getPortType().equals(BufferedDataTable.TYPE);
+        return addPortObjectReferenceReader(wfm, portObjectIDSettings, isTable, nodeIDSuffix);
+    }
+
+    /**
+     * Adds a "Port Object Reference Reader" node to the workflow, which will read the object passed in as argument.
+     *
+     * The added reference reader references the data in the {@link PortObjectRepository} by a unique port object id.
+     *
+     * @param outport the outport to get the port object and flow variables from that the to be added node will provide,
+     *            too (the port object is just referenced by the original node id and port index)
+     * @param idInPortObjectRepo the port object id in the port object repository
+     * @param wfm the workflow manager the new node should be added to
+     * @param nodeIDSuffix the id the to be added node will have (will be ignored if there is a node with the id
+     *            already!)
+     * @return the id of the newly added node
+     */
+    public static NodeID addPortObjectReferenceReaderWithRepoReference(final NodeOutPort outport,
+        final UUID idInPortObjectRepo, final WorkflowManager wfm, final int nodeIDSuffix) {
+        List<FlowVariable> variables = outport.getFlowObjectStack().getAllAvailableFlowVariables().values().stream()
+            .filter(f -> f.getScope() == Scope.Flow).collect(Collectors.toList());
+        PortObjectIDSettings portObjectIDSettings = new PortObjectIDSettings();
+        portObjectIDSettings.setId(idInPortObjectRepo);
+        portObjectIDSettings.setFlowVariables(variables);
+        boolean isTable = outport.getPortType().equals(BufferedDataTable.TYPE);
+        return addPortObjectReferenceReader(wfm, portObjectIDSettings, isTable, nodeIDSuffix);
+    }
+
+    private static NodeID addPortObjectReferenceReader(final WorkflowManager wfm,
+        final PortObjectIDSettings portObjectIDSettings, final boolean isTable, final int nodeIDSuffix) {
         NodeFactory<?> factory =
             isTable ? SandboxedNodeCreator.TABLE_READ_NODE_FACTORY : SandboxedNodeCreator.OBJECT_READ_NODE_FACTORY;
         NodeID inID;

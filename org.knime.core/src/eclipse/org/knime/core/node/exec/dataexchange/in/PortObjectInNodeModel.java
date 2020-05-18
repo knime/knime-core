@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
@@ -103,8 +104,8 @@ public final class PortObjectInNodeModel extends NodeModel {
             return new PortObjectSpec[1];
         }
         pushFlowVariables();
-        int id = m_portObjectIDSettings.getId();
-        PortObject obj = PortObjectRepository.get(id);
+        UUID id = m_portObjectIDSettings.getId();
+        PortObject obj = PortObjectRepository.get(id).orElse(null);
         if (obj != null) {
             return new PortObjectSpec[]{obj.getSpec()};
         }
@@ -142,8 +143,8 @@ public final class PortObjectInNodeModel extends NodeModel {
                 return readPOFromURI(exec);
             case REPOSITORY:
             default:
-                int id = m_portObjectIDSettings.getId();
-                PortObject obj = PortObjectRepository.get(id);
+                UUID id = m_portObjectIDSettings.getId();
+                PortObject obj = PortObjectRepository.get(id).orElse(null);
                 if (obj == null) {
                     throw new RuntimeException("No port object for id " + id);
                 }
@@ -154,12 +155,14 @@ public final class PortObjectInNodeModel extends NodeModel {
     }
 
     /**
-     * The port object if the reference type is {@link ReferenceType#NODE}, otherwise an empty optional.
+     * The port object if the reference type is {@link ReferenceType#NODE} or {@link ReferenceType#REPOSITORY},
+     * otherwise an empty optional.
      *
      * @return the port object of an other referenced node
      */
     public Optional<PortObject> getPortObject() {
-        if (m_portObjectIDSettings.getReferenceType() == ReferenceType.NODE) {
+        if (m_portObjectIDSettings.getReferenceType() == ReferenceType.NODE
+            || m_portObjectIDSettings.getReferenceType() == ReferenceType.REPOSITORY) {
             try {
                 return Optional.of(getPortObject(null));
             } catch (IOException | CanceledExecutionException | URISyntaxException ex) {

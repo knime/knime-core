@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -55,11 +56,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
+import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
@@ -70,6 +77,7 @@ import org.knime.core.node.workflow.capture.WorkflowFragment;
 import org.knime.core.node.workflow.capture.WorkflowFragment.Input;
 import org.knime.core.node.workflow.capture.WorkflowFragment.Output;
 import org.knime.core.node.workflow.capture.WorkflowFragment.PortID;
+import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.util.Pair;
 
 /**
@@ -162,22 +170,12 @@ public final class WorkflowCaptureOperation {
                         if (!visitedSrcPorts.containsKey(currentSrcPort)) {
                             // only add portObjectReader if not inserted already in previous loop iteration
                             NodeID sourceID = c.getSource();
-                            NodeUIInformation sourceUIInformation = m_wfm.getNodeContainer(sourceID).getUIInformation();
-                            int sourcePort = c.getSourcePort();
                             NodeContainer sourceNode = m_wfm.getNodeContainer(sourceID);
+                            NodeUIInformation sourceUIInformation = sourceNode.getUIInformation();
                             nodesToDetermineBoundingBox.add(sourceNode);
-                            NodeOutPort upstreamPort;
-                            if (sourceID.equals(m_wfm.getID())) {
-                                assert c.getType() == ConnectionType.WFMIN;
-                                upstreamPort = m_wfm.getInPort(sourcePort).getUnderlyingPort();
-                            } else {
-                                upstreamPort = sourceNode.getOutPort(sourcePort);
-                            }
-                            NodeIDSuffix pastedIDSuffix = NodeIDSuffix.create(tempParent.getID(),
-                                PortObjectRepository.addPortObjectReferenceReaderToWorkflow(upstreamPort,
-                                    m_wfm.getProjectWFM().getID(), tempParent, sourceID.getIndex()));
+                            NodeID pastedID = addPortObjectReferenceReader(m_wfm, tempParent, sourceNode, c);
+                            NodeIDSuffix pastedIDSuffix = NodeIDSuffix.create(tempParent.getID(), pastedID);
 
-                            NodeID pastedID = pastedIDSuffix.prependParent(tempParent.getID());
                             tempParent.getNodeContainer(pastedID).setUIInformation(sourceUIInformation);
 
                             //TODO deal with WFMIN-connections
@@ -288,4 +286,49 @@ public final class WorkflowCaptureOperation {
         return spec instanceof DataTableSpec ? (DataTableSpec)spec : null;
     }
 
+    private static NodeID addPortObjectReferenceReader(final WorkflowManager srcWfm, final WorkflowManager newWfm,
+        final NodeContainer sourceNode, final ConnectionContainer c) {
+        NodeOutPort upstreamPort;
+        int sourcePort = c.getSourcePort();
+        NodeID sourceID = sourceNode.getID();
+        if (sourceID.equals(srcWfm.getID())) {
+            assert c.getType() == ConnectionType.WFMIN;
+            upstreamPort = srcWfm.getInPort(sourcePort).getUnderlyingPort();
+        } else {
+            upstreamPort = sourceNode.getOutPort(sourcePort);
+        }
+        FlowVirtualScopeContext virtualScopeContext = getVirtualScopeContext(sourceNode);
+        if (sourceNode instanceof NativeNodeContainer
+            && ((NativeNodeContainer)sourceNode).getNodeModel() instanceof PortObjectInNodeModel) {
+            // it's already a reference reader, just copy the node
+            WorkflowPersistor copy = srcWfm.copy(WorkflowCopyContent.builder().setNodeIDs(sourceNode.getID()).build());
+            return newWfm.paste(copy).getNodeIDs()[0];
+        } else if (virtualScopeContext != null && upstreamPort.getPortObject() != null) {
+            // the captured nodes are part of a 'virtual scope', i.e. nodes will be deleted after execution
+            // -> reference reader node can't reference a node port
+            // -> port objects need to be put into the globally available port object repository
+            PortObject po = upstreamPort.getPortObject();
+            AtomicReference<UUID> id = new AtomicReference<>(PortObjectRepository.getIDFor(po).orElse(null));
+            if (id.get() == null) {
+                virtualScopeContext.getPortObjectIDCallback().accept(exec -> {
+                    try {
+                        id.set(PortObjectRepository.addCopy(po, exec));
+                        return id.get();
+                    } catch (IOException | CanceledExecutionException ex) {
+                        // will be handled in the caller code
+                        throw new CompletionException(ex);
+                    }
+                });
+            }
+            return PortObjectRepository.addPortObjectReferenceReaderWithRepoReference(upstreamPort, id.get(),
+                newWfm, sourceID.getIndex());
+        } else {
+            return PortObjectRepository.addPortObjectReferenceReaderWithNodeReference(upstreamPort,
+                srcWfm.getProjectWFM().getID(), newWfm, sourceID.getIndex());
+        }
+    }
+
+    private static FlowVirtualScopeContext getVirtualScopeContext(final NodeContainer nc) {
+        return nc.getFlowObjectStack().peek(FlowVirtualScopeContext.class);
+    }
 }

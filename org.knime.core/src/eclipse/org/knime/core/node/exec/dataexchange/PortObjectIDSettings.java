@@ -53,6 +53,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -77,7 +78,7 @@ public final class PortObjectIDSettings {
     private ReferenceType m_refType;
 
     // repo ref type details
-    private Integer m_id;
+    private UUID m_id;
 
     // node ref type details
     private NodeIDSuffix m_nodeIDSuffix;
@@ -124,7 +125,7 @@ public final class PortObjectIDSettings {
         m_refType = ReferenceType.valueOf(settings.getString("referenceType", ReferenceType.REPOSITORY.toString()));
         switch (m_refType) {
             case REPOSITORY:
-                m_id = settings.getInt("portobject_ID");
+                m_id = UUID.fromString(settings.getString("portobject_ID"));
                 break;
             case NODE:
                 try {
@@ -182,7 +183,7 @@ public final class PortObjectIDSettings {
         switch (m_refType) {
             case REPOSITORY:
                 if (m_id != null) {
-                    settings.addInt("portobject_ID", m_id);
+                    settings.addString("portobject_ID", m_id.toString());
                 }
                 break;
             case NODE:
@@ -269,7 +270,7 @@ public final class PortObjectIDSettings {
      *
      * @return the id
      */
-    public Integer getId() {
+    public UUID getId() {
         return m_id;
     }
 
@@ -277,7 +278,7 @@ public final class PortObjectIDSettings {
      * Set new ID for the port object, setting null invalidates the settings.
      * @param id the id to set
      */
-    public void setId(final Integer id) {
+    public void setId(final UUID id) {
         m_refType = ReferenceType.REPOSITORY;
         m_id = id;
     }

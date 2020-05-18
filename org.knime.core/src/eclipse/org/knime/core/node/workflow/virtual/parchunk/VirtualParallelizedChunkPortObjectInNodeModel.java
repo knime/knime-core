@@ -42,7 +42,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 30, 2011 (wiswedel): created
  */
@@ -62,13 +62,15 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.ScopeStartNode;
 import org.knime.core.node.workflow.VariableType;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public class VirtualParallelizedChunkPortObjectInNodeModel extends NodeModel {
+public class VirtualParallelizedChunkPortObjectInNodeModel extends NodeModel
+    implements ScopeStartNode<FlowVirtualScopeContext> {
 
 	private VirtualParallelizedChunkNodeInput m_input;
 

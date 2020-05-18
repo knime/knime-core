@@ -1994,10 +1994,42 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/exec/dataexchange/PortObjectIDSettings.java" type="org.knime.core.node.exec.dataexchange.PortObjectIDSettings">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.exec.dataexchange.PortObjectIDSettings"/>
+                <message_argument value="getId()"/>
+            </message_arguments>
+        </filter>
         <filter comment="Removes FSConnection flow variable type in 4.2.0 (which existed but was @noreference in 4.1.0)" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.exec.dataexchange.PortObjectIDSettings"/>
                 <message_argument value="setFSConnectionFlowVariableProvider(FSConnectionFlowVariableProvider)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.exec.dataexchange.PortObjectIDSettings"/>
+                <message_argument value="setId(Integer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/exec/dataexchange/PortObjectRepository.java" type="org.knime.core.node.exec.dataexchange.PortObjectRepository">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.exec.dataexchange.PortObjectRepository"/>
+                <message_argument value="add(PortObject)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.exec.dataexchange.PortObjectRepository"/>
+                <message_argument value="get(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.exec.dataexchange.PortObjectRepository"/>
+                <message_argument value="remove(int)"/>
             </message_arguments>
         </filter>
     </resource>

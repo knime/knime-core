@@ -108,6 +108,8 @@ import org.knime.core.node.workflow.VariableType;
 import org.knime.core.node.workflow.VariableType.DoubleType;
 import org.knime.core.node.workflow.VariableType.IntType;
 import org.knime.core.node.workflow.VariableType.StringType;
+import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
+import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeModel;
 
 
 /**
@@ -1641,6 +1643,9 @@ public abstract class NodeModel implements ViewableModel {
         }
         if (this instanceof CaptureWorkflowStartNode) {
             return new FlowCaptureContext();
+        }
+        if (this instanceof VirtualParallelizedChunkPortObjectInNodeModel) {
+            return new FlowVirtualScopeContext();
         }
         if (this instanceof ScopeStartNode) {
             return new FlowTryCatchContext();
