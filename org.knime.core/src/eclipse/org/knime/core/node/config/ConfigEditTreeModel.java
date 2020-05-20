@@ -168,31 +168,13 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             final AbstractConfigEntry childValue = configValue.getEntry(childKey);
 
             // determine the variable value (if any) of the child and whether the variable value has grandchildren
-            ConfigBase childVariableValue = null;
-            boolean childVariableValueHasGrandchildren = false;
-            if (variableValue != null) {
-                try {
-                    childVariableValue = variableValue.getConfigBase(childKey);
-                    for (final String variableKey : childVariableValue.keySet()) {
-                        if (childVariableValue.getEntry(variableKey).getType() == ConfigEntries.config) {
-                            childVariableValueHasGrandchildren = true;
-                        }
-                    }
-                } catch (InvalidSettingsException e) {
-                }
-            }
+            final ConfigBase childVariableValue = getChildVariableValue(variableValue, childKey);
+            final boolean childVariableValueHasGrandchildren = hasGrandChildren(childVariableValue);
 
-            // determine the array subtype (if any) of the child
-            // if the child is an array, don't expand on it further
-            // instead interpret it as a leaf even though it is a config and actually has children
-            // the only exception is if the child has descendants in the variable tree
-            ConfigEntries childArraySubtype = null;
-            // TODO why did we need the grandchildren check?
-            if (!childVariableValueHasGrandchildren && childValue.getType() == ConfigEntries.config) {
-                childArraySubtype = getChildArraySubtype(configValue, childKey);
-            }
-
-            final boolean isLeaf = isLeaf(configValue, childKey, childValue);
+            // childVariableValueHasGrandchildren is true for pre 4.1.0 workflows
+            // (before array flow variables were introduced) that overwrite array configs.
+            // Therefore those configs can't be leaves in the config tree
+            final boolean isLeaf = !childVariableValueHasGrandchildren && isLeaf(configValue, childKey, childValue);
 
             // determine if the child is an internal config
             final boolean childIsInternals =
@@ -212,6 +194,28 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         }
     }
 
+    private static boolean hasGrandChildren(final ConfigBase childVariableValue) {
+        if (childVariableValue != null) {
+            for (final String variableKey : childVariableValue.keySet()) {
+                if (childVariableValue.getEntry(variableKey).getType() == ConfigEntries.config) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static ConfigBase getChildVariableValue(final ConfigBaseRO variableValue, final String childKey) {
+        if (variableValue != null) {
+            try {
+                return variableValue.getConfigBase(childKey);
+            } catch (InvalidSettingsException e) {
+                // ignore
+            }
+        }
+        return null;
+    }
+
     private static boolean isLeaf(final ConfigBase configValue, final String childKey,
         final AbstractConfigEntry childValue) {
         // all non-config entries are leafs
@@ -222,30 +226,6 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 .isPresent();
         }
         return isLeaf;
-    }
-
-    private static ConfigEntries getChildArraySubtype(final ConfigBase configValue, final String childKey) {
-        if (configValue.getStringArray(childKey, (String[])null) != null) {
-            return ConfigEntries.xstring;
-        } else if (configValue.getCharArray(childKey, (char[])null) != null) {
-            return ConfigEntries.xchar;
-        } else if (configValue.getBooleanArray(childKey, (boolean[])null) != null) {
-            return ConfigEntries.xboolean;
-        } else if (configValue.getByteArray(childKey, (byte[])null) != null) {
-            return ConfigEntries.xbyte;
-        } else if (configValue.getShortArray(childKey, (short[])null) != null) {
-            return ConfigEntries.xshort;
-        } else if (configValue.getIntArray(childKey, (int[])null) != null) {
-            return ConfigEntries.xint;
-        } else if (configValue.getLongArray(childKey, (long[])null) != null) {
-            return ConfigEntries.xlong;
-        } else if (configValue.getFloatArray(childKey, (float[])null) != null) {
-            return ConfigEntries.xfloat;
-        } else if (configValue.getDoubleArray(childKey, (double[])null) != null) {
-            return ConfigEntries.xdouble;
-        } else {
-            return null;
-        }
     }
 
     /**
