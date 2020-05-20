@@ -48,6 +48,7 @@
 package org.knime.core.util.workflowsummary;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -110,7 +111,7 @@ public final class WorkflowSummaryConfiguration {
 
         private boolean m_includeExecutionInfo = false;
 
-        private List<NodeID> m_nodesToIgnore;
+        private List<NodeID> m_nodesToIgnore = Collections.emptyList();
 
         private Builder(final SummaryFormat format) {
             m_format = format;
