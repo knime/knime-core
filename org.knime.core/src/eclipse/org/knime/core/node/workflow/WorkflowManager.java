@@ -135,6 +135,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
+import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.ExternalNodeData;
@@ -790,6 +791,82 @@ public final class WorkflowManager extends NodeContainer
             LOGGER.debug("Added new node " + id);
             setDirty();
             return id;
+        }
+    }
+
+    /**
+     * Checks whether a node can be replaced with another version of itself (i.e. whether
+     * {@link #replaceNode(NodeID, ModifiableNodeCreationConfiguration)} can be called subsequently).
+     *
+     * @param id
+     * @return <code>true</code> if node can be replaced, otherwise <code>false</code>
+     * @since 4.2
+     */
+    public boolean canReplaceNode(final NodeID id) {
+        return getNodeContainer(id) instanceof NativeNodeContainer && canRemoveNode(id);
+    }
+
+    /**
+     * Replaces a node with same type of node but another {@link NodeCreationConfiguration}, e.g. in order to change the
+     * ports.
+     *
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will
+     * be thrown.
+     *
+     * Node settings and annotation will be transfered to the new node. Incoming and outgoing connections will be kept
+     * as far as possible (if the respective input and output port is still there and compatible).
+     *
+     * @param id the id of the node to replace
+     * @param creationConfig node creation configuration to create the new node, can be <code>null</code>
+     * @since 4.2
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
+     */
+    public void replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
+        CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
+             NativeNodeContainer nnc = (NativeNodeContainer)getNodeContainer(id);
+        try (WorkflowLock lock = lock()) {
+            // keep the node's settings
+            final NodeSettings settings = new NodeSettings("node settings");
+            try {
+                saveNodeSettings(id, settings);
+            } catch (InvalidSettingsException e) {
+                // no valid settings available, skip
+            }
+
+            // keep some node properties to be transfered to the new node
+            NodeUIInformation uiInfo = nnc.getUIInformation();
+            NodeFactory<?> factory = nnc.getNode().getFactory();
+            NodeAnnotation nodeAnnotation = nnc.getNodeAnnotation();
+            Set<ConnectionContainer> connections = new LinkedHashSet<>();
+            connections.addAll(getIncomingConnectionsFor(id));
+            connections.addAll(getOutgoingConnectionsFor(id));
+
+            // delete the old node
+            removeNode(id);
+
+            // add new node
+            addNodeAndApplyContext(factory, creationConfig, id.getIndex());
+            nnc = (NativeNodeContainer)getNodeContainer(id);
+
+            // load the previously stored settings
+            try {
+                loadNodeSettings(id, settings);
+            } catch (InvalidSettingsException e) {
+                // ignore
+            }
+
+            // transfer old node properties, such as position and annotation
+            nnc.setUIInformation(uiInfo);
+            nnc.getNodeAnnotation().copyFrom(nodeAnnotation.getData(), true);
+
+            // restore connections if possible
+            for (ConnectionContainer cc : connections) {
+                if (canAddConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort())) {
+                    ConnectionContainer newCC =
+                        addConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort());
+                    newCC.setUIInfo(cc.getUIInfo());
+                }
+            }
         }
     }
 
