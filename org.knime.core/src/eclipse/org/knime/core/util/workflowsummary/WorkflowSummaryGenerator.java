@@ -107,6 +107,7 @@ import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.metadata.MetaInfoFile;
@@ -164,10 +165,12 @@ public final class WorkflowSummaryGenerator {
      */
     public static void generate(final WorkflowManager wfm, final OutputStream out,
         final WorkflowSummaryConfiguration config) throws IOException {
-        if (config.m_format == SummaryFormat.XML) {
-            getXmlMapper().writeValue(out, new WorkflowSummary(wfm, config));
-        } else {
-            getJsonMapper().writeValue(out, new WorkflowSummary(wfm, config));
+        try (WorkflowLock lock = wfm.lock()) {
+            if (config.m_format == SummaryFormat.XML) {
+                getXmlMapper().writeValue(out, new WorkflowSummary(wfm, config));
+            } else {
+                getJsonMapper().writeValue(out, new WorkflowSummary(wfm, config));
+            }
         }
     }
 
