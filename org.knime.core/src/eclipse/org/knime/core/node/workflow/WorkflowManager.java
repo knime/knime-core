@@ -800,6 +800,7 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param id
      * @return <code>true</code> if node can be replaced, otherwise <code>false</code>
+     * @throws IllegalArgumentException if there is no node for the given id
      * @since 4.2
      */
     public boolean canReplaceNode(final NodeID id) {
@@ -818,8 +819,9 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param id the id of the node to replace
      * @param creationConfig node creation configuration to create the new node, can be <code>null</code>
-     * @since 4.2
      * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
+     * @throws IllegalArgumentException if there is no node for the given id
+     * @since 4.2
      */
     public void replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
