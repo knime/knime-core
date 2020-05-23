@@ -77,15 +77,6 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
      * {@inheritDoc}
      */
     @Override
-    default void remove(final NodeID[] nodeIDs, final ConnectionID[] connectionIDs,
-        final WorkflowAnnotationID[] annotationIDs) {
-        throw new UnsupportedOperationException("Please use the async method instead.");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     default NodeID createAndAddNode(final NodeFactory<?> factory, final NodeUIInformation uiInfo) {
         throw new UnsupportedOperationException("Please use the async method instead.");
     }
@@ -107,6 +98,35 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
      * @return the result as a future
      */
     CompletableFuture<NodeID> createAndAddNodeAsync(NodeFactory<?> factory, final NodeUIInformation uiInfo);
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default void replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
+        throw new UnsupportedOperationException("Please use the async method instead.");
+    }
+
+    /**
+     * Async version of {@link #replaceNode(NodeID, ModifiableNodeCreationConfiguration)}.
+     *
+     * @param id
+     * @param creationConfig
+     * @return void as future - throws a {@link OperationNotAllowedException} if operation couldn't be performed (e.g.
+     *         because there are executing node's successors) on {@link CompletableFutureEx#getOrThrow()}
+     */
+    CompletableFutureEx<Void, OperationNotAllowedException> replaceNodeAsync(NodeID id,
+        ModifiableNodeCreationConfiguration creationConfig);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default void remove(final NodeID[] nodeIDs, final ConnectionID[] connectionIDs,
+        final WorkflowAnnotationID[] annotationIDs) {
+        throw new UnsupportedOperationException("Please use the async method instead.");
+    }
 
     /**
      * Async version of {@link #remove(NodeID[], ConnectionContainerUI[], WorkflowAnnotationID[])}.

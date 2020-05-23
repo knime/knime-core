@@ -46,6 +46,9 @@
  */
 package org.knime.core.ui.node.workflow;
 
+import java.util.Optional;
+
+import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.ui.UI;
 
@@ -64,5 +67,12 @@ public interface NativeNodeContainerUI extends SingleNodeContainerUI, UI {
      * @return the fully-qualified underlying node factory class name of the native node
      */
     String getNodeFactoryClassName();
+
+    /**
+     * Returns a deep copy of the creation configuration of this node.
+     *
+     * @return deep copy of the node creation configuration
+     */
+    Optional<ModifiableNodeCreationConfiguration> getCopyOfCreationConfig();
 
 }

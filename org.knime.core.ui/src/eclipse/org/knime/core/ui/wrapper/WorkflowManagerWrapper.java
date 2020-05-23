@@ -131,6 +131,16 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     }
 
     @Override
+    public boolean canReplaceNode(final NodeID id) {
+        return unwrap().canReplaceNode(id);
+    }
+
+    @Override
+    public void replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
+        unwrap().replaceNode(id, creationConfig);
+    }
+
+    @Override
     public boolean canRemoveNode(final NodeID nodeID) {
         return unwrap().canRemoveNode(nodeID);
     }

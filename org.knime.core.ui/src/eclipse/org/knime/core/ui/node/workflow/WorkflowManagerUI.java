@@ -59,6 +59,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
+import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.interactive.InteractiveNode;
@@ -170,11 +171,38 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      *
      * @param factory the factory representing the new node
      * @param uiInfo essentially the position of the new node
-     * @param creationConfig the node creation configuration
+     * @param creationConfig the node creation configuration or <code>null</code>
      * @return newly created (unique) NodeID
      */
     NodeID createAndAddNode(NodeFactory<?> factory, NodeUIInformation uiInfo,
         final ModifiableNodeCreationConfiguration creationConfig);
+
+    /**
+     * Checks whether a node can be replaced with another version of itself (i.e. whether
+     * {@link #replaceNode(NodeID, ModifiableNodeCreationConfiguration)} can be called subsequently).
+     *
+     * @param id
+     * @return <code>true</code> if node can be replaced, otherwise <code>false</code>
+     * @since 4.2
+     */
+    boolean canReplaceNode(final NodeID id);
+
+    /**
+     * Replaces a node with same type of node but another {@link NodeCreationConfiguration}, e.g. in order to change the
+     * ports.
+     *
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalAccessException} will
+     * be thrown.
+     *
+     * Node settings and annotation will be transfered to the new node. Incoming and outgoing connections will be kept
+     * as far as possible (if the respective input and output port is still there and compatible).
+     *
+     * @param id the id of the node to replace
+     * @param creationConfig node creation configuration to create the new node
+     * @since 4.2
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
+     */
+    void replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig);
 
 //    /** Create new Node based on given factory uid and add to workflow.
 //     *

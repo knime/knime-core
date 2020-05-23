@@ -75,6 +75,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
+import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
 import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.missing.MissingNodeFactory;
@@ -330,7 +331,17 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             "Unknown factory class \"%s\" -- not registered via extension point", factoryClassName));
     }
 
-    private static Optional<ModifiableNodeCreationConfiguration> loadCreationConfig(final NodeSettingsRO settings,
+    /**
+     * Helper to load a nodes {@link NodeCreationConfiguration}.
+     *
+     * @param settings the settings the node creation configuration will be initialized with
+     * @param factory the node factory get the node creation config from
+     * @return the node creation config or an empty optional of the node factory is not of type
+     *         {@link ConfigurableNodeFactory}
+     * @throws InvalidSettingsException
+     * @since 4.2
+     */
+    public static Optional<ModifiableNodeCreationConfiguration> loadCreationConfig(final NodeSettingsRO settings,
         final NodeFactory<NodeModel> factory) throws InvalidSettingsException {
         if (factory instanceof ConfigurableNodeFactory) {
             final ModifiableNodeCreationConfiguration creationConfig =
