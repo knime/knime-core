@@ -72,6 +72,7 @@ public interface NativeNodeContainerUI extends SingleNodeContainerUI, UI {
      * Returns a deep copy of the creation configuration of this node.
      *
      * @return deep copy of the node creation configuration
+     * @throws UnsupportedOperationException if operation is not supported by the implementation
      */
     Optional<ModifiableNodeCreationConfiguration> getCopyOfCreationConfig();
 

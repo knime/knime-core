@@ -2198,9 +2198,10 @@ public final class Node implements NodeModelWarningListener {
      *
      * @param factory the factory instance to create the node dialog pane from
      * @param nrOutPorts the number of output ports (mainly used to determine whether to add a misc ("Memory Policy")
-     *                          tab; if this value is greater than zero, such a tab will be added)
+     *            tab; if this value is greater than zero, such a tab will be added)
      * @param addJobMgrTab whether the job manager tab should be added
-     * @param creationConfig the node creation configuration
+     * @param creationConfig the node creation configuration, must be non-null if the provided factory is of type
+     *            {@link ConfigurableNodeFactory}
      *
      * @return Reference to dialog pane.
      * @throws IllegalStateException If node has no dialog.
