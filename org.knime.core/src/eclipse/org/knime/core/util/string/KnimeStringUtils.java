@@ -50,6 +50,8 @@ package org.knime.core.util.string;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
@@ -821,9 +823,12 @@ public class KnimeStringUtils {
      * "%2F" -> "/"
      *
      * Uses the java standard library implementation {@link URLDecoder#decode(String, String)}.
+     * Silently ignores exceptions caused by passing an illegal charsetName.
+     *
      * @param str the string to decode
-     * @param charsetName the character set to use
-     * @return the decoded string
+     * @param charsetName the character set to use.
+     * @return the decoded string or the original string if the charset is not supported.
+     * @since 4.2
      */
     public static String urlDecode(final String str, final String charsetName) {
         try {
@@ -840,13 +845,14 @@ public class KnimeStringUtils {
      * -> "%3F"
      *
      * Uses the java standard library implementation: {@link URLEncoder#encode(String, String)}. set.
-     *
+     * Silently ignores exceptions caused by passing an illegal charsetName.
      * See https://en.wikipedia.org/wiki/Percent-encoding and the URI RFC on details when to apply percent encoding.
      * https://tools.ietf.org/html/rfc3986#section-2.1
      *
      * @param str string to apply percent encoding to
      * @param charsetName the character set to use
-     * @return the escaped string
+     * @return the escaped string or the original string if the charset is not supported.
+     * @since 4.2
      */
     public static String urlEncode(final String str, final String charsetName) {
         try {
@@ -869,72 +875,93 @@ public class KnimeStringUtils {
      * @param str the URI to fix
      * @param pathDelimiter the delimiter for the path part of a URI, usually "/"
      * @param charsetName the character set to use
-     * @return the escaped string
+     * @return the escaped string or the original string if the scope is not supported or the str parameter can not be
+     * converted to a valid URI by removing forbidden characters.
+     * @since 4.2
      */
     public static String urlEncodeScope(final String scope, final String str, final String pathDelimiter,
         final String charsetName) {
 
-        if ("path".equalsIgnoreCase(scope.trim())) {
-            // split the path part by delimiter and encode each individual part
+        URI uri = null;
+        { // replace forbidden characters step by step until a valid URI is produced
 
-            int schemeDelimiterPos = str.indexOf("//");
-            int queryDelimiterPos = str.indexOf("?");
-            int fragmentDelimiterPos = str.indexOf("#");
+            char[] chars = new char[str.length()];
+            str.getChars(0, str.length()-1, chars, 0);
+            int lastFixedPos = -1;
 
-            // use first slash as path begin marker
-            // skip initial scheme:// if present
-            int pathStart;
-            if (schemeDelimiterPos != -1) {
-                pathStart = str.indexOf("/", schemeDelimiterPos + 2);
-            } else {
-                pathStart = str.indexOf("/");
-            }
+            boolean works = false;
+            boolean aborted = false;
+            do {
+                try {
+                    uri = new URI(new String(chars));
+                    works = true;
+                } catch (URISyntaxException ex) {
+                    works = false;
+                    int index = ex.getIndex();
+                    // when the fixed applied in the previous iteration didn't work, abort
+                    aborted = index == lastFixedPos;
+                    chars[index] = 'a';
+                    lastFixedPos = index;
+                }
+            } while (!works && !aborted);
 
-            // no path part found, we're done
-            if (pathStart == -1) {
+            if (aborted) {
                 return str;
             }
 
-            // use fragment start marker ("#") or query start marker ("?") if present as path end marker
-            // if query exists, it ends the path
-            int pathEnd;
-            if (queryDelimiterPos != -1) {
-                pathEnd = queryDelimiterPos;
-                // if no query exists the path might be ended by a fragment
-            } else if (fragmentDelimiterPos != -1) {
-                pathEnd = fragmentDelimiterPos;
-            } else {
-                // otherwise it extends until the end
-                pathEnd = str.length();
+        }
+
+        // the URI object won't give us the offsets of the parsed portions, but we can determine them by summing up
+        // the lengths of the parts that come before path and query, respectively
+
+        int pathStart = 0, pathEndExclusive, queryBegin, queryEndExclusive;
+        { // determine the begin and end offsets of query and path
+
+            if (uri.getScheme() != null) {
+                pathStart += uri.getScheme().length() + 1; // e.g., "https" + ":"
+            }
+            // if the user info, host, or port is present, the double slash is mandatory
+            if (uri.getAuthority() != null) {
+                pathStart += 2 + uri.getAuthority().length(); // e.g., "//" + "user@host.tld:8080"
+            }
+            pathEndExclusive = pathStart;
+            if (uri.getPath() != null) {
+                pathEndExclusive += uri.getPath().length(); // e.g., /dir/script/
+            }
+            queryBegin = pathEndExclusive;
+            queryEndExclusive = queryBegin;
+            if (uri.getQuery() != null) {
+                queryBegin += 1; // do not include query delimiter "?" in the query
+                queryEndExclusive = queryBegin + uri.getQuery().length(); // e.g., "q=search"
+            }
+        }
+
+        if ("path".equalsIgnoreCase(scope.trim())) {
+
+            if(uri.getPath() == null) {
+                return str;
             }
 
             // don't use a stream here, because it may be called a million times during processing a table
-            String path = str.substring(pathStart + 1, pathEnd);
-            String[] parts = path.split(pathDelimiter);
+            String path = str.substring(pathStart, pathEndExclusive);
+            // set limit to -1 in order to catch trailing delimiters
+            String[] parts = path.split(pathDelimiter, -1);
             for (int i = 0; i < parts.length; i++) {
                 parts[i] = urlEncode(parts[i], charsetName).replace("+", "%20");
             }
             final String encodedPath = String.join(pathDelimiter, parts);
 
-            return str.substring(0, pathStart + 1) + encodedPath + str.substring(pathEnd - 1);
+            return str.substring(0, pathStart) + encodedPath + str.substring(pathEndExclusive);
 
         } else if ("query".equalsIgnoreCase(scope.trim())) {
 
-            int firstQuestionMark = str.indexOf("?");
-
-            // string has no query part -- we're done
-            if (firstQuestionMark == -1) {
+            if(uri.getQuery() == null) {
                 return str;
             }
 
-            // assume everything after the first question mark is query
-            String queryPart = str.substring(firstQuestionMark + 1);
+            String encodedQuery = urlEncode(str.substring(queryBegin, queryEndExclusive), charsetName);
 
-            // encode query part
-            final String encodedQuery = urlEncode(queryPart, charsetName);
-
-            // include the question mark again
-            return str.substring(0, firstQuestionMark + 1) + encodedQuery;
+            return str.substring(0, queryBegin) + encodedQuery + str.substring(queryEndExclusive);
 
         } else {
             LOGGER.error(String.format("Scope %s is not supported. Use \"path\" or \"query\".", scope));
