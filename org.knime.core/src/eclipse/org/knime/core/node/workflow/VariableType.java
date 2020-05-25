@@ -428,7 +428,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<Boolean> getSimpleType() {
+        public Class<Boolean> getSimpleType() {
             return Boolean.class;
         }
 
@@ -580,7 +580,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<Boolean[]> getSimpleType() {
+        public Class<Boolean[]> getSimpleType() {
             return Boolean[].class;
         }
 
@@ -723,7 +723,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<Double> getSimpleType() {
+        public Class<Double> getSimpleType() {
             return Double.class;
         }
 
@@ -857,7 +857,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<Double[]> getSimpleType() {
+        public Class<Double[]> getSimpleType() {
             return Double[].class;
         }
 
@@ -1024,7 +1024,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<Integer> getSimpleType() {
+        public Class<Integer> getSimpleType() {
             return Integer.class;
         }
 
@@ -1191,7 +1191,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<Integer[]> getSimpleType() {
+        public Class<Integer[]> getSimpleType() {
             return Integer[].class;
         }
 
@@ -1342,7 +1342,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<Long> getSimpleType() {
+        public Class<Long> getSimpleType() {
             return Long.class;
         }
 
@@ -1503,7 +1503,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<Long[]> getSimpleType() {
+        public Class<Long[]> getSimpleType() {
             return Long[].class;
         }
 
@@ -1634,7 +1634,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<String> getSimpleType() {
+        public Class<String> getSimpleType() {
             return String.class;
         }
 
@@ -1796,7 +1796,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<String[]> getSimpleType() {
+        public Class<String[]> getSimpleType() {
             return String[].class;
         }
 
@@ -1909,7 +1909,7 @@ public abstract class VariableType<T> {
         }
 
         @Override
-        protected Class<CredentialsFlowVariableValue> getSimpleType() {
+        public Class<CredentialsFlowVariableValue> getSimpleType() {
             return CredentialsFlowVariableValue.class;
         }
 
@@ -2042,7 +2042,7 @@ public abstract class VariableType<T> {
      * @return the class object of the simple type represented by this {@link VariableType}
      * @since 4.2
      */
-    protected abstract Class<T> getSimpleType();
+    public abstract Class<T> getSimpleType();
 
     /**
      * Loads a {@link VariableValue} corresponding to this type from the provided settings.
