@@ -73,6 +73,8 @@ public final class WorkflowSummaryConfiguration {
 
     final UnaryOperator<String> m_textEncoder;
 
+    final boolean m_indentation;
+
     /**
      * The final format of the workflow summary.
      */
@@ -88,6 +90,7 @@ public final class WorkflowSummaryConfiguration {
         m_nodesToIgnore = new ArrayList<>(builder.m_nodesToIgnore);
         m_includeExecutionInfo = builder.m_includeExecutionInfo;
         m_textEncoder = builder.m_textEncoder;
+        m_indentation = builder.m_indentation;
     }
 
     /**
@@ -112,6 +115,8 @@ public final class WorkflowSummaryConfiguration {
         private boolean m_includeExecutionInfo = false;
 
         private List<NodeID> m_nodesToIgnore = Collections.emptyList();
+
+        private boolean m_indentation = true;
 
         private Builder(final SummaryFormat format) {
             m_format = format;
@@ -145,6 +150,17 @@ public final class WorkflowSummaryConfiguration {
          */
         public Builder nodesToIgnore(final List<NodeID> nodesToIgnore) {
             m_nodesToIgnore = nodesToIgnore;
+            return this;
+        }
+
+        /**
+         * Whether to use indentation in the generated workflow summary.
+         *
+         * @param useIndentation
+         * @return this builder for chaining
+         */
+        public Builder indentation(final boolean useIndentation) {
+            m_indentation = useIndentation;
             return this;
         }
 

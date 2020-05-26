@@ -124,6 +124,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -166,10 +167,16 @@ public final class WorkflowSummaryGenerator {
     public static void generate(final WorkflowManager wfm, final OutputStream out,
         final WorkflowSummaryConfiguration config) throws IOException {
         try (WorkflowLock lock = wfm.lock()) {
+            ObjectMapper mapper;
             if (config.m_format == SummaryFormat.XML) {
-                getXmlMapper().writeValue(out, new WorkflowSummary(wfm, config));
+                mapper = getXmlMapper();
             } else {
-                getJsonMapper().writeValue(out, new WorkflowSummary(wfm, config));
+                mapper = getJsonMapper();
+            }
+            if (config.m_indentation) {
+                mapper.writerWithDefaultPrettyPrinter().writeValue(out, new WorkflowSummary(wfm, config));
+            } else {
+                mapper.writeValue(out, new WorkflowSummary(wfm, config));
             }
         }
     }
