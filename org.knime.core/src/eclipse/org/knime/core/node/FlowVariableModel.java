@@ -47,6 +47,7 @@
  */
 package org.knime.core.node;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -196,7 +197,7 @@ public class FlowVariableModel {
      * @since 3.3
      */
     public Optional<FlowVariable> getVariableValue() {
-        return Optional.ofNullable(getParent().getAvailableFlowVariables(m_variableType).get(m_inputVariableName));
+        return Arrays.stream(getMatchingVariables()).filter(v -> v.getName().equals(m_inputVariableName)).findFirst();
     }
 
     /**
