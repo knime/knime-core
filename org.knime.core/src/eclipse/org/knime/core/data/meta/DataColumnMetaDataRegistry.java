@@ -122,18 +122,6 @@ public enum DataColumnMetaDataRegistry {
 
     }
 
-    private static Class<? extends DataColumnMetaData> getMetaDataClass(final String name) {
-        final Class<?> clazz;
-        try {
-            clazz = Class.forName(name);
-        } catch (ClassNotFoundException ex) {
-            LOGGER.error(String.format("The class declaration for the meta data class '%s' could not be found.", name),
-                ex);
-            return null;
-        }
-        return clazz.asSubclass(DataColumnMetaData.class);
-    }
-
     /**
      * Retrieves the typed runtime class of a {@link DataColumnMetaData} object.
      *
@@ -254,7 +242,12 @@ public enum DataColumnMetaDataRegistry {
      *         or {@link Optional#empty()} if the meta data class is unknown to the registry
      */
     public Optional<DataColumnMetaDataSerializer<?>> getSerializer(final String metaDataClassName) {
-        return Optional.ofNullable(m_serializers.get(getMetaDataClass(metaDataClassName)));
+        final Class<? extends DataColumnMetaData> clazz = m_metaDataClasses.get(metaDataClassName);
+        if (clazz == null) {
+            LOGGER.errorWithFormat("The meta data class '%s' is unknown. Are you missing an extension?", metaDataClassName);
+            return Optional.empty();
+        }
+        return Optional.ofNullable(m_serializers.get(clazz));
     }
 
     private static IExtensionPoint getExtensionPoint() {
