@@ -46,11 +46,28 @@
  */
 package org.knime.core.node.tableview;
 
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import java.util.HashSet;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -63,11 +80,13 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultRowIterator;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
 import org.knime.core.node.util.ViewUtils;
+import org.mockito.ArgumentMatcher;
 
 import junit.framework.TestCase;
 
@@ -802,6 +821,36 @@ public class TableContentModelTest extends TestCase {
     }
 
     /**
+     * Tests that the call back set via {@link AsyncTable#setRowsAvailableCallback(BiConsumer)} is called and causes the
+     * {@link TableContentModel} to update the rows.
+     */
+    public void testAsyncTableRowsAvailableCallback() {
+        Semaphore semaphore = new Semaphore(5);
+        semaphore.acquireUninterruptibly(5);
+        TestAsyncTable table = new TestAsyncTable(semaphore, 5);
+        TableContentModel model = new TableContentModel(table);
+        TableModelListener tableModelListener = mock(TableModelListener.class);
+        model.addTableModelListener(tableModelListener);
+        for (int i = 0; i < 5; i++) {
+            assertThat("'loading' row key expected", model.getRowKey(i).getString(), is("Loading ... (" + i + ")"));
+            assertThat("empty string expected", model.getValueAt(i, 0).toString(), is(""));
+        }
+
+        ArgumentMatcher<TableModelEvent> argMatcher = new ArgumentMatcher<TableModelEvent>() {
+
+            @Override
+            public boolean matches(final TableModelEvent e) {
+                return e.getType() == TableModelEvent.UPDATE && e.getLastRow() < 5 && e.getFirstRow() < 5;
+            }
+
+        };
+        semaphore.release(5);
+        await().atMost(2, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).untilAsserted(() -> {
+            verify(tableModelListener, times(5)).tableChanged(argThat(argMatcher));
+        });
+    }
+
+    /**
      * Iterator that throws exception when <code>next()</code> method is called
      * at an inappropriate time.
      */
@@ -848,4 +897,87 @@ public class TableContentModelTest extends TestCase {
             return super.next();
         } // next()
     } // private class RestrictedAccessIterator
+
+    private static class TestAsyncTable implements DataTable, AsyncTable {
+
+        private BiConsumer<Long, Long> m_rowsAvailableCallback;
+
+        private Semaphore m_semaphore;
+
+        private long m_rowCount;
+
+        TestAsyncTable(final Semaphore semaphore, final long rowCount) {
+            m_semaphore = semaphore;
+            m_rowCount = rowCount;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataTableSpec getDataTableSpec() {
+            return new DataTableSpec(new String[]{"test"}, new DataType[]{StringCell.TYPE});
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public RowIterator iterator() {
+            return new RowIterator() {
+
+                private long m_idx = 0;
+
+                @Override
+                public DataRow next() {
+                    final long idx = m_idx;
+                    CompletableFuture<DataRow> futureRow =
+                        CompletableFuture.supplyAsync(createDataRowSupplier(idx)).thenApply(r -> {
+                            m_rowsAvailableCallback.accept(idx, idx);
+                            return r;
+                        });
+                    return new AsyncDataRow(m_idx++, 1, futureRow);
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return m_idx < m_rowCount;
+                }
+            };
+        }
+
+        private Supplier<DataRow> createDataRowSupplier(final long idx) {
+            return () -> {
+                m_semaphore.acquireUninterruptibly();
+                return new DefaultRow("row " + idx, new StringCell(UUID.randomUUID().toString()));
+            };
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setRowsAvailableCallback(final BiConsumer<Long, Long> rowsAvailableCallback) {
+            m_rowsAvailableCallback = rowsAvailableCallback;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setRowCountKnownCallback(final Consumer<Long> rowCountKnownCallback) {
+            if (rowCountKnownCallback != null) {
+                rowCountKnownCallback.accept(m_rowCount);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void cancel() {
+            //
+        }
+
+    }
 }

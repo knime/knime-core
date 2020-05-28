@@ -415,7 +415,7 @@ public class TableContentModel extends AbstractTableModel
                 });
                 ((AsyncTable)data).setRowCountKnownCallback(count -> {
                     setRowCount(count.intValue(), true);
-                    ((AsyncTable)data).setRowsAvailableCallback(null);
+                    ((AsyncTable)data).setRowCountKnownCallback(null);
                 });
             }
 
