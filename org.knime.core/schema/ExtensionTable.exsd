@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.knime.core" id="ExtensionTable" name="ExtensionTable"/>
+      </appInfo>
+      <documentation>
+         (Framework private) extension point to register additional extension tables.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="ExtensionTableLoader"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="ExtensionTableLoader">
+      <annotation>
+         <documentation>
+            An ExtensionTable can be wrapped by a BufferedDataTable and then be accessed as node table output. Extension tables are loaded using a loader.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="extensionTableLoader" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The class responsible for the extension table definition.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.node.ExtensionTableLoader"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         KNIME 4.2
+      </documentation>
+   </annotation>
+
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiinfo"/>
+      </appInfo>
+      <documentation>
+         No public API
+      </documentation>
+   </annotation>
+
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         KNIME AG, Zurich, Switzerland
+      </documentation>
+   </annotation>
+
+</schema>

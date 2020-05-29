@@ -47,8 +47,6 @@ package org.knime.core.node;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 import javax.swing.JComponent;
@@ -252,63 +250,16 @@ public abstract class ExtensionTable implements KnowsRowCountTable {
      * @throws IOException If reading fails
      * @throws CanceledExecutionException If canceled
      */
-    static ExtensionTable loadExtensionTable(final ReferencedFile fileRef,
-            final DataTableSpec spec, final NodeSettingsRO s,
-            final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec)
-    throws InvalidSettingsException, IOException, CanceledExecutionException {
+    static ExtensionTable loadExtensionTable(final ReferencedFile fileRef, final DataTableSpec spec,
+        final NodeSettingsRO s, final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec)
+        throws InvalidSettingsException, IOException, CanceledExecutionException {
 
         final String tableImpl = s.getString(CFG_TABLE_IMPL);
-        NodeSettingsRO derivedSettings =
-            s.getNodeSettings(CFG_TABLE_DERIVED_SETTINGS);
-        LoadContext context = new LoadContext(
-                fileRef, spec, derivedSettings, tblRep, exec);
+        NodeSettingsRO derivedSettings = s.getNodeSettings(CFG_TABLE_DERIVED_SETTINGS);
+        LoadContext context = new LoadContext(fileRef, spec, derivedSettings, tblRep, exec);
 
-        Class<?> clazz;
-        try {
-            clazz = Class.forName(tableImpl);
-        } catch (ClassNotFoundException e) {
-            throw new InvalidSettingsException("Unknown table identifier: "
-                    + tableImpl);
-        }
+        return ExtensionTableRegistry.getInstance().loadExtensionTable(context, tableImpl);
 
-        if (!ExtensionTable.class.isAssignableFrom(clazz)) {
-            throw new InvalidSettingsException("Table type must extend "
-                    + "ExtensionTable: " + tableImpl);
-        }
-        Class<? extends ExtensionTable> cl =
-            clazz.asSubclass(ExtensionTable.class);
-
-        try {
-            Constructor<? extends ExtensionTable> con = cl
-                    .getDeclaredConstructor(ExtensionTable.LoadContext.class);
-            // allow implementations with private classes/constructors
-            con.setAccessible(true);
-            return con.newInstance(context);
-        } catch (NoSuchMethodException e) {
-            throw new InvalidSettingsException("Table type must declare a "
-                    + "constructor of type ExtensionTable.LoadContext: "
-                    + tableImpl);
-        } catch (InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof IOException) {
-                throw (IOException)cause;
-            } else if (cause instanceof InvalidSettingsException) {
-                throw (InvalidSettingsException)cause;
-            } else if (cause instanceof CanceledExecutionException) {
-                throw (CanceledExecutionException)cause;
-            } else if (cause instanceof RuntimeException) {
-                throw (RuntimeException)cause;
-            } else if (cause instanceof Error) {
-                throw (Error)cause;
-            } else {
-                throw new RuntimeException(cause);
-            }
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
 }
