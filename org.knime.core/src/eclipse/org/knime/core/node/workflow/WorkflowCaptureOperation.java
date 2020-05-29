@@ -173,7 +173,7 @@ public final class WorkflowCaptureOperation {
                             NodeContainer sourceNode = m_wfm.getNodeContainer(sourceID);
                             NodeUIInformation sourceUIInformation = sourceNode.getUIInformation();
                             nodesToDetermineBoundingBox.add(sourceNode);
-                            NodeID pastedID = addPortObjectReferenceReader(m_wfm, tempParent, sourceNode, c);
+                            NodeID pastedID = addPortObjectReferenceReader(m_wfm, tempParent, c);
                             NodeIDSuffix pastedIDSuffix = NodeIDSuffix.create(tempParent.getID(), pastedID);
 
                             tempParent.getNodeContainer(pastedID).setUIInformation(sourceUIInformation);
@@ -286,13 +286,23 @@ public final class WorkflowCaptureOperation {
         return spec instanceof DataTableSpec ? (DataTableSpec)spec : null;
     }
 
+    /**
+     * Helper to add 'port object reference reader nodes' that represent the port objects at the source of connections
+     * that lead directly into the scope (i.e. not via the scope start, sort of static inputs).
+     *
+     * @param srcWfm the original workflow
+     * @param newWfm the new workflow fragment to add the reference reader nodes to
+     * @param outConn the outgoing connection of the node/port to reference
+     * @return the id of the port object reference reader node
+     */
     private static NodeID addPortObjectReferenceReader(final WorkflowManager srcWfm, final WorkflowManager newWfm,
-        final NodeContainer sourceNode, final ConnectionContainer c) {
+        final ConnectionContainer outConn) {
         NodeOutPort upstreamPort;
-        int sourcePort = c.getSourcePort();
-        NodeID sourceID = sourceNode.getID();
+        int sourcePort = outConn.getSourcePort();
+        NodeID sourceID = outConn.getSource();
+        NodeContainer sourceNode = srcWfm.getNodeContainer(sourceID);
         if (sourceID.equals(srcWfm.getID())) {
-            assert c.getType() == ConnectionType.WFMIN;
+            assert outConn.getType() == ConnectionType.WFMIN;
             upstreamPort = srcWfm.getInPort(sourcePort).getUnderlyingPort();
         } else {
             upstreamPort = sourceNode.getOutPort(sourcePort);

@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.exec.dataexchange;
 
+import static java.lang.System.identityHashCode;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -56,6 +58,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -91,8 +94,6 @@ import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowManager;
 
-import com.google.common.collect.MapMaker;
-
 /**
  * Static repository of {@link PortObject PortObjects}. It is used to virtually set output objects of port object
  * in node models.
@@ -105,9 +106,9 @@ public final class PortObjectRepository {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(PortObjectRepository.class);
 
-    private static final Map<UUID, PortObject> MAP = new MapMaker().weakValues().makeMap();
+    private static final Map<UUID, PortObject> MAP = new HashMap<>();
 
-    private static final Map<PortObject, UUID> BEFORE_COPY_TO_ID_MAP = new MapMaker().weakKeys().makeMap();
+    private static final Map<Integer, UUID> BEFORE_COPY_TO_ID_MAP = new HashMap<>();
 
     private PortObjectRepository() {
         // empty
@@ -137,7 +138,7 @@ public final class PortObjectRepository {
     public static synchronized UUID addCopy(final PortObject po, final ExecutionContext exec)
         throws IOException, CanceledExecutionException {
         UUID id = add(copy(po, exec, exec));
-        BEFORE_COPY_TO_ID_MAP.put(po, id);
+        BEFORE_COPY_TO_ID_MAP.put(identityHashCode(po), id);
         return id;
     }
 
@@ -150,7 +151,18 @@ public final class PortObjectRepository {
      * @return the id or an empty optional of not found
      */
     public static synchronized Optional<UUID> getIDFor(final PortObject po) {
-        return Optional.ofNullable(BEFORE_COPY_TO_ID_MAP.get(po));
+        return Optional.ofNullable(BEFORE_COPY_TO_ID_MAP.get(identityHashCode(po)));
+    }
+
+    /**
+     * Removes the stored id for a port object. Only has an effect if the very same port object has been added via
+     * {@link #addCopy(PortObject, ExecutionContext)} before.
+     *
+     * @param po the port object to remove the id for
+     * @return the id or an empty optional if there is no mapped id
+     */
+    public static synchronized Optional<UUID> removeIDFor(final PortObject po) {
+        return Optional.ofNullable(BEFORE_COPY_TO_ID_MAP.remove(identityHashCode(po)));
     }
 
     /** Add new port object to repository.

@@ -91,22 +91,4 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
         return m_callback;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null || !obj.getClass().equals(getClass())) {
-            return false;
-        }
-        return super.equals(obj);
-    }
-
 }
