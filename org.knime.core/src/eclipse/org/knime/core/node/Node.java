@@ -1704,6 +1704,7 @@ public final class Node implements NodeModelWarningListener {
      *
      * @param c To access.
      * @return Its local table repository.
+     * @since 4.2
      */
     public static Map<Integer, ContainerTable> getLocalTableRepositoryFromContext(
             final ExecutionContext c) {

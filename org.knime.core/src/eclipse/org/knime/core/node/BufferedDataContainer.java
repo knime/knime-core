@@ -143,16 +143,16 @@ public class BufferedDataContainer extends DataContainer {
          * be written instantly as their owning buffer is discarded in the next loop iteration, see bug 2935. To be
          * written instantly, they have to be handled sequentially.
          */
-        super(spec, initDomain, maxCellsInMemory < 0
-                ? getMaxCellsInMemory(policy) : maxCellsInMemory,
-                        node.isForceSychronousIO(), (dataRepository == null) ? NotInWorkflowDataRepository.newInstance() : dataRepository, localTableRepository,
-                            /**
-                             * "in theory" the data repository should never be null for non-cleared file store handlers. However...
-                             * resetting nodes in fully executed loops causes the loop start to be reset first and then the loop body+end,
-                             * see also WorkflowManager.resetAndConfigureAffectedLoopContext() (can be reproduced using unit test
-                             * Bug4409_inactiveInnerLoop
-                             */
-                            fileStoreHandler, forceCopyOfBlobs, rowKeys);
+        super(spec, initDomain, maxCellsInMemory < 0 ? getMaxCellsInMemory(policy) : maxCellsInMemory,
+            node.isForceSychronousIO(),
+            (dataRepository == null) ? NotInWorkflowDataRepository.newInstance() : dataRepository, localTableRepository,
+            /**
+             * "in theory" the data repository should never be null for non-cleared file store handlers. However...
+             * resetting nodes in fully executed loops causes the loop start to be reset first and then the loop
+             * body+end, see also WorkflowManager.resetAndConfigureAffectedLoopContext() (can be reproduced using unit
+             * test Bug4409_inactiveInnerLoop
+             */
+            fileStoreHandler, forceCopyOfBlobs, rowKeys);
         m_node = node;
     }
 

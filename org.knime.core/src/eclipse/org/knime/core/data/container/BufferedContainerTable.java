@@ -72,7 +72,12 @@ import org.knime.core.node.workflow.WorkflowDataRepository;
  * We split it from the <code>Buffer</code> implementation as a buffer is dynamic in size. This table should only be
  * used when the buffer has been fixed.
  *
+ * <p>Node implementations should not rely on API defined in this class and therefore should not have any reference to
+ * this class.
+ *
+ * @since 4.2
  * @author Bernd Wiswedel, University of Konstanz
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class BufferedContainerTable implements ContainerTable {
 

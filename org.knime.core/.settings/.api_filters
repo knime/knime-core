@@ -1867,6 +1867,13 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/ContainerTable.java" type="org.knime.core.data.container.ContainerTable">
+        <filter id="337809484">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.ContainerTable"/>
+                <message_argument value="4"/>
+                <message_argument value="8"/>
+            </message_arguments>
+        </filter>
         <filter id="576720909">
             <message_arguments>
                 <message_argument value="KnowsRowCountTable"/>
@@ -1881,6 +1888,72 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/DataContainer.java" type="org.knime.core.data.container.DataContainer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="addRowKeyForDuplicateCheck(RowKey)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="createInternalBufferID()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="getBuffer()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="getDataRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="getFileStoreHandler()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="getLocalTableRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="isContainerTable(DataTable)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="isForceCopyOfBlobs()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="setBufferCreator(DataContainer.BufferCreator)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="setFileStoreHandler(IWriteFileStoreHandler)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="setForceCopyOfBlobs(boolean)"/>
+            </message_arguments>
+        </filter>
         <filter id="643850349">
             <message_arguments>
                 <message_argument value="IWriteFileStoreHandler"/>
@@ -1959,6 +2032,26 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/BufferedDataContainer.java" type="org.knime.core.node.BufferedDataContainer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.BufferedDataContainer"/>
+                <message_argument value="createInternalBufferID()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.BufferedDataContainer"/>
+                <message_argument value="getDataRepository()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.BufferedDataContainer"/>
+                <message_argument value="getLocalTableRepository()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/DynamicNodeFactory.java" type="org.knime.core.node.DynamicNodeFactory">
         <filter id="1141899266">
             <message_arguments>
@@ -1981,6 +2074,12 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.Node"/>
                 <message_argument value="Node(NodeFactory&lt;NodeModel&gt;, NodeCreationContext)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="getLocalTableRepositoryFromContext(ExecutionContext)"/>
             </message_arguments>
         </filter>
     </resource>

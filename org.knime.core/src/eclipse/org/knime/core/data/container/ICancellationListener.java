@@ -49,11 +49,12 @@
 package org.knime.core.data.container;
 
 /**
- * Simply a listener
+ * Simply a listener, notified when the write process into a container is cancelled.
  *
  * @author Christian Dietz, KNIME GmbH
  *
  * @since 4.2
+ * @noreference This interface is not intended to be referenced by clients.
  */
 interface ICancellationListener {
 
