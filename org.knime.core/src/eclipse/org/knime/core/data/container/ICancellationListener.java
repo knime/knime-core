@@ -59,7 +59,7 @@ package org.knime.core.data.container;
 interface ICancellationListener {
 
     /**
-     * Called when node was cancelled
+     * Called when node was cancelled.
      */
     void onCancel();
 }

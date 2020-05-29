@@ -258,7 +258,11 @@ public class DataContainer implements RowAppender {
 
             @Override
             public void onCancel() {
-                m_rowContainer.clear();
+                // handle case where something goes wrong during row container instantiation
+                // listener is removed by cancellation impl
+                if (m_rowContainer != null) {
+                    m_rowContainer.clear();
+                }
             }
         };
         m_localRepository.addCancellationListener(m_cancellationListener);

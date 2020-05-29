@@ -54,7 +54,7 @@ import java.util.Map;
  * Interface for a local data repository. Contains temporarily created tables. Allows adding and removing cancellation
  * listeners to clean-up memory / files etc in case of node cancellation.
  *
- * @author Christian Dietz, KNIME GmbH
+ * @author Christian Dietz, KNIME GmbH, Konstanz
  * @since 4.2
  * @noreference This interface is not intended to be referenced by clients.
  */
@@ -81,17 +81,16 @@ public interface ILocalDataRepository {
     void removeTable(int id);
 
     /**
-     * Adds a {@link ICancellationListener}
+     * Adds a ICancellationListener
      *
-     * @param id of {@link ICancellationListener}
      * @param listener notified on cancel
      */
     void addCancellationListener(ICancellationListener listener);
 
     /**
-     * Removes the {@link ICancellationListener} with the given id
+     * Removes the ICancellationListener
      *
-     * @param id the id of the {@link ICancellationListener}
+     * @param listener the ICancellationListener
      */
     void removeCancellationListener(ICancellationListener listener);
 
@@ -109,7 +108,7 @@ public interface ILocalDataRepository {
     void addTable(ContainerTable table);
 
     /**
-     * Calls cancel on all listeners and {@link #clear()}s repository.
+     * Calls cancel on all listeners and {@link #clear()}s repository (i.e. also removes all listeners)
      */
     void onCancel();
 }

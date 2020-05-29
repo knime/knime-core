@@ -142,7 +142,6 @@ public class DefaultLocalDataRepository implements ILocalDataRepository {
         for (final ICancellationListener listener : m_cancellationListeners.values()) {
             listener.onCancel();
         }
-        // cancel is cancel is cancel.
         clear();
     }
 
