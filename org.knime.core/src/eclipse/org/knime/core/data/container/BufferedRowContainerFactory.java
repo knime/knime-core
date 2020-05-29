@@ -44,55 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 30, 2020 (dietzc): created
+ *   May 25, 2020 (dietzc): created
  */
 package org.knime.core.data.container;
 
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 
 /**
- * RowContainer store {@link DataRow}s and are able to provide a {@link ContainerTable} after RowContainer#close()' was
- * called.
+ * {@link RowContainerFactory} implementation to create {@link RowContainer}s used < 4.2 and beyond.
  *
- * NB: {@link RowContainer} abstracts from previous implementations of {@link DataContainer}.
- *
- * @author Christian Dietz, KNIME GmbH
+ * @author Christian Dietz, KNIME GmbH, Konstanz
  * @since 4.2
+ *
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public interface RowContainer extends RowAppender, AutoCloseable {
+public final class BufferedRowContainerFactory implements RowContainerFactory {
+
+    public static final String HUMAN_READABLE_NAME = "Default (DataContainer)";
 
     @Override
-    void close();
+    public boolean supports(final DataTableSpec spec) {
+        return true;
+    }
+
+    @Override
+    public RowContainer create(final DataTableSpec spec, final DataContainerSettings settings,
+        final IDataRepository repository, final ILocalDataRepository localRepository,
+        final IWriteFileStoreHandler fileStoreHandler) {
+        return new BufferedRowContainer(spec, settings, repository, localRepository,
+            initFileStoreHandler(fileStoreHandler, repository));
+    }
+
+    private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
+        final IDataRepository repository) {
+        IWriteFileStoreHandler nonNull = fileStoreHandler;
+        if (nonNull == null) {
+            nonNull = NotInWorkflowWriteFileStoreHandler.create();
+            nonNull.addToRepository(repository);
+        }
+        return nonNull;
+    }
 
     /**
-     * Can only be called after RowContainer#close() has been called.
-     *
-     * @return the underlying {@link ContainerTable}.
+     * {@inheritDoc}
      */
-    ContainerTable getTable();
-
-    /**
-     * Clears the RowContainer, i.e. all associated temporary data and memory will be removed.
-     */
-    void clear();
-
-    /**
-     * @return size of the RowContainer. Can increase until RowContainer is closed.
-     */
-    long size();
-
-    /**
-     * @return the underlying {@link DataTableSpec}. On close, the {@link DataTableSpec} will comprise domain
-     *         information for each column.
-     */
-    DataTableSpec getTableSpec();
-
-    /**
-     * Set the maximum number of possible values for a nominal domain
-     *
-     * @param maxPossibleValues the maximum number of parameters for a nominal domain.
-     */
-    @Deprecated
-    void setMaxPossibleValues(int maxPossibleValues);
+    @Override
+    public String getName() {
+        return HUMAN_READABLE_NAME;
+    }
 }

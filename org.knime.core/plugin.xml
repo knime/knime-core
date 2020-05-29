@@ -12,6 +12,7 @@
    <extension-point id="EarlyStartup" name="EarlyStartup" schema="schema/EarlyStartup.exsd"/>
    <extension-point id="TableFormat" name="TableFormat" schema="schema/TableFormat.exsd"/>
    <extension-point id="ExtensionTable" name="ExtensionTable" schema="schema/ExtensionTable.exsd"/>
+   <extension-point id="RowContainer" name="RowContainer" schema="schema/RowContainer.exsd"/>
    <extension-point id="JavaToDataCellConverter" name="JavaToDataCellConverter" schema="schema/JavaToDataCellConverter.exsd"/>
    <extension-point id="DataCellToJavaConverter" name="DataCellToJavaConverter" schema="schema/DataCellToJavaConverter.exsd"/>
    <extension-point id="WorkflowSaveHook" name="Extensions that are run after a workflow is saved to disc" schema="schema/WorkflowSaveHook.exsd"/>
@@ -687,5 +688,11 @@
             factory-class="org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory"
             hidden="true">
       </node>
+   </extension>
+   <extension
+         point="org.knime.core.RowContainer">
+      <RowContainer
+            factoryClass="org.knime.core.data.container.BufferedRowContainerFactory">
+      </RowContainer>
    </extension>
 </plugin>

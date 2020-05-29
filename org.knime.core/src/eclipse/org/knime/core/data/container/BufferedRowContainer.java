@@ -262,7 +262,7 @@ class BufferedRowContainer implements RowContainer {
      */
     BufferedRowContainer(final DataTableSpec spec, final DataContainerSettings settings,
         final IDataRepository repository, final ILocalDataRepository localRepository,
-        final IWriteFileStoreHandler fileStoreHandler, final boolean forceCopyOfBlobs, final boolean rowKeys) {
+        final IWriteFileStoreHandler fileStoreHandler) {
         CheckUtils.checkArgumentNotNull(spec, "Spec must not be null!");
         CheckUtils.checkArgument(settings.getMaxCellsInMemory() >= 0, "Cell count must be positive: %s",
             settings.getMaxCellsInMemory());
@@ -295,8 +295,8 @@ class BufferedRowContainer implements RowContainer {
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
         m_maxRowsInMemory = settings.getMaxCellsInMemory() / ((colCount > 0) ? colCount : 1);
-        m_bufferCreator = rowKeys ? new BufferCreator(settings.getBufferSettings()) : new NoKeyBufferCreator();
-        m_forceCopyOfBlobs = forceCopyOfBlobs;
+        m_bufferCreator = settings.isEnableRowKeys() ? new BufferCreator(settings.getBufferSettings()) : new NoKeyBufferCreator();
+        m_forceCopyOfBlobs = settings.isForceCopyOfBlobs();
         m_repository = repository;
         m_localRepository = localRepository;
         m_fileStoreHandler = fileStoreHandler;

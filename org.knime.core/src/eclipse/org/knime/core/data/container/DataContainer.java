@@ -61,7 +61,6 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
-import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
@@ -91,6 +90,7 @@ import org.knime.core.util.FileUtil;
  *
  * @author Bernd Wiswedel, University of Konstanz
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  */
 public class DataContainer implements RowAppender {
 
@@ -190,6 +190,17 @@ public class DataContainer implements RowAppender {
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
      *
      * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
+     * @param settings the container settings
+     * @noreference This constructor is not intended to be referenced by clients.
+     */
+    public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
+        this(spec, settings, NotInWorkflowDataRepository.newInstance(), new DefaultLocalDataRepository(), null, false);
+    }
+
+    /**
+     * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
+     *
+     * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
      * @param initDomain if set to true, the column domains in the container are initialized with the domains from spec.
      * @param maxCellsInMemory Maximum count of cells in memory before swapping.
      * @param forceSynchronousIO Whether to force synchronous IO. If this property is false, it's using the default
@@ -199,30 +210,20 @@ public class DataContainer implements RowAppender {
      * @param fileStoreHandler a filestore handler
      * @param forceCopyOfBlobs true, if blobs should be copied
      * @param rowKeys if <code>true</code>, {@link RowKey}s are expected to be part of a {@link DataRow}.
+     * @param enableDataContainerV2 if <code>true</code> extension point for {@link RowContainerFactory}s can be used.
      * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0 or the spec is null
      * @since 4.2
      */
     protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
         final boolean forceSynchronousIO, final IDataRepository repository,
         final ILocalDataRepository localTableRepository, final IWriteFileStoreHandler fileStoreHandler,
-        final boolean forceCopyOfBlobs, final boolean rowKeys) {
+        final boolean forceCopyOfBlobs, final boolean rowKeys, final boolean enableDataContainerV2) {
         this(spec,
             DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
                 .withForceSequentialRowHandling(
-                    forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()),
-            repository, localTableRepository, fileStoreHandler, forceCopyOfBlobs, rowKeys);
-    }
-
-    /**
-     * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
-     *
-     * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
-     * @param settings the container settings
-     * @noreference This constructor is not intended to be referenced by clients.
-     */
-    public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
-        this(spec, settings, NotInWorkflowDataRepository.newInstance(), new DefaultLocalDataRepository(), null, false,
-            true);
+                    forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling())
+                .withForceCopyOfBlobs(forceCopyOfBlobs).withRowKeysEnabled(rowKeys),
+            repository, localTableRepository, fileStoreHandler, enableDataContainerV2);
     }
 
     /**
@@ -242,18 +243,11 @@ public class DataContainer implements RowAppender {
                     forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()));
     }
 
-    /**
-     * @param spec
-     * @param withForceSequentialRowHandling
-     * @param repository
-     */
     private DataContainer(final DataTableSpec spec, final DataContainerSettings settings,
         final IDataRepository repository, final ILocalDataRepository localRepository,
-        final IWriteFileStoreHandler fileStoreHandler, final boolean forceCopyOfBlobs, final boolean rowKeys) {
+        final IWriteFileStoreHandler fileStoreHandler, final boolean enableDataContainerV2) {
         m_spec = spec;
         m_localRepository = localRepository;
-        m_rowContainer = new BufferedRowContainer(spec, settings, repository, localRepository,
-            initFileStoreHandler(fileStoreHandler, repository), forceCopyOfBlobs, rowKeys);
         m_cancellationListener = new ICancellationListener() {
 
             @Override
@@ -266,6 +260,18 @@ public class DataContainer implements RowAppender {
             }
         };
         m_localRepository.addCancellationListener(m_cancellationListener);
+        m_spec = spec;
+
+        final RowContainerFactory selected;
+        if (enableDataContainerV2) {
+            // try to use row container factory selected in preference page, if not compatible to spec, fallback to default.
+            selected = RowContainerFactoryRegistry.getInstance().getRowContainerFactoryFor(spec);
+        } else {
+            // force default implementation (i.e. < 4.2)
+            selected = RowContainerFactoryRegistry.getInstance().getDefaultRowContainerFactory();
+        }
+
+        m_rowContainer = selected.create(spec, settings, repository, localRepository, fileStoreHandler);
     }
 
     /**
@@ -467,16 +473,6 @@ public class DataContainer implements RowAppender {
     public static DataTable cache(final DataTable table, final ExecutionMonitor exec)
         throws CanceledExecutionException {
         return cache(table, exec, DataContainerSettings.getDefault().getMaxCellsInMemory());
-    }
-
-    private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
-        final IDataRepository repository) {
-        IWriteFileStoreHandler nonNull = fileStoreHandler;
-        if (nonNull == null) {
-            nonNull = NotInWorkflowWriteFileStoreHandler.create();
-            nonNull.addToRepository(repository);
-        }
-        return nonNull;
     }
 
     /**

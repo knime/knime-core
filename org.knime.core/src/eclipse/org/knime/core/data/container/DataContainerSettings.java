@@ -54,6 +54,7 @@ import java.util.function.Supplier;
 
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConfigurableWorkflowContext;
@@ -125,8 +126,15 @@ public final class DataContainerSettings {
         /** The maximum number of domain values used by {@link DuplicateChecker}. */
         private int m_maxDomainValues;
 
+        /** The force copy of blobs flag **/
+        private boolean m_forceCopyOfBlobs;
+
+        /** The flag to enable row keys in this {@link DataContainer}. **/
+        private boolean m_enableRowKeys;
+
         /** The {@link BufferSettings}. */
         private BufferSettings m_bufferSettings;
+
 
         /**
          * Constructor.
@@ -142,6 +150,8 @@ public final class DataContainerSettings {
             m_initDomain = settings.m_initDomain;
             m_maxDomainValues = settings.m_maxDomainValues;
             m_bufferSettings = settings.m_bufferSettings;
+            m_enableRowKeys = settings.m_enableRowKeys;
+            m_forceCopyOfBlobs = settings.m_forceCopyOfBlobs;
         }
 
         Builder setMaxCellsInMemory(final int maxCellsInMemory) {
@@ -176,6 +186,16 @@ public final class DataContainerSettings {
 
         Builder setMaxDomainValues(final int maxDomainValues) {
             m_maxDomainValues = maxDomainValues;
+            return this;
+        }
+
+        Builder setForceCopyOfBlobs(final boolean forceCopyOfBlobs) {
+            m_forceCopyOfBlobs = forceCopyOfBlobs;
+            return this;
+        }
+
+        Builder setRowKeysEnabled(final boolean enableRowKeys) {
+            m_enableRowKeys = enableRowKeys;
             return this;
         }
 
@@ -222,6 +242,12 @@ public final class DataContainerSettings {
     /** The maximum number of domain values used by {@link DuplicateChecker}. */
     private final int m_maxDomainValues;
 
+    /** The force copy of blobs flag **/
+    private final boolean m_forceCopyOfBlobs;
+
+    /** The flag to enable row keys in this {@link DataContainer}. **/
+    private final boolean m_enableRowKeys;
+
     /** The {@link BufferSettings}. */
     private final BufferSettings m_bufferSettings;
 
@@ -245,8 +271,11 @@ public final class DataContainerSettings {
         m_rowBatchSize = initRowBatchSize();
         m_initDomain = initDomain();
         m_maxDomainValues = initMaxDomainValues();
+        m_forceCopyOfBlobs = initForceCopyOfBlobs();
+        m_enableRowKeys = initEnableRowKeys();
         m_bufferSettings = new BufferSettings();
     }
+
 
     /**
      * Constructor.
@@ -264,6 +293,8 @@ public final class DataContainerSettings {
         m_initDomain = builder.m_initDomain;
         m_maxDomainValues = builder.m_maxDomainValues;
         m_bufferSettings = builder.m_bufferSettings;
+        m_forceCopyOfBlobs = builder.m_forceCopyOfBlobs;
+        m_enableRowKeys = builder.m_enableRowKeys;
     }
 
     /**
@@ -370,6 +401,21 @@ public final class DataContainerSettings {
         creator.setMaxPossibleValues(m_maxDomainValues);
         return creator;
     }
+
+    /**
+     * @return <source>true</source> if blobs should be copied by this {@link DataContainer}.
+     */
+    public boolean isForceCopyOfBlobs() {
+        return m_forceCopyOfBlobs;
+    }
+
+    /**
+     * @return <source>true</source> if {@link RowKey}s are part of this {@link DataContainer}.
+     */
+    public boolean isEnableRowKeys() {
+        return m_enableRowKeys;
+    }
+
 
     /**
      * Returns the {@link BufferSettings}.
@@ -490,6 +536,44 @@ public final class DataContainerSettings {
         final Builder b = new Builder(this);
         b.setBufferSettings(bufferSettings);
         return b.build();
+    }
+
+    /**
+     * Defaults to <source>false</source>.
+     *
+     * @param forceCopyOfBlobs flag to indicate whether or not blobs are copied
+     * @return a new instance of {@code DataContainerSettings}
+     */
+    public DataContainerSettings withForceCopyOfBlobs(final boolean forceCopyOfBlobs) {
+        final Builder b = new Builder(this);
+        b.setForceCopyOfBlobs(forceCopyOfBlobs);
+        return b.build();
+    }
+
+    /**
+     * Defaults to <source>true</source>.
+     *
+     * @param enableRowKeys flag to indicate whether {@link RowKey}s are part of the {@link DataContainer}.
+     * @return a new instance of {@code DataContainerSettings}
+     */
+    public DataContainerSettings withRowKeysEnabled(final boolean enableRowKeys) {
+        final Builder b = new Builder(this);
+        b.setRowKeysEnabled(enableRowKeys);
+        return b.build();
+    }
+
+    /**
+     * @return default value for force copy of blobs
+     */
+    private static boolean initForceCopyOfBlobs() {
+        return false;
+    }
+
+    /**
+     * @return default value.
+     */
+    private static boolean initEnableRowKeys() {
+        return true;
     }
 
     /**
