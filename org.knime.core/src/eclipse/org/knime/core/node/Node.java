@@ -2493,6 +2493,25 @@ public final class Node implements NodeModelWarningListener {
         table.ensureOpen();
     }
 
+    /***
+     *
+     * Creates a new {@link BufferedDataContainer} with or without {@link RowKey}s.
+     *
+     * @param context {@link ExecutionContext} to be used to create {@link BufferedDataContainer}
+     * @param spec the input {@link DataTableSpec}
+     * @param initDomain <source>true</source> if domain should be initialized with values from input spec.
+     * @param maxCellsInMemory number of maximum cells in memory
+     * @param rowKeys <source>true</source> if rowkeys are part of the {@link BufferedDataContainer}.
+     *
+     * @apiNote not intended to be used by clients
+     * @since 4.2
+     *
+     * @return {@link BufferedDataContainer}
+     */
+    public static BufferedDataContainer invokeCreateDataContainer(final ExecutionContext context,
+        final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory, final boolean rowKeys) {
+        return context.createDataContainer(spec, initDomain, maxCellsInMemory, rowKeys);
+    }
     /** Widens scope of {@link AbstractNodeView#openView(String, Rectangle)} method so it
      * can be called from UI framework components. This method is not meant for
      * public use and may change in future versions.

@@ -391,7 +391,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * the <code>BufferedDataTable</code>.
      * @throws NullPointerException If the spec argument is <code>null</code>.
      */
-    public BufferedDataContainer createDataContainer(final DataTableSpec spec,
+    BufferedDataContainer createDataContainer(final DataTableSpec spec,
         final boolean initDomain, final int maxCellsInMemory, final boolean rowKeys) {
         boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
                 || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);

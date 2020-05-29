@@ -82,6 +82,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -369,7 +370,8 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         // the reference table but does not add any new column we avoid to scan
         // the entire table (nothing is written anyway))
         if (newColCount > 0) {
-            DataContainer container = context.createDataContainer(new DataTableSpec(newColSpecs), true, -1, false);
+            final DataContainer container =
+                Node.invokeCreateDataContainer(context, new DataTableSpec(newColSpecs), true, -1, false);
             assert newColumnFactoryList.size() == newColCount;
             try {
                 if (workerCount <= 0) {
