@@ -69,7 +69,6 @@ import org.knime.core.data.DataCellTypeConverter;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.data.container.filter.TableFilter;
@@ -464,17 +463,19 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         final int factoryCount = newColsFactories.size();
         int r = 0;
         CellFactory facForProgress = factoryCount > 0 ? newColsFactories.iterator().next() : null;
-        for (RowIterator it = table.iterator(); it.hasNext(); r++) {
-            DataRow row = it.next();
-            DataRow append = calcNewCellsForRow(row, newColsProducerMapping);
-            container.addRowToTable(append);
-            if (facForProgress == null) {
-                // no factory added means at least one columns gets type converted.
-                assert !newColsProducerMapping.getConverterToIndexMap().isEmpty();
-            } else {
-                facForProgress.setProgress(r + 1, finalRowCount, row.getKey(), subProgress);
+        try (CloseableRowIterator it = table.iterator()) {
+            for (; it.hasNext(); r++) {
+                DataRow row = it.next();
+                DataRow append = calcNewCellsForRow(row, newColsProducerMapping);
+                container.addRowToTable(append);
+                if (facForProgress == null) {
+                    // no factory added means at least one columns gets type converted.
+                    assert !newColsProducerMapping.getConverterToIndexMap().isEmpty();
+                } else {
+                    facForProgress.setProgress(r + 1, finalRowCount, row.getKey(), subProgress);
+                }
+                subProgress.checkCanceled();
             }
-            subProgress.checkCanceled();
         }
     }
 
