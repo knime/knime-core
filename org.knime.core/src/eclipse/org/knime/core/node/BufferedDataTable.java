@@ -582,8 +582,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
             m_delegate.saveToFile(outFile, s, exec);
         } else {
             if (m_delegate instanceof RearrangeColumnsTable) {
-                final BufferedContainerTable appendTable = (BufferedContainerTable)((RearrangeColumnsTable)m_delegate).getAppendTable();
-                if (appendTable != null) {
+                final ContainerTable containerTable = ((RearrangeColumnsTable)m_delegate).getAppendTable();
+                if (containerTable != null && containerTable instanceof BufferedContainerTable) {
+                    final BufferedContainerTable appendTable = (BufferedContainerTable)containerTable;
                     final TableStoreFormat format = appendTable.getTableStoreFormat();
                     if (!DefaultTableStoreFormat.class.equals(format.getClass())) {
                         // use different identifier to cause old versions of KNIME to fail loading newer workflows
@@ -813,7 +814,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 }
                 if (Arrays.asList(TABLE_TYPE_REARRANGE_COLUMN, TABLE_TYPE_REARRANGE_COLUMN_CUSTOM,
                     TABLE_TYPE_REARRANGE_COLUMN_COMPRESS).contains(tableType)) {
-                    t = new BufferedDataTable(new RearrangeColumnsTable(fileRef, s, tblRep, spec, id, dataRepository),
+                    t = new BufferedDataTable(new RearrangeColumnsTable(fileRef, s, tblRep, spec, id, dataRepository, exec),
                         dataRepository);
                 } else if (tableType.equals(TABLE_TYPE_JOINED)) {
                     JoinedTable jt = JoinedTable.load(s, spec, tblRep, dataRepository);

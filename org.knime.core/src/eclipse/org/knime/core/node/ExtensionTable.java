@@ -53,6 +53,7 @@ import javax.swing.JComponent;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.WrappedTable;
 import org.knime.core.data.container.filter.FilterDelegateRowIterator;
 import org.knime.core.data.container.filter.TableFilter;
@@ -64,7 +65,7 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * defined by {@link KnowsRowCountTable}, ExtensionTables must define a
  * constructor that accepts a single argument of type {@link LoadContext}.
  */
-public abstract class ExtensionTable implements KnowsRowCountTable {
+public abstract class ExtensionTable implements ContainerTable {
 
     private static final String CFG_TABLE_IMPL = "table_implementation";
     private static final String CFG_TABLE_DERIVED_SETTINGS =
@@ -250,7 +251,7 @@ public abstract class ExtensionTable implements KnowsRowCountTable {
      * @throws IOException If reading fails
      * @throws CanceledExecutionException If canceled
      */
-    static ExtensionTable loadExtensionTable(final ReferencedFile fileRef, final DataTableSpec spec,
+    public static ExtensionTable loadExtensionTable(final ReferencedFile fileRef, final DataTableSpec spec,
         final NodeSettingsRO s, final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec)
         throws InvalidSettingsException, IOException, CanceledExecutionException {
 

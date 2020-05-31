@@ -81,6 +81,7 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.ExtensionTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
@@ -136,6 +137,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
 
     private static final String CFG_FLAGS = "table_internal_flags";
 
+    private static final String CFG_APPEND_TABLE_TYPE = "table_type";
     private final DataTableSpec m_spec;
 
     private final BufferedDataTable m_reference;
@@ -173,14 +175,16 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
      *            restore is written using KNIME 1.1.x or before.
      * @param tableID buffer ID of underlying buffer.
      * @param dataRepository Repository of buffers for blob and file store (de)serialization.
+     * @param exec execution monitor
      * @throws IOException If reading the fails.
      * @throws InvalidSettingsException If the settings are invalid.
+     * @throws CanceledExecutionException
      * @noreference
      */
     public RearrangeColumnsTable(final ReferencedFile f, final NodeSettingsRO settings,
         final Map<Integer, BufferedDataTable> tblRep, final DataTableSpec spec, final int tableID,
-        final WorkflowDataRepository dataRepository)
-        throws IOException, InvalidSettingsException {
+        final WorkflowDataRepository dataRepository, final ExecutionMonitor exec)
+        throws IOException, InvalidSettingsException, CanceledExecutionException {
         NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
         int refTableID = subSettings.getInt(CFG_REFERENCE_ID);
         m_reference = BufferedDataTable.getDataTable(tblRep, refTableID, dataRepository);
@@ -218,9 +222,14 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
                 }
                 assert index == appendColCount;
                 DataTableSpec appendSpec = new DataTableSpec(appendColSpecs);
-                CopyOnAccessTask noKeyBufferOnAccessTask =
-                    new CopyOnAccessTask(f, appendSpec, tableID, dataRepository, false);
-                m_appendTable = DataContainer.readFromZipDelayed(noKeyBufferOnAccessTask, appendSpec);
+                // appendTableType = 0 is BufferedContainerTable, tableType = 1 is ExtensionTable
+                if (subSettings.containsKey(CFG_APPEND_TABLE_TYPE) && subSettings.getInt(CFG_APPEND_TABLE_TYPE) == 1) {
+                    m_appendTable = ExtensionTable.loadExtensionTable(f, appendSpec, subSettings, tblRep, exec);
+                } else {
+                    CopyOnAccessTask noKeyBufferOnAccessTask =
+                        new CopyOnAccessTask(f, appendSpec, tableID, dataRepository, false);
+                    m_appendTable = DataContainer.readFromZipDelayed(noKeyBufferOnAccessTask, appendSpec);
+                }
             }
         } else {
             m_appendTable = null;
@@ -652,7 +661,17 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         subSettings.addIntArray(CFG_MAP, m_map);
         subSettings.addBooleanArray(CFG_FLAGS, m_isFromRefTable);
         if (m_appendTable != null) {
-            // subSettings argument is ignored in ContainerTable
+            /* FIXME (later): this logic already is present in BufferedDataTable#save.
+            * Why do we have to replicate this logic here?
+            */
+            if (m_appendTable instanceof BufferedContainerTable) {
+                subSettings.addInt(CFG_APPEND_TABLE_TYPE, 0);
+            } else if (m_appendTable instanceof ExtensionTable) {
+                subSettings.addInt(CFG_APPEND_TABLE_TYPE, 1);
+            } else {
+                throw new IllegalArgumentException("Unsupported append table type in RearrangeColumnTable.");
+            }
+
             m_appendTable.saveToFile(f, subSettings, exec);
         }
     }
