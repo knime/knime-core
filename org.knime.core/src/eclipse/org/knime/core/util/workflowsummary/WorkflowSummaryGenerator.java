@@ -61,6 +61,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -193,6 +194,14 @@ public final class WorkflowSummaryGenerator {
             JSON_MAPPER.setSerializationInclusion(Include.NON_NULL);
         }
         return JSON_MAPPER;
+    }
+
+    private static Integer getGraphDepth(final NodeContainer nc) {
+        Set<NodeGraphAnnotation> nga = nc.getParent().getNodeGraphAnnotation(nc.getID());
+        if (!nga.isEmpty()) {
+            return nga.iterator().next().getDepth();
+        }
+        return null;
     }
 
     @JacksonXmlRootElement
@@ -352,8 +361,9 @@ public final class WorkflowSummaryGenerator {
                     if (config.m_nodesToIgnore != null) {
                         stream = stream.filter(nc -> !config.m_nodesToIgnore.contains(nc.getID()));
                     }
-                    return stream.map(nc -> Node.create(nc, config))
-                        .collect(Collectors.toList());
+                    Comparator<NodeContainer> comp = Comparator.comparing(WorkflowSummaryGenerator::getGraphDepth)
+                        .thenComparing(NodeContainer::getID);
+                    return stream.sorted(comp::compare).map(nc -> Node.create(nc, config)).collect(Collectors.toList());
                 }
 
                 @Override
@@ -467,11 +477,7 @@ public final class WorkflowSummaryGenerator {
 
                 @Override
                 public Integer getGraphDepth() {
-                    Set<NodeGraphAnnotation> nga = nc.getParent().getNodeGraphAnnotation(nc.getID());
-                    if (!nga.isEmpty()) {
-                        return nga.iterator().next().getDepth();
-                    }
-                    return null;
+                    return WorkflowSummaryGenerator.getGraphDepth(nc);
                 }
 
                 @Override
