@@ -214,8 +214,9 @@ public class DataContainerTest extends TestCase {
      * @throws Exception
      */
     public static final void testMemoryAlertWhileRestore() throws Exception {
+        System.gc();
         DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, /* no rows in mem */ 0, false);
-        int count = 1000;
+        int count = 10;
         for (RowIterator it = generateRows(count); it.hasNext();) {
             container.addRowToTable(it.next());
         }
@@ -231,7 +232,7 @@ public class DataContainerTest extends TestCase {
             if (i == count / 2) {
                 synchronized (buffer) {
                     // currently it does nothing as memory alerts while restoring is not supported
-                    MemoryAlertSystem.getInstance().sendMemoryAlert();
+                    MemoryAlertSystem.getInstanceUncollected().sendMemoryAlert();
                 }
             }
             RowIterator pushIterator, otherIterator;
@@ -248,14 +249,15 @@ public class DataContainerTest extends TestCase {
             assertEquals(referenceRow, pushRow);
             assertEquals(referenceRow, otherRow);
         }
-        assertTrue(buffer.isHeldInMemory());
-        assertFalse(tableIterator1.hasNext());
-        assertFalse(tableIterator2.hasNext());
+        // we can't be sure that a table is held in memory, since it might be dropped from the cache at any time
+        // assertTrue("Table has not been restored into memory.", buffer.isHeldInMemory());
+        assertFalse("Iterator has more rows than expected.", tableIterator1.hasNext());
+        assertFalse("Iterator has more rows than expected.", tableIterator2.hasNext());
 
         Thread restoreThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                MemoryAlertSystem.getInstance().sendMemoryAlert();
+                MemoryAlertSystem.getInstanceUncollected().sendMemoryAlert();
             }
         }, "Buffer restore");
 
@@ -270,7 +272,8 @@ public class DataContainerTest extends TestCase {
             assertEquals(referenceRow, row);
         }
         restoreThread.join();
-        assertTrue(buffer.isHeldInMemory());
+        // we can't be sure that a table is held in memory, since it might be dropped from the cache at any time
+        // assertTrue("Table has not been restored into memory.", buffer.isHeldInMemory());
     }
 
     private static RowIterator generateRows(final int count) {
@@ -589,9 +592,9 @@ public class DataContainerTest extends TestCase {
             row = null;
         }
         container.close();
-        final BufferedContainerTable table = (BufferedContainerTable) container.getBufferedTable();
-        assertTrue(table.getBuffer().isFlushedToDisk());
+        assertTrue(container.getBufferedTable().getBuffer().isFlushedToDisk());
         final Throwable[] throwables = new Throwable[1];
+        final ContainerTable table = container.getBufferedTable();
         table.restoreIntoMemory();
         // different iterators restore the content, each of which one row
         RowIterator[] its = new RowIterator[10];
@@ -709,7 +712,7 @@ public class DataContainerTest extends TestCase {
     @Test(timeout = 5000)
     public void testWriteRead() throws IOException, CanceledExecutionException, InterruptedException {
         // (1) create table
-        final BufferedContainerTable writeTable = generateMediumSizedTable();
+        final ContainerTable writeTable = generateMediumSizedTable();
 
         // (2) create file to write to / read from and start monitoring file creation and deletion in temp dir
         final File file = FileUtil.createTempFile("testWriteStream", ".zip");
@@ -777,7 +780,7 @@ public class DataContainerTest extends TestCase {
      *
      * @return a small-sized table
      */
-    static BufferedContainerTable generateSmallSizedTable() {
+    static ContainerTable generateSmallSizedTable() {
         // in particular, we simply instantiate a tiny container and add a slighlty larger number of rows to it
         final DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, 20, false);
         final int count = 5;
@@ -785,7 +788,7 @@ public class DataContainerTest extends TestCase {
             container.addRowToTable(it.next());
         }
         container.close();
-        return (BufferedContainerTable)container.getBufferedTable();
+        return container.getBufferedTable();
     }
 
     /**
@@ -794,7 +797,7 @@ public class DataContainerTest extends TestCase {
      *
      * @return a medium-sized table
      */
-    static BufferedContainerTable generateMediumSizedTable() {
+    static ContainerTable generateMediumSizedTable() {
         // in particular, we simply instantiate a tiny container and add a slighlty larger number of rows to it
         final DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, 10, false);
         final int count = 20;
@@ -802,7 +805,7 @@ public class DataContainerTest extends TestCase {
             container.addRowToTable(it.next());
         }
         container.close();
-        return (BufferedContainerTable)container.getBufferedTable();
+        return container.getBufferedTable();
     }
 
     static DataRow createRandomRow(final int index, final int colCount, final Random rand1,
