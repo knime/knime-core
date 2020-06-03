@@ -882,90 +882,73 @@ public class KnimeStringUtils {
     public static String urlEncodeScope(final String scope, final String str, final String pathDelimiter,
         final String charsetName) {
 
+        final boolean isPath = "path".equalsIgnoreCase(scope.trim());
+        if (!isPath && !"query".equalsIgnoreCase(scope.trim())) {
+            LOGGER.error(String.format("Scope %s is not supported. Use \"path\" or \"query\".", scope));
+            return str;
+        }
+
+        final char[] chars = str.toCharArray();
+        int lastFixedPos = -1;
         URI uri = null;
-        { // replace forbidden characters step by step until a valid URI is produced
-
-            char[] chars = new char[str.length()];
-            str.getChars(0, str.length()-1, chars, 0);
-            int lastFixedPos = -1;
-
-            boolean works = false;
-            boolean aborted = false;
-            do {
-                try {
-                    uri = new URI(new String(chars));
-                    works = true;
-                } catch (URISyntaxException ex) {
-                    works = false;
-                    int index = ex.getIndex();
-                    // when the fixed applied in the previous iteration didn't work, abort
-                    aborted = index == lastFixedPos;
-                    chars[index] = 'a';
-                    lastFixedPos = index;
+        // replace forbidden characters step by step until a valid URI is produced
+        while (uri == null) {
+            try {
+                uri = new URI(new String(chars));
+            } catch (URISyntaxException ex) {
+                final int index = ex.getIndex();
+                // when the fix applied in the previous iteration didn't work, abort
+                if (index == -1 || index == lastFixedPos) {
+                    return str;
                 }
-            } while (!works && !aborted);
-
-            if (aborted) {
-                return str;
+                chars[index] = 'a';
+                lastFixedPos = index;
             }
-
+        }
+        
+        if ((isPath && uri.getPath() == null) || (!isPath && uri.getQuery() == null)) {
+            return str;
         }
 
         // the URI object won't give us the offsets of the parsed portions, but we can determine them by summing up
         // the lengths of the parts that come before path and query, respectively
 
-        int pathStart = 0, pathEndExclusive, queryBegin, queryEndExclusive;
-        { // determine the begin and end offsets of query and path
-
-            if (uri.getScheme() != null) {
-                pathStart += uri.getScheme().length() + 1; // e.g., "https" + ":"
-            }
-            // if the user info, host, or port is present, the double slash is mandatory
-            if (uri.getAuthority() != null) {
-                pathStart += 2 + uri.getAuthority().length(); // e.g., "//" + "user@host.tld:8080"
-            }
-            pathEndExclusive = pathStart;
-            if (uri.getPath() != null) {
-                pathEndExclusive += uri.getPath().length(); // e.g., /dir/script/
-            }
-            queryBegin = pathEndExclusive;
-            queryEndExclusive = queryBegin;
-            if (uri.getQuery() != null) {
-                queryBegin += 1; // do not include query delimiter "?" in the query
-                queryEndExclusive = queryBegin + uri.getQuery().length(); // e.g., "q=search"
-            }
+        // determine the begin and end offsets of the path
+        int pathStart = 0, pathEndExclusive;
+        if (uri.getScheme() != null) {
+            pathStart += uri.getScheme().length() + 1; // e.g., "https" + ":"
+        }
+        // if the user info, host, or port is present, the double slash is mandatory
+        if (uri.getAuthority() != null) {
+            pathStart += 2 + uri.getAuthority().length(); // e.g., "//" + "user@host.tld:8080"
+        }
+        pathEndExclusive = pathStart;
+        if (uri.getPath() != null) {
+            pathEndExclusive += uri.getPath().length(); // e.g., /dir/script/
         }
 
-        if ("path".equalsIgnoreCase(scope.trim())) {
-
-            if(uri.getPath() == null) {
-                return str;
-            }
-
+        if (isPath) {
             // don't use a stream here, because it may be called a million times during processing a table
-            String path = str.substring(pathStart, pathEndExclusive);
+            final String path = str.substring(pathStart, pathEndExclusive);
             // set limit to -1 in order to catch trailing delimiters
-            String[] parts = path.split(pathDelimiter, -1);
+            final String[] parts = path.split(pathDelimiter, -1);
             for (int i = 0; i < parts.length; i++) {
                 parts[i] = urlEncode(parts[i], charsetName).replace("+", "%20");
             }
             final String encodedPath = String.join(pathDelimiter, parts);
 
             return str.substring(0, pathStart) + encodedPath + str.substring(pathEndExclusive);
-
-        } else if ("query".equalsIgnoreCase(scope.trim())) {
-
-            if(uri.getQuery() == null) {
-                return str;
-            }
-
-            String encodedQuery = urlEncode(str.substring(queryBegin, queryEndExclusive), charsetName);
-
-            return str.substring(0, queryBegin) + encodedQuery + str.substring(queryEndExclusive);
-
-        } else {
-            LOGGER.error(String.format("Scope %s is not supported. Use \"path\" or \"query\".", scope));
-            return str;
         }
+
+        int queryBegin = pathEndExclusive;
+        int queryEndExclusive = queryBegin;
+        // determine the begin and end offsets of the query
+        if (uri.getQuery() != null) {
+            queryBegin += 1; // do not include query delimiter "?" in the query
+            queryEndExclusive = queryBegin + uri.getQuery().length(); // e.g., "q=search"
+        }
+        final String encodedQuery = urlEncode(str.substring(queryBegin, queryEndExclusive), charsetName);
+
+        return str.substring(0, queryBegin) + encodedQuery + str.substring(queryEndExclusive);
     }
 }
