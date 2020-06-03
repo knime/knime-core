@@ -46,6 +46,11 @@
 							</requirement>
 							<requirement>
 								<type>eclipse-feature</type>
+								<id>org.knime.features.javasnippet</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
 								<id>org.knime.features.workbench</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
