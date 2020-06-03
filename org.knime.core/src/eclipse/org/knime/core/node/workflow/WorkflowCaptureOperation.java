@@ -339,6 +339,14 @@ public final class WorkflowCaptureOperation {
     }
 
     private static FlowVirtualScopeContext getVirtualScopeContext(final NodeContainer nc) {
-        return nc.getFlowObjectStack().peek(FlowVirtualScopeContext.class);
+        FlowVirtualScopeContext context = nc.getFlowObjectStack().peek(FlowVirtualScopeContext.class);
+        if (context != null || (nc instanceof WorkflowManager)
+            && (((WorkflowManager)nc).isProject() || ((WorkflowManager)nc).isComponentProjectWFM())) {
+            // context is given or we are already at the workflow root level
+            return context;
+        } else {
+            // if there is no virtual scope, recursively check the parent(s), too
+            return getVirtualScopeContext((NodeContainer)nc.getDirectNCParent());
+        }
     }
 }
