@@ -337,13 +337,13 @@ public class WindowCacheTableTest extends TestCase {
         int offset = 0;
         List<DataRow> rows = cache.getRows(offset, rowsToFetch, new ExecutionMonitor());
         assertEquals("Number of rows returned should be number of rows requested", rowsToFetch, rows.size());
-        assertEquals("Should be first row in table", CONT.getTable().iterator().next(), rows.get(0));
+        checkRowEquals(CONT.getTable().iterator().next(), rows.get(0));
 
         // get chunk
         rowsToFetch = 10;
         rows = cache.getRows(offset, rowsToFetch, new ExecutionMonitor());
         assertEquals("Number of rows returned should be number of rows requested", rowsToFetch, rows.size());
-        assertEquals("Should be first row in table", CONT.getTable().iterator().next(), rows.get(0));
+        checkRowEquals(CONT.getTable().iterator().next(), rows.get(0));
 
         // get chunk with offset
         offset = NUM_ROWS / 2;
@@ -353,7 +353,7 @@ public class WindowCacheTableTest extends TestCase {
         for (int i = 0; i < offset; i++) {
             iterator.next();
         }
-        assertEquals("Should be row at offset", iterator.next(), rows.get(0));
+        checkRowEquals(iterator.next(), rows.get(0));
 
         // get last row
         offset = NUM_ROWS - 1;
@@ -398,7 +398,14 @@ public class WindowCacheTableTest extends TestCase {
         for (int i = 0; i < offset; i++) {
             iterator.next();
         }
-        assertEquals("Should be row at offset", iterator.next(), rows.get(0));
+        checkRowEquals(iterator.next(), rows.get(0));
+    }
+
+    private void checkRowEquals(final DataRow expected, final DataRow actual) {
+        assertEquals("Rowkeys not identical", expected.getKey(), actual.getKey());
+        for (int j = 0; j < expected.getNumCells(); j++) {
+            assertEquals("Cells not identical", expected.getCell(j), actual.getCell(j));
+        }
     }
 
     /**
