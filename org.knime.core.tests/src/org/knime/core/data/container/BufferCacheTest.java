@@ -151,15 +151,17 @@ public class BufferCacheTest {
         // invoke garbage collection
         MemoryAlertSystemTest.forceGC();
 
-        // check that all hot tables are still in the cache (due to them being softly referenced)
         for (Pair<Buffer, WeakReference<List<BlobSupportDataRow>>> weakenedHotTable : weakenedHotTables) {
             final Buffer buffer = weakenedHotTable.getFirst();
             final List<BlobSupportDataRow> list = weakenedHotTable.getSecond().get();
-            final Optional<List<BlobSupportDataRow>> listFromCache = cache.get(buffer);
-            Assert.assertNotNull("Reference to list has been dropped unexpectedly.", list);
-            Assert.assertTrue("List could not be retrieved from cache.", listFromCache.isPresent());
-            Assert.assertEquals("List retrieved from cache differs from list put into cache.", list,
-                listFromCache.get());
+            // the table is only softly referenced in the cache, so it could be garbage-collected
+            if (list != null) {
+                // check that all hot tables are still in the cache
+                final Optional<List<BlobSupportDataRow>> listFromCache = cache.get(buffer);
+                Assert.assertTrue("List could not be retrieved from cache.", listFromCache.isPresent());
+                Assert.assertEquals("List retrieved from cache differs from list put into cache.", list,
+                    listFromCache.get());
+            }
         }
 
         // check that all cold tables have been dropped (due to them being only weakly referenced)
