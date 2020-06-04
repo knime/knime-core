@@ -3084,8 +3084,9 @@ public final class WorkflowManager extends NodeContainer
                 FlowScopeContext fsc = flowObjectStack.peek(FlowScopeContext.class);
 
                 // if the node is in a subnode the subnode may be part of restored loop, see AP-7585
-                FlowLoopContext subnodeOuterFlowLoopContext = flowObjectStack
-                    .peekOptional(FlowSubnodeScopeContext.class).map(s -> s.getOuterFlowLoopContext()).orElse(null);
+                FlowLoopContext subnodeOuterFlowLoopContext =
+                    flowObjectStack.peekOptional(FlowSubnodeScopeContext.class)
+                        .map(s -> s.getOuterFlowScopeContext(FlowLoopContext.class)).orElse(null);
 
                 if (fsc instanceof RestoredFlowLoopContext
                     || subnodeOuterFlowLoopContext instanceof RestoredFlowLoopContext) {

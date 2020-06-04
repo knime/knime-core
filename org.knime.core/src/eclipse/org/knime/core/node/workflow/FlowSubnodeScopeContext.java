@@ -66,15 +66,15 @@ final class FlowSubnodeScopeContext extends FlowScopeContext {
      * is nested.
      * @return flow loop context or null
      */
-    FlowLoopContext getOuterFlowLoopContext() {
+    <C extends FlowScopeContext> C getOuterFlowScopeContext(final Class<C> contextClass) {
         FlowObjectStack flowObjectStack = m_snc.getFlowObjectStack();
-        FlowLoopContext flowLoopContext = flowObjectStack.peek(FlowLoopContext.class);
-        if (flowLoopContext != null) {
-            return flowLoopContext;
+        C flowScopeContext = flowObjectStack.peek(contextClass);
+        if (flowScopeContext != null) {
+            return flowScopeContext;
         }
         FlowSubnodeScopeContext outerSubnodeScope = flowObjectStack.peek(FlowSubnodeScopeContext.class);
         if (outerSubnodeScope != null) {
-            return outerSubnodeScope.getOuterFlowLoopContext();
+            return outerSubnodeScope.getOuterFlowScopeContext(contextClass);
         }
         return null;
     }

@@ -55,6 +55,7 @@ import java.util.function.Function;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.workflow.FlowScopeContext;
+import org.knime.core.node.workflow.NativeNodeContainer;
 
 /**
  * Marks a virtual scope, i.e. a scope (a set of nodes) that is not permanently present and deleted after the execution
@@ -68,6 +69,8 @@ import org.knime.core.node.workflow.FlowScopeContext;
 public final class FlowVirtualScopeContext extends FlowScopeContext {
 
     private Consumer<Function<ExecutionContext, UUID>> m_callback;
+
+    private NativeNodeContainer m_nc;
 
     /**
      * Sets the callback to get informed about the ids of port objects that have been put into the
@@ -89,6 +92,20 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
      */
     public Consumer<Function<ExecutionContext, UUID>> getPortObjectIDCallback() {
         return m_callback;
+    }
+
+    /**
+     * TODO must be set!
+     * Node associated with this virtual context (e.g., to use its file store handler)
+     *
+     * @param nc
+     */
+    public void setNodeContainer(final NativeNodeContainer nc) {
+        m_nc= nc;
+    }
+
+    public NativeNodeContainer getNodeContainer() {
+        return m_nc;
     }
 
 }

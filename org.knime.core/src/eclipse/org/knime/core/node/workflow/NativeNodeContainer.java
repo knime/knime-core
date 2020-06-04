@@ -103,6 +103,7 @@ import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResul
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
+import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.w3c.dom.Element;
 
 /**
@@ -662,12 +663,17 @@ public class NativeNodeContainer extends SingleNodeContainer {
      */
     public void initFileStoreHandlerReference(final NativeNodeContainer nnc) {
         IWriteFileStoreHandler targetFSHandler = (IWriteFileStoreHandler)nnc.getNode().getFileStoreHandler();
+        initWriteFileStoreHandlerReference(targetFSHandler);
+    }
+
+    private IFileStoreHandler initWriteFileStoreHandlerReference(final IWriteFileStoreHandler targetFSHandler) {
         IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
         if (oldFSHandler instanceof IWriteFileStoreHandler) {
             oldFSHandler.clearAndDispose();
         }
         IWriteFileStoreHandler newFSHandler = new ReferenceWriteFileStoreHandler(targetFSHandler, getID());
         m_node.setFileStoreHandler(newFSHandler);
+        return newFSHandler;
     }
 
     /**
@@ -679,15 +685,43 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * @since 4.1
      */
     public void initLocalFileStoreHandler() {
-        final FlowObjectStack flowObjectStack = getFlowObjectStack();
-        FlowLoopContext upstreamFLC = flowObjectStack.peek(FlowLoopContext.class);
-        if (upstreamFLC == null) {
-            // if node is contained in subnode check if the subnode is in a loop (see AP-5667)
-            final FlowSubnodeScopeContext subnodeSC = flowObjectStack.peek(FlowSubnodeScopeContext.class);
-            if (subnodeSC != null) {
-                upstreamFLC = subnodeSC.getOuterFlowLoopContext();
-            }
+        IFileStoreHandler newFSHandler = initLoopScopeFileStoreHandler();
+        if (newFSHandler == null) {
+            newFSHandler = initVirtualScopeFileStoreHandler();
         }
+        if (newFSHandler == null) {
+            newFSHandler = initDefaultFileStoreHandler();
+        }
+        m_node.setFileStoreHandler(newFSHandler);
+    }
+
+    /**
+     * Inits the default file store handler for a node, i.e. file stores are stored with the node itself.
+     *
+     * @return the file store handler, never <code>null</code>
+     */
+    private IFileStoreHandler initDefaultFileStoreHandler() {
+        // node is not a start node and not contained in a loop
+        IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
+        if (oldFSHandler instanceof IWriteFileStoreHandler) {
+            clearFileStoreHandler();
+            /*assert false : "Node " + getNameWithID() + " must not have file store handler at this point (not a "
+            + "loop start and not contained in loop), disposing old handler";*/
+        }
+        IWriteFileStoreHandler newFSHandler = new WriteFileStoreHandler(getNameWithID(), UUID.randomUUID());
+        newFSHandler.addToRepository(getParent().getWorkflowDataRepository());
+        return newFSHandler;
+    }
+
+    /**
+     * Inits the file store handler if node is part of a loop scope (including start and end).
+     *
+     * @return the file store handler or <code>null</code> if not a loop scope
+     */
+    private IFileStoreHandler initLoopScopeFileStoreHandler() {
+        final FlowObjectStack flowObjectStack = getFlowObjectStack();
+        FlowLoopContext upstreamFLC = getFlowScopeContextFromHierarchy(FlowLoopContext.class, flowObjectStack);
+
         NodeID outerStartNodeID = upstreamFLC == null ? null : upstreamFLC.getHeadNode();
         // loop start nodes will put their loop context on the outgoing flow object stack
         assert !getID().equals(outerStartNodeID) : "Loop start on incoming flow stack can't be node itself";
@@ -702,14 +736,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
         WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
         if (innerFLC == null && upstreamFLC == null) {
-            // node is not a start node and not contained in a loop
-            if (oldFSHandler instanceof IWriteFileStoreHandler) {
-                clearFileStoreHandler();
-                /*assert false : "Node " + getNameWithID() + " must not have file store handler at this point (not a "
-                + "loop start and not contained in loop), disposing old handler";*/
-            }
-            newFSHandler = new WriteFileStoreHandler(getNameWithID(), UUID.randomUUID());
-            newFSHandler.addToRepository(dataRepository);
+            return null;
         } else if (innerFLC != null) {
             // node is a loop start node
             int loopIteration = innerFLC.getIterationIndex();
@@ -752,8 +779,46 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 newFSHandler.addToRepository(dataRepository);
             }
         }
-        if (newFSHandler != null) {
-            m_node.setFileStoreHandler(newFSHandler);
+        return newFSHandler;
+    }
+
+    /**
+     * Gets the flow scope context of the given class, also crossing 'subnode-boundaries' if this node is part of a
+     * subnode/component.
+     *
+     * @return the context or <code>null</node> if there is none of the given class
+     */
+    private static <C extends FlowScopeContext> C getFlowScopeContextFromHierarchy(final Class<C> contextClass,
+        final FlowObjectStack flowObjectStack) {
+        C context = flowObjectStack.peek(contextClass);
+        if (context == null) {
+            // if node is contained in subnode check if the subnode is in a loop (see AP-5667)
+            final FlowSubnodeScopeContext subnodeSC = flowObjectStack.peek(FlowSubnodeScopeContext.class);
+            if (subnodeSC != null) {
+                context = subnodeSC.getOuterFlowScopeContext(contextClass);
+            }
+        }
+        return context;
+    }
+
+    /**
+     * Inits file store handler for nodes that are part of a {@link FlowVirtualScopeContext}.
+     *
+     * @return the file store handler or <code>null</code> if not a virtual scope
+     */
+    private IFileStoreHandler initVirtualScopeFileStoreHandler() {
+        FlowVirtualScopeContext virtualScope =
+            getFlowScopeContextFromHierarchy(FlowVirtualScopeContext.class, getFlowObjectStack());
+        if (virtualScope != null) {
+            IFileStoreHandler fsh = virtualScope.getNodeContainer().getNode().getFileStoreHandler();
+            if (fsh instanceof IWriteFileStoreHandler) {
+                return initWriteFileStoreHandlerReference((IWriteFileStoreHandler)fsh);
+            } else {
+                // TODO double-check: can we really just re-use this file store handler
+                return fsh;
+            }
+        } else {
+            return null;
         }
     }
 

@@ -340,8 +340,8 @@ public final class WorkflowCaptureOperation {
 
     private static FlowVirtualScopeContext getVirtualScopeContext(final NodeContainer nc) {
         FlowVirtualScopeContext context = nc.getFlowObjectStack().peek(FlowVirtualScopeContext.class);
-        if (context != null || (nc instanceof WorkflowManager)
-            && (((WorkflowManager)nc).isProject() || ((WorkflowManager)nc).isComponentProjectWFM())) {
+        if (context != null || (nc instanceof WorkflowManager
+            && (((WorkflowManager)nc).isProject() || ((WorkflowManager)nc).isComponentProjectWFM()))) {
             // context is given or we are already at the workflow root level
             return context;
         } else {

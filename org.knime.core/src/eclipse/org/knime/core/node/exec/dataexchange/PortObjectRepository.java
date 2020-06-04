@@ -73,6 +73,8 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.filestore.FileStorePortObject;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -128,6 +130,9 @@ public final class PortObjectRepository {
 
     /**
      * Adds a copy of the passed port object (by using the provided execution context).
+     *
+     * Note: if the port object is of type {@link FileStorePortObject} the
+     * {@link NotInWorkflowWriteFileStoreHandler} will be used.
      *
      * @param po the port object to copy and add
      * @param exec the execution context for the copy
