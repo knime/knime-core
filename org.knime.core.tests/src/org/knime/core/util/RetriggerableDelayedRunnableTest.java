@@ -64,28 +64,23 @@ public class RetriggerableDelayedRunnableTest extends TestCase {
     public void testEarlyRetrigger() {
         final AtomicBoolean fired = new AtomicBoolean(false);
         final AtomicBoolean retriggered = new AtomicBoolean(false);
-        final Runnable trigger = () -> {
-            fired.set(true);
-        };
-        final RetriggerableDelayedRunnable triggerable = new RetriggerableDelayedRunnable(trigger, 1000);
-        final Runnable retrigger = () -> {
-            try {
-                Thread.sleep(300);
-            } catch (final InterruptedException ie) { }
-            retriggered.set(triggerable.retrigger());
-        };
+        final Runnable trigger = () -> fired.set(true);
+        final RetriggerableDelayedRunnable triggerable = new RetriggerableDelayedRunnable(trigger, 300);
 
         (new Thread(triggerable)).start();
-        (new Thread(retrigger)).start();
+        try {
+            Thread.sleep(200);
+        } catch (final InterruptedException ie) { }
+        retriggered.set(triggerable.retrigger());
 
         try {
-            Thread.sleep(1100);
+            Thread.sleep(200);
         } catch (final InterruptedException ie) { }
         assertFalse("Firing of the trigger should not have happened yet.", fired.get());
-        assertTrue("Retiggering should have been successful.", retriggered.get());
+        assertTrue("Retriggering should have been successful.", retriggered.get());
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(200);
         } catch (final InterruptedException ie) { }
         assertTrue("Firing of the trigger should have happened.", fired.get());
     }
@@ -96,28 +91,19 @@ public class RetriggerableDelayedRunnableTest extends TestCase {
     public void testLateRetrigger() {
         final AtomicBoolean fired = new AtomicBoolean(false);
         final AtomicBoolean retriggered = new AtomicBoolean(false);
-        final Runnable trigger = () -> {
-            fired.set(true);
-        };
-        final RetriggerableDelayedRunnable triggerable = new RetriggerableDelayedRunnable(trigger, 1000);
-        final Runnable retrigger = () -> {
-            try {
-                Thread.sleep(1300);
-            } catch (final InterruptedException ie) { }
-            retriggered.set(triggerable.retrigger());
-        };
+        final Runnable trigger = () -> fired.set(true);
+        final RetriggerableDelayedRunnable triggerable = new RetriggerableDelayedRunnable(trigger, 100);
 
         (new Thread(triggerable)).start();
-        (new Thread(retrigger)).start();
+        try {
+            Thread.sleep(200);
+        } catch (final InterruptedException ie) { }
+        retriggered.set(triggerable.retrigger());
 
         try {
-            Thread.sleep(1100);
+            Thread.sleep(200);
         } catch (final InterruptedException ie) { }
         assertTrue("Firing of the trigger should have happened yet.", fired.get());
-
-        try {
-            Thread.sleep(500);
-        } catch (final InterruptedException ie) { }
         assertFalse("Retiggering should not have been successful.", retriggered.get());
     }
 }
