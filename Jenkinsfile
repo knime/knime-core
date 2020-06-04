@@ -4,7 +4,6 @@ def BN = BRANCH_NAME == "master" || BRANCH_NAME.startsWith("releases/") ? BRANCH
 library "knime-pipeline@$BN"
 
 properties([
-	// provide a list of upstream jobs which should trigger a rebuild of this job
 	pipelineTriggers([upstream(
 		'knime-shared/' + env.BRANCH_NAME.replaceAll('/', '%2F')
 	)]),
@@ -39,9 +38,10 @@ try {
 
     workflowTests.runTests(
         dependencies: [
-            repositories: ['knime-core', 'knime-json', 'knime-python']
-        ],
-        withAssertions: true
+            repositories: ['knime-json', 'knime-python', 'knime-filehandling',
+                'knime-datageneration', 'knime-jep', 'knime-js-base', 'knime-cloud', 'knime-database', 'knime-kerberos',
+				'knime-textprocessing', 'knime-dl4j', 'knime-virtual', 'knime-r', 'knime-streaming', 'knime-cluster']
+        ]
     )
 
 	stage('Sonarqube analysis') {
@@ -49,10 +49,9 @@ try {
 		workflowTests.runSonar([])
 	}
 } catch (ex) {
-	currentBuild.result = 'FAILED'
+	currentBuild.result = 'FAILURE'
 	throw ex
 } finally {
 	notifications.notifyBuild(currentBuild.result);
 }
-
- /* vim: set ts=4: */
+/* vim: set shiftwidth=4 expandtab smarttab: */
