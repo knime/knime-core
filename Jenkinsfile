@@ -39,7 +39,7 @@ try {
 
     workflowTests.runTests(
         dependencies: [
-            repositories: ['knime-core', 'knime-json', 'knime-python', 'knime-product']
+            repositories: ['knime-core', 'knime-json', 'knime-python']
         ],
         withAssertions: true
     )
