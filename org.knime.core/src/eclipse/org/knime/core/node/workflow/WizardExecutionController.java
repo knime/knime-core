@@ -48,8 +48,10 @@ package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -98,6 +100,8 @@ public final class WizardExecutionController extends WebResourceController imple
 
     private boolean m_hasExecutionStarted = false;
 
+    private final Map<String, String> m_additionalProperties;
+
     /** Created from workflow.
      * @param manager ...
      */
@@ -105,6 +109,7 @@ public final class WizardExecutionController extends WebResourceController imple
         super(manager);
         m_promptedSubnodeIDSuffixes = new Stack<>();
         m_waitingSubnodes = new ArrayList<>();
+        m_additionalProperties = new HashMap<>();
     }
 
     /** Restored from settings.
@@ -121,6 +126,12 @@ public final class WizardExecutionController extends WebResourceController imple
         String[] waitingSubnodes = settings.getStringArray("waitingSubnodes", new String[0]);
         Stream.of(waitingSubnodes).map(s -> NodeIDSuffix.fromString(s).prependParent(manager.getID()))
             .forEach(id -> m_waitingSubnodes.add(id));
+        if (settings.containsKey("additionalProperties")) {
+            NodeSettingsRO additionalProps = settings.getNodeSettings("additionalProperties");
+            for (String key : additionalProps) {
+                m_additionalProperties.put(key, additionalProps.getString(key));
+            }
+        }
     }
 
     /**
@@ -373,6 +384,38 @@ public final class WizardExecutionController extends WebResourceController imple
         }
     }
 
+    /**
+     * Additional properties to be stored with the wizard execution controller.
+     *
+     * @param key the property key
+     * @param value  the property value
+     * @since 4.2
+     */
+    public void setProperty(final String key, final String value) {
+        m_additionalProperties.put(key, value);
+    }
+
+    /**
+     * Retrieves a property stored with the wizard execution controller.
+     *
+     * @param key the key of the property
+     * @return the value or an empty optional if there is no value for the given key
+     * @since 4.2
+     */
+    public Optional<String> getProperty(final String key) {
+        return Optional.ofNullable(m_additionalProperties.get(key));
+    }
+
+    /**
+     * Removes a property.
+     *
+     * @param key the property key to remove
+     * @since 4.2
+     */
+    public void removeProperty(final String key) {
+        m_additionalProperties.remove(key);
+    }
+
     private void stepBackInternal() {
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
@@ -406,6 +449,11 @@ public final class WizardExecutionController extends WebResourceController imple
         NodeID parentId = m_manager.getID();
         settings.addStringArray("waitingSubnodes",
             m_waitingSubnodes.stream().map(id -> NodeIDSuffix.create(parentId, id).toString()).toArray(String[]::new));
+        if (!m_additionalProperties.isEmpty()) {
+            NodeSettingsWO additionalProps = settings.addNodeSettings("additionalProperties");
+            m_additionalProperties.entrySet().stream()
+                .forEach(e -> additionalProps.addString(e.getKey(), e.getValue()));
+        }
     }
 
     @Override
