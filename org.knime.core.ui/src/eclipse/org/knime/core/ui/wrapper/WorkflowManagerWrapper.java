@@ -77,8 +77,10 @@ import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.node.workflow.action.ReplaceNodeResult;
 import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.UndoableUI;
 import org.knime.core.ui.node.workflow.WorkflowContextUI;
 import org.knime.core.ui.node.workflow.WorkflowCopyUI;
 import org.knime.core.ui.node.workflow.WorkflowInPortUI;
@@ -136,8 +138,20 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     }
 
     @Override
-    public void replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
-        unwrap().replaceNode(id, creationConfig);
+    public UndoableUI replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
+        ReplaceNodeResult res = unwrap().replaceNode(id, creationConfig);
+        return new UndoableUI() {
+
+            @Override
+            public void undo() {
+                res.undo();
+            }
+
+            @Override
+            public boolean canUndo() {
+                return res.canUndo();
+            }
+        };
     }
 
     @Override

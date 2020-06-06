@@ -56,6 +56,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.UndoableUI;
 import org.knime.core.ui.node.workflow.WorkflowCopyUI;
 import org.knime.core.ui.node.workflow.WorkflowCopyWithOffsetUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
@@ -104,7 +105,7 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
      * {@inheritDoc}
      */
     @Override
-    default void replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
+    default UndoableUI replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
         throw new UnsupportedOperationException("Please use the async method instead.");
     }
 
@@ -116,7 +117,7 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
      * @return void as future - throws a {@link OperationNotAllowedException} if operation couldn't be performed (e.g.
      *         because there are executing node's successors) on {@link CompletableFutureEx#getOrThrow()}
      */
-    CompletableFutureEx<Void, OperationNotAllowedException> replaceNodeAsync(NodeID id,
+    CompletableFutureEx<UndoableUI, OperationNotAllowedException> replaceNodeAsync(NodeID id,
         ModifiableNodeCreationConfiguration creationConfig);
 
     /**

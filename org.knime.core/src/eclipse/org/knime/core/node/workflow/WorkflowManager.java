@@ -179,6 +179,7 @@ import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
+import org.knime.core.node.workflow.action.ReplaceNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 import org.knime.core.node.workflow.capture.WorkflowFragment;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
@@ -819,14 +820,15 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param id the id of the node to replace
      * @param creationConfig node creation configuration to create the new node, can be <code>null</code>
+     * @return a result that contains all information necessary to undo the operation
      * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
      * @throws IllegalArgumentException if there is no node for the given id
      * @since 4.2
      */
-    public void replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
+    public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
-             NativeNodeContainer nnc = (NativeNodeContainer)getNodeContainer(id);
         try (WorkflowLock lock = lock()) {
+            NativeNodeContainer nnc = (NativeNodeContainer)getNodeContainer(id);
             // keep the node's settings
             final NodeSettings settings = new NodeSettings("node settings");
             try {
@@ -842,6 +844,10 @@ public final class WorkflowManager extends NodeContainer
             Set<ConnectionContainer> connections = new LinkedHashSet<>();
             connections.addAll(getIncomingConnectionsFor(id));
             connections.addAll(getOutgoingConnectionsFor(id));
+
+            // keep old node creation config
+            ModifiableNodeCreationConfiguration oldNodeCreationConfig =
+                nnc.getNode().getCopyOfCreationConfig().orElse(null);
 
             // delete the old node
             removeNode(id);
@@ -862,13 +868,18 @@ public final class WorkflowManager extends NodeContainer
             nnc.getNodeAnnotation().copyFrom(nodeAnnotation.getData(), true);
 
             // restore connections if possible
+            List<ConnectionContainer> removedConnections = new ArrayList<>();
             for (ConnectionContainer cc : connections) {
                 if (canAddConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort())) {
                     ConnectionContainer newCC =
                         addConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort());
                     newCC.setUIInfo(cc.getUIInfo());
+                } else {
+                    // record the connections that couldn't be added for the undo operation
+                    removedConnections.add(cc);
                 }
             }
+            return new ReplaceNodeResult(this, id, removedConnections, oldNodeCreationConfig);
         }
     }
 

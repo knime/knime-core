@@ -199,10 +199,11 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      *
      * @param id the id of the node to replace
      * @param creationConfig node creation configuration to create the new node
+     * @return undo object
      * @since 4.2
      * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
      */
-    void replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig);
+    UndoableUI replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig);
 
 //    /** Create new Node based on given factory uid and add to workflow.
 //     *

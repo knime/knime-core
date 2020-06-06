@@ -48,16 +48,19 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
+import org.knime.core.node.workflow.action.ReplaceNodeResult;
 
 /**
  * Tests the {@link WorkflowManager#canReplaceNode(NodeID)} and
@@ -67,13 +70,11 @@ import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
  */
 public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
 
+    private NodeID m_datagenerator_1;
+
     private NodeID m_concatenate_2;
 
     private NodeID m_metanode_4;
-
-    @SuppressWarnings("javadoc")
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 
     /**
      * Load workflow.
@@ -83,6 +84,7 @@ public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
     @Before
     public void setup() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
+        m_datagenerator_1 = new NodeID(baseID, 1);
         m_concatenate_2 = new NodeID(baseID, 2);
         m_metanode_4 = new NodeID(baseID, 4);
     }
@@ -124,9 +126,42 @@ public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
         assertThat("missing out connections", wfm.getOutgoingConnectionsFor(m_concatenate_2).size(), is(1));
 
         // test if node cannot be replaced -> exception
-        exception.expect(IllegalStateException.class);
-        exception.expectMessage("Node cannot be replaced");
-        wfm.replaceNode(m_metanode_4, creationConfig);
+        IllegalStateException e =
+            assertThrows(IllegalStateException.class, () -> wfm.replaceNode(m_metanode_4, creationConfig));
+        assertThat("unexpected exception message", e.getMessage(), is("Node cannot be replaced"));
+    }
+
+    /**
+     * Tests {@link ReplaceNodeResult#undo()} and makes sure that connections removed during the node replacement are
+     * added back again on undo.
+     */
+    @Test
+    public void testReplaceNodeUndo() {
+        WorkflowManager wfm = getManager();
+        NativeNodeContainer oldNC = (NativeNodeContainer)wfm.getNodeContainer(m_concatenate_2);
+
+        // add port and connect
+        ModifiableNodeCreationConfiguration creationConfig = oldNC.getNode().getCopyOfCreationConfig().get();
+        creationConfig.getPortConfig().get().getExtendablePorts().get("input").addPort(BufferedDataTable.TYPE);
+        wfm.replaceNode(m_concatenate_2, creationConfig);
+        ConnectionContainer newCC = wfm.addConnection(m_datagenerator_1, 1, m_concatenate_2, 3);
+        NativeNodeContainer newNC = (NativeNodeContainer)wfm.getNodeContainer(m_concatenate_2);
+        assertThat("unexpected number of input ports", newNC.getNrInPorts(), is(4));
+
+        // remove port again
+        ReplaceNodeResult replaceRes =
+            wfm.replaceNode(m_concatenate_2, oldNC.getNode().getCopyOfCreationConfig().get());
+        newNC = (NativeNodeContainer)wfm.getNodeContainer(m_concatenate_2);
+        assertThat("unexpected number of input ports", newNC.getNrInPorts(), is(3));
+        assertThat("unexpected connection", wfm.getConnection(newCC.getID()), nullValue());
+        assertThat("canUndo expected to be possible", replaceRes.canUndo(), is(true));
+
+        // undo remove operation
+        replaceRes.undo();
+        NativeNodeContainer undoNC = (NativeNodeContainer)wfm.getNodeContainer(m_concatenate_2);
+        assertTrue(undoNC != newNC);
+        assertThat("unexpected number of input ports", undoNC.getNrInPorts(), is(4));
+        assertThat("connection missing", wfm.getConnection(newCC.getID()), notNullValue());
     }
 
 }
