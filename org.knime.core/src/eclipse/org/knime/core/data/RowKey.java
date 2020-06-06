@@ -58,7 +58,7 @@ package org.knime.core.data;
  * @see DataRow
  * @author Michael Berthold, University of Konstanz
  */
-public final class RowKey {
+public final class RowKey implements RowKeyValue {
 
     /** Private member holding non-null row id. */
     private final String m_id;
@@ -77,6 +77,7 @@ public final class RowKey {
     }
 
     /** @return Underlying string of this row key. */
+    @Override
     public String getString() {
         return m_id;
     }
