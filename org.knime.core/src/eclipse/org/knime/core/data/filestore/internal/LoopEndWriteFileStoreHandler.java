@@ -62,6 +62,7 @@ import org.knime.core.util.LRUCache;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandler {
 

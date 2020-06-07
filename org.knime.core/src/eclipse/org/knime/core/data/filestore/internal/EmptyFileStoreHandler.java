@@ -57,6 +57,7 @@ import org.knime.core.node.util.CheckUtils;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @since 2.6
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class EmptyFileStoreHandler implements IFileStoreHandler {
 

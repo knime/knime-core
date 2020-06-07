@@ -59,6 +59,7 @@ import org.knime.core.node.ExecutionContext;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface IWriteFileStoreHandler extends IFileStoreHandler {
 

@@ -54,6 +54,7 @@ import org.knime.core.data.IDataRepository;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class NotInWorkflowWriteFileStoreHandler extends WriteFileStoreHandler {
 

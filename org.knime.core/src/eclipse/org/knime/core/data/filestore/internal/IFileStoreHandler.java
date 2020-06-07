@@ -58,6 +58,7 @@ import org.knime.core.data.filestore.FileStoreKey;
  * @noextend This interface is not intended to be extended by clients.
  * @noimplement This interface is not intended to be implemented by clients.
  * @since 2.6
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface IFileStoreHandler {
 

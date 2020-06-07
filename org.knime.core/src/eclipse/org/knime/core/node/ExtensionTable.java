@@ -250,6 +250,8 @@ public abstract class ExtensionTable implements ContainerTable {
      * @throws InvalidSettingsException If settings are invalid
      * @throws IOException If reading fails
      * @throws CanceledExecutionException If canceled
+     * @since 4.2
+     * @noreference This method is not intended to be referenced by clients.
      */
     public static ExtensionTable loadExtensionTable(final ReferencedFile fileRef, final DataTableSpec spec,
         final NodeSettingsRO s, final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec)

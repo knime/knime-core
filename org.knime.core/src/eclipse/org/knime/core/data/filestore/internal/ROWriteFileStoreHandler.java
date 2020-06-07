@@ -61,6 +61,7 @@ import org.knime.core.node.ExecutionContext;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class ROWriteFileStoreHandler extends EmptyFileStoreHandler implements IWriteFileStoreHandler {
 

@@ -59,6 +59,7 @@ import org.knime.core.node.NodeLogger;
  * testing environment or using a 3rd party executor.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class NotInWorkflowDataRepository implements IDataRepository {
 
@@ -76,7 +77,7 @@ public final class NotInWorkflowDataRepository implements IDataRepository {
     public int generateNewID() {
         return DataContainer.NOT_IN_WORKFLOW_BUFFER;
     }
-    
+
     /**
      * {@inheritDoc}
      */

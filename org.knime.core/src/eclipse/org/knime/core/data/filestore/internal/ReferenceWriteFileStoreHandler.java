@@ -67,6 +67,7 @@ import org.knime.core.util.FileUtil;
  * {@link #ReferenceWriteFileStoreHandler(WriteFileStoreHandler, NodeID)}.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHandler {
 

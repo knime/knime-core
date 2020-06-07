@@ -60,6 +60,8 @@ import org.knime.core.data.renderer.StringValueRenderer;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @since 4.2
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface FileStoreKeyDataValue extends DataValue {
 

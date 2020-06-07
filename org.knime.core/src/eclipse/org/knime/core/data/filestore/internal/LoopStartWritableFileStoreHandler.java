@@ -63,6 +63,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class LoopStartWritableFileStoreHandler
     extends WriteFileStoreHandler implements ILoopStartWriteFileStoreHandler {

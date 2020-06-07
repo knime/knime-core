@@ -66,6 +66,7 @@ import org.knime.core.node.workflow.FlowLoopContext;
  * in their (inner) loop execution to allow for a cleanup after each iteration.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStartWriteFileStoreHandler {
 

@@ -59,6 +59,7 @@ import org.knime.core.data.filestore.FileStoreUtil;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class FileStoreProxy {
 

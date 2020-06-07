@@ -62,6 +62,7 @@ import org.knime.core.data.filestore.FileStoreKey;
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class FileStoreKeyDataCell extends DataCell implements FileStoreKeyDataValue {
     /**
