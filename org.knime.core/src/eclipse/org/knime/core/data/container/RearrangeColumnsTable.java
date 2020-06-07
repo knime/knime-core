@@ -137,6 +137,11 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
     private static final String CFG_FLAGS = "table_internal_flags";
 
     private static final String CFG_APPEND_TABLE_TYPE = "table_type";
+
+    private static final int BUFFERED_CONTAINER_TABLE_TYPE = 0;
+
+    private static final int EXTENSION_TABLE_TYPE = 1;
+
     private final DataTableSpec m_spec;
 
     private final BufferedDataTable m_reference;
@@ -221,8 +226,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
                 }
                 assert index == appendColCount;
                 DataTableSpec appendSpec = new DataTableSpec(appendColSpecs);
-                // appendTableType = 0 is BufferedContainerTable, tableType = 1 is ExtensionTable
-                if (subSettings.containsKey(CFG_APPEND_TABLE_TYPE) && subSettings.getInt(CFG_APPEND_TABLE_TYPE) == 1) {
+                if (subSettings.containsKey(CFG_APPEND_TABLE_TYPE) && subSettings.getInt(CFG_APPEND_TABLE_TYPE) == EXTENSION_TABLE_TYPE) {
                     m_appendTable = ExtensionTable.loadExtensionTable(f, appendSpec, subSettings, tblRep, exec);
                 } else {
                     CopyOnAccessTask noKeyBufferOnAccessTask =
@@ -666,9 +670,9 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
             * Why do we have to replicate this logic here?
             */
             if (m_appendTable instanceof BufferedContainerTable) {
-                subSettings.addInt(CFG_APPEND_TABLE_TYPE, 0);
+                subSettings.addInt(CFG_APPEND_TABLE_TYPE, BUFFERED_CONTAINER_TABLE_TYPE);
             } else if (m_appendTable instanceof ExtensionTable) {
-                subSettings.addInt(CFG_APPEND_TABLE_TYPE, 1);
+                subSettings.addInt(CFG_APPEND_TABLE_TYPE, EXTENSION_TABLE_TYPE);
             } else {
                 throw new IllegalArgumentException("Unsupported append table type in RearrangeColumnTable.");
             }
