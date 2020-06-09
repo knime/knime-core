@@ -157,6 +157,7 @@ public final class WorkflowCaptureOperation {
 
             // collect nodes outside the scope body but connected to the scope body (only incoming)
             Map<Pair<NodeID, Integer>, NodeID> visitedSrcPorts = new HashMap<>(); //maps to 'pasted' node id
+            boolean isCaptureScopePartOfVirtualScope = getVirtualScopeContext(m_startNode) != null;
             for (int i = 0; i < allButScopeIDs.length; i++) {
                 NodeContainer oldNode = m_wfm.getNodeContainer(allButScopeIDs[i]);
                 for (int p = 0; p < oldNode.getNrInPorts(); p++) {
@@ -173,7 +174,8 @@ public final class WorkflowCaptureOperation {
                             NodeContainer sourceNode = m_wfm.getNodeContainer(sourceID);
                             NodeUIInformation sourceUIInformation = sourceNode.getUIInformation();
                             nodesToDetermineBoundingBox.add(sourceNode);
-                            NodeID pastedID = addPortObjectReferenceReader(m_wfm, tempParent, c);
+                            NodeID pastedID =
+                                addPortObjectReferenceReader(m_wfm, tempParent, c, isCaptureScopePartOfVirtualScope);
                             NodeIDSuffix pastedIDSuffix = NodeIDSuffix.create(tempParent.getID(), pastedID);
 
                             tempParent.getNodeContainer(pastedID).setUIInformation(sourceUIInformation);
@@ -293,10 +295,12 @@ public final class WorkflowCaptureOperation {
      * @param srcWfm the original workflow
      * @param newWfm the new workflow fragment to add the reference reader nodes to
      * @param outConn the outgoing connection of the node/port to reference
+     * @param isCaptureScopePartOfVirtualScope indicates whether the capture scope is part of a
+     *            {@link FlowVirtualScopeContext}
      * @return the id of the port object reference reader node
      */
     private static NodeID addPortObjectReferenceReader(final WorkflowManager srcWfm, final WorkflowManager newWfm,
-        final ConnectionContainer outConn) {
+        final ConnectionContainer outConn, final boolean isCaptureScopePartOfVirtualScope) {
         NodeOutPort upstreamPort;
         int sourcePort = outConn.getSourcePort();
         NodeID sourceID = outConn.getSource();
@@ -333,6 +337,12 @@ public final class WorkflowCaptureOperation {
             return PortObjectRepository.addPortObjectReferenceReaderWithRepoReference(upstreamPort, id.get(),
                 newWfm, sourceID.getIndex());
         } else {
+            if (virtualScopeContext == null && isCaptureScopePartOfVirtualScope) {
+                throw new IllegalStateException(
+                    "The node '" + sourceNode.getNameWithID() + "' is not part of the capture scope but needs to be."
+                        + " Wrap the entire capture scope into a component or"
+                        + " connect the affected node to the capture scope start.");
+            }
             return PortObjectRepository.addPortObjectReferenceReaderWithNodeReference(upstreamPort,
                 srcWfm.getProjectWFM().getID(), newWfm, sourceID.getIndex());
         }
