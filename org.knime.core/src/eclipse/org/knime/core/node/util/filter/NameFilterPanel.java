@@ -215,6 +215,11 @@ public abstract class NameFilterPanel<T> extends JPanel {
     /** The filter used to filter out/in valid elements. */
     private InputFilter<T> m_filter;
 
+    /**
+     * Indicates whether other UI element should be displayed or not
+     */
+    private final boolean m_showSelectionListsOnly;
+
     private String m_currentType = NameFilterConfiguration.TYPE;
 
     private ButtonGroup m_typeGroup;
@@ -602,6 +607,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
         super(new GridLayout(1, 1));
         m_filter = filter;
+        m_showSelectionListsOnly = showSelectionListsOnly;
         m_patternPanel = getPatternFilterPanel(filter);
         m_patternPanel.addChangeListener(new ChangeListener() {
             @Override
@@ -717,7 +723,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_enforceExclusion.setBorder(new EmptyBorder(8, 8, 8, 8));
         m_enforceInclusion.addActionListener(e -> cleanInvalidValues());
         m_enforceExclusion.addActionListener(e -> cleanInvalidValues());
-        if (!showSelectionListsOnly) {
+        if (!m_showSelectionListsOnly) {
             final ButtonGroup forceGroup = new ButtonGroup();
             m_enforceInclusion.setToolTipText("Force the set of included " + getEntryDescription() + " to stay the same.");
             forceGroup.add(m_enforceInclusion);
@@ -808,8 +814,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * if radio buttons are not displayed or neither is selected.
      */
     public Optional<EnforceOption> getSelectedEnforceOption() {
-        if (!m_nameFilterPanel.isAncestorOf(m_enforceExclusion)
-            || !m_nameFilterPanel.isAncestorOf(m_enforceInclusion)) {
+        if (m_showSelectionListsOnly) {
             return Optional.empty();
         }
         if (m_enforceInclusion.isSelected()) {
