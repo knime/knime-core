@@ -819,11 +819,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
         }
         if (m_enforceInclusion.isSelected()) {
             return Optional.of(EnforceOption.EnforceInclusion);
-        }
-        if (m_enforceExclusion.isSelected()) {
+        } else {
             return Optional.of(EnforceOption.EnforceExclusion);
         }
-        return Optional.empty();
     }
 
     /**
