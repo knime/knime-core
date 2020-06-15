@@ -50,8 +50,6 @@ package org.knime.core.util.string;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
@@ -863,92 +861,4 @@ public class KnimeStringUtils {
         }
     }
 
-    /**
-     * Replaces characters not allowed in an URL by ASCII characters. Considers only either the path or query part
-     * (encode scope) of the URI.
-     *
-     * @param scope the part of the URI to fix. Possible values: "path" and "query". Use "path" to encode only the path
-     *            portion of an URI-like string. Use "query" to encode only the query portion of an URI-like string.
-     *            Note: a "both" option wouldn't be wise since a third option may be added in the future. Likewise, an
-     *            "all" option might be misleading (since it actually refers only to some parts of the URI)
-     *
-     * @param str the URI to fix
-     * @param pathDelimiter the delimiter for the path part of a URI, usually "/"
-     * @param charsetName the character set to use
-     * @return the escaped string or the original string if the scope is not supported or the str parameter can not be
-     * converted to a valid URI by removing forbidden characters.
-     * @since 4.2
-     */
-    public static String urlEncodeScope(final String scope, final String str, final String pathDelimiter,
-        final String charsetName) {
-
-        final boolean isPath = "path".equalsIgnoreCase(scope.trim());
-        if (!isPath && !"query".equalsIgnoreCase(scope.trim())) {
-            LOGGER.error(String.format("Scope %s is not supported. Use \"path\" or \"query\".", scope));
-            return str;
-        }
-
-        final char[] chars = str.toCharArray();
-        int lastFixedPos = -1;
-        URI uri = null;
-        // replace forbidden characters step by step until a valid URI is produced
-        while (uri == null) {
-            try {
-                uri = new URI(new String(chars));
-            } catch (URISyntaxException ex) {
-                final int index = ex.getIndex();
-                // when the fix applied in the previous iteration didn't work, abort
-                if (index == -1 || index == lastFixedPos) {
-                    return str;
-                }
-                chars[index] = 'a';
-                lastFixedPos = index;
-            }
-        }
-        
-        if ((isPath && uri.getPath() == null) || (!isPath && uri.getQuery() == null)) {
-            return str;
-        }
-
-        // the URI object won't give us the offsets of the parsed portions, but we can determine them by summing up
-        // the lengths of the parts that come before path and query, respectively
-
-        // determine the begin and end offsets of the path
-        int pathStart = 0, pathEndExclusive;
-        if (uri.getScheme() != null) {
-            pathStart += uri.getScheme().length() + 1; // e.g., "https" + ":"
-        }
-        // if the user info, host, or port is present, the double slash is mandatory
-        if (uri.getAuthority() != null) {
-            pathStart += 2 + uri.getAuthority().length(); // e.g., "//" + "user@host.tld:8080"
-        }
-        pathEndExclusive = pathStart;
-        if (uri.getPath() != null) {
-            pathEndExclusive += uri.getPath().length(); // e.g., /dir/script/
-        }
-
-        if (isPath) {
-            // don't use a stream here, because it may be called a million times during processing a table
-            final String path = str.substring(pathStart, pathEndExclusive);
-            // set limit to -1 in order to catch trailing delimiters
-            final String[] parts = path.split(pathDelimiter, -1);
-            for (int i = 0; i < parts.length; i++) {
-                parts[i] = urlEncode(parts[i], charsetName).replace("+", "%20");
-            }
-            final String encodedPath = String.join(pathDelimiter, parts);
-
-            return str.substring(0, pathStart) + encodedPath + str.substring(pathEndExclusive);
-        }
-
-        int queryBegin = pathEndExclusive;
-        int queryEndExclusive = queryBegin;
-        // determine the begin and end offsets of the query
-        if (uri.getQuery() != null) {
-            queryBegin += 1; // do not include query delimiter "?" in the query
-            queryEndExclusive = queryBegin + uri.getQuery().length(); // e.g., "q=search"
-        }
-        final String encodedQuery = urlEncode(str.substring(queryBegin, queryEndExclusive), charsetName);
-
-        return str.substring(0, queryBegin) + encodedQuery + str.substring(queryEndExclusive);
-    }
 }
