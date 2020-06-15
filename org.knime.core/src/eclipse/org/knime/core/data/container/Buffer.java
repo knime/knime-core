@@ -824,7 +824,7 @@ public class Buffer implements KNIMEStreamConstants {
                 m_lifecycle.onAddRowToLargeList();
             }
         } else {
-            flushBuffer();
+            ensureWriterIsOpen();
             m_outputWriter.writeRow(row);
         }
     }

@@ -47,6 +47,7 @@
  */
 package org.knime.core.data.filestore.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -86,6 +87,12 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
     /** {@inheritDoc} */
     @Override
     public UUID getStoreUUID() {
+        return m_loopStartFSHandler.getStoreUUID();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public File getBaseDir() {
         // no own file stores
         return null;
     }
@@ -141,6 +148,13 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
 
     /** {@inheritDoc} */
     @Override
+    public FileStore createFileStore(final String name, final int[] nestedLoopPath, final int iterationIndex)
+        throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void open(final ExecutionContext exec) {
         m_fileStoresInLoopCache = new FileStoresInLoopCache(exec);
         m_duplicateChecker = new InternalDuplicateChecker();
@@ -175,6 +189,12 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
     @Override
     public void addToRepository(final IDataRepository repository) {
         // ignore, handler does not define own file stores (only the start does)
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isReference() {
+        return true;
     }
 
 }

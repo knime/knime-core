@@ -47,6 +47,7 @@
  */
 package org.knime.core.data.filestore.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
@@ -55,7 +56,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
-import org.knime.core.data.filestore.internal.LoopStartWritableFileStoreHandler.NestedLoopIdentifierProvider;
+import org.knime.core.data.filestore.internal.LoopStartWriteFileStoreHandler.NestedLoopIdentifierProvider;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.workflow.FlowLoopContext;
@@ -68,7 +69,7 @@ import org.knime.core.node.workflow.FlowLoopContext;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStartWriteFileStoreHandler {
+public final class NestedLoopStartWriteFileStoreHandler implements ILoopStartWriteFileStoreHandler {
 
     private final ILoopStartWriteFileStoreHandler m_reference;
     private final int[] m_thisNestedLoopPath;
@@ -83,7 +84,7 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
 
     /**
      * @param reference */
-    public LoopStartReferenceWriteFileStoreHandler(final ILoopStartWriteFileStoreHandler reference,
+    public NestedLoopStartWriteFileStoreHandler(final ILoopStartWriteFileStoreHandler reference,
             final FlowLoopContext flowLoopContext) {
         m_reference = reference;
         m_flowLoopContext = flowLoopContext;
@@ -100,6 +101,12 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
     /** {@inheritDoc} */
     @Override
     public UUID getStoreUUID() {
+        return m_reference.getStoreUUID();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public File getBaseDir() {
         return null;
     }
 
@@ -151,6 +158,13 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
         FileStore fs = createFileStoreInLoopBody(name);
         m_duplicateChecker.add(name);
         return fs;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStore createFileStore(final String name, final int[] nestedLoopPath, final int iterationIndex)
+        throws IOException {
+        throw new UnsupportedOperationException();
     }
 
     /** {@inheritDoc} */
@@ -238,6 +252,12 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
                 return false;
             }
         }
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isReference() {
         return true;
     }
 

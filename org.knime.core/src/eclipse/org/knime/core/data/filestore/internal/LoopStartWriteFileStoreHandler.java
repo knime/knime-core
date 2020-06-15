@@ -65,8 +65,8 @@ import org.knime.core.node.workflow.NativeNodeContainer;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @noreference This class is not intended to be referenced by clients.
  */
-public class LoopStartWritableFileStoreHandler
-    extends WriteFileStoreHandler implements ILoopStartWriteFileStoreHandler {
+public class LoopStartWriteFileStoreHandler extends AbstractReferenceWriteFileStoreHandler
+    implements ILoopStartWriteFileStoreHandler {
 
     private static final int[] OUTER_LOOP_PATH = new int[] {};
 
@@ -78,23 +78,53 @@ public class LoopStartWritableFileStoreHandler
     private FileStoresInLoopCache m_endNodeCacheWithKeysToPersist;
 
     /**
-     * @param startNode
-     * @param storeUUID
-     * @param flowLoopContext */
-    public LoopStartWritableFileStoreHandler(final NativeNodeContainer startNode, final UUID storeUUID,
+     * If this loop start file store handler just references another one.
+     */
+    private final boolean m_referencesAnotherFileStoreHandler;
+
+    /**
+     * Initializes a new loop start file store handler with the given store id. All file stores in the loop will be
+     * created at the node 'owning' this file store handler.
+     *
+     * @param startNode the {@link LoopStartNode}
+     * @param storeUUID the file store handler's id
+     * @param flowLoopContext the loop's context
+     */
+    public LoopStartWriteFileStoreHandler(final NativeNodeContainer startNode, final UUID storeUUID,
             final FlowLoopContext flowLoopContext) {
-        super(startNode.getNameWithID(), storeUUID);
+        super(new WriteFileStoreHandler(startNode.getNameWithID(), storeUUID));
         CheckUtils.checkArgument(startNode.isModelCompatibleTo(
             LoopStartNode.class), "Node not a start node: %s", startNode);
         m_startNodeContainer = startNode;
         m_flowLoopContext = flowLoopContext;
         m_nestedLoopIdentifierProvider = new NestedLoopIdentifierProvider();
+        m_referencesAnotherFileStoreHandler = false;
+    }
+
+    /**
+     * Initializes a new loop start file store handler that references the provided one. I.e. in that case it is a
+     * 'reference file store handler', {@link IWriteFileStoreHandler#isReference()} returns <code>true</code> and the
+     * actual file stores are created in the by the referenced file store handler.
+     *
+     * @param startNode the {@link LoopStartNode}
+     * @param fsh the file store handler to be referenced (and delegated the most calls to)
+     * @param flowLoopContext the loop's context
+     */
+    public LoopStartWriteFileStoreHandler(final NativeNodeContainer startNode, final IWriteFileStoreHandler fsh,
+        final FlowLoopContext flowLoopContext) {
+        super(fsh);
+        CheckUtils.checkArgument(startNode.isModelCompatibleTo(LoopStartNode.class), "Node not a start node: %s",
+            startNode);
+        m_startNodeContainer = startNode;
+        m_flowLoopContext = flowLoopContext;
+        m_nestedLoopIdentifierProvider = new NestedLoopIdentifierProvider();
+        m_referencesAnotherFileStoreHandler = true;
     }
 
     /** {@inheritDoc} */
     @Override
     public UUID getOutmostLoopStartStoreUUID() {
-        return getStoreUUID();
+        return super.getStoreUUID();
     }
 
     /** {@inheritDoc} */
@@ -111,14 +141,13 @@ public class LoopStartWritableFileStoreHandler
     @Override
     public synchronized FileStore createFileStore(final String name) throws IOException {
         final FileStore fs = createFileStoreInLoopBody(name);
-        super.addToDuplicateChecker(name);
         return fs;
     }
 
     /** {@inheritDoc} */
     @Override
     public synchronized FileStore createFileStoreInLoopBody(final String name) throws IOException {
-        final FileStore fs = createFileStoreInternal(name,
+        final FileStore fs = super.createFileStore(name,
                 OUTER_LOOP_PATH, m_flowLoopContext.getIterationIndex());
         m_fileStoresInLoopCache.add(fs);
         return fs;
@@ -129,15 +158,8 @@ public class LoopStartWritableFileStoreHandler
     public synchronized FileStore createFileStoreInNestedLoop(
             final String name, final int[] nestedLoopPath, final int iterationIndex)
             throws IOException {
-        return createFileStoreInternal(name, nestedLoopPath, iterationIndex);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    FileStore createFileStoreInternal(final String name, final int[] nestedLoopPath,
-        final int iterationIndex) throws IOException {
         markStartNodeDirty();
-        return super.createFileStoreInternal(name, nestedLoopPath, iterationIndex);
+        return super.createFileStore(name, nestedLoopPath, iterationIndex);
     }
 
     /** {@inheritDoc}
@@ -184,7 +206,16 @@ public class LoopStartWritableFileStoreHandler
     /** {@inheritDoc} */
     @Override
     public boolean isCreatedInThisLoop(final FileStoreKey key) {
-        return key.getStoreUUID().equals(getStoreUUID());
+        // if this loop start file store handler just references another file store handler (e.g. because
+        // it's part of a virtual scope), the store UUID of the delegate would not be unique for this loop -
+        // is this a problem? (would possibly also cause file stores to be flushed in another, upstream loop)
+        return key.getStoreUUID().equals(super.getStoreUUID());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isReference() {
+        return m_referencesAnotherFileStoreHandler;
     }
 
     private void markStartNodeDirty() {

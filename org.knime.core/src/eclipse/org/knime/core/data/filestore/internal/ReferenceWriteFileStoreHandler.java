@@ -48,12 +48,9 @@
 package org.knime.core.data.filestore.internal;
 
 import java.io.IOException;
-import java.util.UUID;
 
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreKey;
-import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
@@ -69,19 +66,18 @@ import org.knime.core.util.FileUtil;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHandler {
+public final class ReferenceWriteFileStoreHandler extends AbstractReferenceWriteFileStoreHandler {
 
-    private final IWriteFileStoreHandler m_reference;
     private InternalDuplicateChecker m_duplicateChecker;
     private NodeID m_nodeId;
 
     /**
      * @param reference */
     public ReferenceWriteFileStoreHandler(final ILoopStartWriteFileStoreHandler reference) {
+        super(reference);
         if (reference == null) {
             throw new NullPointerException("Argument must not be null.");
         }
-        m_reference = reference;
     }
 
     /**
@@ -89,9 +85,9 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
      * @param nodeId the node id of the node this file store handler belongs to
      */
     public ReferenceWriteFileStoreHandler(final IWriteFileStoreHandler reference, final NodeID nodeId) {
+        super(reference);
         CheckUtils.checkArgumentNotNull(reference);
         CheckUtils.checkArgumentNotNull(nodeId);
-        m_reference = reference;
         m_nodeId = nodeId;
     }
 
@@ -103,39 +99,8 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
 
     /** {@inheritDoc} */
     @Override
-    public UUID getStoreUUID() {
-        // doesn't define own file stores
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public FileStoreKey translateToLocal(final FileStore fs, final FlushCallback flushCallback) {
-        return m_reference.translateToLocal(fs, flushCallback);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean mustBeFlushedPriorSave(final FileStore fs) {
-        return m_reference.mustBeFlushedPriorSave(fs);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public IDataRepository getDataRepository() {
-        return m_reference.getDataRepository();
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void clearAndDispose() {
         // ignore
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public FileStore getFileStore(final FileStoreKey key) {
-        return m_reference.getFileStore(key);
     }
 
     /** {@inheritDoc} */
@@ -145,11 +110,11 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
             throw new IOException("File store handler \"" + toString() + "\" is read only/closed");
         }
         m_duplicateChecker.add(name);
-        if (m_reference instanceof ILoopStartWriteFileStoreHandler) {
-            return ((ILoopStartWriteFileStoreHandler)m_reference).createFileStoreInLoopBody(name);
+        if (getDelegate() instanceof ILoopStartWriteFileStoreHandler) {
+            return ((ILoopStartWriteFileStoreHandler)getDelegate()).createFileStoreInLoopBody(name);
         } else {
             assert m_nodeId != null;
-            return m_reference.createFileStore(FileUtil.getValidFileName(name + "#" + m_nodeId, 0));
+            return getDelegate().createFileStore(FileUtil.getValidFileName(name + "#" + m_nodeId, 0));
         }
     }
 
@@ -170,14 +135,14 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
 
     /** {@inheritDoc} */
     @Override
-    public void ensureOpenAfterLoad() throws IOException {
-        m_reference.ensureOpenAfterLoad();
+    public String toString() {
+        return "Reference on " + getDelegate().toString();
     }
 
     /** {@inheritDoc} */
     @Override
-    public String toString() {
-        return "Reference on " + m_reference.toString();
+    public boolean isReference() {
+        return true;
     }
 
 }

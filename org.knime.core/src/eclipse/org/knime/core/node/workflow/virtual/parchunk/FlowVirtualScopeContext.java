@@ -95,15 +95,18 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
     }
 
     /**
-     * TODO must be set!
-     * Node associated with this virtual context (e.g., to use its file store handler)
+     * Sets the node container that is (indirectly) responsible for the creation of this virtual scope. The file
+     * handlers of this node, e.g., will be used. Must be set before the scope can be executed.
      *
-     * @param nc
+     * @param nc the node
      */
     public void setNodeContainer(final NativeNodeContainer nc) {
         m_nc= nc;
     }
 
+    /**
+     * @return the node associated with this virtual scope (see {@link #setNodeContainer(NativeNodeContainer)})
+     */
     public NativeNodeContainer getNodeContainer() {
         return m_nc;
     }

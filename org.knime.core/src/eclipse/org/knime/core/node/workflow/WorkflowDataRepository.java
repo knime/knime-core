@@ -155,8 +155,9 @@ public class WorkflowDataRepository implements IDataRepository {
 
     @Override
     public void addFileStoreHandler(final IWriteFileStoreHandler handler) {
-        final UUID storeUUID = handler.getStoreUUID();
-        if (storeUUID != null) {
+        if (!handler.isReference()) {
+            final UUID storeUUID = handler.getStoreUUID();
+            assert storeUUID != null;
             m_handlerMap.put(storeUUID, handler);
             LOGGER.debug("Adding handler " + handler + " - " + m_handlerMap.size() + " in total");
         }

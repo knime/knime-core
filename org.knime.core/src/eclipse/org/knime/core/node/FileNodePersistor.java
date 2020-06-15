@@ -69,6 +69,7 @@ import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
@@ -1414,8 +1415,9 @@ public class FileNodePersistor implements NodePersistor {
         IFileStoreHandler fileStoreHandler = node.getFileStoreHandler();
         String uuidS;
         String dirNameInFlow;
-        if (isSaveData && fileStoreHandler instanceof WriteFileStoreHandler) {
-            final WriteFileStoreHandler defFileStoreHandler = (WriteFileStoreHandler)fileStoreHandler;
+        if (isSaveData && fileStoreHandler instanceof IWriteFileStoreHandler
+            && !((IWriteFileStoreHandler)fileStoreHandler).isReference()) {
+            final IWriteFileStoreHandler defFileStoreHandler = (IWriteFileStoreHandler)fileStoreHandler;
             File baseDir = defFileStoreHandler.getBaseDir();
             dirNameInFlow = baseDir == null ? null : FILESTORE_FOLDER_PREFIX;
             if (dirNameInFlow != null) {

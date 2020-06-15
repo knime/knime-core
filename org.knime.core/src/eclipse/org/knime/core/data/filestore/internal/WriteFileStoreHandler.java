@@ -144,6 +144,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     }
 
     /** @return the baseDir */
+    @Override
     public File getBaseDir() {
         return m_baseDir;
     }
@@ -270,7 +271,17 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         m_duplicateChecker.add(name);
     }
 
-    FileStore createFileStoreInternal(final String name,
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized FileStore createFileStore(final String name, final int[] nestedLoopPath,
+        final int iterationIndex) throws IOException {
+        // NOTE: inconsistent with the other createFileStore-method - doesn't add to the duplicate checker
+        return createFileStoreInternal(name, nestedLoopPath, iterationIndex);
+    }
+
+    private FileStore createFileStoreInternal(final String name,
             final int[] nestedLoopPath, final int iterationIndex) throws IOException {
         assert Thread.holdsLock(this);
         CheckUtils.checkArgumentNotNull(name, "Argument must not be null.");
@@ -372,6 +383,13 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isReference() {
+        return false;
+    }
 
     public static final IFileStoreHandler restore(final String name,
             final UUID uuid,

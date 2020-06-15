@@ -69,7 +69,6 @@ import org.junit.Assert;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
@@ -335,8 +334,8 @@ public abstract class WorkflowTestCase {
         NodeContainer nc = findNodeContainer(id);
         if (nc instanceof NativeNodeContainer) {
             IFileStoreHandler fsh = ((NativeNodeContainer)nc).getNode().getFileStoreHandler();
-            if (fsh instanceof WriteFileStoreHandler) {
-                return ((WriteFileStoreHandler)fsh).getBaseDir();
+            if (fsh instanceof IWriteFileStoreHandler) {
+                return ((IWriteFileStoreHandler)fsh).getBaseDir();
             }
         }
         return null;

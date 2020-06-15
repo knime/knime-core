@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,10 +41,10 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Jul 11, 2012 (wiswedel): created
+ *   Jun 14, 2020 (hornm): created
  */
 package org.knime.core.data.filestore.internal;
 
@@ -58,61 +59,97 @@ import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.ExecutionContext;
 
 /**
+ * Implementation that wraps/references another {@link IWriteFileStoreHandler} and delegates all the calls to it.
  *
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @noreference This interface is not intended to be referenced by clients.
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @since 4.2
  */
-public interface IWriteFileStoreHandler extends IFileStoreHandler {
+abstract class AbstractReferenceWriteFileStoreHandler implements IWriteFileStoreHandler {
 
-    public FileStore createFileStore(final String name) throws IOException;
+    private final IWriteFileStoreHandler m_delegate;
 
     /**
-     * Creates a file store also using loop information (for the {@link FileStoreKey}).
-     *
-     * NOTE: doesn't do duplicate checking!
-     *
-     * @param name
-     * @param nestedLoopPath
-     * @param iterationIndex
-     * @return the new file store
-     * @throws IOException
+     * @param delegate the instance to delegate the calls to
      */
-    public FileStore createFileStore(String name, int[] nestedLoopPath, int iterationIndex) throws IOException;
-
-    public void open(final ExecutionContext exec);
-
-    public void addToRepository(final IDataRepository repository);
-
-    public void close();
-
-    public void ensureOpenAfterLoad() throws IOException;
+    protected AbstractReferenceWriteFileStoreHandler(final IWriteFileStoreHandler delegate) {
+        m_delegate = delegate;
+    }
 
     /**
-     * @param fs
-     * @param flushCallback TODO
-     * @return */
-    public FileStoreKey translateToLocal(FileStore fs, FlushCallback flushCallback);
-
-    public boolean mustBeFlushedPriorSave(final FileStore fs);
-
-    /**
-     * @return the store id, never <code>null</code>. If {@link #isReference()} is <code>true</code>, it returns the
-     *         store id of the referenced file store handler
+     * @return the delegate file store handler
      */
-    public UUID getStoreUUID();
+    protected IWriteFileStoreHandler getDelegate() {
+        return m_delegate;
+    }
 
-    /**
-     * @return the file store's base directory or <code>null</code> if this handler just references another one (i.e.
-     *         {@link #isReference()} is <code>true</code>) or there have been no file stores creates by the respective
-     *         node
-     */
-    File getBaseDir();
+    @Override
+    public IDataRepository getDataRepository() {
+        return m_delegate.getDataRepository();
+    }
 
-    /**
-     * Tells if this file store handler just references another one and doesn't create file stores itself. This file
-     * store, e.g., won't be persisted with the node neither will it be added to the {@link IDataRepository}.
-     *
-     * @return <code>true</code> if this file store handler just references another one, otherwise <code>false</code>
-     */
-    boolean isReference();
+    @Override
+    public FileStore createFileStore(final String name) throws IOException {
+        return m_delegate.createFileStore(name);
+    }
+
+    @Override
+    public FileStore createFileStore(final String name, final int[] nestedLoopPath, final int iterationIndex)
+        throws IOException {
+        return m_delegate.createFileStore(name, nestedLoopPath, iterationIndex);
+    }
+
+    @Override
+    public void clearAndDispose() {
+        m_delegate.clearAndDispose();
+    }
+
+    @Override
+    public FileStore getFileStore(final FileStoreKey key) {
+        return m_delegate.getFileStore(key);
+    }
+
+    @Override
+    public void open(final ExecutionContext exec) {
+        m_delegate.open(exec);
+    }
+
+    @Override
+    public void addToRepository(final IDataRepository repository) {
+        m_delegate.addToRepository(repository);
+    }
+
+    @Override
+    public void close() {
+        m_delegate.close();
+    }
+
+    @Override
+    public void ensureOpenAfterLoad() throws IOException {
+        m_delegate.ensureOpenAfterLoad();
+    }
+
+    @Override
+    public FileStoreKey translateToLocal(final FileStore fs, final FlushCallback flushCallback) {
+        return m_delegate.translateToLocal(fs, flushCallback);
+    }
+
+    @Override
+    public boolean mustBeFlushedPriorSave(final FileStore fs) {
+        return m_delegate.mustBeFlushedPriorSave(fs);
+    }
+
+    @Override
+    public UUID getStoreUUID() {
+        return m_delegate.getStoreUUID();
+    }
+
+    @Override
+    public File getBaseDir() {
+        if (isReference()) {
+            return null;
+        } else {
+            return m_delegate.getBaseDir();
+        }
+    }
+
 }

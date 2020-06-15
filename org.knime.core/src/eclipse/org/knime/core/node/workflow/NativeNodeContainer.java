@@ -63,8 +63,8 @@ import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.ILoopStartWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.LoopEndWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.LoopStartReferenceWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.LoopStartWritableFileStoreHandler;
+import org.knime.core.data.filestore.internal.LoopStartWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.NestedLoopStartWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.ReferenceWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
@@ -93,6 +93,7 @@ import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.FlowVariable.Scope;
@@ -663,17 +664,15 @@ public class NativeNodeContainer extends SingleNodeContainer {
      */
     public void initFileStoreHandlerReference(final NativeNodeContainer nnc) {
         IWriteFileStoreHandler targetFSHandler = (IWriteFileStoreHandler)nnc.getNode().getFileStoreHandler();
-        initWriteFileStoreHandlerReference(targetFSHandler);
+        m_node.setFileStoreHandler(initWriteFileStoreHandlerReference(targetFSHandler));
     }
 
-    private IFileStoreHandler initWriteFileStoreHandlerReference(final IWriteFileStoreHandler targetFSHandler) {
+    private IWriteFileStoreHandler initWriteFileStoreHandlerReference(final IWriteFileStoreHandler targetFSHandler) {
         IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
         if (oldFSHandler instanceof IWriteFileStoreHandler) {
             oldFSHandler.clearAndDispose();
         }
-        IWriteFileStoreHandler newFSHandler = new ReferenceWriteFileStoreHandler(targetFSHandler, getID());
-        m_node.setFileStoreHandler(newFSHandler);
-        return newFSHandler;
+        return new ReferenceWriteFileStoreHandler(targetFSHandler, getID());
     }
 
     /**
@@ -685,14 +684,62 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * @since 4.1
      */
     public void initLocalFileStoreHandler() {
-        IFileStoreHandler newFSHandler = initLoopScopeFileStoreHandler();
-        if (newFSHandler == null) {
-            newFSHandler = initVirtualScopeFileStoreHandler();
+        FlowLoopContext upstreamFLC = getUpstreamFlowLoopContext();
+        FlowLoopContext innerFLC = getInnerFlowLoopContext();
+        IWriteFileStoreHandler currentFSHandler;
+
+        // special handling if node is part of a loop and _not_ in the first iteration
+        currentFSHandler = initFileStoreHandlerInLoopIteration(upstreamFLC, innerFLC);
+
+        if (currentFSHandler == null) {
+            // node not in loop or in a loop's iteration (but not the first one)
+            // -> initialize new file store handler for the first time
+
+            // check for virtual scope
+            // note: virtual scope is always the outermost scope
+            IWriteFileStoreHandler virtualScopeFSHandler = initVirtualScopeFileStoreHandler();
+
+            if (virtualScopeFSHandler == null && upstreamFLC == null && innerFLC == null) {
+                // node neither part of a virtual scope nor a loop scope
+                currentFSHandler = initDefaultFileStoreHandler();
+            } else if (upstreamFLC != null || innerFLC != null) {
+                // in case node is part of a loop (or nested loop ...)
+                // (return null if not)
+                currentFSHandler = initLoopScopeFileStoreHandler(upstreamFLC, innerFLC, virtualScopeFSHandler);
+            }
+            if (currentFSHandler == null && virtualScopeFSHandler != null) {
+                currentFSHandler = virtualScopeFSHandler;
+           }
         }
-        if (newFSHandler == null) {
-            newFSHandler = initDefaultFileStoreHandler();
+
+        if (currentFSHandler != null) {
+            WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
+            currentFSHandler.addToRepository(dataRepository);
+            m_node.setFileStoreHandler(currentFSHandler);
         }
-        m_node.setFileStoreHandler(newFSHandler);
+    }
+
+    private IWriteFileStoreHandler initFileStoreHandlerInLoopIteration(final FlowLoopContext upstreamFLC,
+        final FlowLoopContext innerFLC) {
+        if (innerFLC != null && innerFLC.getIterationIndex() > 0) {
+            // it's a loop start in its n-th iteration (n > 0)
+            assert m_node.getFileStoreHandler() instanceof IWriteFileStoreHandler : "Loop Start " + getNameWithID()
+                + " must have file store handler in iteration " + innerFLC.getIterationIndex();
+            // just keep the existing file store handler
+            return (IWriteFileStoreHandler)m_node.getFileStoreHandler();
+        } else if (innerFLC == null && upstreamFLC != null && upstreamFLC.getIterationIndex() > 0) {
+            if (this.isModelCompatibleTo(LoopEndNode.class)) {
+                // it's a loop end in its n-th iteration (n > 0)
+                assert m_node.getFileStoreHandler() instanceof IWriteFileStoreHandler : "Node " + getNameWithID()
+                    + " must have file store handler in iteration " + upstreamFLC.getIterationIndex();
+                // just keep the existing file store handler
+                return (IWriteFileStoreHandler)m_node.getFileStoreHandler();
+            } else {
+                // it's an ordinary node in the n-th iteration (n > 0) of the loop it's part of
+                return new ReferenceWriteFileStoreHandler(upstreamFLC.getFileStoreHandler());
+            }
+        }
+        return null;
     }
 
     /**
@@ -700,7 +747,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
      *
      * @return the file store handler, never <code>null</code>
      */
-    private IFileStoreHandler initDefaultFileStoreHandler() {
+    private IWriteFileStoreHandler initDefaultFileStoreHandler() {
         // node is not a start node and not contained in a loop
         IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
         if (oldFSHandler instanceof IWriteFileStoreHandler) {
@@ -709,16 +756,68 @@ public class NativeNodeContainer extends SingleNodeContainer {
             + "loop start and not contained in loop), disposing old handler";*/
         }
         IWriteFileStoreHandler newFSHandler = new WriteFileStoreHandler(getNameWithID(), UUID.randomUUID());
-        newFSHandler.addToRepository(getParent().getWorkflowDataRepository());
         return newFSHandler;
     }
 
     /**
      * Inits the file store handler if node is part of a loop scope (including start and end).
      *
+     * @param upstreamFLC optional loop context this node might be part of
+     * @param innerFLC optional loop context beginning at this node if this node is a loop start
+     * @param targetFSH file store handler to be referenced if given
      * @return the file store handler or <code>null</code> if not a loop scope
      */
-    private IFileStoreHandler initLoopScopeFileStoreHandler() {
+    private IWriteFileStoreHandler initLoopScopeFileStoreHandler(final FlowLoopContext upstreamFLC,
+        final FlowLoopContext innerFLC, final IWriteFileStoreHandler targetFSH) {
+        IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
+        IWriteFileStoreHandler newFSHandler = null;
+
+        if (innerFLC != null) {
+            // node is a loop start node
+            assert innerFLC.getIterationIndex() == 0;
+            if (oldFSHandler instanceof IWriteFileStoreHandler) {
+                assert false : "Loop Start " + getNameWithID() + " must not have file store handler at this point "
+                    + "(no iteration ran), disposing old handler";
+                clearFileStoreHandler();
+            }
+            if (upstreamFLC != null) {
+                ILoopStartWriteFileStoreHandler upStreamFSHandler = upstreamFLC.getFileStoreHandler();
+                newFSHandler = new NestedLoopStartWriteFileStoreHandler(upStreamFSHandler, innerFLC);
+            } else if (targetFSH != null) {
+                // there is another target file store handler
+                // -> loop start file store handler references it
+                newFSHandler = new LoopStartWriteFileStoreHandler(this, targetFSH, innerFLC);
+            } else {
+                // create entirely new loop start file store handler (without referencing another handler)
+                newFSHandler = new LoopStartWriteFileStoreHandler(this, UUID.randomUUID(), innerFLC);
+            }
+            innerFLC.setFileStoreHandler((ILoopStartWriteFileStoreHandler)newFSHandler);
+        } else {
+            // ordinary node contained in loop
+            assert upstreamFLC != null;
+            assert upstreamFLC.getIterationIndex() == 0;
+            ILoopStartWriteFileStoreHandler upStreamFSHandler = upstreamFLC.getFileStoreHandler();
+            if (this.isModelCompatibleTo(LoopEndNode.class)) {
+                if (upStreamFSHandler != null) {
+                    newFSHandler = new LoopEndWriteFileStoreHandler(upStreamFSHandler);
+                } else {
+                    // Note on a potentially null-upStreamFSHandler:
+                    // nodes in inactive branches don't have a file store handler set
+                    // -> need to be taken into consideration when setting up the file store handler
+                    // for an 'InactiveBranchConsumer-loop end'
+                    assert this.isModelCompatibleTo(InactiveBranchConsumer.class);
+                }
+            } else {
+                newFSHandler = new ReferenceWriteFileStoreHandler(upStreamFSHandler);
+            }
+        }
+        return newFSHandler;
+    }
+
+    /**
+     * @return the flow loop context this node is part of or <code>null</code> if not part of a loop
+     */
+    private FlowLoopContext getUpstreamFlowLoopContext() {
         final FlowObjectStack flowObjectStack = getFlowObjectStack();
         FlowLoopContext upstreamFLC = getFlowScopeContextFromHierarchy(FlowLoopContext.class, flowObjectStack);
 
@@ -726,60 +825,19 @@ public class NativeNodeContainer extends SingleNodeContainer {
         // loop start nodes will put their loop context on the outgoing flow object stack
         assert !getID().equals(outerStartNodeID) : "Loop start on incoming flow stack can't be node itself";
 
+        return upstreamFLC;
+    }
+
+    /**
+     * @return if this node is a loop start, the loop start's loop inner loop context, otherwise <code>null</code>
+     */
+    private FlowLoopContext getInnerFlowLoopContext() {
         final FlowLoopContext innerFLC = getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
         NodeID innerStartNodeID = innerFLC == null ? null : innerFLC.getHeadNode();
         // if there is a loop context on this node's stack, this node must be the start
         assert !(this.isModelCompatibleTo(LoopStartNode.class)) || getID().equals(innerStartNodeID);
 
-        IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
-        IWriteFileStoreHandler newFSHandler = null;
-
-        WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
-        if (innerFLC == null && upstreamFLC == null) {
-            return null;
-        } else if (innerFLC != null) {
-            // node is a loop start node
-            int loopIteration = innerFLC.getIterationIndex();
-            if (loopIteration == 0) {
-                if (oldFSHandler instanceof IWriteFileStoreHandler) {
-                    assert false : "Loop Start " + getNameWithID() + " must not have file store handler at this point "
-                            + "(no iteration ran), disposing old handler";
-                    clearFileStoreHandler();
-                }
-                if (upstreamFLC != null) {
-                    ILoopStartWriteFileStoreHandler upStreamFSHandler = upstreamFLC.getFileStoreHandler();
-                    newFSHandler = new LoopStartReferenceWriteFileStoreHandler(upStreamFSHandler, innerFLC);
-                } else {
-                    newFSHandler = new LoopStartWritableFileStoreHandler(this, UUID.randomUUID(), innerFLC);
-                }
-                newFSHandler.addToRepository(dataRepository);
-                innerFLC.setFileStoreHandler((ILoopStartWriteFileStoreHandler)newFSHandler);
-            } else {
-                assert oldFSHandler instanceof IWriteFileStoreHandler : "Loop Start " + getNameWithID()
-                    + " must have file store handler in iteration " + loopIteration;
-                newFSHandler = (IWriteFileStoreHandler)oldFSHandler;
-                // keep the old one
-            }
-        } else {
-            // ordinary node contained in loop
-            assert innerFLC == null && upstreamFLC != null;
-            ILoopStartWriteFileStoreHandler upStreamFSHandler = upstreamFLC.getFileStoreHandler();
-            //Note on a potentially null-upStreamFSHandler:
-            //nodes in inactive branches don't have a file store handler set
-            //-> need to be taken into consideration when setting up the file store handler for an 'InactiveBranchConsumer-loop end'
-            if (this.isModelCompatibleTo(LoopEndNode.class)) {
-                if (upstreamFLC.getIterationIndex() > 0) {
-                    newFSHandler = (IWriteFileStoreHandler)oldFSHandler;
-                } else if(upStreamFSHandler != null){
-                    newFSHandler = new LoopEndWriteFileStoreHandler(upStreamFSHandler);
-                    newFSHandler.addToRepository(dataRepository);
-                }
-            } else if(upStreamFSHandler != null){
-                newFSHandler = new ReferenceWriteFileStoreHandler(upStreamFSHandler);
-                newFSHandler.addToRepository(dataRepository);
-            }
-        }
-        return newFSHandler;
+        return innerFLC;
     }
 
     /**
@@ -806,16 +864,19 @@ public class NativeNodeContainer extends SingleNodeContainer {
      *
      * @return the file store handler or <code>null</code> if not a virtual scope
      */
-    private IFileStoreHandler initVirtualScopeFileStoreHandler() {
+    private IWriteFileStoreHandler initVirtualScopeFileStoreHandler() {
         FlowVirtualScopeContext virtualScope =
             getFlowScopeContextFromHierarchy(FlowVirtualScopeContext.class, getFlowObjectStack());
         if (virtualScope != null) {
             IFileStoreHandler fsh = virtualScope.getNodeContainer().getNode().getFileStoreHandler();
             if (fsh instanceof IWriteFileStoreHandler) {
                 return initWriteFileStoreHandlerReference((IWriteFileStoreHandler)fsh);
+            } else if (fsh == null) {
+                // can happen if the node associated with the virtual scope is reset
+                throw new IllegalStateException("No file store handler given. Try to re-execute '"
+                    + virtualScope.getNodeContainer().getNameWithID() + "'");
             } else {
-                // TODO double-check: can we really just re-use this file store handler
-                return fsh;
+                throw new IllegalStateException("No file store handler given. Most likely an implementation error");
             }
         } else {
             return null;

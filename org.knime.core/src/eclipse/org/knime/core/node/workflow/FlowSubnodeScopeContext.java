@@ -79,6 +79,10 @@ final class FlowSubnodeScopeContext extends FlowScopeContext {
         return null;
     }
 
+    SubNodeContainer getSubNodeContainer() {
+        return m_snc;
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {

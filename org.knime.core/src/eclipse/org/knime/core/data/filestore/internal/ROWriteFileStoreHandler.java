@@ -47,6 +47,7 @@
  */
 package org.knime.core.data.filestore.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -74,6 +75,13 @@ public class ROWriteFileStoreHandler extends EmptyFileStoreHandler implements IW
     /** {@inheritDoc} */
     @Override
     public FileStore createFileStore(final String name) throws IOException {
+        throw new IllegalStateException("read only file store handler");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStore createFileStore(final String name, final int[] nestedLoopPath, final int iterationIndex)
+        throws IOException {
         throw new IllegalStateException("read only file store handler");
     }
 
@@ -115,8 +123,18 @@ public class ROWriteFileStoreHandler extends EmptyFileStoreHandler implements IW
 
     /** {@inheritDoc} */
     @Override
+    public File getBaseDir() {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void ensureOpenAfterLoad() {
     }
 
-
+    /** {@inheritDoc} */
+    @Override
+    public boolean isReference() {
+        return true;
+    }
 }
