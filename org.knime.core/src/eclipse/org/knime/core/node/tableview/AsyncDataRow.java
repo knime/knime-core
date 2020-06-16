@@ -150,4 +150,14 @@ public class AsyncDataRow implements DataRow {
             };
         }
     }
+
+    /**
+     * Blocks till the data row is loaded (either successfully or exceptionally).
+     *
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public void waitUntilLoaded() throws InterruptedException, ExecutionException {
+        m_futureRow.get();
+    }
 }
