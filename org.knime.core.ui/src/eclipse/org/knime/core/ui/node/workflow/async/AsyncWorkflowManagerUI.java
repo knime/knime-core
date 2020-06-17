@@ -46,6 +46,7 @@
  */
 package org.knime.core.ui.node.workflow.async;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.knime.core.node.NodeFactory;
@@ -255,12 +256,22 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
     void refreshOrFail(final boolean deepRefresh) throws SnapshotNotFoundException;
 
     /**
-     * Sets the disconnected-status of the workflow manager. I.e. in case the workflow manager implementation is just a
-     * client and has lost the connection to the server.
+     * Sets a connection problem message and therewith also the overall the connection-state of the workflow manager.
+     * I.e. in case the workflow manager implementation is just a client and has, e.g., lost the connection to the
+     * server.
      *
-     * @param disconnected <code>true</code> if disconnected, otherwise <code>false</code>
+     * The 'connected'-state is represented by a problem-message _not_ being present.
+     *
+     * The state is sync'd between all related workflow managers (i.e. parent or children).
+     *
+     * @param message a message if the workflow is not connected anymore or <code>null</code> if it's connected
      */
-    void setDisconnected(final boolean disconnected);
+    void setConnectionProblem(String message);
+
+    /**
+     * @return a connection problem message if disconnected or an empty optional if connected
+     */
+    Optional<String> getConnectionProblem();
 
     /**
      * @param listener listener that gets informed when the write protection status has changed. The actual status can
