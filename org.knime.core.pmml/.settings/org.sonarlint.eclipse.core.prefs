@@ -3,4 +3,4 @@ eclipse.preferences.version=1
 idePrefixKey=
 projectKey=org.knime\:knime-core
 serverId=sonar.knime.com
-sqPrefixKey=
+sqPrefixKey=org.knime.core.pmml
