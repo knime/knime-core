@@ -812,6 +812,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
     /**
      * @return The EnforceOption corresponding to the selection of the corresponding radio buttons. Empty
      * if radio buttons are not displayed or neither is selected.
+     * @since 4.2
      */
     public Optional<EnforceOption> getSelectedEnforceOption() {
         if (m_showSelectionListsOnly) {
@@ -828,6 +829,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * Set the selection of the enforce inclusion/exclusion radio buttons according to the given
      * `enforceOption`
      * @param enforceOption
+     * @since 4.2
      */
     public void setSelectedEnforceOption(final EnforceOption enforceOption) {
         switch (enforceOption) {
