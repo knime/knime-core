@@ -1146,6 +1146,40 @@ public abstract class NodeDialogPane {
     }
 
     /**
+     * Sets the tool tip text of a certain tab in the dialog. This does not
+     * affect any component placed in the tab - just the tab itself.
+     *
+     * @param toolTipText the tooltip text to be displayed for the tab.
+     * @param tabTitle the title of the tab to set the tool tip
+     * @throws IllegalArgumentException if a tab with the specified tabTitle
+     *             does not exist.
+     * @since 4.2
+     */
+    protected void setToolTip(final String toolTipText, final String tabTitle) {
+        final Component pane = m_tabs.get(tabTitle);
+        if (pane == null) {
+            throw new IllegalArgumentException("Tab with the specified title '"
+                    + tabTitle + "' doesn't exist.");
+        }
+
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            /** {@inheritDoc} */
+            @Override
+            public void run() {
+                int tabIdx = getTabIndex(pane);
+                if (tabIdx < 0) {
+                    // Ooops. Our hash map is out of sync...
+                    throw new IllegalArgumentException(
+                            "Tab with the specified title '" + tabTitle
+                            + "' doesn't exist.");
+                }
+
+                m_pane.setToolTipTextAt(tabIdx, toolTipText);
+            }
+        });
+    }
+
+    /**
      * Sets the enable status of a certain tab in the dialog. This does not
      * affect any component placed in the tab - just the tab itself. Disabled
      * tabs can't be brought to front - but if the tab which is currently
