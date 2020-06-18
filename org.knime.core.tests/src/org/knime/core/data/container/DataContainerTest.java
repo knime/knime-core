@@ -592,10 +592,10 @@ public class DataContainerTest extends TestCase {
             row = null;
         }
         container.close();
-        assertTrue(container.getBufferedTable().getBuffer().isFlushedToDisk());
+        assertTrue(((BufferedContainerTable)container.getBufferedTable()).getBuffer().isFlushedToDisk());
         final Throwable[] throwables = new Throwable[1];
         final ContainerTable table = container.getBufferedTable();
-        table.restoreIntoMemory();
+        ((BufferedContainerTable)table).restoreIntoMemory();
         // different iterators restore the content, each of which one row
         RowIterator[] its = new RowIterator[10];
         for (int i = 0; i < its.length; i++) {
@@ -720,7 +720,7 @@ public class DataContainerTest extends TestCase {
 
         // wait for all asynchronous disk write threads to terminate such that they do not interfere with our
         // monitoring of file creation / deletion.
-        BufferTest.waitForBufferToBeFlushed(writeTable.getBuffer());
+        BufferTest.waitForBufferToBeFlushed(((BufferedContainerTable)writeTable).getBuffer());
         try (WatchService watcher = FileSystems.getDefault().newWatchService()) {
             Path dir = FileUtil.getWorkflowTempDir().toPath();
             WatchKey key =

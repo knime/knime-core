@@ -138,7 +138,7 @@ public class BufferTest {
      * @return a small-sized table
      */
     static Buffer generateSmallSizedTable() {
-        return DataContainerTest.generateSmallSizedTable().getBuffer();
+        return ((BufferedContainerTable)DataContainerTest.generateSmallSizedTable()).getBuffer();
     }
 
     /**
@@ -148,7 +148,7 @@ public class BufferTest {
      * @return a medium-sized table
      */
     static Buffer generateMediumSizedTable() {
-        return DataContainerTest.generateMediumSizedTable().getBuffer();
+        return ((BufferedContainerTable)DataContainerTest.generateMediumSizedTable()).getBuffer();
     }
 
     /**
