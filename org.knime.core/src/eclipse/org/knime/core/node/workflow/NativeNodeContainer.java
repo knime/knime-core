@@ -867,14 +867,14 @@ public class NativeNodeContainer extends SingleNodeContainer {
     private IWriteFileStoreHandler initVirtualScopeFileStoreHandler() {
         FlowVirtualScopeContext virtualScope =
             getFlowScopeContextFromHierarchy(FlowVirtualScopeContext.class, getFlowObjectStack());
-        if (virtualScope != null) {
-            IFileStoreHandler fsh = virtualScope.getNodeContainer().getNode().getFileStoreHandler();
+        if (virtualScope != null && virtualScope.getNodeContainer().isPresent()) {
+            IFileStoreHandler fsh = virtualScope.getNodeContainer().get().getNode().getFileStoreHandler();
             if (fsh instanceof IWriteFileStoreHandler) {
                 return initWriteFileStoreHandlerReference((IWriteFileStoreHandler)fsh);
             } else if (fsh == null) {
                 // can happen if the node associated with the virtual scope is reset
                 throw new IllegalStateException("No file store handler given. Try to re-execute '"
-                    + virtualScope.getNodeContainer().getNameWithID() + "'");
+                    + virtualScope.getNodeContainer().get().getNameWithID() + "'");
             } else {
                 throw new IllegalStateException("No file store handler given. Most likely an implementation error");
             }

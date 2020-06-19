@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.virtual.parchunk;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -60,6 +61,9 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 /**
  * Marks a virtual scope, i.e. a scope (a set of nodes) that is not permanently present and deleted after the execution
  * of all contained nodes.
+ *
+ * A virtual scope is marked by the {@link VirtualParallelizedChunkPortObjectInNodeModel} and
+ * {@link VirtualParallelizedChunkPortObjectOutNodeModel}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
@@ -98,6 +102,10 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
      * Sets the node container that is (indirectly) responsible for the creation of this virtual scope. The file
      * handlers of this node, e.g., will be used. Must be set before the scope can be executed.
      *
+     * This node container does not need to be provided if the start node of this virtual scope is connected (upstream)
+     * to another loop start (as it is the case with the parallel chunk loop start node). In all other case it must be
+     * set.
+     *
      * @param nc the node
      */
     public void setNodeContainer(final NativeNodeContainer nc) {
@@ -105,10 +113,11 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
     }
 
     /**
-     * @return the node associated with this virtual scope (see {@link #setNodeContainer(NativeNodeContainer)})
+     * @return the node associated with this virtual scope (see {@link #setNodeContainer(NativeNodeContainer)}) or an
+     *         empty optional if there is no node associated.
      */
-    public NativeNodeContainer getNodeContainer() {
-        return m_nc;
+    public Optional<NativeNodeContainer> getNodeContainer() {
+        return Optional.ofNullable(m_nc);
     }
 
 }
