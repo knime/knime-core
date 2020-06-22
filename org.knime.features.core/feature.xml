@@ -759,4 +759,28 @@ propagated with or for interoperation with KNIME.
          version="0.0.0"
          unpack="false"/>
 
+   <plugin
+         id="javax.xml.clfix"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.e4.ui.css.core.clfix"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.xerces.clfix"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
 </feature>

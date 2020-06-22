@@ -66,6 +66,7 @@
 				<configuration>
 					<excludes>
 						<plugin id="org.eclipse.ant.optional.junit" />
+						<plugin id="org.apache.xerces.clfix" />
 					</excludes>
 				</configuration>
 			</plugin>
