@@ -182,11 +182,6 @@
 			<layout>p2</layout>
 			<url>${knime.tp.p2}</url>
 		</repository>
-		<repository>
-			<id>p2-knime-json</id>
-			<layout>p2</layout>
-			<url>${knime.json.p2}</url>
-		</repository>
 	</repositories>
 
 	<build>
