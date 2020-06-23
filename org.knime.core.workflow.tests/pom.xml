@@ -30,8 +30,8 @@
 					<dependency-resolution>
 						<extraRequirements>
 							<requirement>
-								<type>eclipse-feature</type>
-								<id>org.knime.features.testing.application</id>
+								<type>eclipse-plugin</type>
+								<id>org.knime.testing.application</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
 							<requirement>
@@ -57,6 +57,11 @@
 							<requirement>
 								<type>eclipse-feature</type>
 								<id>org.knime.features.js.views</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
+								<id>org.knime.features.core</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
 						</extraRequirements>
