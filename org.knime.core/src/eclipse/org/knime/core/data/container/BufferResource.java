@@ -123,7 +123,11 @@ public interface BufferResource {
         private void removeStaleEntriesAndReleaseResources() {
             Reference<? extends CloseableRowIterator> ref;
             while ((ref = m_refQueue.poll()) != null) {
-                m_openResources.inverse().remove(ref).releaseResource();
+                final BufferResource resource = m_openResources.inverse().remove(ref);
+                // resource could be null if entry was already unregistered
+                if (resource != null) {
+                    resource.releaseResource();
+                }
             }
         }
     }
