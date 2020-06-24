@@ -99,8 +99,13 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.FlowVariable.Scope;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainerTemplate;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeGraphAnnotation;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -381,7 +386,8 @@ public final class WorkflowSummaryGenerator {
     }
 
     @JsonPropertyOrder({"id", "name", "type", "state", "graphDepth", "annotation", "metanode", "component",
-        "factoryKey", "nodeMessage", "settings", "outputs", "subWorkflow", "executionStatistics", "jobManager"})
+        "factoryKey", "nodeMessage", "settings", "outputs", "subWorkflow", "executionStatistics", "jobManager",
+        "deprecated", "parentId", "linkInfo", "flowVariables"})
     private interface Node {
 
         @JacksonXmlProperty(isAttribute = true)
@@ -408,6 +414,12 @@ public final class WorkflowSummaryGenerator {
         @JacksonXmlProperty(isAttribute = true)
         Integer getGraphDepth();
 
+        @JacksonXmlProperty(isAttribute = true)
+        Boolean isDeprecated();
+
+        @JacksonXmlProperty(isAttribute = true)
+        String getParentId();
+
         NodeFactoryKey getFactoryKey();
 
         NodeMessage getNodeMessage();
@@ -425,6 +437,12 @@ public final class WorkflowSummaryGenerator {
         ExecutionStatistics getExecutionStatistics();
 
         JobManager getJobManager();
+
+        LinkInfo getLinkInfo();
+
+        @JacksonXmlProperty(localName = "flowvariable")
+        @JacksonXmlElementWrapper(localName = "flowvariables")
+        List<FlowVariable> getFlowVariables();
 
         static Node create(final NodeContainer nc, final WorkflowSummaryConfiguration config) {
             return new Node() {
@@ -547,6 +565,49 @@ public final class WorkflowSummaryGenerator {
                 @Override
                 public NodeMessage getNodeMessage() {
                     return NodeMessage.create(nc.getNodeMessage());
+                }
+
+                @Override
+                public Boolean isDeprecated() {
+                    if (nc instanceof NativeNodeContainer
+                        && ((NativeNodeContainer)nc).getNode().getFactory().isDeprecated()) {
+                        return true;
+                    } else {
+                        return null;
+                    }
+                }
+
+                @Override
+                public String getParentId() {
+                    if (nc.getParent().isProject()) {
+                        return null;
+                    } else {
+                        //remove project wfm id
+                        WorkflowManager projectWFM = nc.getParent().getProjectWFM();
+                        return NodeIDSuffix.create(projectWFM.getID(), nc.getParent().getID()).toString();
+                    }
+                }
+
+                @Override
+                public LinkInfo getLinkInfo() {
+                    if (nc instanceof NodeContainerTemplate) {
+                        return LinkInfo.create(((NodeContainerTemplate)nc).getTemplateInformation());
+                    } else {
+                        return null;
+                    }
+                }
+
+                @Override
+                public List<FlowVariable> getFlowVariables() {
+                    if (nc instanceof SingleNodeContainer) {
+                        // the outgoing stack of a SingleNodeContainer only contains variables owned by that node
+                        FlowObjectStack fos = ((SingleNodeContainer)nc).getOutgoingFlowObjectStack();
+                        return fos == null ? null : fos.getAllAvailableFlowVariables().values().stream()//
+                            .filter(f -> f.getScope() == Scope.Flow)//
+                            .map(FlowVariable::create).collect(Collectors.toList());
+                    } else {
+                        return null;
+                    }
                 }
 
             };
@@ -813,7 +874,7 @@ public final class WorkflowSummaryGenerator {
         }
     }
 
-    @JsonPropertyOrder({"index", "type", "inactive", "summary", "tableSpec", "successors"})
+    @JsonPropertyOrder({"index", "type", "inactive", "tableSpec", "dataSummary", "successors"})
     private interface OutputPort {
 
         @JacksonXmlProperty(isAttribute = true)
@@ -827,7 +888,7 @@ public final class WorkflowSummaryGenerator {
 
         TableSpec getTableSpec();
 
-        String getSummary();
+        String getDataSummary();
 
         @JacksonXmlProperty(localName = "successor")
         @JacksonXmlElementWrapper(localName = "successors")
@@ -861,7 +922,7 @@ public final class WorkflowSummaryGenerator {
                 }
 
                 @Override
-                public String getSummary() {
+                public String getDataSummary() {
                     if (config.m_includeExecutionInfo && p.getPortObject() != null) {
                         return p.getPortObject().getSummary();
                     }
@@ -1065,6 +1126,39 @@ public final class WorkflowSummaryGenerator {
             }
             return res;
         }
+    }
+
+    @JsonPropertyOrder({"name", "type", "value"})
+    private interface FlowVariable {
+
+        @JacksonXmlProperty(isAttribute = true)
+        String getName();
+
+        @JacksonXmlProperty(isAttribute = true)
+        String getType();
+
+        String getValue();
+
+        static FlowVariable create(final org.knime.core.node.workflow.FlowVariable var) {
+            return new FlowVariable() {
+
+                @Override
+                public String getName() {
+                    return var.getName();
+                }
+
+                @Override
+                public String getType() {
+                    return var.getVariableType().getIdentifier();
+                }
+
+                @Override
+                public String getValue() {
+                    return var.getValueAsString();
+                }
+
+            };
+        }
 
     }
 
@@ -1127,6 +1221,44 @@ public final class WorkflowSummaryGenerator {
                 });
             }
             return res;
+        }
+    }
+
+    @JsonPropertyOrder({"sourceURI", "timeStamp", "updateStatus"})
+    private interface LinkInfo {
+
+        @JacksonXmlProperty(isAttribute = true)
+        String getSourceURI();
+
+        @JacksonXmlProperty(isAttribute = true)
+        String getTimeStamp();
+
+        @JacksonXmlProperty(isAttribute = true)
+        String getUpdateStatus();
+
+        static LinkInfo create(final MetaNodeTemplateInformation info) {
+            info.getSourceURI();
+            if (info.getRole() != Role.None) {
+                return new LinkInfo() {
+
+                    @Override
+                    public String getSourceURI() {
+                        return info.getSourceURI() != null ? info.getSourceURI().toString() : null;
+                    }
+
+                    @Override
+                    public String getTimeStamp() {
+                        return info.getTimeStampString();
+                    }
+
+                    @Override
+                    public String getUpdateStatus() {
+                        return info.getUpdateStatus() != null ? info.getUpdateStatus().name() : null;
+                    }
+                };
+            } else {
+                return null;
+            }
         }
     }
 

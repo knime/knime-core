@@ -108,6 +108,9 @@ public interface NodeContainerTemplate {
      * @param tI the new templateInformation */
     public void setTemplateInformation(MetaNodeTemplateInformation tI);
 
+    /**
+     * @return the template info, never <code>null</code>
+     */
     public MetaNodeTemplateInformation getTemplateInformation();
 
     public WorkflowCipher getWorkflowCipher();
