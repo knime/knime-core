@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.core.node;
 
@@ -53,28 +53,75 @@ package org.knime.core.node;
  * {@link org.knime.core.node.NodeProgressMonitor} if a cancel is
  * requested, this method will throw this exception which then leads the
  * process to terminate.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class CanceledExecutionException extends Exception {
-    
+
     /**
      * Creates a new exception of this type with an error message.
      */
     public CanceledExecutionException() {
         super();
     }
-    
+
     /**
      * Constructs an <code>CancelExecutionException</code> with the specified
      * detail message.
-     * 
+     *
      * Use a helpful message here as it will be displayed to the user, and it is
      * the only hint ones gets to correct the problem.
-     * 
+     *
      * @param s a detail message about the cancelation
      */
     public CanceledExecutionException(final String s) {
         super(s);
+    }
+
+    /**
+     * A function that can be used to check whether execution has been canceled.
+     * @author Carl Witt, KNIME AG, Zurich, Switzerland
+     * @since 4.2
+     */
+    @FunctionalInterface
+    public interface CancelChecker {
+        /**
+         * Check whether the execution was canceled. If so, throw an according exception.
+         * @throws CanceledExecutionException
+         */
+        void checkCanceled() throws CanceledExecutionException;
+
+        /**
+         * Provides a default value for the polling interval parameter of
+         * {@link #checkCanceledPeriodically(ExecutionContext, long)}
+         *
+         * @param exec see {@link #checkCanceledPeriodically(ExecutionContext, long)}
+         * @return an object that periodically tests the execution context for cancelation
+         */
+        public static CancelChecker checkCanceledPeriodically(final ExecutionContext exec) {
+            return checkCanceledPeriodically(exec, 5000);
+        }
+
+        /**
+         * @param exec the context to check for cancelation
+         * @param skipEveryNInvocations check cancelation only on every n-th invocation of {@link #checkCanceled()} to
+         *            save some time
+         * @return an object that periodically tests the execution context for cancelation
+         */
+        public static CancelChecker checkCanceledPeriodically(final ExecutionContext exec,
+            final long skipEveryNInvocations) {
+            return new CancelChecker() {
+                long m_skipNext = skipEveryNInvocations;
+
+                @Override
+                public void checkCanceled() throws CanceledExecutionException {
+                    if (--m_skipNext == 0) {
+                        exec.checkCanceled();
+                        m_skipNext = skipEveryNInvocations;
+                    }
+                }
+            };
+
+        }
     }
 }

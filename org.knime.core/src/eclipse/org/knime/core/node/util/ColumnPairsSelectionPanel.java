@@ -121,7 +121,7 @@ public class ColumnPairsSelectionPanel extends JPanel {
 
         m_fillComponent = new JPanel();
         m_fillComponent.setBackground(Color.WHITE);
-        m_persistentAddButton = new JButton("Add row");
+        m_persistentAddButton = new JButton("Add matching criterion");
         m_persistentAddButton.setToolTipText("Append row at the end");
         m_persistentAddButton.addActionListener(new ActionListener() {
             /**  {@inheritDoc} */
