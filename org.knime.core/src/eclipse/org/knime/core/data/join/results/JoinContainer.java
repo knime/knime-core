@@ -60,6 +60,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.join.HybridHashJoin;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
+import org.knime.core.data.join.OrderedRow;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.CanceledExecutionException.CancelChecker;
@@ -354,25 +355,12 @@ public abstract class JoinContainer implements JoinResults {
         TLongHashSet m_set = new TLongHashSet();
 
         /**
-         * Combine two numbers such that sorting the combined values first sorts according to left value then according
-         * to right value.
-         *
-         * @param left a 32-bit unsigned integer, i.e., at most ~4G
-         * @param right a 32-bit unsigned integer, i.e., at most ~4G
-         * @return a 64-bit unsigned long containing the left value in the upper 32 bits and the right in the lower 32
-         *         bits
-         */
-        long combine(final long left, final long right) {
-            return (left << 32) + right;
-        }
-
-        /**
          * @param leftRowOffset a 32-bit unsigned integer, i.e., at most ~4G
          * @param rightRowOffset a 32-bit unsigned integer, i.e., at most ~4G
          * @return whether the combination of row offsets is new, i.e., hasn't been put before
          */
         public boolean put(final long leftRowOffset, final long rightRowOffset) {
-            return m_set.add(combine(leftRowOffset, rightRowOffset));
+            return m_set.add(OrderedRow.combinedOffsets(leftRowOffset, rightRowOffset));
         }
 
     }

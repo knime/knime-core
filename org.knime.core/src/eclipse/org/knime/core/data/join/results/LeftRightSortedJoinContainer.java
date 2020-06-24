@@ -50,21 +50,14 @@ package org.knime.core.data.join.results;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataTableSpecCreator;
-import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.DefaultCellIterator;
-import org.knime.core.data.def.LongCell;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
+import org.knime.core.data.join.OrderedRow;
 import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -96,9 +89,9 @@ public class LeftRightSortedJoinContainer extends JoinContainer {
         final boolean deduplicateResults, final boolean deferUnmatchedRows) {
         super(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
 
-        // add two long columns to each output spec for storing the left and right row offset
+        // add a long column to each output spec for storing the combined left and right row offset
         m_workingSpecs = Arrays.stream(m_outputSpecs)
-                .map(tableSpec -> LeftRightOrderedRow.withOffsets(m_joinSpecification, tableSpec))
+                .map(OrderedRow::withOffset)
                 .toArray(DataTableSpec[]::new);
 
         // create output containers
@@ -109,25 +102,28 @@ public class LeftRightSortedJoinContainer extends JoinContainer {
         m_tables = new BufferedDataTable[3];
     }
 
-    private void add(final int rowType, final LeftRightOrderedRow row) {
+    private void add(final int rowType, final DataRow row) {
         m_containers[rowType].addRowToTable(row);
     }
 
     @Override
     public boolean doAddMatch(final DataRow left, final long leftOffset, final DataRow right, final long rightOffset) {
-        add(MATCHES, new LeftRightOrderedRow(m_joinSpecification.rowJoin(left, right), leftOffset, rightOffset));
+        DataRow joinedProjected = m_joinSpecification.rowJoin(left, right);
+        add(MATCHES, OrderedRow.withCombinedOffset(joinedProjected, leftOffset, rightOffset));
         return true;
     }
 
     @Override
     public boolean doAddLeftOuter(final DataRow row, final long offset) {
-        add(LEFT_OUTER, new LeftRightOrderedRow(m_joinSpecification.rowProject(InputTable.LEFT, row), offset, -1));
+        DataRow projected = m_joinSpecification.rowProject(InputTable.LEFT, row);
+        add(LEFT_OUTER, OrderedRow.withCombinedOffset(projected, offset, -1));
         return true;
     }
 
     @Override
     public boolean doAddRightOuter(final DataRow row, final long offset) {
-        add(RIGHT_OUTER, new LeftRightOrderedRow(m_joinSpecification.rowProject(InputTable.RIGHT, row), -1, offset));
+        DataRow projected = m_joinSpecification.rowProject(InputTable.RIGHT, row);
+        add(RIGHT_OUTER, OrderedRow.withCombinedOffset(projected, -1, offset));
         return true;
     }
 
@@ -146,6 +142,8 @@ public class LeftRightSortedJoinContainer extends JoinContainer {
      */
     private BufferedDataTable get(final int resultType) throws CanceledExecutionException {
         if (m_tables[resultType] == null) {
+            System.out.println("Shipping results for type " + resultType);
+            // in case unmatched rows are collected deferred, this is the last possibility to collect them
             if(resultType != MATCHES) {
                 m_unmatchedRows[resultType].collectUnmatched();
             }
@@ -154,20 +152,13 @@ public class LeftRightSortedJoinContainer extends JoinContainer {
 
             BufferedDataTable unsorted = m_containers[resultType].getTable();
 
-            // sort by the first two columns
-            String[] sortColumns = new String[] {
-                // left row offset
-                unsorted.getDataTableSpec().getColumnSpec(0).getName(),
-                // right row offset
-                unsorted.getDataTableSpec().getColumnSpec(1).getName()
-            };
-            boolean[] sortBothAscending = new boolean[]{true, true};
+            // sort by the combined offsets
             BufferedDataTable sorted =
-                new BufferedDataTableSorter(unsorted, Arrays.asList(sortColumns), sortBothAscending).sort(m_exec);
+                new BufferedDataTableSorter(unsorted, Comparator.comparingLong(OrderedRow.OFFSET_EXTRACTOR))
+                    .sort(m_exec);
 
             // remove sort columns
-            final ColumnRearranger workingSpecToFinalSpec =
-                LeftRightOrderedRow.removeSortColumns(m_workingSpecs[resultType]);
+            final ColumnRearranger workingSpecToFinalSpec = OrderedRow.removeOffset(m_workingSpecs[resultType]);
             m_tables[resultType] = m_exec.createColumnRearrangeTable(sorted, workingSpecToFinalSpec, m_exec);
         }
         return m_tables[resultType];
@@ -213,153 +204,6 @@ public class LeftRightSortedJoinContainer extends JoinContainer {
         result.close();
 
         return result.getTable();
-    }
-
-}
-/**
- * Adds the offset of the row in its source table to the row. This is used for persisting partitions of an input table
- * (either hash or probe). The row offsets are later on needed to sort the join results if the {@link JoinSpecification}
- * specifies {@link OutputRowOrder#DETERMINISTIC} or {@link OutputRowOrder#LEFT_RIGHT}.
- *
- * @see NWayMergeContainer.SortedChunks#nWayMerge
- * @see LeftRightSortedJoinContainer#getSingleTable()
- *
- * @author Carl Witt, KNIME AG, Zurich, Switzerland
- */
-@SuppressWarnings("javadoc")
-class LeftRightOrderedRow implements DataRow, Comparable<LeftRightOrderedRow> {
-
-    private final LongCell m_leftOrder;
-    private final LongCell m_rightOrder;
-    final RowKey m_rowKey;
-    final DataCell[] m_cells;
-
-    private static final Comparator<LeftRightOrderedRow> COMPARATOR =
-        Comparator.comparingLong(LeftRightOrderedRow::getLeftOrder).thenComparing(LeftRightOrderedRow::getRightOrder);
-
-    public LeftRightOrderedRow(final DataRow original, final long leftOrder, final long rightOrder) {
-
-        m_rowKey = original.getKey();
-
-        m_leftOrder = new LongCell(leftOrder);
-        m_rightOrder = new LongCell(rightOrder);
-
-        m_cells = new DataCell[original.getNumCells() + 2];
-
-        m_cells[0] = m_leftOrder;
-        m_cells[1] = m_rightOrder;
-
-        for (int cell=0; cell < original.getNumCells(); cell++) {
-            m_cells[cell+2] = original.getCell(cell);
-        }
-
-    }
-
-    /**
-     * @param workingSpec a working table spec generated with {@link #withOffsets(JoinSpecification, DataTableSpec)}
-     * @return the original data table spec, without the auxiliary column for sorting
-     */
-    public static ColumnRearranger removeSortColumns(final DataTableSpec workingSpec) {
-        ColumnRearranger workingSpecToFinalSpec = new ColumnRearranger(workingSpec);
-        workingSpecToFinalSpec.remove(0, 1);
-        return workingSpecToFinalSpec;
-    }
-
-    /**
-     * Prepends two long columns to the given table specification. They hold the row offset of the left/right row that
-     * contributed to a row in the join results. Row offset denotes the position of the row in its source table (left or
-     * right input table). Can be -1 if it's a left/right unmatched row.
-     */
-    static DataTableSpec withOffsets(final JoinSpecification joinSpec, final DataTableSpec spec) {
-
-        DataColumnSpec leftRowOffset = new DataColumnSpecCreator("Left Row Offset", LongCell.TYPE).createSpec();
-        DataColumnSpec rightRowOffset = new DataColumnSpecCreator("Right Row Offset", LongCell.TYPE).createSpec();
-        // make sure the column names are unique; however, as long as they don't clash, the names don't matter
-        DataColumnSpec leftRowOffsetSafe = joinSpec.columnDisambiguate(leftRowOffset, spec::containsName);
-        DataColumnSpec rightRowOffsetSafe = joinSpec.columnDisambiguate(rightRowOffset, spec::containsName);
-
-        // prepend columns to get a working table spec that can be sorted by the first two columns
-        return new DataTableSpecCreator()
-                .addColumns(leftRowOffsetSafe, rightRowOffsetSafe)
-                .addColumns(spec)
-                .createSpec();
-    }
-
-    public long getLeftOrder() {
-        return m_leftOrder.getLongValue();
-    }
-
-    public long getRightOrder() {
-        return m_rightOrder.getLongValue();
-    }
-
-
-    @Override
-    public Iterator<DataCell> iterator() {
-        return new DefaultCellIterator(this);
-    }
-
-    @Override
-    public int getNumCells() {
-        return m_cells.length;
-    }
-
-    @Override
-    public RowKey getKey() {
-        return m_rowKey;
-    }
-
-    @Override
-    public DataCell getCell(final int index) {
-        return m_cells[index];
-    }
-
-    @Override
-    public int compareTo(final LeftRightOrderedRow o) {
-        return COMPARATOR.compare(this, o);
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((m_leftOrder == null) ? 0 : m_leftOrder.hashCode());
-        result = prime * result + ((m_rightOrder == null) ? 0 : m_rightOrder.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        LeftRightOrderedRow other = (LeftRightOrderedRow)obj;
-        if (m_leftOrder == null) {
-            if (other.m_leftOrder != null) {
-                return false;
-            }
-        } else if (!m_leftOrder.equals(other.m_leftOrder)) {
-            return false;
-        }
-        if (m_rightOrder == null) {
-            if (other.m_rightOrder != null) {
-                return false;
-            }
-        } else if (!m_rightOrder.equals(other.m_rightOrder)) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("(%s, %s) %s: %s", m_leftOrder, m_rightOrder, m_rowKey, Arrays.toString(m_cells));
     }
 
 }

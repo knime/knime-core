@@ -171,18 +171,18 @@ public class HybridHashJoin extends JoinImplementation {
                 m_joinResults = new UnorderedJoinContainer(m_joinSpecification, m_exec, deduplicateResults, deferMatches);
                 break;
             case DETERMINISTIC:
-                m_joinResults =
-                    new NWayMergeContainer(m_joinSpecification, m_exec, m_left == m_probe, deduplicateResults, deferMatches);
-                break;
+//                m_joinResults =
+//                    new NWayMergeContainer(m_joinSpecification, m_exec, m_left == m_probe, deduplicateResults, deferMatches);
+//                break;
             case LEFT_RIGHT:
-                if (m_left == m_probe) {
-                    // if the left table happens to be the probe table, legacy and deterministic order are the same
-                    m_joinResults =
-                        new NWayMergeContainer(m_joinSpecification, m_exec, m_left == m_probe, deduplicateResults, deferMatches);
-                } else {
+//                if (m_left == m_probe) {
+//                    // if the left table happens to be the probe table, legacy and deterministic order are the same
+//                    m_joinResults =
+//                        new NWayMergeContainer(m_joinSpecification, m_exec, m_left == m_probe, deduplicateResults, deferMatches);
+//                } else {
                     // otherwise we need to do the full sort
                     m_joinResults = new LeftRightSortedJoinContainer(m_joinSpecification, m_exec, deduplicateResults, deferMatches);
-                }
+//                }
                 break;
             default:
                 throw new IllegalStateException();

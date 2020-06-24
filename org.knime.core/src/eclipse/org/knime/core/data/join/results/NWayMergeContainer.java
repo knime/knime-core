@@ -154,8 +154,7 @@ public class NWayMergeContainer extends JoinContainer {
             if (resultType != MATCHES) {
                 m_unmatchedRows[resultType].collectUnmatched();
             }
-
-            // perform n-way merge of the sorted chunks
+            // perform n-way merge of the sorted chunks, remove the auxiliary offset column
             m_tables[resultType] = m_chunks[resultType].getSortedTable();
         }
 

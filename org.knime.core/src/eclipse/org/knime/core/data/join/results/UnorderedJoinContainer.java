@@ -71,6 +71,8 @@ import org.knime.core.node.ExecutionContext;
  */
 public class UnorderedJoinContainer extends JoinContainer {
 
+    private static final int SINGLE_TABLE = 3;
+
     private final BufferedDataContainer[] m_containers;
 
     private final BufferedDataTable[] m_tables;
@@ -87,7 +89,7 @@ public class UnorderedJoinContainer extends JoinContainer {
 
         m_containers =
             Arrays.stream(m_outputSpecs).map(exec::createDataContainer).toArray(BufferedDataContainer[]::new);
-        m_tables = new BufferedDataTable[3];
+        m_tables = new BufferedDataTable[4];
     }
 
     private void add(final int rowType, final DataRow row) {
@@ -142,27 +144,32 @@ public class UnorderedJoinContainer extends JoinContainer {
     @Override
     public BufferedDataTable getSingleTable() throws CanceledExecutionException {
 
-        // this is empty if matches are not retained
-        // however, it has the correct spec (left + right included columns)
-        // and is open after object construction until #getMatches is called
-        final BufferedDataContainer result = m_containers[MATCHES];
-        CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodically(m_exec);
+        if(m_tables[SINGLE_TABLE] == null) {
 
-        // add left unmatched rows
-        if (m_joinSpecification.isRetainUnmatched(InputTable.LEFT)) {
-            JoinResults.iterateWithResources(getLeftOuter(), row -> result.addRowToTable(padRightWithMissing(row)),
-                checkCanceled);
+            // this is empty if matches are not retained
+            // however, it has the correct spec (left + right included columns)
+            // and is open after object construction until #getMatches is called
+            final BufferedDataContainer result = m_containers[MATCHES];
+            CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodically(m_exec);
+
+            // add left unmatched rows
+            if (m_joinSpecification.isRetainUnmatched(InputTable.LEFT)) {
+                JoinResults.iterateWithResources(getLeftOuter(), row -> result.addRowToTable(padRightWithMissing(row)),
+                    checkCanceled);
+            }
+
+            // add right unmatched rows
+            if (m_joinSpecification.isRetainUnmatched(InputTable.RIGHT)) {
+                JoinResults.iterateWithResources(getRightOuter(), row -> result.addRowToTable(padLeftWithMissing(row)),
+                    checkCanceled);
+            }
+
+            result.close();
+            m_tables[SINGLE_TABLE] = result.getTable();
+
         }
+        return m_tables[SINGLE_TABLE];
 
-        // add right unmatched rows
-        if (m_joinSpecification.isRetainUnmatched(InputTable.RIGHT)) {
-            JoinResults.iterateWithResources(getRightOuter(), row -> result.addRowToTable(padLeftWithMissing(row)),
-                checkCanceled);
-        }
-
-        result.close();
-
-        return result.getTable();
     }
 
 }

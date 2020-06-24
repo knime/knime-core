@@ -133,6 +133,28 @@ public abstract class OrderedRow { // implements DataRow, Comparable<OrderedRow>
     }
 
     /**
+     * @param rowProject
+     * @param i
+     * @param offset
+     * @return
+     */
+    public static DataRow withCombinedOffset(final DataRow row, final long leftOffset, final long rightOffset) {
+        return withOffset(row, combinedOffsets(leftOffset, rightOffset));
+    }
+
+    /**
+     * Combine two offsets into one long such that sorting the combined values first sorts according to left value then
+     * according to right value.
+     *
+     * @param left a 32-bit unsigned integer, i.e., at most ~4G
+     * @param right a 32-bit unsigned integer, i.e., at most ~4G
+     * @return a 64-bit unsigned long containing the left value in the upper 32 bits and the right in the lower 32 bits
+     */
+    public static long combinedOffsets(final long left, final long right) {
+        return (left << 32) + right;
+    }
+
+    /**
      * Revert the {@link #withOffset(DataTableSpec)} operation
      *
      * <pre>

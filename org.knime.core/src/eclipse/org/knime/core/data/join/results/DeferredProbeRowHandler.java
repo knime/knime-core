@@ -228,12 +228,16 @@ class DeferredProbeRowHandler implements UnmatchedRows {
     }
 
     /**
+     * Outputs unmatched rows into the handler {@link #m_unmatched} passed during construction.
+     * This method is meant to be called only once. It is assumed that unmatched rows are produced and collected in the
+     * end, NOT produced, collected, produced, ...
+     * This clears all data structures.
      * @throws CanceledExecutionException if the {@link CancelChecker} passed at construction signaled that execution is
      *             canceled
      */
     @Override
     public void collectUnmatched() throws CanceledExecutionException {
-        System.out.println(String.format("Deferred unmatched probe row collection%n candidates %s%n wasMatched %s", m_candidates, m_wasMatched)); // %ndeferred %s , m_deferred
+//        System.out.println(String.format("Deferred unmatched probe row collection%n candidates %s%n wasMatched %s", m_candidates, m_wasMatched)); // %ndeferred %s , m_deferred
 
         if (m_candidates != null) {
             while (!m_candidates.isEmpty()) {
@@ -241,6 +245,7 @@ class DeferredProbeRowHandler implements UnmatchedRows {
                 Entry<Long, DataRow> unmatchedRow = m_candidates.pollFirstEntry();
                 m_unmatched.accept(unmatchedRow.getValue(), unmatchedRow.getKey());
             }
+            m_candidates.clear();
         } else {
             // do a single pass over the probe input, output every unmatched row into the join results
             ObjLongConsumer<DataRow> outputIfUnmatched = (datarow, originalRowOffset) -> {
@@ -251,6 +256,7 @@ class DeferredProbeRowHandler implements UnmatchedRows {
             };
             JoinResults.enumerateWithResources(m_probeInput, outputIfUnmatched, m_checkCanceled);
         }
+        m_wasMatched.clear();
     }
 
 }
