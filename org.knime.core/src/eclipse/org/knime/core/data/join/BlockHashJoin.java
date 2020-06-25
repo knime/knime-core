@@ -140,14 +140,12 @@ class BlockHashJoin {
         JoinTableSettings hashSettings = m_joinSpecification.getSettings(hashSide);
         JoinTableSettings probeSettings = m_joinSpecification.getSettings(probeSide);
 
-        // if either bucket is empty, we're done joining those buckets.
-        Optional<BufferedDataTable> probeInput = probeSettings.getTable();
-        Optional<BufferedDataTable> hashInput = hashSettings.getTable();
+        BufferedDataTable probe = probeSettings.getTable().orElseThrow(IllegalStateException::new);
+        BufferedDataTable hash = hashSettings.getTable().orElseThrow(IllegalStateException::new);
 
-        ObjLongConsumer<DataRow> unmatchedHashRows = extractOffsets(results.unmatched(hashSettings.getSide()));
-
-        BufferedDataTable probe = probeInput.orElseThrow(IllegalStateException::new);
-        BufferedDataTable hash = hashInput.orElseThrow(IllegalStateException::new);
+        // if the join problem we're solving here comes from a partition, the row offsets have changed.
+        // in case they matter, we can extract them from an auxiliary column added to the rows
+        ObjLongConsumer<DataRow> unmatchedHashRows = extractOffsets(results.unmatched(hashSide));
 
 //        System.out.println(String.format("extractRowOffsets=%s", m_extractRowOffsets));
 
@@ -156,6 +154,7 @@ class BlockHashJoin {
             () -> new HashIndex(m_joinSpecification, results, hashSide, m_progress::isCanceled);
         HashIndex index = newHashIndex.get();
 
+        // grab and index as many hash input rows as possible (ideally all)
         try (CloseableRowIterator hashRows = hash.iterator()) {
 
             long rowOffset = 0;
@@ -168,14 +167,7 @@ class BlockHashJoin {
 
                 DataCell[] joinAttributeValues = JoinTuple.get(hashSettings, hashRow);
 
-                if (joinAttributeValues == null) {
-//                    System.out.println(String.format("unmatched hash Row=%s", hashRow));
-                    unmatchedHashRows.accept(hashRow, rowOffset);
-                } else {
-//                    System.out.println(
-//                        String.format("index hash row %s using %s", hashRow, Arrays.toString(joinAttributeValues)));
-                    index.addHashRow(joinAttributeValues, hashRow, rowOffset);
-                }
+                index.addHashRow(joinAttributeValues, hashRow, rowOffset);
 
                 // if memory is running low, do a pass over the probe input to be able to clear the hash index
                 boolean memoryLow = m_progress.isMemoryLow(100);
@@ -185,9 +177,9 @@ class BlockHashJoin {
 
                     // switch from caching unmatched rows to just marking unmatched rows and collecting them later
                     // TODO pass on the signal via join container probeRowHandler.lowMemory();
-                    System.out
-                        .println(String.format("Flushing pass over probe input (%s) against partialIndex with %s rows",
-                            probeSide, index.numAddedRows()));
+//                    System.out
+//                        .println(String.format("Flushing pass over probe input (%s) against partialIndex with %s rows",
+//                            probeSide, index.numAddedRows()));
                     singlePass(probe, index, unmatchedHashRows);
                     index = newHashIndex.get();
                 }

@@ -214,4 +214,521 @@ public abstract class JoinTestInput {
         return buffer.toString();
     }
 
+
+    /**
+     * Produce both matches and unmatched rows in both input tables.
+     * Include one non-join column from each table.
+     */
+    abstract static class SmallInput extends JoinTestInput {
+
+        // left table
+        DataRow leftA = defaultRow("A,A,1,2"), // left outer
+                leftB = defaultRow("B,B,3,4"), // inner
+                leftX = defaultRow("X,X,100,101"); // inner
+
+        // right table
+        DataRow rightX = defaultRow("X,X,102,103"), // inner
+                rightB = defaultRow("B,B,5,6"), // inner
+                rightC = defaultRow("C,?,7,8"), // right outer
+                rightD = defaultRow("D,D,9,10"); // right outer
+
+        DataRow leftAProjected = defaultRow("A,1"),
+                leftBProjected = defaultRow("B,3"),
+                leftXProjected = defaultRow("X,100");
+
+        DataRow rightXProjected = defaultRow("X,103"),
+                rightBProjected = defaultRow("B,6"),
+                rightCProjected = defaultRow("C,8"),
+                rightDProjected = defaultRow("D,10");
+
+        @Override
+        BufferedDataTable left() {
+            return JoinTestInput.table("Join Column,Nonjoin1,Nonjoin2", leftA, leftB, leftX);
+        }
+
+        @Override
+        BufferedDataTable right() {
+            return JoinTestInput.table("Join Column,Nonjoin1,Nonjoin2", rightX, rightB, rightC, rightD);
+        }
+
+        // results
+        DataRow innerX = defaultRow("X+X,100,103");
+        DataRow innerB = defaultRow("B+B,3,6");
+        DataRow leftOuterA = defaultRow("A+?,1,?");
+        DataRow leftOuterB = defaultRow("B+?,3,?");
+        DataRow leftOuterX = defaultRow("X+?,100,?");
+        DataRow rightOuterX = defaultRow("?+X,?,103");
+        DataRow rightOuterB = defaultRow("?+B,?,6");
+        DataRow rightOuterC = defaultRow("?+C,?,8");
+        DataRow rightOuterD = defaultRow("?+D,?,10");
+
+        @Override void configureJoin() {
+            // this configuration produces the default results
+            m_leftJoinColumns = new String[]{"Join Column"};
+            m_rightJoinColumns = new String[]{"Join Column"};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+
+        @Override
+        DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+            switch(order) {
+                case ARBITRARY:
+                    switch(mode) {
+                        case INNER: return new DataRow[] {innerB, innerX};
+                        case LEFT_OUTER: return new DataRow[] {innerX, leftOuterA, innerB};
+                        case RIGHT_OUTER: return new DataRow[] {innerX, innerB, rightOuterC, rightOuterD};
+                        case FULL_OUTER: return new DataRow[] {innerX, rightOuterC, leftOuterA, innerB, rightOuterD};
+                        case LEFT_ANTI: return new DataRow[] {leftOuterA};
+                        case RIGHT_ANTI: return new DataRow[] {rightOuterD, rightOuterC};
+                        case FULL_ANTI: return new DataRow[] {rightOuterD, rightOuterC, leftOuterA};
+                        case EMPTY: return new DataRow[] {};
+                        default: throw new IllegalStateException();
+                    }
+                case DETERMINISTIC:
+                    switch(mode) {
+                        // innerX comes first because the right table dictates major row order (because it is larger
+                        // and thus used as probe table)
+                        case INNER: return new DataRow[] {innerX, innerB};
+                        case LEFT_OUTER: return new DataRow[] {innerX, innerB, leftOuterA};
+                        case RIGHT_OUTER: return new DataRow[] {innerX,innerB, rightOuterC, rightOuterD};
+                        case FULL_OUTER: return new DataRow[] {innerX, innerB,leftOuterA, rightOuterC, rightOuterD};
+                        case LEFT_ANTI: return new DataRow[]{ leftOuterA};
+                        case RIGHT_ANTI: return new DataRow[] {rightOuterC, rightOuterD};
+                        case FULL_ANTI: return new DataRow[] {leftOuterA, rightOuterC, rightOuterD};
+                        case EMPTY: return new DataRow[] {};
+                        default: throw new IllegalStateException();
+                    }
+                case LEFT_RIGHT: switch(mode) {
+                    // innerB comes first because the left table dictates the major row order
+                    case INNER: return new DataRow[] {innerB, innerX};
+                    case LEFT_OUTER: return new DataRow[] {innerB, innerX, leftOuterA};
+                    case RIGHT_OUTER: return new DataRow[] {innerB,innerX, rightOuterC, rightOuterD};
+                    case FULL_OUTER: return new DataRow[] {innerB, innerX,leftOuterA, rightOuterC, rightOuterD};
+                    case LEFT_ANTI: return new DataRow[]{ leftOuterA};
+                    case RIGHT_ANTI: return new DataRow[] {rightOuterC, rightOuterD};
+                    case FULL_ANTI: return new DataRow[] {leftOuterA, rightOuterC, rightOuterD};
+                    case EMPTY: return new DataRow[] {};
+                    default: throw new IllegalStateException();
+                }
+                default: throw new IllegalStateException();
+            }
+        }
+
+        @Override
+        DataRow[] leftOuter(final OutputRowOrder order) {
+            switch (order) {
+                case ARBITRARY:
+                case DETERMINISTIC:
+                case LEFT_RIGHT: return new DataRow[]{leftAProjected};
+                default: throw new IllegalStateException();
+            }
+        }
+
+        @Override
+        DataRow[] rightOuter(final OutputRowOrder order) {
+            switch (order) {
+                case ARBITRARY: return new DataRow[]{rightDProjected, rightCProjected};
+                case DETERMINISTIC:
+                case LEFT_RIGHT: return new DataRow[]{rightCProjected, rightDProjected};
+                default: throw new IllegalStateException();
+            }
+        }
+
+        @Override public String toString() { return "SmallInput"; }
+
+    }
+
+    /**
+     * Test two small input tables that produce innner, left outer, and right outer results.
+     */
+    public static final JoinTestInput allResultTypes = new SmallInput() {
+        @Override void configureJoin() {
+            // this configuration produces the default results
+            m_leftJoinColumns = new String[]{"Join Column"};
+            m_rightJoinColumns = new String[]{"Join Column"};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+        @Override public String toString() { return "allResultTypes"; }
+    };
+
+    /**
+     * Test self join.
+     */
+    public static final JoinTestInput selfJoin = new SmallInput() {
+        BufferedDataTable table = JoinTestInput.table("Join Column,Nonjoin1,Nonjoin2", leftA, leftB, leftX);
+        @Override void configureJoin() {
+            // this configuration produces the default results
+            m_leftJoinColumns = new String[]{"Join Column"};
+            m_rightJoinColumns = new String[]{"Join Column"};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+
+        @Override BufferedDataTable left() { return table; }
+        @Override BufferedDataTable right() { return table; }
+
+        @Override
+        DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+            switch (mode) {
+                case INNER:
+                case LEFT_OUTER:
+                case RIGHT_OUTER:
+                case FULL_OUTER:
+                    return new DataRow[]{JoinTestInput.defaultRow("A+A,1,2"), JoinTestInput.defaultRow("B+B,3,4"),
+                        JoinTestInput.defaultRow("X+X,100,101")};
+                case EMPTY:
+                case LEFT_ANTI:
+                case RIGHT_ANTI:
+                case FULL_ANTI:
+                    return new DataRow[0];
+                default:
+                    throw new IllegalStateException();
+            }
+        }
+
+        @Override
+        DataRow[] leftOuter(final OutputRowOrder order) { return new DataRow[0]; }
+
+        @Override
+        DataRow[] rightOuter(final OutputRowOrder order) { return new DataRow[0]; }
+
+        @Override public String toString() { return "self join"; }
+
+    };
+
+    /**
+     * Produces the same output as {@link SmallInput}, but by comparing the row key to "Join Column"
+     */
+    public static final JoinTestInput mixRowKeyWithNormalColumn = new SmallInput() {
+        @Override void configureJoin() {
+            // this configuration produces the default results
+            m_leftJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY};
+            m_rightJoinColumns = new String[]{"Join Column"};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+        @Override public String toString() { return "mixRowKeyWithNormalColumn"; }
+    };
+
+    /**
+     * Produces the same output as {@link SmallInput} but by comparing the row keys instead of the join columns.
+     */
+    public static final JoinTestInput joinOnRowKeys = new SmallInput() {
+        @Override void configureJoin() {
+            // this configuration produces the default results
+            m_leftJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY};
+            m_rightJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+        @Override public String toString() { return "joinOnRowKeys"; }
+    };
+
+    /**
+     * Test that duplicate join clauses (e.g., A=A && A=A) work as expected.
+     */
+    public static final JoinTestInput joinOnRedundantColumns = new SmallInput() {
+        @Override void configureJoin() {
+            // this configuration produces the default results
+            m_leftJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY, "Join Column", "Join Column",JoinTableSettings.SpecialJoinColumn.ROW_KEY};
+            m_rightJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY, "Join Column", "Join Column",JoinTableSettings.SpecialJoinColumn.ROW_KEY};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+        @Override public String toString() { return "joinOnRedundantColumns"; }
+    };
+
+    /**
+     * Test match any with a single clause - gives same result as conjunctive with single clause.
+     */
+    public static final JoinTestInput singleColumnMatchAny = new SmallInput() {
+        @Override void configureJoin() {
+            // this configuration produces the default results
+            m_leftJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY};
+            m_rightJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+
+        @Override
+        JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
+            throws InvalidSettingsException {
+
+            JoinTableSettings leftSettings =
+                JoinTableSettings.left(joinMode.m_retainLeftUnmatched, m_leftJoinColumns, m_leftIncludeColumns, left());
+            JoinTableSettings rightSettings = JoinTableSettings.right(joinMode.m_retainRightUnmatched,
+                m_rightJoinColumns, m_rightIncludeColumns, right());
+
+
+            return new JoinSpecification.Builder(leftSettings, rightSettings)
+                .columnNameDisambiguator(name -> name.concat("*"))
+                .mergeJoinColumns(false)
+                // match any
+                .conjunctive(false)
+                .outputRowOrder(outputRowOrder).rowKeyFactory(JoinSpecification.createConcatRowKeysFactory("+"))
+                .retainMatched(joinMode.m_retainMatches).build();
+        }
+
+        @Override public String toString() { return "singleColumnMatchAny"; }
+
+
+    };
+
+    /**
+     * Test match any with a clause that doesn't change results (because it produces no matches).
+     */
+    public static final JoinTestInput nonAdditionalMatchAny = new SmallInput() {
+        @Override void configureJoin() {
+            // this configuration produces the default results
+            m_leftJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY, "Join Column"};
+            m_rightJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY, "Nonjoin1"};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+
+        @Override
+        JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
+            throws InvalidSettingsException {
+
+            JoinTableSettings leftSettings =
+                JoinTableSettings.left(joinMode.m_retainLeftUnmatched, m_leftJoinColumns, m_leftIncludeColumns, left());
+            JoinTableSettings rightSettings = JoinTableSettings.right(joinMode.m_retainRightUnmatched,
+                m_rightJoinColumns, m_rightIncludeColumns, right());
+
+
+            return new JoinSpecification.Builder(leftSettings, rightSettings)
+                .columnNameDisambiguator(name -> name.concat("*"))
+                .mergeJoinColumns(false)
+                // match any
+                .conjunctive(false)
+                .outputRowOrder(outputRowOrder).rowKeyFactory(JoinSpecification.createConcatRowKeysFactory("+"))
+                .retainMatched(joinMode.m_retainMatches).build();
+        }
+        @Override public String toString() { return "nonAdditionalMatchAny"; }
+
+    };
+
+    /**
+     * Test match any with a single clause - gives same result as conjunctive with single clause.
+     */
+    public static final JoinTestInput redundantMatchAny = new SmallInput() {
+        @Override void configureJoin() {
+            // this configuration produces the default results
+            m_leftJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY, JoinTableSettings.SpecialJoinColumn.ROW_KEY};
+            m_rightJoinColumns = new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY, JoinTableSettings.SpecialJoinColumn.ROW_KEY};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+
+        @Override
+        JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
+            throws InvalidSettingsException {
+
+            JoinTableSettings leftSettings =
+                JoinTableSettings.left(joinMode.m_retainLeftUnmatched, m_leftJoinColumns, m_leftIncludeColumns, left());
+            JoinTableSettings rightSettings = JoinTableSettings.right(joinMode.m_retainRightUnmatched,
+                m_rightJoinColumns, m_rightIncludeColumns, right());
+
+
+            return new JoinSpecification.Builder(leftSettings, rightSettings)
+                .columnNameDisambiguator(name -> name.concat("*"))
+                .mergeJoinColumns(false)
+                // match any
+                .conjunctive(false)
+                .outputRowOrder(outputRowOrder).rowKeyFactory(JoinSpecification.createConcatRowKeysFactory("+"))
+                .retainMatched(joinMode.m_retainMatches).build();
+        }
+        @Override public String toString() { return "redundantMatchAny"; }
+
+    };
+
+    /**
+     * Test that joining on row keys and mixing a special column with a normal column does not throw any errors.
+     * Also covers the case where no matches are produced at all.
+     */
+    public static final JoinTestInput emptyJoinOnRowKeys = new SmallInput() {
+        @Override void configureJoin() {
+            m_leftJoinColumns =
+                new Object[]{JoinTableSettings.SpecialJoinColumn.ROW_KEY, JoinTableSettings.SpecialJoinColumn.ROW_KEY};
+            m_rightJoinColumns = new Object[]{"Nonjoin1", "Nonjoin2"};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+
+        @Override DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+            switch (order) {
+                case ARBITRARY:
+                case DETERMINISTIC:
+                case LEFT_RIGHT:
+                    switch(mode) {
+                        case EMPTY:
+                        case INNER: return new DataRow[0];
+                        case LEFT_ANTI:
+                        case LEFT_OUTER: return new DataRow[] {leftOuterA, leftOuterB, leftOuterX};
+                        case RIGHT_ANTI:
+                        case RIGHT_OUTER: return new DataRow[] {rightOuterX, rightOuterB, rightOuterC, rightOuterD};
+                        case FULL_ANTI:
+                        case FULL_OUTER: return new DataRow[] {leftOuterA, leftOuterB, leftOuterX, rightOuterX, rightOuterB, rightOuterC, rightOuterD};
+                        default: throw new IllegalStateException();
+                    }
+                default: throw new IllegalStateException();
+            }
+
+        }
+
+        /** empty join -> all left rows are unmatched */
+        @Override
+        DataRow[] leftOuter(final OutputRowOrder order) {
+            switch (order) {
+                case ARBITRARY: return new DataRow[]{leftAProjected,leftXProjected,leftBProjected};
+                case DETERMINISTIC:
+                case LEFT_RIGHT: return new DataRow[]{leftAProjected,leftBProjected,leftXProjected};
+                default: throw new IllegalStateException();
+            }
+        }
+
+        /** empty join -> all right rows are unmatched */
+        @Override
+        DataRow[] rightOuter(final OutputRowOrder order) {
+            switch (order) {
+                case ARBITRARY: return new DataRow[]{rightDProjected, rightXProjected, rightCProjected, rightBProjected};
+                case DETERMINISTIC:
+                case LEFT_RIGHT: return new DataRow[]{rightXProjected, rightBProjected, rightCProjected, rightDProjected};
+                default: throw new IllegalStateException();
+            }
+        }
+        @Override public String toString() { return "emptyJoinOnRowKeys"; }
+
+    };
+
+    /**
+     * Test the case where one table contains no rows at all.
+     */
+    public static final JoinTestInput emptyHashTable = new SmallInput() {
+        @Override void configureJoin() {
+            m_leftJoinColumns = new String[]{"Join Column"};
+            m_rightJoinColumns = new String[]{"Join Column"};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+
+        @Override
+        BufferedDataTable left() {
+            return JoinTestInput.table("Join Column,Nonjoin1,Nonjoin2", new DataRow[0]);
+        }
+
+        @Override
+        BufferedDataTable right() {
+            return JoinTestInput.table("Join Column,Nonjoin1,Nonjoin2", rightX, rightB, rightC, rightD);
+        }
+
+        @Override DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+            switch (order) {
+                case ARBITRARY:
+                case DETERMINISTIC:
+                case LEFT_RIGHT:
+                    switch(mode) {
+                        case EMPTY:
+                        case LEFT_ANTI:
+                        case LEFT_OUTER:
+                        case INNER: return new DataRow[0];
+                        case RIGHT_ANTI:
+                        case RIGHT_OUTER:
+                        case FULL_ANTI:
+                        case FULL_OUTER: return new DataRow[] {rightOuterX, rightOuterB, rightOuterC, rightOuterD};
+                        default: throw new IllegalStateException();
+                    }
+                default: throw new IllegalStateException();
+            }
+
+        }
+
+        /** empty join -> all left rows are unmatched */
+        @Override
+        DataRow[] leftOuter(final OutputRowOrder order) {
+            return new DataRow[0];
+        }
+
+        /** empty join -> all right rows are unmatched */
+        @Override
+        DataRow[] rightOuter(final OutputRowOrder order) {
+            switch (order) {
+                case ARBITRARY: return new DataRow[]{rightDProjected, rightXProjected, rightCProjected, rightBProjected};
+                case DETERMINISTIC:
+                case LEFT_RIGHT: return new DataRow[]{rightXProjected, rightBProjected, rightCProjected, rightDProjected};
+                default: throw new IllegalStateException();
+            }
+        }
+        @Override public String toString() { return "empty hash table"; }
+
+    };
+
+    /**
+     * Just a single inner join result row.
+     */
+    public static final JoinTestInput singleInnerJoin = new JoinTestInput() {
+
+        @Override
+        BufferedDataTable left() {
+            return JoinTestInput.table("Join Column,Nonjoin1,Nonjoin2", "Left B,B,3,4");
+        }
+
+        @Override
+        BufferedDataTable right() {
+            return JoinTestInput.table("Join Column,Nonjoin1,Nonjoin2", "Right B,B,5,6");
+        }
+
+        @Override void configureJoin() {
+            m_leftJoinColumns = new String[]{"Join Column"};
+            m_rightJoinColumns = new String[]{"Join Column"};
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+
+        @Override
+        DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+
+            DataRow innerA = defaultRow("Left B+Right B,3,6");
+
+            switch (mode) {
+                case INNER:
+                case LEFT_OUTER:
+                case RIGHT_OUTER:
+                case FULL_OUTER:
+                    return new DataRow[]{innerA};
+                case LEFT_ANTI:
+                case RIGHT_ANTI:
+                case FULL_ANTI:
+                case EMPTY:
+                    return new DataRow[]{};
+                default:
+                    throw new IllegalStateException();
+            }
+        }
+
+        @Override public String toString() { return "single inner join"; }
+
+        @Override
+        public DataRow[] leftOuter(final OutputRowOrder order) {
+            return new DataRow[0];
+        }
+
+        @Override
+        public DataRow[] rightOuter(final OutputRowOrder order) {
+            return new DataRow[0];
+        }
+
+    };
+
+
+    public static final JoinTestInput[] CONJUNCTIVE = new JoinTestInput[] {
+        allResultTypes, selfJoin, mixRowKeyWithNormalColumn, joinOnRowKeys, joinOnRedundantColumns, emptyJoinOnRowKeys, emptyHashTable, singleInnerJoin
+    };
+
+    public static final JoinTestInput[] DISJUNCTIVE = new JoinTestInput[] {
+        singleColumnMatchAny, nonAdditionalMatchAny, redundantMatchAny
+    };
+
 }

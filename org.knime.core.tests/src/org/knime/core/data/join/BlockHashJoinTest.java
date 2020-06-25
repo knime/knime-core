@@ -50,10 +50,7 @@ package org.knime.core.data.join;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
-
-import java.util.Arrays;
 
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.Theories;
@@ -61,7 +58,10 @@ import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.join.JoinImplementation.JoinProgressMonitor;
-import org.knime.core.data.join.results.JoinResults;
+import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
+import org.knime.core.data.join.results.JoinContainer;
+import org.knime.core.data.join.results.LeftRightSortedJoinContainer;
+import org.knime.core.data.join.results.UnorderedJoinContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
@@ -75,7 +75,11 @@ import org.knime.core.node.InvalidSettingsException;
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 @RunWith(Theories.class)
-public class HybridHashJoinTest extends JoinTest {
+public class BlockHashJoinTest extends JoinTest {
+
+    // TODO test with true, but that would require test data with annotated offsets
+    @DataPoints
+    public static boolean[] doExtractRowOffsets = new boolean[] {false};
 
     /**
      * TODO match any not yet implemented
@@ -87,7 +91,7 @@ public class HybridHashJoinTest extends JoinTest {
      * @param input the left and right input table
      * @param joinMode which results to retain
      * @param order output row order
-     * @param executionMode in-memory, partial on disk, on disk
+     * @param executionMode
      * @throws CanceledExecutionException
      * @throws InvalidSettingsException
      */
@@ -97,26 +101,30 @@ public class HybridHashJoinTest extends JoinTest {
 
         // TODO fast sort not yet supported
         assumeThat(order, is(not(OutputOrder.PROBE_HASH)));
-
-        // TODO full hybrid hash join not yet supported
-        assumeThat(executionMode, is(not(Execution.PARTIAL_IN_MEMORY)));
-
-        System.out.println(String.format("Single Table %-15s %-15s %-15s", joinMode, order.m_rowOrder, executionMode));
+        // consider in memory and partial in memory (on disk doesn't make a difference compared to partial in memory)
+        assumeThat(executionMode, is(not(Execution.ON_DISK)));
 
         // create the joiner
         JoinSpecification joinSpec = input.getJoinSpecification(joinMode, order.m_rowOrder);
-        JoinImplementation implementation =
-            JoinerFactory.JoinAlgorithm.HYBRID_HASH.getFactory().create(joinSpec, JoinTestInput.EXEC);
-        implementation.setMaxOpenFiles(4);
 
-        HybridHashJoin hybridHash = (HybridHashJoin)implementation;
-        JoinProgressMonitor mon = hybridHash.m_progress;
-        mon.setDesiredPartitionsOnDisk(executionMode.m_desiredPartitionsOnDisk);
+        // only to get the progress monitor
+        HybridHashJoin hybrid = (HybridHashJoin)JoinerFactory.JoinAlgorithm.HYBRID_HASH.getFactory().
+                create(joinSpec, JoinTestInput.EXEC);
+        JoinProgressMonitor mon = hybrid.m_progress;
+        mon.m_assumeMemoryLow = executionMode != Execution.IN_MEMORY;
+
+        // test data would need to be in auxiliary format with annotated row offsets.
+        // only relevant when splitting the join problem in several independent join problems.
+        boolean extractRowOffsets = false;
+        BlockHashJoin blockHashJoin = new BlockHashJoin(JoinTestInput.EXEC, mon, joinSpec, extractRowOffsets);
+
+        JoinContainer results = order.m_rowOrder == OutputRowOrder.ARBITRARY
+            ? new UnorderedJoinContainer(joinSpec, JoinTestInput.EXEC, false, false)
+            : new LeftRightSortedJoinContainer(joinSpec, JoinTestInput.EXEC, false, false);
 
         // do the join
-        BufferedDataTable result = hybridHash.join().getSingleTable();
-
-        validateExecutionMode(joinMode, executionMode, mon);
+        blockHashJoin.join(results);
+        BufferedDataTable result = results.getSingleTable();
 
         // compare to expected results
         DataRow[] expected = input.ordered(joinMode, order.m_rowOrder);
@@ -128,7 +136,7 @@ public class HybridHashJoinTest extends JoinTest {
      * @param input the left and right input table
      * @param joinMode which results to retain
      * @param order output row order
-     * @param executionMode in-memory, partial on disk, on disk
+     * @param executionMode
      * @throws CanceledExecutionException
      * @throws InvalidSettingsException
      */
@@ -138,32 +146,31 @@ public class HybridHashJoinTest extends JoinTest {
 
         // TODO fast sort not yet supported
         assumeThat(order, is(not(OutputOrder.PROBE_HASH)));
+        // consider in memory and partial in memory (on disk doesn't make a difference compared to partial in memory)
+        assumeThat(executionMode, is(not(Execution.ON_DISK)));
 
-        // TODO full hybrid hash join not yet supported
-        assumeThat(executionMode, is(not(Execution.PARTIAL_IN_MEMORY)));
-
-//        assumeThat(input, is(mixRowKeyWithNormalColumn));
-//        assumeThat(joinMode, is(JoinMode.INNER));
-//        assumeThat(order, is(OutputOrder.LEGACY));
-//        assumeThat(executionMode, is(Execution.IN_MEMORY));
-        System.out.println(String.format(">>>> Separate Outputs %-15s %-15s %-15s", joinMode,  order.m_rowOrder, executionMode));
+        System.out.println(String.format("Single Table %-15s %-15s %-15s", joinMode, order.m_rowOrder, executionMode));
 
         // create the joiner
         JoinSpecification joinSpec = input.getJoinSpecification(joinMode, order.m_rowOrder);
 
-        // a small number of allowed open files is needed to test flushing to disk on small inputs
-        // e.g., if there are only 3 rows, at most 3 partition pairs will be flushed to disk
-        JoinImplementation implementation = JoinerFactory.JoinAlgorithm.HYBRID_HASH.getFactory()
-                .create(joinSpec, JoinTestInput.EXEC)
-                .setMaxOpenFiles(4);
+        // only to get the progress monitor
+        HybridHashJoin hybrid = (HybridHashJoin)JoinerFactory.JoinAlgorithm.HYBRID_HASH.getFactory().
+                create(joinSpec, JoinTestInput.EXEC);
+        JoinProgressMonitor mon = hybrid.m_progress;
+        mon.m_assumeMemoryLow = executionMode != Execution.IN_MEMORY;
 
-        HybridHashJoin hybridHash = (HybridHashJoin)implementation;
-        JoinProgressMonitor mon = hybridHash.m_progress;
-        mon.setDesiredPartitionsOnDisk(executionMode.m_desiredPartitionsOnDisk);
+        // test data would need to be in auxiliary format with annotated row offsets.
+        // only relevant when splitting the join problem in several independent join problems.
+        boolean extractRowOffsets = false;
+        BlockHashJoin blockHashJoin = new BlockHashJoin(JoinTestInput.EXEC, mon, joinSpec, extractRowOffsets);
+
+        JoinContainer results = order.m_rowOrder == OutputRowOrder.ARBITRARY
+            ? new UnorderedJoinContainer(joinSpec, JoinTestInput.EXEC, extractRowOffsets, extractRowOffsets)
+            : new LeftRightSortedJoinContainer(joinSpec, JoinTestInput.EXEC, extractRowOffsets, extractRowOffsets);
 
         // do the join
-        JoinResults results = hybridHash.join();
-        validateExecutionMode(joinMode, executionMode, mon);
+        blockHashJoin.join(results);
 
         if(joinMode.m_retainMatches) {
             DataRow[] expectedMatches = input.ordered(JoinMode.INNER, order.m_rowOrder);
@@ -186,50 +193,6 @@ public class HybridHashJoinTest extends JoinTest {
             order.m_validator.accept(actual, expectedRight);
         }
 
-    }
-
-    /**
-     * Checks that in-memory executions do not use disk (etc.) by comparing the execution statistics reported by the
-     * {@link JoinProgressMonitor} to the desired execution mode.
-     *
-     * @param joinMode to check whether the result contains any results at all
-     * @param executionMode to check whether in-memory or disk should be used
-     * @param mon provides execution information about the hybrid hash join
-     */
-    private static void validateExecutionMode(final JoinMode joinMode, final Execution executionMode,
-        final JoinProgressMonitor mon) {
-        switch (executionMode) {
-            case IN_MEMORY:
-                // if in-memory execution is to be tested, then no partitions are to be swapped to disk
-                // this also tests the execution of this test case (maybe not enough heap is available to join in memory)
-                assertTrue(mon.getProbeRowsProcessedInMemory() > 0 ^ joinMode == JoinMode.EMPTY);
-                assertTrue(mon.getProbeRowsProcessedFromDisk() == 0);
-                break;
-            case PARTIAL_IN_MEMORY:
-                // if we're testing the low memory case, at least some buckets must be written to disk
-                // (except there is no output at all to be produced, then zero partitions should be flushed to disk)
-                {
-                    String message = "No rows in memory in partial in-memory execution. "
-                        + Arrays.toString(mon.m_hashBucketSizes);
-                    assertTrue(message, mon.getProbeRowsProcessedInMemory() > 0 ^ joinMode == JoinMode.EMPTY);
-                }
-                {
-                    long nonEmptyProbeDiskBuckets = Arrays.stream(mon.m_probeBucketSizes).filter(l -> l > 0).count();
-                    String message = "No rows processed from disk in partial in-memory execution. "
-                        + Arrays.toString(mon.m_hashBucketSizes);
-                    assertTrue(message, mon.getProbeRowsProcessedFromDisk() > 0
-                        ^ (joinMode == JoinMode.EMPTY || nonEmptyProbeDiskBuckets == 0));
-                }
-                break;
-            case ON_DISK:
-                //                assertTrue("Processed " + mon.getProbeRowsProcessedInMemory() + " rows in memory in disk-based execution mode.", mon.getProbeRowsProcessedInMemory() == 0);
-                //                assertTrue(String.format("%s partitions on disk in disk-based execution mode", mon.getNumPartitionsOnDisk()), mon.getNumPartitionsOnDisk() > 0 ^ mon.getProbeRowsProcessedInMemory() == 0);
-                //                assertTrue(
-                //                    String.format(
-                //                        "%s rows processed from disk in disk based execution mode. Rows processed in memory: %s",
-                //                        mon.getProbeRowsProcessedFromDisk(), mon.getProbeRowsProcessedInMemory()),
-                //                    mon.getProbeRowsProcessedFromDisk() > 0 ^ joinMode == JoinMode.EMPTY);
-        }
     }
 
 

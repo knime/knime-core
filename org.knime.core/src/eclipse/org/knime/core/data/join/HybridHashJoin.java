@@ -63,6 +63,7 @@ import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions.DiskBucket;
 import org.knime.core.data.join.JoinSpecification.InputTable;
+import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
 import org.knime.core.data.join.results.JoinContainer;
 import org.knime.core.data.join.results.JoinResults;
 import org.knime.core.data.join.results.LeftRightSortedJoinContainer;
@@ -135,8 +136,6 @@ public class HybridHashJoin extends JoinImplementation {
         m_hashSettings = m_joinSpecification.getSettings(probeTable.other());
         m_probeSettings = m_joinSpecification.getSettings(probeTable);
 
-        System.out.println(String.format("probeTable %s", probeTable));
-
         m_progress = new JoinProgressMonitor();
 
     }
@@ -190,13 +189,18 @@ public class HybridHashJoin extends JoinImplementation {
 
         // ordered join containers need the row offsets to sort the output
         // for a disjunctive join, offsets are used to reject duplicate results and collect deferred unmatched rows
+        // hiliting needs offsets to map output rows back to input rows
         boolean storeRowOffsets = !(m_joinResults instanceof UnorderedJoinContainer) || deduplicateResults;
         m_partitioner = new DiskBackedHashPartitions(storeRowOffsets, m_joinResults);
 
         m_progress.m_numBuckets = m_partitioner.m_numPartitions;
 
-        // build an index of the hash input, partially on disk if necessary
-        phase1();
+        // build an index of the hash input
+        // TODO as a workaround, fall back to nested loop if memory runs low
+        boolean success = phase1();
+        if (!success) {
+            return fallbackToNestedLoop();
+        }
 
         // single pass over the probe input, write rows to disk that can't be processed in memory
         phase2();
@@ -212,7 +216,7 @@ public class HybridHashJoin extends JoinImplementation {
      *
      * @throws CanceledExecutionException
      */
-    private void phase1() throws CanceledExecutionException {
+    private boolean phase1() throws CanceledExecutionException {
 
         System.out.println("    HybridHashJoin.phase1()");
         m_progress.setMessage("Phase 1/3: Processing smaller table");
@@ -227,8 +231,12 @@ public class HybridHashJoin extends JoinImplementation {
 
                 // if memory is running low and there are hash buckets in-memory
                 if (m_progress.isMemoryLow(100)) {
-                    m_partitioner.flushNextBucket();
-                    m_progress.setNumPartitionsOnDisk(m_partitioner.getNumPartitionsOnDisk());
+                    // TODO if memory runs low, the hybrid hash join should kick in.
+                    // for now, we can just solve the entire problem using a nested loop join which is slower but works.
+                    return false;
+
+//                    m_partitioner.flushNextBucket();
+//                    m_progress.setNumPartitionsOnDisk(m_partitioner.getNumPartitionsOnDisk());
                 }
 
                 DataRow hashRow = hashRows.next();
@@ -247,6 +255,8 @@ public class HybridHashJoin extends JoinImplementation {
 
         // hash input has been processed completely, close buckets that have been migrated to disk (if any)
         m_partitioner.closeHashBuckets();
+
+        return true;
 
     }
 
@@ -323,6 +333,24 @@ public class HybridHashJoin extends JoinImplementation {
             probeBucket.join(hashBucket, m_joinResults);
             m_joinResults.sortedChunkEnd();
         }
+
+    }
+
+    /**
+     * TODO Workaround for bugs in phase 2 and phase 3.
+     *
+     * @throws CanceledExecutionException
+     */
+    private JoinResults fallbackToNestedLoop() throws CanceledExecutionException {
+        System.out.println("HybridHashJoin.fallbackToNestedLoop()");
+        BlockHashJoin completeJoin = new BlockHashJoin(m_exec, m_progress, m_joinSpecification, false);
+        // discard results from phase 1, start over
+        m_joinResults = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
+            ? new UnorderedJoinContainer(m_joinSpecification, m_exec, false, false)
+            : new LeftRightSortedJoinContainer(m_joinSpecification, m_exec, false, false);
+
+        completeJoin.join(m_joinResults);
+        return m_joinResults;
 
     }
 
@@ -470,7 +498,11 @@ public class HybridHashJoin extends JoinImplementation {
 
             DataCell[] joinAttributeValues = JoinTuple.get(m_hashSettings, hashRow);
 
+            // the hash index does its own check for missing join column values, but having one here also makes sense,
+            // because here we decide which partitions to route the row to based on the join column values.
+            // If one of the values is missing, the row needs to be treated only once.
             if (joinAttributeValues == null) {
+                // do not index the row
                 m_unmatchedHashRows.accept(hashRow, rowOffset);
             } else {
                 if (m_joinSpecification.isConjunctive()) {
@@ -482,11 +514,11 @@ public class HybridHashJoin extends JoinImplementation {
                 }
             }
 
-
         }
 
         /**
-         * @param joinAttributeValues
+         * @param joinAttributeValues non-null. If one of the join columns contains a missing value, it can't be
+         *            matched. It needs to be treated as unmatched, but only once, not in several partitions.
          * @throws CanceledExecutionException
          */
         private void coveredPartitions(final DataCell[] joinAttributeValues, final PartitionHandler partitionHandler) throws CanceledExecutionException {

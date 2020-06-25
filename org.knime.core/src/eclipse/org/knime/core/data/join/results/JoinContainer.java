@@ -220,10 +220,13 @@ public abstract class JoinContainer implements JoinResults {
     @Override
     public boolean addMatch(final DataRow left, final long leftOrder, final DataRow right, final long rightOrder) {
         boolean isFreshValue = !m_deduplicateResults || m_caches[MATCHES].put(leftOrder, rightOrder);
+
+        // let the deferred probe row handlers now that both rows are not unmatched
+        m_unmatchedRows[LEFT_OUTER].matched(left, leftOrder);
+        m_unmatchedRows[RIGHT_OUTER].matched(right, rightOrder);
+
         if (m_joinSpecification.isRetainMatched() && isFreshValue) {
 //            System.out.println(String.format(" +accepted match for offsets %s|%s %s + %s", leftOrder, rightOrder, left, right));
-            m_unmatchedRows[LEFT_OUTER].matched(left, leftOrder);
-            m_unmatchedRows[RIGHT_OUTER].matched(right, rightOrder);
             return doAddMatch(left, leftOrder, right, rightOrder);
         }
         if(m_deduplicateResults && !isFreshValue) {

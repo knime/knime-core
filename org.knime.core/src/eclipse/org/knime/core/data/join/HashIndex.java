@@ -159,11 +159,14 @@ class HashIndex {
      */
     /**
      *
-     * @param joinSpecification
-     * @param joinContainer
-     * @param probeRowHandler
-     * @param hashSide
-     * @param checkCanceled
+     * @param joinSpecification tells the hash index whether we're interested in left/right unmatched rows, how to
+     *            extract join tuples from data rows and whether it's a conjunctive or a disjunctive join.
+     * @param joinContainer to receive matched and unmatched rows
+     * @param hashSide the join specification talks about left and right tables. hashside tells the index which side is
+     *            being indexed and which side is used as probe
+     * @param checkCanceled to enable interrupting expensive operations, such as
+     *            {@link #forUnmatchedHashRows(ObjLongConsumer)} and (in extreme cases)
+     *            {@link #joinSingleRow(DataRow, long)}
      */
     @SuppressWarnings("serial")
     HashIndex(final JoinSpecification joinSpecification, final JoinResults joinContainer,
@@ -231,29 +234,41 @@ class HashIndex {
 
     /**
      *
-     * @param joinTuple data cells holding the values of the columns appearing in the join clauses
+     * @param joinTuple data cells holding the values of the columns appearing in the join clauses. can be null to
+     *            indicate that one of the join columns contains a missing value. The row will then be treated as
+     *            unmatched rows (missing value equals nothing).
      * @param row
      * @param offset
      */
     public void addHashRow(final DataCell[] joinTuple, final DataRow row, final long offset) {
 
-        if (m_joinSpecification.isConjunctive()) {
-            List<DataRow> rowList = m_indexes.get(0).computeIfAbsent(joinTuple, newRowList);
-            rowList.add(row);
+        if (joinTuple == null) {
+            // do not add to index structure. can't be matched by anything
+            //          System.out.println(String.format("unmatched hash Row=%s", hashRow));
+            m_joinContainer.unmatched(m_hashSide).accept(row, offset);
         } else {
-            // add the row to every clause index
-            for(int clause = 0; clause < m_indexes.size(); clause++) {
-                // contains the rows that have a specific combination of values in the join columns of the i-th clause
-                List<DataRow> clauseRowList = m_indexes.get(clause).computeIfAbsent(joinTuple, newRowList);
-                // the values corresponding to the clause are extracted by the clause index's hashing strategy
-                // collisions are avoided via that hashing strategy's equals implementation
-                clauseRowList.add(row);
+            //          System.out.println(
+            //              String.format("index hash row %s using %s", hashRow, Arrays.toString(joinAttributeValues)));
+
+            if (m_joinSpecification.isConjunctive()) {
+                List<DataRow> rowList = m_indexes.get(0).computeIfAbsent(joinTuple, newRowList);
+                rowList.add(row);
+            } else {
+                // add the row to every clause index
+                for (int clause = 0; clause < m_indexes.size(); clause++) {
+                    // contains the rows that have a specific combination of values in the join columns of the i-th clause
+                    List<DataRow> clauseRowList = m_indexes.get(clause).computeIfAbsent(joinTuple, newRowList);
+                    // the values corresponding to the clause are extracted by the clause index's hashing strategy
+                    // collisions are avoided via that hashing strategy's equals implementation
+                    clauseRowList.add(row);
+                }
             }
+            // add to index structure
+            m_hashrowInternalOffsets.put(row, m_rows.size());
+            m_rows.add(row);
+            m_rowOffsets.add(offset);
         }
 
-        m_hashrowInternalOffsets.put(row, m_rows.size());
-        m_rows.add(row);
-        m_rowOffsets.add(offset);
     }
 
     /**
@@ -282,17 +297,16 @@ class HashIndex {
                     m_matched.set(internalOffset);
                 }
 
-                if (m_joinSpecification.isRetainMatched()) {
-                    long hashRowOrder = m_rowOffsets.get(internalOffset);
+                // we can't skip this since the join container needs to know that the probe row is not unmatched
+                long hashRowOrder = m_rowOffsets.get(internalOffset);
 
-                    DataRow left = m_probeSettings.getSide().isLeft() ? probeRow : hashRow;
-                    DataRow right = m_probeSettings.getSide().isLeft() ? hashRow : probeRow;
+                DataRow left = m_probeSettings.getSide().isLeft() ? probeRow : hashRow;
+                DataRow right = m_probeSettings.getSide().isLeft() ? hashRow : probeRow;
 
-                    long leftOrder = m_probeSettings.getSide().isLeft() ? probeRowOffset : hashRowOrder;
-                    long rightOrder = m_probeSettings.getSide().isLeft() ? hashRowOrder : probeRowOffset;
+                long leftOrder = m_probeSettings.getSide().isLeft() ? probeRowOffset : hashRowOrder;
+                long rightOrder = m_probeSettings.getSide().isLeft() ? hashRowOrder : probeRowOffset;
 
-                    m_joinContainer.addMatch(left, leftOrder, right, rightOrder);
-                }
+                m_joinContainer.addMatch(left, leftOrder, right, rightOrder);
             }
         }
 
