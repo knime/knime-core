@@ -115,14 +115,14 @@ public class LeftRightSortedJoinContainer extends JoinContainer {
 
     @Override
     public boolean doAddLeftOuter(final DataRow row, final long offset) {
-        DataRow projected = m_joinSpecification.rowProject(InputTable.LEFT, row);
+        DataRow projected = m_joinSpecification.rowProjectOuter(InputTable.LEFT, row);
         add(LEFT_OUTER, OrderedRow.withCombinedOffset(projected, offset, -1));
         return true;
     }
 
     @Override
     public boolean doAddRightOuter(final DataRow row, final long offset) {
-        DataRow projected = m_joinSpecification.rowProject(InputTable.RIGHT, row);
+        DataRow projected = m_joinSpecification.rowProjectOuter(InputTable.RIGHT, row);
         add(RIGHT_OUTER, OrderedRow.withCombinedOffset(projected, -1, offset));
         return true;
     }

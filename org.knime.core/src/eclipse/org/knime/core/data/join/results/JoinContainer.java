@@ -279,7 +279,7 @@ public abstract class JoinContainer implements JoinResults {
      */
     protected DataRow padLeftWithMissing(final DataRow rightUnmatchedRowProjected) {
 
-        int[] includes = m_joinSpecification.columnIncludeIndices(InputTable.LEFT);
+        int[] includes = m_joinSpecification.getMatchTableIncludeIndices(InputTable.LEFT);
         int padCells = includes.length;
 
         final DataCell[] dataCells = new DataCell[padCells + rightUnmatchedRowProjected.getNumCells()];
@@ -303,7 +303,7 @@ public abstract class JoinContainer implements JoinResults {
      */
     protected DataRow padRightWithMissing(final DataRow leftUnmatchedRowProjected) {
 
-        int[] includes = m_joinSpecification.columnIncludeIndices(InputTable.RIGHT);
+        int[] includes = m_joinSpecification.getMatchTableIncludeIndices(InputTable.RIGHT);
         int padCells = includes.length;
 
         final DataCell[] dataCells = new DataCell[leftUnmatchedRowProjected.getNumCells() + padCells];

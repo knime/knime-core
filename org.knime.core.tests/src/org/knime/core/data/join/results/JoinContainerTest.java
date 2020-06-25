@@ -87,7 +87,7 @@ public class JoinContainerTest extends JoinSpecificationTest {
             UnorderedJoinContainer container = new UnorderedJoinContainer(jspec, JoinTestInput.EXEC, false, false);
 
             { // pad left
-                DataRow padded = container.padLeftWithMissing(jspec.rowProject(InputTable.RIGHT, rows[RIGHT]));
+                DataRow padded = container.padLeftWithMissing(jspec.rowProjectOuter(InputTable.RIGHT, rows[RIGHT]));
 
                 assertEquals(DataType.getMissingCell(), padded.getCell(0)); // A
                 assertEquals(DataType.getMissingCell(), padded.getCell(1)); // C=Z
@@ -98,7 +98,7 @@ public class JoinContainerTest extends JoinSpecificationTest {
             }
 
             { // pad right
-                DataRow padded = container.padRightWithMissing(jspec.rowProject(InputTable.LEFT, rows[LEFT]));
+                DataRow padded = container.padRightWithMissing(jspec.rowProjectOuter(InputTable.LEFT, rows[LEFT]));
 
                 assertEquals(cell("a"), padded.getCell(0));
                 assertEquals(cell("c"), padded.getCell(1));
@@ -123,7 +123,7 @@ public class JoinContainerTest extends JoinSpecificationTest {
         UnorderedJoinContainer container = new UnorderedJoinContainer(jspec, JoinTestInput.EXEC, false, false);
 
         { // pad left
-            DataRow padded = container.padLeftWithMissing(jspec.rowProject(InputTable.RIGHT, rows[RIGHT]));
+            DataRow padded = container.padLeftWithMissing(jspec.rowProjectOuter(InputTable.RIGHT, rows[RIGHT]));
 
             assertEquals(DataType.getMissingCell(), padded.getCell(0)); // A
             assertEquals(DataType.getMissingCell(), padded.getCell(1)); // C
@@ -134,7 +134,7 @@ public class JoinContainerTest extends JoinSpecificationTest {
         }
 
         { // pad right
-            DataRow padded = container.padRightWithMissing(jspec.rowProject(InputTable.LEFT, rows[LEFT]));
+            DataRow padded = container.padRightWithMissing(jspec.rowProjectOuter(InputTable.LEFT, rows[LEFT]));
 
             assertEquals(cell("a"), padded.getCell(0));
             assertEquals(cell("c"), padded.getCell(1));

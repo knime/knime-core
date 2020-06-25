@@ -137,14 +137,14 @@ public class NWayMergeContainer extends JoinContainer {
     @Override
     public boolean doAddLeftOuter(final DataRow row, final long leftOffset) {
         long probeRowOffset = m_leftIsProbe ? leftOffset : Long.MAX_VALUE;
-        m_chunks[LEFT_OUTER].addSorted(m_joinSpecification.rowProject(InputTable.LEFT, row), probeRowOffset);
+        m_chunks[LEFT_OUTER].addSorted(m_joinSpecification.rowProjectOuter(InputTable.LEFT, row), probeRowOffset);
         return true;
     }
 
     @Override
     public boolean doAddRightOuter(final DataRow row, final long rightOffset) {
         long probeRowOffset = m_leftIsProbe ? Long.MAX_VALUE : rightOffset;
-        m_chunks[RIGHT_OUTER].addSorted(m_joinSpecification.rowProject(InputTable.RIGHT, row), probeRowOffset);
+        m_chunks[RIGHT_OUTER].addSorted(m_joinSpecification.rowProjectOuter(InputTable.RIGHT, row), probeRowOffset);
         return true;
     }
 

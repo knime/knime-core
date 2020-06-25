@@ -115,13 +115,13 @@ public class UnorderedJoinContainer extends JoinContainer {
 
     @Override
     public boolean doAddLeftOuter(final DataRow row, final long offset) {
-        add(LEFT_OUTER, m_joinSpecification.rowProject(InputTable.LEFT, row));
+        add(LEFT_OUTER, m_joinSpecification.rowProjectOuter(InputTable.LEFT, row));
         return true;
     }
 
     @Override
     public boolean doAddRightOuter(final DataRow row, final long offset) {
-        add(RIGHT_OUTER, m_joinSpecification.rowProject(InputTable.RIGHT, row));
+        add(RIGHT_OUTER, m_joinSpecification.rowProjectOuter(InputTable.RIGHT, row));
         return true;
     }
 

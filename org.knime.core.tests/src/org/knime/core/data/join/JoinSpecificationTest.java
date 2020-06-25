@@ -294,7 +294,7 @@ public class JoinSpecificationTest {
      * Applying the original join specification to the working table is no big deal, since everything we need is there.
      * However, the column accessors need to be remapped to the new spec, such that
      * {@link JoinTuple#get(JoinTableSettings, DataRow)} accesses the right rows and
-     * {@link JoinSpecification#rowProject(InputTable, DataRow)} includes the right rows.
+     * {@link JoinSpecification#rowProjectOuter(InputTable, DataRow)} includes the right rows.
      * @throws InvalidSettingsException
      *
      */
@@ -338,11 +338,11 @@ public class JoinSpecificationTest {
                 same.test(expectedLeftCondensed, leftWorkingRow));
             assertTrue(same.test(rightSettings.condensed(rightOriginalRow, 0, storeRowOffsets), rightWorkingRow));
 
-            assertTrue(same.test(original.rowProject(InputTable.LEFT, leftOriginalRow),
-                working.rowProject(InputTable.LEFT, leftWorkingRow)));
+            assertTrue(same.test(original.rowProjectOuter(InputTable.LEFT, leftOriginalRow),
+                working.rowProjectOuter(InputTable.LEFT, leftWorkingRow)));
 
-            assertTrue(same.test(original.rowProject(InputTable.RIGHT, rightOriginalRow),
-                working.rowProject(InputTable.RIGHT, rightWorkingRow)));
+            assertTrue(same.test(original.rowProjectOuter(InputTable.RIGHT, rightOriginalRow),
+                working.rowProjectOuter(InputTable.RIGHT, rightWorkingRow)));
 
         }
 
@@ -430,14 +430,66 @@ public class JoinSpecificationTest {
     }
 
     /**
-     * This is used to project data rows from an input table down to the columns included in the joined table.
+     * Test the join merge columns feature in combination with special join columns (join on row keys).
+     *
+     * <pre>
+     * left table   A B C D E
+     * include      i   i   i
+     *
+     * right table  U V W A Y Z
+     * include      i i   i
+     * </pre>
+     *
      * @throws InvalidSettingsException
      */
     @Test
-    public void project() throws InvalidSettingsException {
-        JoinSpecification jspec = new JoinSpecification.Builder(settings[LEFT], settings[RIGHT]).build();
+    public void testMergeJoinColumnsWithRowKeys() throws InvalidSettingsException {
+        JoinTableSettings leftSettings =
+            JoinTableSettings.left(true, new Object[]{"A", JoinTableSettings.SpecialJoinColumn.ROW_KEY, "C", "D"},
+                new String[]{"A", "C", "E"}, specs[LEFT]);
+        JoinTableSettings rightSettings =
+            JoinTableSettings.right(true, new Object[]{"A", JoinTableSettings.SpecialJoinColumn.ROW_KEY, "Z", "A"},
+                new String[]{"U", "V", "A"}, specs[RIGHT]);
+        JoinSpecification joinSpec = new JoinSpecification.Builder(leftSettings, rightSettings)
+            .columnNameDisambiguator(name -> name.concat(" (right table)"))
+            .mergeJoinColumns(true)
+            .build();
 
-        DataRow leftProjected = jspec.rowProject(InputTable.LEFT, rows[LEFT]);
+        { // output table specification for matches
+            DataTableSpec spec = joinSpec.specForMatchTable();
+
+            // joined table has seven columns
+            assertEquals(6, spec.getNumColumns());
+            System.out.println(spec);
+            // named like this
+            int[] indices = spec.columnsToIndices("A", "C=Z", "D=A", "E", "U", "V");
+            // and in the above order
+            int[] expectedIndices = IntStream.range(0, 6).toArray();
+            assertArrayEquals(expectedIndices, indices);
+        }
+
+        { // output table specification for unmatched left rows
+            DataTableSpec spec = joinSpec.specForUnmatched(InputTable.LEFT);
+            assertEquals(3, spec.getNumColumns());
+            // named like this
+            int[] indices = spec.columnsToIndices("A", "C", "E");
+            // and in the above order
+            int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
+            assertArrayEquals(expectedIndices, indices);
+        }
+
+        { // output table specification for unmatched right rows
+            DataTableSpec spec = joinSpec.specForUnmatched(InputTable.RIGHT);
+            assertEquals(3, spec.getNumColumns());
+            // named like this (no disambiguation)
+            int[] indices = spec.columnsToIndices("U", "V", "A");
+            // and in the above order
+            int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
+            assertArrayEquals(expectedIndices, indices);
+        }
+
+        // test project
+        DataRow leftProjected = joinSpec.rowProjectOuter(InputTable.LEFT, rows[LEFT]);
 
         assertEquals(leftProjected.getNumCells(), 3);
 
@@ -446,7 +498,36 @@ public class JoinSpecificationTest {
         assertEquals(cell("c"), leftProjected.getCell(1));
         assertEquals(cell("e"), leftProjected.getCell(2));
 
-        DataRow rightProjected = jspec.rowProject(InputTable.RIGHT, rows[RIGHT]);
+        DataRow rightProjected = joinSpec.rowProjectOuter(InputTable.RIGHT, rows[RIGHT]);
+
+        assertEquals(rightProjected.getNumCells(), 3);
+
+        // projected row has the cell contents of columns U, V, A (#1)
+        assertEquals(cell("u"), rightProjected.getCell(0));
+        assertEquals(cell("v"), rightProjected.getCell(1));
+        assertEquals(cell("x"), rightProjected.getCell(2));
+
+
+    }
+
+    /**
+     * This is used to project data rows from an input table down to the columns included in the joined table.
+     * @throws InvalidSettingsException
+     */
+    @Test
+    public void project() throws InvalidSettingsException {
+        JoinSpecification jspec = new JoinSpecification.Builder(settings[LEFT], settings[RIGHT]).build();
+
+        DataRow leftProjected = jspec.rowProjectOuter(InputTable.LEFT, rows[LEFT]);
+
+        assertEquals(leftProjected.getNumCells(), 3);
+
+        // projected row has the cell contents of columns A, C, E
+        assertEquals(cell("a"), leftProjected.getCell(0));
+        assertEquals(cell("c"), leftProjected.getCell(1));
+        assertEquals(cell("e"), leftProjected.getCell(2));
+
+        DataRow rightProjected = jspec.rowProjectOuter(InputTable.RIGHT, rows[RIGHT]);
 
         assertEquals(rightProjected.getNumCells(), 3);
 

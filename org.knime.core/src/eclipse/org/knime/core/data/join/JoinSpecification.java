@@ -45,6 +45,7 @@
 package org.knime.core.data.join;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -62,6 +63,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions.DiskBucket;
 import org.knime.core.data.join.JoinTableSettings.SpecialJoinColumn;
+import org.knime.core.data.join.results.JoinResults;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -322,7 +324,7 @@ public class JoinSpecification {
     /**
      * Remap the join and include columns to working tables containing only the join and include columns and optionally
      * a row offset, e.g., as computed by {@link JoinTableSettings#condensed(boolean)}. This recomputes the lookup
-     * indices for join and include columns, e.g., {@link #columnIncludeIndices(InputTable)}.
+     * indices for join and include columns, e.g., {@link #getMatchTableIncludeIndices(InputTable)}.
      *
      * <h1>Usage</h1>
      *
@@ -402,10 +404,13 @@ public class JoinSpecification {
     }
 
     /**
+     * Find the included column indices for inner tables, i.e., computed using {@link JoinResults#getSingleTable()} or
+     * {@link JoinResults#getMatches()}.
+     *
      * @param side left or right input table
      * @return the indices of the columns to include. Result depends on whether {@link #isMergeJoinColumns()}.
      */
-    public int[] columnIncludeIndices(final InputTable side) {
+    public int[] getMatchTableIncludeIndices(final InputTable side) {
         return isMergeJoinColumns() ? m_mergeIncludes[side.ordinal()] : getSettings(side).getIncludeColumns();
     }
 
@@ -497,8 +502,8 @@ public class JoinSpecification {
      * @see Builder#mergeJoinColumns(boolean)
      */
     public DataRow rowJoin(final DataRow left, final DataRow right) {
-        int[] leftIncludes = columnIncludeIndices(InputTable.LEFT);
-        int[] rightIncludes = columnIncludeIndices(InputTable.RIGHT);
+        int[] leftIncludes = getMatchTableIncludeIndices(InputTable.LEFT);
+        int[] rightIncludes = getMatchTableIncludeIndices(InputTable.RIGHT);
 
         final DataCell[] dataCells = new DataCell[leftIncludes.length + rightIncludes.length];
 
@@ -520,12 +525,15 @@ public class JoinSpecification {
     }
 
     /**
+     * Projects an unmatched row to only the included columns. Note that for matches, getting rid of non-included
+     * columns is taken care of in {@link #rowJoin(DataRow, DataRow)}.
+     *
      * @param side whether to project to the included columns of the left or right input table
      * @param row a row from the given input table
      * @return only the cells selected for inclusion, as per {@link #getSettings(InputTable)}.
      */
-    public DataRow rowProject(final InputTable side, final DataRow row) {
-        int[] includes = columnIncludeIndices(side);
+    public DataRow rowProjectOuter(final InputTable side, final DataRow row) {
+        int[] includes = getSettings(side).getIncludeColumns();
         final DataCell[] dataCells = new DataCell[includes.length];
 
         int cell = 0;
@@ -533,6 +541,7 @@ public class JoinSpecification {
         for (int i = 0; i < includes.length; i++) {
             dataCells[cell++] = row.getCell(includes[i]);
         }
+        System.out.println("dataCells=" + Arrays.toString(dataCells));
         return new DefaultRow(row.getKey(), dataCells);
     }
 
