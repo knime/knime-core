@@ -71,29 +71,39 @@ import org.knime.core.node.ExecutionContext;
  */
 public class UnorderedJoinContainer extends JoinContainer {
 
-    private static final int SINGLE_TABLE = 3;
-
-    private final BufferedDataContainer[] m_containers;
-
-    private final BufferedDataTable[] m_tables;
+    /**
+     * The containers that hold the {@link DataRow}s that become the {@link #m_splitOutputResults}.
+     */
+    private final BufferedDataContainer[] m_splitOutputContainers;
 
     /**
-     * @param joinSpecification as in {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean)}
-     * @param exec as in {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean)}
-     * @param deduplicateResults as in {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean)}
+     * Caches the results returned by {@link #get(int)}, i.e., the three split output tables for matches, left
+     * unmatched, and right unmatched rows.
+     */
+    private final BufferedDataTable[] m_splitOutputResults;
+
+    /**
+     * Caches result returned by {@link #getSingleTable()}.
+     */
+    BufferedDataTable m_singleTableResult;
+
+    /**
+     * @param joinSpecification as in {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean, boolean)}
+     * @param exec as in {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean, boolean)}
+     * @param deduplicateResults as in {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean, boolean)}
      * @param deferUnmatchedRows
      */
     public UnorderedJoinContainer(final JoinSpecification joinSpecification, final ExecutionContext exec,
         final boolean deduplicateResults, final boolean deferUnmatchedRows) {
         super(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
 
-        m_containers =
+        m_splitOutputContainers =
             Arrays.stream(m_outputSpecs).map(exec::createDataContainer).toArray(BufferedDataContainer[]::new);
-        m_tables = new BufferedDataTable[4];
+        m_splitOutputResults = new BufferedDataTable[4];
     }
 
     private void add(final int rowType, final DataRow row) {
-        m_containers[rowType].addRowToTable(row);
+        m_splitOutputContainers[rowType].addRowToTable(row);
     }
 
     @Override
@@ -116,14 +126,14 @@ public class UnorderedJoinContainer extends JoinContainer {
     }
 
     private BufferedDataTable get(final int resultType) throws CanceledExecutionException {
-        if (m_tables[resultType] == null) {
+        if (m_splitOutputResults[resultType] == null) {
             if (resultType != MATCHES) {
                 m_unmatchedRows[resultType].collectUnmatched();
             }
-            m_containers[resultType].close();
-            m_tables[resultType] = m_containers[resultType].getTable();
+            m_splitOutputContainers[resultType].close();
+            m_splitOutputResults[resultType] = m_splitOutputContainers[resultType].getTable();
         }
-        return m_tables[resultType];
+        return m_splitOutputResults[resultType];
     }
 
     @Override
@@ -144,12 +154,12 @@ public class UnorderedJoinContainer extends JoinContainer {
     @Override
     public BufferedDataTable getSingleTable() throws CanceledExecutionException {
 
-        if(m_tables[SINGLE_TABLE] == null) {
+        if(m_singleTableResult == null) {
 
             // this is empty if matches are not retained
             // however, it has the correct spec (left + right included columns)
             // and is open after object construction until #getMatches is called
-            final BufferedDataContainer result = m_containers[MATCHES];
+            final BufferedDataContainer result = m_splitOutputContainers[MATCHES];
             CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodically(m_exec);
 
             // add left unmatched rows
@@ -165,10 +175,10 @@ public class UnorderedJoinContainer extends JoinContainer {
             }
 
             result.close();
-            m_tables[SINGLE_TABLE] = result.getTable();
+            m_singleTableResult = result.getTable();
 
         }
-        return m_tables[SINGLE_TABLE];
+        return m_singleTableResult;
 
     }
 

@@ -142,7 +142,6 @@ public class LeftRightSortedJoinContainer extends JoinContainer {
      */
     private BufferedDataTable get(final int resultType) throws CanceledExecutionException {
         if (m_tables[resultType] == null) {
-            System.out.println("Shipping results for type " + resultType);
             // in case unmatched rows are collected deferred, this is the last possibility to collect them
             if(resultType != MATCHES) {
                 m_unmatchedRows[resultType].collectUnmatched();
