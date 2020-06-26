@@ -797,18 +797,18 @@ public class NativeNodeContainer extends SingleNodeContainer {
             assert upstreamFLC != null;
             assert upstreamFLC.getIterationIndex() == 0;
             ILoopStartWriteFileStoreHandler upStreamFSHandler = upstreamFLC.getFileStoreHandler();
-            if (this.isModelCompatibleTo(LoopEndNode.class)) {
-                if (upStreamFSHandler != null) {
+            if (upStreamFSHandler != null) {
+                if (this.isModelCompatibleTo(LoopEndNode.class)) {
                     newFSHandler = new LoopEndWriteFileStoreHandler(upStreamFSHandler);
                 } else {
-                    // Note on a potentially null-upStreamFSHandler:
-                    // nodes in inactive branches don't have a file store handler set
-                    // -> need to be taken into consideration when setting up the file store handler
-                    // for an 'InactiveBranchConsumer-loop end'
-                    assert this.isModelCompatibleTo(InactiveBranchConsumer.class);
+                    newFSHandler = new ReferenceWriteFileStoreHandler(upStreamFSHandler);
                 }
             } else {
-                newFSHandler = new ReferenceWriteFileStoreHandler(upStreamFSHandler);
+                // Note on a potentially null-upStreamFSHandler:
+                // nodes in inactive branches don't have a file store handler set
+                // -> need to be taken into consideration when setting up the file store handler
+                // for an 'InactiveBranchConsumer-loop end'
+                assert this.isModelCompatibleTo(InactiveBranchConsumer.class);
             }
         }
         return newFSHandler;
