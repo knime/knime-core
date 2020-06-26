@@ -82,7 +82,7 @@ public class JoinTableSettings {
             /**
              * Indicates that the row key of a data row shall be used as value in a join column equality clause.
              */
-            ROW_KEY("$RowKey$", -100);
+            ROW_KEY("___$RowKey$____ac59075b", -100);
 
         final String m_defaultColumnName;
         final int m_columnIndexIndicator;
@@ -91,6 +91,9 @@ public class JoinTableSettings {
             m_columnIndexIndicator = columnIndexIndicator;
         }
 
+        @Override public String toString() {
+            return m_defaultColumnName;
+        }
 //        public String safeColumnName(final Predicate<String> isAmbiguous) {
 //            return JoinSpecification.disambiguateName(m_defaultColumnName, isAmbiguous, s -> s.concat("$"));
 //        }
@@ -98,7 +101,10 @@ public class JoinTableSettings {
             return ! (o instanceof SpecialJoinColumn);
         }
 
-
+//        public Predicate<String> isDefaultColumnName() { return m_defaultColumnName::equals; }
+        public Object inflate(final String columnName) {
+            return m_defaultColumnName.equals(columnName) ? this : columnName;
+        }
     }
 
 
