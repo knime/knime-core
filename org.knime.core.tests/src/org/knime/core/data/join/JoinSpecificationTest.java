@@ -349,13 +349,18 @@ public class JoinSpecificationTest {
     }
 
     /**
-     * When merging join columns, the same column can have multiple join partners.
-     *         A B C  ⨝  A B C A=B B=C
-     * include ✓   ✓     ✓ ✓    ✓   ✓
+     * When merging join columns, the same column can have multiple join partners. In this case the left column will
+     * consume all right columns it joins on (because they're all the same). If one of the right columns has the same
+     * name as the left column, the left original name is kept. Otherwise it will be named using the A=B form.
+     *
+     * <pre>
+     *         A B C  ⨝  A B C
+     * include ✓   ✓     ✓ ✓
      * left join clauses A = B right join clauses
      *                   A = A
      *                   A = C
-     * Since the left join
+     * </pre>
+     *
      * @throws InvalidSettingsException
      */
     @Test

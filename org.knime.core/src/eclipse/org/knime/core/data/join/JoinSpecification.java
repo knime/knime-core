@@ -45,7 +45,6 @@
 package org.knime.core.data.join;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -191,6 +190,11 @@ public class JoinSpecification {
      */
     private final Predicate<String> m_includedViaMerge;
 
+    /**
+     * See {@link #columnLeftMergedLocations()}
+     */
+    private final int[][] m_columnLeftMergedLocations;
+
     private JoinSpecification(final Builder builder) {
         this.m_conjunctive = builder.m_conjunctive;
         this.m_settings[InputTable.LEFT.ordinal()] = builder.m_leftSettings;
@@ -218,6 +222,9 @@ public class JoinSpecification {
         if (builder.m_mergeJoinColumns) {
             m_mergeIncludes[InputTable.LEFT.ordinal()] = columnLeftMergeIncludes();
             m_mergeIncludes[InputTable.RIGHT.ordinal()] = columnRightMergeIncludes();
+            m_columnLeftMergedLocations = columnLeftMergedLocations();
+        } else {
+            m_columnLeftMergedLocations = null;
         }
 
     }
@@ -404,8 +411,9 @@ public class JoinSpecification {
     }
 
     /**
-     * Find the included column indices for inner tables, i.e., computed using {@link JoinResults#getSingleTable()} or
-     * {@link JoinResults#getMatches()}.
+     * Columns to include from the given table when producing results in single table format
+     * ({@link JoinResults#getTable()}) or when producing join results for the matched rows output
+     * ({@link JoinResults#getMatches()}).
      *
      * @param side left or right input table
      * @return the indices of the columns to include. Result depends on whether {@link #isMergeJoinColumns()}.
@@ -443,6 +451,32 @@ public class JoinSpecification {
             .mapToObj(otherJoinClauses::get)
             // ignore special join columns
             .filter(SpecialJoinColumn::isNot).map(Object::toString);
+    }
+
+    /**
+     * @see #getColumnLeftMergedLocations()
+     */
+    int[][] columnLeftMergedLocations() {
+
+        // this has as many columns as the left input table contributes to the merged match spec.
+        int[] leftMergeSpecPart = m_mergeIncludes[InputTable.LEFT.ordinal()];
+        int[][] result = new int[leftMergeSpecPart.length][];
+        DataTableSpec rightOriginal = getSettings(InputTable.RIGHT).getTableSpec();
+
+        for (int i = 0; i < leftMergeSpecPart.length; i++) {
+            // the i-th column in the merge spec references the j-th column in the original table
+            int originalColumnIndex = leftMergeSpecPart[i];
+            // use j to get the original column name in the left table
+            String columnName =
+                getSettings(InputTable.LEFT).getTableSpec().getColumnSpec(originalColumnIndex).getName();
+            // use the column name to find the join partners
+            int[] lookupIndex = columnJoinPartners(InputTable.LEFT, columnName)
+                // look up where to get the join partner's value in the projected row format
+                .mapToInt(rightOriginal::findColumnIndex)
+                .toArray();
+            result[i] = lookupIndex;
+        }
+        return result;
     }
 
     /**
@@ -525,12 +559,17 @@ public class JoinSpecification {
     }
 
     /**
-     * Projects an unmatched row to only the included columns. Note that for matches, getting rid of non-included
-     * columns is taken care of in {@link #rowJoin(DataRow, DataRow)}.
+     * Projects a row to only the included columns. This does not depend on {@link #isMergeJoinColumns()} as it assumes
+     * that we're producing separate tables as a basis for a single combined table {@link JoinResults#getTable()}.
+     * Note that for matches, getting rid of non-included columns is taken care of in
+     * {@link #rowJoin(DataRow, DataRow)}.
      *
      * @param side whether to project to the included columns of the left or right input table
      * @param row a row from the given input table
-     * @return only the cells selected for inclusion, as per {@link #getSettings(InputTable)}.
+     * @return only the cells selected for inclusion. For the left table, the included columns in the separate output are the
+     * same as
+     * , either to be output directly as unmatched row, or to be padded
+     *         with missing values when producing {@link JoinResults#getTable()}
      */
     public DataRow rowProjectOuter(final InputTable side, final DataRow row) {
         int[] includes = getSettings(side).getIncludeColumns();
@@ -541,7 +580,6 @@ public class JoinSpecification {
         for (int i = 0; i < includes.length; i++) {
             dataCells[cell++] = row.getCell(includes[i]);
         }
-        System.out.println("dataCells=" + Arrays.toString(dataCells));
         return new DefaultRow(row.getKey(), dataCells);
     }
 
@@ -761,6 +799,19 @@ public class JoinSpecification {
         // the number of join clauses is always equal for left and right side
         int numJoinClauses = getSettings(InputTable.LEFT).getJoinClauses().size();
         return isConjunctive() ? 1 : numJoinClauses;
+    }
+
+    /**
+     * Used when producing single table output with merged join columns. This is only needed for right outer rows,
+     * because their values are put into the corresponding merged join columns in the left part of the table spec. For
+     * left outer rows, we can just append missing values at the end to fit the {@link #specForMatchTable()} format.
+     *
+     * @return a right unmatched row, the column indices in the right row (which has been formated by
+     *         {@link #rowProjectOuter(InputTable, DataRow)}) where to extract the merged join column values from. For
+     *         non-merged columns, returns -1 to indicate a missing value.
+     */
+    public int[][] getColumnLeftMergedLocations() {
+        return m_columnLeftMergedLocations;
     }
 
     /**

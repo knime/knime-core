@@ -68,7 +68,7 @@ import gnu.trove.strategy.HashingStrategy;
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-class JoinTest {
+abstract class JoinTest {
 
     /**
      * This enum holds all ways of joining the two tables.

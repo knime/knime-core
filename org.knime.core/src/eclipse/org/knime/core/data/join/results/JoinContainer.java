@@ -107,7 +107,7 @@ public abstract class JoinContainer implements JoinResults {
     protected final RowOffsetCombinationSet[] m_caches;
 
     /**
-     * {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean)}
+     * {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean, boolean)}
      */
     protected final boolean m_deduplicateResults;
 
@@ -177,10 +177,10 @@ public abstract class JoinContainer implements JoinResults {
      * @param resultType
      */
     private UnmatchedRows unmatchedRowHandler(final InputTable side, final boolean defer) {
-        BufferedDataTable table =
-            m_joinSpecification.getSettings(side).getTable().orElseThrow(IllegalStateException::new);
         ObjLongConsumer<DataRow> handler = side.isLeft() ? this::doAddLeftOuter : this::doAddRightOuter;
         if (defer) {
+            BufferedDataTable table =
+                    m_joinSpecification.getSettings(side).getTable().orElseThrow(IllegalStateException::new);
             return new DeferredProbeRowHandler(table, handler, m_checkCanceled);
         } else {
             return UnmatchedRows.completeIndex(handler);
@@ -273,51 +273,97 @@ public abstract class JoinContainer implements JoinResults {
     }
 
     /**
-     * @param rightUnmatchedRowProjected an unmatched row from the right table that has been projected down to included
-     *            columns already.
+     * Convert a row from the left input table to the single match table format. <br/>
+     * Depending on whether join columns in the right table are merged, fewer missing values are appended.
+     *
+     * @param leftUnmatched an unmatched row from the left table in the original input format
      * @return a data row that contains missing values for all included columns of the right table.
      */
-    protected DataRow padLeftWithMissing(final DataRow rightUnmatchedRowProjected) {
+    protected DataRow leftToSingleTableFormat(final DataRow leftUnmatched) {
 
-        int[] includes = m_joinSpecification.getMatchTableIncludeIndices(InputTable.LEFT);
-        int padCells = includes.length;
+        int[] leftCells = m_joinSpecification.getMatchTableIncludeIndices(InputTable.LEFT);
+        // this skips merged join columns if merge join columns is on
+        int[] rightCells = m_joinSpecification.getMatchTableIncludeIndices(InputTable.RIGHT);
 
-        final DataCell[] dataCells = new DataCell[padCells + rightUnmatchedRowProjected.getNumCells()];
+        final DataCell[] dataCells = new DataCell[leftCells.length + rightCells.length];
         int cell = 0;
 
-        for (int i = 0; i < padCells; i++) {
+        for (int i = 0; i < leftCells.length; i++) {
+            dataCells[cell++] = leftUnmatched.getCell(leftCells[i]);
+        }
+        for (int i = 0; i < rightCells.length; i++) {
             dataCells[cell++] = DataType.getMissingCell();
         }
-        for (int i = 0; i < rightUnmatchedRowProjected.getNumCells(); i++) {
-            dataCells[cell++] = rightUnmatchedRowProjected.getCell(i);
-        }
 
-        RowKey newKey = m_joinSpecification.getRowKeyFactory().apply(null, rightUnmatchedRowProjected);
+        RowKey newKey = m_joinSpecification.getRowKeyFactory().apply(leftUnmatched, null);
         return new DefaultRow(newKey, dataCells);
     }
 
     /**
-     * @param leftUnmatchedRowProjected an unmatched row from the left table that has been projected down to included
-     *            columns already.
+     * Convert a row from the right input table to single match table format. <br/>
+     * Depending on whether join columns are to be merged, the merged columns are removed from the row (also, the
+     * columns not included are removed). If merge join columns is on, the present values from the right outer row are
+     * written to the column of the left table that consumed the join column (can be multiple; if they are all equal,
+     * the value will be used, otherwise a missing value is emitted).
+     *
+     * @param rightUnmatched an unmatched row from the original right input table
      * @return a data row that contains missing values for all included columns of the right table.
      */
-    protected DataRow padRightWithMissing(final DataRow leftUnmatchedRowProjected) {
+    protected DataRow rightToSingleTableFormat(final DataRow rightUnmatched) {
 
-        int[] includes = m_joinSpecification.getMatchTableIncludeIndices(InputTable.RIGHT);
-        int padCells = includes.length;
+        // getMatchTableIncludeIndices is aware of whether merge join columns is selected
+        int[] leftCells = m_joinSpecification.getMatchTableIncludeIndices(InputTable.LEFT);
+        int[] rightCells = m_joinSpecification.getMatchTableIncludeIndices(InputTable.RIGHT);
 
-        final DataCell[] dataCells = new DataCell[leftUnmatchedRowProjected.getNumCells() + padCells];
+        final DataCell[] dataCells = new DataCell[leftCells.length + rightCells.length];
         int cell = 0;
 
-        for (int i = 0; i < leftUnmatchedRowProjected.getNumCells(); i++) {
-            dataCells[cell++] = leftUnmatchedRowProjected.getCell(i);
-        }
-        for (int i = 0; i < padCells; i++) {
-            dataCells[cell++] = DataType.getMissingCell();
-        }
+        if(m_joinSpecification.isMergeJoinColumns()) {
 
-        RowKey newKey = m_joinSpecification.getRowKeyFactory().apply(leftUnmatchedRowProjected, null);
+            int[][] lookupColumns = m_joinSpecification.getColumnLeftMergedLocations();
+
+            // put values from merged columns into left table
+            for (int i = 0; i < leftCells.length; i++) {
+
+                // in case this is not a join column (no lookup columns) just use a missing value
+                DataCell consensus = lookupColumns[i].length == 0 ? DataType.getMissingCell() : null;
+
+                for (int j = 0; j < lookupColumns[i].length; j++) {
+                    if(lookupColumns[i][j] == -1) {
+                        // if any of the lookup values is missing, deliver a missing value
+                        consensus = DataType.getMissingCell();
+                        break;
+                    } else {
+                        DataCell value = rightUnmatched.getCell(lookupColumns[i][j]);
+                        // if at least one value does not equal the others, return a missing value
+                        if(consensus != null && !value.equals(consensus)) {
+                            consensus = DataType.getMissingCell();
+                            break;
+                        }
+                        consensus = value;
+                    }
+                }
+                dataCells[cell++] = consensus;
+            }
+            // skip the merged join columns
+            for (int i = 0; i < rightCells.length; i++) {
+                dataCells[cell++] = rightUnmatched.getCell(rightCells[i]);
+            }
+
+        } else {
+            // just fill all left table columns with missing values
+            for (int i = 0; i < leftCells.length; i++) {
+                dataCells[cell++] = DataType.getMissingCell();
+            }
+
+            // and append everything that has survived projection to right outer format
+            for (int i = 0; i < rightCells.length; i++) {
+                dataCells[cell++] = rightUnmatched.getCell(rightCells[i]);
+            }
+        }
+        RowKey newKey = m_joinSpecification.getRowKeyFactory().apply(null, rightUnmatched);
         return new DefaultRow(newKey, dataCells);
+
     }
 
     @Override
