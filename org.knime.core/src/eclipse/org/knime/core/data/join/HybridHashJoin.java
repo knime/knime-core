@@ -66,6 +66,9 @@ import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
 import org.knime.core.data.join.results.JoinContainer;
 import org.knime.core.data.join.results.JoinResults;
+import org.knime.core.data.join.results.JoinResults.OutputCombined;
+import org.knime.core.data.join.results.JoinResults.OutputMode;
+import org.knime.core.data.join.results.JoinResults.OutputSplit;
 import org.knime.core.data.join.results.LeftRightSortedJoinContainer;
 import org.knime.core.data.join.results.NWayMergeContainer;
 import org.knime.core.data.join.results.UnorderedJoinContainer;
@@ -116,9 +119,6 @@ public class HybridHashJoin extends JoinImplementation {
 
     private DiskBackedHashPartitions m_partitioner;
 
-    private JoinContainer m_joinResults;
-
-
     /**
      * @param settings
      * @param exec
@@ -141,84 +141,92 @@ public class HybridHashJoin extends JoinImplementation {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputCombined joinOutputCombined() throws CanceledExecutionException, InvalidSettingsException {
+        return (OutputCombined) join(OutputMode.OutputCombined);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputSplit joinOutputSplit() throws CanceledExecutionException, InvalidSettingsException {
+        return (OutputSplit) join(OutputMode.OutputSplit);
+    }
+
+    /**
      *
      * Only hash input buckets move between main memory and disk. They do so only during partitioning the hash input.
      * Probe input rows are either directly processed or go to disk.
+     * @param outputMode
      *
-     * @param hashInput
-     * @param probeInput
-     *
-     * @return
      * @throws CanceledExecutionException
      */
-    @Override
-    public JoinResults join() throws CanceledExecutionException {
+    private JoinContainer join(final JoinResults.OutputMode outputMode) throws CanceledExecutionException {
 
         // catch empty join
         if (!(m_joinSpecification.isRetainMatched() || m_joinSpecification.isRetainUnmatched(InputTable.LEFT)
             || m_joinSpecification.isRetainUnmatched(InputTable.RIGHT))) {
-            return new UnorderedJoinContainer(m_joinSpecification, m_exec, false, false);
+            return UnorderedJoinContainer.create(outputMode, m_joinSpecification, m_exec, false, false);
         }
 
         boolean deduplicateResults = !m_joinSpecification.isConjunctive();
         boolean deferMatches =  ! m_joinSpecification.isConjunctive();
-        System.out.println(String.format("deferMatches=%s", deferMatches));
+
+        JoinContainer joinResults;
 
         switch (m_joinSpecification.getOutputRowOrder()) {
             case ARBITRARY:
-                // TODO redundant
-                m_joinResults = new UnorderedJoinContainer(m_joinSpecification, m_exec, deduplicateResults, deferMatches);
+                joinResults = UnorderedJoinContainer.create(outputMode, m_joinSpecification, m_exec, deduplicateResults,
+                    deferMatches);
                 break;
-            case DETERMINISTIC:
-//                m_joinResults =
-//                    new NWayMergeContainer(m_joinSpecification, m_exec, m_left == m_probe, deduplicateResults, deferMatches);
-//                break;
             case LEFT_RIGHT:
-//                if (m_left == m_probe) {
-//                    // if the left table happens to be the probe table, legacy and deterministic order are the same
-//                    m_joinResults =
-//                        new NWayMergeContainer(m_joinSpecification, m_exec, m_left == m_probe, deduplicateResults, deferMatches);
-//                } else {
-                    // otherwise we need to do the full sort
-                    m_joinResults = new LeftRightSortedJoinContainer(m_joinSpecification, m_exec, deduplicateResults, deferMatches);
-//                }
+                joinResults = LeftRightSortedJoinContainer.create(outputMode, m_joinSpecification, m_exec,
+                    deduplicateResults, deferMatches);
                 break;
             default:
-                throw new IllegalStateException();
+                throw new IllegalStateException(
+                    "Output order not implemented: " + m_joinSpecification.getOutputRowOrder());
         }
 
         // ordered join containers need the row offsets to sort the output
         // for a disjunctive join, offsets are used to reject duplicate results and collect deferred unmatched rows
         // hiliting needs offsets to map output rows back to input rows
-        boolean storeRowOffsets = !(m_joinResults instanceof UnorderedJoinContainer) || deduplicateResults;
-        m_partitioner = new DiskBackedHashPartitions(storeRowOffsets, m_joinResults);
+        boolean storeRowOffsets = !(joinResults instanceof UnorderedJoinContainer.Split || joinResults instanceof UnorderedJoinContainer.Combined) || deduplicateResults;
+        m_partitioner = new DiskBackedHashPartitions(storeRowOffsets, joinResults);
 
         m_progress.m_numBuckets = m_partitioner.m_numPartitions;
 
         // build an index of the hash input
-        // TODO as a workaround, fall back to nested loop if memory runs low
-        boolean success = phase1();
+        boolean success = phase1(joinResults);
         if (!success) {
-            return fallbackToNestedLoop();
+            // discard results from phase 1, start over
+            joinResults = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
+                ? UnorderedJoinContainer.create(outputMode, m_joinSpecification, m_exec, false, false)
+                : LeftRightSortedJoinContainer.create(outputMode, m_joinSpecification, m_exec, false, false);
+
+            return fallbackToNestedLoop(joinResults);
         }
 
         // single pass over the probe input, write rows to disk that can't be processed in memory
-        phase2();
+        phase2(joinResults);
 
         // join rows that have been flushed to disk
-        phase3();
+        phase3(joinResults);
 
-        return m_joinResults;
+        return joinResults;
     }
 
     /**
      * Index the hash input by partitioning the hash input into buckets. Keep as many buckets as possible in memory.
      *
+     * @return false if phase 1 could not be completed due to low heap space.
      * @throws CanceledExecutionException
      */
-    private boolean phase1() throws CanceledExecutionException {
+    private boolean phase1(final JoinContainer joinResults) throws CanceledExecutionException {
 
-        System.out.println("    HybridHashJoin.phase1()");
         m_progress.setMessage("Phase 1/3: Processing smaller table");
         m_progress.reset();
 
@@ -231,10 +239,8 @@ public class HybridHashJoin extends JoinImplementation {
 
                 // if memory is running low and there are hash buckets in-memory
                 if (m_progress.isMemoryLow(100)) {
-                    // TODO if memory runs low, the hybrid hash join should kick in.
                     // for now, we can just solve the entire problem using a nested loop join which is slower but works.
                     return false;
-
 //                    m_partitioner.flushNextBucket();
 //                    m_progress.setNumPartitionsOnDisk(m_partitioner.getNumPartitionsOnDisk());
                 }
@@ -251,7 +257,7 @@ public class HybridHashJoin extends JoinImplementation {
         } // close hash input row iterator
 
         // the unmatched hash rows (due to incomplete join attributes) have been added in hash input row order
-        m_joinResults.sortedChunkEnd();
+        joinResults.sortedChunkEnd();
 
         // hash input has been processed completely, close buckets that have been migrated to disk (if any)
         m_partitioner.closeHashBuckets();
@@ -266,12 +272,11 @@ public class HybridHashJoin extends JoinImplementation {
      * <li>process probe rows immediately for which the matching bucket is in memory</li>
      * <li>flush probe rows to disk for which the matching bucket is not in memory</li>
      * </ul>
+     * @param joinResults
      *
      * @throws CanceledExecutionException
      */
-    private void phase2() throws CanceledExecutionException {
-
-        System.out.println(String.format("    HybridHashJoin.phase2() with %s in-memory hash partitions", m_partitioner.getNumInMemoryParititions()));
+    private void phase2(final JoinContainer joinResults) throws CanceledExecutionException {
 
         m_progress.setMessage("Phase 2/3: Processing larger table");
 
@@ -299,14 +304,12 @@ public class HybridHashJoin extends JoinImplementation {
         // probe input partitioning is done; no more rows will be added to probe buckets
         m_partitioner.closeProbeBuckets();
 
-        m_joinResults.sortedChunkEnd();
-
-        System.out.println("phase 2 finalize: in-memory hash indexes");
+        joinResults.sortedChunkEnd();
 
         for (HashIndex hashIndex : m_partitioner.inMemoryHashPartitions()) {
             // handle unmatched in-memory hash rows
-            hashIndex.forUnmatchedHashRows(m_joinResults.unmatched(m_hashSide));
-            m_joinResults.sortedChunkEnd();
+            hashIndex.forUnmatchedHashRows(joinResults.unmatched(m_hashSide));
+            joinResults.sortedChunkEnd();
         }
 
     }
@@ -316,9 +319,7 @@ public class HybridHashJoin extends JoinImplementation {
      *
      * @throws CanceledExecutionException
      */
-    private void phase3() throws CanceledExecutionException {
-
-//        System.out.println("    HybridHashJoin.phase3()");
+    private void phase3(final JoinContainer joinResults) throws CanceledExecutionException {
 
         // since each table is sorted according to natural join order, we can do a n-way merge of the partial results
         m_progress.setMessage("Phase 3/3: Processing data on disk");
@@ -327,30 +328,21 @@ public class HybridHashJoin extends JoinImplementation {
         // join the pairs of buckets that haven't been processed in memory
         int i = 0;
         for (Pair<DiskBucket, DiskBucket> pair : m_partitioner.unprocessedPartitions()) {
-            System.out.println(" ! Block Hash Join over partition " + (i++));
             DiskBucket probeBucket = pair.getFirst();
             DiskBucket hashBucket = pair.getSecond();
-            probeBucket.join(hashBucket, m_joinResults);
-            m_joinResults.sortedChunkEnd();
+            probeBucket.join(hashBucket, joinResults);
+            joinResults.sortedChunkEnd();
         }
 
     }
 
     /**
-     * TODO Workaround for bugs in phase 2 and phase 3.
-     *
      * @throws CanceledExecutionException
      */
-    private JoinResults fallbackToNestedLoop() throws CanceledExecutionException {
-        System.out.println("HybridHashJoin.fallbackToNestedLoop()");
+    private JoinContainer fallbackToNestedLoop(final JoinContainer joinResults) throws CanceledExecutionException {
         BlockHashJoin completeJoin = new BlockHashJoin(m_exec, m_progress, m_joinSpecification, false);
-        // discard results from phase 1, start over
-        m_joinResults = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
-            ? new UnorderedJoinContainer(m_joinSpecification, m_exec, false, false)
-            : new LeftRightSortedJoinContainer(m_joinSpecification, m_exec, false, false);
-
-        completeJoin.join(m_joinResults);
-        return m_joinResults;
+        completeJoin.join(joinResults);
+        return joinResults;
 
     }
 
@@ -415,15 +407,6 @@ public class HybridHashJoin extends JoinImplementation {
         private final boolean m_storeRowOffsets;
 
         /**
-         * The format of the table in which to flush rows to disk. m_workingSpecs[{@link #PROBE}] for probe input and
-         * m_workingSpecs[{@link #HASH}] for hash input table. Contains only the included columns and join columns as
-         * returned by {@link JoinTableSettings#m_materializeColumnIndices} and possibly a column for the row's offset
-         * if sorting of the results is required.
-         */
-//        private final JoinTableSettings[] m_workingSpecs = new JoinTableSettings[2];
-//      private final IdentityHashMap<BufferedDataTable, DataTableSpec> m_workingSpecs = new IdentityHashMap<>();
-
-        /**
          * Invariant: <br/>
          * <ul>
          * <li>for i ≥ firstInMemoryHashBucket, hashBucketsInMemory[i] is used and hashBucketsOnDisk[i] is null</li>
@@ -442,7 +425,6 @@ public class HybridHashJoin extends JoinImplementation {
             // we create two files per hash bucket, one for the hash input partition and one for the probe input partition
             // note that the effective number of buckets is limited by the number of rows in the hash table (for each row, at most one bucket is migrated to disk)
             m_numPartitions = Math.max(1, getMaxOpenFiles() / 2);
-//            coveredPartitions = new int[m_numPartitions];
 
             InputTable hashSide = HashIndex.smallerTable(m_joinSpecification);
 
@@ -459,16 +441,8 @@ public class HybridHashJoin extends JoinImplementation {
             m_hashBucketsOnDisk = new DiskBucket[m_numPartitions];
 
             InputTable probeSide = m_probe == m_left ? InputTable.LEFT : InputTable.RIGHT;
-            m_unmatchedProbeRows = m_joinResults.unmatched(probeSide);
-            m_unmatchedHashRows = m_joinResults.unmatched(probeSide.other());
-
-
-            // create intermediate table specs for flushing rows to disk
-//            m_workingSpecs[PROBE] = m_tableSettings.get(m_probe).condensed(storeRowOffsets);
-//            m_workingSpecs[HASH] = m_tableSettings.get(m_hash).condensed(storeRowOffsets);
-
-//            System.out.println(String.format("m_workingSpecs[PROBE]=%s", m_workingSpecs[PROBE]));
-//            System.out.println(String.format("m_workingSpecs[HASH]=%s", m_workingSpecs[HASH]));
+            m_unmatchedProbeRows = results.unmatched(probeSide);
+            m_unmatchedHashRows = results.unmatched(probeSide.other());
 
             // initialize each bucket with its own copy of the working table settings such that we can use them to
             // point to the bucket's intermediate table
@@ -476,10 +450,6 @@ public class HybridHashJoin extends JoinImplementation {
                     .map(DiskBucket::new)
                     .limit(m_numPartitions)
                     .toArray(DiskBucket[]::new);
-
-//            for (BufferedDataTable inputTable : new BufferedDataTable[]{m_probe, m_hash}) {
-//                m_workingSpecs.put(inputTable, workingTableSpec(storeRowOffsets, inputTable));
-//            }
 
         }
 

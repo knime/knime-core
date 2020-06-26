@@ -161,23 +161,23 @@ public class NWayMergeContainer extends JoinContainer {
         return m_tables[resultType];
     }
 
-    @Override
-    public BufferedDataTable getMatches() throws CanceledExecutionException {
-        return get(MATCHES);
-    }
-
-    @Override
-    public BufferedDataTable getLeftOuter() throws CanceledExecutionException {
-        return get(LEFT_OUTER);
-    }
-
-    /**
-     * The unmatched rows of the right input table, in order of appearance in the right input table.
-     */
-    @Override
-    public BufferedDataTable getRightOuter() throws CanceledExecutionException {
-        return get(RIGHT_OUTER);
-    }
+//    @Override
+//    public BufferedDataTable getMatches() throws CanceledExecutionException {
+//        return get(MATCHES);
+//    }
+//
+//    @Override
+//    public BufferedDataTable getLeftOuter() throws CanceledExecutionException {
+//        return get(LEFT_OUTER);
+//    }
+//
+//    /**
+//     * The unmatched rows of the right input table, in order of appearance in the right input table.
+//     */
+//    @Override
+//    public BufferedDataTable getRightOuter() throws CanceledExecutionException {
+//        return get(RIGHT_OUTER);
+//    }
 
     @Override
     public void sortedChunkEnd() {
@@ -188,44 +188,44 @@ public class NWayMergeContainer extends JoinContainer {
         }
     }
 
-    /**
-     * Returns the concatenation of matched rows, left unmatched rows, and right unmatched rows. Which rows are included
-     * depends on the join specification.<br/>
-     * The spec of the returned table is the same as that of {@link #getMatches()}. Pads left unmatched and right
-     * unmatched rows with missing values to fill the missing columns.
-     *
-     * @return matched and unmatched rows concatenated in one table with {@link JoinSpecification#specForMatchTable()}.
-     * @throws CanceledExecutionException
-     */
-    @Override
-    public BufferedDataTable getSingleTable() throws CanceledExecutionException {
-
-        // if only the matches are needed, we can use the output table directly
-        if (m_joinSpecification.isRetainMatched()
-                && !m_joinSpecification.isRetainUnmatched(InputTable.LEFT)
-                && !m_joinSpecification.isRetainUnmatched(InputTable.RIGHT)) {
-            return getMatches();
-        } else { // otherwise we need to pad and concat the unmatched rows
-
-            BufferedDataContainer container = m_exec.createDataContainer(m_joinSpecification.specForMatchTable());
-            CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodically(m_exec);
-
-            if (m_joinSpecification.isRetainMatched()) {
-                JoinResults.iterateWithResources(getMatches(), container::addRowToTable, checkCanceled);
-            }
-            if (m_joinSpecification.isRetainUnmatched(InputTable.LEFT)) {
-                JoinResults.iterateWithResources(getLeftOuter(),
-                    row -> container.addRowToTable(padRightWithMissing(row)), checkCanceled);
-            }
-            if (m_joinSpecification.isRetainUnmatched(InputTable.RIGHT)) {
-                JoinResults.iterateWithResources(getRightOuter(),
-                    row -> container.addRowToTable(padLeftWithMissing(row)), checkCanceled);
-            }
-            container.close();
-            return container.getTable();
-        }
-
-    }
+//    /**
+//     * Returns the concatenation of matched rows, left unmatched rows, and right unmatched rows. Which rows are included
+//     * depends on the join specification.<br/>
+//     * The spec of the returned table is the same as that of {@link #getMatches()}. Pads left unmatched and right
+//     * unmatched rows with missing values to fill the missing columns.
+//     *
+//     * @return matched and unmatched rows concatenated in one table with {@link JoinSpecification#specForMatchTable()}.
+//     * @throws CanceledExecutionException
+//     */
+//    @Override
+//    public BufferedDataTable getSingleTable() throws CanceledExecutionException {
+//
+//        // if only the matches are needed, we can use the output table directly
+//        if (m_joinSpecification.isRetainMatched()
+//                && !m_joinSpecification.isRetainUnmatched(InputTable.LEFT)
+//                && !m_joinSpecification.isRetainUnmatched(InputTable.RIGHT)) {
+//            return getMatches();
+//        } else { // otherwise we need to pad and concat the unmatched rows
+//
+//            BufferedDataContainer container = m_exec.createDataContainer(m_joinSpecification.specForMatchTable());
+//            CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodically(m_exec);
+//
+//            if (m_joinSpecification.isRetainMatched()) {
+//                JoinResults.iterateWithResources(getMatches(), container::addRowToTable, checkCanceled);
+//            }
+//            if (m_joinSpecification.isRetainUnmatched(InputTable.LEFT)) {
+//                JoinResults.iterateWithResources(getLeftOuter(),
+//                    row -> container.addRowToTable(leftToSingleTableFormat(row)), checkCanceled);
+//            }
+//            if (m_joinSpecification.isRetainUnmatched(InputTable.RIGHT)) {
+//                JoinResults.iterateWithResources(getRightOuter(),
+//                    row -> container.addRowToTable(rightToSingleTableFormat(row)), checkCanceled);
+//            }
+//            container.close();
+//            return container.getTable();
+//        }
+//
+//    }
 
     /**
      * This is an abstraction for collecting similar rows that are produced in sorted chunks. The idea is to get a

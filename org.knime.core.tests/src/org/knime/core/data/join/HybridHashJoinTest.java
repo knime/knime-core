@@ -61,7 +61,7 @@ import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.join.JoinImplementation.JoinProgressMonitor;
-import org.knime.core.data.join.results.JoinResults;
+import org.knime.core.data.join.results.JoinResults.OutputSplit;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
@@ -114,7 +114,7 @@ public class HybridHashJoinTest extends JoinTest {
         mon.setDesiredPartitionsOnDisk(executionMode.m_desiredPartitionsOnDisk);
 
         // do the join
-        BufferedDataTable result = hybridHash.join().getSingleTable();
+        BufferedDataTable result = hybridHash.joinOutputCombined().getTable();
 
         validateExecutionMode(joinMode, executionMode, mon);
 
@@ -162,7 +162,7 @@ public class HybridHashJoinTest extends JoinTest {
         mon.setDesiredPartitionsOnDisk(executionMode.m_desiredPartitionsOnDisk);
 
         // do the join
-        JoinResults results = hybridHash.join();
+        OutputSplit results = hybridHash.joinOutputSplit();
         validateExecutionMode(joinMode, executionMode, mon);
 
         if(joinMode.m_retainMatches) {

@@ -60,7 +60,8 @@ import javax.management.ObjectName;
 import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions;
 import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions.DiskBucket;
 import org.knime.core.data.join.JoinSpecification.InputTable;
-import org.knime.core.data.join.results.JoinResults;
+import org.knime.core.data.join.results.JoinResults.OutputCombined;
+import org.knime.core.data.join.results.JoinResults.OutputSplit;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -113,7 +114,9 @@ public abstract class JoinImplementation {
         m_right = settings.getSettings(InputTable.RIGHT).getTable().get();
     }
 
-    public abstract JoinResults join() throws CanceledExecutionException, InvalidSettingsException;
+    public abstract OutputCombined joinOutputCombined() throws CanceledExecutionException, InvalidSettingsException;
+
+    public abstract OutputSplit joinOutputSplit() throws CanceledExecutionException, InvalidSettingsException;
 
     /**
      * Validates the settings in the passed <code>NodeSettings</code> object. The specified settings is checked for

@@ -67,6 +67,8 @@ import org.knime.core.node.CanceledExecutionException.CancelChecker;
  */
 public interface JoinResults {
 
+    enum OutputMode {OutputCombined, OutputSplit}
+
     /**
      * Accepts the given row as a an inner join result if {@link #isRetainMatched()} is true. If
      * {@link #isRetainMatched()} is false, the operation has no effect.
@@ -98,30 +100,6 @@ public interface JoinResults {
      * @return whether the row was accepted
      */
     public boolean addRightOuter(DataRow row, long offset);
-
-    /**
-     * @return The {@link DataTable} which holds the inner joins.
-     * @throws CanceledExecutionException
-     */
-    public BufferedDataTable getMatches() throws CanceledExecutionException;
-
-    /**
-     * @return The unmatched rows from the left table.
-     * @throws CanceledExecutionException
-     */
-    public BufferedDataTable getLeftOuter() throws CanceledExecutionException;
-
-    /**
-     * @return The unmatched rows from the right table.
-     * @throws CanceledExecutionException
-     */
-    public BufferedDataTable getRightOuter() throws CanceledExecutionException;
-
-    /**
-     * @return a table containing the matches, left unmatched rows, and right unmatched rows.
-     * @throws CanceledExecutionException
-     */
-    public BufferedDataTable getSingleTable() throws CanceledExecutionException;
 
     /** @return whether to keep rows added via {@link #addMatch(DataRow, long, DataRow, long)}. */
     public boolean isRetainMatched();
@@ -202,5 +180,46 @@ public interface JoinResults {
      */
     boolean isDeduplicateResults();
 
+   /**
+    *
+    * @author Carl Witt, KNIME AG, Zurich, Switzerland
+    * @since 4.2
+    */
+   public interface OutputCombined extends JoinResults {
+
+       /**
+        * @return a table containing the matches, left unmatched rows, and right unmatched rows.
+        * @throws CanceledExecutionException
+        */
+       public BufferedDataTable getTable() throws CanceledExecutionException;
+
+   }
+
+   /**
+   *
+   * @author Carl Witt, KNIME AG, Zurich, Switzerland
+   * @since 4.2
+   */
+  public interface OutputSplit extends JoinResults {
+
+      /**
+       * @return The {@link DataTable} which holds the inner joins.
+       * @throws CanceledExecutionException
+       */
+      public BufferedDataTable getMatches() throws CanceledExecutionException;
+
+      /**
+       * @return The unmatched rows from the left table.
+       * @throws CanceledExecutionException
+       */
+      public BufferedDataTable getLeftOuter() throws CanceledExecutionException;
+
+      /**
+       * @return The unmatched rows from the right table.
+       * @throws CanceledExecutionException
+       */
+      public BufferedDataTable getRightOuter() throws CanceledExecutionException;
+
+  }
 
 }
