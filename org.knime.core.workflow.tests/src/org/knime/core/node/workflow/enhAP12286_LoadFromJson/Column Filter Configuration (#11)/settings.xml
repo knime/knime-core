@@ -67,21 +67,32 @@
 <entry key="type" type="xstring" value="Twinlist"/>
 <entry key="limit_number_visible_options" type="xboolean" value="false"/>
 <entry key="number_visible_options" type="xint" value="10"/>
+<config key="validation">
+<config key="min_num_columns">
+<entry key="error_message" type="xstring" value=""/>
+<entry key="min_num_columns" type="xint" value="0"/>
+</config>
+</config>
+<config key="input_filter">
+<config key="type_filter"/>
+<entry key="allow_all_types" type="xboolean" value="true"/>
+<entry key="filter_columns_without_domain" type="xboolean" value="false"/>
+</config>
 </config>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
 <entry key="state" type="xstring" value="CONFIGURED"/>
 <entry key="factory" type="xstring" value="org.knime.js.base.node.configuration.filter.column.ColumnFilterDialogNodeFactory"/>
-<entry key="node-name" type="xstring" value="Column Filter Configuration"/>
+<entry key="node-name" type="xstring" value="Column Filter Configuration (deprecated)"/>
 <entry key="node-bundle-name" type="xstring" value="KNIME Quick Form Nodes"/>
 <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.js.quickforms"/>
 <entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
-<entry key="node-bundle-version" type="xstring" value="4.1.0.qualifier"/>
+<entry key="node-bundle-version" type="xstring" value="4.2.0.qualifier"/>
 <entry key="node-feature-name" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-symbolic-name" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-version" type="xstring" value="0.0.0"/>
 <config key="factory_settings"/>
-<entry key="name" type="xstring" value="Column Filter Configuration"/>
+<entry key="name" type="xstring" value="Column Filter Configuration (deprecated)"/>
 <entry key="hasContent" type="xboolean" value="false"/>
 <entry key="isInactive" type="xboolean" value="false"/>
 <config key="ports">

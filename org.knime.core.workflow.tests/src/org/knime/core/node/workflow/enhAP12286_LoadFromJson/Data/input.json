@@ -1,5 +1,17 @@
 
 {
+    "value-filter-18":{
+        "column":"Cluster Membership Changed",
+        "values":[
+                "Cluster_0",
+                "Cluster_1"
+            ],
+	"excludes":[
+		"Cluster_2",
+		"Cluster_3"
+    	    ],
+	"enforce-option":"EnforceInclusion"
+    },
     "value-filter-14":{
         "column":"Cluster Membership Changed",
         "values":[
