@@ -114,7 +114,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
     }
 
-    static final LoadVersion VERSION_LATEST = LoadVersion.V4010;
+    static final LoadVersion VERSION_LATEST = LoadVersion.V4020;
 
     /** Format used to save author/edit infos. */
     static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");

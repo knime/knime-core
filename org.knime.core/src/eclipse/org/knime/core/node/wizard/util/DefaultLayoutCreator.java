@@ -96,4 +96,12 @@ public interface DefaultLayoutCreator {
     public String addUnreferencedViews(final String originalLayout, final Map<NodeIDSuffix, WizardNode> allNodes,
         final Map<NodeIDSuffix, SubNodeContainer> allNestedViews, final NodeID containerID);
 
+
+    /**
+     * Updates a component layout to include the enabled legacy mode flag
+     * @param originalLayout the original layout, which needs to be already expanded
+     * @return The updated layout with legacy flag enabled
+     * @since 4.2
+     */
+    public String updateLegacyLayout(final String originalLayout);
 }

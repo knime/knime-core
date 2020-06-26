@@ -73,6 +73,9 @@ public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor 
     /** @since 3.1 */
     String getLayoutJSONString();
 
+    /** @since 4.2 */
+    boolean isLegacyLayoutDetected();
+
     /** @since 3.7 */
     boolean isHideInWizard();
 

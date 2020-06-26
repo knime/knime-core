@@ -109,6 +109,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private String m_layoutJSONString;
 
+    private boolean m_legacyLayoutDetected;
+
     private String m_customCSS;
 
     private boolean m_hideInWizard;
@@ -217,6 +219,15 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     @Override
     public String getLayoutJSONString() {
         return m_layoutJSONString;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 4.2
+     */
+    @Override
+    public boolean isLegacyLayoutDetected() {
+        return m_legacyLayoutDetected;
     }
 
     /**
@@ -371,6 +382,14 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         // added in 3.1, load with default value
         m_layoutJSONString = nodeSettings.getString("layoutJSON", "");
 
+        // added in 4.2, check for legacy components for layout
+        m_legacyLayoutDetected = nodeSettings.getBoolean("legacyLayoutDetected", false);
+        if (getLoadVersion().isOlderThan(LoadVersion.V4020) &&
+           (m_layoutJSONString.contentEquals("") ||
+           !m_layoutJSONString.contains("parentLayoutLegacyMode"))) {
+            m_legacyLayoutDetected = true;
+        }
+
         // added in 3.7, load with default values
         m_customCSS = nodeSettings.getString("customCSS", "");
         m_hideInWizard = nodeSettings.getBoolean("hideInWizard", false);
@@ -504,6 +523,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         subnodeNC.getMetadata().save(settings);
         subnodeNC.getTemplateInformation().save(settings);
         settings.addString("layoutJSON", subnodeNC.getLayoutJSONString());
+        settings.addBoolean("legacyLayoutDetected", subnodeNC.isLegacyLayoutDetected());
         settings.addBoolean("hideInWizard", subnodeNC.isHideInWizard());
         settings.addString("customCSS", subnodeNC.getCssStyles());
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();

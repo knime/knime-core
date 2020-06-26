@@ -138,4 +138,22 @@ public final class LayoutUtil {
         }
         return creator.addUnreferencedViews(originalLayout, allNodes, allNestedViews, containerID);
     }
+
+    /**
+     * Updates a component layout to include the enabled legacy mode flag.
+     * @param originalLayout the original layout, which needs to be already expanded
+     * @return The layout with legacy flag enabled as a JSON serialized string
+     * @throws IOException If no service is registered or the legacy mode cannot be updated
+     * @since 4.2
+     */
+    public static String updateLegacyLayout(final String originalLayout) throws IOException {
+        if (serviceTracker == null) {
+            throw new IOException("Core bundle is not active, can't update legacy flag in layout.");
+        }
+        DefaultLayoutCreator creator = (DefaultLayoutCreator)serviceTracker.getService();
+        if (creator == null) {
+            throw new IOException("Can't update legacy flag in layout; no appropriate service registered.");
+        }
+        return creator.updateLegacyLayout(originalLayout);
+    }
 }

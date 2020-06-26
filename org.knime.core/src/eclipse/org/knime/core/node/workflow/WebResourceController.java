@@ -461,6 +461,7 @@ public abstract class WebResourceController {
         findNestedViewNodes(subNC, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
         NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subNC.getID());
         String pageLayout = subNC.getLayoutJSONString();
+        boolean originalLayoutMissingLegacyFlag = !pageLayout.contains("parentLayoutLegacyMode");
         if (StringUtils.isEmpty(pageLayout)) {
             try {
                 WorkflowManager subWfm = subNC.getWorkflowManager();
@@ -486,6 +487,14 @@ public abstract class WebResourceController {
             pageLayout = LayoutUtil.addUnreferencedViews(pageLayout, resultMap, sncMap, containerID);
         } catch (IOException ex) {
             LOGGER.error("Layout could not be amended by unreferenced views: " + ex.getMessage(), ex);
+        }
+        boolean legacyLayoutDetected = subNC.isLegacyLayoutDetected();
+        if (legacyLayoutDetected && originalLayoutMissingLegacyFlag) {
+            try {
+                pageLayout = LayoutUtil.updateLegacyLayout(pageLayout);
+            } catch (IOException ex) {
+                LOGGER.error("Legacy layout detected but could not be updated: " + ex.getMessage(), ex);
+            }
         }
         Set<HiLiteHandler> knownHiLiteHandlers = new HashSet<HiLiteHandler>();
         Set<HiLiteTranslator> knownTranslators = new HashSet<HiLiteTranslator>();

@@ -261,6 +261,7 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     /** JSON layout info for wizard nodes. */
     private String m_layoutJSONString;
+    private boolean m_legacyLayoutDetected;
 
     private boolean m_hideInWizard;
     private String m_customCSS;
@@ -301,6 +302,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
         m_layoutJSONString = persistor.getLayoutJSONString();
+        m_legacyLayoutDetected = persistor.isLegacyLayoutDetected();
         m_hideInWizard = persistor.isHideInWizard();
         m_customCSS = persistor.getCssStyles();
         PortType[] inTypes = new PortType[inPortTemplates.length];
@@ -2207,6 +2209,14 @@ public final class SubNodeContainer extends SingleNodeContainer
                 setDirty();
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 4.2
+     */
+    public boolean isLegacyLayoutDetected() {
+        return m_legacyLayoutDetected;
     }
 
     /**
