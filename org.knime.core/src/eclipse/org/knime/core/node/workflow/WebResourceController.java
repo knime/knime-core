@@ -460,9 +460,9 @@ public abstract class WebResourceController {
         LinkedHashMap<NodeIDSuffix, SubNodeContainer> sncMap = new LinkedHashMap<NodeIDSuffix, SubNodeContainer>();
         findNestedViewNodes(subNC, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
         NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subNC.getID());
-        String pageLayout = subNC.getLayoutJSONString();
-        boolean originalLayoutMissingLegacyFlag = !pageLayout.contains("parentLayoutLegacyMode");
-        if (StringUtils.isEmpty(pageLayout)) {
+        final String originalPageLayout = subNC.getLayoutJSONString();
+        String localPageLayout = originalPageLayout;
+        if (StringUtils.isEmpty(localPageLayout)) {
             try {
                 WorkflowManager subWfm = subNC.getWorkflowManager();
                 Map<NodeIDSuffix, ViewHideable> viewMap = new LinkedHashMap<NodeIDSuffix, ViewHideable>();
@@ -471,30 +471,27 @@ public abstract class WebResourceController {
                 Map<NodeID, SubNodeContainer> nestedSubs = getSubnodeContainers(subWfm);
                 nestedSubs.entrySet().stream().filter(e -> isWizardPage(e.getKey(), subWfm))
                     .forEach(e -> viewMap.put(NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()), e.getValue()));
-                pageLayout = LayoutUtil.createDefaultLayout(viewMap);
+                localPageLayout = LayoutUtil.createDefaultLayout(viewMap);
             } catch (IOException ex) {
                 LOGGER.error("Default page layout could not be created: " + ex.getMessage(), ex);
             }
         }
         try {
-            pageLayout = LayoutUtil.expandNestedLayout(pageLayout, subNC.getWorkflowManager());
+            localPageLayout = LayoutUtil.expandNestedLayout(localPageLayout, subNC.getWorkflowManager());
         } catch (IOException ex) {
             LOGGER.error("Nested layouts could not be expanded: " + ex.getMessage(), ex);
         }
         try {
             NodeID containerID = NodeID
                 .fromString(NodeIDSuffix.create(m_manager.getID(), subNC.getWorkflowManager().getID()).toString());
-            pageLayout = LayoutUtil.addUnreferencedViews(pageLayout, resultMap, sncMap, containerID);
+            localPageLayout = LayoutUtil.addUnreferencedViews(localPageLayout, resultMap, sncMap, containerID);
         } catch (IOException ex) {
             LOGGER.error("Layout could not be amended by unreferenced views: " + ex.getMessage(), ex);
         }
-        boolean legacyLayoutDetected = subNC.isLegacyLayoutDetected();
-        if (legacyLayoutDetected && originalLayoutMissingLegacyFlag) {
-            try {
-                pageLayout = LayoutUtil.updateLegacyLayout(pageLayout);
-            } catch (IOException ex) {
-                LOGGER.error("Legacy layout detected but could not be updated: " + ex.getMessage(), ex);
-            }
+        try {
+            localPageLayout = LayoutUtil.updateLayout(localPageLayout, originalPageLayout, subNC.getLayoutVersion());
+        } catch (IOException ex) {
+            LOGGER.error("Layout could not be updated: " + ex.getMessage(), ex);
         }
         Set<HiLiteHandler> knownHiLiteHandlers = new HashSet<HiLiteHandler>();
         Set<HiLiteTranslator> knownTranslators = new HashSet<HiLiteTranslator>();
@@ -505,7 +502,7 @@ public abstract class WebResourceController {
         List<HiLiteTranslator> translatorList =
             knownTranslators.size() > 0 ? new ArrayList<HiLiteTranslator>(knownTranslators) : null;
         List<HiLiteManager> managerList = knownManagers.size() > 0 ? new ArrayList<HiLiteManager>(knownManagers) : null;
-        WizardPageContent page = new WizardPageContent(pageID, resultMap, pageLayout, translatorList, managerList);
+        WizardPageContent page = new WizardPageContent(pageID, resultMap, localPageLayout, translatorList, managerList);
         page.setInfoMap(infoMap);
         return page;
     }

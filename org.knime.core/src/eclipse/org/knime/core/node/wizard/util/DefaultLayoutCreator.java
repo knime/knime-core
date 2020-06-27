@@ -76,16 +76,16 @@ public interface DefaultLayoutCreator {
 
     /**
      * Expands nested layouts by inserting the appropriate sub-layouts in an original layout.
-     * @param originalLayout the original not expanded layout
+     * @param currentLayout the current not expanded layout
      * @param wfm the {@link WorkflowManager} of the containing {@link SubNodeContainer}
      * @return The expanded layout as JSON serialized string
      * @since 3.7
      */
-    public String expandNestedLayout(final String originalLayout, final WorkflowManager wfm);
+    public String expandNestedLayout(final String currentLayout, final WorkflowManager wfm);
 
     /**
      * Creates extra rows/columns at the bottom of the layout for all unreferenced nodes
-     * @param originalLayout the original layout, which needs to be already expanded
+     * @param currentLayout the current layout, which needs to be already expanded
      * @param allNodes a map of all viewable nodes
      * @param allNestedViews a map of all {@link SubNodeContainer} which contain nested views
      * @param containerID the {@link NodeID} of the containing subnode container
@@ -93,15 +93,16 @@ public interface DefaultLayoutCreator {
      * @since 3.7
      */
     @SuppressWarnings("rawtypes")
-    public String addUnreferencedViews(final String originalLayout, final Map<NodeIDSuffix, WizardNode> allNodes,
+    public String addUnreferencedViews(final String currentLayout, final Map<NodeIDSuffix, WizardNode> allNodes,
         final Map<NodeIDSuffix, SubNodeContainer> allNestedViews, final NodeID containerID);
 
-
     /**
-     * Updates a component layout to include the enabled legacy mode flag
-     * @param originalLayout the original layout, which needs to be already expanded
-     * @return The updated layout with legacy flag enabled
+     * Updates a versioned layout
+     * @param currentLayout the current layout, which needs to be already expanded
+     * @param originalLayout the original layout, as provided by the {@link SubNodeContainer}
+     * @param layoutVersion the layout version
+     * @return The updated layout
      * @since 4.2
      */
-    public String updateLegacyLayout(final String originalLayout);
+    public String updateLayout(final String currentLayout, final String originalLayout, final String layoutVersion);
 }

@@ -67,7 +67,7 @@ public class CopySubNodeContainerPersistor
     private final int m_virtualInNodeIDSuffix;
     private final int m_virtualOutNodeIDSuffix;
     private final String m_layoutJSONString;
-    private final boolean m_legacyLayoutDetected;
+    private final String m_layoutVersion;
     private final boolean m_hideInWizard;
     private final String m_customCSS;
     private ComponentMetadata m_componentMetadata;
@@ -103,7 +103,7 @@ public class CopySubNodeContainerPersistor
         m_virtualInNodeIDSuffix = original.getVirtualInNode().getID().getIndex();
         m_virtualOutNodeIDSuffix = original.getVirtualOutNode().getID().getIndex();
         m_layoutJSONString = new String(original.getLayoutJSONString());
-        m_legacyLayoutDetected = original.isLegacyLayoutDetected(); // added 4.2
+        m_layoutVersion = original.getLayoutVersion();
         m_hideInWizard = original.isHideInWizard();
         m_customCSS = new String(original.getCssStyles());
         m_componentMetadata = original.getMetadata();
@@ -167,8 +167,8 @@ public class CopySubNodeContainerPersistor
      * @since 4.2
      */
     @Override
-    public boolean isLegacyLayoutDetected() {
-        return m_legacyLayoutDetected;
+    public String getLayoutVersion() {
+        return m_layoutVersion;
     }
 
     /**

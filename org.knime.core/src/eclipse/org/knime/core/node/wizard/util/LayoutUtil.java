@@ -140,20 +140,23 @@ public final class LayoutUtil {
     }
 
     /**
-     * Updates a component layout to include the enabled legacy mode flag.
-     * @param originalLayout the original layout, which needs to be already expanded
-     * @return The layout with legacy flag enabled as a JSON serialized string
-     * @throws IOException If no service is registered or the legacy mode cannot be updated
+     * Updates a versioned layout
+     * @param currentLayout the current layout, which needs to be already expanded
+     * @param originalLayout the original layout, as provided by the {@link SubNodeContainer}
+     * @param layoutVersion the layout version
+     * @return The updated layout
+     * @throws IOException If no service is registered or the layout cannot be updated
      * @since 4.2
      */
-    public static String updateLegacyLayout(final String originalLayout) throws IOException {
+    public static String updateLayout(final String currentLayout, final String originalLayout,
+        final String layoutVersion) throws IOException {
         if (serviceTracker == null) {
-            throw new IOException("Core bundle is not active, can't update legacy flag in layout.");
+            throw new IOException("Core bundle is not active, can't update layout.");
         }
         DefaultLayoutCreator creator = (DefaultLayoutCreator)serviceTracker.getService();
         if (creator == null) {
-            throw new IOException("Can't update legacy flag in layout; no appropriate service registered.");
+            throw new IOException("Can't update layout; no appropriate service registered.");
         }
-        return creator.updateLegacyLayout(originalLayout);
+        return creator.updateLayout(currentLayout, originalLayout, layoutVersion);
     }
 }

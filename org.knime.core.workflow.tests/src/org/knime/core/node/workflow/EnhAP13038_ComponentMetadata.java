@@ -121,7 +121,7 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
         closeWorkflow();
         initWorkflowFromTemp();
         component = (SubNodeContainer)getManager().getNodeContainer(m_component_4);
-        assertThat("unexpected load version", getManager().getLoadVersion(), is(LoadVersion.V4010));
+        assertThat("unexpected load version", getManager().getLoadVersion(), is(LoadVersion.V4020));
         metadata = component.getMetadata();
         checkComponentMetadata(metadata);
         checkInOutNodes(component);
@@ -172,7 +172,7 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
         closeWorkflow();
         initWorkflowFromTemp();
-        assertThat("unexpected load version", getManager().getLoadVersion(), is(LoadVersion.V4010));
+        assertThat("unexpected load version", getManager().getLoadVersion(), is(LoadVersion.V4020));
         testAddRemovePortsInternal();
     }
 

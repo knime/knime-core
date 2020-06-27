@@ -2171,6 +2171,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/util/DefaultLayoutCreator.java" type="org.knime.core.node.wizard.util.DefaultLayoutCreator">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.util.DefaultLayoutCreator"/>
+                <message_argument value="updateLayout(String, String, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/ConfigurableWorkflowContext.java" type="org.knime.core.node.workflow.ConfigurableWorkflowContext">
         <filter id="571473929">
             <message_arguments>
