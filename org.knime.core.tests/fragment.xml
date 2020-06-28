@@ -22,12 +22,6 @@
       </provider>
    </extension>
    <extension
-         point="org.knime.core.WorkflowSaveHook">
-      <WorkflowSaveHook
-            class="org.knime.core.util.TestWorkflowSaveHook">
-      </WorkflowSaveHook>
-   </extension>
-   <extension
          point="org.knime.workbench.repository.nodes">
       <node
             factory-class="org.knime.core.node.workflow.node.adapter.AdapterNodeFactory"

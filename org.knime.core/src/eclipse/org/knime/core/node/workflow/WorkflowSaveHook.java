@@ -113,9 +113,9 @@ public abstract class WorkflowSaveHook {
                 continue;
             }
 
-            WorkflowSaveHook instance = null;
             try {
-                instance = (WorkflowSaveHook)elem.createExecutableExtension(EXT_POINT_ATTR_CLASS_NAME);
+                WorkflowSaveHook instance = (WorkflowSaveHook)elem.createExecutableExtension(EXT_POINT_ATTR_CLASS_NAME);
+                resultList.add(instance);
             } catch (Throwable t) {
                 LOGGER.error("Problems during initialization of workflow save hook (class '"
                         + workflowSaveHookClassName + "'.)", t);
@@ -123,7 +123,6 @@ public abstract class WorkflowSaveHook {
                     LOGGER.error("Extension " + decl + " ignored.");
                 }
             }
-            resultList.add(instance);
         }
         return Collections.unmodifiableList(resultList);
     }
