@@ -383,7 +383,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         m_layoutJSONString = nodeSettings.getString("layoutJSON", "");
 
         // added in 4.2, versioned layouts
-        m_layoutVersion = nodeSettings.getString("layoutVersion", getLoadVersion().toString());
+        m_layoutVersion = nodeSettings.getString("layoutVersion", getLoadVersion().getVersionString());
 
         // added in 3.7, load with default values
         m_customCSS = nodeSettings.getString("customCSS", "");
