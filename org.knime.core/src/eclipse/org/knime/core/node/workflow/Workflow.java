@@ -220,9 +220,9 @@ class Workflow {
         return scc == null ? null : Collections.unmodifiableSet(scc);
     }
 
-    /** Return all connections having the same destination.
+    /** Return all connections having the same source.
      *
-     * @param id of destination node
+     * @param id of source node
      * @return set as described above
      */
     Set<ConnectionContainer> getConnectionsBySource(final NodeID id) {

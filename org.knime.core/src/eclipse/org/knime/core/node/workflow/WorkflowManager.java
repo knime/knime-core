@@ -5948,6 +5948,19 @@ public final class WorkflowManager extends NodeContainer
                     p = ((NodeOutPortWrapper)p).getUnderlyingPort();
                 }
                 if (p == null) { // unconnected port
+                    if (nc instanceof WorkflowManager) {
+                        // check whether the workflow in-port is connected to a node within the metanode
+                        final int portIdx = i;
+                        if (((WorkflowManager)nc).getWorkflow().getConnectionsBySource(nc.getID()).stream()
+                            .anyMatch(cc -> cc.getSourcePort() == portIdx)) {
+                            // if so, the metanode is regarded as _not_ fully connected
+                            return false;
+                        } else {
+                            // otherwise the particular workflow port has neither in- nor out-connections
+                            // and can be ignored
+                            continue;
+                        }
+                    }
                     // accept only if inport is optional
                     if (!nc.getInPort(i).getPortType().isOptional()) {
                         return false;
@@ -8195,18 +8208,7 @@ public final class WorkflowManager extends NodeContainer
                 snc.setCredentialsStore(m_credentialsStore);
             }
             LoadResult subResult = new LoadResult(cont.getNameWithID());
-            boolean isFullyConnected = isFullyConnected(bfsID);
-            boolean needsReset;
-            switch (cont.getInternalState()) {
-                case IDLE:
-                case UNCONFIGURED_MARKEDFOREXEC:
-                    needsReset = false;
-                    break;
-                default:
-                    // we reset everything which is not fully connected
-                    needsReset = !isFullyConnected;
-                    break;
-            }
+            InternalNodeContainerState contStateBeforeLoadContent = cont.getInternalState();
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(bfsID);
             final int predCount = predPorts.length;
             PortObject[] portObjects = new PortObject[predCount];
@@ -8225,6 +8227,7 @@ public final class WorkflowManager extends NodeContainer
                 }
             }
             FlowObjectStack inStack;
+            boolean needsReset = false;
             try {
                 if (isSourceNode(bfsID)) {
                     predStacks = new FlowObjectStack[]{getWorkflowVariableStack()};
@@ -8267,6 +8270,7 @@ public final class WorkflowManager extends NodeContainer
             if (persistor.isDirtyAfterLoad()) {
                 cont.setDirty();
             }
+
             boolean hasPredecessorFailed = false;
             for (ConnectionContainer cc : m_workflow.getConnectionsByDest(bfsID)) {
                 NodeID s = cc.getSource();
@@ -8277,8 +8281,23 @@ public final class WorkflowManager extends NodeContainer
                     hasPredecessorFailed = true;
                 }
             }
-            needsReset |= persistor.needsResetAfterLoad();
-            needsReset |= hasPredecessorFailed;
+
+            if (!needsReset) {
+                boolean isFullyConnected = isFullyConnected(bfsID);
+                switch (contStateBeforeLoadContent) {
+                    case IDLE:
+                    case UNCONFIGURED_MARKEDFOREXEC:
+                        needsReset = false;
+                        break;
+                    default:
+                        // we reset everything which is not fully connected
+                        needsReset = !isFullyConnected;
+                        break;
+                }
+                needsReset |= persistor.needsResetAfterLoad();
+                needsReset |= hasPredecessorFailed;
+            }
+
             boolean isExecuted = cont.getInternalState().equals(EXECUTED);
             boolean remoteExec = persistor.getMetaPersistor().getExecutionJobSettings() != null;
 
