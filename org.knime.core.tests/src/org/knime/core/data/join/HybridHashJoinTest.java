@@ -92,7 +92,7 @@ public class HybridHashJoinTest extends JoinTest {
      * @throws InvalidSettingsException
      */
     @Theory
-    public void getSingleTable(final JoinTestInput input, final JoinMode joinMode, final OutputOrder order,
+    public void testJoinOutputCombined(final JoinTestInput input, final JoinMode joinMode, final OutputOrder order,
         final Execution executionMode) throws CanceledExecutionException, InvalidSettingsException {
 
         // TODO fast sort not yet supported
@@ -133,7 +133,7 @@ public class HybridHashJoinTest extends JoinTest {
      * @throws InvalidSettingsException
      */
     @Theory
-    public void separateOutput(final JoinTestInput input, final JoinMode joinMode, final OutputOrder order,
+    public void testJoinOutputSplit(final JoinTestInput input, final JoinMode joinMode, final OutputOrder order,
         final Execution executionMode) throws CanceledExecutionException, InvalidSettingsException {
 
         // TODO fast sort not yet supported

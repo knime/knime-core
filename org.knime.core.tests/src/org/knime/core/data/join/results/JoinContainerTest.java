@@ -49,13 +49,18 @@
 package org.knime.core.data.join.results;
 
 import static org.junit.Assert.assertEquals;
+import static org.knime.core.data.join.JoinTestInput.cell;
+import static org.knime.core.data.join.JoinTestInput.col;
+import static org.knime.core.data.join.JoinTestInput.defaultRow;
 
 import org.junit.Test;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
-import org.knime.core.data.join.JoinSpecificationTest;
+import org.knime.core.data.join.JoinTableSettings;
+import org.knime.core.data.join.JoinTableSettings.JoinColumn;
 import org.knime.core.data.join.JoinTestInput;
 import org.knime.core.data.join.results.JoinResults.OutputMode;
 import org.knime.core.node.InvalidSettingsException;
@@ -64,27 +69,43 @@ import org.knime.core.node.InvalidSettingsException;
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public class JoinContainerTest extends JoinSpecificationTest {
+public class JoinContainerTest {
+
+    private static final int LEFT = 0, RIGHT = 1;
+
+    DataTableSpec[] m_specs;
+
+    JoinTableSettings[] m_settings;
+
+    DataRow[] m_rows;
 
     /**
      * @throws InvalidSettingsException
      */
     public JoinContainerTest() throws InvalidSettingsException {
         super();
+        m_specs = new DataTableSpec[]{new DataTableSpec(col("A"), col("B"), col("C"), col("D"), col("E")),
+            new DataTableSpec(col("U"), col("V"), col("W"), col("A"), col("Y"), col("Z"))};
+        m_settings = new JoinTableSettings[2];
+        // left join columns  A B C D, include A C E
+        m_settings[LEFT] = new JoinTableSettings(true, JoinColumn.array("A", "B", "C", "D"), new String[]{"A", "C", "E"},
+            InputTable.LEFT, m_specs[LEFT]);
+        // right join columns A Y Z A, include U V A
+        m_settings[RIGHT] = new JoinTableSettings(true, JoinColumn.array("A", "Y", "Z", "A"), new String[]{"U", "V", "A"},
+            InputTable.RIGHT, m_specs[RIGHT]);
+
+        m_rows = new DataRow[]{defaultRow("left,a,b,c,d,e"), defaultRow("right,u,v,w,x,y,z")};
     }
 
     /**
-     * Padding makes sense only when providing output in a single table.
-     * In this case, the included columns from the other table are filled with missing values.
-     * When merge join columns is enabled, the added missing values must conform to the different output table columns.
+     * Padding makes sense only when providing output in a single table. In this case, the included columns from the
+     * other table are filled with missing values. When merge join columns is enabled, the added missing values must
+     * conform to the different output table columns.
+     *
      * @throws InvalidSettingsException
      */
     @Test
-    public void testToToSingleTableFormat() throws InvalidSettingsException {
-        // left table A B C D E
-        // right table U V W A Y Z
-        // left join columns  A B C D, include A C E
-        // right join columns A Y Z A, include U V A
+    public void toSingleTableFormatMerged() throws InvalidSettingsException {
 
         // right outer has values u,v,w,x,y,z so will be mapped to
         // joined row has columns "A", "C=Z", "D=A", "E", "U", "V"
@@ -94,22 +115,23 @@ public class JoinContainerTest extends JoinSpecificationTest {
         //                         a     c      d     e    ?    ?
 
         JoinSpecification jspec =
-            new JoinSpecification.Builder(settings[LEFT], settings[RIGHT]).mergeJoinColumns(true).build();
-        JoinContainer container = UnorderedJoinContainer.create(OutputMode.OutputCombined, jspec, JoinTestInput.EXEC, false, false);
+            new JoinSpecification.Builder(m_settings[LEFT], m_settings[RIGHT]).mergeJoinColumns(true).build();
+        JoinContainer container =
+            UnorderedJoinContainer.create(OutputMode.OutputCombined, jspec, JoinTestInput.EXEC, false, false);
 
         { // pad left
-            DataRow padded = container.rightToSingleTableFormat(rows[RIGHT]);
+            DataRow padded = container.rightToSingleTableFormat(m_rows[RIGHT]);
 
-            assertEquals(cell("x"), padded.getCell(0)); // A
+            assertEquals(cell("x"), padded.getCell(0)); // A=A
             assertEquals(cell("z"), padded.getCell(1)); // C=Z
             assertEquals(cell("x"), padded.getCell(2)); // D=A
             assertEquals(DataType.getMissingCell(), padded.getCell(3)); // E
-            assertEquals(cell("u"), padded.getCell(4));
-            assertEquals(cell("v"), padded.getCell(5));
+            assertEquals(cell("u"), padded.getCell(4)); // U
+            assertEquals(cell("v"), padded.getCell(5)); // V
         }
 
         { // pad right
-            DataRow padded = container.leftToSingleTableFormat(rows[LEFT]);
+            DataRow padded = container.leftToSingleTableFormat(m_rows[LEFT]);
 
             assertEquals(cell("a"), padded.getCell(0));
             assertEquals(cell("c"), padded.getCell(1));
@@ -123,10 +145,11 @@ public class JoinContainerTest extends JoinSpecificationTest {
     /**
      * Padding makes sense only when providing output in a single table. In this case, the included columns from the
      * other table are filled with missing values.
+     *
      * @throws InvalidSettingsException
      */
     @Test
-    public void testPadWithMissing() throws InvalidSettingsException {
+    public void toSingleTableFormat() throws InvalidSettingsException {
         // left table A B C D E
         // left join columns  A B C D, include A C E
         // right table U V W A Y Z
@@ -134,11 +157,12 @@ public class JoinContainerTest extends JoinSpecificationTest {
         // joined row has columns "A", "C", "E", "U", "V", "A (#1)"
 
         JoinSpecification jspec =
-            new JoinSpecification.Builder(settings[LEFT], settings[RIGHT]).mergeJoinColumns(false).build();
-        JoinContainer container = UnorderedJoinContainer.create(OutputMode.OutputCombined, jspec, JoinTestInput.EXEC, false, false);
+            new JoinSpecification.Builder(m_settings[LEFT], m_settings[RIGHT]).mergeJoinColumns(false).build();
+        JoinContainer container =
+            UnorderedJoinContainer.create(OutputMode.OutputCombined, jspec, JoinTestInput.EXEC, false, false);
 
         { // pad left
-            DataRow padded = container.rightToSingleTableFormat(jspec.rowProjectOuter(InputTable.RIGHT, rows[RIGHT]));
+            DataRow padded = container.rightToSingleTableFormat(m_rows[RIGHT]);
 
             assertEquals(DataType.getMissingCell(), padded.getCell(0)); // A
             assertEquals(DataType.getMissingCell(), padded.getCell(1)); // C
@@ -149,7 +173,7 @@ public class JoinContainerTest extends JoinSpecificationTest {
         }
 
         { // pad right
-            DataRow padded = container.leftToSingleTableFormat(jspec.rowProjectOuter(InputTable.LEFT, rows[LEFT]));
+            DataRow padded = container.leftToSingleTableFormat(m_rows[LEFT]);
 
             assertEquals(cell("a"), padded.getCell(0));
             assertEquals(cell("c"), padded.getCell(1));

@@ -61,7 +61,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions.DiskBucket;
-import org.knime.core.data.join.JoinTableSettings.SpecialJoinColumn;
+import org.knime.core.data.join.JoinTableSettings.JoinColumn;
 import org.knime.core.data.join.results.JoinResults;
 import org.knime.core.node.InvalidSettingsException;
 
@@ -114,7 +114,7 @@ public class JoinSpecification {
      */
     public enum OutputRowOrder {
             /** Output rows may be provided in any order. */
-            ARBITRARY("Do not sort"),
+            ARBITRARY("Arbitrary output order (may vary randomly)"),
             /** Identical input tables and identical join specification must give identical output. */
             DETERMINISTIC("Fast sort (use any table to determine output order)"),
             /**
@@ -127,7 +127,7 @@ public class JoinSpecification {
              * Each block must be sorted by row offset in the left table, breaking ties by row offset in the right
              * table.
              */
-            LEFT_RIGHT("Legacy sort (sort by row offset in left table, then right table)");
+            LEFT_RIGHT("Left-right output order (sort by row offset in left table, then right table)");
 
         private final String m_label;
 
@@ -440,17 +440,18 @@ public class JoinSpecification {
      * @param colName the name of the column, say X
      * @return column names Y from the other table for which X=Y is in the join conditions
      */
-    private Stream<String> columnJoinPartners(final InputTable table, final String colName) {
-        List<Object> joinClauses = m_settings[table.ordinal()].getJoinClauses();
-        List<Object> otherJoinClauses = m_settings[table.other().ordinal()].getJoinClauses();
+    Stream<String> columnJoinPartners(final InputTable table, final String colName) {
+        List<JoinColumn> joinClauses = m_settings[table.ordinal()].getJoinClauses();
+        List<JoinColumn> otherJoinClauses = m_settings[table.other().ordinal()].getJoinClauses();
 
         return IntStream.range(0, joinClauses.size())
             // this is a clause containing the desired column name
-            .filter(i -> joinClauses.get(i).equals(colName))
+            .filter(i -> joinClauses.get(i).isColumn() && joinClauses.get(i).toColumnName().equals(colName))
             // get the join partner column
             .mapToObj(otherJoinClauses::get)
             // ignore special join columns
-            .filter(SpecialJoinColumn::isNot).map(Object::toString);
+            .filter(JoinColumn::isColumn)
+            .map(JoinColumn::toColumnName);
     }
 
     /**

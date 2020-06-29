@@ -99,7 +99,7 @@ public interface JoinTuple {
         int[] joinClauseColumns = tableSettings.getJoinClauseColumns();
         DataCell[] cells = new DataCell[joinClauseColumns.length];
         for (int i = 0; i < cells.length; i++) {
-            cells[i] = joinClauseColumns[i] == SpecialJoinColumn.ROW_KEY.m_columnIndexIndicator
+            cells[i] = joinClauseColumns[i] == SpecialJoinColumn.ROW_KEY.getColumnIndexIndicator()
                 ? new StringCell(row.getKey().getString()) : row.getCell(joinClauseColumns[i]);
             if (cells[i].isMissing()) {
                 return null;

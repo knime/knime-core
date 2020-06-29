@@ -66,14 +66,116 @@ import org.knime.core.node.InvalidSettingsException;
 /**
  * Bundle included columns, join columns, etc. for a given input table. Two {@link JoinTableSettings} can be combined
  * into a {@link JoinSpecification}. <br/>
- * Use the static methods {@link #left(boolean, Object[], String[], DataTableSpec)} or
- * {@link #left(boolean, Object[], String[], BufferedDataTable)} to create settings for the left input table and the
- * analogous methods for the right input table.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 4.2
  */
 public class JoinTableSettings {
+
+    /**
+     * Describes the left-hand side or right-hand side of a join equality predicate, e.g., col1 = col2. Which side
+     * depends on {@link JoinTableSettings#getSide()}. Each {@link JoinColumn} is either a String which contains the
+     * name of a column in a table or to a {@link SpecialJoinColumn} which describes for instance the row key. So
+     * {@link JoinColumn} is a union type for {@link String} and {@link SpecialJoinColumn}.
+     */
+    public static class JoinColumn {
+        private final String m_columnName;
+
+        private final SpecialJoinColumn m_specialColumn;
+
+        /**
+         * Constructor for {@link String} instances.
+         *
+         * @param columnName the name of a column in a table
+         */
+        public JoinColumn(final String columnName) {
+            m_columnName = columnName;
+            this.m_specialColumn = null;
+
+        }
+
+        /**
+         * Constructor for {@link SpecialJoinColumn} instances.
+         *
+         * @param specialColumn the object representing a join criterion involving a non-existing column in the table,
+         *            e.g., row keys.
+         */
+        public JoinColumn(final SpecialJoinColumn specialColumn) {
+            m_specialColumn = specialColumn;
+            this.m_columnName = null;
+        }
+
+        /**
+         * @param spec the data table specification in which to look up the column's name
+         * @return if this is a String instance, the column index as returned by
+         *         {@link DataTableSpec#findColumnIndex(String)}. If this is a {@link SpecialJoinColumn} then the
+         *         indicator index returned by {@link SpecialJoinColumn#getColumnIndexIndicator()}
+         */
+        public int toColumnIndex(final DataTableSpec spec) {
+            if (m_columnName == null) {
+                return m_specialColumn.getColumnIndexIndicator();
+            } else {
+                return spec.findColumnIndex(m_columnName);
+            }
+        }
+
+        /**
+         * @return if this is a String instance, the column name passed to {@link JoinColumn#JoinColumn(String)}. If
+         *         this is a {@link SpecialJoinColumn} instance, the column name indicator, as returned by
+         *         {@link SpecialJoinColumn#getColumnNameIndicator()}.
+         */
+        public String toColumnName() {
+            if (m_columnName == null) {
+                return m_specialColumn.getColumnNameIndicator();
+            } else {
+                return m_columnName;
+            }
+        }
+
+        /**
+         * @param string column name, either from an input table or a reserved name as per
+         *            {@link SpecialJoinColumn#getColumnNameIndicator()}
+         * @return if none of the reserved names matches, a {@link String} instance of a {@link JoinColumn}, otherwise a
+         *         {@link SpecialJoinColumn} instance of a {@link JoinColumn}
+         */
+        public static JoinColumn fromString(final String string) {
+            // if any of the special join columns' column names matches, return the according object
+            return Arrays.stream(SpecialJoinColumn.values())
+                .filter(special -> special.getColumnNameIndicator().equals(string)).map(JoinColumn::new).findFirst()
+                .orElse(new JoinColumn(string));
+        }
+
+        /**
+         * @param clauses either
+         * @return JoinClause objects instantiated from either {@link String}s or {@link SpecialJoinColumn}s
+         */
+        public static JoinColumn[] array(final Object... clauses) {
+            boolean valid = Arrays.stream(clauses).allMatch(o -> o instanceof String || o instanceof SpecialJoinColumn);
+            if (!valid) {
+                throw new IllegalArgumentException(
+                    "Use either String or SpecialJoinColumn objects to instantiante a JoinClause array.");
+            }
+            return Arrays.stream(clauses).map(o -> {
+                if (o instanceof String) {
+                    return new JoinColumn((String)o);
+                }
+                return new JoinColumn((SpecialJoinColumn)o);
+            }).toArray(JoinColumn[]::new);
+        }
+
+        /**
+         * @return true if this is a String instance (was created using {@link JoinColumn#JoinColumn(String)}.
+         */
+        public boolean isColumn() {
+            return m_columnName != null;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("JoinClause (%s) %s", isColumn() ? "String" : "SpecialJoinColumn", toColumnName());
+        }
+
+    }
 
     /**
      * The values of this enum indicate special join columns, such as joining on a row key.
@@ -84,29 +186,37 @@ public class JoinTableSettings {
              */
             ROW_KEY("___$RowKey$____ac59075b", -100);
 
-        final String m_defaultColumnName;
-        final int m_columnIndexIndicator;
+        static boolean isNot(final Object o) {
+            return !(o instanceof SpecialJoinColumn);
+        }
+
+        private final String m_columnNameIndicator;
+
+        private final int m_columnIndexIndicator;
+
         private SpecialJoinColumn(final String defaultColumnName, final int columnIndexIndicator) {
-            m_defaultColumnName = defaultColumnName;
+            if (columnIndexIndicator >= 0) {
+                throw new IllegalArgumentException("Special join columns can only reserve negative column indices.");
+            }
+            m_columnNameIndicator = defaultColumnName;
             m_columnIndexIndicator = columnIndexIndicator;
         }
 
-        @Override public String toString() {
-            return m_defaultColumnName;
-        }
-//        public String safeColumnName(final Predicate<String> isAmbiguous) {
-//            return JoinSpecification.disambiguateName(m_defaultColumnName, isAmbiguous, s -> s.concat("$"));
-//        }
-        static boolean isNot(final Object o) {
-            return ! (o instanceof SpecialJoinColumn);
+        /**
+         * @return the reserved name for this special join column
+         */
+        public String getColumnNameIndicator() {
+            return m_columnNameIndicator;
         }
 
-//        public Predicate<String> isDefaultColumnName() { return m_defaultColumnName::equals; }
-        public Object inflate(final String columnName) {
-            return m_defaultColumnName.equals(columnName) ? this : columnName;
+        /**
+         * @return the reserved column offset for this non-existing join column
+         */
+        public int getColumnIndexIndicator() {
+            return m_columnIndexIndicator;
         }
+
     }
-
 
     /** @see JoinTableSettings#getSide() */
     private final InputTable m_side;
@@ -120,7 +230,7 @@ public class JoinTableSettings {
      * column name in {@link #getTableSpec()}. The contents do not have to be unique, as for instance a column name may
      * appear in multiple join clauses.
      */
-    private final List<Object> m_joinClauses;
+    private final List<JoinColumn> m_joinClauses;
 
     /**
      * Column offsets containing the values for the join clauses, might include negative values for
@@ -156,21 +266,22 @@ public class JoinTableSettings {
     private Optional<Long> m_materializedCells;
 
     /**
-     *
      * @param retainUnmatched whether to output unmatched rows from this table
      * @param joinColumns a join column can either be a String denoting a name of a column in the spec or a
      *            {@link SpecialJoinColumn} value indicating a special join column. If anything other than a String or a
      *            {@link SpecialJoinColumn} is passed, it will be converted to a String and interpreted as if it was
      *            passed as a String parameter in the first place.
-     * @param includeColumns name of a column in the spec
+     * @param includeColumns the names of the columns to include in the output
      * @param side either left hand input table of a join or right input table
      * @param spec the spec of the input table to be joined with another input table
-     * @throws InvalidSettingsException if the include or join column names do not exist in the spec, or are not present (empty array or null)
+     * @throws InvalidSettingsException if the include or join column names do not exist in the spec, or are not present
+     *             (empty array or null)
      */
-    private JoinTableSettings(final boolean retainUnmatched, final Object[] joinColumns, final String[] includeColumns,
-        final InputTable side, final DataTableSpec spec) throws InvalidSettingsException {
+    public JoinTableSettings(final boolean retainUnmatched, final JoinColumn[] joinColumns,
+        final String[] includeColumns, final InputTable side, final DataTableSpec spec)
+        throws InvalidSettingsException {
 
-        if(joinColumns == null || joinColumns.length == 0) {
+        if (joinColumns == null || joinColumns.length == 0) {
             throw new InvalidSettingsException("No join columns passed.");
         }
         if (includeColumns == null) {
@@ -180,41 +291,25 @@ public class JoinTableSettings {
         m_side = side;
         m_retainUnmatched = retainUnmatched;
 
-        // just adding a fictional column name isn't the solution. see m_joinColumnNames
         m_joinClauses = Arrays.asList(joinColumns);
-        //                Arrays.stream(joinColumns)
-        //            .filter(IS_SPECIAL_COLUMN.negate())
-        //            .toArray(String[]::new);
-        //            .map(col -> col instanceof SpecialJoinColumn ?
-        //((SpecialJoinColumn)col).safeColumnName(spec::containsName) : col.toString())
+
         m_includeColumnNames = Arrays.stream(includeColumns).collect(Collectors.toList());
+        validate(m_includeColumnNames, "include", spec);
 
         // join and include columns
-        m_joinColumnNames = getJoinClauses().stream().filter(SpecialJoinColumn::isNot).map(Object::toString)
+        m_joinColumnNames = getJoinClauses().stream().filter(JoinColumn::isColumn).map(JoinColumn::toColumnName)
             .collect(Collectors.toList());
-
         // make sure join column names are present in the data table specification
-        validate(getJoinColumnNames(), "join", spec);
-        validate(getIncludeColumnNames(), "include", spec);
+        validate(m_joinColumnNames, "join", spec);
 
-        m_joinClauseColumns = getJoinClauses().stream()
-                .mapToInt(clause -> {
-                    if (clause == SpecialJoinColumn.ROW_KEY) {
-                        return SpecialJoinColumn.ROW_KEY.m_columnIndexIndicator;
-                    } else {
-                        return spec.findColumnIndex(clause.toString());
-                    }
-                }).toArray();
-
+        m_joinClauseColumns = getJoinClauses().stream().mapToInt(clause -> clause.toColumnIndex(spec)).toArray();
 
         m_includeColumns = spec.columnsToIndices(includeColumns);
         // working table specification
         m_materializeColumnIndices =
-            IntStream.concat(Arrays.stream(m_joinClauseColumns), Arrays.stream(m_includeColumns))
-                .distinct()             // column is materialized only once
-                .filter(i -> i >= 0)    // only actual columns, no special join columns
-                .sorted()
-                .toArray();
+            IntStream.concat(Arrays.stream(m_joinClauseColumns), Arrays.stream(m_includeColumns)).distinct() // column is materialized only once
+                .filter(i -> i >= 0) // only actual columns, no special join columns
+                .sorted().toArray();
 
         m_materializedCells = Optional.empty();
         m_forTable = Optional.empty();
@@ -222,107 +317,30 @@ public class JoinTableSettings {
 
     }
 
-    JoinTableSettings(final boolean retainUnmatched, final Object[] joinColumns, final String[] includeColumns,
-        final JoinSpecification.InputTable side, final BufferedDataTable table) throws InvalidSettingsException {
+    /**
+     * @param retainUnmatched whether to output unmatched rows from this table
+     * @param joinColumns a join column can either be a String denoting a name of a column in the spec or a
+     *            {@link SpecialJoinColumn} value indicating a special join column. If anything other than a String or a
+     *            {@link SpecialJoinColumn} is passed, it will be converted to a String and interpreted as if it was
+     *            passed as a String parameter in the first place.
+     * @param includeColumns the names of the columns to include in the output
+     * @param side either left hand input table of a join or right input table * @param table the data for which these
+     *            settings are created
+     * @param table the table providing the data for one side of the join
+     *
+     * @throws InvalidSettingsException if the include or join column names do not exist in the spec, or are not present
+     *             (empty array or null)
+     */
+    public JoinTableSettings(final boolean retainUnmatched, final JoinColumn[] joinColumns,
+        final String[] includeColumns, final JoinSpecification.InputTable side, final BufferedDataTable table)
+        throws InvalidSettingsException {
         this(retainUnmatched, joinColumns, includeColumns, side, table.getDataTableSpec());
         setTable(table);
     }
 
     /**
-     * Join columns can contain non-existing column names (e.g., $Row Key$) to indicate joining on row keys.
-     *
-     * @param spec
-     * @return
-     */
-    //        int[] findJoinColumns(final DataTableSpec spec) {
-    //            return Arrays.stream(joinClauses).mapToInt(name -> {
-    //                int col = spec.findColumnIndex(name);
-    //                return m_settings.getRowKeyIndicator().equals(name) ? ROW_KEY_COLUMN_INDEX_INDICATOR : col;
-    //            }).toArray();
-    //        }
-
-    //    /**
-    //     * Extract the values from the join columns from the row.
-    //     * @param workingRow
-    //     *
-    //     * @return
-    //     */
-    //    protected JoinTuple getJoinTupleWorkingRow(final DataRow workingRow) {
-    //        int[] indices = m_joinColumnsWorkingTable;
-    //        DataCell[] cells = new DataCell[indices.length];
-    //        for (int i = 0; i < cells.length; i++) {
-    //            if (indices[i] >= 0) {
-    //                cells[i] = workingRow.getCell(indices[i]);
-    //            } else if (indices[i] == JoinImplementation.ROW_KEY_COLUMN_INDEX_INDICATOR) {
-    //                // create a StringCell since row IDs may match
-    //                // StringCell's
-    //                cells[i] = new StringCell(workingRow.getKey().getString());
-    //            }
-    //        }
-    //        return new JoinTuple(cells);
-    //    }
-
-
-    //    /**
-    //     * @param innerSettings
-    //     * @return
-    //     */
-    //    DataTableSpec workingTableWith(final JoinTableSettings innerSettings) {
-    //        return new DataTableSpec(
-    //            Stream.concat(m_workingTableSpec.stream(), innerSettings.m_workingTableSpec.stream().skip(1))
-    //                .toArray(DataColumnSpec[]::new));
-    //    }
-
-        /**
-         * @param retainUnmatched output unmatched rows from this table
-         * @param joinColumns the left hand sides of the join predicate clauses
-         * @param includeColumnNames the names of the columns to include in the output
-         * @param table the data for which these settings are created
-         * @return join table settings marked as settings for the left (a.k.a outer) join table
-         * @throws InvalidSettingsException
-         */
-        public static JoinTableSettings left(final boolean retainUnmatched, final Object[] joinColumns, final String[] includeColumnNames, final BufferedDataTable table) throws InvalidSettingsException {
-            return new JoinTableSettings(retainUnmatched, joinColumns, includeColumnNames, InputTable.LEFT, table);
-        }
-
-    /**
-     * @param retainUnmatched output unmatched rows from this table
-     * @param joinColumns the left hand sides of the join predicate clauses
-     * @param includeColumnNames the names of the columns to include in the output
-     * @param spec the table schema for which these settings are created
-     * @return join table settings marked as settings for the left (a.k.a outer) join table
-     * @throws InvalidSettingsException
-     */
-    public static JoinTableSettings left(final boolean retainUnmatched, final Object[] joinColumns, final String[] includeColumnNames, final DataTableSpec spec) throws InvalidSettingsException {
-        return new JoinTableSettings(retainUnmatched, joinColumns, includeColumnNames, InputTable.LEFT, spec);
-    }
-
-    /**
-     * @param retainUnmatched output unmatched rows from this table
-     * @param joinColumnNames the left hand sides of the join predicate clauses
-     * @param includeColumnNames the names of the columns to include in the output
-     * @param table the data for which these settings are created
-     * @return join table settings marked as settings for the right (a.k.a inner) join table
-     * @throws InvalidSettingsException
-     */
-    public static JoinTableSettings right(final boolean retainUnmatched, final Object[] joinColumnNames, final String[] includeColumnNames, final BufferedDataTable table) throws InvalidSettingsException {
-        return new JoinTableSettings(retainUnmatched, joinColumnNames, includeColumnNames, InputTable.RIGHT, table);
-    }
-
-    /**
-     * @param retainUnmatched output unmatched rows from this table
-     * @param joinColumnNames the left hand sides of the join predicate clauses
-     * @param includeColumnNames the names of the columns to include in the output
-     * @param spec the table schema for which these settings are created
-     * @return join table settings marked as settings for the right (a.k.a inner) join table
-     * @throws InvalidSettingsException
-     */
-    public static JoinTableSettings right(final boolean retainUnmatched, final Object[] joinColumnNames, final String[] includeColumnNames, final DataTableSpec spec) throws InvalidSettingsException {
-        return new JoinTableSettings(retainUnmatched, joinColumnNames, includeColumnNames, InputTable.RIGHT, spec);
-    }
-
-    /**
-     * @return the number of cells in join and include columns, or zero if no table has been set {@link #setTable(BufferedDataTable)}
+     * @return the number of cells in join and include columns, or zero if no table has been set
+     *         {@link #setTable(BufferedDataTable)}
      */
     protected Optional<Long> getMaterializedCells() {
         return m_materializedCells;
@@ -370,15 +388,16 @@ public class JoinTableSettings {
 
     /**
      * Validate join and include column names by verifying that they exist in the given table spec.
+     *
      * @param joinColumnNames join or include column names
      * @throws InvalidSettingsException if a column name does not exist in the spec
      */
-    private static void validate(final List<String> joinColumnNames, final String columnType, final DataTableSpec spec) throws InvalidSettingsException {
+    private static void validate(final List<String> joinColumnNames, final String columnType, final DataTableSpec spec)
+        throws InvalidSettingsException {
         Predicate<String> validColumnName = spec::containsName;
 
-        List<String> invalidColumnNames = joinColumnNames.stream()
-                .filter(validColumnName.negate())
-                .collect(Collectors.toList());
+        List<String> invalidColumnNames =
+            joinColumnNames.stream().filter(validColumnName.negate()).collect(Collectors.toList());
 
         if (!invalidColumnNames.isEmpty()) {
             throw new InvalidSettingsException(String.format(
@@ -407,7 +426,7 @@ public class JoinTableSettings {
 
         JoinTableSettings result;
         try {
-            result = new JoinTableSettings(m_retainUnmatched, getJoinClauses().toArray(new Object[0]),
+            result = new JoinTableSettings(m_retainUnmatched, getJoinClauses().toArray(new JoinColumn[0]),
                 getIncludeColumnNames().toArray(new String[0]), getSide(), outputSpec);
             return result;
 
@@ -416,11 +435,6 @@ public class JoinTableSettings {
             assert false;
             return null;
         }
-//        System.out.println(String.format("condensed %s", getSide()));
-//        System.out.println("m_materializeColumnIndices=" + Arrays.toString(m_materializeColumnIndices));
-//        System.out.println(String.format("condensed outputSpec=%s", outputSpec));
-//        System.out.println(String.format("Arrays.toString(result.getJoinClauseColumns()=%s", Arrays.toString(result.getJoinClauseColumns())));
-//        System.out.println("result.m_includeColumns=" + Arrays.toString(result.m_includeColumns));
 
     }
 
@@ -464,7 +478,7 @@ public class JoinTableSettings {
     /**
      * @return the sequence of left/right hand sides of the join clauses
      */
-    public List<Object> getJoinClauses() {
+    public List<JoinColumn> getJoinClauses() {
         return m_joinClauses;
     }
 
