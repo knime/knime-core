@@ -1335,10 +1335,10 @@ public final class WorkflowManager extends NodeContainer
                 if (!currentlyLoadingFlow) {
                     // nodes with optional inputs may have executing successors
                     // note it is ok if the WFM itself is executing...
-                    if (getParent().hasSuccessorInProgress(getID())) {
+                    if (hasSuccessorsInProgress(destPort)) {
                         return false;
                     }
-                }
+                 }
             }
             // check if we are about to replace an existing connection
             for (ConnectionContainer cc : m_workflow.getConnectionsByDest(dest)) {
@@ -1414,7 +1414,7 @@ public final class WorkflowManager extends NodeContainer
             }
             if (destID.equals(getID())) { // wfm out connection
                 // note it is ok if the WFM itself is executing...
-                if (getParent().hasSuccessorInProgress(getID())) {
+                if (hasSuccessorsInProgress(cc.getDestPort())) {
                     return false;
                 }
             } else {
@@ -4790,8 +4790,34 @@ public final class WorkflowManager extends NodeContainer
         }
         // now also check successors of the metanode itself
         if (nodes.keySet().contains(this.getID())) {
-            // TODO check only nodes connection to the specific WF outport
-            if (getParent().hasSuccessorInProgress(getID())) {
+            // check only nodes connection to the specific WF outport
+            for (int portIdx : nodes.get(this.getID())) {
+                if (hasSuccessorsInProgress(portIdx)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if this workflow manager (i.e. metanode) has successors in progress at a given port.
+     *
+     * @param portIdx the port idx to check
+     * @return whether there are successors in progress
+     */
+    private boolean hasSuccessorsInProgress(final int portIdx) {
+        WorkflowManager parent = getParent();
+        Set<ConnectionContainer> outConns = parent.getOutgoingConnectionsFor(getID(), portIdx);
+        for (ConnectionContainer cc : outConns) {
+            NodeContainer successor;
+            if (cc.getDest().equals(parent.getID())) {
+                successor = parent;
+            } else {
+                successor = parent.getNodeContainer(cc.getDest());
+            }
+            if (successor.getNodeContainerState().isExecutionInProgress()
+                || parent.hasSuccessorInProgress(successor.getID())) {
                 return true;
             }
         }
