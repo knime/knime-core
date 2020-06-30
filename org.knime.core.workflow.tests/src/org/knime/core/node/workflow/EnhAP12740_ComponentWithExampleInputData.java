@@ -214,11 +214,6 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //should reset the changes tracker
         assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
 
-        //change view layout
-        componentProject.setLayoutJSONString("{}");
-        assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
-        assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
-
         //reset all
         componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
         wfm.resetAndConfigureAll();

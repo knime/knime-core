@@ -78,7 +78,7 @@ public final class LayoutUtil {
      *
      * @since 4.2
      */
-    public static final String EMPTY_LAYOUT_MARKER = "LAYOUT_REQUIRED";
+    public static final String EMPTY_LAYOUT_MARKER = "NEW_SUBNODE_LAYOUT";
 
     static {
         Bundle coreBundle = FrameworkUtil.getBundle(LayoutUtil.class);
