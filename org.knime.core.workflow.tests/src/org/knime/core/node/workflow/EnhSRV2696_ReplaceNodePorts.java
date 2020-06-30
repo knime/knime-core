@@ -140,22 +140,26 @@ public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
     @Test
 	public void testInsertPortBeforeAnotherPort() {
 		WorkflowManager wfm = getManager();
-		NodeID modelwriter_8 = new NodeID(wfm.getID(), 8);
-		NativeNodeContainer oldNC = (NativeNodeContainer) wfm.getNodeContainer(modelwriter_8);
+		NodeID modelwriter_11 = new NodeID(wfm.getID(), 11);
+		NativeNodeContainer oldNC = (NativeNodeContainer) wfm.getNodeContainer(modelwriter_11);
+		assertTrue("node annotation expected to be the default one", oldNC.getNodeAnnotation().getData().isDefault());
 
 		// add new port
 		ModifiableNodeCreationConfiguration creationConfig = oldNC.getNode().getCopyOfCreationConfig().get();
 		creationConfig.getPortConfig().get().getExtendablePorts().get("File System Connection")
 				.addPort(FileSystemPortObject.TYPE);
-		ReplaceNodeResult replaceRes = wfm.replaceNode(modelwriter_8, creationConfig);
+		ReplaceNodeResult replaceRes = wfm.replaceNode(modelwriter_11, creationConfig);
 
 		// check that connection remains
-		assertThat("connection is gone unexpectedly", wfm.getIncomingConnectionFor(modelwriter_8, 2), notNullValue());
+		NativeNodeContainer newNC = (NativeNodeContainer) wfm.getNodeContainer(modelwriter_11);
+		assertThat("connection is gone unexpectedly", wfm.getIncomingConnectionFor(modelwriter_11, 2), notNullValue());
+		assertTrue("node annotation expected to be the default one", newNC.getNodeAnnotation().getData().isDefault());
 
 		// try undo
 		replaceRes.undo();
-		assertThat("connection is gone unexpectedly", wfm.getIncomingConnectionFor(modelwriter_8, 1), notNullValue());
-
+		newNC = (NativeNodeContainer) wfm.getNodeContainer(modelwriter_11);
+		assertThat("connection is gone unexpectedly", wfm.getIncomingConnectionFor(modelwriter_11, 1), notNullValue());
+		assertTrue("node annotation expected to be the default one", newNC.getNodeAnnotation().getData().isDefault());
 	}
 
     /**

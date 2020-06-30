@@ -864,7 +864,9 @@ public final class WorkflowManager extends NodeContainer
 
             // transfer old node properties, such as position and annotation
             nnc.setUIInformation(uiInfo);
-            nnc.getNodeAnnotation().copyFrom(nodeAnnotation.getData(), true);
+            if (!nodeAnnotation.getData().isDefault()) {
+                nnc.getNodeAnnotation().copyFrom(nodeAnnotation.getData(), true);
+            }
 
             // restore connections if possible
             List<ConnectionContainer> removedConnections = reconnect(id,
