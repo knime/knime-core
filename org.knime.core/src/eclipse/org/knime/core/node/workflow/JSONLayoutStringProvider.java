@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,47 +43,60 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Oct 5, 2013 by wiswedel
+ * History
+ *   Jun 30, 2020 (benlaney): created
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.wizard.util.LayoutUtil;
 
 /**
- * Describes persistor for {@link SubNodeContainer}.
+ * Default implementation of an JSON Layout String Provider. This is the abstract wrapper class used to store the JSON
+ * layout string representation of a SubNode component layout in the SubNodeContainer. The main functionality of this
+ * class is to provide sub classes a uniform default layout format.
  *
- * <p>Not to be extended or used by clients.
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @noimplement This interface is not intended to be implemented by clients.
- * @noextend This interface is not intended to be extended by clients.
- * @since 2.9
+ * @author benlaney
+ * @since 4.2
  */
-public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor {
+public class JSONLayoutStringProvider implements SubNodeLayoutProvider {
 
-    /** @return the wrapped workflow manager's persistor. */
-    WorkflowPersistor getWorkflowPersistor();
-
-    WorkflowPortTemplate[] getInPortTemplates();
-
-    WorkflowPortTemplate[] getOutPortTemplates();
-
-    int getVirtualInNodeIDSuffix();
-
-    int getVirtualOutNodeIDSuffix();
-
-    /** @since 3.1 */
-    String getLayoutJSONString();
-
-    /** @since 3.7 */
-    boolean isHideInWizard();
-
-    /** @since 3.7 */
-    String getCssStyles();
+    private String m_layoutString;
 
     /**
-     * @since 4.1
+     * Creates a default layout string for newly created SubNodeContainers.
+     *
      */
-    ComponentMetadata getMetadata();
+    public JSONLayoutStringProvider() {
+        m_layoutString = createDefaultLayout(true);
+    }
 
-    MetaNodeTemplateInformation getTemplateInformation();
+    /**
+     * Creates a layout string provider for SubNodeContainers loaded from a saved layout string representation. If the
+     * component was saved without a layout (which was the default before V4.2.0) it will create a layout string
+     * representation for later processing.
+     *
+     * @param currentLayout the existing layout string as read in from the saved component settings.
+     */
+    public JSONLayoutStringProvider(final String currentLayout) {
+        m_layoutString = currentLayout.isEmpty() ? createDefaultLayout(false) : currentLayout;
+    }
+
+    /**
+     * @param isNewLayout if the layout string is being generated for a newly created component or if it's an empty
+     *            layout which has been loaded from a saved workflow.
+     * @return the newly created layout string.
+     */
+    private static final String createDefaultLayout(final boolean isNewLayout) {
+        return LayoutUtil.EMPTY_LAYOUT_MARKER + "=" + isNewLayout;
+    }
+
+    @Override
+    public String getLayoutString() {
+        return m_layoutString;
+    }
+
+    @Override
+    public final void setLayoutString(final String layoutString) {
+        m_layoutString = layoutString;
+    }
 }

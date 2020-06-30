@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,47 +43,26 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Oct 5, 2013 by wiswedel
+ * History
+ *   Jun 30, 2020 (benlaney): created
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
-
 /**
- * Describes persistor for {@link SubNodeContainer}.
+ * Generic wrapper which holds a layout string for the SubNodeContainer.
  *
- * <p>Not to be extended or used by clients.
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @noimplement This interface is not intended to be implemented by clients.
- * @noextend This interface is not intended to be extended by clients.
- * @since 2.9
+ * @author benlaney
+ * @since 4.2
  */
-public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor {
-
-    /** @return the wrapped workflow manager's persistor. */
-    WorkflowPersistor getWorkflowPersistor();
-
-    WorkflowPortTemplate[] getInPortTemplates();
-
-    WorkflowPortTemplate[] getOutPortTemplates();
-
-    int getVirtualInNodeIDSuffix();
-
-    int getVirtualOutNodeIDSuffix();
-
-    /** @since 3.1 */
-    String getLayoutJSONString();
-
-    /** @since 3.7 */
-    boolean isHideInWizard();
-
-    /** @since 3.7 */
-    String getCssStyles();
+public interface SubNodeLayoutProvider {
 
     /**
-     * @since 4.1
+     * @return the layout string representation for the SubNodeContainer.
      */
-    ComponentMetadata getMetadata();
+    public String getLayoutString();
 
-    MetaNodeTemplateInformation getTemplateInformation();
+    /**
+     * @param layout the string representation of the SubNodeContainer layout.
+     */
+    public void setLayoutString(final String layout);
 }

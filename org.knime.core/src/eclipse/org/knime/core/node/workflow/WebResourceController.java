@@ -64,7 +64,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
@@ -462,7 +462,8 @@ public abstract class WebResourceController {
         NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subNC.getID());
         final String originalPageLayout = subNC.getLayoutJSONString();
         String localPageLayout = originalPageLayout;
-        if (StringUtils.isEmpty(localPageLayout)) {
+        Assert.isTrue(!localPageLayout.isEmpty(), "Layouts should never be empty.");
+        if (LayoutUtil.requiresLayout(localPageLayout)) {
             try {
                 WorkflowManager subWfm = subNC.getWorkflowManager();
                 Map<NodeIDSuffix, ViewHideable> viewMap = new LinkedHashMap<NodeIDSuffix, ViewHideable>();
@@ -489,7 +490,7 @@ public abstract class WebResourceController {
             LOGGER.error("Layout could not be amended by unreferenced views: " + ex.getMessage(), ex);
         }
         try {
-            localPageLayout = LayoutUtil.updateLayout(localPageLayout, originalPageLayout, subNC.getLayoutVersion());
+            localPageLayout = LayoutUtil.updateLayout(localPageLayout, originalPageLayout);
         } catch (IOException ex) {
             LOGGER.error("Layout could not be updated: " + ex.getMessage(), ex);
         }

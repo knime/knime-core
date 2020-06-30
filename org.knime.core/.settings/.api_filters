@@ -2175,7 +2175,7 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.util.DefaultLayoutCreator"/>
-                <message_argument value="updateLayout(String, String, String)"/>
+                <message_argument value="updateLayout(String, String)"/>
             </message_arguments>
         </filter>
     </resource>

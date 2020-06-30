@@ -71,6 +71,15 @@ public final class LayoutUtil {
 
     private static final ServiceTracker serviceTracker;
 
+    /**
+     * In the 4.2 release we decided to components should no longer be saved without a layout configuration. This static
+     * field acts as the "magic marker" we use (in combination with other information) to identify what would have
+     * (before 4.2.0), been an empty layout.
+     *
+     * @since 4.2
+     */
+    public static final String EMPTY_LAYOUT_MARKER = "LAYOUT_REQUIRED";
+
     static {
         Bundle coreBundle = FrameworkUtil.getBundle(LayoutUtil.class);
         if (coreBundle != null) {
@@ -140,16 +149,15 @@ public final class LayoutUtil {
     }
 
     /**
-     * Updates a versioned layout
+     * Updates a layout if needed.
+     *
      * @param currentLayout the current layout, which needs to be already expanded
      * @param originalLayout the original layout, as provided by the {@link SubNodeContainer}
-     * @param layoutVersion the layout version
      * @return The updated layout
      * @throws IOException If no service is registered or the layout cannot be updated
      * @since 4.2
      */
-    public static String updateLayout(final String currentLayout, final String originalLayout,
-        final String layoutVersion) throws IOException {
+    public static String updateLayout(final String currentLayout, final String originalLayout) throws IOException {
         if (serviceTracker == null) {
             throw new IOException("Core bundle is not active, can't update layout.");
         }
@@ -157,6 +165,22 @@ public final class LayoutUtil {
         if (creator == null) {
             throw new IOException("Can't update layout; no appropriate service registered.");
         }
-        return creator.updateLayout(currentLayout, originalLayout, layoutVersion);
+        return creator.updateLayout(currentLayout, originalLayout);
+    }
+
+    /**
+     * Checks a layout string representation for the presence of a "magic marker" which indicates a full layout needs to
+     * be created.
+     *
+     * @param currentLayout to check for the "magic marker" which
+     * @return if the provided layout needs to be updated.
+     *
+     * @since 4.2
+     */
+    public static boolean requiresLayout(final String currentLayout) {
+        if (currentLayout == null) {
+            return true;
+        }
+        return currentLayout.contains(EMPTY_LAYOUT_MARKER);
     }
 }

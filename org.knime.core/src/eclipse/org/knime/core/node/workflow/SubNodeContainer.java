@@ -260,8 +260,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     private boolean m_isPerformingActionCalledFromParent;
 
     /** JSON layout info for wizard nodes. */
-    private String m_layoutJSONString;
-    private String m_layoutVersion;
+    private SubNodeLayoutProvider m_layoutJSONProvider;
 
     private boolean m_hideInWizard;
     private String m_customCSS;
@@ -301,8 +300,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length - 1];
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
-        m_layoutJSONString = persistor.getLayoutJSONString();
-        m_layoutVersion = persistor.getLayoutVersion();
+        m_layoutJSONProvider = new JSONLayoutStringProvider(persistor.getLayoutJSONString());
         m_hideInWizard = persistor.isHideInWizard();
         m_customCSS = persistor.getCssStyles();
         PortType[] inTypes = new PortType[inPortTemplates.length];
@@ -404,6 +402,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         setInternalState(m_wfm.getInternalState());
         m_templateInformation = MetaNodeTemplateInformation.NONE;
         m_metadata = ComponentMetadata.NONE;
+
+        m_layoutJSONProvider = new JSONLayoutStringProvider();
 
         postLoadWFM();
     }
@@ -2184,10 +2184,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @since 3.1
      */
     public String getLayoutJSONString() {
-        if (m_layoutJSONString == null) {
-            m_layoutJSONString = "";
-        }
-        return m_layoutJSONString;
+        return m_layoutJSONProvider.getLayoutString();
     }
 
     /**
@@ -2195,28 +2192,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @since 3.1
      */
     public void setLayoutJSONString(final String layoutJSONString) {
-        if (!StringUtils.equals(m_layoutJSONString, layoutJSONString)) {
-            m_layoutJSONString = layoutJSONString;
-            if (isProject()) {
-                //differently handled if this is a component project
-                //otherwise the setDirty event will just be past to the parent (which is ROOT)
-                getChangesTracker().ifPresent(ct -> ct.otherChange());
-                //for consistency
-                if (!getWorkflowManager().isDirty()) {
-                    getWorkflowManager().setDirty();
-                }
-            } else {
-                setDirty();
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * @since 4.2
-     */
-    public String getLayoutVersion() {
-        return m_layoutVersion;
+        m_layoutJSONProvider.setLayoutString(layoutJSONString);
     }
 
     /**

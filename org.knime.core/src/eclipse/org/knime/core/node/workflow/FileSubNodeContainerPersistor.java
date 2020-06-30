@@ -109,8 +109,6 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private String m_layoutJSONString;
 
-    private String m_layoutVersion;
-
     private String m_customCSS;
 
     private boolean m_hideInWizard;
@@ -219,15 +217,6 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     @Override
     public String getLayoutJSONString() {
         return m_layoutJSONString;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @since 4.2
-     */
-    @Override
-    public String getLayoutVersion() {
-        return m_layoutVersion;
     }
 
     /**
@@ -382,9 +371,6 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         // added in 3.1, load with default value
         m_layoutJSONString = nodeSettings.getString("layoutJSON", "");
 
-        // added in 4.2, versioned layouts
-        m_layoutVersion = nodeSettings.getString("layoutVersion", getLoadVersion().getVersionString());
-
         // added in 3.7, load with default values
         m_customCSS = nodeSettings.getString("customCSS", "");
         m_hideInWizard = nodeSettings.getBoolean("hideInWizard", false);
@@ -518,7 +504,6 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         subnodeNC.getMetadata().save(settings);
         subnodeNC.getTemplateInformation().save(settings);
         settings.addString("layoutJSON", subnodeNC.getLayoutJSONString());
-        settings.addString("layoutVersion", subnodeNC.getLayoutVersion());
         settings.addBoolean("hideInWizard", subnodeNC.isHideInWizard());
         settings.addString("customCSS", subnodeNC.getCssStyles());
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();

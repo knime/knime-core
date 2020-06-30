@@ -97,12 +97,11 @@ public interface DefaultLayoutCreator {
         final Map<NodeIDSuffix, SubNodeContainer> allNestedViews, final NodeID containerID);
 
     /**
-     * Updates a versioned layout
+     * Updates a layout
      * @param currentLayout the current layout, which needs to be already expanded
      * @param originalLayout the original layout, as provided by the {@link SubNodeContainer}
-     * @param layoutVersion the layout version
      * @return The updated layout
      * @since 4.2
      */
-    public String updateLayout(final String currentLayout, final String originalLayout, final String layoutVersion);
+    public String updateLayout(final String currentLayout, final String originalLayout);
 }
