@@ -56,11 +56,13 @@ import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.workflow.action.ReplaceNodeResult;
+import org.knime.filehandling.core.port.FileSystemPortObject;
 
 /**
  * Tests the {@link WorkflowManager#canReplaceNode(NodeID)} and
@@ -130,6 +132,31 @@ public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
             assertThrows(IllegalStateException.class, () -> wfm.replaceNode(m_metanode_4, creationConfig));
         assertThat("unexpected exception message", e.getMessage(), is("Node cannot be replaced"));
     }
+    
+	/**
+	 * Tests that connections remain if a port is inserted before another already
+	 * connected one.
+	 */
+    @Test
+	public void testInsertPortBeforeAnotherPort() {
+		WorkflowManager wfm = getManager();
+		NodeID modelwriter_8 = new NodeID(wfm.getID(), 8);
+		NativeNodeContainer oldNC = (NativeNodeContainer) wfm.getNodeContainer(modelwriter_8);
+
+		// add new port
+		ModifiableNodeCreationConfiguration creationConfig = oldNC.getNode().getCopyOfCreationConfig().get();
+		creationConfig.getPortConfig().get().getExtendablePorts().get("File System Connection")
+				.addPort(FileSystemPortObject.TYPE);
+		ReplaceNodeResult replaceRes = wfm.replaceNode(modelwriter_8, creationConfig);
+
+		// check that connection remains
+		assertThat("connection is gone unexpectedly", wfm.getIncomingConnectionFor(modelwriter_8, 2), notNullValue());
+
+		// try undo
+		replaceRes.undo();
+		assertThat("connection is gone unexpectedly", wfm.getIncomingConnectionFor(modelwriter_8, 1), notNullValue());
+
+	}
 
     /**
      * Tests {@link ReplaceNodeResult#undo()} and makes sure that connections removed during the node replacement are

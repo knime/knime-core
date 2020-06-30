@@ -841,9 +841,8 @@ public final class WorkflowManager extends NodeContainer
             NodeUIInformation uiInfo = nnc.getUIInformation();
             NodeFactory<?> factory = nnc.getNode().getFactory();
             NodeAnnotation nodeAnnotation = nnc.getNodeAnnotation();
-            Set<ConnectionContainer> connections = new LinkedHashSet<>();
-            connections.addAll(getIncomingConnectionsFor(id));
-            connections.addAll(getOutgoingConnectionsFor(id));
+            Set<ConnectionContainer> incomingConnections = getIncomingConnectionsFor(id);
+            Set<ConnectionContainer> outgoingConnections = getOutgoingConnectionsFor(id);
 
             // keep old node creation config
             ModifiableNodeCreationConfiguration oldNodeCreationConfig =
@@ -868,19 +867,44 @@ public final class WorkflowManager extends NodeContainer
             nnc.getNodeAnnotation().copyFrom(nodeAnnotation.getData(), true);
 
             // restore connections if possible
-            List<ConnectionContainer> removedConnections = new ArrayList<>();
-            for (ConnectionContainer cc : connections) {
-                if (canAddConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort())) {
-                    ConnectionContainer newCC =
-                        addConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort());
-                    newCC.setUIInfo(cc.getUIInfo());
-                } else {
-                    // record the connections that couldn't be added for the undo operation
-                    removedConnections.add(cc);
-                }
-            }
+            List<ConnectionContainer> removedConnections = reconnect(id,
+                oldNodeCreationConfig.getPortConfig().get().mapInputPorts(creationConfig.getPortConfig().get()),
+                oldNodeCreationConfig.getPortConfig().get().mapOutputPorts(creationConfig.getPortConfig().get()),
+                incomingConnections, outgoingConnections);
+
             return new ReplaceNodeResult(this, id, removedConnections, oldNodeCreationConfig);
         }
+    }
+
+    private List<ConnectionContainer> reconnect(final NodeID newId, final Map<Integer, Integer> inputPortMapping,
+        final Map<Integer, Integer> outputPortMapping, final Set<ConnectionContainer> incomingConnections,
+        final Set<ConnectionContainer> outgoingConnections) {
+
+        List<ConnectionContainer> removedConnections = new ArrayList<>();
+
+        // set incoming connections
+        for (final ConnectionContainer c : incomingConnections) {
+            if (canAddConnection(c.getSource(), c.getSourcePort(), newId, inputPortMapping.get(c.getDestPort()))) {
+                final ConnectionContainer newcc =
+                    addConnection(c.getSource(), c.getSourcePort(), newId, inputPortMapping.get(c.getDestPort()));
+                newcc.setUIInfo(c.getUIInfo());
+            } else {
+                removedConnections.add(c);
+            }
+        }
+
+        // set outgoing connections
+        for (final ConnectionContainer c : outgoingConnections) {
+            if (canAddConnection(newId, outputPortMapping.get(c.getSourcePort()), c.getDest(), c.getDestPort())) {
+                final ConnectionContainer newcc =
+                    addConnection(newId, outputPortMapping.get(c.getSourcePort()), c.getDest(), c.getDestPort());
+                newcc.setUIInfo(c.getUIInfo());
+            } else {
+                removedConnections.add(c);
+            }
+        }
+
+        return removedConnections;
     }
 
     /**
