@@ -70,14 +70,14 @@ public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor 
 
     int getVirtualOutNodeIDSuffix();
 
-    /** @since 3.1 */
-    String getLayoutJSONString();
-
     /** @since 3.7 */
     boolean isHideInWizard();
 
     /** @since 3.7 */
     String getCssStyles();
+
+    /** @since 4.2 */
+    JSONLayoutStringProvider getJSONLayoutStringProvider();
 
     /**
      * @since 4.1

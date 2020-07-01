@@ -60,8 +60,8 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
 
 /**
- * Tests {@link SubNodeContainer} behavior after default layoutJSONStrings were
- * added.
+ * Tests {@link SubNodeContainer} behavior after JSONLayoutStringProviders were
+ * added in v4.2.0.
  *
  * @author benlaney
  */
@@ -93,9 +93,8 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 	}
 
 	/**
-	 * Main test for {@link SubNodeContainer} behavior after default
-	 * layoutJSONStrings were added. Runs sub-test methods sequentially to simulate
-	 * the life-cycle of a workflow.
+	 * Main test for SubNode layout behavior after default layouts were added. Runs
+	 * sub-test methods sequentially to simulate the life-cycle of a workflow.
 	 * 
 	 * @throws Exception
 	 */
@@ -120,9 +119,8 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 		SubNodeContainer container2 = (SubNodeContainer) findNodeContainer(m_subNode2);
 		assertNotNull(container1);
 		assertNotNull(container2);
-		assertTrue("Problem detecting saved, empty layouts",
-				LayoutUtil.requiresLayout(container1.getLayoutJSONString()));
-		assertFalse("Problem detecting saved layouts", LayoutUtil.requiresLayout(container2.getLayoutJSONString()));
+		assertTrue("Problem detecting saved, empty layouts", container1.getJSONLayoutStringProvider().isEmptyLayout());
+		assertFalse("Problem detecting saved layouts", container2.getJSONLayoutStringProvider().isEmptyLayout());
 		assertFalse("Missing layout version caused dirty workflow", wfm.isDirty());
 	}
 
@@ -139,8 +137,8 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 		SubNodeContainer newComponent = new SubNodeContainer(wfm, m_subNodeNew, container1.getWorkflowManager(),
 				"Test_Node");
 		assertNotNull(newComponent);
-		assertTrue("Problem detecting saved, empty layouts",
-				LayoutUtil.requiresLayout(newComponent.getLayoutJSONString()));
+		assertTrue("Problem creating new component layouts layouts",
+				newComponent.getJSONLayoutStringProvider().checkOriginalContains("{\"parentLayoutLegacyMode\":false}"));
 	}
 
 	/**
@@ -169,9 +167,8 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 		SubNodeContainer container2 = (SubNodeContainer) findNodeContainer(m_subNode2);
 		assertNotNull(container1);
 		assertNotNull(container2);
-		assertTrue("Problem detecting saved, empty layouts",
-				LayoutUtil.requiresLayout(container1.getLayoutJSONString()));
-		assertFalse("Problem detecting saved layouts", LayoutUtil.requiresLayout(container2.getLayoutJSONString()));
+		assertTrue("Problem detecting saved, empty layouts", container1.getJSONLayoutStringProvider().isEmptyLayout());
+		assertFalse("Problem detecting saved layouts", container2.getJSONLayoutStringProvider().isEmptyLayout());
 		assertFalse("Missing layout version caused dirty workflow", wfm.isDirty());
 	}
 }

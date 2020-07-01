@@ -53,6 +53,7 @@ import java.util.Map;
 
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.JSONLayoutStringProvider;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -68,40 +69,36 @@ public interface DefaultLayoutCreator {
 
     /**
      * Creates a default layout structure as a serialized JSON string.
-     * @param viewNodes the nodes to include in the layout
+     * @param viewNodes the nodes to include in the layout.
      * @return a default layout structure as JSON string.
-     * @throws IOException on creation error
+     * @throws IOException on creation error.
      */
     public String createDefaultLayout(final Map<NodeIDSuffix, ViewHideable> viewNodes) throws IOException;
 
     /**
      * Expands nested layouts by inserting the appropriate sub-layouts in an original layout.
-     * @param currentLayout the current not expanded layout
-     * @param wfm the {@link WorkflowManager} of the containing {@link SubNodeContainer}
-     * @return The expanded layout as JSON serialized string
-     * @since 3.7
+     * @param layoutStringProvider the layout provider with an unexpanded layout.
+     * @param wfm the {@link WorkflowManager} of the containing {@link SubNodeContainer}.
+     * @since 4.2
      */
-    public String expandNestedLayout(final String currentLayout, final WorkflowManager wfm);
+    public void expandNestedLayout(final JSONLayoutStringProvider layoutStringProvider, final WorkflowManager wfm);
 
     /**
-     * Creates extra rows/columns at the bottom of the layout for all unreferenced nodes
-     * @param currentLayout the current layout, which needs to be already expanded
-     * @param allNodes a map of all viewable nodes
-     * @param allNestedViews a map of all {@link SubNodeContainer} which contain nested views
-     * @param containerID the {@link NodeID} of the containing subnode container
-     * @return The amended layout as a JSON serialized string
-     * @since 3.7
+     * Creates extra rows/columns at the bottom of the layout for all unreferenced nodes.
+     * @param layoutStringProvider the layout provider, who's layout needs to be already expanded.
+     * @param allNodes a map of all viewable nodes.
+     * @param allNestedViews a map of all {@link SubNodeContainer} which contain nested views.
+     * @param containerID the {@link NodeID} of the containing subnode container.
+     * @since 4.2
      */
     @SuppressWarnings("rawtypes")
-    public String addUnreferencedViews(final String currentLayout, final Map<NodeIDSuffix, WizardNode> allNodes,
+    public void addUnreferencedViews(final JSONLayoutStringProvider layoutStringProvider, final Map<NodeIDSuffix, WizardNode> allNodes,
         final Map<NodeIDSuffix, SubNodeContainer> allNestedViews, final NodeID containerID);
 
     /**
-     * Updates a layout
-     * @param currentLayout the current layout, which needs to be already expanded
-     * @param originalLayout the original layout, as provided by the {@link SubNodeContainer}
-     * @return The updated layout
+     * Updates a layout.
+     * @param layoutStringProvider the layout provider, whos layout needs to be already expanded.
      * @since 4.2
      */
-    public String updateLayout(final String currentLayout, final String originalLayout);
+    public void updateLayout(final JSONLayoutStringProvider layoutStringProvider);
 }

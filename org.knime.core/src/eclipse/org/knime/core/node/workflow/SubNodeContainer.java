@@ -259,8 +259,8 @@ public final class SubNodeContainer extends SingleNodeContainer
      * is triggered via {@link #performExecuteNode(PortObject[])} or reset via {@link #performReset()}. */
     private boolean m_isPerformingActionCalledFromParent;
 
-    /** JSON layout info for wizard nodes. */
-    private SubNodeLayoutProvider m_layoutJSONProvider;
+    /** JSON layout info provider for wizard nodes. */
+    private JSONLayoutStringProvider m_JSONLayoutStringProvider;
 
     private boolean m_hideInWizard;
     private String m_customCSS;
@@ -300,7 +300,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length - 1];
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
-        m_layoutJSONProvider = new JSONLayoutStringProvider(persistor.getLayoutJSONString());
+        m_JSONLayoutStringProvider = persistor.getJSONLayoutStringProvider();
         m_hideInWizard = persistor.isHideInWizard();
         m_customCSS = persistor.getCssStyles();
         PortType[] inTypes = new PortType[inPortTemplates.length];
@@ -403,7 +403,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_templateInformation = MetaNodeTemplateInformation.NONE;
         m_metadata = ComponentMetadata.NONE;
 
-        m_layoutJSONProvider = new JSONLayoutStringProvider();
+        m_JSONLayoutStringProvider = new JSONLayoutStringProvider();
 
         postLoadWFM();
     }
@@ -2180,20 +2180,13 @@ public final class SubNodeContainer extends SingleNodeContainer
     /* -------------- Layouting --------- */
 
     /**
-     * @return the layoutJSONString
-     * @since 3.1
+     * @return the JSONLayoutStringProvider
+     * @since 4.2
      */
-    public String getLayoutJSONString() {
-        return m_layoutJSONProvider.getLayoutString();
+    public JSONLayoutStringProvider getJSONLayoutStringProvider() {
+        return m_JSONLayoutStringProvider;
     }
 
-    /**
-     * @param layoutJSONString the layoutJSONString to set
-     * @since 3.1
-     */
-    public void setLayoutJSONString(final String layoutJSONString) {
-        m_layoutJSONProvider.setLayoutString(layoutJSONString);
-    }
 
     /**
      * {@inheritDoc}

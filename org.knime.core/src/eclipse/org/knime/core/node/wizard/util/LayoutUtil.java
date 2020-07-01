@@ -53,6 +53,7 @@ import java.util.Map;
 
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.JSONLayoutStringProvider;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -71,15 +72,6 @@ public final class LayoutUtil {
 
     private static final ServiceTracker serviceTracker;
 
-    /**
-     * In the 4.2 release we decided to components should no longer be saved without a layout configuration. This static
-     * field acts as the "magic marker" we use (in combination with other information) to identify what would have
-     * (before 4.2.0), been an empty layout.
-     *
-     * @since 4.2
-     */
-    public static final String EMPTY_LAYOUT_MARKER = "NEW_SUBNODE_LAYOUT";
-
     static {
         Bundle coreBundle = FrameworkUtil.getBundle(LayoutUtil.class);
         if (coreBundle != null) {
@@ -92,7 +84,7 @@ public final class LayoutUtil {
 
     /**
      * Creates a default layout structure as a serialized JSON string.
-     * @param viewNodes the nodes to include in the layout
+     * @param viewNodes the nodes to include in the layout.
      * @return a default layout structure as JSON string.
      * @throws IOException If no service is registered or the default layout cannot be created.
      */
@@ -109,13 +101,12 @@ public final class LayoutUtil {
 
     /**
      * Expands nested layouts by inserting the appropriate sub-layouts in an original layout.
-     * @param originalLayout the original not expanded layout
-     * @param wfm the {@link WorkflowManager} of the containing {@link SubNodeContainer}
-     * @return The expanded layout as JSON serialized string
+     * @param layoutStringProvider the layout provider with an unexpanded layout.
+     * @param wfm the {@link WorkflowManager} of the containing {@link SubNodeContainer}.
      * @throws IOException If no service is registered or the layout cannot be expanded.
-     * @since 3.7
+     * @since 4.2
      */
-    public static String expandNestedLayout(final String originalLayout, final WorkflowManager wfm) throws IOException {
+    public static void expandNestedLayout(final JSONLayoutStringProvider layoutStringProvider, final WorkflowManager wfm) throws IOException {
         if (serviceTracker == null) {
             throw new IOException("Core bundle is not active, can't expand nested layout.");
         }
@@ -123,20 +114,19 @@ public final class LayoutUtil {
         if (creator == null) {
             throw new IOException("Can't expand nested layout; no appropriate service registered.");
         }
-        return creator.expandNestedLayout(originalLayout, wfm);
+        creator.expandNestedLayout(layoutStringProvider, wfm);
     }
 
     /**
-     * Creates extra rows/columns at the bottom of the layout for all unreferenced nodes
-     * @param originalLayout the original layout, which needs to be already expanded
-     * @param allNodes a map of all viewable nodes
-     * @param allNestedViews a map of all {@link SubNodeContainer} which contain nested views
-     * @param containerID the {@link NodeID} of the containing subnode container
-     * @return The amended layout as a JSON serialized string
+     * Creates extra rows/columns at the bottom of the layout for all unreferenced nodes.
+     * @param layoutStringProvider the layout provider, who's layout needs to be already expanded.
+     * @param allNodes a map of all viewable nodes.
+     * @param allNestedViews a map of all {@link SubNodeContainer} which contain nested views.
+     * @param containerID the {@link NodeID} of the containing subnode container.
      * @throws IOException If no service is registered or the layout cannot be amended.
-     * @since 3.7
+     * @since 4.2
      */
-    public static String addUnreferencedViews(final String originalLayout, final Map<NodeIDSuffix, WizardNode> allNodes,
+    public static void addUnreferencedViews(final JSONLayoutStringProvider layoutStringProvider, final Map<NodeIDSuffix, WizardNode> allNodes,
         final Map<NodeIDSuffix, SubNodeContainer> allNestedViews, final NodeID containerID) throws IOException {
         if (serviceTracker == null) {
             throw new IOException("Core bundle is not active, can't add unreferenced views to layout.");
@@ -145,42 +135,23 @@ public final class LayoutUtil {
         if (creator == null) {
             throw new IOException("Can't add unreferenced views to layout; no appropriate service registered.");
         }
-        return creator.addUnreferencedViews(originalLayout, allNodes, allNestedViews, containerID);
+        creator.addUnreferencedViews(layoutStringProvider, allNodes, allNestedViews, containerID);
     }
 
     /**
      * Updates a layout if needed.
      *
-     * @param currentLayout the current layout, which needs to be already expanded
-     * @param originalLayout the original layout, as provided by the {@link SubNodeContainer}
-     * @return The updated layout
-     * @throws IOException If no service is registered or the layout cannot be updated
+     * @param layoutStringProvider the layout provider, who's layout needs to be already expanded.
      * @since 4.2
      */
-    public static String updateLayout(final String currentLayout, final String originalLayout) throws IOException {
+    public static void updateLayout(final JSONLayoutStringProvider layoutStringProvider) {
         if (serviceTracker == null) {
-            throw new IOException("Core bundle is not active, can't update layout.");
+            throw new IllegalStateException("Core bundle is not active, can't update layout.");
         }
         DefaultLayoutCreator creator = (DefaultLayoutCreator)serviceTracker.getService();
         if (creator == null) {
-            throw new IOException("Can't update layout; no appropriate service registered.");
+            throw new IllegalStateException("Can't update layout; no appropriate service registered.");
         }
-        return creator.updateLayout(currentLayout, originalLayout);
-    }
-
-    /**
-     * Checks a layout string representation for the presence of a "magic marker" which indicates a full layout needs to
-     * be created.
-     *
-     * @param currentLayout to check for the "magic marker" which
-     * @return if the provided layout needs to be updated.
-     *
-     * @since 4.2
-     */
-    public static boolean requiresLayout(final String currentLayout) {
-        if (currentLayout == null) {
-            return true;
-        }
-        return currentLayout.contains(EMPTY_LAYOUT_MARKER);
+        creator.updateLayout(layoutStringProvider);
     }
 }

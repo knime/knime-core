@@ -48,55 +48,121 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.wizard.util.LayoutUtil;
-
 /**
- * Default implementation of an JSON Layout String Provider. This is the abstract wrapper class used to store the JSON
- * layout string representation of a SubNode component layout in the SubNodeContainer. The main functionality of this
- * class is to provide sub classes a uniform default layout format.
+ * Functional wrapper class for what was a simple String layout representation before version 4.2.0. This class can be
+ * referenced throughout the SubNode layout life-cycle. Added functionality include the ability to compare an updated
+ * layout with it's originally layout, detection of layouts created and saved with KAP pre-v4.2.0 as well as a default
+ * layout seed for creating new SubNode layouts moving forward.
  *
  * @author benlaney
  * @since 4.2
  */
-public class JSONLayoutStringProvider implements SubNodeLayoutProvider {
-
-    private String m_layoutString;
+public final class JSONLayoutStringProvider {
 
     /**
-     * Creates a default layout string for newly created SubNodeContainers.
-     *
+     * The default layout string for new components. Added for v4.2.0, but it can be updated as needed for future
+     * changes. This is not truly a valid layout within the SubNode layout framework, but it is valid JSON and will be
+     * used as the seed to generate a new, full layout (with page content, etc.) by the framework.
+     */
+    private static final String DEFAULT_LATEST_LAYOUT_STRING = "{\"parentLayoutLegacyMode\":false}";
+
+    private static final String DEFAULT_PRE_V42_LAYOUT_STRING = "";
+
+    private static final Long PRE_V42_MARKER = 1593604281000L; // July 1st, 2020; pre-V4.2.0 release
+
+    private static final Long LATEST_MARKER = System.currentTimeMillis();
+
+    private String m_currentLayoutString;
+
+    private final String m_loadedLayoutString;
+
+    private Long m_layoutVersion;
+
+    /**
+     * Creates a default layout string provider for newly created components (SubNodeContainers).
      */
     public JSONLayoutStringProvider() {
-        m_layoutString = createDefaultLayout(true);
+        m_currentLayoutString = DEFAULT_LATEST_LAYOUT_STRING;
+        m_loadedLayoutString = DEFAULT_LATEST_LAYOUT_STRING;
+        m_layoutVersion = LATEST_MARKER;
     }
 
     /**
-     * Creates a layout string provider for SubNodeContainers loaded from a saved layout string representation. If the
-     * component was saved without a layout (which was the default before V4.2.0) it will create a layout string
-     * representation for later processing.
+     * Creates a layout string provider for components (SubNodeContainers) loaded from a saved layout string
+     * representation. If the component was saved without a layout (which was the default before V4.2.0) it will detect
+     * this and ensure default layout creation later in the component life-cycle maintains the expected,
+     * backwards-compatible behavior.
      *
      * @param currentLayout the existing layout string as read in from the saved component settings.
      */
     public JSONLayoutStringProvider(final String currentLayout) {
-        m_layoutString = currentLayout.isEmpty() ? createDefaultLayout(false) : currentLayout;
+        if (isEmptyLayout(currentLayout)) {
+            m_currentLayoutString = DEFAULT_PRE_V42_LAYOUT_STRING;
+            m_loadedLayoutString = DEFAULT_PRE_V42_LAYOUT_STRING;
+            m_layoutVersion = PRE_V42_MARKER;
+        } else {
+            m_currentLayoutString = currentLayout;
+            m_loadedLayoutString = currentLayout;
+            m_layoutVersion = LATEST_MARKER;
+        }
     }
 
     /**
-     * @param isNewLayout if the layout string is being generated for a newly created component or if it's an empty
-     *            layout which has been loaded from a saved workflow.
-     * @return the newly created layout string.
+     * @return the current string representation of the layout.
      */
-    private static final String createDefaultLayout(final boolean isNewLayout) {
-        return LayoutUtil.EMPTY_LAYOUT_MARKER + "=" + isNewLayout;
-    }
-
-    @Override
     public String getLayoutString() {
-        return m_layoutString;
+        return m_currentLayoutString;
     }
 
-    @Override
-    public final void setLayoutString(final String layoutString) {
-        m_layoutString = layoutString;
+    /**
+     * @param layoutString current layoutString to set.
+     */
+    public void setLayoutString(final String layoutString) {
+        m_currentLayoutString = layoutString;
+    }
+
+    /**
+     * @return if the layout provider holds a layout saved with an AP version less than v4.2.0.
+     */
+    public boolean isLayoutPreV42() {
+        return m_layoutVersion > PRE_V42_MARKER;
+    }
+
+    /**
+     * Checks the layout to see if its empty or equal to the default placeholder layout for new components.
+     *
+     * @return if the layout is empty or equal to the default placeholder layout.
+     * @since 4.2
+     */
+    public boolean isValidLayout() {
+        return !isEmptyLayout(m_currentLayoutString)
+            && !m_currentLayoutString.contentEquals(DEFAULT_LATEST_LAYOUT_STRING);
+    }
+
+    /**
+     * Checks the original layout (as loaded from a saved workflow or created for a new component) contains the provided
+     * search term string.
+     *
+     * @param searchTerm the term to search for in the original layout.
+     * @return if the original layout contains the provided search term string.
+     */
+    public boolean checkOriginalContains(final String searchTerm) {
+        if (searchTerm == null) {
+            return false;
+        }
+        return m_loadedLayoutString.contains(searchTerm);
+    }
+
+    /**
+     * Checks if the layout is null or empty.
+     *
+     * @return if the current layout of this provider is null or empty.
+     */
+    public boolean isEmptyLayout() {
+        return isEmptyLayout(m_currentLayoutString);
+    }
+
+    private static boolean isEmptyLayout(final String layoutString) {
+        return layoutString == null || layoutString.isEmpty();
     }
 }

@@ -216,17 +216,17 @@ public interface SubNodeContainerUI extends SingleNodeContainerUI, UI {
 //    @Deprecated
 //    void setLayoutInfo(Map<Integer, WizardNodeLayoutInfo> layoutInfo);
 
-    /**
-     * @return the layoutJSONString
-     * @since 3.1
-     */
-    String getLayoutJSONString();
-
-    /**
-     * @param layoutJSONString the layoutJSONString to set
-     * @since 3.1
-     */
-    void setLayoutJSONString(String layoutJSONString);
+//    /**
+//     * @return the layoutJSONString
+//     * @since 3.1
+//     */
+//    String getLayoutJSONString();
+//
+//    /**
+//     * @param layoutJSONString the layoutJSONString to set
+//     * @since 3.1
+//     */
+//    void setLayoutJSONString(String layoutJSONString);
 
 //    /** {@inheritDoc} */
 //    WorkflowLock lock();

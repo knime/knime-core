@@ -105,22 +105,6 @@ public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<Su
      * {@inheritDoc}
      */
     @Override
-    public String getLayoutJSONString() {
-        return unwrap().getLayoutJSONString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setLayoutJSONString(final String layoutJSONString) {
-        unwrap().setLayoutJSONString(layoutJSONString);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public boolean isWriteProtected() {
         return unwrap().isWriteProtected();
     }
