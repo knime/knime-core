@@ -62,6 +62,7 @@ import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinTableSettings;
 import org.knime.core.data.join.JoinTableSettings.JoinColumn;
 import org.knime.core.data.join.JoinTestInput;
+import org.knime.core.data.join.JoinerFactory.JoinAlgorithm;
 import org.knime.core.data.join.results.JoinResults.OutputMode;
 import org.knime.core.node.InvalidSettingsException;
 
@@ -117,7 +118,7 @@ public class JoinContainerTest {
         JoinSpecification jspec =
             new JoinSpecification.Builder(m_settings[LEFT], m_settings[RIGHT]).mergeJoinColumns(true).build();
         JoinContainer container =
-            UnorderedJoinContainer.create(OutputMode.OutputCombined, jspec, JoinTestInput.EXEC, false, false);
+            UnorderedJoinContainer.create(OutputMode.OutputCombined, JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC), JoinTestInput.EXEC, false, false);
 
         { // pad left
             DataRow padded = container.rightToSingleTableFormat(m_rows[RIGHT]);
@@ -159,7 +160,7 @@ public class JoinContainerTest {
         JoinSpecification jspec =
             new JoinSpecification.Builder(m_settings[LEFT], m_settings[RIGHT]).mergeJoinColumns(false).build();
         JoinContainer container =
-            UnorderedJoinContainer.create(OutputMode.OutputCombined, jspec, JoinTestInput.EXEC, false, false);
+            UnorderedJoinContainer.create(OutputMode.OutputCombined, JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC), JoinTestInput.EXEC, false, false);
 
         { // pad left
             DataRow padded = container.rightToSingleTableFormat(m_rows[RIGHT]);

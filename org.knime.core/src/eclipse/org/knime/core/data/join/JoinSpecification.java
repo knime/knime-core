@@ -104,6 +104,17 @@ public class JoinSpecification {
         public boolean isLeft() {
             return this == LEFT;
         }
+
+        private static final InputTable[] LEFT_RIGHT = new InputTable[] {LEFT, RIGHT};
+
+        /**
+         * @return an array containing the constants {@link #LEFT} and {@link #RIGHT}. One could also use
+         *         {@link InputTable#values()}, but in case another constant is added, code may break in different
+         *         places.
+         */
+        public static InputTable[] leftRight() {
+            return LEFT_RIGHT;
+        }
     }
 
     /**

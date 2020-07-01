@@ -236,7 +236,7 @@ class BlockHashJoin {
             return true;
         }
 
-        for (InputTable presentSide : InputTable.values()) {
+        for (InputTable presentSide : InputTable.leftRight()) {
             JoinTableSettings present = joinSpecification.getSettings(presentSide);
             JoinTableSettings absent = joinSpecification.getSettings(presentSide.other());
             Optional<BufferedDataTable> presentTable = present.getTable();

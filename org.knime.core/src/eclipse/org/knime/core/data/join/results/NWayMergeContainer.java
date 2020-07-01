@@ -57,6 +57,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.join.HybridHashJoin;
+import org.knime.core.data.join.JoinImplementation;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
@@ -104,7 +105,7 @@ public class NWayMergeContainer extends JoinContainer {
 
     /**
      *
-     * @param joinSpecification
+     * @param joinImplementation
      * @param exec
      * @param leftIsProbe the row offset of the probe table is used to sort output rows. Since we operate on left and
      *            right tables here, we need to know which is the probe table. If false, the right input is the probe
@@ -112,9 +113,9 @@ public class NWayMergeContainer extends JoinContainer {
      * @param deduplicateResults
      * @param deferUnmatchedRows
      */
-    public NWayMergeContainer(final JoinSpecification joinSpecification, final ExecutionContext exec,
+    public NWayMergeContainer(final JoinImplementation joinImplementation, final ExecutionContext exec,
         final boolean leftIsProbe, final boolean deduplicateResults, final boolean deferUnmatchedRows) {
-        super(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
+        super(joinImplementation, deduplicateResults, deferUnmatchedRows);
         m_leftIsProbe = leftIsProbe;
 
         // create output containers
@@ -131,6 +132,9 @@ public class NWayMergeContainer extends JoinContainer {
         DataRow match = m_joinSpecification.rowJoin(left, right);
         long probeRowOffset = m_leftIsProbe ? leftOffset : rightOffset;
         m_chunks[MATCHES].addSorted(match, probeRowOffset);
+        // TODO hiliting
+        //        addHiliteMapping(InputTable.LEFT, ResultType.MATCHES, left.getKey(), match.getKey());
+        //        addHiliteMapping(InputTable.RIGHT, ResultType.MATCHES, right.getKey(), match.getKey());
         return true;
     }
 
@@ -138,6 +142,9 @@ public class NWayMergeContainer extends JoinContainer {
     public boolean doAddLeftOuter(final DataRow row, final long leftOffset) {
         long probeRowOffset = m_leftIsProbe ? leftOffset : Long.MAX_VALUE;
         m_chunks[LEFT_OUTER].addSorted(m_joinSpecification.rowProjectOuter(InputTable.LEFT, row), probeRowOffset);
+        // TODO hiliting
+        //        addHiliteMapping(InputTable.LEFT, ResultType.MATCHES, left.getKey(), match.getKey());
+        //        addHiliteMapping(InputTable.RIGHT, ResultType.MATCHES, right.getKey(), match.getKey());
         return true;
     }
 
@@ -145,6 +152,9 @@ public class NWayMergeContainer extends JoinContainer {
     public boolean doAddRightOuter(final DataRow row, final long rightOffset) {
         long probeRowOffset = m_leftIsProbe ? Long.MAX_VALUE : rightOffset;
         m_chunks[RIGHT_OUTER].addSorted(m_joinSpecification.rowProjectOuter(InputTable.RIGHT, row), probeRowOffset);
+        // TODO hiliting
+        //        addHiliteMapping(InputTable.LEFT, ResultType.MATCHES, left.getKey(), match.getKey());
+        //        addHiliteMapping(InputTable.RIGHT, ResultType.MATCHES, right.getKey(), match.getKey());
         return true;
     }
 

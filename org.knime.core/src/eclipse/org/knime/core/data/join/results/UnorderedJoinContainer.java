@@ -51,6 +51,7 @@ package org.knime.core.data.join.results;
 import java.util.Arrays;
 
 import org.knime.core.data.DataRow;
+import org.knime.core.data.join.JoinImplementation;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
@@ -75,19 +76,19 @@ public interface UnorderedJoinContainer {
 
     /**
      * @param outputMode
-     * @param joinSpecification
+     * @param joinImplementation
      * @param exec
      * @param deduplicateResults
      * @param deferUnmatchedRows
      * @return
      */
-    public static JoinContainer create(final OutputMode outputMode, final JoinSpecification joinSpecification, final ExecutionContext exec,
+    public static JoinContainer create(final OutputMode outputMode, final JoinImplementation joinImplementation, final ExecutionContext exec,
         final boolean deduplicateResults, final boolean deferUnmatchedRows) {
         switch(outputMode) {
             case OutputCombined:
-                return new Combined(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
+                return new Combined(joinImplementation, exec, deduplicateResults, deferUnmatchedRows);
             case OutputSplit:
-                return new Split(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
+                return new Split(joinImplementation, exec, deduplicateResults, deferUnmatchedRows);
         }
         throw new IllegalStateException("Output mode not implemented: " + outputMode);
     }
@@ -112,16 +113,16 @@ public interface UnorderedJoinContainer {
         private final BufferedDataTable[] m_splitOutputResults;
 
         /**
-         * @param joinSpecification as in
-         *            {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean, boolean)}
-         * @param exec as in {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean, boolean)}
+         * @param joinImplementation as in
+         *            {@link JoinContainer#JoinContainer(JoinImplementation, boolean, boolean)}
+         * @param exec as in {@link JoinContainer#JoinContainer(JoinImplementation, boolean, boolean)}
          * @param deduplicateResults as in
-         *            {@link JoinContainer#JoinContainer(JoinSpecification, ExecutionContext, boolean, boolean)}
+         *            {@link JoinContainer#JoinContainer(JoinImplementation, boolean, boolean)}
          * @param deferUnmatchedRows
          */
-        public Split(final JoinSpecification joinSpecification, final ExecutionContext exec,
+        public Split(final JoinImplementation joinImplementation, final ExecutionContext exec,
             final boolean deduplicateResults, final boolean deferUnmatchedRows) {
-            super(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
+            super(joinImplementation, deduplicateResults, deferUnmatchedRows);
             m_splitOutputContainers =
                 Arrays.stream(m_outputSpecs).map(exec::createDataContainer).toArray(BufferedDataContainer[]::new);
             m_splitOutputResults = new BufferedDataTable[3];
@@ -130,9 +131,10 @@ public interface UnorderedJoinContainer {
         @Override
         public boolean doAddMatch(final DataRow left, final long leftOffset, final DataRow right,
             final long rightOffset) {
-            DataRow match = m_joinSpecification.rowJoin(left, right);
-            final DataRow row = match;
-            m_splitOutputContainers[MATCHES].addRowToTable(row);
+            final DataRow match = m_joinSpecification.rowJoin(left, right);
+            m_splitOutputContainers[MATCHES].addRowToTable(match);
+            addHiliteMapping(InputTable.LEFT, ResultType.MATCHES, left.getKey(), match.getKey());
+            addHiliteMapping(InputTable.RIGHT, ResultType.MATCHES, right.getKey(), match.getKey());
             return true;
         }
 
@@ -140,6 +142,7 @@ public interface UnorderedJoinContainer {
         public boolean doAddLeftOuter(final DataRow row, final long offset) {
             DataRow leftOuter = m_joinSpecification.rowProjectOuter(InputTable.LEFT, row);
             m_splitOutputContainers[LEFT_OUTER].addRowToTable(leftOuter);
+            addHiliteMapping(InputTable.LEFT, ResultType.LEFT_OUTER, row.getKey(), leftOuter.getKey());
             return true;
         }
 
@@ -147,6 +150,7 @@ public interface UnorderedJoinContainer {
         public boolean doAddRightOuter(final DataRow row, final long offset) {
             DataRow rightOuter = m_joinSpecification.rowProjectOuter(InputTable.RIGHT, row);
             m_splitOutputContainers[RIGHT_OUTER].addRowToTable(rightOuter);
+            addHiliteMapping(InputTable.RIGHT, ResultType.RIGHT_OUTER, row.getKey(), rightOuter.getKey());
             return true;
         }
 
@@ -192,14 +196,14 @@ public interface UnorderedJoinContainer {
         private BufferedDataTable m_singleTableResult;
 
         /**
-         * @param joinSpecification
+         * @param joinImplementation
          * @param exec
          * @param deduplicateResults
          * @param deferUnmatchedRows
          */
-        public Combined(final JoinSpecification joinSpecification, final ExecutionContext exec,
+        public Combined(final JoinImplementation joinImplementation, final ExecutionContext exec,
             final boolean deduplicateResults, final boolean deferUnmatchedRows) {
-            super(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
+            super(joinImplementation, deduplicateResults, deferUnmatchedRows);
             m_singleTableContainer = exec.createDataContainer(m_outputSpecs[MATCHES]);
         }
 
@@ -208,6 +212,8 @@ public interface UnorderedJoinContainer {
             final long rightOrder) {
             DataRow match = m_joinSpecification.rowJoin(left, right);
             m_singleTableContainer.addRowToTable(match);
+            addHiliteMapping(InputTable.LEFT, ResultType.MATCHES, left.getKey(), match.getKey());
+            addHiliteMapping(InputTable.RIGHT, ResultType.MATCHES, right.getKey(), match.getKey());
             return true;
         }
 
@@ -215,6 +221,7 @@ public interface UnorderedJoinContainer {
         protected boolean doAddLeftOuter(final DataRow row, final long offset) {
             DataRow paddedMerged = leftToSingleTableFormat(row);
             m_singleTableContainer.addRowToTable(paddedMerged);
+            addHiliteMapping(InputTable.LEFT, ResultType.LEFT_OUTER, row.getKey(), paddedMerged.getKey());
             return true;
         }
 
@@ -222,6 +229,7 @@ public interface UnorderedJoinContainer {
         protected boolean doAddRightOuter(final DataRow row, final long offset) {
             DataRow paddedMerged = rightToSingleTableFormat(row);
             m_singleTableContainer.addRowToTable(paddedMerged);
+            addHiliteMapping(InputTable.RIGHT, ResultType.RIGHT_OUTER, row.getKey(), paddedMerged.getKey());
             return true;
         }
 

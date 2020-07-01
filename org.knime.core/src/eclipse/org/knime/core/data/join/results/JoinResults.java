@@ -70,6 +70,25 @@ public interface JoinResults {
     enum OutputMode {OutputCombined, OutputSplit}
 
     /**
+     * Categories for join results, e.g., matches and unmatched rows.
+     * In some situations it is appropriate to refer to all result types, e.g., for {@link OutputCombined#getTable()}.
+     */
+    enum ResultType {
+            /** rows that join rows from the left and right input tables */
+            MATCHES,
+            /** unmatched rows from the left input table */
+            LEFT_OUTER,
+            /** unmatched rows from the right table */
+            RIGHT_OUTER,
+            /** {@link #MATCHES}, {@link #LEFT_OUTER}, and {@link #RIGHT_OUTER} */
+            ALL;
+            static final ResultType[] MATCHES_AND_OUTER = new ResultType[] {MATCHES, LEFT_OUTER, RIGHT_OUTER};
+            public static ResultType[] matchesAndOuter() {
+                return MATCHES_AND_OUTER;
+            }
+    }
+
+    /**
      * Accepts the given row as a an inner join result if {@link #isRetainMatched()} is true. If
      * {@link #isRetainMatched()} is false, the operation has no effect.
      *

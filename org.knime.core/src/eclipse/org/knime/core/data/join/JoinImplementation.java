@@ -84,15 +84,15 @@ import org.knime.core.node.streamable.StreamableFunction;
 @SuppressWarnings("javadoc")
 public abstract class JoinImplementation {
 
+    /** This can change and the auxiliary data structures should be updated accordingly. */
+    protected final JoinSpecification m_joinSpecification;
+
     /** Logger to print debug info to. */
     static final NodeLogger LOGGER = NodeLogger.getLogger(JoinImplementation.class);
 
     protected JoinProgressMonitor m_progress;
 
     protected final ExecutionContext m_exec;
-
-    /** This can change and the auxiliary data structures should be updated accordingly. */
-    protected JoinSpecification m_joinSpecification;
 
     private boolean m_enableHiliting = false;
 
@@ -150,6 +150,14 @@ public abstract class JoinImplementation {
 //            throw new InvalidSettingsException("Maximum number of open files must be at least 3.");
 //        }
 
+    }
+
+    /**
+     * @return the logical aspects of the join, such as whether to output unmatched rows, etc.
+     * @see JoinSpecification
+     */
+    public JoinSpecification getJoinSpecification() {
+        return m_joinSpecification;
     }
 
     /**
@@ -214,6 +222,13 @@ public abstract class JoinImplementation {
      */
     protected void setProgress(final JoinProgressMonitor progress) {
         this.m_progress = progress;
+    }
+
+    /**
+     * @return
+     */
+    public ExecutionContext getExecutionContext() {
+        return m_exec;
     }
 
     class JoinProgressMonitor implements HybridHashJoinMXBean{

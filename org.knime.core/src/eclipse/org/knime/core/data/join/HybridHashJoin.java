@@ -169,7 +169,7 @@ public class HybridHashJoin extends JoinImplementation {
         // catch empty join
         if (!(m_joinSpecification.isRetainMatched() || m_joinSpecification.isRetainUnmatched(InputTable.LEFT)
             || m_joinSpecification.isRetainUnmatched(InputTable.RIGHT))) {
-            return UnorderedJoinContainer.create(outputMode, m_joinSpecification, m_exec, false, false);
+            return UnorderedJoinContainer.create(outputMode, this, m_exec, false, false);
         }
 
         boolean deduplicateResults = !m_joinSpecification.isConjunctive();
@@ -179,11 +179,11 @@ public class HybridHashJoin extends JoinImplementation {
 
         switch (m_joinSpecification.getOutputRowOrder()) {
             case ARBITRARY:
-                joinResults = UnorderedJoinContainer.create(outputMode, m_joinSpecification, m_exec, deduplicateResults,
+                joinResults = UnorderedJoinContainer.create(outputMode, this, m_exec, deduplicateResults,
                     deferMatches);
                 break;
             case LEFT_RIGHT:
-                joinResults = LeftRightSortedJoinContainer.create(outputMode, m_joinSpecification, m_exec,
+                joinResults = LeftRightSortedJoinContainer.create(outputMode, this, m_exec,
                     deduplicateResults, deferMatches);
                 break;
             default:
@@ -204,8 +204,8 @@ public class HybridHashJoin extends JoinImplementation {
         if (!success) {
             // discard results from phase 1, start over
             joinResults = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
-                ? UnorderedJoinContainer.create(outputMode, m_joinSpecification, m_exec, false, false)
-                : LeftRightSortedJoinContainer.create(outputMode, m_joinSpecification, m_exec, false, false);
+                ? UnorderedJoinContainer.create(outputMode, this, m_exec, false, false)
+                : LeftRightSortedJoinContainer.create(outputMode, this, m_exec, false, false);
 
             return fallbackToNestedLoop(joinResults);
         }

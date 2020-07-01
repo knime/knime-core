@@ -59,6 +59,7 @@ import org.junit.runner.RunWith;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.join.JoinImplementation.JoinProgressMonitor;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
+import org.knime.core.data.join.JoinerFactory.JoinAlgorithm;
 import org.knime.core.data.join.results.JoinContainer;
 import org.knime.core.data.join.results.JoinResults.OutputCombined;
 import org.knime.core.data.join.results.JoinResults.OutputMode;
@@ -119,8 +120,8 @@ public class BlockHashJoinTest extends JoinTest {
         mon.m_assumeMemoryLow = executionMode != Execution.IN_MEMORY;
 
         JoinContainer results = order.m_rowOrder == OutputRowOrder.ARBITRARY
-            ? UnorderedJoinContainer.create(OutputMode.OutputCombined, joinSpec, JoinTestInput.EXEC, false, false)
-            : LeftRightSortedJoinContainer.create(OutputMode.OutputCombined, joinSpec, JoinTestInput.EXEC, false, false);
+            ? UnorderedJoinContainer.create(OutputMode.OutputCombined, JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC), JoinTestInput.EXEC, false, false)
+            : LeftRightSortedJoinContainer.create(OutputMode.OutputCombined, JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC), JoinTestInput.EXEC, false, false);
 
         // test data would need to be in auxiliary format with annotated row offsets.
         // only relevant when splitting the join problem in several independent join problems.
@@ -169,8 +170,8 @@ public class BlockHashJoinTest extends JoinTest {
         // only relevant when splitting the join problem in several independent join problems.
         boolean extractRowOffsets = false;
         JoinContainer container = order.m_rowOrder == OutputRowOrder.ARBITRARY
-            ? UnorderedJoinContainer.create(OutputMode.OutputSplit, joinSpec, JoinTestInput.EXEC, extractRowOffsets, extractRowOffsets)
-            : LeftRightSortedJoinContainer.create(OutputMode.OutputSplit, joinSpec, JoinTestInput.EXEC, extractRowOffsets, extractRowOffsets);
+            ? UnorderedJoinContainer.create(OutputMode.OutputSplit, JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC), JoinTestInput.EXEC, extractRowOffsets, extractRowOffsets)
+            : LeftRightSortedJoinContainer.create(OutputMode.OutputSplit, JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC), JoinTestInput.EXEC, extractRowOffsets, extractRowOffsets);
 
         // do the join
         BlockHashJoin blockHashJoin = new BlockHashJoin(JoinTestInput.EXEC, mon, joinSpec, extractRowOffsets);

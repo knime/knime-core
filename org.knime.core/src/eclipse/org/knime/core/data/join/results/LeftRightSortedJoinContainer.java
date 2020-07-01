@@ -54,6 +54,7 @@ import java.util.Comparator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.join.JoinImplementation;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
@@ -77,21 +78,22 @@ public abstract class LeftRightSortedJoinContainer {
 
     /**
      * @param outputMode
-     * @param joinSpecification
+     * @param joinImplementation
      * @param exec
      * @param deduplicateResults
      * @param deferUnmatchedRows
      * @return
      */
-    public static JoinContainer create(final OutputMode outputMode, final JoinSpecification joinSpecification, final ExecutionContext exec,
-        final boolean deduplicateResults, final boolean deferUnmatchedRows) {
-        switch(outputMode) {
+    public static JoinContainer create(final OutputMode outputMode, final JoinImplementation joinImplementation,
+        final ExecutionContext exec, final boolean deduplicateResults, final boolean deferUnmatchedRows) {
+        switch (outputMode) {
             case OutputCombined:
-                return new Combined(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
+                return new Combined(joinImplementation, exec, deduplicateResults, deferUnmatchedRows);
             case OutputSplit:
-                return new Split(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
+                return new Split(joinImplementation, exec, deduplicateResults, deferUnmatchedRows);
+            default:
+                throw new IllegalStateException("Output mode not implemented: " + outputMode);
         }
-        throw new IllegalStateException("Output mode not implemented: " + outputMode);
     }
 
     private static final Comparator<DataRow> COMPARE_COMBINED_OFFSETS = (c1, c2) -> Long
@@ -116,14 +118,14 @@ public abstract class LeftRightSortedJoinContainer {
         private final DataTableSpec[] m_workingSpecs;
 
         /**
-         * @param joinSpecification
+         * @param joinImplementation
          * @param exec
          * @param deduplicateResults
          * @param deferUnmatchedRows
          */
-        protected Split(final JoinSpecification joinSpecification, final ExecutionContext exec,
+        protected Split(final JoinImplementation joinImplementation, final ExecutionContext exec,
             final boolean deduplicateResults, final boolean deferUnmatchedRows) {
-            super(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
+            super(joinImplementation, deduplicateResults, deferUnmatchedRows);
             // add a long column to each output spec for storing the combined left and right row offset
             m_workingSpecs = Arrays.stream(m_outputSpecs).map(OrderedRow::withOffset).toArray(DataTableSpec[]::new);
 
@@ -138,7 +140,10 @@ public abstract class LeftRightSortedJoinContainer {
         protected boolean doAddMatch(final DataRow left, final long leftOffset, final DataRow right,
             final long rightOffset) {
             DataRow joinedProjected = m_joinSpecification.rowJoin(left, right);
-            add(MATCHES, OrderedRow.withOffset(joinedProjected, OrderedRow.combinedOffsets(leftOffset, rightOffset)));
+            DataRow match = OrderedRow.withOffset(joinedProjected, OrderedRow.combinedOffsets(leftOffset, rightOffset));
+            add(MATCHES, match);
+            addHiliteMapping(InputTable.LEFT, ResultType.MATCHES, left.getKey(), match.getKey());
+            addHiliteMapping(InputTable.RIGHT, ResultType.MATCHES, right.getKey(), match.getKey());
             return true;
         }
 
@@ -148,7 +153,9 @@ public abstract class LeftRightSortedJoinContainer {
             DataRow projected = m_joinSpecification.rowProjectOuter(InputTable.LEFT, row);
             // no combined offset necessary, since they live in their own table and are sorted separately
             // (their offsets have their own "scope")
-            add(LEFT_OUTER, OrderedRow.withOffset(projected, offset));
+            DataRow leftOuter = OrderedRow.withOffset(projected, offset);
+            add(LEFT_OUTER, leftOuter);
+            addHiliteMapping(InputTable.LEFT, ResultType.LEFT_OUTER, row.getKey(), leftOuter.getKey());
             return true;
         }
 
@@ -158,7 +165,9 @@ public abstract class LeftRightSortedJoinContainer {
             DataRow projected = m_joinSpecification.rowProjectOuter(InputTable.RIGHT, row);
             // no combined offset necessary, since they live in their own table and are sorted separately
             // (their offsets have their own "scope")
-            add(RIGHT_OUTER, OrderedRow.withOffset(projected, offset));
+            DataRow rightOuter = OrderedRow.withOffset(projected, offset);
+            add(RIGHT_OUTER, rightOuter);
+            addHiliteMapping(InputTable.RIGHT, ResultType.RIGHT_OUTER, row.getKey(), rightOuter.getKey());
             return true;
         }
 
@@ -255,15 +264,15 @@ public abstract class LeftRightSortedJoinContainer {
         private BufferedDataTable m_singleTableResult;
 
         /**
-         * @param joinSpecification
+         * @param joinImplementation
          * @param exec
          * @param deduplicateResults
          * @param deferUnmatchedRows
          */
 
-        public Combined(final JoinSpecification joinSpecification, final ExecutionContext exec,
+        public Combined(final JoinImplementation joinImplementation, final ExecutionContext exec,
             final boolean deduplicateResults, final boolean deferUnmatchedRows) {
-            super(joinSpecification, exec, deduplicateResults, deferUnmatchedRows);
+            super(joinImplementation, deduplicateResults, deferUnmatchedRows);
 
             // add a long column to each output spec for storing the combined left and right row offset
             m_workingSpec = OrderedRow.withOffset(m_outputSpecs[MATCHES]);
@@ -275,8 +284,10 @@ public abstract class LeftRightSortedJoinContainer {
         protected boolean doAddMatch(final DataRow left, final long leftOffset, final DataRow right,
             final long rightOffset) {
             DataRow joinedProjected = m_joinSpecification.rowJoin(left, right);
-            DataRow withOffsets = OrderedRow.withOffset(joinedProjected, OrderedRow.combinedOffsets(leftOffset, rightOffset));
-            m_singleTableContainer.addRowToTable(withOffsets);
+            DataRow match = OrderedRow.withOffset(joinedProjected, OrderedRow.combinedOffsets(leftOffset, rightOffset));
+            addHiliteMapping(InputTable.LEFT, ResultType.MATCHES, left.getKey(), match.getKey());
+            addHiliteMapping(InputTable.RIGHT, ResultType.MATCHES, right.getKey(), match.getKey());
+            m_singleTableContainer.addRowToTable(match);
             return true;
         }
 
@@ -284,8 +295,9 @@ public abstract class LeftRightSortedJoinContainer {
         protected boolean doAddLeftOuter(final DataRow row, final long offset) {
             // use leftToSingleTableFormat to create single table row layout
             DataRow paddedMerged = leftToSingleTableFormat(row);
-            DataRow withOffset = OrderedRow.withOffset(paddedMerged, (offset << 32) | OUTER_ROW_BIT);
-            m_singleTableContainer.addRowToTable(withOffset);
+            DataRow leftOuter = OrderedRow.withOffset(paddedMerged, (offset << 32) | OUTER_ROW_BIT);
+            addHiliteMapping(InputTable.LEFT, ResultType.LEFT_OUTER, row.getKey(), leftOuter.getKey());
+            m_singleTableContainer.addRowToTable(leftOuter);
             return true;
         }
 
@@ -293,8 +305,9 @@ public abstract class LeftRightSortedJoinContainer {
         protected boolean doAddRightOuter(final DataRow row, final long offset) {
             // use leftToSingleTableFormat to create single table row layout
             DataRow paddedMerged = rightToSingleTableFormat(row);
-            DataRow withOffset = OrderedRow.withOffset(paddedMerged, offset | RIGHT_OUTER_BITS);
-            m_singleTableContainer.addRowToTable(withOffset);
+            DataRow rightOuter = OrderedRow.withOffset(paddedMerged, offset | RIGHT_OUTER_BITS);
+            m_singleTableContainer.addRowToTable(rightOuter);
+            addHiliteMapping(InputTable.RIGHT, ResultType.RIGHT_OUTER, row.getKey(), rightOuter.getKey());
             return true;
         }
 
