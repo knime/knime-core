@@ -53,10 +53,10 @@ import java.util.Map;
 
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.workflow.JSONLayoutStringProvider;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.SubnodeContainerLayoutStringProvider;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -106,7 +106,8 @@ public final class LayoutUtil {
      * @throws IOException If no service is registered or the layout cannot be expanded.
      * @since 4.2
      */
-    public static void expandNestedLayout(final JSONLayoutStringProvider layoutStringProvider, final WorkflowManager wfm) throws IOException {
+    public static void expandNestedLayout(final SubnodeContainerLayoutStringProvider layoutStringProvider,
+        final WorkflowManager wfm) throws IOException {
         if (serviceTracker == null) {
             throw new IOException("Core bundle is not active, can't expand nested layout.");
         }
@@ -126,8 +127,9 @@ public final class LayoutUtil {
      * @throws IOException If no service is registered or the layout cannot be amended.
      * @since 4.2
      */
-    public static void addUnreferencedViews(final JSONLayoutStringProvider layoutStringProvider, final Map<NodeIDSuffix, WizardNode> allNodes,
-        final Map<NodeIDSuffix, SubNodeContainer> allNestedViews, final NodeID containerID) throws IOException {
+    public static void addUnreferencedViews(final SubnodeContainerLayoutStringProvider layoutStringProvider,
+        final Map<NodeIDSuffix, WizardNode> allNodes, final Map<NodeIDSuffix, SubNodeContainer> allNestedViews,
+        final NodeID containerID) throws IOException {
         if (serviceTracker == null) {
             throw new IOException("Core bundle is not active, can't add unreferenced views to layout.");
         }
@@ -144,7 +146,7 @@ public final class LayoutUtil {
      * @param layoutStringProvider the layout provider, who's layout needs to be already expanded.
      * @since 4.2
      */
-    public static void updateLayout(final JSONLayoutStringProvider layoutStringProvider) {
+    public static void updateLayout(final SubnodeContainerLayoutStringProvider layoutStringProvider) {
         if (serviceTracker == null) {
             throw new IllegalStateException("Core bundle is not active, can't update layout.");
         }

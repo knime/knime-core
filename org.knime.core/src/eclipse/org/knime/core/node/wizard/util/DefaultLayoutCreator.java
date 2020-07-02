@@ -53,10 +53,10 @@ import java.util.Map;
 
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.workflow.JSONLayoutStringProvider;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.SubnodeContainerLayoutStringProvider;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -81,7 +81,8 @@ public interface DefaultLayoutCreator {
      * @param wfm the {@link WorkflowManager} of the containing {@link SubNodeContainer}.
      * @since 4.2
      */
-    public void expandNestedLayout(final JSONLayoutStringProvider layoutStringProvider, final WorkflowManager wfm);
+    public void expandNestedLayout(final SubnodeContainerLayoutStringProvider layoutStringProvider,
+        final WorkflowManager wfm);
 
     /**
      * Creates extra rows/columns at the bottom of the layout for all unreferenced nodes.
@@ -92,13 +93,14 @@ public interface DefaultLayoutCreator {
      * @since 4.2
      */
     @SuppressWarnings("rawtypes")
-    public void addUnreferencedViews(final JSONLayoutStringProvider layoutStringProvider, final Map<NodeIDSuffix, WizardNode> allNodes,
-        final Map<NodeIDSuffix, SubNodeContainer> allNestedViews, final NodeID containerID);
+    public void addUnreferencedViews(final SubnodeContainerLayoutStringProvider layoutStringProvider,
+        final Map<NodeIDSuffix, WizardNode> allNodes, final Map<NodeIDSuffix, SubNodeContainer> allNestedViews,
+        final NodeID containerID);
 
     /**
      * Updates a layout.
-     * @param layoutStringProvider the layout provider, whos layout needs to be already expanded.
+     * @param layoutStringProvider the layout provider, who's layout needs to be already expanded.
      * @since 4.2
      */
-    public void updateLayout(final JSONLayoutStringProvider layoutStringProvider);
+    public void updateLayout(final SubnodeContainerLayoutStringProvider layoutStringProvider);
 }

@@ -77,7 +77,7 @@ public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor 
     String getCssStyles();
 
     /** @since 4.2 */
-    JSONLayoutStringProvider getJSONLayoutStringProvider();
+    SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider();
 
     /**
      * @since 4.1

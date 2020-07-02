@@ -260,7 +260,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     private boolean m_isPerformingActionCalledFromParent;
 
     /** JSON layout info provider for wizard nodes. */
-    private JSONLayoutStringProvider m_JSONLayoutStringProvider;
+    private SubnodeContainerLayoutStringProvider m_SubnodeLayoutStringProvider;
 
     private boolean m_hideInWizard;
     private String m_customCSS;
@@ -300,7 +300,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length - 1];
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
-        m_JSONLayoutStringProvider = persistor.getJSONLayoutStringProvider();
+        m_SubnodeLayoutStringProvider = persistor.getSubnodeLayoutStringProvider();
         m_hideInWizard = persistor.isHideInWizard();
         m_customCSS = persistor.getCssStyles();
         PortType[] inTypes = new PortType[inPortTemplates.length];
@@ -403,7 +403,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_templateInformation = MetaNodeTemplateInformation.NONE;
         m_metadata = ComponentMetadata.NONE;
 
-        m_JSONLayoutStringProvider = new JSONLayoutStringProvider();
+        m_SubnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider();
 
         postLoadWFM();
     }
@@ -2180,11 +2180,11 @@ public final class SubNodeContainer extends SingleNodeContainer
     /* -------------- Layouting --------- */
 
     /**
-     * @return the JSONLayoutStringProvider
+     * @return the SubnodeContainerLayoutStringProvider
      * @since 4.2
      */
-    public JSONLayoutStringProvider getJSONLayoutStringProvider() {
-        return m_JSONLayoutStringProvider;
+    public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
+        return m_SubnodeLayoutStringProvider;
     }
 
 

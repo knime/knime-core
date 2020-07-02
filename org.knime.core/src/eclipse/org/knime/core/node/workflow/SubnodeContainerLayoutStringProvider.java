@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Functional wrapper class for what was a simple String layout representation before version 4.2.0. This class can be
  * referenced throughout the SubNode layout life-cycle. Added functionality include the ability to compare an updated
@@ -57,7 +59,7 @@ package org.knime.core.node.workflow;
  * @author benlaney
  * @since 4.2
  */
-public final class JSONLayoutStringProvider {
+public final class SubnodeContainerLayoutStringProvider {
 
     /**
      * The default layout string for new components. Added for v4.2.0, but it can be updated as needed for future
@@ -68,23 +70,19 @@ public final class JSONLayoutStringProvider {
 
     private static final String DEFAULT_PRE_V42_LAYOUT_STRING = "";
 
-    private static final Long PRE_V42_MARKER = 1593604281000L; // July 1st, 2020; pre-V4.2.0 release
-
-    private static final Long LATEST_MARKER = System.currentTimeMillis();
+    private final boolean m_isEmptyLayoutPreV42; // July 1st, 2020; pre-V4.2.0 release
 
     private String m_currentLayoutString;
 
     private final String m_loadedLayoutString;
 
-    private Long m_layoutVersion;
-
     /**
      * Creates a default layout string provider for newly created components (SubNodeContainers).
      */
-    public JSONLayoutStringProvider() {
+    public SubnodeContainerLayoutStringProvider() {
         m_currentLayoutString = DEFAULT_LATEST_LAYOUT_STRING;
         m_loadedLayoutString = DEFAULT_LATEST_LAYOUT_STRING;
-        m_layoutVersion = LATEST_MARKER;
+        m_isEmptyLayoutPreV42 = false;
     }
 
     /**
@@ -95,15 +93,15 @@ public final class JSONLayoutStringProvider {
      *
      * @param currentLayout the existing layout string as read in from the saved component settings.
      */
-    public JSONLayoutStringProvider(final String currentLayout) {
-        if (isEmptyLayout(currentLayout)) {
+    public SubnodeContainerLayoutStringProvider(final String currentLayout) {
+        if (StringUtils.isEmpty(currentLayout)) {
             m_currentLayoutString = DEFAULT_PRE_V42_LAYOUT_STRING;
             m_loadedLayoutString = DEFAULT_PRE_V42_LAYOUT_STRING;
-            m_layoutVersion = PRE_V42_MARKER;
+            m_isEmptyLayoutPreV42 = true;
         } else {
             m_currentLayoutString = currentLayout;
             m_loadedLayoutString = currentLayout;
-            m_layoutVersion = LATEST_MARKER;
+            m_isEmptyLayoutPreV42 = false;
         }
     }
 
@@ -122,21 +120,22 @@ public final class JSONLayoutStringProvider {
     }
 
     /**
-     * @return if the layout provider holds a layout saved with an AP version less than v4.2.0.
+     * @return if the layout was originally created from an empty Pre-V4.2.0 SubNode loaded from settings.
      */
-    public boolean isLayoutPreV42() {
-        return m_layoutVersion > PRE_V42_MARKER;
+    public boolean wasLoadedEmptyPreV42Layout() {
+        return m_isEmptyLayoutPreV42;
     }
 
     /**
-     * Checks the layout to see if its empty or equal to the default placeholder layout for new components.
+     * Checks the layout is one of the default placeholder layouts. If true, the layout should be updated before its
+     * functionally accessed. If not, this indicates downstream layout processing has occurred.
      *
-     * @return if the layout is empty or equal to the default placeholder layout.
+     * @return true if the layout is equal to one of the default layouts.
      * @since 4.2
      */
-    public boolean isValidLayout() {
-        return !isEmptyLayout(m_currentLayoutString)
-            && !m_currentLayoutString.contentEquals(DEFAULT_LATEST_LAYOUT_STRING);
+    public boolean isPlaceholderLayout() {
+        return m_currentLayoutString.contentEquals(DEFAULT_PRE_V42_LAYOUT_STRING)
+            || m_currentLayoutString.contentEquals(DEFAULT_LATEST_LAYOUT_STRING);
     }
 
     /**
@@ -159,10 +158,6 @@ public final class JSONLayoutStringProvider {
      * @return if the current layout of this provider is null or empty.
      */
     public boolean isEmptyLayout() {
-        return isEmptyLayout(m_currentLayoutString);
-    }
-
-    private static boolean isEmptyLayout(final String layoutString) {
-        return layoutString == null || layoutString.isEmpty();
+        return StringUtils.isEmpty(m_currentLayoutString);
     }
 }

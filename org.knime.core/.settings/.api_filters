@@ -2175,25 +2175,19 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.util.DefaultLayoutCreator"/>
-                <message_argument value="addUnreferencedViews(JSONLayoutStringProvider, Map&lt;NodeID.NodeIDSuffix,WizardNode&gt;, Map&lt;NodeID.NodeIDSuffix,SubNodeContainer&gt;, NodeID)"/>
+                <message_argument value="addUnreferencedViews(SubnodeContainerLayoutStringProvider, Map&lt;NodeID.NodeIDSuffix,WizardNode&gt;, Map&lt;NodeID.NodeIDSuffix,SubNodeContainer&gt;, NodeID)"/>
             </message_arguments>
         </filter>
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.util.DefaultLayoutCreator"/>
-                <message_argument value="expandNestedLayout(JSONLayoutStringProvider, WorkflowManager)"/>
+                <message_argument value="expandNestedLayout(SubnodeContainerLayoutStringProvider, WorkflowManager)"/>
             </message_arguments>
         </filter>
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.util.DefaultLayoutCreator"/>
-                <message_argument value="updateLayout(JSONLayoutStringProvider)"/>
-            </message_arguments>
-        </filter>
-        <filter id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.wizard.util.DefaultLayoutCreator"/>
-                <message_argument value="updateLayout(String, String)"/>
+                <message_argument value="updateLayout(SubnodeContainerLayoutStringProvider)"/>
             </message_arguments>
         </filter>
         <filter id="405901410">

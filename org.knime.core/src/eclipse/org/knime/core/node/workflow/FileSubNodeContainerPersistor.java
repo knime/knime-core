@@ -107,7 +107,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private int m_virtualOutNodeIDSuffix = -1;
 
-    private JSONLayoutStringProvider m_JSONLayoutStringProvider;
+    private SubnodeContainerLayoutStringProvider m_SubnodeLayoutStringProvider;
 
     private String m_customCSS;
 
@@ -215,8 +215,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
      * @since 4.2
      */
     @Override
-    public JSONLayoutStringProvider getJSONLayoutStringProvider() {
-        return m_JSONLayoutStringProvider;
+    public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
+        return m_SubnodeLayoutStringProvider;
     }
 
     /**
@@ -368,8 +368,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             }
         }
 
-        // updated with 4.2
-        m_JSONLayoutStringProvider = new JSONLayoutStringProvider(nodeSettings.getString("layoutJSON", ""));
+        // added in 3.1, updated with 4.2
+        m_SubnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(nodeSettings.getString("layoutJSON", ""));
 
         // added in 3.7, load with default values
         m_customCSS = nodeSettings.getString("customCSS", "");
@@ -503,7 +503,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         }
         subnodeNC.getMetadata().save(settings);
         subnodeNC.getTemplateInformation().save(settings);
-        settings.addString("layoutJSON", subnodeNC.getJSONLayoutStringProvider().getLayoutString());
+        settings.addString("layoutJSON", subnodeNC.getSubnodeLayoutStringProvider().getLayoutString());
         settings.addBoolean("hideInWizard", subnodeNC.isHideInWizard());
         settings.addString("customCSS", subnodeNC.getCssStyles());
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();

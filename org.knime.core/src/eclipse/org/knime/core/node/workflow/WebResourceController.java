@@ -459,7 +459,7 @@ public abstract class WebResourceController {
         LinkedHashMap<NodeIDSuffix, SubNodeContainer> sncMap = new LinkedHashMap<NodeIDSuffix, SubNodeContainer>();
         findNestedViewNodes(subNC, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
         NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subNC.getID());
-        JSONLayoutStringProvider layoutStringProvider = subNC.getJSONLayoutStringProvider();
+        SubnodeContainerLayoutStringProvider layoutStringProvider = subNC.getSubnodeLayoutStringProvider();
         if (layoutStringProvider.isEmptyLayout()) {
             try {
                 WorkflowManager subWfm = subNC.getWorkflowManager();
