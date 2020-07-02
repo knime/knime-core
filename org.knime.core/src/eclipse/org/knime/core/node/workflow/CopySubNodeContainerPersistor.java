@@ -66,7 +66,7 @@ public class CopySubNodeContainerPersistor
     private final WorkflowPortTemplate[] m_outPortTemplates;
     private final int m_virtualInNodeIDSuffix;
     private final int m_virtualOutNodeIDSuffix;
-    private final SubnodeContainerLayoutStringProvider m_SubnodeLayoutStringProvider;
+    private final SubnodeContainerLayoutStringProvider m_subnodeLayoutStringProvider;
     private final boolean m_hideInWizard;
     private final String m_customCSS;
     private ComponentMetadata m_componentMetadata;
@@ -101,7 +101,7 @@ public class CopySubNodeContainerPersistor
         }
         m_virtualInNodeIDSuffix = original.getVirtualInNode().getID().getIndex();
         m_virtualOutNodeIDSuffix = original.getVirtualOutNode().getID().getIndex();
-        m_SubnodeLayoutStringProvider = original.getSubnodeLayoutStringProvider();
+        m_subnodeLayoutStringProvider = original.getSubnodeLayoutStringProvider().copy();
         m_hideInWizard = original.isHideInWizard();
         m_customCSS = new String(original.getCssStyles());
         m_componentMetadata = original.getMetadata();
@@ -157,7 +157,7 @@ public class CopySubNodeContainerPersistor
      */
     @Override
     public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
-        return m_SubnodeLayoutStringProvider;
+        return m_subnodeLayoutStringProvider;
     }
 
     /**

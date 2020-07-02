@@ -107,7 +107,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private int m_virtualOutNodeIDSuffix = -1;
 
-    private SubnodeContainerLayoutStringProvider m_SubnodeLayoutStringProvider;
+    private SubnodeContainerLayoutStringProvider m_subnodeLayoutStringProvider;
 
     private String m_customCSS;
 
@@ -216,7 +216,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
      */
     @Override
     public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
-        return m_SubnodeLayoutStringProvider;
+        return m_subnodeLayoutStringProvider;
     }
 
     /**
@@ -369,7 +369,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         }
 
         // added in 3.1, updated with 4.2
-        m_SubnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(nodeSettings.getString("layoutJSON", ""));
+        m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(nodeSettings.getString("layoutJSON", ""));
 
         // added in 3.7, load with default values
         m_customCSS = nodeSettings.getString("customCSS", "");

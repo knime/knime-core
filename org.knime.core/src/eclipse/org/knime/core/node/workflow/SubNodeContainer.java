@@ -260,7 +260,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     private boolean m_isPerformingActionCalledFromParent;
 
     /** JSON layout info provider for wizard nodes. */
-    private SubnodeContainerLayoutStringProvider m_SubnodeLayoutStringProvider;
+    private SubnodeContainerLayoutStringProvider m_subnodeLayoutStringProvider;
 
     private boolean m_hideInWizard;
     private String m_customCSS;
@@ -300,7 +300,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length - 1];
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
-        m_SubnodeLayoutStringProvider = persistor.getSubnodeLayoutStringProvider();
+        m_subnodeLayoutStringProvider = persistor.getSubnodeLayoutStringProvider();
         m_hideInWizard = persistor.isHideInWizard();
         m_customCSS = persistor.getCssStyles();
         PortType[] inTypes = new PortType[inPortTemplates.length];
@@ -403,7 +403,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_templateInformation = MetaNodeTemplateInformation.NONE;
         m_metadata = ComponentMetadata.NONE;
 
-        m_SubnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider();
+        m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider();
 
         postLoadWFM();
     }
@@ -2184,9 +2184,30 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @since 4.2
      */
     public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
-        return m_SubnodeLayoutStringProvider;
+        return m_subnodeLayoutStringProvider;
     }
 
+    /**
+     * @return SubnodeContainerLayoutStringProvider the SubnodeContainerLayoutStringProvider to set
+     * @since 4.2
+     */
+    public void setSubnodeLayoutStringProvider(final SubnodeContainerLayoutStringProvider layoutStringProvider) {
+        if (StringUtils.equals(m_subnodeLayoutStringProvider.getLayoutString(),
+                layoutStringProvider.getLayoutString())) {
+            m_subnodeLayoutStringProvider = layoutStringProvider;
+            if (isProject()) {
+                //differently handled if this is a component project
+                //otherwise the setDirty event will just be past to the parent (which is ROOT)
+                getChangesTracker().ifPresent(ct -> ct.otherChange());
+                //for consistency
+                if (!getWorkflowManager().isDirty()) {
+                    getWorkflowManager().setDirty();
+                }
+            } else {
+                setDirty();
+            }
+        }
+    }
 
     /**
      * {@inheritDoc}

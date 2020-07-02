@@ -160,4 +160,16 @@ public final class SubnodeContainerLayoutStringProvider {
     public boolean isEmptyLayout() {
         return StringUtils.isEmpty(m_currentLayoutString);
     }
+
+    /**
+     * Creates a new instance of this class with an identical internal state. Should be used when copying components.
+     *
+     * @return a new SubnodeContainerLayoutProvider instance.
+     */
+    public SubnodeContainerLayoutStringProvider copy() {
+        SubnodeContainerLayoutStringProvider newLayoutStringProvider =
+            new SubnodeContainerLayoutStringProvider(m_loadedLayoutString);
+        newLayoutStringProvider.setLayoutString(m_currentLayoutString);
+        return newLayoutStringProvider;
+    }
 }
